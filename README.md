@@ -1,3 +1,28 @@
+# 烬域 · 风起之境 v0.8
+
+本地可玩的单人策略卡牌游戏。保留 56 张已确认卡图、三位英雄、五关战役与 v1 存档，完成开发结构整理、战场遮挡修复及真实来源浏览器回归。
+
+```bash
+python3 build.py
+python3 -m http.server 8000 --bind 127.0.0.1
+```
+
+访问 **http://127.0.0.1:8000/dist/**，点击「战斗试玩」或「开启冒险」。`dist/` 是拆分图片和脚本的网页版本；根目录 `index.html` 是包含全部资源的离线单文件版本。修改源码后重新构建并刷新浏览器。
+
+```bash
+npm ci
+npm test
+npm run test:e2e
+```
+
+端到端测试优先使用本机 Chrome；其他环境可设置 `CHROMIUM_PATH`，或安装 Playwright Chromium。原 Python 浏览器回归需激活 `.venv` 后运行 `python tests/run_release_checks.py`。
+
+本次变化、模块职责和验证边界见 [开发结构](docs/ARCHITECTURE.md) 与 [本轮验收](docs/QA_V08.md)。原始交接说明、素材来源与基线哈希仍在 `docs/` 和 `HANDOFF_*` 中。默认手绘 Canvas 场景完全独立运行；`?renderer=three` 仅供开发者预览继承的 Three.js 场景。
+
+---
+
+以下为导入 v0.7 时的历史说明，测试状态以本轮验收为准。
+
 > **源码交接包说明（2026-09-06）：** 本包针对继续开发整理，不包含依赖包或已构建的 `index.html`。解压后先运行 `python3 build.py`，即可在本目录生成与 v0.7.0 交付版一致的游戏。正常构建不需要 `npm install` 或 `pip install`。首次接手请看 `AGENTS.md`、`docs/CODEX_HANDOFF.md` 和 `docs/ASSETS.md`。
 
 # 烬域 · 风起之境

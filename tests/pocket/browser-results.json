@@ -1,6 +1,6 @@
 {
   "status": "passed",
-  "testedHTMLsha256": "bee5fec655a6f27007c6ec7d98427e5a02b5b3dea46eba38e763f40e2999f790",
+  "testedHTMLsha256": "4d42ea0cd848b7d2ad5778c7c4e16f64ef9ed2ff5962d9b0c6ae4d99a7e04245",
   "checks": [
     "Portrait lobby uses native CSS pixels, with reachable primary actions and no desktop letterboxing",
     "Portrait hero power, end-turn, menu and collection buttons have at least 44 CSS-pixel height",
@@ -39,35 +39,35 @@
     "portraitAim": {
       "a": {
         "x": 110,
-        "y": 449.5
+        "y": 456
       },
       "b": {
-        "x": 110.61636352539062,
-        "y": 448.7125244140625
+        "x": 110.64098358154297,
+        "y": 455.2324523925781
       },
       "z": {
         "x": 195,
-        "y": 276.5
+        "y": 296
       },
-      "dot": 188.62417602539062
+      "dot": 177.29122161865234
     },
     "normalCampaign": {
       "turnsAdvanced": 3,
-      "cardsPlayedViaTouch": 1,
+      "cardsPlayedViaTouch": 2,
       "hero": "paladin"
     },
     "responsive": [
       {
         "width": 320,
         "height": 568,
-        "minionWidth": 38,
+        "minionWidth": 31.99999237060547,
         "powerHeight": 52,
         "endTurnHeight": 52
       },
       {
         "width": 360,
         "height": 640,
-        "minionWidth": 43,
+        "minionWidth": 42.99999237060547,
         "powerHeight": 52,
         "endTurnHeight": 52
       },
@@ -81,49 +81,49 @@
       {
         "width": 430,
         "height": 932,
-        "minionWidth": 52.999996185302734,
+        "minionWidth": 52.27085876464844,
         "powerHeight": 52,
         "endTurnHeight": 52
       },
       {
         "width": 568,
         "height": 320,
-        "minionWidth": 40,
+        "minionWidth": 32.54400634765625,
         "powerHeight": 52,
         "endTurnHeight": 50
       },
       {
         "width": 667,
         "height": 375,
-        "minionWidth": 54,
+        "minionWidth": 53.249755859375,
         "powerHeight": 52,
         "endTurnHeight": 50
       },
       {
         "width": 844,
         "height": 390,
-        "minionWidth": 69.99998474121094,
+        "minionWidth": 61.144073486328125,
         "powerHeight": 52,
         "endTurnHeight": 50
       },
       {
         "width": 932,
         "height": 430,
-        "minionWidth": 70,
+        "minionWidth": 69.03536987304688,
         "powerHeight": 52,
         "endTurnHeight": 50
       },
       {
         "width": 768,
         "height": 1024,
-        "minionWidth": 76,
+        "minionWidth": 74.95440673828125,
         "powerHeight": 52,
         "endTurnHeight": 52
       },
       {
         "width": 1024,
         "height": 768,
-        "minionWidth": 70,
+        "minionWidth": 69.0357666015625,
         "powerHeight": 52,
         "endTurnHeight": 50
       }

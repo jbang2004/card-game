@@ -1,35 +1,35 @@
 {
-  "sha256": "bee5fec655a6f27007c6ec7d98427e5a02b5b3dea46eba38e763f40e2999f790",
+  "sha256": "2cc6475d9e4d65c23aef3d8097b29e5b44949965cb657f740183ebd87b8d125d",
   "suites": [
     {
       "suite": "engine",
       "exitCode": 0,
-      "seconds": 0.32
+      "seconds": 0.39
     },
     {
       "suite": "card-assets",
       "exitCode": 0,
-      "seconds": 0.32
+      "seconds": 0.51
     },
     {
       "suite": "pocket",
       "exitCode": 0,
-      "seconds": 106.66
+      "seconds": 104.64
     },
     {
       "suite": "pocket-extra",
       "exitCode": 0,
-      "seconds": 12.85
+      "seconds": 11.46
     },
     {
       "suite": "anime",
       "exitCode": 0,
-      "seconds": 29.77
+      "seconds": 27.43
     },
     {
       "suite": "world",
       "exitCode": 0,
-      "seconds": 14.63
+      "seconds": 12.92
     }
   ]
 }
