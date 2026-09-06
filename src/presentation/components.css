@@ -1,0 +1,304 @@
+/* Stable component contracts. Legacy CSS lives in a lower cascade layer.
+   Responsive rules change geometry only; colors come from shared tokens. */
+:root {
+  --ui-font:
+    -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei",
+    sans-serif;
+  --surface: #2c2119;
+  --surface-raised: #3c2c20;
+  --ink: #f6e4c3;
+  --ink-secondary: #dac6a5;
+  --paper: #efdfbd;
+  --paper-ink: #332519;
+  --primary-fill: linear-gradient(155deg, #f5d68d, #c59440);
+  --secondary-fill: linear-gradient(#4d3929, #302219);
+}
+body,
+button,
+input,
+select {
+  font-family: var(--ui-font);
+}
+button {
+  font-weight: 600;
+}
+.lobby-copy,
+body.touch-layout .lobby-copy {
+  background: var(--surface);
+  border: 2px solid #b18a50;
+  border-radius: 16px;
+  outline: 0;
+  box-shadow:
+    inset 0 0 0 5px #18100b66,
+    0 12px 35px #0005;
+  color: var(--ink);
+}
+.lobby-copy:before {
+  border: 1px solid #b18a504d;
+  border-radius: 10px;
+}
+.lobby-copy .eyebrow,
+.lobby-chinese,
+.lobby-tagline,
+.lobby-desc,
+body.touch-layout .lobby-chinese,
+body.touch-layout .lobby-tagline,
+body.touch-layout .lobby-desc {
+  color: var(--ink);
+  text-shadow: none;
+  font-family: var(--ui-font);
+  letter-spacing: 0;
+}
+.lobby-copy .eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: var(--ink-secondary);
+}
+.lobby-chinese {
+  font-size: 28px;
+  font-weight: 650;
+}
+.lobby-tagline {
+  font-size: 17px;
+  line-height: 1.6;
+}
+.lobby-desc {
+  font-size: 14px;
+  line-height: 1.6;
+}
+.lobby-title,
+.lobby-title span {
+  color: #ffe1a5;
+  text-shadow: 0 2px 3px #0006;
+}
+.gold-btn,
+body.touch-layout .gold-btn,
+.end-turn,
+body.touch-layout .end-turn {
+  background: var(--primary-fill);
+  color: #352310;
+  text-shadow: none;
+  border: 2px solid #7b562c;
+  box-shadow:
+    inset 0 0 0 1px #ffe7b0,
+    0 3px 0 #51361d,
+    0 5px 10px #0005;
+  font-family: var(--ui-font);
+  letter-spacing: 0;
+}
+.ghost-btn,
+body.touch-layout .ghost-btn,
+#lobby-library-btn,
+.atelier-open,
+body.touch-layout .atelier-open {
+  background: var(--secondary-fill);
+  color: var(--ink);
+  text-shadow: none;
+  border: 1px solid #9c7849;
+  box-shadow:
+    inset 0 1px #e4c59233,
+    0 3px 7px #0004;
+  letter-spacing: 0;
+}
+.gold-btn:hover,
+.ghost-btn:hover {
+  filter: brightness(1.1);
+}
+.showcase-link,
+.showcase-link span,
+.text-btn,
+.library-foot {
+  color: var(--ink-secondary);
+  text-shadow: none;
+}
+.lobby-bottom,
+body.touch-layout .lobby-bottom {
+  background: #21170fe8;
+  color: var(--ink-secondary);
+  text-shadow: none;
+}
+/* One rectangular aperture for EVERY card type and rarity. The art never owns
+   a second competing silhouette, mask, border or transform. */
+body .card,
+body .card.common,
+body .card.rare,
+body .card.epic,
+body .card.legendary {
+  border-radius: 10px;
+  isolation: isolate;
+  background: linear-gradient(135deg, #c5a16a, #795638);
+  border: 2px solid #5d4027;
+}
+body .card:after,
+body .card-inner:before,
+body .card-inner:after {
+  display: none;
+}
+body .card-inner {
+  inset: 4px;
+  overflow: hidden;
+  isolation: isolate;
+  clip-path: inset(0 round 5px);
+  border-radius: 5px;
+  border: 1px solid #8c6b40;
+  background: var(--paper);
+  box-shadow: none;
+}
+body .card .card-art {
+  position: absolute;
+  inset: 0 0 auto;
+  width: 100%;
+  height: 57%;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  clip-path: inset(0);
+  isolation: isolate;
+  background: #3b2b21;
+  box-shadow: none;
+}
+body .card .card-art img {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--art-pos, 50% 40%);
+  transform: none;
+  border: 0;
+  border-radius: 0;
+  clip-path: none;
+  filter: none;
+}
+body .card .card-art:after {
+  display: none;
+}
+body .card .card-title {
+  top: 57%;
+  left: 0;
+  right: 0;
+  height: 12%;
+  min-height: 0;
+  padding: 0 2px;
+  border: 0;
+  border-top: 1px solid #a7824d;
+  border-bottom: 1px solid #a7824d;
+  border-radius: 0;
+  background: #493321;
+  color: #fff0d1;
+  font-family: var(--ui-font);
+  font-weight: 650;
+  letter-spacing: 0;
+  text-shadow: none;
+}
+body .card-title:before,
+body .card-title:after {
+  display: none;
+}
+body .card .card-text {
+  top: 71%;
+  left: 4%;
+  right: 4%;
+  color: var(--paper-ink);
+  font-family: var(--ui-font);
+  font-weight: 500;
+  line-height: 1.4;
+  text-shadow: none;
+}
+body .card .card-text b {
+  color: var(--paper-ink);
+  font-weight: 750;
+}
+body .card .card-type {
+  color: #72583a;
+  font-family: var(--ui-font);
+  letter-spacing: 0;
+  text-shadow: none;
+}
+body .card-rarity {
+  top: 68%;
+  width: 5px;
+  height: 5px;
+  box-shadow: none;
+}
+body .card-cost,
+body .stat,
+body .hero-health,
+body .hero-armor {
+  font-family: Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  text-shadow: 0 1px 1px #0008;
+}
+body .hero-name {
+  font-family: var(--ui-font);
+  text-shadow: none;
+}
+body .modal-box {
+  color: var(--ink);
+}
+body .modal-heading h2,
+body .library-heading h2 {
+  font-family: var(--ui-font);
+  letter-spacing: 0;
+  font-weight: 650;
+}
+body .modal-box p,
+body .modal-heading .eyebrow {
+  color: var(--ink-secondary);
+  text-shadow: none;
+}
+body.touch-layout .lobby-chinese {
+  font-size: 24px;
+}
+body.touch-layout .lobby-tagline {
+  font-size: 15px;
+}
+body.touch-layout .lobby-desc {
+  font-size: 13px;
+}
+/* Readable type follows the rendered card width, including the large touch
+   collection and inspection views; small hand cards retain compact rules. */
+body .card {
+  container-type: inline-size;
+}
+body .card .card-title {
+  font-size: clamp(10px, 7.5cqw, 18px);
+}
+body .card .card-text {
+  font-size: clamp(10px, 6cqw, 15px);
+}
+body .hand-card .card .card-text {
+  font-size: clamp(9px, 7cqw, 11px);
+}
+body .card-cost {
+  font-size: clamp(14px, 17cqw, 34px);
+}
+body .card .stat {
+  font-size: clamp(14px, 16cqw, 32px);
+}
+body .card .card-type {
+  font-size: clamp(6px, 3.5cqw, 9px);
+}
+.library-item .add-label,
+.library-item .owned-count,
+.deck-intro {
+  color: var(--ink-secondary);
+  text-shadow: none;
+}
+.touch-library-tabs {
+  background: #211810;
+  border: 1px solid #80603b;
+  border-radius: 8px;
+}
+.touch-library-tabs button {
+  background: var(--surface-raised);
+  color: var(--ink-secondary);
+  border-color: #80603b;
+}
+.touch-library-tabs button[aria-selected="true"] {
+  background: var(--secondary-fill);
+  color: var(--ink);
+}
