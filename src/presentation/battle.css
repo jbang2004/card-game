@@ -1,0 +1,245 @@
+/* Production battle layout. This file owns desktop hand geometry and HUD rails.
+   World imagery remains behind the interaction plane; mobile geometry belongs
+   to EmberViewport and mobile.css. */
+body:not(.touch-layout) .hand-zone {
+  left: 200px;
+  right: auto;
+  top: 753px;
+  width: 1200px;
+  height: 184px;
+  perspective: none;
+}
+body:not(.touch-layout) .hand-card {
+  width: var(--desktop-card-w, 142px);
+  height: var(--desktop-card-h, 184px);
+  transform: translateX(calc(-50% + var(--x)));
+  transform-origin: center bottom;
+}
+body:not(.touch-layout) .hand-card:hover,
+body:not(.touch-layout) .hand-card:focus-visible {
+  transform: translateX(calc(-50% + var(--x))) translateY(-4px);
+  z-index: 40;
+}
+body:not(.touch-layout) .hand-card.selected {
+  transform: translateX(calc(-50% + var(--x))) translateY(-4px);
+}
+body:not(.touch-layout) .hand-card .card .stat {
+  width: 25%;
+  height: 18%;
+  bottom: 1%;
+  font-size: 25px;
+}
+body:not(.touch-layout) .hand-card .stat.atk {
+  left: 0;
+}
+body:not(.touch-layout) .hand-card .stat.hp {
+  right: 0;
+}
+body:not(.touch-layout) .hand-card .card-cost {
+  left: 0;
+  top: 0;
+  font-size: 27px;
+}
+body:not(.touch-layout) .hand-card .card-title {
+  font-size: 12px;
+}
+body:not(.touch-layout) .hand-card .card-text {
+  font-size: 10px;
+  line-height: 1.35;
+}
+body:not(.touch-layout) .compact-hand .card-title {
+  font-size: 10px;
+}
+body:not(.touch-layout) .compact-hand .card-title.long {
+  font-size: 9px;
+}
+body:not(.touch-layout) .compact-hand .card-text {
+  font-size: 9px;
+}
+body:not(.touch-layout) .hand-label {
+  left: 227px;
+  top: 722px;
+  color: #f4ebce;
+}
+body:not(.touch-layout) .hand-label .hand-tip {
+  display: inline;
+  color: #eee4ca !important;
+}
+body:not(.touch-layout) .mana-panel {
+  left: 1404px;
+  top: 508px;
+  width: 176px;
+  height: 102px;
+  padding: 12px;
+  border-width: 2px;
+  border-radius: 12px;
+}
+body:not(.touch-layout) .mana-caption {
+  font-size: 10px;
+}
+body:not(.touch-layout) .mana-caption strong {
+  font-size: 21px;
+}
+body:not(.touch-layout) .mana-gems {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px 3px;
+}
+body:not(.touch-layout) .mana-gem {
+  width: 19px;
+  height: 19px;
+}
+body:not(.touch-layout) .mana-desc {
+  display: none;
+}
+body:not(.touch-layout) .turn-controls {
+  left: 1404px;
+  width: 176px;
+  top: 409px;
+}
+body:not(.touch-layout) .turn-controls .end-turn {
+  width: 176px;
+}
+body:not(.touch-layout) .turn-shortcut {
+  font-size: 9px;
+}
+body:not(.touch-layout) .turn-number {
+  color: #f4ecd5;
+}
+body:not(.touch-layout) .player-deck {
+  left: 1315px;
+  top: 663px;
+}
+body:not(.touch-layout) .enemy-deck {
+  left: 1430px;
+  top: 302px;
+}
+body:not(.touch-layout) .campaign-panel {
+  background: #f4ead7ed;
+  border: 1px solid #a8b18b;
+}
+body:not(.touch-layout) .chapter-name {
+  text-shadow: none;
+}
+/* Reading is handled by the independent preview instead of magnifying a hand
+   card across the hero and adjacent cards. Preview never intercepts targets. */
+.card-preview {
+  pointer-events: none;
+}
+body:not(.touch-layout) .card-preview {
+  width: 230px;
+  height: 322px;
+}
+body:not(.touch-layout) .card-preview .card {
+  width: 230px;
+  height: 322px;
+}
+body:not(.touch-layout) .card-preview .keyword-notes {
+  max-height: 98px;
+  overflow: hidden;
+}
+.engine-status {
+  display: none;
+}
+/* Small screens need a quiet backing behind text laid over buildings. */
+.touch-layout #touch-match-chip {
+  background: #314b3ba8;
+  border-radius: 7px;
+  padding: 5px;
+}
+.touch-layout .hand-zone {
+  border-top: 1px solid #b9c79866;
+  background: linear-gradient(#40584055, #2d443b99);
+  border-radius: 10px;
+}
+.touch-layout .turn-number {
+  background: #30493690;
+  border-radius: 4px;
+  padding: 3px 5px;
+}
+@media (prefers-reduced-motion: reduce) {
+  body:not(.touch-layout) .hand-card {
+    transition: none;
+  }
+}
+/* Notifications use the scenery rail, never the player's hero or hand. */
+body:not(.touch-layout) #hint {
+  left: 1404px;
+  top: 626px;
+  bottom: auto;
+  width: 176px;
+  min-width: 0;
+  max-width: 176px;
+  padding: 10px;
+  transform: none;
+  font-size: 12px;
+  line-height: 1.6;
+  pointer-events: none;
+}
+body:not(.touch-layout) #toast,
+body:not(.touch-layout) .battle-view #toast {
+  left: 22px;
+  top: 92px;
+  bottom: auto;
+  width: 268px;
+  max-width: 268px;
+  padding: 12px 16px;
+  transform: none;
+  font-size: 13px;
+  line-height: 1.6;
+}
+#combat-preview small,
+#combat-preview .survive {
+  color: #45643e;
+}
+#combat-preview .kill {
+  color: #a34635;
+}
+/* A reserved status strip prevents temporary notifications hiding units. */
+body.touch-layout .battle-view #toast {
+  left: var(--notice-x);
+  top: var(--notice-y);
+  width: var(--notice-w);
+  height: var(--notice-h);
+  max-width: none;
+  transform: none;
+  padding: 3px 8px;
+  font-size: 11px;
+  line-height: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: #f4ecd7;
+  color: #40533e;
+  border-color: #a6b28c;
+}
+body.mobile-landscape .mana-gems {
+  display: none;
+}
+body.mobile-landscape .mana-caption strong {
+  font-size: 13px;
+}
+body.mobile-landscape .mana-caption:before {
+  content: "法力";
+  font-size: 10px;
+  color: #eef1d8;
+}
+body.mobile-landscape .enemy-mana {
+  font-size: 11px;
+  line-height: 16px;
+  padding: 0 4px;
+}
+body.mobile-landscape .enemy-mana i {
+  display: none;
+}
+body.mobile-landscape .enemy-mana:before {
+  content: "敌方法力";
+  font-size: 9px;
+}
+body.mobile-portrait .hand-label {
+  width: 122px !important;
+  white-space: nowrap;
+}
+body.mobile-portrait .hand-label > * {
+  flex-shrink: 0;
+}

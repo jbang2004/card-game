@@ -304,6 +304,6 @@
   ],
   "errors": [],
   "imageRequests": [],
-  "testedHTMLsha256": "bee5fec655a6f27007c6ec7d98427e5a02b5b3dea46eba38e763f40e2999f790",
+  "testedHTMLsha256": "4d42ea0cd848b7d2ad5778c7c4e16f64ef9ed2ff5962d9b0c6ae4d99a7e04245",
   "mode": "Chromium desktop + native touch emulation; fixture-based token events; no public deployment or physical-device claim"
 }

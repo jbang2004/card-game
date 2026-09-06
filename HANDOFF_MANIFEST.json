@@ -1,0 +1,1041 @@
+{
+  "format": "emberfall-source-handoff-1",
+  "version": "0.7.0",
+  "sourceArchiveSHA256": "70e7dc511cb6e6ad7a790cf7a96dba7b8717c09fd9b8e7585eb0a5d131363f91",
+  "expectedHTMLsha256": "bee5fec655a6f27007c6ec7d98427e5a02b5b3dea46eba38e763f40e2999f790",
+  "dependencyPackagesIncluded": false,
+  "builtHTMLIncluded": false,
+  "originalAssetSheetsIncluded": true,
+  "files": [
+    {
+      "path": ".gitignore",
+      "bytes": 342,
+      "sha256": "b7aa274165714a3358da0a204db15eee8157fd762947f32dc5c8a24cc1ea712e"
+    },
+    {
+      "path": "AGENTS.md",
+      "bytes": 2270,
+      "sha256": "9888dac4f2f6f1a5648b98cb5ff344782a202262a2f5da81ce08b6653096f505"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "bytes": 5672,
+      "sha256": "eeab3870f3fa9407602751930de1a956f2aaeff157b9c0e8701b778ef0bbd285"
+    },
+    {
+      "path": "DEPLOYMENT.md",
+      "bytes": 1201,
+      "sha256": "5975d0ba2d80efc94810ed46d5f4f2ee023fad99597f34a6a280d0c2113d5ec7"
+    },
+    {
+      "path": "DISTRIBUTION.json",
+      "bytes": 1437,
+      "sha256": "eaa90a76d4b4796cb180a7c012f69b48c125abde1de8bed2d59ae854efea894f"
+    },
+    {
+      "path": "HANDOFF_CHECKS.json",
+      "bytes": 1760,
+      "sha256": "30fc1cf00cca91bb23f345fb5fbaad65672869cc50c77ed596bcaeea383fb86f"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 1079,
+      "sha256": "bf04c6788da8a0d9e3a45b5ded5d9f6f0355d821c9b58bb8c7b83e8134993f2b"
+    },
+    {
+      "path": "README.md",
+      "bytes": 6219,
+      "sha256": "371bfb0a885c9aeede9f1031d5670ffdba646cfef5d9b59a1267dffebc7c371b"
+    },
+    {
+      "path": "THIRD_PARTY.md",
+      "bytes": 3201,
+      "sha256": "944a5f9ca7437ff9c535ea434b2e8cb38572df70bfc9aec8748af4834a5d14a9"
+    },
+    {
+      "path": "VALIDATION.md",
+      "bytes": 3738,
+      "sha256": "c744d53d2c9e2e64c9937a195208610a880c28cac03b33bdd52308baba784dcf"
+    },
+    {
+      "path": "assets/anime/Contact_Sheet.jpg",
+      "bytes": 1834728,
+      "sha256": "dd319e97a761e5ffa50347d30d52abc95fce78005cfe77c41c5da02757bb89dd"
+    },
+    {
+      "path": "assets/anime/ambush.webp",
+      "bytes": 55460,
+      "sha256": "6d388b166cfcb22683c5a9e2c42e738b637d4662266257097676aaed6b8dfa80"
+    },
+    {
+      "path": "assets/anime/archer.webp",
+      "bytes": 49782,
+      "sha256": "17ff6664aee4d4b69341ccd983be6c30af62dcbd65f591f6df02d96dde65b106"
+    },
+    {
+      "path": "assets/anime/ashdragon.webp",
+      "bytes": 65560,
+      "sha256": "648a44ce8d578531dbc5fe3e198460852a7b09a4228c6a56f51a48b1ee345653"
+    },
+    {
+      "path": "assets/anime/assassin.webp",
+      "bytes": 51670,
+      "sha256": "459f336c03602d7aa0d7769c9dbf4ae0671ea8d119d5b325be64df9df08cbbfe"
+    },
+    {
+      "path": "assets/anime/base-rules.json",
+      "bytes": 166,
+      "sha256": "0fd12a72d4f5f871b8a0518b07084cd209c9ec2f8a872f1e700276927f9eedc3"
+    },
+    {
+      "path": "assets/anime/battlecry.webp",
+      "bytes": 58536,
+      "sha256": "acdba193c2d1af408d97d5c558d2a38fa5b6682abac66915f5d8be99629be880"
+    },
+    {
+      "path": "assets/anime/berserker.webp",
+      "bytes": 63390,
+      "sha256": "bac6ea975affbfed62afcae1b9cb6bccf8702db0c159ed0486e5c213929b32e0"
+    },
+    {
+      "path": "assets/anime/blessing.webp",
+      "bytes": 58538,
+      "sha256": "7663161c2081ec60e296174c7eb6b800059360a2ff2337dec468a2f6ca64aec7"
+    },
+    {
+      "path": "assets/anime/bolt.webp",
+      "bytes": 51650,
+      "sha256": "fca819717b9d44bbf42e727b7940187eb9c474137a652c2025cec5a7d2ad5b24"
+    },
+    {
+      "path": "assets/anime/cleric.webp",
+      "bytes": 57264,
+      "sha256": "05ff1e4424afb001801ec425ccfe3ae0fee36beecfacb1a7e3f6e1ed12700c8f"
+    },
+    {
+      "path": "assets/anime/coin.webp",
+      "bytes": 53704,
+      "sha256": "27c1dc6f4f228510ea8c6cb890efedc832c7200123e4ea6423dbeb7278d13b61"
+    },
+    {
+      "path": "assets/anime/colossus.webp",
+      "bytes": 68606,
+      "sha256": "24d4852dcf42ce902a30b6b8391e5e3ef1e7c48579368d782f31b7a45ac2ff4f"
+    },
+    {
+      "path": "assets/anime/dagger.webp",
+      "bytes": 52154,
+      "sha256": "6aa2e0ee58af59dc83b2e4e6dd1129efcb07efbafffdf301a6a83df69ab01474"
+    },
+    {
+      "path": "assets/anime/discovery.webp",
+      "bytes": 57474,
+      "sha256": "0810c4f67f6993755978d16bd04453415c85c16e220ce8aa22796045468e705a"
+    },
+    {
+      "path": "assets/anime/dragon.webp",
+      "bytes": 58254,
+      "sha256": "d63682970cf987e0a0994d9457b4fb9b97f847d46cff8a6787b245278494a5e3"
+    },
+    {
+      "path": "assets/anime/execute.webp",
+      "bytes": 50998,
+      "sha256": "f968cc0c1dfd852749a099234727e088a11db15575832a03ddcbb0a8d59471e1"
+    },
+    {
+      "path": "assets/anime/fireball.webp",
+      "bytes": 52022,
+      "sha256": "2c1b0c67f78f8d8ca1a1035c67eea41f094f9b40b09f9b6080dd8060dcdffc4d"
+    },
+    {
+      "path": "assets/anime/frame-sources/frame-legendary.webp",
+      "bytes": 14450,
+      "sha256": "1fdfa121e3ebae6578ecb938425c046c0970ffe616c17534f703cbbcae33a733"
+    },
+    {
+      "path": "assets/anime/frame-sources/frame-minion.webp",
+      "bytes": 12864,
+      "sha256": "d39cbeebdf3642b40df184eb841753ea5479406b81ff087e2ee1cbe8733c71a6"
+    },
+    {
+      "path": "assets/anime/frame-sources/frame-nature.webp",
+      "bytes": 12320,
+      "sha256": "fe8966d710eaae6256437e425217a35b55b1e54e00ec753d3b77e18e75c54e5f"
+    },
+    {
+      "path": "assets/anime/frame-sources/frame-spell.webp",
+      "bytes": 12198,
+      "sha256": "7e1403eefcd5c8d990afb4630ce344c7045a44a4e20b115421383ce03887cff4"
+    },
+    {
+      "path": "assets/anime/frame-sources/frame-weapon.webp",
+      "bytes": 9468,
+      "sha256": "ec571455cda2593d79f9aa2a8284cd4a4daec5c1357a331c956bfb983376b33e"
+    },
+    {
+      "path": "assets/anime/frostbolt.webp",
+      "bytes": 60492,
+      "sha256": "4d5240acd581f8c5444dcb229df6e0825b71b49890e257992074ba6f5057ef07"
+    },
+    {
+      "path": "assets/anime/frostking.webp",
+      "bytes": 70396,
+      "sha256": "e9a20db02d95c50a2730af64a9316fd8d345382acb8f76b6ff84838afa49f6af"
+    },
+    {
+      "path": "assets/anime/golem.webp",
+      "bytes": 68540,
+      "sha256": "3245d669a99c2fa03f45fa1979b6e7ed4d7de2b3ed91ce9c5ab6f05ba32a5201"
+    },
+    {
+      "path": "assets/anime/guard.webp",
+      "bytes": 53278,
+      "sha256": "159f5432dbc1960a5355ce83fceb00eecbfc97b9ac8c15d11a6ec8ee8bbc712d"
+    },
+    {
+      "path": "assets/anime/huntress.webp",
+      "bytes": 55910,
+      "sha256": "e7fd2e2692d29c9d50a4fb716cd37cb839201f896629d5a8592f399cdb77f887"
+    },
+    {
+      "path": "assets/anime/leech.webp",
+      "bytes": 44510,
+      "sha256": "f34455e1b0ce85197c0e5be289fbe0054aeddcae69db052eea8a13112d2626b6"
+    },
+    {
+      "path": "assets/anime/lifedrain.webp",
+      "bytes": 54102,
+      "sha256": "ff81370f3e666eeede3f8cbf164b50f1f7a262b2e7e1e6b023b6005985c56439"
+    },
+    {
+      "path": "assets/anime/manifest.json",
+      "bytes": 37254,
+      "sha256": "657ffc9293e2885079bdb9487e0123a8dad65d03fb09ba6c61d552a1e43e8faa"
+    },
+    {
+      "path": "assets/anime/necromancer.webp",
+      "bytes": 50334,
+      "sha256": "5688c7043873b7b6a94416ee5af6314bdddda2c11781b9db6df13c86ca51c99e"
+    },
+    {
+      "path": "assets/anime/non-card-relics.json",
+      "bytes": 203748,
+      "sha256": "d41e0f0d36d88fd23d3b617e30b1159ee4f01c2eed2737ccf3034a4cc8118694"
+    },
+    {
+      "path": "assets/anime/nova.webp",
+      "bytes": 68882,
+      "sha256": "db062d59ed0b8fd0b2517072f01c34ad3769e0807a8475dc4fddd75ea85fddf8"
+    },
+    {
+      "path": "assets/anime/nyx.webp",
+      "bytes": 61916,
+      "sha256": "5df9d81dc404950ff37622809028f5a8b074f8019d7196364d1fddd3bac0ec6e"
+    },
+    {
+      "path": "assets/anime/oracle.webp",
+      "bytes": 54928,
+      "sha256": "7f80f39d78c2c7688d6fcb46a5c1a79e575163ea7ebe9e71404a15e85327eaed"
+    },
+    {
+      "path": "assets/anime/paladin.webp",
+      "bytes": 59228,
+      "sha256": "7b1ce010baa70c9169a2300c618ef188c6bf1a7bc8a65a543f7db358545e41b1"
+    },
+    {
+      "path": "assets/anime/phoenix.webp",
+      "bytes": 56222,
+      "sha256": "cf7cf011af60c4be5fac6c3b1d3cc4ecc5b3703cd9e1bea321d9e93e1aa9a585"
+    },
+    {
+      "path": "assets/anime/polymorph.webp",
+      "bytes": 60168,
+      "sha256": "8df330e98eb8707ddc32c0d991f9be7bef63048d7f54d21964034503ba898dbe"
+    },
+    {
+      "path": "assets/anime/pup.webp",
+      "bytes": 54296,
+      "sha256": "409a75e2de2dd004def48412f6a85c1c26fed4e35103214c2ed61b05a045ca2f"
+    },
+    {
+      "path": "assets/anime/rally.webp",
+      "bytes": 54964,
+      "sha256": "d5935ce7a7eb1e78c937d602adabca07b49a3322a4d142dd06420f8412178610"
+    },
+    {
+      "path": "assets/anime/reaper.webp",
+      "bytes": 60538,
+      "sha256": "35a70db32cd4241ee623a2d7b91bfa7b26e2514ab74597c3f1a38c6681af9e66"
+    },
+    {
+      "path": "assets/anime/recruit.webp",
+      "bytes": 51432,
+      "sha256": "2ef75f39fdbf1f4f1051fb7c64b4de288017f27618781fc2f530614c364fc1a8"
+    },
+    {
+      "path": "assets/anime/renew.webp",
+      "bytes": 65174,
+      "sha256": "912f928ea6b28f42ca2c641cf9af70095663cd2d929426510702422c7b527635"
+    },
+    {
+      "path": "assets/anime/rider.webp",
+      "bytes": 57884,
+      "sha256": "2b9bfa3c0587842c027c17939401210d2c7c4f998fae8b3599059f92b7a99987"
+    },
+    {
+      "path": "assets/anime/sentinel.webp",
+      "bytes": 58218,
+      "sha256": "db08eb8e4eb6f54230a3049c501cac92d8d42a00e90832c17692b149350728bb"
+    },
+    {
+      "path": "assets/anime/sheep.webp",
+      "bytes": 52516,
+      "sha256": "9201eabf1f2b47bc04d601adeb8aa192c0f55feb755f566cd29f5616f4f0e770"
+    },
+    {
+      "path": "assets/anime/shield.webp",
+      "bytes": 53254,
+      "sha256": "82e13d64d449f6939d103e5400c0e751e32383519b60afed3a64a3933e4e9ca1"
+    },
+    {
+      "path": "assets/anime/silence.webp",
+      "bytes": 53028,
+      "sha256": "a5f7a524e953430d1ae510c84f0c940ea55e8e15b072dc1ccb201da4a2bb3968"
+    },
+    {
+      "path": "assets/anime/skeleton.webp",
+      "bytes": 48314,
+      "sha256": "d2307f6abe4682fe14f6678b57c75824585753b3926e2a6a029582dcc6496c69"
+    },
+    {
+      "path": "assets/anime/solaris.webp",
+      "bytes": 59532,
+      "sha256": "4edd2a4947da0a4d0b130b89b1f0ca844ca28a7d3fc7af218b8dcd988108b142"
+    },
+    {
+      "path": "assets/anime/sources/01-apprentices.png",
+      "bytes": 2806030,
+      "sha256": "29a440a2ab5d4055b4907d58cf8aedff8d9a84b5b0699c7af4ddc339a9a0d495"
+    },
+    {
+      "path": "assets/anime/sources/02-vanguards.png",
+      "bytes": 2908158,
+      "sha256": "40fbfd125d8a93e10283173f80ba2e44eac2ecef6059edbb97723874171ccb31"
+    },
+    {
+      "path": "assets/anime/sources/03-guardians.png",
+      "bytes": 2884994,
+      "sha256": "811ddd3bd479eb023ed61cf895625075f7fe16c6a700ca7fef86463f2b6dd1ec"
+    },
+    {
+      "path": "assets/anime/sources/04-legends.png",
+      "bytes": 3022292,
+      "sha256": "73c2b88602354fa6a62909f090fb5c1de4bc37246e97d392ff5c3fae70dc64bb"
+    },
+    {
+      "path": "assets/anime/sources/05-elements.png",
+      "bytes": 2893255,
+      "sha256": "5a41c8bc237834766be09ba37d562eb317ee230e2852d30f63d62229499472a6"
+    },
+    {
+      "path": "assets/anime/sources/06-rituals.png",
+      "bytes": 2878308,
+      "sha256": "6daee904a58ba5fc70753d28af4cbf90c69ae577c77c7a0bbf35be4e343d8bf6"
+    },
+    {
+      "path": "assets/anime/sources/07-relics.png",
+      "bytes": 2847198,
+      "sha256": "200430a49cadd79ac49e54a36308da96e668baacce8ede631af3066d67ec191f"
+    },
+    {
+      "path": "assets/anime/sources/08-companions.png",
+      "bytes": 2834617,
+      "sha256": "9bc11ec5669a508bb1d0065f14b0dc179218e3fc90c39d7c644c6f5be3c725d5"
+    },
+    {
+      "path": "assets/anime/spark.webp",
+      "bytes": 52820,
+      "sha256": "4cb970bb7d19c28a61c76022e9f422939dc17bdbfbde100cc44f541c22bcac66"
+    },
+    {
+      "path": "assets/anime/spider.webp",
+      "bytes": 57752,
+      "sha256": "de67d24cd33339a352a5cca34b9f45dbb40588ef4b250509972e53d0581690e6"
+    },
+    {
+      "path": "assets/anime/spiritwolf.webp",
+      "bytes": 54778,
+      "sha256": "23f5db08cd106a8202348e18a6a2beefd8b8b552e069f1340b480d1cc445114f"
+    },
+    {
+      "path": "assets/anime/squire.webp",
+      "bytes": 50986,
+      "sha256": "ddb2a5d5b8eda55c8e1ee818b9c99d79bb311411282238ce5b07cb0c65a9b819"
+    },
+    {
+      "path": "assets/anime/stone.webp",
+      "bytes": 59810,
+      "sha256": "e527b0cba10511d196b5f10de523d3a48740f38fb9755aa6feeab74422fa69c4"
+    },
+    {
+      "path": "assets/anime/storm.webp",
+      "bytes": 63620,
+      "sha256": "16af970410976ed03fbae54f4ecc6131a3cb0bf7ed30fde5538134de91f4d498"
+    },
+    {
+      "path": "assets/anime/sunblade.webp",
+      "bytes": 57610,
+      "sha256": "0d1308197eecc984ed37658ae0671e29f7da0083539d23c1d46078b945d2abde"
+    },
+    {
+      "path": "assets/anime/thorn.webp",
+      "bytes": 65396,
+      "sha256": "71cb0f31ef137794e4ddb745dac690e18e1b1ecae71004e8457f77701784ad91"
+    },
+    {
+      "path": "assets/anime/titan.webp",
+      "bytes": 61220,
+      "sha256": "b0132b2619e17a113293e4f113e41c99b63f035554481c6d13d6cd74fb1f8cfa"
+    },
+    {
+      "path": "assets/anime/treant.webp",
+      "bytes": 68528,
+      "sha256": "7c878f285c453cd48a47e85773c6a4576637801183942c1fd6f388def0309136"
+    },
+    {
+      "path": "assets/anime/wisdom.webp",
+      "bytes": 63272,
+      "sha256": "542f5d654f341a81e04cd88bbe9db325170a42f1de357e5289827dbcb90df946"
+    },
+    {
+      "path": "assets/anime/wisp.webp",
+      "bytes": 50656,
+      "sha256": "db368e0ebd095f15787ccfe9b06b2fbb71a48f912b6323409e22270cc4b3bbf1"
+    },
+    {
+      "path": "assets/anime/wolf.webp",
+      "bytes": 49864,
+      "sha256": "b0d61e04314b40f7e5350c03846a1aeada011817d62a73eb293a6e76fba9d071"
+    },
+    {
+      "path": "assets/anime/wolves.webp",
+      "bytes": 62026,
+      "sha256": "024b914d1962c73171472d58b1e4593654a415a834fd0b5b2327f544e4b39573"
+    },
+    {
+      "path": "assets/atelier/board-0.webp",
+      "bytes": 231668,
+      "sha256": "161764afef94e81ff4330e0593274e77e845ef6184ad2a1d34a3f80e40afabaf"
+    },
+    {
+      "path": "assets/atelier/board-1.webp",
+      "bytes": 230506,
+      "sha256": "2746f2c0523b9abbbae026f97703126fb581073484a3a7cc0c9a1d59da51b3b0"
+    },
+    {
+      "path": "assets/atelier/board-2.webp",
+      "bytes": 231264,
+      "sha256": "7d2ba13ec74e63687cb18222eb8fbd70ee2f39c907615d5b1d7d95f389db9a2b"
+    },
+    {
+      "path": "assets/atelier/board-3.webp",
+      "bytes": 231094,
+      "sha256": "5d4ead32673a68576e2564042d4cab6ef815a0fbf62e402b70f4bdfe21a20cef"
+    },
+    {
+      "path": "assets/atelier/board-4.webp",
+      "bytes": 231054,
+      "sha256": "712ced0856140da87556fb27c15ecd6fcb8f10647c5ccc89956834f5d3f02ff3"
+    },
+    {
+      "path": "assets/atelier/board-core.webp",
+      "bytes": 116006,
+      "sha256": "a06ca3b6c0b5449b0fd9faad77a42c90db9775687134f03b97f4c1ea7ed45e43"
+    },
+    {
+      "path": "assets/atelier/board.webp",
+      "bytes": 243904,
+      "sha256": "1653bb8258ed8469e02ce3c96619ad0c943f96b5ee8b32b1253afa8e1e03c427"
+    },
+    {
+      "path": "assets/atelier/building-brewery.webp",
+      "bytes": 47966,
+      "sha256": "e8208990715dba3456ed5ae9936568ecb537262be2a51646a61b301b79d9c562"
+    },
+    {
+      "path": "assets/atelier/building-forge.webp",
+      "bytes": 43758,
+      "sha256": "14ba2344fbc172cbe08f5cd164481ea80cd1543fe70dbfef814c09ac1224c233"
+    },
+    {
+      "path": "assets/atelier/building-mine.webp",
+      "bytes": 54690,
+      "sha256": "c3bc5622d91afe52c4e87e699d33ad3a97630da0ba74f4ef7d89f80380430798"
+    },
+    {
+      "path": "assets/atelier/building-observatory.webp",
+      "bytes": 49710,
+      "sha256": "bdbbb22a2c9a4bdecd81a8ee43492a976f7b2d4b9dc7218884bfa9f83bcb26a5"
+    },
+    {
+      "path": "assets/atelier/frame-hero.webp",
+      "bytes": 22184,
+      "sha256": "5db7e2f4689abfd83a2577fabf9a72780ca3548680e988c9e7f2638890003759"
+    },
+    {
+      "path": "assets/atelier/frame-legendary.webp",
+      "bytes": 35722,
+      "sha256": "8a8264bdc9b9e430b633cf20f85b490142bd0f205a51c87e42104e3c0a6a60d6"
+    },
+    {
+      "path": "assets/atelier/frame-minion.webp",
+      "bytes": 30810,
+      "sha256": "eae438696c492163d8c56d869ee2f2356d25b9553e05378bec687bbb85364fe3"
+    },
+    {
+      "path": "assets/atelier/frame-nature.webp",
+      "bytes": 31846,
+      "sha256": "a7a5ec4f31bdc19df04c3f8cf1b4d9353df9a6d187912e370c05429ddf831fe5"
+    },
+    {
+      "path": "assets/atelier/frame-spell.webp",
+      "bytes": 31916,
+      "sha256": "2d8f27b3d0635ea21f595e79c98ae53fcf857d407da1f5992146852ca982b66c"
+    },
+    {
+      "path": "assets/atelier/frame-weapon.webp",
+      "bytes": 25444,
+      "sha256": "7b13ccea60f2a370ec258397590564e005c65e8bf994a2d02176db5af10fa10b"
+    },
+    {
+      "path": "assets/atelier/lobby.webp",
+      "bytes": 188274,
+      "sha256": "68d929876b2628b3f934ca419c13b415ec9551079acfa214f6c881460b423906"
+    },
+    {
+      "path": "assets/atelier/table-surface.webp",
+      "bytes": 15258,
+      "sha256": "1264ed87b762d488ed0e35dc8f382ec3dba484cce878caa24543814f40f9b54f"
+    },
+    {
+      "path": "assets/parchment.jpg",
+      "bytes": 26354,
+      "sha256": "ec6c86291b0a1a73a0c06a1cd3cea8814dbb4ccac723c87b0292eb815a62322e"
+    },
+    {
+      "path": "assets/references/world/approved-tavern.png",
+      "bytes": 3101778,
+      "sha256": "714f2dd77ef93d707f1dcf4b1dc43a761e0b98afbc967921e3cc591f2133fb4f"
+    },
+    {
+      "path": "assets/references/world/approved-village.png",
+      "bytes": 3002714,
+      "sha256": "9d9ec6d407d7263223df36cce43c52295ecbd7a8c97d44ec75e2b26faad4232d"
+    },
+    {
+      "path": "assets/stone.jpg",
+      "bytes": 9147,
+      "sha256": "0a6e6faa688d2cf2ce6f226ef646d413e6516fd8f6027715e10f8a880536671f"
+    },
+    {
+      "path": "assets/windborne/architecture-contact.jpg",
+      "bytes": 125628,
+      "sha256": "dcc508b1a9f5cd1afc4532e5bb4be4ff4c7255c97709311bd725490ab3c34c70"
+    },
+    {
+      "path": "assets/windborne/board.webp",
+      "bytes": 49250,
+      "sha256": "f5d1cf7bd844efebb227e855b8eb7f34afbe2c153eece48a8f7d8f99fe716f7c"
+    },
+    {
+      "path": "assets/windborne/building-brewery.webp",
+      "bytes": 79978,
+      "sha256": "8bc3836209a8dc805bcaf64c1e737887cc5c2dc06947f3fe6af1e78fdaebf0a2"
+    },
+    {
+      "path": "assets/windborne/building-forge.webp",
+      "bytes": 38354,
+      "sha256": "9910d85606aef0eed4b481cdb160a02ceceecf1402668b29dc46f2b95ee38761"
+    },
+    {
+      "path": "assets/windborne/building-mine.webp",
+      "bytes": 45578,
+      "sha256": "9587ee46c6fe2e53a0e50d511173f2cac95267d50a51c99f1a167626d7769276"
+    },
+    {
+      "path": "assets/windborne/building-observatory.webp",
+      "bytes": 51774,
+      "sha256": "9584e3155b8212c48b0f7cc4e41707343f03ca5025fbb6ac123e70d657e2e051"
+    },
+    {
+      "path": "assets/windborne/horizon.webp",
+      "bytes": 65716,
+      "sha256": "a544d5c55d0d2c35c88c5810d2cab87494effbd5e6b9d9b23085f7ff7786b05c"
+    },
+    {
+      "path": "assets/windborne/leaf-seal.svg",
+      "bytes": 335,
+      "sha256": "1dd8fadb2dba6d3b6509312b666e502ae253650277923beb598d9c909e34359d"
+    },
+    {
+      "path": "assets/windborne/manifest.json",
+      "bytes": 5543,
+      "sha256": "2bd5ab8c89fb55f258b49d55b70c1d84c73675852a60fa72853e48450c702999"
+    },
+    {
+      "path": "assets/windborne/paper.webp",
+      "bytes": 3694,
+      "sha256": "e1466ed03f53b3faa1c80910c8588a54c8e84e1cdab45741344ae58003a5335c"
+    },
+    {
+      "path": "assets/windborne/wood.webp",
+      "bytes": 5272,
+      "sha256": "471864d3640b064e45bf60f255e57bb1ca57632d02c97cb6357b022d94996476"
+    },
+    {
+      "path": "assets/wood.jpg",
+      "bytes": 55159,
+      "sha256": "17731e87fbd6af0ba11a788072052f56fa892a245ef2215e3e5b1ebc338d89ac"
+    },
+    {
+      "path": "build.py",
+      "bytes": 1970,
+      "sha256": "90ed62f7be644575f02bb8b9608b6d1c9ff071b2196ec087985d62fe2082d53d"
+    },
+    {
+      "path": "docs/ANIME_V06.md",
+      "bytes": 6670,
+      "sha256": "9a5cc2ebd82766bc4d8b9072d0937dc22bda1eedc53c81b831cb7a274e71ae92"
+    },
+    {
+      "path": "docs/ASSETS.md",
+      "bytes": 11190,
+      "sha256": "025e65c4a750646320507eb3e7ef0e7a160e72dd96ae051b4644a7688c4d0bfd"
+    },
+    {
+      "path": "docs/CODEX_HANDOFF.md",
+      "bytes": 6853,
+      "sha256": "536dc5f74e055fd3f1f9523e14acb0c9607b1ef8120733bdae078a7d281ccff5"
+    },
+    {
+      "path": "package.json",
+      "bytes": 947,
+      "sha256": "7d84c75e8d271a97ee43257e3180b272bcb69d320a3994afee61e1e1b169d454"
+    },
+    {
+      "path": "preview/Emberfall_Windborne_Battle.jpg",
+      "bytes": 424156,
+      "sha256": "81d0472f25849aaef29e5ac19216965ff84c8520386bcd8931455a41c202cb81"
+    },
+    {
+      "path": "preview/Emberfall_Windborne_Landscape.jpg",
+      "bytes": 103313,
+      "sha256": "c5ea673a4d7ccb5bdd1788335eefbff76e039e0d18249add53bad17677f5eaa5"
+    },
+    {
+      "path": "preview/Emberfall_Windborne_Lobby.jpg",
+      "bytes": 308630,
+      "sha256": "2cd1282c01705c3a1c72b6d25a6dddb6db8005fa4b48e63ef9e585e5644df45a"
+    },
+    {
+      "path": "preview/Emberfall_Windborne_Portrait.jpg",
+      "bytes": 109923,
+      "sha256": "6b8826f51dbbf5868cfe9587919546953b5053eb6e404697b2a6d66650ab8996"
+    },
+    {
+      "path": "requirements-art.txt",
+      "bytes": 188,
+      "sha256": "134f3049d58623f1a7995cdce30054d096b2faa475a7d334b5a258045940fec4"
+    },
+    {
+      "path": "requirements-test.txt",
+      "bytes": 96,
+      "sha256": "cc5467e3f23b37b93751cdd3217fe1b47b52492abada6dfebf2c28fcc1510648"
+    },
+    {
+      "path": "src/anime-assets.js",
+      "bytes": 4284140,
+      "sha256": "efc020648bc522352b77d8d37f28daa29f89b48a15349e1fe815589c8a1f8614"
+    },
+    {
+      "path": "src/anime-ui.js",
+      "bytes": 3110,
+      "sha256": "f3caed42e5cc65b42ffc9de2acfe4925f41c24068f8d13c9c1f174148278e9ea"
+    },
+    {
+      "path": "src/anime.css",
+      "bytes": 2767,
+      "sha256": "2bbd310757d2cb1ec07be4d96c8a6e945532713489ce81b5d1ed2b645b253ae6"
+    },
+    {
+      "path": "src/art.js",
+      "bytes": 36399,
+      "sha256": "5456915535b6706b342c5c25efb4fef5a20fd369b78c95241b779a1be138656a"
+    },
+    {
+      "path": "src/atelier-art.js",
+      "bytes": 3058,
+      "sha256": "aea92bbd430f3746d38c2f52ee40f372968a1fb9f258a253080b6732e42ee56c"
+    },
+    {
+      "path": "src/atelier-assets.js",
+      "bytes": 2791649,
+      "sha256": "a243d160c3617beeb63901efba4ba994e49565b318b1e176bf8c92fab3e674ca"
+    },
+    {
+      "path": "src/atelier-ui.js",
+      "bytes": 3426,
+      "sha256": "157fed0aa9527098bd711544d0d9a3a6a1e84cc9ccbbd79322550e7f5bb0559e"
+    },
+    {
+      "path": "src/atelier-world.js",
+      "bytes": 8395,
+      "sha256": "836c921c4c17586df036b3ce532cfe2f727cf4fcacc693f610187db3545e0dc5"
+    },
+    {
+      "path": "src/atelier.css",
+      "bytes": 26186,
+      "sha256": "ff5533b2f0bc622d7c341c6e3eea3257b1f92c8760d3d8b9cf41f175ea75b97f"
+    },
+    {
+      "path": "src/backdrops.js",
+      "bytes": 477404,
+      "sha256": "7071fa9d0270d4defe10faf7bed5652ca4e9845c8567a6c62bb7695f498901cd"
+    },
+    {
+      "path": "src/data.js",
+      "bytes": 12337,
+      "sha256": "d1d5aac78750c43b4c688cec5644ad8f3e9ebdec4c9a51e32ee1ab79449b8ff0"
+    },
+    {
+      "path": "src/effects.js",
+      "bytes": 32342,
+      "sha256": "3422cc10b2eb5e8544a45e86f9b48b9db8e33ac6812f979e8cbff3620fabd29f"
+    },
+    {
+      "path": "src/engine.js",
+      "bytes": 20526,
+      "sha256": "b90e715cb4550429296d4bf9b4c426e287d578632725b7b16d442b4ce4e68acd"
+    },
+    {
+      "path": "src/enhancements.js",
+      "bytes": 8452,
+      "sha256": "15dd4f7eb3f481a943fb7cd595438b0c9f225636633b93de201973f77fda3778"
+    },
+    {
+      "path": "src/materials.js",
+      "bytes": 121096,
+      "sha256": "518f87655683eddbb6364cb3deb18426c7cc4b5556b831282c009609040552ba"
+    },
+    {
+      "path": "src/mobile-ui.js",
+      "bytes": 16559,
+      "sha256": "ec1b84aeb885ce06d55dd864a8fa106f01ef26dd5d3d0ae9e14f52931663de31"
+    },
+    {
+      "path": "src/mobile-view.js",
+      "bytes": 8427,
+      "sha256": "ebe38eff8d2b988dbc34d5c0e6572c5d883b6f7cd874d88b5e0947dbeac441d7"
+    },
+    {
+      "path": "src/mobile-world.js",
+      "bytes": 249,
+      "sha256": "23222a5ae59fa8791c8ff32b7dfd569c756d6657936968db1671be0f2a4c6542"
+    },
+    {
+      "path": "src/mobile.css",
+      "bytes": 42320,
+      "sha256": "1e1bbc4b587a453eaf2401a65345fa0bcb1475861a01cf49855b547a73e8b193"
+    },
+    {
+      "path": "src/portraits.js",
+      "bytes": 203846,
+      "sha256": "c15758d521dc4cf0ab40b47eccfa5ddcf2be93257ba58832deb73f15f0eb4349"
+    },
+    {
+      "path": "src/refinement.css",
+      "bytes": 47435,
+      "sha256": "ae8d46d83417e30c77a88ea29b9d66aa63747499fe1ae2a7d2bfea0ca118c5ba"
+    },
+    {
+      "path": "src/scene.js",
+      "bytes": 16182,
+      "sha256": "8913b311c07fdf91f018c704d123b832cd2ea0df366692029dae9fb566c784d9"
+    },
+    {
+      "path": "src/style.css",
+      "bytes": 43847,
+      "sha256": "101689976ef9e9ee013a2047997251f9cdf9b17e74a28ae8485f6808011fad5e"
+    },
+    {
+      "path": "src/tavern-art.js",
+      "bytes": 26561,
+      "sha256": "7c0360fc33aeca25714acd1e984808ac6f6d710992a09efcd6d560ecc13a3c9d"
+    },
+    {
+      "path": "src/tavern-ui.js",
+      "bytes": 3711,
+      "sha256": "4eff82a74be288d0de63c8aff9c323655f2ee30d53c5725f4e766f2009e008f0"
+    },
+    {
+      "path": "src/tavern-world.js",
+      "bytes": 16593,
+      "sha256": "7c51ca0c0935a7738e61b7f7cef58108b185baafb2c3ba2c81aa7919cccc8d9f"
+    },
+    {
+      "path": "src/tavern.css",
+      "bytes": 47661,
+      "sha256": "89de3f7741beea7d551900f9f3566e4cef7c7eac65044b7350d98a72e13bd628"
+    },
+    {
+      "path": "src/template.html",
+      "bytes": 9786,
+      "sha256": "549902a4f8b233e8f0c52c7247eee213125ac3adee20757ea33f39a429ba504a"
+    },
+    {
+      "path": "src/ui.js",
+      "bytes": 47170,
+      "sha256": "dfcd308f50efefa2d0c1a5712e13e1f1e16152f26a4019bd03a25d0e55f737f6"
+    },
+    {
+      "path": "src/windborne-ui.js",
+      "bytes": 4927,
+      "sha256": "49d5ed5a0e163375f39416d44f8bbbad74e1cb3c33e70ef09188151b816279e2"
+    },
+    {
+      "path": "src/windborne.css",
+      "bytes": 24363,
+      "sha256": "20ecdcb6151951acc330a71bcb10f9bb9bab6a198065d4bf17ca5c3aca631bd6"
+    },
+    {
+      "path": "src/world-assets.js",
+      "bytes": 453732,
+      "sha256": "74ee6152b183c4027758a6121f256bff2a3ada453a22ccf09db631b6bdb7d246"
+    },
+    {
+      "path": "tests/anime/additional.log",
+      "bytes": 612,
+      "sha256": "82ec0daedcf96470bce049f8f5da4a243ddc8c7f54a0986d6b25193592f01b4e"
+    },
+    {
+      "path": "tests/anime/asset-tests.log",
+      "bytes": 2190,
+      "sha256": "190abf9b200c651b8c3137b2d2a277b6458bcf8db587536767288867095ea2e2"
+    },
+    {
+      "path": "tests/anime/browser-regression.log",
+      "bytes": 3434,
+      "sha256": "3f3489e8ae862aa96a017d8fe3c5f7c96b698fc2c3ee2857a14a535c4c89ccae"
+    },
+    {
+      "path": "tests/anime/integration-results.json",
+      "bytes": 5458,
+      "sha256": "cef4a1029aa92c5d175b4d466b209adf8632fe1711a875f2c3b2180527ee92a6"
+    },
+    {
+      "path": "tests/anime/integration.log",
+      "bytes": 1435,
+      "sha256": "292da5e88adba20cb4a5ef2ee55115edc91ba420e2f781b28316c6535c614650"
+    },
+    {
+      "path": "tests/anime/node-tests.log",
+      "bytes": 8152,
+      "sha256": "3cff15ca7934a9cafc1ae5e23fb794bc89a03a461915f357ab2d5286beadf7b6"
+    },
+    {
+      "path": "tests/anime/origin-probe.json",
+      "bytes": 478,
+      "sha256": "337be247645325382e799103787e47ffa5d30525100ae351a9be949ebf10fa10"
+    },
+    {
+      "path": "tests/anime/preview-errors.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "tests/anime/rebuild.json",
+      "bytes": 226,
+      "sha256": "4c7bceab12d479877602e8aa75d0446aa7ca8b7c1ada4238508c7ee387cf03f3"
+    },
+    {
+      "path": "tests/anime/rules-original-integrity.json",
+      "bytes": 446,
+      "sha256": "eaf7c38b2777ad54ef293ed1de958b90063fcefbe59e411fa0b9741f999e7e82"
+    },
+    {
+      "path": "tests/anime/syntax.json",
+      "bytes": 39,
+      "sha256": "0dd0f8dc52dd76adc5febd2de53f2fb65e4d53d62fe47ec6d7e83e0d5baa51b2"
+    },
+    {
+      "path": "tests/anime_assets.test.cjs",
+      "bytes": 3891,
+      "sha256": "9c27852668437ea564c290d783ef513f300a9a9103f60e05ddaf21cf7da07e0a"
+    },
+    {
+      "path": "tests/anime_origin_probe.py",
+      "bytes": 1937,
+      "sha256": "5ce217c5a531ba77c9ce974751a5dbd5f51c85bc31e7fa8246958cf517e88cff"
+    },
+    {
+      "path": "tests/anime_preview.py",
+      "bytes": 2122,
+      "sha256": "316f85e3a313a8a82dd8560e2e7cd10ed17bdccc014760a50447c13b45ccfa83"
+    },
+    {
+      "path": "tests/browser_anime.py",
+      "bytes": 9539,
+      "sha256": "74d151b4e379e4b095758dd0945cac2d8a3152a891d20aebc54a394579293958"
+    },
+    {
+      "path": "tests/browser_pocket.py",
+      "bytes": 23324,
+      "sha256": "54db902e9bc75e9347f21aefb3ebb279b1941788510958514db94754035e0976"
+    },
+    {
+      "path": "tests/browser_windborne.py",
+      "bytes": 7389,
+      "sha256": "d468fb92aec8bf3c90c86cfb49eb82cf448c409da46db556466c71697bc73b1e"
+    },
+    {
+      "path": "tests/engine.test.cjs",
+      "bytes": 12033,
+      "sha256": "f6b17fb5b5a0336a2fb6cfb6febde8ca3b8138a92d8b19baf8748addc2a61d5f"
+    },
+    {
+      "path": "tests/pocket/additional-results.json",
+      "bytes": 880,
+      "sha256": "8af7b0dda9aabc1cd644d75e5ec524c0417c2d741d8bcbe6b77d04315df7a757"
+    },
+    {
+      "path": "tests/pocket/browser-results.json",
+      "bytes": 5858,
+      "sha256": "903c230382046d8870f643f95573452f4e242cd4dc237a1975da6cae7c5a0107"
+    },
+    {
+      "path": "tests/pocket_additional.py",
+      "bytes": 4933,
+      "sha256": "3f372f7e35af0cc5acb3410a412a2d147aef3598d62a13d9a198a198379fd928"
+    },
+    {
+      "path": "tests/preview_windborne.py",
+      "bytes": 2249,
+      "sha256": "89b6fb6531abfe7cf9aa55a5e8f7df306ecff221140f3a51460078ae832da24c"
+    },
+    {
+      "path": "tests/run_release_checks.py",
+      "bytes": 1129,
+      "sha256": "70191e7e0078443e04c82e8d9447ac4da4b0fcc4566bd7810d9c07c55a701dac"
+    },
+    {
+      "path": "tests/windborne/anime-release.log",
+      "bytes": 1435,
+      "sha256": "292da5e88adba20cb4a5ef2ee55115edc91ba420e2f781b28316c6535c614650"
+    },
+    {
+      "path": "tests/windborne/archive-build.json",
+      "bytes": 419,
+      "sha256": "daa452c13a535f67fc49f1754edde9e0fc11826389823807535b96c8ea44acec"
+    },
+    {
+      "path": "tests/windborne/card-assets-release.log",
+      "bytes": 2193,
+      "sha256": "494d1d9978619109b8d62271277b00f39046d29b924a7c9bfc87d621495e7a8d"
+    },
+    {
+      "path": "tests/windborne/card-assets.log",
+      "bytes": 2193,
+      "sha256": "0be6ec6a5cfd1b7cba9f6c863ffc7385251919cff357d09ee9857a191271f9b8"
+    },
+    {
+      "path": "tests/windborne/engine-release.log",
+      "bytes": 6072,
+      "sha256": "51163f9bb738c2e67f1532aa8c9fa51e09bc4693c6330fde7d878d4920421103"
+    },
+    {
+      "path": "tests/windborne/integration.json",
+      "bytes": 2201,
+      "sha256": "f9d0d896ea7d9248f0f7ccdcb81ee47249bf50a09c335c5f207b42d8179d1b86"
+    },
+    {
+      "path": "tests/windborne/pocket-extra-release.log",
+      "bytes": 612,
+      "sha256": "82ec0daedcf96470bce049f8f5da4a243ddc8c7f54a0986d6b25193592f01b4e"
+    },
+    {
+      "path": "tests/windborne/pocket-final.log",
+      "bytes": 3434,
+      "sha256": "3f3489e8ae862aa96a017d8fe3c5f7c96b698fc2c3ee2857a14a535c4c89ccae"
+    },
+    {
+      "path": "tests/windborne/pocket-run.log",
+      "bytes": 3434,
+      "sha256": "3f3489e8ae862aa96a017d8fe3c5f7c96b698fc2c3ee2857a14a535c4c89ccae"
+    },
+    {
+      "path": "tests/windborne/preview-errors.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "tests/windborne/rebuild.json",
+      "bytes": 1512,
+      "sha256": "d7fdc8d93dfdfbe934328355a8507af4408615fb307d0451b882f1c840d56e59"
+    },
+    {
+      "path": "tests/windborne/release-run.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/windborne/release-sha.json",
+      "bytes": 600,
+      "sha256": "df85ed8c363f496f5a00bc08d475960338e13a5f5650e9b26cd04f39224e82f5"
+    },
+    {
+      "path": "tests/windborne/rules.log",
+      "bytes": 6073,
+      "sha256": "94679b27cd791ec841a1bdb0282540db6d602afd35d6c493d2dfbf73f16cf618"
+    },
+    {
+      "path": "tests/windborne/suite-status.json",
+      "bytes": 442,
+      "sha256": "ba21defd61690354d3166af27c18ace43801e106d934a36781a052d53972e0a8"
+    },
+    {
+      "path": "tests/windborne/unchanged-content.json",
+      "bytes": 396,
+      "sha256": "87e0e5c8f5c44c5383dc803f1058ccfebeedc09252283f684b496924abda0003"
+    },
+    {
+      "path": "tests/windborne/world-release.log",
+      "bytes": 1280,
+      "sha256": "810372bbf10a1d9bb4f7723eef1d0727572dfc4b7554b619be135e813ace2f4a"
+    },
+    {
+      "path": "tools/art_contact_sheet.py",
+      "bytes": 1956,
+      "sha256": "e4c7a876d39b46eb7a54e4fd123d61b39d93d1e96559b197ae51d7ebcd265658"
+    },
+    {
+      "path": "tools/build_anime_assets.py",
+      "bytes": 3755,
+      "sha256": "caffeeba73d753c0e574a71c5b0ef2ea80f62261f815f9d45e5b809a048261e5"
+    },
+    {
+      "path": "tools/build_world_assets.py",
+      "bytes": 7511,
+      "sha256": "323847986c81b6a077eb996efbfd4d1756890f0ee64047f0e7bb02a0ea95eefc"
+    },
+    {
+      "path": "tools/prepare_anime_runtime.py",
+      "bytes": 1816,
+      "sha256": "f4c0ca0d03b6a8b2374739481412b9989b452dec0d1aeb7be942d860c2e3d142"
+    },
+    {
+      "path": "tools/verify_handoff.py",
+      "bytes": 2638,
+      "sha256": "286ace35057a35d4dfa11001772f1f9a9c3cbb4cd5b85f1116594216f01b2cfa"
+    }
+  ]
+}

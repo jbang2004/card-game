@@ -2,31 +2,31 @@
   {
     "suite": "engine",
     "exitCode": 0,
-    "seconds": 0.32
+    "seconds": 0.39
   },
   {
     "suite": "card-assets",
     "exitCode": 0,
-    "seconds": 0.32
+    "seconds": 0.51
   },
   {
     "suite": "pocket",
     "exitCode": 0,
-    "seconds": 106.66
+    "seconds": 104.64
   },
   {
     "suite": "pocket-extra",
     "exitCode": 0,
-    "seconds": 12.85
+    "seconds": 11.46
   },
   {
     "suite": "anime",
     "exitCode": 0,
-    "seconds": 29.77
+    "seconds": 27.43
   },
   {
     "suite": "world",
     "exitCode": 0,
-    "seconds": 14.63
+    "seconds": 12.92
   }
 ]

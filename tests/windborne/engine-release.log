@@ -1,220 +1,43 @@
-TAP version 13
-# Subtest: 48 collectible cards, 8 tokens; all three 30-card decks valid
-ok 1 - 48 collectible cards, 8 tokens; all three 30-card decks valid
-  ---
-  duration_ms: 1.139892
-  type: 'test'
-  ...
-# Subtest: mulligan, initial draw and opponent coin
-ok 2 - mulligan, initial draw and opponent coin
-  ---
-  duration_ms: 0.922009
-  type: 'test'
-  ...
-# Subtest: mana refresh and cap
-ok 3 - mana refresh and cap
-  ---
-  duration_ms: 0.421476
-  type: 'test'
-  ...
-# Subtest: invalid target and insufficient mana are atomic rejections
-ok 4 - invalid target and insufficient mana are atomic rejections
-  ---
-  duration_ms: 0.502476
-  type: 'test'
-  ...
-# Subtest: summon sickness prevents attacking
-ok 5 - summon sickness prevents attacking
-  ---
-  duration_ms: 0.993085
-  type: 'test'
-  ...
-# Subtest: rush permits minion combat, never same-turn face attacks
-ok 6 - rush permits minion combat, never same-turn face attacks
-  ---
-  duration_ms: 0.420695
-  type: 'test'
-  ...
-# Subtest: charge can attack heroes immediately
-ok 7 - charge can attack heroes immediately
-  ---
-  duration_ms: 0.248649
-  type: 'test'
-  ...
-# Subtest: taunt must be attacked; hidden taunt does not restrict targets
-ok 8 - taunt must be attacked; hidden taunt does not restrict targets
-  ---
-  duration_ms: 0.649675
-  type: 'test'
-  ...
-# Subtest: divine shield blocks poison and damage, then disappears
-ok 9 - divine shield blocks poison and damage, then disappears
-  ---
-  duration_ms: 0.555235
-  type: 'test'
-  ...
-# Subtest: combat damage is simultaneous
-ok 10 - combat damage is simultaneous
-  ---
-  duration_ms: 0.481174
-  type: 'test'
-  ...
-# Subtest: windfury allows exactly two attacks
-ok 11 - windfury allows exactly two attacks
-  ---
-  duration_ms: 0.252294
-  type: 'test'
-  ...
-# Subtest: stealth blocks enemy targeting, not friendly buffs or AoE
-ok 12 - stealth blocks enemy targeting, not friendly buffs or AoE
-  ---
-  duration_ms: 0.290953
-  type: 'test'
-  ...
-# Subtest: lifesteal heals for damage dealt and shields block it
-ok 13 - lifesteal heals for damage dealt and shields block it
-  ---
-  duration_ms: 0.26258
-  type: 'test'
-  ...
-# Subtest: deathrattles trigger after dead minions free board slots
-ok 14 - deathrattles trigger after dead minions free board slots
-  ---
-  duration_ms: 0.166337
-  type: 'test'
-  ...
-# Subtest: reborn fires once, at 1 health, with fresh summon sickness
-ok 15 - reborn fires once, at 1 health, with fresh summon sickness
-  ---
-  duration_ms: 0.137174
-  type: 'test'
-  ...
-# Subtest: spell damage stacks with relic, but not hero powers
-ok 16 - spell damage stacks with relic, but not hero powers
-  ---
-  duration_ms: 0.233798
-  type: 'test'
-  ...
-# Subtest: freeze blocks next own turn and thaws at own end
-ok 17 - freeze blocks next own turn and thaws at own end
-  ---
-  duration_ms: 0.177713
-  type: 'test'
-  ...
-# Subtest: silence removes enchantments, taunt and deathrattle
-ok 18 - silence removes enchantments, taunt and deathrattle
-  ---
-  duration_ms: 0.617447
-  type: 'test'
-  ...
-# Subtest: polymorph resets stats and keywords without a deathrattle
-ok 19 - polymorph resets stats and keywords without a deathrattle
-  ---
-  duration_ms: 0.2025
-  type: 'test'
-  ...
-# Subtest: temporary attack expires at own turn end
-ok 20 - temporary attack expires at own turn end
-  ---
-  duration_ms: 0.176522
-  type: 'test'
-  ...
-# Subtest: weapon enables hero attack and loses durability
-ok 21 - weapon enables hero attack and loses durability
-  ---
-  duration_ms: 0.187328
-  type: 'test'
-  ...
-# Subtest: minions retaliate against attacking heroes
-ok 22 - minions retaliate against attacking heroes
-  ---
-  duration_ms: 0.125847
-  type: 'test'
-  ...
-# Subtest: secret redirects incoming face attack to summoned guard
-ok 23 - secret redirects incoming face attack to summoned guard
-  ---
-  duration_ms: 0.206227
-  type: 'test'
-  ...
-# Subtest: duplicate secrets are rejected before spending mana
-ok 24 - duplicate secrets are rejected before spending mana
-  ---
-  duration_ms: 0.116022
-  type: 'test'
-  ...
-# Subtest: discover requires choice and grants exactly one card
-ok 25 - discover requires choice and grants exactly one card
-  ---
-  duration_ms: 0.190803
-  type: 'test'
-  ...
-# Subtest: hand cap burns; empty deck causes escalating fatigue
-ok 26 - hand cap burns; empty deck causes escalating fatigue
-  ---
-  duration_ms: 0.244062
-  type: 'test'
-  ...
-# Subtest: board cap prevents spending a minion card
-ok 27 - board cap prevents spending a minion card
-  ---
-  duration_ms: 0.138776
-  type: 'test'
-  ...
-# Subtest: each boss transitions exactly once at half health
-ok 28 - each boss transitions exactly once at half health
-  ---
-  duration_ms: 0.257122
-  type: 'test'
-  ...
-# Subtest: boss lethal does not trigger phase 2; over-state is immutable to actions
-ok 29 - boss lethal does not trigger phase 2; over-state is immutable to actions
-  ---
-  duration_ms: 0.230392
-  type: 'test'
-  ...
-# Subtest: simultaneous lethal is a draw
-ok 30 - simultaneous lethal is a draw
-  ---
-  duration_ms: 0.204193
-  type: 'test'
-  ...
-# Subtest: relics apply starting health, armor, mana and summon
-ok 31 - relics apply starting health, armor, mana and summon
-  ---
-  duration_ms: 0.149642
-  type: 'test'
-  ...
-# Subtest: serialized restoration retains deterministic RNG and action state
-ok 32 - serialized restoration retains deterministic RNG and action state
-  ---
-  duration_ms: 0.840067
-  type: 'test'
-  ...
-# Subtest: AI does not read the hidden contents of the player hand or deck
-ok 33 - AI does not read the hidden contents of the player hand or deck
-  ---
-  duration_ms: 0.710525
-  type: 'test'
-  ...
-# Subtest: AI actions are legal across all bosses
-ok 34 - AI actions are legal across all bosses
-  ---
-  duration_ms: 1.243757
-  type: 'test'
-  ...
-# Subtest: 150 randomized complete games maintain state invariants
-ok 35 - 150 randomized complete games maintain state invariants
-  ---
-  duration_ms: 181.858371
-  type: 'test'
-  ...
-1..35
-# tests 35
-# suites 0
-# pass 35
-# fail 0
-# cancelled 0
-# skipped 0
-# todo 0
-# duration_ms 254.290731
+✔ 48 collectible cards, 8 tokens; all three 30-card decks valid (1.54825ms)
+✔ mulligan, initial draw and opponent coin (0.709125ms)
+✔ mana refresh and cap (0.244708ms)
+✔ invalid target and insufficient mana are atomic rejections (0.542ms)
+✔ summon sickness prevents attacking (0.508708ms)
+✔ rush permits minion combat, never same-turn face attacks (0.372584ms)
+✔ charge can attack heroes immediately (0.330833ms)
+✔ taunt must be attacked; hidden taunt does not restrict targets (1.571083ms)
+✔ divine shield blocks poison and damage, then disappears (0.267208ms)
+✔ combat damage is simultaneous (0.277416ms)
+✔ windfury allows exactly two attacks (0.176917ms)
+✔ stealth blocks enemy targeting, not friendly buffs or AoE (0.763916ms)
+✔ lifesteal heals for damage dealt and shields block it (0.251583ms)
+✔ deathrattles trigger after dead minions free board slots (0.159708ms)
+✔ reborn fires once, at 1 health, with fresh summon sickness (0.124625ms)
+✔ spell damage stacks with relic, but not hero powers (0.214458ms)
+✔ freeze blocks next own turn and thaws at own end (0.12725ms)
+✔ silence removes enchantments, taunt and deathrattle (0.631292ms)
+✔ polymorph resets stats and keywords without a deathrattle (0.120292ms)
+✔ temporary attack expires at own turn end (0.087375ms)
+✔ weapon enables hero attack and loses durability (0.115667ms)
+✔ minions retaliate against attacking heroes (0.065167ms)
+✔ secret redirects incoming face attack to summoned guard (0.076584ms)
+✔ duplicate secrets are rejected before spending mana (0.054125ms)
+✔ discover requires choice and grants exactly one card (0.118583ms)
+✔ hand cap burns; empty deck causes escalating fatigue (0.068167ms)
+✔ board cap prevents spending a minion card (0.0575ms)
+✔ each boss transitions exactly once at half health (0.133125ms)
+✔ boss lethal does not trigger phase 2; over-state is immutable to actions (0.12675ms)
+✔ simultaneous lethal is a draw (0.071334ms)
+✔ relics apply starting health, armor, mana and summon (0.062041ms)
+✔ serialized restoration retains deterministic RNG and action state (0.652959ms)
+✔ AI does not read the hidden contents of the player hand or deck (0.287334ms)
+✔ AI actions are legal across all bosses (0.658667ms)
+✔ 150 randomized complete games maintain state invariants (122.185125ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 272.088

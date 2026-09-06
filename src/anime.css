@@ -1,20 +1,123 @@
 /* Anime asset integration only: preserve the tested desktop and touch layouts. */
 /* A single aperture fills the arch all the way to its apex. Older layers put a
    second rectangular image crop below that apex, leaving a stale painted strip. */
-.card.type-minion .card-art,.card.legendary .card-art{left:1%;right:1%;top:-2%;width:98%;height:60%;border-radius:49% 49% 12% 12% / 31% 31% 8% 8%;}
-.card.spell .card-art,.card.weapon .card-art{left:1%;right:1%;top:1%;width:98%;height:57%;border-radius:9% 9% 5% 5%;}
-.card-art img,.card.art-painted .card-art img{display:block;width:100%;height:100%;object-fit:cover;object-position:var(--art-pos,50% 25%);transform:scale(var(--art-scale,1.025));border-radius:0;filter:none;}
-.card-art:after{background:linear-gradient(transparent 75%,#201c2024);box-shadow:inset 0 0 5px #2c221a38;}
-.card.epic .card-art:after,.card.legendary .card-art:after{background:linear-gradient(transparent 78%,#211d2729);}
-.minion-art img,.portrait-frame img{object-position:var(--art-pos,50% 25%);transform:scale(var(--art-scale,1.04));filter:none;}
-.hero-option>img,.hero-option:hover>img{object-position:var(--art-pos,50% 22%);transform:scale(var(--art-scale,1.015));opacity:1;filter:none;}
-body.touch-layout .hero-option>img,body.touch-layout .hero-option:hover>img,body.mobile-landscape .hero-option>img,body.mobile-landscape .hero-option:hover>img{object-position:var(--art-pos,50% 22%);transform:scale(var(--art-scale,1.015));filter:none;}
+.card.type-minion .card-art,
+.card.legendary .card-art {
+  left: 1%;
+  right: 1%;
+  top: -2%;
+  width: 98%;
+  height: 60%;
+  border-radius: 49% 49% 12% 12% / 31% 31% 8% 8%;
+}
+.card.spell .card-art,
+.card.weapon .card-art {
+  left: 1%;
+  right: 1%;
+  top: 1%;
+  width: 98%;
+  height: 57%;
+  border-radius: 9% 9% 5% 5%;
+}
+.card-art img,
+.card.art-painted .card-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--art-pos, 50% 25%);
+  transform: scale(var(--art-scale, 1.025));
+  border-radius: 0;
+  filter: none;
+}
+.card-art:after {
+  background: linear-gradient(transparent 75%, #201c2024);
+  box-shadow: inset 0 0 5px #2c221a38;
+}
+.card.epic .card-art:after,
+.card.legendary .card-art:after {
+  background: linear-gradient(transparent 78%, #211d2729);
+}
+.minion-art img,
+.portrait-frame img {
+  object-position: var(--art-pos, 50% 25%);
+  transform: scale(var(--art-scale, 1.04));
+  filter: none;
+}
+.hero-option > img,
+.hero-option:hover > img {
+  object-position: var(--art-pos, 50% 22%);
+  transform: scale(var(--art-scale, 1.015));
+  opacity: 1;
+  filter: none;
+}
+body.touch-layout .hero-option > img,
+body.touch-layout .hero-option:hover > img,
+body.mobile-landscape .hero-option > img,
+body.mobile-landscape .hero-option:hover > img {
+  object-position: var(--art-pos, 50% 22%);
+  transform: scale(var(--art-scale, 1.015));
+  filter: none;
+}
 /* Hidden filters from the original dark-theme stylesheet must not tint the new art. */
-body.touch-layout .minion-art img,body.touch-layout .portrait-frame img{filter:none;}
+body.touch-layout .minion-art img,
+body.touch-layout .portrait-frame img {
+  filter: none;
+}
 /* Full-art viewing is non-destructive and available from a touch card sheet. */
-.anime-art-button{margin:8px 0 0;padding:9px 12px;border:1px solid #aa875e66;border-radius:8px;background:#b7945b15;color:#775031;font-size:13px;min-height:44px;}
-.anime-viewer{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:max(60px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:#111b22f5;backdrop-filter:blur(8px);}
-.anime-viewer img{width:auto;height:auto;max-width:100%;max-height:calc(100dvh - 154px);aspect-ratio:3/4;object-fit:contain;box-shadow:0 20px 60px #0009;border-radius:6px;}
-.anime-viewer p{font:600 16px/1.5 var(--sans);color:#f0e1c1;text-align:center;}
-.anime-viewer small{font-size:11px;color:#bca988;}
-.anime-viewer button{position:absolute;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));width:48px;height:48px;border-radius:50%;background:#2e3c45;border:1px solid #c6b58c99;font-size:24px;color:#efddb9;}
+.anime-art-button {
+  margin: 8px 0 0;
+  padding: 9px 12px;
+  border: 1px solid #aa875e66;
+  border-radius: 8px;
+  background: #b7945b15;
+  color: #775031;
+  font-size: 13px;
+  min-height: 44px;
+}
+.anime-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  padding: max(60px, env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
+  background: #111b22f5;
+  backdrop-filter: blur(8px);
+}
+.anime-viewer img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: calc(100dvh - 154px);
+  aspect-ratio: 3/4;
+  object-fit: contain;
+  box-shadow: 0 20px 60px #0009;
+  border-radius: 6px;
+}
+.anime-viewer p {
+  font: 600 16px/1.5 var(--sans);
+  color: #f0e1c1;
+  text-align: center;
+}
+.anime-viewer small {
+  font-size: 11px;
+  color: #bca988;
+}
+.anime-viewer button {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #2e3c45;
+  border: 1px solid #c6b58c99;
+  font-size: 24px;
+  color: #efddb9;
+}

@@ -1,0 +1,41 @@
+{
+  "version": "0.7.0",
+  "edition": "WIND BORNE / 风起之境",
+  "htmlBytes": 8844233,
+  "htmlSHA256": "bee5fec655a6f27007c6ec7d98427e5a02b5b3dea46eba38e763f40e2999f790",
+  "ruleTests": 35,
+  "cardAssetTests": 10,
+  "browserChecks": 67,
+  "browserSuites": {
+    "tests/pocket/browser-results.json": {
+      "count": 31,
+      "testedHTMLsha256": "bee5fec655a6f27007c6ec7d98427e5a02b5b3dea46eba38e763f40e2999f790",
+      "errors": []
+    },
+    "tests/pocket/additional-results.json": {
+      "count": 5,
+      "testedHTMLsha256": "bee5fec655a6f27007c6ec7d98427e5a02b5b3dea46eba38e763f40e2999f790",
+      "errors": []
+    },
+    "tests/anime/integration-results.json": {
+      "count": 17,
+      "testedHTMLsha256": "bee5fec655a6f27007c6ec7d98427e5a02b5b3dea46eba38e763f40e2999f790",
+      "errors": []
+    },
+    "tests/windborne/integration.json": {
+      "count": 14,
+      "testedHTMLsha256": "bee5fec655a6f27007c6ec7d98427e5a02b5b3dea46eba38e763f40e2999f790",
+      "errors": []
+    }
+  },
+  "newWorldAssets": 9,
+  "uniqueCardImages": 56,
+  "rulesAndCardDataUnchangedFrom": "0.6.0",
+  "animeArtBytesUnchanged": true,
+  "renderingTested": "Canvas / 2D; desktop and touch emulation",
+  "physicalPhonesTested": false,
+  "realOriginPersistenceTested": false,
+  "publicDeploymentExecuted": false,
+  "worldPipelineRebuild": "byte-identical",
+  "sourceInputZipSHA256": "6d7407ef1abf0755f6d60192e438a24db2487608619b87b2c24fe35c9ac28e02"
+}

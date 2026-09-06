@@ -1,36 +1,84 @@
 #!/usr/bin/env python3
-"""Build portable HTML. Optionally embed vendor/three.min.js for offline 3D."""
+"""Reproducible portable and web builds from a single ordered template.
+
+index.html: fully embedded, suitable for offline transfer and legacy tests.
+dist/: external scripts, styles and content-addressed images for HTTP caching.
+The registry maps template tokens to source files; dependencies follow template
+order. Unknown, duplicate or unused tokens fail the build instead of shipping.
+"""
 from pathlib import Path
+import base64
+import hashlib
+import json
 import re
 
 ROOT = Path(__file__).resolve().parent
-SRC = ROOT / "src"
-html = (SRC / "template.html").read_text(encoding="utf-8")
-for token, filename in {
-    "WORLD_ASSETS":"world-assets.js", "WINDBORNE_STYLE":"windborne.css", "WINDBORNE_UI":"windborne-ui.js",
-    "ANIME_ASSETS":"anime-assets.js", "ANIME_STYLE":"anime.css", "ANIME_UI":"anime-ui.js",
-    "MOBILE_VIEW":"mobile-view.js", "MOBILE_WORLD":"mobile-world.js", "MOBILE_STYLE":"mobile.css", "MOBILE_UI":"mobile-ui.js",
-    "ATELIER_STYLE":"atelier.css", "ATELIER_ASSETS":"atelier-assets.js", "ATELIER_ART":"atelier-art.js", "ATELIER_WORLD":"atelier-world.js", "ATELIER_UI":"atelier-ui.js",
-    "STYLE": "style.css", "DATA": "data.js", "ENGINE": "engine.js",
-    "ART": "art.js", "SCENE": "scene.js", "UI": "ui.js",
-    "MATERIALS":"materials.js", "PORTRAITS":"portraits.js", "TAVERN_ART":"tavern-art.js",
-    "BACKDROPS":"backdrops.js", "TAVERN_WORLD":"tavern-world.js", "TAVERN_STYLE":"tavern.css", "TAVERN_UI":"tavern-ui.js",
-    "REFINEMENT": "refinement.css", "EFFECTS": "effects.js", "ENHANCEMENTS": "enhancements.js"
-}.items():
-    text = (SRC / filename).read_text(encoding="utf-8")
-    html = html.replace(f"/*{token}*/", text)
+SRC = ROOT / 'src'
+TOKEN = re.compile(r'/\*([A-Z_]+)\*/')
+IMAGE = re.compile(r'data:image/(png|webp|jpeg|gif);base64,([A-Za-z0-9+/=]+)')
 
-vendor = ROOT / "vendor" / "three.min.js"
-if vendor.exists():
-    library = vendor.read_text(encoding="utf-8")
-    if len(library) < 100000 or "REVISION" not in library:
-        raise ValueError("vendor/three.min.js is not a valid Three.js UMD build")
-    library = re.sub(r"</script", r"<\\/script", library, flags=re.I)
-    html = html.replace("</head>", "<script>" + library + "</script></head>", 1)
-    mode = "embedded Three.js: offline 3D enabled"
-else:
-    mode = "CDN Three.js: full offline 2D fallback"
 
-out = ROOT / "index.html"
-out.write_text(html, encoding="utf-8")
-print(f"Built {out}: {len(html.encode('utf-8')):,} bytes ({mode})")
+def build():
+    registry = json.loads((ROOT / 'config/build.json').read_text())
+    template = (SRC / 'template.html').read_text()
+    tokens = TOKEN.findall(template)
+    if len(tokens) != len(set(tokens)) or set(tokens) != set(registry):
+        raise ValueError('Template tokens must match build registry exactly')
+    sources = {k: (SRC / v).read_text() for k, v in registry.items()}
+    portable = TOKEN.sub(lambda m: sources[m[1]], template)
+    vendor = ROOT / 'vendor/three.min.js'
+    if vendor.exists():
+        library = vendor.read_text()
+        if len(library) < 100000 or 'REVISION' not in library:
+            raise ValueError('Invalid Three.js UMD build')
+        library = re.sub(r'</script', r'<\\/script', library, flags=re.I)
+        portable = portable.replace('</head>', '<script>' + library + '</script></head>', 1)
+    (ROOT / 'index.html').write_text(portable)
+
+    dist = ROOT / 'dist'
+    (dist / 'assets').mkdir(parents=True, exist_ok=True)
+    records = {}
+
+    def extract_image(match):
+        data = base64.b64decode(match[2], validate=True)
+        suffix = 'jpg' if match[1] == 'jpeg' else match[1]
+        name = f'assets/{hashlib.sha256(data).hexdigest()[:20]}.{suffix}'
+        (dist / name).write_bytes(data)
+        records[name] = len(data)
+        # URLs assigned to JS image.src resolve relative to document, not script.
+        return './' + name
+
+    def web_script(match):
+        key = match[1]
+        text = IMAGE.sub(extract_image, sources[key])
+        name = 'scripts/' + registry[key]
+        target = dist / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(text)
+        records[name] = target.stat().st_size
+        return f'<script src="./{name}" defer></script>'
+
+    web = re.sub(r'<script>/\*([A-Z_]+)\*/</script>', web_script, template)
+    css = []
+
+    def web_style(match):
+        css.append(TOKEN.sub(lambda m: sources[m[1]], match[1]))
+        return '<link rel="stylesheet" href="./styles.css">'
+
+    web = re.sub(r'<style>(.*?)</style>', web_style, web, flags=re.S)
+    (dist / 'styles.css').write_text('\n'.join(css))
+    (dist / 'index.html').write_text(web)
+    if TOKEN.search(web):
+        raise ValueError('Unresolved web build token')
+    for name in ('index.html', 'styles.css'):
+        records[name] = (dist / name).stat().st_size
+    report = {'version': '0.8.0', 'portableBytes': len(portable.encode()),
+              'webBytes': sum(records.values()), 'files': records,
+              'portableSha256': hashlib.sha256(portable.encode()).hexdigest()}
+    (dist / 'build-manifest.json').write_text(json.dumps(report, indent=2) + '\n')
+    print(f'Portable: index.html ({report["portableBytes"]:,} bytes)')
+    print(f'Web: dist/index.html ({len(records)} files; {report["webBytes"]:,} bytes)')
+
+
+if __name__ == '__main__':
+    build()

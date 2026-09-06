@@ -1,0 +1,51 @@
+{
+  "date": "2026-09-06",
+  "edition": "Emberfall Wind Borne v0.7.0 — source handoff, no gameplay changes",
+  "dependenciesDownloaded": false,
+  "dependenciesBundled": false,
+  "browserSuitesRerun": false,
+  "runtimeSourceModulesByteIdentical": 32,
+  "assetFilesRetainedByteIdentical": 108,
+  "build": {
+    "command": "python3 -S build.py",
+    "passed": true,
+    "htmlBytes": 8844233,
+    "htmlSHA256": "bee5fec655a6f27007c6ec7d98427e5a02b5b3dea46eba38e763f40e2999f790",
+    "matchesPriorDelivery": true,
+    "needsSitePackages": false
+  },
+  "syntaxChecks": {
+    "javascript": 24,
+    "python": 14,
+    "passed": true
+  },
+  "rules": {
+    "passed": 35,
+    "failed": 0,
+    "command": "node --test tests/engine.test.cjs"
+  },
+  "cardAssets": {
+    "passed": 10,
+    "failed": 0,
+    "command": "node --test tests/anime_assets.test.cjs"
+  },
+  "embeddedCardImagesMatchIndependentFiles": 56,
+  "worldManifestHashesMatch": 8,
+  "worldAssetsPresent": 9,
+  "decodedAssetImages": {
+    ".jpg": 5,
+    ".webp": 88,
+    ".png": 10
+  },
+  "priorBrowserValidation": "See VALIDATION.md and existing test result JSON files; not rerun for this packaging operation.",
+  "packagingOnlyChanges": [
+    "Added AGENTS.md and developer/asset handoff documents",
+    "Added NumPy requirement and optional Playwright requirement manifest",
+    "Added portable CHROMIUM_PATH selection in browser helper scripts",
+    "Release-test runner creates its output directory and uses current Python",
+    "Optional contact sheet uses local project output and configurable installed system font",
+    "Omitted compiled index.html and five redundant preview screenshots",
+    "Kept all original src and assets byte-identical"
+  ],
+  "expectedGeneratedHTMLExcludedFromArchive": true
+}
