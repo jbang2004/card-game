@@ -1,0 +1,2 @@
+# Optional browser tests; no Python packages are needed for Node rule tests.
+playwright==1.57.0

@@ -1,0 +1,1410 @@
+{
+  "version": "0.6.0",
+  "cards": 56,
+  "collectible": 48,
+  "tokens": 8,
+  "sourceAtlases": 8,
+  "description": "Every card has a separate panel from the user-approved anime atlas set. Hero/Boss portraits deliberately reuse matching panels, listed separately in runtime routing. Frames and scenery are retained from v0.5.",
+  "items": {
+    "spark": {
+      "name": "引火学徒",
+      "type": "minion",
+      "token": false,
+      "source": "sources/01-apprentices.png",
+      "sourceSHA256": "29a440a2ab5d4055b4907d58cf8aedff8d9a84b5b0699c7af4ddc339a9a0d495",
+      "cropBox": [
+        17,
+        13,
+        357,
+        469
+      ],
+      "cropNativeSize": [
+        340,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "spark.webp",
+      "bytes": 52820,
+      "sha256": "4cb970bb7d19c28a61c76022e9f422939dc17bdbfbde100cc44f541c22bcac66",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "squire": {
+      "name": "晨曦侍从",
+      "type": "minion",
+      "token": false,
+      "source": "sources/01-apprentices.png",
+      "sourceSHA256": "29a440a2ab5d4055b4907d58cf8aedff8d9a84b5b0699c7af4ddc339a9a0d495",
+      "cropBox": [
+        376,
+        13,
+        713,
+        469
+      ],
+      "cropNativeSize": [
+        337,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "squire.webp",
+      "bytes": 50986,
+      "sha256": "ddb2a5d5b8eda55c8e1ee818b9c99d79bb311411282238ce5b07cb0c65a9b819",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "wolf": {
+      "name": "月影幼狼",
+      "type": "minion",
+      "token": false,
+      "source": "sources/01-apprentices.png",
+      "sourceSHA256": "29a440a2ab5d4055b4907d58cf8aedff8d9a84b5b0699c7af4ddc339a9a0d495",
+      "cropBox": [
+        735,
+        13,
+        1073,
+        469
+      ],
+      "cropNativeSize": [
+        338,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "wolf.webp",
+      "bytes": 49864,
+      "sha256": "b0d61e04314b40f7e5350c03846a1aeada011817d62a73eb293a6e76fba9d071",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "archer": {
+      "name": "边境游侠",
+      "type": "minion",
+      "token": false,
+      "source": "sources/01-apprentices.png",
+      "sourceSHA256": "29a440a2ab5d4055b4907d58cf8aedff8d9a84b5b0699c7af4ddc339a9a0d495",
+      "cropBox": [
+        1093,
+        13,
+        1430,
+        469
+      ],
+      "cropNativeSize": [
+        337,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "archer.webp",
+      "bytes": 49782,
+      "sha256": "17ff6664aee4d4b69341ccd983be6c30af62dcbd65f591f6df02d96dde65b106",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "guard": {
+      "name": "铁誓卫士",
+      "type": "minion",
+      "token": false,
+      "source": "sources/01-apprentices.png",
+      "sourceSHA256": "29a440a2ab5d4055b4907d58cf8aedff8d9a84b5b0699c7af4ddc339a9a0d495",
+      "cropBox": [
+        17,
+        547,
+        357,
+        1005
+      ],
+      "cropNativeSize": [
+        340,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "guard.webp",
+      "bytes": 53278,
+      "sha256": "159f5432dbc1960a5355ce83fceb00eecbfc97b9ac8c15d11a6ec8ee8bbc712d",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "oracle": {
+      "name": "星界观测者",
+      "type": "minion",
+      "token": false,
+      "source": "sources/01-apprentices.png",
+      "sourceSHA256": "29a440a2ab5d4055b4907d58cf8aedff8d9a84b5b0699c7af4ddc339a9a0d495",
+      "cropBox": [
+        376,
+        547,
+        713,
+        1005
+      ],
+      "cropNativeSize": [
+        337,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "oracle.webp",
+      "bytes": 54928,
+      "sha256": "7f80f39d78c2c7688d6fcb46a5c1a79e575163ea7ebe9e71404a15e85327eaed",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "wisp": {
+      "name": "暮光精灵",
+      "type": "minion",
+      "token": false,
+      "source": "sources/01-apprentices.png",
+      "sourceSHA256": "29a440a2ab5d4055b4907d58cf8aedff8d9a84b5b0699c7af4ddc339a9a0d495",
+      "cropBox": [
+        735,
+        547,
+        1073,
+        1005
+      ],
+      "cropNativeSize": [
+        338,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "wisp.webp",
+      "bytes": 50656,
+      "sha256": "db368e0ebd095f15787ccfe9b06b2fbb71a48f912b6323409e22270cc4b3bbf1",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "spider": {
+      "name": "幽谷蛛后",
+      "type": "minion",
+      "token": false,
+      "source": "sources/02-vanguards.png",
+      "sourceSHA256": "40fbfd125d8a93e10283173f80ba2e44eac2ecef6059edbb97723874171ccb31",
+      "cropBox": [
+        17,
+        13,
+        357,
+        469
+      ],
+      "cropNativeSize": [
+        340,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "spider.webp",
+      "bytes": 57752,
+      "sha256": "de67d24cd33339a352a5cca34b9f45dbb40588ef4b250509972e53d0581690e6",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "sentinel": {
+      "name": "烬翼斥候",
+      "type": "minion",
+      "token": false,
+      "source": "sources/02-vanguards.png",
+      "sourceSHA256": "40fbfd125d8a93e10283173f80ba2e44eac2ecef6059edbb97723874171ccb31",
+      "cropBox": [
+        376,
+        13,
+        713,
+        469
+      ],
+      "cropNativeSize": [
+        337,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "sentinel.webp",
+      "bytes": 58218,
+      "sha256": "db08eb8e4eb6f54230a3049c501cac92d8d42a00e90832c17692b149350728bb",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "assassin": {
+      "name": "夜幕刺客",
+      "type": "minion",
+      "token": false,
+      "source": "sources/02-vanguards.png",
+      "sourceSHA256": "40fbfd125d8a93e10283173f80ba2e44eac2ecef6059edbb97723874171ccb31",
+      "cropBox": [
+        735,
+        13,
+        1073,
+        469
+      ],
+      "cropNativeSize": [
+        338,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "assassin.webp",
+      "bytes": 51670,
+      "sha256": "459f336c03602d7aa0d7769c9dbf4ae0671ea8d119d5b325be64df9df08cbbfe",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "cleric": {
+      "name": "曙光祭司",
+      "type": "minion",
+      "token": false,
+      "source": "sources/02-vanguards.png",
+      "sourceSHA256": "40fbfd125d8a93e10283173f80ba2e44eac2ecef6059edbb97723874171ccb31",
+      "cropBox": [
+        1093,
+        13,
+        1430,
+        469
+      ],
+      "cropNativeSize": [
+        337,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "cleric.webp",
+      "bytes": 57264,
+      "sha256": "05ff1e4424afb001801ec425ccfe3ae0fee36beecfacb1a7e3f6e1ed12700c8f",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "berserker": {
+      "name": "赤岩狂战士",
+      "type": "minion",
+      "token": false,
+      "source": "sources/02-vanguards.png",
+      "sourceSHA256": "40fbfd125d8a93e10283173f80ba2e44eac2ecef6059edbb97723874171ccb31",
+      "cropBox": [
+        17,
+        547,
+        357,
+        1005
+      ],
+      "cropNativeSize": [
+        340,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "berserker.webp",
+      "bytes": 63390,
+      "sha256": "bac6ea975affbfed62afcae1b9cb6bccf8702db0c159ed0486e5c213929b32e0",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "golem": {
+      "name": "符文石像",
+      "type": "minion",
+      "token": false,
+      "source": "sources/02-vanguards.png",
+      "sourceSHA256": "40fbfd125d8a93e10283173f80ba2e44eac2ecef6059edbb97723874171ccb31",
+      "cropBox": [
+        376,
+        547,
+        713,
+        1005
+      ],
+      "cropNativeSize": [
+        337,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "golem.webp",
+      "bytes": 68540,
+      "sha256": "3245d669a99c2fa03f45fa1979b6e7ed4d7de2b3ed91ce9c5ab6f05ba32a5201",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "leech": {
+      "name": "血月行者",
+      "type": "minion",
+      "token": false,
+      "source": "sources/02-vanguards.png",
+      "sourceSHA256": "40fbfd125d8a93e10283173f80ba2e44eac2ecef6059edbb97723874171ccb31",
+      "cropBox": [
+        735,
+        547,
+        1073,
+        1005
+      ],
+      "cropNativeSize": [
+        338,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "leech.webp",
+      "bytes": 44510,
+      "sha256": "f34455e1b0ce85197c0e5be289fbe0054aeddcae69db052eea8a13112d2626b6",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "treant": {
+      "name": "古木守护者",
+      "type": "minion",
+      "token": false,
+      "source": "sources/03-guardians.png",
+      "sourceSHA256": "811ddd3bd479eb023ed61cf895625075f7fe16c6a700ca7fef86463f2b6dd1ec",
+      "cropBox": [
+        17,
+        13,
+        357,
+        469
+      ],
+      "cropNativeSize": [
+        340,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "treant.webp",
+      "bytes": 68528,
+      "sha256": "7c878f285c453cd48a47e85773c6a4576637801183942c1fd6f388def0309136",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "phoenix": {
+      "name": "不灭凤凰",
+      "type": "minion",
+      "token": false,
+      "source": "sources/03-guardians.png",
+      "sourceSHA256": "811ddd3bd479eb023ed61cf895625075f7fe16c6a700ca7fef86463f2b6dd1ec",
+      "cropBox": [
+        376,
+        13,
+        713,
+        469
+      ],
+      "cropNativeSize": [
+        337,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "phoenix.webp",
+      "bytes": 56222,
+      "sha256": "cf7cf011af60c4be5fac6c3b1d3cc4ecc5b3703cd9e1bea321d9e93e1aa9a585",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "rider": {
+      "name": "霜牙狼骑",
+      "type": "minion",
+      "token": false,
+      "source": "sources/03-guardians.png",
+      "sourceSHA256": "811ddd3bd479eb023ed61cf895625075f7fe16c6a700ca7fef86463f2b6dd1ec",
+      "cropBox": [
+        735,
+        13,
+        1073,
+        469
+      ],
+      "cropNativeSize": [
+        338,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "rider.webp",
+      "bytes": 57884,
+      "sha256": "2b9bfa3c0587842c027c17939401210d2c7c4f998fae8b3599059f92b7a99987",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "necromancer": {
+      "name": "亡者织梦师",
+      "type": "minion",
+      "token": false,
+      "source": "sources/03-guardians.png",
+      "sourceSHA256": "811ddd3bd479eb023ed61cf895625075f7fe16c6a700ca7fef86463f2b6dd1ec",
+      "cropBox": [
+        1093,
+        13,
+        1430,
+        469
+      ],
+      "cropNativeSize": [
+        337,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "necromancer.webp",
+      "bytes": 50334,
+      "sha256": "5688c7043873b7b6a94416ee5af6314bdddda2c11781b9db6df13c86ca51c99e",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "paladin": {
+      "name": "圣光裁决者",
+      "type": "minion",
+      "token": false,
+      "source": "sources/03-guardians.png",
+      "sourceSHA256": "811ddd3bd479eb023ed61cf895625075f7fe16c6a700ca7fef86463f2b6dd1ec",
+      "cropBox": [
+        17,
+        547,
+        357,
+        1005
+      ],
+      "cropNativeSize": [
+        340,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "paladin.webp",
+      "bytes": 59228,
+      "sha256": "7b1ce010baa70c9169a2300c618ef188c6bf1a7bc8a65a543f7db358545e41b1",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "titan": {
+      "name": "玄铁泰坦",
+      "type": "minion",
+      "token": false,
+      "source": "sources/03-guardians.png",
+      "sourceSHA256": "811ddd3bd479eb023ed61cf895625075f7fe16c6a700ca7fef86463f2b6dd1ec",
+      "cropBox": [
+        376,
+        547,
+        713,
+        1005
+      ],
+      "cropNativeSize": [
+        337,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "titan.webp",
+      "bytes": 61220,
+      "sha256": "b0132b2619e17a113293e4f113e41c99b63f035554481c6d13d6cd74fb1f8cfa",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "huntress": {
+      "name": "荒野之矛",
+      "type": "minion",
+      "token": false,
+      "source": "sources/03-guardians.png",
+      "sourceSHA256": "811ddd3bd479eb023ed61cf895625075f7fe16c6a700ca7fef86463f2b6dd1ec",
+      "cropBox": [
+        735,
+        547,
+        1073,
+        1005
+      ],
+      "cropNativeSize": [
+        338,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "huntress.webp",
+      "bytes": 55910,
+      "sha256": "e7fd2e2692d29c9d50a4fb716cd37cb839201f896629d5a8592f399cdb77f887",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "dragon": {
+      "name": "烬喉幼龙",
+      "type": "minion",
+      "token": false,
+      "source": "sources/04-legends.png",
+      "sourceSHA256": "73c2b88602354fa6a62909f090fb5c1de4bc37246e97d392ff5c3fae70dc64bb",
+      "cropBox": [
+        17,
+        13,
+        357,
+        469
+      ],
+      "cropNativeSize": [
+        340,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "dragon.webp",
+      "bytes": 58254,
+      "sha256": "d63682970cf987e0a0994d9457b4fb9b97f847d46cff8a6787b245278494a5e3",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "reaper": {
+      "name": "黯月收割者",
+      "type": "minion",
+      "token": false,
+      "source": "sources/04-legends.png",
+      "sourceSHA256": "73c2b88602354fa6a62909f090fb5c1de4bc37246e97d392ff5c3fae70dc64bb",
+      "cropBox": [
+        376,
+        13,
+        713,
+        469
+      ],
+      "cropNativeSize": [
+        337,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "reaper.webp",
+      "bytes": 60538,
+      "sha256": "35a70db32cd4241ee623a2d7b91bfa7b26e2514ab74597c3f1a38c6681af9e66",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "colossus": {
+      "name": "远古山岳",
+      "type": "minion",
+      "token": false,
+      "source": "sources/04-legends.png",
+      "sourceSHA256": "73c2b88602354fa6a62909f090fb5c1de4bc37246e97d392ff5c3fae70dc64bb",
+      "cropBox": [
+        735,
+        13,
+        1073,
+        469
+      ],
+      "cropNativeSize": [
+        338,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "colossus.webp",
+      "bytes": 68606,
+      "sha256": "24d4852dcf42ce902a30b6b8391e5e3ef1e7c48579368d782f31b7a45ac2ff4f",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "solaris": {
+      "name": "逐日者·索拉",
+      "type": "minion",
+      "token": false,
+      "source": "sources/04-legends.png",
+      "sourceSHA256": "73c2b88602354fa6a62909f090fb5c1de4bc37246e97d392ff5c3fae70dc64bb",
+      "cropBox": [
+        1093,
+        13,
+        1430,
+        469
+      ],
+      "cropNativeSize": [
+        337,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "solaris.webp",
+      "bytes": 59532,
+      "sha256": "4edd2a4947da0a4d0b130b89b1f0ca844ca28a7d3fc7af218b8dcd988108b142",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "nyx": {
+      "name": "星陨女王·妮克丝",
+      "type": "minion",
+      "token": false,
+      "source": "sources/04-legends.png",
+      "sourceSHA256": "73c2b88602354fa6a62909f090fb5c1de4bc37246e97d392ff5c3fae70dc64bb",
+      "cropBox": [
+        17,
+        547,
+        357,
+        1005
+      ],
+      "cropNativeSize": [
+        340,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "nyx.webp",
+      "bytes": 61916,
+      "sha256": "5df9d81dc404950ff37622809028f5a8b074f8019d7196364d1fddd3bac0ec6e",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "ashdragon": {
+      "name": "终焰·阿什拉",
+      "type": "minion",
+      "token": false,
+      "source": "sources/04-legends.png",
+      "sourceSHA256": "73c2b88602354fa6a62909f090fb5c1de4bc37246e97d392ff5c3fae70dc64bb",
+      "cropBox": [
+        376,
+        547,
+        713,
+        1005
+      ],
+      "cropNativeSize": [
+        337,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "ashdragon.webp",
+      "bytes": 65560,
+      "sha256": "648a44ce8d578531dbc5fe3e198460852a7b09a4228c6a56f51a48b1ee345653",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "frostking": {
+      "name": "白霜之王",
+      "type": "minion",
+      "token": false,
+      "source": "sources/04-legends.png",
+      "sourceSHA256": "73c2b88602354fa6a62909f090fb5c1de4bc37246e97d392ff5c3fae70dc64bb",
+      "cropBox": [
+        735,
+        547,
+        1073,
+        1005
+      ],
+      "cropNativeSize": [
+        338,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "frostking.webp",
+      "bytes": 70396,
+      "sha256": "e9a20db02d95c50a2730af64a9316fd8d345382acb8f76b6ff84838afa49f6af",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "bolt": {
+      "name": "星火箭",
+      "type": "spell",
+      "token": false,
+      "source": "sources/05-elements.png",
+      "sourceSHA256": "5a41c8bc237834766be09ba37d562eb317ee230e2852d30f63d62229499472a6",
+      "cropBox": [
+        17,
+        13,
+        357,
+        469
+      ],
+      "cropNativeSize": [
+        340,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "bolt.webp",
+      "bytes": 51650,
+      "sha256": "fca819717b9d44bbf42e727b7940187eb9c474137a652c2025cec5a7d2ad5b24",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "frostbolt": {
+      "name": "寒霜之触",
+      "type": "spell",
+      "token": false,
+      "source": "sources/05-elements.png",
+      "sourceSHA256": "5a41c8bc237834766be09ba37d562eb317ee230e2852d30f63d62229499472a6",
+      "cropBox": [
+        376,
+        13,
+        713,
+        469
+      ],
+      "cropNativeSize": [
+        337,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "frostbolt.webp",
+      "bytes": 60492,
+      "sha256": "4d5240acd581f8c5444dcb229df6e0825b71b49890e257992074ba6f5057ef07",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "fireball": {
+      "name": "陨火术",
+      "type": "spell",
+      "token": false,
+      "source": "sources/05-elements.png",
+      "sourceSHA256": "5a41c8bc237834766be09ba37d562eb317ee230e2852d30f63d62229499472a6",
+      "cropBox": [
+        735,
+        13,
+        1073,
+        469
+      ],
+      "cropNativeSize": [
+        338,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "fireball.webp",
+      "bytes": 52022,
+      "sha256": "2c1b0c67f78f8d8ca1a1035c67eea41f094f9b40b09f9b6080dd8060dcdffc4d",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "nova": {
+      "name": "冰封领域",
+      "type": "spell",
+      "token": false,
+      "source": "sources/05-elements.png",
+      "sourceSHA256": "5a41c8bc237834766be09ba37d562eb317ee230e2852d30f63d62229499472a6",
+      "cropBox": [
+        1093,
+        13,
+        1430,
+        469
+      ],
+      "cropNativeSize": [
+        337,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "nova.webp",
+      "bytes": 68882,
+      "sha256": "db062d59ed0b8fd0b2517072f01c34ad3769e0807a8475dc4fddd75ea85fddf8",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "storm": {
+      "name": "烈焰风暴",
+      "type": "spell",
+      "token": false,
+      "source": "sources/05-elements.png",
+      "sourceSHA256": "5a41c8bc237834766be09ba37d562eb317ee230e2852d30f63d62229499472a6",
+      "cropBox": [
+        17,
+        547,
+        357,
+        1005
+      ],
+      "cropNativeSize": [
+        340,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "storm.webp",
+      "bytes": 63620,
+      "sha256": "16af970410976ed03fbae54f4ecc6131a3cb0bf7ed30fde5538134de91f4d498",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "wisdom": {
+      "name": "星界密卷",
+      "type": "spell",
+      "token": false,
+      "source": "sources/05-elements.png",
+      "sourceSHA256": "5a41c8bc237834766be09ba37d562eb317ee230e2852d30f63d62229499472a6",
+      "cropBox": [
+        376,
+        547,
+        713,
+        1005
+      ],
+      "cropNativeSize": [
+        337,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "wisdom.webp",
+      "bytes": 63272,
+      "sha256": "542f5d654f341a81e04cd88bbe9db325170a42f1de357e5289827dbcb90df946",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "blessing": {
+      "name": "黎明祝福",
+      "type": "spell",
+      "token": false,
+      "source": "sources/05-elements.png",
+      "sourceSHA256": "5a41c8bc237834766be09ba37d562eb317ee230e2852d30f63d62229499472a6",
+      "cropBox": [
+        735,
+        547,
+        1073,
+        1005
+      ],
+      "cropNativeSize": [
+        338,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "blessing.webp",
+      "bytes": 58538,
+      "sha256": "7663161c2081ec60e296174c7eb6b800059360a2ff2337dec468a2f6ca64aec7",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "renew": {
+      "name": "生命之泉",
+      "type": "spell",
+      "token": false,
+      "source": "sources/06-rituals.png",
+      "sourceSHA256": "6daee904a58ba5fc70753d28af4cbf90c69ae577c77c7a0bbf35be4e343d8bf6",
+      "cropBox": [
+        17,
+        13,
+        357,
+        469
+      ],
+      "cropNativeSize": [
+        340,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "renew.webp",
+      "bytes": 65174,
+      "sha256": "912f928ea6b28f42ca2c641cf9af70095663cd2d929426510702422c7b527635",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "execute": {
+      "name": "暗影湮灭",
+      "type": "spell",
+      "token": false,
+      "source": "sources/06-rituals.png",
+      "sourceSHA256": "6daee904a58ba5fc70753d28af4cbf90c69ae577c77c7a0bbf35be4e343d8bf6",
+      "cropBox": [
+        376,
+        13,
+        713,
+        469
+      ],
+      "cropNativeSize": [
+        337,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "execute.webp",
+      "bytes": 50998,
+      "sha256": "f968cc0c1dfd852749a099234727e088a11db15575832a03ddcbb0a8d59471e1",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "silence": {
+      "name": "遗忘咒印",
+      "type": "spell",
+      "token": false,
+      "source": "sources/06-rituals.png",
+      "sourceSHA256": "6daee904a58ba5fc70753d28af4cbf90c69ae577c77c7a0bbf35be4e343d8bf6",
+      "cropBox": [
+        735,
+        13,
+        1073,
+        469
+      ],
+      "cropNativeSize": [
+        338,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "silence.webp",
+      "bytes": 53028,
+      "sha256": "a5f7a524e953430d1ae510c84f0c940ea55e8e15b072dc1ccb201da4a2bb3968",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "rally": {
+      "name": "王者号令",
+      "type": "spell",
+      "token": false,
+      "source": "sources/06-rituals.png",
+      "sourceSHA256": "6daee904a58ba5fc70753d28af4cbf90c69ae577c77c7a0bbf35be4e343d8bf6",
+      "cropBox": [
+        1093,
+        13,
+        1430,
+        469
+      ],
+      "cropNativeSize": [
+        337,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "rally.webp",
+      "bytes": 54964,
+      "sha256": "d5935ce7a7eb1e78c937d602adabca07b49a3322a4d142dd06420f8412178610",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "wolves": {
+      "name": "群狼呼唤",
+      "type": "spell",
+      "token": false,
+      "source": "sources/06-rituals.png",
+      "sourceSHA256": "6daee904a58ba5fc70753d28af4cbf90c69ae577c77c7a0bbf35be4e343d8bf6",
+      "cropBox": [
+        17,
+        547,
+        357,
+        1005
+      ],
+      "cropNativeSize": [
+        340,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "wolves.webp",
+      "bytes": 62026,
+      "sha256": "024b914d1962c73171472d58b1e4593654a415a834fd0b5b2327f544e4b39573",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "shield": {
+      "name": "圣光庇佑",
+      "type": "spell",
+      "token": false,
+      "source": "sources/06-rituals.png",
+      "sourceSHA256": "6daee904a58ba5fc70753d28af4cbf90c69ae577c77c7a0bbf35be4e343d8bf6",
+      "cropBox": [
+        376,
+        547,
+        713,
+        1005
+      ],
+      "cropNativeSize": [
+        337,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "shield.webp",
+      "bytes": 53254,
+      "sha256": "82e13d64d449f6939d103e5400c0e751e32383519b60afed3a64a3933e4e9ca1",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "lifedrain": {
+      "name": "灵魂虹吸",
+      "type": "spell",
+      "token": false,
+      "source": "sources/06-rituals.png",
+      "sourceSHA256": "6daee904a58ba5fc70753d28af4cbf90c69ae577c77c7a0bbf35be4e343d8bf6",
+      "cropBox": [
+        735,
+        547,
+        1073,
+        1005
+      ],
+      "cropNativeSize": [
+        338,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "lifedrain.webp",
+      "bytes": 54102,
+      "sha256": "ff81370f3e666eeede3f8cbf164b50f1f7a262b2e7e1e6b023b6005985c56439",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "dagger": {
+      "name": "银月双刃",
+      "type": "weapon",
+      "token": false,
+      "source": "sources/07-relics.png",
+      "sourceSHA256": "200430a49cadd79ac49e54a36308da96e668baacce8ede631af3066d67ec191f",
+      "cropBox": [
+        17,
+        13,
+        357,
+        469
+      ],
+      "cropNativeSize": [
+        340,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "dagger.webp",
+      "bytes": 52154,
+      "sha256": "6aa2e0ee58af59dc83b2e4e6dd1129efcb07efbafffdf301a6a83df69ab01474",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "sunblade": {
+      "name": "日耀圣剑",
+      "type": "weapon",
+      "token": false,
+      "source": "sources/07-relics.png",
+      "sourceSHA256": "200430a49cadd79ac49e54a36308da96e668baacce8ede631af3066d67ec191f",
+      "cropBox": [
+        376,
+        13,
+        713,
+        469
+      ],
+      "cropNativeSize": [
+        337,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "sunblade.webp",
+      "bytes": 57610,
+      "sha256": "0d1308197eecc984ed37658ae0671e29f7da0083539d23c1d46078b945d2abde",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "polymorph": {
+      "name": "迷途化形",
+      "type": "spell",
+      "token": false,
+      "source": "sources/07-relics.png",
+      "sourceSHA256": "200430a49cadd79ac49e54a36308da96e668baacce8ede631af3066d67ec191f",
+      "cropBox": [
+        735,
+        13,
+        1073,
+        469
+      ],
+      "cropNativeSize": [
+        338,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "polymorph.webp",
+      "bytes": 60168,
+      "sha256": "8df330e98eb8707ddc32c0d991f9be7bef63048d7f54d21964034503ba898dbe",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "discovery": {
+      "name": "虚空洞见",
+      "type": "spell",
+      "token": false,
+      "source": "sources/07-relics.png",
+      "sourceSHA256": "200430a49cadd79ac49e54a36308da96e668baacce8ede631af3066d67ec191f",
+      "cropBox": [
+        1093,
+        13,
+        1430,
+        469
+      ],
+      "cropNativeSize": [
+        337,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "discovery.webp",
+      "bytes": 57474,
+      "sha256": "0810c4f67f6993755978d16bd04453415c85c16e220ce8aa22796045468e705a",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "ambush": {
+      "name": "镜像伏击",
+      "type": "spell",
+      "token": false,
+      "source": "sources/07-relics.png",
+      "sourceSHA256": "200430a49cadd79ac49e54a36308da96e668baacce8ede631af3066d67ec191f",
+      "cropBox": [
+        17,
+        547,
+        357,
+        1005
+      ],
+      "cropNativeSize": [
+        340,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "ambush.webp",
+      "bytes": 55460,
+      "sha256": "6d388b166cfcb22683c5a9e2c42e738b637d4662266257097676aaed6b8dfa80",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "battlecry": {
+      "name": "战意沸腾",
+      "type": "spell",
+      "token": false,
+      "source": "sources/07-relics.png",
+      "sourceSHA256": "200430a49cadd79ac49e54a36308da96e668baacce8ede631af3066d67ec191f",
+      "cropBox": [
+        376,
+        547,
+        713,
+        1005
+      ],
+      "cropNativeSize": [
+        337,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "battlecry.webp",
+      "bytes": 58536,
+      "sha256": "acdba193c2d1af408d97d5c558d2a38fa5b6682abac66915f5d8be99629be880",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "coin": {
+      "name": "以太硬币",
+      "type": "spell",
+      "token": true,
+      "source": "sources/07-relics.png",
+      "sourceSHA256": "200430a49cadd79ac49e54a36308da96e668baacce8ede631af3066d67ec191f",
+      "cropBox": [
+        735,
+        547,
+        1073,
+        1005
+      ],
+      "cropNativeSize": [
+        338,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "coin.webp",
+      "bytes": 53704,
+      "sha256": "27c1dc6f4f228510ea8c6cb890efedc832c7200123e4ea6423dbeb7278d13b61",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "pup": {
+      "name": "幽灵狼",
+      "type": "minion",
+      "token": true,
+      "source": "sources/08-companions.png",
+      "sourceSHA256": "9bc11ec5669a508bb1d0065f14b0dc179218e3fc90c39d7c644c6f5be3c725d5",
+      "cropBox": [
+        17,
+        13,
+        357,
+        469
+      ],
+      "cropNativeSize": [
+        340,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "pup.webp",
+      "bytes": 54296,
+      "sha256": "409a75e2de2dd004def48412f6a85c1c26fed4e35103214c2ed61b05a045ca2f",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "spiritwolf": {
+      "name": "灵狼",
+      "type": "minion",
+      "token": true,
+      "source": "sources/08-companions.png",
+      "sourceSHA256": "9bc11ec5669a508bb1d0065f14b0dc179218e3fc90c39d7c644c6f5be3c725d5",
+      "cropBox": [
+        376,
+        13,
+        713,
+        469
+      ],
+      "cropNativeSize": [
+        337,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "spiritwolf.webp",
+      "bytes": 54778,
+      "sha256": "23f5db08cd106a8202348e18a6a2beefd8b8b552e069f1340b480d1cc445114f",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "skeleton": {
+      "name": "骸骨",
+      "type": "minion",
+      "token": true,
+      "source": "sources/08-companions.png",
+      "sourceSHA256": "9bc11ec5669a508bb1d0065f14b0dc179218e3fc90c39d7c644c6f5be3c725d5",
+      "cropBox": [
+        735,
+        13,
+        1073,
+        469
+      ],
+      "cropNativeSize": [
+        338,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "skeleton.webp",
+      "bytes": 48314,
+      "sha256": "d2307f6abe4682fe14f6678b57c75824585753b3926e2a6a029582dcc6496c69",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "stone": {
+      "name": "石卫",
+      "type": "minion",
+      "token": true,
+      "source": "sources/08-companions.png",
+      "sourceSHA256": "9bc11ec5669a508bb1d0065f14b0dc179218e3fc90c39d7c644c6f5be3c725d5",
+      "cropBox": [
+        1093,
+        13,
+        1430,
+        469
+      ],
+      "cropNativeSize": [
+        337,
+        456
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "stone.webp",
+      "bytes": 59810,
+      "sha256": "e527b0cba10511d196b5f10de523d3a48740f38fb9755aa6feeab74422fa69c4",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "sheep": {
+      "name": "绵羊",
+      "type": "minion",
+      "token": true,
+      "source": "sources/08-companions.png",
+      "sourceSHA256": "9bc11ec5669a508bb1d0065f14b0dc179218e3fc90c39d7c644c6f5be3c725d5",
+      "cropBox": [
+        17,
+        547,
+        357,
+        1005
+      ],
+      "cropNativeSize": [
+        340,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "sheep.webp",
+      "bytes": 52516,
+      "sha256": "9201eabf1f2b47bc04d601adeb8aa192c0f55feb755f566cd29f5616f4f0e770",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "recruit": {
+      "name": "曙光新兵",
+      "type": "minion",
+      "token": true,
+      "source": "sources/08-companions.png",
+      "sourceSHA256": "9bc11ec5669a508bb1d0065f14b0dc179218e3fc90c39d7c644c6f5be3c725d5",
+      "cropBox": [
+        376,
+        547,
+        713,
+        1005
+      ],
+      "cropNativeSize": [
+        337,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "recruit.webp",
+      "bytes": 51432,
+      "sha256": "2ef75f39fdbf1f4f1051fb7c64b4de288017f27618781fc2f530614c364fc1a8",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "thorn": {
+      "name": "荆棘树灵",
+      "type": "minion",
+      "token": true,
+      "source": "sources/08-companions.png",
+      "sourceSHA256": "9bc11ec5669a508bb1d0065f14b0dc179218e3fc90c39d7c644c6f5be3c725d5",
+      "cropBox": [
+        735,
+        547,
+        1073,
+        1005
+      ],
+      "cropNativeSize": [
+        338,
+        458
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "file": "thorn.webp",
+      "bytes": 65396,
+      "sha256": "71cb0f31ef137794e4ddb745dac690e18e1b1ecae71004e8457f77701784ad91",
+      "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    }
+  }
+}

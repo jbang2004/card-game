@@ -1,0 +1,280 @@
+TAP version 13
+# Subtest: 56 manifest entries exactly equal 48 collectible + 8 token IDs
+ok 1 - 56 manifest entries exactly equal 48 collectible + 8 token IDs
+  ---
+  duration_ms: 1.372759
+  type: 'test'
+  ...
+# Subtest: Every output is distinct and matches its recorded file hash
+ok 2 - Every output is distinct and matches its recorded file hash
+  ---
+  duration_ms: 4.777999
+  type: 'test'
+  ...
+# Subtest: Source provenance points to all eight actual approved atlases
+ok 3 - Source provenance points to all eight actual approved atlases
+  ---
+  duration_ms: 147.872332
+  type: 'test'
+  ...
+# Subtest: All 56 card routes resolve directly to their own embedded anime image
+ok 4 - All 56 card routes resolve directly to their own embedded anime image
+  ---
+  duration_ms: 0.552112
+  type: 'test'
+  ...
+# Subtest: Missing future card art fails visibly rather than reverting to old vectors
+ok 5 - Missing future card art fails visibly rather than reverting to old vectors
+  ---
+  duration_ms: 0.787937
+  type: 'test'
+  ...
+# Subtest: Colliding Boss/card IDs are routed by palette, never changing card imagery
+ok 6 - Colliding Boss/card IDs are routed by palette, never changing card imagery
+  ---
+  duration_ms: 0.287303
+  type: 'test'
+  ...
+# Subtest: Three heroes and five Bosses use documented new panels without a legacy fallback
+ok 7 - Three heroes and five Bosses use documented new panels without a legacy fallback
+  ---
+  duration_ms: 1.803417
+  type: 'test'
+  ...
+# Subtest: No obsolete portrait-* entries remain in the environmental runtime cache
+ok 8 - No obsolete portrait-* entries remain in the environmental runtime cache
+  ---
+  duration_ms: 0.190127
+  type: 'test'
+  ...
+# Subtest: All focal calibrations are valid and bounded to small non-distorting overscan
+ok 9 - All focal calibrations are valid and bounded to small non-distorting overscan
+  ---
+  duration_ms: 2.507598
+  type: 'test'
+  ...
+# Subtest: Rules and card data retain the original v0.5 hashes
+ok 10 - Rules and card data retain the original v0.5 hashes
+  ---
+  duration_ms: 0.489828
+  type: 'test'
+  ...
+# Subtest: 48 collectible cards, 8 tokens; all three 30-card decks valid
+ok 11 - 48 collectible cards, 8 tokens; all three 30-card decks valid
+  ---
+  duration_ms: 1.296293
+  type: 'test'
+  ...
+# Subtest: mulligan, initial draw and opponent coin
+ok 12 - mulligan, initial draw and opponent coin
+  ---
+  duration_ms: 1.012436
+  type: 'test'
+  ...
+# Subtest: mana refresh and cap
+ok 13 - mana refresh and cap
+  ---
+  duration_ms: 0.401655
+  type: 'test'
+  ...
+# Subtest: invalid target and insufficient mana are atomic rejections
+ok 14 - invalid target and insufficient mana are atomic rejections
+  ---
+  duration_ms: 0.526603
+  type: 'test'
+  ...
+# Subtest: summon sickness prevents attacking
+ok 15 - summon sickness prevents attacking
+  ---
+  duration_ms: 1.116222
+  type: 'test'
+  ...
+# Subtest: rush permits minion combat, never same-turn face attacks
+ok 16 - rush permits minion combat, never same-turn face attacks
+  ---
+  duration_ms: 0.418611
+  type: 'test'
+  ...
+# Subtest: charge can attack heroes immediately
+ok 17 - charge can attack heroes immediately
+  ---
+  duration_ms: 0.247553
+  type: 'test'
+  ...
+# Subtest: taunt must be attacked; hidden taunt does not restrict targets
+ok 18 - taunt must be attacked; hidden taunt does not restrict targets
+  ---
+  duration_ms: 0.753284
+  type: 'test'
+  ...
+# Subtest: divine shield blocks poison and damage, then disappears
+ok 19 - divine shield blocks poison and damage, then disappears
+  ---
+  duration_ms: 0.610359
+  type: 'test'
+  ...
+# Subtest: combat damage is simultaneous
+ok 20 - combat damage is simultaneous
+  ---
+  duration_ms: 0.429978
+  type: 'test'
+  ...
+# Subtest: windfury allows exactly two attacks
+ok 21 - windfury allows exactly two attacks
+  ---
+  duration_ms: 0.263046
+  type: 'test'
+  ...
+# Subtest: stealth blocks enemy targeting, not friendly buffs or AoE
+ok 22 - stealth blocks enemy targeting, not friendly buffs or AoE
+  ---
+  duration_ms: 0.290478
+  type: 'test'
+  ...
+# Subtest: lifesteal heals for damage dealt and shields block it
+ok 23 - lifesteal heals for damage dealt and shields block it
+  ---
+  duration_ms: 0.224048
+  type: 'test'
+  ...
+# Subtest: deathrattles trigger after dead minions free board slots
+ok 24 - deathrattles trigger after dead minions free board slots
+  ---
+  duration_ms: 0.187582
+  type: 'test'
+  ...
+# Subtest: reborn fires once, at 1 health, with fresh summon sickness
+ok 25 - reborn fires once, at 1 health, with fresh summon sickness
+  ---
+  duration_ms: 0.138338
+  type: 'test'
+  ...
+# Subtest: spell damage stacks with relic, but not hero powers
+ok 26 - spell damage stacks with relic, but not hero powers
+  ---
+  duration_ms: 0.230708
+  type: 'test'
+  ...
+# Subtest: freeze blocks next own turn and thaws at own end
+ok 27 - freeze blocks next own turn and thaws at own end
+  ---
+  duration_ms: 0.227262
+  type: 'test'
+  ...
+# Subtest: silence removes enchantments, taunt and deathrattle
+ok 28 - silence removes enchantments, taunt and deathrattle
+  ---
+  duration_ms: 0.628687
+  type: 'test'
+  ...
+# Subtest: polymorph resets stats and keywords without a deathrattle
+ok 29 - polymorph resets stats and keywords without a deathrattle
+  ---
+  duration_ms: 0.211268
+  type: 'test'
+  ...
+# Subtest: temporary attack expires at own turn end
+ok 30 - temporary attack expires at own turn end
+  ---
+  duration_ms: 0.17932
+  type: 'test'
+  ...
+# Subtest: weapon enables hero attack and loses durability
+ok 31 - weapon enables hero attack and loses durability
+  ---
+  duration_ms: 0.204988
+  type: 'test'
+  ...
+# Subtest: minions retaliate against attacking heroes
+ok 32 - minions retaliate against attacking heroes
+  ---
+  duration_ms: 0.136004
+  type: 'test'
+  ...
+# Subtest: secret redirects incoming face attack to summoned guard
+ok 33 - secret redirects incoming face attack to summoned guard
+  ---
+  duration_ms: 0.144388
+  type: 'test'
+  ...
+# Subtest: duplicate secrets are rejected before spending mana
+ok 34 - duplicate secrets are rejected before spending mana
+  ---
+  duration_ms: 0.109034
+  type: 'test'
+  ...
+# Subtest: discover requires choice and grants exactly one card
+ok 35 - discover requires choice and grants exactly one card
+  ---
+  duration_ms: 0.182866
+  type: 'test'
+  ...
+# Subtest: hand cap burns; empty deck causes escalating fatigue
+ok 36 - hand cap burns; empty deck causes escalating fatigue
+  ---
+  duration_ms: 0.127192
+  type: 'test'
+  ...
+# Subtest: board cap prevents spending a minion card
+ok 37 - board cap prevents spending a minion card
+  ---
+  duration_ms: 0.114433
+  type: 'test'
+  ...
+# Subtest: each boss transitions exactly once at half health
+ok 38 - each boss transitions exactly once at half health
+  ---
+  duration_ms: 0.28516
+  type: 'test'
+  ...
+# Subtest: boss lethal does not trigger phase 2; over-state is immutable to actions
+ok 39 - boss lethal does not trigger phase 2; over-state is immutable to actions
+  ---
+  duration_ms: 0.234824
+  type: 'test'
+  ...
+# Subtest: simultaneous lethal is a draw
+ok 40 - simultaneous lethal is a draw
+  ---
+  duration_ms: 0.147412
+  type: 'test'
+  ...
+# Subtest: relics apply starting health, armor, mana and summon
+ok 41 - relics apply starting health, armor, mana and summon
+  ---
+  duration_ms: 0.130176
+  type: 'test'
+  ...
+# Subtest: serialized restoration retains deterministic RNG and action state
+ok 42 - serialized restoration retains deterministic RNG and action state
+  ---
+  duration_ms: 0.936832
+  type: 'test'
+  ...
+# Subtest: AI does not read the hidden contents of the player hand or deck
+ok 43 - AI does not read the hidden contents of the player hand or deck
+  ---
+  duration_ms: 0.71714
+  type: 'test'
+  ...
+# Subtest: AI actions are legal across all bosses
+ok 44 - AI actions are legal across all bosses
+  ---
+  duration_ms: 1.047868
+  type: 'test'
+  ...
+# Subtest: 150 randomized complete games maintain state invariants
+ok 45 - 150 randomized complete games maintain state invariants
+  ---
+  duration_ms: 178.284634
+  type: 'test'
+  ...
+1..45
+# tests 45
+# suites 0
+# pass 45
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 267.531874

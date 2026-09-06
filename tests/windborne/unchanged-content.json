@@ -1,0 +1,14 @@
+{
+  "src/engine.js": {
+    "unchanged": true,
+    "sha256": "b90e715cb4550429296d4bf9b4c426e287d578632725b7b16d442b4ce4e68acd"
+  },
+  "src/data.js": {
+    "unchanged": true,
+    "sha256": "d1d5aac78750c43b4c688cec5644ad8f3e9ebdec4c9a51e32ee1ab79449b8ff0"
+  },
+  "src/anime-assets.js": {
+    "unchanged": true,
+    "sha256": "efc020648bc522352b77d8d37f28daa29f89b48a15349e1fe815589c8a1f8614"
+  }
+}

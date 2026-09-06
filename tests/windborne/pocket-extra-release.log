@@ -1,0 +1,5 @@
+PASS Equipping a weapon through touch confirmation preserves mana, shows the weapon and leaves hand/hero/skill controls unobscured
+PASS Touch hero weapon attack targets a legal taunt, applies retaliation/lifesteal and loses exactly one durability
+PASS Landscape full-hand overview is reachable from the touch menu and does not alter the equipped-weapon match
+PASS Switching between native mobile and desktop layouts resets weapon geometry without changing the match; narrow resource rows do not overlap the skill caption
+PASS Desktop mouse drag-to-summon still spends the original cost and cleans its drag ghost

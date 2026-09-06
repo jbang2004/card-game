@@ -1,0 +1,309 @@
+{
+  "status": "passed",
+  "count": 17,
+  "checks": [
+    "All 56 embedded anime assets decode at their declared 336×448 resolution",
+    "Every card and token maps one-to-one to a distinct new image; no legacy/shared-card fallback",
+    "The real searchable collection displays all 48 new collectible artworks",
+    "All 48 visible DOM art rectangles cover their apertures without letterboxing",
+    "Names, cost, attack, health and text are live DOM, not the atlas caption pixels",
+    "The three hero choices use the documented matching anime panels",
+    "Playing the wolves spell summons two visible anime spirit-wolf tokens",
+    "Necromancer battlecry displays the new skeleton tokens and its own artwork",
+    "Transforming an enemy replaces the portrait with the new sheep illustration",
+    "The paladin hero power uses the new recruit artwork",
+    "Wolf and titan deathrattles reveal the new pup and stone-guard token images",
+    "The Thorn Queen power creates the new thorn token through actual rule events",
+    "The eighth token, ether coin, uses its new art and still grants one mana",
+    "All five Boss portrait routes use their explicit new-art aliases",
+    "Mobile full-art viewing preserves the battle and restores focus to the card sheet",
+    "Escape and device rotation close the art viewer without dismissing or spending the card",
+    "No external image fetches or JavaScript page errors in the executed integration checks"
+  ],
+  "decoded": [
+    {
+      "id": "spark",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "squire",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "wolf",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "archer",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "guard",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "oracle",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "wisp",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "spider",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "sentinel",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "assassin",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "cleric",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "berserker",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "golem",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "leech",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "treant",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "phoenix",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "rider",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "necromancer",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "paladin",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "titan",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "huntress",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "dragon",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "reaper",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "colossus",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "solaris",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "nyx",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "ashdragon",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "frostking",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "bolt",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "frostbolt",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "fireball",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "nova",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "storm",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "wisdom",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "blessing",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "renew",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "execute",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "silence",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "rally",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "wolves",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "shield",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "lifedrain",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "dagger",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "sunblade",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "polymorph",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "discovery",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "ambush",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "battlecry",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "coin",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "pup",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "spiritwolf",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "skeleton",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "stone",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "sheep",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "recruit",
+      "w": 336,
+      "h": 448
+    },
+    {
+      "id": "thorn",
+      "w": 336,
+      "h": 448
+    }
+  ],
+  "errors": [],
+  "imageRequests": [],
+  "testedHTMLsha256": "bee5fec655a6f27007c6ec7d98427e5a02b5b3dea46eba38e763f40e2999f790",
+  "mode": "Chromium desktop + native touch emulation; fixture-based token events; no public deployment or physical-device claim"
+}

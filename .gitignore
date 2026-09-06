@@ -1,0 +1,23 @@
+__pycache__/
+node_modules/
+.DS_Store
+vendor/three.min.js
+tests/capture_frames/
+tests/*-run.log
+
+# Developer handoff: generated output and local-only dependencies.
+/index.html
+/dist/
+/.venv/
+/venv/
+/.pytest_cache/
+/.cache/
+*.pyc
+*.pyo
+.env
+.env.*
+!.env.example
+/vendor/
+/playwright-report/
+/test-results/
+/assets/anime/Contact_Sheet_small.jpg

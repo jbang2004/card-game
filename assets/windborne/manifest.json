@@ -1,0 +1,338 @@
+{
+  "version": "0.7.0",
+  "sourceSHA256": "9d9ec6d407d7263223df36cce43c52295ecbd7a8c97d44ec75e2b26faad4232d",
+  "source": "approved-village.png",
+  "method": "polygon extraction from approved environment concept; authored board surface and UI materials",
+  "assets": {
+    "building-brewery": {
+      "file": "building-brewery.webp",
+      "size": [
+        558,
+        543
+      ],
+      "sha256": "8bc3836209a8dc805bcaf64c1e737887cc5c2dc06947f3fe6af1e78fdaebf0a2",
+      "crop": [
+        0,
+        0,
+        558,
+        543
+      ],
+      "maskPolygon": [
+        [
+          0,
+          0
+        ],
+        [
+          553,
+          0
+        ],
+        [
+          551,
+          157
+        ],
+        [
+          558,
+          225
+        ],
+        [
+          527,
+          275
+        ],
+        [
+          484,
+          300
+        ],
+        [
+          390,
+          309
+        ],
+        [
+          315,
+          334
+        ],
+        [
+          288,
+          394
+        ],
+        [
+          278,
+          471
+        ],
+        [
+          243,
+          523
+        ],
+        [
+          0,
+          543
+        ]
+      ],
+      "kind": "approved concept cutout"
+    },
+    "building-observatory": {
+      "file": "building-observatory.webp",
+      "size": [
+        406,
+        547
+      ],
+      "sha256": "9584e3155b8212c48b0f7cc4e41707343f03ca5025fbb6ac123e70d657e2e051",
+      "crop": [
+        1130,
+        0,
+        1536,
+        547
+      ],
+      "maskPolygon": [
+        [
+          1245,
+          0
+        ],
+        [
+          1536,
+          0
+        ],
+        [
+          1536,
+          547
+        ],
+        [
+          1440,
+          520
+        ],
+        [
+          1380,
+          480
+        ],
+        [
+          1379,
+          405
+        ],
+        [
+          1361,
+          355
+        ],
+        [
+          1257,
+          325
+        ],
+        [
+          1140,
+          300
+        ],
+        [
+          1130,
+          253
+        ],
+        [
+          1180,
+          207
+        ],
+        [
+          1220,
+          129
+        ],
+        [
+          1234,
+          50
+        ]
+      ],
+      "kind": "approved concept cutout"
+    },
+    "building-mine": {
+      "file": "building-mine.webp",
+      "size": [
+        520,
+        398
+      ],
+      "sha256": "9587ee46c6fe2e53a0e50d511173f2cac95267d50a51c99f1a167626d7769276",
+      "crop": [
+        0,
+        491,
+        520,
+        889
+      ],
+      "maskPolygon": [
+        [
+          0,
+          491
+        ],
+        [
+          157,
+          491
+        ],
+        [
+          192,
+          500
+        ],
+        [
+          224,
+          558
+        ],
+        [
+          284,
+          614
+        ],
+        [
+          301,
+          650
+        ],
+        [
+          384,
+          696
+        ],
+        [
+          450,
+          718
+        ],
+        [
+          482,
+          773
+        ],
+        [
+          520,
+          799
+        ],
+        [
+          501,
+          827
+        ],
+        [
+          434,
+          834
+        ],
+        [
+          341,
+          851
+        ],
+        [
+          340,
+          889
+        ],
+        [
+          0,
+          889
+        ]
+      ],
+      "kind": "approved concept cutout"
+    },
+    "building-forge": {
+      "file": "building-forge.webp",
+      "size": [
+        350,
+        556
+      ],
+      "sha256": "9910d85606aef0eed4b481cdb160a02ceceecf1402668b29dc46f2b95ee38761",
+      "crop": [
+        1186,
+        468,
+        1536,
+        1024
+      ],
+      "maskPolygon": [
+        [
+          1410,
+          478
+        ],
+        [
+          1536,
+          468
+        ],
+        [
+          1536,
+          1024
+        ],
+        [
+          1352,
+          1024
+        ],
+        [
+          1310,
+          944
+        ],
+        [
+          1347,
+          911
+        ],
+        [
+          1347,
+          871
+        ],
+        [
+          1330,
+          811
+        ],
+        [
+          1315,
+          769
+        ],
+        [
+          1253,
+          751
+        ],
+        [
+          1191,
+          731
+        ],
+        [
+          1186,
+          663
+        ],
+        [
+          1272,
+          611
+        ],
+        [
+          1365,
+          564
+        ]
+      ],
+      "kind": "approved concept cutout"
+    },
+    "horizon": {
+      "file": "horizon.webp",
+      "size": [
+        1536,
+        130
+      ],
+      "sha256": "a544d5c55d0d2c35c88c5810d2cab87494effbd5e6b9d9b23085f7ff7786b05c",
+      "crop": [
+        0,
+        0,
+        1536,
+        130
+      ],
+      "kind": "native-width approved concept skyline; above all gameplay pixels"
+    },
+    "paper": {
+      "file": "paper.webp",
+      "size": [
+        512,
+        512
+      ],
+      "sha256": "e1466ed03f53b3faa1c80910c8588a54c8e84e1cdab45741344ae58003a5335c",
+      "kind": "authored paper texture"
+    },
+    "wood": {
+      "file": "wood.webp",
+      "size": [
+        512,
+        256
+      ],
+      "sha256": "471864d3640b064e45bf60f255e57bb1ca57632d02c97cb6357b022d94996476",
+      "kind": "authored muted wood material"
+    },
+    "board": {
+      "file": "board.webp",
+      "size": [
+        1600,
+        940
+      ],
+      "sha256": "f5d1cf7bd844efebb227e855b8eb7f34afbe2c153eece48a8f7d8f99fe716f7c",
+      "kind": "authored transparent stone/wood board, no gameplay pixels"
+    },
+    "leaf-seal": {
+      "file": "leaf-seal.svg",
+      "kind": "authored vector UI emblem"
+    }
+  }
+}

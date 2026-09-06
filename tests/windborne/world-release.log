@@ -1,0 +1,15 @@
+PASS 1 All nine embedded world/material assets decode, without remote image loads
+PASS 2 Desktop, mobile and gallery share the same four approved anime architecture layers
+PASS 3 All 56 card illustrations retain their existing approved image routes
+PASS 4 Updated world gallery uses new architecture, closes cleanly and leaves progression untouched
+PASS 5 Day/dusk switching changes visual state and aria state, never battle state or RNG
+PASS 6 All four relocated scenery hotspots give feedback without consuming cards or mana
+PASS 7 All 48 collectible pictures cover the new matte frames; rule text remains live
+PASS 8 Palette changes mid-spell do not cancel the result, freeze an input lock or spend twice
+PASS 9 Real desktop melee retains simultaneous damage, target removal and animation cleanup
+PASS 10 Reduced motion retains a static illuminated world and the new time-of-day setting
+PASS 11 Portrait touch-confirmed casting stays readable and hits the right target with the new UI
+PASS 12 Landscape rotation retains the same match and keeps all primary controls on screen
+PASS 13 Phone-native day/dusk control remains reachable through settings without toolbar crowding
+PASS 14 No JavaScript page errors or remote image/font requests in this integration run
+DONE 14 checks
