@@ -364,3 +364,89 @@ for (const [width, height, touch] of [
     await context.close();
   });
 }
+
+test("shared desktop and touch materials, readable lobby, single card aperture", async ({
+  browser,
+}) => {
+  const materials = [];
+  for (const [width, height, touch] of [
+    [1600, 940, false],
+    [390, 844, true],
+    [844, 390, true],
+  ]) {
+    const context = await browser.newContext({
+      viewport: { width, height },
+      isMobile: touch,
+      hasTouch: touch,
+    });
+    const page = await context.newPage();
+    await page.goto("http://127.0.0.1:8000/dist/");
+    await ready(page);
+    materials.push(
+      await page.evaluate(() =>
+        Object.fromEntries(
+          [".lobby-copy", ".gold-btn", ".ghost-btn"].map((s) => {
+            const c = getComputedStyle(document.querySelector(s));
+            return [s, [c.backgroundColor, c.backgroundImage, c.color]];
+          }),
+        ),
+      ),
+    );
+    const contrast = await page.evaluate(() => {
+      const rgb = (s) =>
+        s
+          .match(/[\d.]+/g)
+          .slice(0, 3)
+          .map(Number);
+      const lum = (s) =>
+        rgb(s)
+          .map((v) => v / 255)
+          .map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
+          .reduce((a, v, i) => a + v * [0.2126, 0.7152, 0.0722][i], 0);
+      const bg = lum(
+        getComputedStyle(document.querySelector(".lobby-copy")).backgroundColor,
+      );
+      return [".lobby-tagline", ".lobby-desc", ".lobby-copy .eyebrow"].map(
+        (s) => {
+          const fg = lum(getComputedStyle(document.querySelector(s)).color);
+          return (Math.max(fg, bg) + 0.05) / (Math.min(fg, bg) + 0.05);
+        },
+      );
+    });
+    expect(contrast.every((x) => x >= 4.5)).toBe(true);
+    await page.screenshot({ path: path.join(out, `v10-lobby-${width}.png`) });
+    await page.evaluate(() => Emberfall.showLibrary());
+    const faults = await page.evaluate(() =>
+      Array.from(document.querySelectorAll(".library-item .card-art")).flatMap(
+        (el) => {
+          const img = el.querySelector("img"),
+            a = el.getBoundingClientRect(),
+            b = img.getBoundingClientRect(),
+            s = getComputedStyle(el);
+          return Math.abs(a.width - b.width) > 0.5 ||
+            Math.abs(a.height - b.height) > 0.5 ||
+            Math.abs(a.x - b.x) > 0.5 ||
+            Math.abs(a.y - b.y) > 0.5 ||
+            s.borderRadius !== "0px" ||
+            s.overflow !== "hidden"
+            ? [el.closest("[data-add]").dataset.add]
+            : [];
+        },
+      ),
+    );
+    expect(faults).toEqual([]);
+    await page.screenshot({ path: path.join(out, `v10-library-${width}.png`) });
+    await page.evaluate(() => {
+      Emberfall.closeModal();
+      Emberfall.settings.reduced = true;
+      EmberFX.configure(true, false);
+      Emberfall.demo();
+    });
+    await idle(page);
+    await page.waitForTimeout(800);
+    await page.screenshot({ path: path.join(out, `v10-battle-${width}.png`) });
+    await context.close();
+  }
+  expect(materials[1]).toEqual(materials[0]);
+  expect(materials[2]).toEqual(materials[0]);
+});

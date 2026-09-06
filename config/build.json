@@ -35,5 +35,6 @@
   "BATTLE_LAYOUT": "presentation/battle.css",
   "AUDIO": "platform/audio.js",
   "PREMIUM_ASSETS": "premium-assets.js",
-  "PREMIUM_STYLE": "presentation/premium.css"
+  "PREMIUM_STYLE": "presentation/premium.css",
+  "COMPONENT_STYLE": "presentation/components.css"
 }

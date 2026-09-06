@@ -39,3 +39,9 @@ Web 图片从同一份内嵌源缓存提取，没有重新压缩原画。素材�
 ## v0.9 场景重构
 
 `src/atelier-world.js` 用单张连续原画替换建筑蒙版拼接，独立缓存随视口和昼夜失效；保留调用接口。`src/presentation/premium.css` 负责新材质和数值徽章尺寸，布局仍由原生视口模块管理。`src/premium-assets.js` 由 `tools/build_premium_assets.py` 从审核后的 WebP 生成；生产构建提取为独立图片，单文件构建保留内嵌资源。原始 PNG 与提示词见 `assets/premium/`。
+
+## v0.10 样式层级与组件契约
+
+模板声明 CSS cascade layers：`legacy → layout → theme → components`。旧样式保留基础布局兼容；`battle.css` 管理专属几何，`premium.css` 提供材质，`components.css` 唯一定义大厅色彩、按钮色彩、正文排版与卡图裁切。不再依赖新规则拥有更长选择器来胜过历史移动端或稀有度样式。组件响应式规则只改变字号与几何，不改变配色。
+
+卡面使用一个内框、一个矩形图片窗口及 `object-fit: cover`；图片不再额外缩放，去掉历史伪元素纸面和竞争的拱形轮廓。费用与攻血仍在独立的外层徽章，不会被图片裁切影响。

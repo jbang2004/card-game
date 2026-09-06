@@ -1,13 +1,13 @@
-✔ 56 manifest entries exactly equal 48 collectible + 8 token IDs (1.448041ms)
-✔ Every output is distinct and matches its recorded file hash (12.1835ms)
-✔ Source provenance points to all eight actual approved atlases (96.982208ms)
-✔ All 56 card routes resolve directly to their own embedded anime image (0.233ms)
-✔ Missing future card art fails visibly rather than reverting to old vectors (0.397833ms)
-✔ Colliding Boss/card IDs are routed by palette, never changing card imagery (0.124333ms)
-✔ Three heroes and five Bosses use documented new panels without a legacy fallback (0.095709ms)
-✔ No obsolete portrait-* entries remain in the environmental runtime cache (0.090583ms)
-✔ All focal calibrations are valid and bounded to small non-distorting overscan (1.4295ms)
-✔ Rules and card data retain the original v0.5 hashes (0.44425ms)
+✔ 56 manifest entries exactly equal 48 collectible + 8 token IDs (1.104166ms)
+✔ Every output is distinct and matches its recorded file hash (10.682875ms)
+✔ Source provenance points to all eight actual approved atlases (66.770125ms)
+✔ All 56 card routes resolve directly to their own embedded anime image (0.186833ms)
+✔ Missing future card art fails visibly rather than reverting to old vectors (0.297708ms)
+✔ Colliding Boss/card IDs are routed by palette, never changing card imagery (0.098042ms)
+✔ Three heroes and five Bosses use documented new panels without a legacy fallback (0.073125ms)
+✔ No obsolete portrait-* entries remain in the environmental runtime cache (0.069041ms)
+✔ All focal calibrations are valid and bounded to small non-distorting overscan (1.120083ms)
+✔ Rules and card data retain the original v0.5 hashes (0.367875ms)
 ℹ tests 10
 ℹ suites 0
 ℹ pass 10
@@ -15,4 +15,4 @@
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 238.088958
+ℹ duration_ms 171.044791

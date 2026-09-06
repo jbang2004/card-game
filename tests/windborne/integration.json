@@ -66,6 +66,6 @@
   ],
   "errors": [],
   "requests": [],
-  "testedHTMLsha256": "7ed3cc8db74d9ef552830378a5b0cc10f216da7cd6fd55bd8094ad79660901b4",
+  "testedHTMLsha256": "1c963ecda548a3810d5e4c2d051a2fea8adf88e50873f0258efb34034bfe22e2",
   "mode": "Chromium desktop and native touch emulation; explicit memory storage; offline Canvas"
 }

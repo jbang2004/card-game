@@ -5,7 +5,7 @@
   const E = Emberfall,
     $ = (s) => document.querySelector(s),
     root = document.documentElement.style;
-  document.title = "烬域 · 风起之境 — THE GILDED TAVERN v0.9";
+  document.title = "烬域 · 风起之境 — THE GILDED TAVERN v0.10";
   root.setProperty("--wind-paper-texture", `url("${WindborneAssets.paper}")`);
   root.setProperty(
     "--wind-leaf-seal",
@@ -19,7 +19,7 @@
   $(".lobby-desc").textContent = "三位旅人 · 四十八张卡牌 · 五段首领冒险";
   $(".lobby-world-label").innerHTML =
     "<span>THE WAYFARER’S TAVERN</span><i></i><span>旅人的酒馆 · 炉火正暖</span>";
-  $(".lobby-bottom small").textContent = "VOL. IX / THE GILDED TAVERN";
+  $(".lobby-bottom small").textContent = "VOL. X / THE GILDED TAVERN";
   $(".lobby-collection>.section-label").textContent = "收集故事，踏上旅途";
   // The actual existing character assets are unchanged, selected for the lighter hub.
   $("#lobby-card-one").innerHTML = E.cardHTML(EmberData.byId.huntress);

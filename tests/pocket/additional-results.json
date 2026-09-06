@@ -1,6 +1,6 @@
 {
   "status": "passed",
-  "testedHTMLsha256": "51e0b276cddb24878a9fd106086ad06e8f812cbaddcbc03ea585045c369059da",
+  "testedHTMLsha256": "b4dc29f12c3689653daaeaf0eca959261e6866ac63ed516e6c7060baa0cafb79",
   "checks": [
     "Equipping a weapon through touch confirmation preserves mana, shows the weapon and leaves hand/hero/skill controls unobscured",
     "Touch hero weapon attack targets a legal taunt, applies retaliation/lifesteal and loses exactly one durability",

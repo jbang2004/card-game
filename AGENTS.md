@@ -16,6 +16,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 ## 修改边界
 
+- 组件样式遵循 `legacy → layout → theme → components` 层级；新配色与卡图容器放在 `presentation/components.css`，手机规则不要另外定义主题颜色。
 - 修改 `src/` 与素材源，然后构建；不要只改生成的 `index.html`。
 - `src/template.html` / `build.py` 决定模块顺序；历史名称的 `tavern*`、`atelier*` 文件仍有构建引用，不能因名字旧就删除。
 - 56 个卡牌 ID 必须各有新动漫插画；保持严格映射，不让缺图静默回退到旧程序化角色图。
