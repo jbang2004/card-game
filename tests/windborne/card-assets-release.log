@@ -1,0 +1,70 @@
+TAP version 13
+# Subtest: 56 manifest entries exactly equal 48 collectible + 8 token IDs
+ok 1 - 56 manifest entries exactly equal 48 collectible + 8 token IDs
+  ---
+  duration_ms: 1.339189
+  type: 'test'
+  ...
+# Subtest: Every output is distinct and matches its recorded file hash
+ok 2 - Every output is distinct and matches its recorded file hash
+  ---
+  duration_ms: 5.421702
+  type: 'test'
+  ...
+# Subtest: Source provenance points to all eight actual approved atlases
+ok 3 - Source provenance points to all eight actual approved atlases
+  ---
+  duration_ms: 154.451919
+  type: 'test'
+  ...
+# Subtest: All 56 card routes resolve directly to their own embedded anime image
+ok 4 - All 56 card routes resolve directly to their own embedded anime image
+  ---
+  duration_ms: 0.504859
+  type: 'test'
+  ...
+# Subtest: Missing future card art fails visibly rather than reverting to old vectors
+ok 5 - Missing future card art fails visibly rather than reverting to old vectors
+  ---
+  duration_ms: 0.774701
+  type: 'test'
+  ...
+# Subtest: Colliding Boss/card IDs are routed by palette, never changing card imagery
+ok 6 - Colliding Boss/card IDs are routed by palette, never changing card imagery
+  ---
+  duration_ms: 0.337791
+  type: 'test'
+  ...
+# Subtest: Three heroes and five Bosses use documented new panels without a legacy fallback
+ok 7 - Three heroes and five Bosses use documented new panels without a legacy fallback
+  ---
+  duration_ms: 1.615279
+  type: 'test'
+  ...
+# Subtest: No obsolete portrait-* entries remain in the environmental runtime cache
+ok 8 - No obsolete portrait-* entries remain in the environmental runtime cache
+  ---
+  duration_ms: 0.233016
+  type: 'test'
+  ...
+# Subtest: All focal calibrations are valid and bounded to small non-distorting overscan
+ok 9 - All focal calibrations are valid and bounded to small non-distorting overscan
+  ---
+  duration_ms: 2.428416
+  type: 'test'
+  ...
+# Subtest: Rules and card data retain the original v0.5 hashes
+ok 10 - Rules and card data retain the original v0.5 hashes
+  ---
+  duration_ms: 0.517999
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 253.015032

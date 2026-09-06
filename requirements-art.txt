@@ -1,0 +1,4 @@
+# Asset authoring only; ordinary HTML build uses the Python standard library.
+# Versions observed in the supplied asset-build environment; no packages bundled.
+Pillow==12.3.0
+numpy==2.3.5

@@ -1,0 +1,8 @@
+{
+  "zipExtractedBuildHTMLsha256": "bee5fec655a6f27007c6ec7d98427e5a02b5b3dea46eba38e763f40e2999f790",
+  "releaseHTMLsha256": "bee5fec655a6f27007c6ec7d98427e5a02b5b3dea46eba38e763f40e2999f790",
+  "byteIdentical": true,
+  "archiveCardAssetTests": 10,
+  "fontFiles": 0,
+  "buildOutput": "Built /mnt/data/_verify_windborne_release/Emberfall_Windborne/index.html: 8,844,233 bytes (CDN Three.js: full offline 2D fallback)"
+}

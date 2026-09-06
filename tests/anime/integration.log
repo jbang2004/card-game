@@ -1,0 +1,18 @@
+PASS 1 All 56 embedded anime assets decode at their declared 336×448 resolution
+PASS 2 Every card and token maps one-to-one to a distinct new image; no legacy/shared-card fallback
+PASS 3 The real searchable collection displays all 48 new collectible artworks
+PASS 4 All 48 visible DOM art rectangles cover their apertures without letterboxing
+PASS 5 Names, cost, attack, health and text are live DOM, not the atlas caption pixels
+PASS 6 The three hero choices use the documented matching anime panels
+PASS 7 Playing the wolves spell summons two visible anime spirit-wolf tokens
+PASS 8 Necromancer battlecry displays the new skeleton tokens and its own artwork
+PASS 9 Transforming an enemy replaces the portrait with the new sheep illustration
+PASS 10 The paladin hero power uses the new recruit artwork
+PASS 11 Wolf and titan deathrattles reveal the new pup and stone-guard token images
+PASS 12 The Thorn Queen power creates the new thorn token through actual rule events
+PASS 13 The eighth token, ether coin, uses its new art and still grants one mana
+PASS 14 All five Boss portrait routes use their explicit new-art aliases
+PASS 15 Mobile full-art viewing preserves the battle and restores focus to the card sheet
+PASS 16 Escape and device rotation close the art viewer without dismissing or spending the card
+PASS 17 No external image fetches or JavaScript page errors in the executed integration checks
+DONE 17 integration checks

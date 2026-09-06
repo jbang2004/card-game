@@ -1,0 +1,35 @@
+{
+  "sha256": "bee5fec655a6f27007c6ec7d98427e5a02b5b3dea46eba38e763f40e2999f790",
+  "suites": [
+    {
+      "suite": "engine",
+      "exitCode": 0,
+      "seconds": 0.32
+    },
+    {
+      "suite": "card-assets",
+      "exitCode": 0,
+      "seconds": 0.32
+    },
+    {
+      "suite": "pocket",
+      "exitCode": 0,
+      "seconds": 106.66
+    },
+    {
+      "suite": "pocket-extra",
+      "exitCode": 0,
+      "seconds": 12.85
+    },
+    {
+      "suite": "anime",
+      "exitCode": 0,
+      "seconds": 29.77
+    },
+    {
+      "suite": "world",
+      "exitCode": 0,
+      "seconds": 14.63
+    }
+  ]
+}

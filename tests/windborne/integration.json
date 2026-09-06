@@ -1,0 +1,71 @@
+{
+  "status": "passed",
+  "count": 14,
+  "checks": [
+    "All nine embedded world/material assets decode, without remote image loads",
+    "Desktop, mobile and gallery share the same four approved anime architecture layers",
+    "All 56 card illustrations retain their existing approved image routes",
+    "Updated world gallery uses new architecture, closes cleanly and leaves progression untouched",
+    "Day/dusk switching changes visual state and aria state, never battle state or RNG",
+    "All four relocated scenery hotspots give feedback without consuming cards or mana",
+    "All 48 collectible pictures cover the new matte frames; rule text remains live",
+    "Palette changes mid-spell do not cancel the result, freeze an input lock or spend twice",
+    "Real desktop melee retains simultaneous damage, target removal and animation cleanup",
+    "Reduced motion retains a static illuminated world and the new time-of-day setting",
+    "Portrait touch-confirmed casting stays readable and hits the right target with the new UI",
+    "Landscape rotation retains the same match and keeps all primary controls on screen",
+    "Phone-native day/dusk control remains reachable through settings without toolbar crowding",
+    "No JavaScript page errors or remote image/font requests in this integration run"
+  ],
+  "assets": [
+    {
+      "key": "building-brewery",
+      "w": 558,
+      "h": 543
+    },
+    {
+      "key": "building-observatory",
+      "w": 406,
+      "h": 547
+    },
+    {
+      "key": "building-mine",
+      "w": 520,
+      "h": 398
+    },
+    {
+      "key": "building-forge",
+      "w": 350,
+      "h": 556
+    },
+    {
+      "key": "horizon",
+      "w": 1536,
+      "h": 130
+    },
+    {
+      "key": "paper",
+      "w": 512,
+      "h": 512
+    },
+    {
+      "key": "wood",
+      "w": 512,
+      "h": 256
+    },
+    {
+      "key": "board",
+      "w": 1600,
+      "h": 940
+    },
+    {
+      "key": "leaf-seal",
+      "w": 150,
+      "h": 150
+    }
+  ],
+  "errors": [],
+  "requests": [],
+  "testedHTMLsha256": "bee5fec655a6f27007c6ec7d98427e5a02b5b3dea46eba38e763f40e2999f790",
+  "mode": "Chromium desktop and native touch emulation; explicit memory storage; offline Canvas"
+}

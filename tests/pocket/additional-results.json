@@ -1,0 +1,15 @@
+{
+  "status": "passed",
+  "testedHTMLsha256": "bee5fec655a6f27007c6ec7d98427e5a02b5b3dea46eba38e763f40e2999f790",
+  "checks": [
+    "Equipping a weapon through touch confirmation preserves mana, shows the weapon and leaves hand/hero/skill controls unobscured",
+    "Touch hero weapon attack targets a legal taunt, applies retaliation/lifesteal and loses exactly one durability",
+    "Landscape full-hand overview is reachable from the touch menu and does not alter the equipped-weapon match",
+    "Switching between native mobile and desktop layouts resets weapon geometry without changing the match; narrow resource rows do not overlap the skill caption",
+    "Desktop mouse drag-to-summon still spends the original cost and cleans its drag ghost"
+  ],
+  "count": 5,
+  "errors": [],
+  "input": "Chromium desktop mouse and emulated touch",
+  "storage": "explicit memory adapter"
+}

@@ -1,0 +1,16 @@
+{
+  "publicDeployment": false,
+  "server": "temporary local static server",
+  "httpResponse": 200,
+  "servedHTMLBytes": 8360738,
+  "browser": {
+    "http": {
+      "navigation": "blocked or failed",
+      "error": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at http://127.0.0.1:36561/"
+    },
+    "file": {
+      "navigation": "blocked or failed",
+      "error": "Page.goto: net::ERR_BLOCKED_BY_ADMINISTRATOR at file:///mnt/data/Emberfall_Anime_Atelier/index.html"
+    }
+  }
+}

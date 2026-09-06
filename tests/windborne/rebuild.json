@@ -1,0 +1,41 @@
+{
+  "method": "Rebuild approved-world asset extraction and single HTML; compare SHA256",
+  "before": {
+    "index.html": "bee5fec655a6f27007c6ec7d98427e5a02b5b3dea46eba38e763f40e2999f790",
+    "src/world-assets.js": "74ee6152b183c4027758a6121f256bff2a3ada453a22ccf09db631b6bdb7d246",
+    "assets/windborne/manifest.json": "2bd5ab8c89fb55f258b49d55b70c1d84c73675852a60fa72853e48450c702999"
+  },
+  "after": {
+    "index.html": "bee5fec655a6f27007c6ec7d98427e5a02b5b3dea46eba38e763f40e2999f790",
+    "src/world-assets.js": "74ee6152b183c4027758a6121f256bff2a3ada453a22ccf09db631b6bdb7d246",
+    "assets/windborne/manifest.json": "2bd5ab8c89fb55f258b49d55b70c1d84c73675852a60fa72853e48450c702999"
+  },
+  "identical": true,
+  "bytes": 8844233,
+  "browserSuites": [
+    {
+      "file": "tests/pocket/browser-results.json",
+      "count": 31,
+      "sha256": "bee5fec655a6f27007c6ec7d98427e5a02b5b3dea46eba38e763f40e2999f790",
+      "errors": []
+    },
+    {
+      "file": "tests/pocket/additional-results.json",
+      "count": 5,
+      "sha256": "bee5fec655a6f27007c6ec7d98427e5a02b5b3dea46eba38e763f40e2999f790",
+      "errors": []
+    },
+    {
+      "file": "tests/anime/integration-results.json",
+      "count": 17,
+      "sha256": "bee5fec655a6f27007c6ec7d98427e5a02b5b3dea46eba38e763f40e2999f790",
+      "errors": []
+    },
+    {
+      "file": "tests/windborne/integration.json",
+      "count": 14,
+      "sha256": "bee5fec655a6f27007c6ec7d98427e5a02b5b3dea46eba38e763f40e2999f790",
+      "errors": []
+    }
+  ]
+}
