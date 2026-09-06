@@ -1,8 +1,8 @@
 {
   "name": "emberfall-card-game",
-  "version": "0.8.0",
+  "version": "0.10.1",
   "private": true,
-  "description": "Emberfall Wind Borne: illustrated anime village, matte journal UI, responsive single-player card battle",
+  "description": "Emberfall: single-player fantasy card battles, responsive UI and offline rules",
   "license": "MIT",
   "scripts": {
     "build": "python3 build.py",

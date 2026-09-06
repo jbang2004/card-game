@@ -70,6 +70,7 @@ const EmberFX = (() => {
   function setBusy(v) {
     busy = v;
     app.classList.toggle("fx-busy", v);
+    document.dispatchEvent(new CustomEvent("ember:fx-busy", { detail: v }));
     const el = document.getElementById("action-status");
     if (el) el.textContent = v ? "RESOLVING · 战斗结算" : "";
   }

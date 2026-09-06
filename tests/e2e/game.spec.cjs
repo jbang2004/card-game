@@ -450,3 +450,37 @@ test("shared desktop and touch materials, readable lobby, single card aperture",
   expect(materials[1]).toEqual(materials[0]);
   expect(materials[2]).toEqual(materials[0]);
 });
+
+test("live-play fix: end turn exposes resolving state and restores readiness", async ({
+  page,
+}) => {
+  await demo(page);
+  await page.locator('.hand-card[data-cardid="frostbolt"]').click();
+  await page.locator('.minion.enemy[data-cardid="golem"]').click();
+  await expect(page.locator("#end-turn")).toBeDisabled();
+  await expect(page.locator("#end-turn")).toHaveText("结算中…");
+  await idle(page);
+  await expect(page.locator("#end-turn")).toBeEnabled();
+  await expect(page.locator("#end-turn")).toHaveText("结束回合");
+  await expect(page.locator("#hand")).toHaveAttribute(
+    "aria-label",
+    "你的 5 张手牌",
+  );
+  await page.locator("#end-turn").click();
+  await idle(page);
+});
+
+test("overkill health announcement matches the visible zero", async ({
+  page,
+}) => {
+  await demo(page);
+  await page.evaluate(() => {
+    Emberfall.game.s.p.hp = -1;
+    Emberfall.renderNow();
+  });
+  await expect(page.locator("#player-hero")).toHaveAttribute(
+    "aria-label",
+    /生命 0，/,
+  );
+  await expect(page.locator("#player-hero .hero-health")).toHaveText("0");
+});
