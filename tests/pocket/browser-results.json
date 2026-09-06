@@ -1,6 +1,6 @@
 {
   "status": "passed",
-  "testedHTMLsha256": "4d42ea0cd848b7d2ad5778c7c4e16f64ef9ed2ff5962d9b0c6ae4d99a7e04245",
+  "testedHTMLsha256": "c7333b5f578e36dffe200f68d04f843ffe1c3718da004bc6ec278e8b7bdac01d",
   "checks": [
     "Portrait lobby uses native CSS pixels, with reachable primary actions and no desktop letterboxing",
     "Portrait hero power, end-turn, menu and collection buttons have at least 44 CSS-pixel height",
@@ -60,70 +60,70 @@
       {
         "width": 320,
         "height": 568,
-        "minionWidth": 31.99999237060547,
+        "minionWidth": 30.65155029296875,
         "powerHeight": 52,
         "endTurnHeight": 52
       },
       {
         "width": 360,
         "height": 640,
-        "minionWidth": 42.99999237060547,
+        "minionWidth": 39.4718017578125,
         "powerHeight": 52,
         "endTurnHeight": 52
       },
       {
         "width": 390,
         "height": 844,
-        "minionWidth": 48,
+        "minionWidth": 45.98106384277344,
         "powerHeight": 52,
         "endTurnHeight": 52
       },
       {
         "width": 430,
         "height": 932,
-        "minionWidth": 52.27085876464844,
+        "minionWidth": 48.663330078125,
         "powerHeight": 52,
         "endTurnHeight": 52
       },
       {
         "width": 568,
         "height": 320,
-        "minionWidth": 32.54400634765625,
+        "minionWidth": 31.610748291015625,
         "powerHeight": 52,
         "endTurnHeight": 50
       },
       {
         "width": 667,
         "height": 375,
-        "minionWidth": 53.249755859375,
+        "minionWidth": 49.5701904296875,
         "powerHeight": 52,
         "endTurnHeight": 50
       },
       {
         "width": 844,
         "height": 390,
-        "minionWidth": 61.144073486328125,
+        "minionWidth": 59.396026611328125,
         "powerHeight": 52,
         "endTurnHeight": 50
       },
       {
         "width": 932,
         "height": 430,
-        "minionWidth": 69.03536987304688,
+        "minionWidth": 64.2698974609375,
         "powerHeight": 52,
         "endTurnHeight": 50
       },
       {
         "width": 768,
         "height": 1024,
-        "minionWidth": 74.95440673828125,
+        "minionWidth": 72.81103515625,
         "powerHeight": 52,
         "endTurnHeight": 52
       },
       {
         "width": 1024,
         "height": 768,
-        "minionWidth": 69.0357666015625,
+        "minionWidth": 67.063232421875,
         "powerHeight": 52,
         "endTurnHeight": 50
       }

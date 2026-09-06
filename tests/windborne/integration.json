@@ -3,9 +3,9 @@
   "count": 14,
   "checks": [
     "All nine embedded world/material assets decode, without remote image loads",
-    "Desktop, mobile and gallery share the same four approved anime architecture layers",
+    "Continuous premium board decodes; four historical architecture assets remain archived",
     "All 56 card illustrations retain their existing approved image routes",
-    "Updated world gallery uses new architecture, closes cleanly and leaves progression untouched",
+    "Historical art archive displays four originals, closes cleanly and leaves progression untouched",
     "Day/dusk switching changes visual state and aria state, never battle state or RNG",
     "All four relocated scenery hotspots give feedback without consuming cards or mana",
     "All 48 collectible pictures cover the new matte frames; rule text remains live",
@@ -66,6 +66,6 @@
   ],
   "errors": [],
   "requests": [],
-  "testedHTMLsha256": "2cc6475d9e4d65c23aef3d8097b29e5b44949965cb657f740183ebd87b8d125d",
+  "testedHTMLsha256": "7ed3cc8db74d9ef552830378a5b0cc10f216da7cd6fd55bd8094ad79660901b4",
   "mode": "Chromium desktop and native touch emulation; explicit memory storage; offline Canvas"
 }

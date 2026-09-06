@@ -35,3 +35,7 @@ Web 图片从同一份内嵌源缓存提取，没有重新压缩原画。素材�
 `npm test` 验证规则与素材；`npm run test:e2e` 验证真实 HTTP 来源、独立资产加载、完整交互、跨刷新存档、11 种满场布局和旋转。截图与机器报告在 `artifacts/qa/`。原 Python 回归保留，用于离线嵌入版和更多卡牌机制的兼容验证。
 
 不把元素在视口内当成无遮挡：新增回归额外检查卡牌间矩形重叠、攻血中心的真实命中元素，以及通知／法力区域与角色、按钮之间的相交。
+
+## v0.9 场景重构
+
+`src/atelier-world.js` 用单张连续原画替换建筑蒙版拼接，独立缓存随视口和昼夜失效；保留调用接口。`src/presentation/premium.css` 负责新材质和数值徽章尺寸，布局仍由原生视口模块管理。`src/premium-assets.js` 由 `tools/build_premium_assets.py` 从审核后的 WebP 生成；生产构建提取为独立图片，单文件构建保留内嵌资源。原始 PNG 与提示词见 `assets/premium/`。

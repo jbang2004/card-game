@@ -301,3 +301,66 @@ test("touch: inspect, confirm, rotate during spell, same match and no stuck effe
   await p.screenshot({ path: path.join(out, "touch-landscape.png") });
   await c.close();
 });
+
+for (const [width, height, touch] of [
+  [1600, 940, false],
+  [320, 568, true],
+  [568, 320, true],
+]) {
+  test(`premium numeric glyph containment ${width}x${height}`, async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      viewport: { width, height },
+      isMobile: touch,
+      hasTouch: touch,
+    });
+    const page = await context.newPage();
+    await page.goto("http://127.0.0.1:8000/dist/");
+    await ready(page);
+    await page.evaluate(() => {
+      Emberfall.settings.reduced = true;
+      EmberFX.configure(true, false);
+      Emberfall.demo();
+      const s = Emberfall.game.s;
+      s.p.hp = 30;
+      s.e.hp = 30;
+      Emberfall.renderNow();
+    });
+    await idle(page);
+    const faults = await page.evaluate(() => {
+      const faults = [];
+      for (const el of document.querySelectorAll(
+        ".hero-health,.hand-card .card-cost,.minion .stat,.hand-card .stat",
+      )) {
+        const b = el.getBoundingClientRect();
+        for (const value of ["1", "2", "3", "10", "30"]) {
+          const original = el.textContent;
+          el.textContent = value;
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          const r = range.getBoundingClientRect();
+          if (
+            r.left < b.left + 1 ||
+            r.right > b.right - 1 ||
+            r.top < b.top ||
+            r.bottom > b.bottom
+          )
+            faults.push({
+              class: el.className,
+              value,
+              b: { w: b.width, h: b.height },
+              text: { w: r.width, h: r.height },
+            });
+          el.textContent = original;
+        }
+      }
+      return faults;
+    });
+    expect(faults).toEqual([]);
+    await page.screenshot({
+      path: path.join(out, `premium-${width}x${height}.png`),
+    });
+    await context.close();
+  });
+}
