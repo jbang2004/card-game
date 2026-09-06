@@ -33,5 +33,7 @@
   "CARD_VIEW": "presentation/cards.js",
   "HAND_LAYOUT": "presentation/hand.js",
   "BATTLE_LAYOUT": "presentation/battle.css",
-  "AUDIO": "platform/audio.js"
+  "AUDIO": "platform/audio.js",
+  "PREMIUM_ASSETS": "premium-assets.js",
+  "PREMIUM_STYLE": "presentation/premium.css"
 }

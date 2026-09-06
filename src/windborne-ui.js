@@ -5,7 +5,7 @@
   const E = Emberfall,
     $ = (s) => document.querySelector(s),
     root = document.documentElement.style;
-  document.title = "烬域 · 风起之境 — WIND BORNE v0.8";
+  document.title = "烬域 · 风起之境 — THE GILDED TAVERN v0.9";
   root.setProperty("--wind-paper-texture", `url("${WindborneAssets.paper}")`);
   root.setProperty(
     "--wind-leaf-seal",
@@ -19,33 +19,33 @@
   $(".lobby-desc").textContent = "三位旅人 · 四十八张卡牌 · 五段首领冒险";
   $(".lobby-world-label").innerHTML =
     "<span>THE WAYFARER’S TAVERN</span><i></i><span>旅人的酒馆 · 炉火正暖</span>";
-  $(".lobby-bottom small").textContent = "VOL. VII / WIND BORNE";
+  $(".lobby-bottom small").textContent = "VOL. IX / THE GILDED TAVERN";
   $(".lobby-collection>.section-label").textContent = "收集故事，踏上旅途";
   // The actual existing character assets are unchanged, selected for the lighter hub.
   $("#lobby-card-one").innerHTML = E.cardHTML(EmberData.byId.huntress);
   $("#lobby-card-two").innerHTML = E.cardHTML(EmberData.byId.phoenix);
-  $("#atelier-open").innerHTML = "漫游四境<small>THE ILLUSTRATED WORLD</small>";
+  $("#atelier-open").innerHTML = "原画档案<small>THE ART COLLECTION</small>";
   $(".board-empty").textContent = "故事的下一笔，由你来写";
   const metadata = {
     chimney: {
       name: "旅人的酒馆",
-      hint: "屋檐上的猫正打着盹，窗内炉火正暖",
-      box: { left: "12px", top: "58px", width: "440px", height: "217px" },
+      hint: "轻触铜灯，点亮桌边的暖光",
+      box: { left: "12px", top: "58px", width: "240px", height: "217px" },
     },
     crystals: {
       name: "星辉观测台",
       hint: "轻拨星环，让远方的星光落在掌心",
-      box: { left: "1270px", top: "63px", width: "310px", height: "211px" },
+      box: { left: "1390px", top: "63px", width: "180px", height: "211px" },
     },
     tree: {
       name: "蓝晶矿脉",
-      hint: "敲响蓝晶，听见山谷深处的回声",
-      box: { left: "18px", top: "510px", width: "277px", height: "232px" },
+      hint: "敲响桌边蓝晶，听见清澈的回声",
+      box: { left: "18px", top: "510px", width: "175px", height: "232px" },
     },
     forge: {
       name: "余烬锻炉",
-      hint: "叩一叩铁砧，旅人的新剑就快做好了",
-      box: { left: "1320px", top: "607px", width: "252px", height: "222px" },
+      hint: "轻叩桌角的小锤，唤起余烬",
+      box: { left: "1475px", top: "710px", width: "110px", height: "120px" },
     },
   };
   for (const b of document.querySelectorAll("[data-prop]")) {

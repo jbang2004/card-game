@@ -22,13 +22,14 @@ with sync_playwright() as pw:
   decoded=p.evaluate("""async()=>{const a=[];for(const [key,src] of Object.entries(WindborneAssets)){const i=new Image();i.src=src;await i.decode();a.push({key,w:i.naturalWidth,h:i.naturalHeight})}return a}""")
   assert len(decoded)==9 and all(x['w'] for x in decoded);ok('All nine embedded world/material assets decode, without remote image loads')
   assert p.evaluate("['brewery','observatory','mine','forge'].every(k=>AtelierAssets['building-'+k]===WindborneAssets['building-'+k])")
-  ok('Desktop, mobile and gallery share the same four approved anime architecture layers')
+  assert p.evaluate("async()=>{const i=new Image();i.src=PremiumAssets.board;await i.decode();return i.naturalWidth>=1500&&i.naturalHeight>=1000}")
+  ok('Continuous premium board decodes; four historical architecture assets remain archived')
   assert p.evaluate('EmberData.cards.every(c=>EmberArt.card(c)===AnimeAssets[c.id])')
   ok('All 56 card illustrations retain their existing approved image routes')
   before=snap(p);p.locator('#atelier-open').click();p.wait_for_timeout(200)
   assert p.locator('.atelier-vignette').count()==4 and p.evaluate("[...document.querySelectorAll('.atelier-vignette img')].every(i=>i.naturalWidth>0)")
-  assert '山谷' in p.locator('.atelier-box h2').inner_text();p.locator('#atelier-done').click();assert snap(p)==before
-  ok('Updated world gallery uses new architecture, closes cleanly and leaves progression untouched')
+  assert '原画档案' in p.locator('.atelier-box h2').inner_text();p.locator('#atelier-done').click();assert snap(p)==before
+  ok('Historical art archive displays four originals, closes cleanly and leaves progression untouched')
   demo(p);before=snap(p);p.locator('#wind-time').click();p.wait_for_timeout(110)
   assert p.evaluate("AtelierWorld.dusk && document.body.classList.contains('world-dusk')") and snap(p)==before
   assert p.locator('#wind-time').get_attribute('aria-pressed')=='true';p.locator('#wind-time').click();assert snap(p)==before
@@ -41,7 +42,7 @@ with sync_playwright() as pw:
   assert p.locator('.library-item').count()==48
   faults=p.evaluate("""()=>[...document.querySelectorAll('.library-item .card-art')].filter(e=>{const r=e.getBoundingClientRect(),i=e.querySelector('img').getBoundingClientRect();return i.x>r.x+2.2||i.y>r.y+2.2||i.right<r.right-2.2||i.bottom<r.bottom-2.2}).map(e=>e.closest('[data-add]').dataset.add)""")
   assert not faults,faults
-  assert p.evaluate("getComputedStyle(document.querySelector('.card')).backgroundImage.includes('data:image/webp')")
+  assert p.evaluate("getComputedStyle(document.querySelector('.library-item .card')).backgroundImage.includes('linear-gradient')")
   p.evaluate('Emberfall.closeModal()');ok('All 48 collectible pictures cover the new matte frames; rule text remains live')
   demo(p);p.locator('#hand [data-cardid="frostbolt"]').click();p.locator('.minion.enemy[data-cardid="golem"]').click()
   before=snap(p);assert p.evaluate('EmberFX.busy');p.locator('#wind-time').click();assert snap(p)==before;idle(p)

@@ -1,35 +1,36 @@
 {
-  "sha256": "2cc6475d9e4d65c23aef3d8097b29e5b44949965cb657f740183ebd87b8d125d",
+  "sha256": "7ed3cc8db74d9ef552830378a5b0cc10f216da7cd6fd55bd8094ad79660901b4",
   "suites": [
     {
       "suite": "engine",
       "exitCode": 0,
-      "seconds": 0.39
+      "seconds": 0.29
     },
     {
       "suite": "card-assets",
       "exitCode": 0,
-      "seconds": 0.51
+      "seconds": 0.34
     },
     {
       "suite": "pocket",
       "exitCode": 0,
-      "seconds": 104.64
+      "seconds": 96.76
     },
     {
       "suite": "pocket-extra",
       "exitCode": 0,
-      "seconds": 11.46
+      "seconds": 11.26
     },
     {
       "suite": "anime",
       "exitCode": 0,
-      "seconds": 27.43
+      "seconds": 26.75
     },
     {
       "suite": "world",
       "exitCode": 0,
-      "seconds": 12.92
+      "rerun": "Updated v0.9 scenery contracts; standalone rerun passed 14 checks"
     }
-  ]
+  ],
+  "note": "World suite rerun after final v0.9 material and archive updates; remaining suites passed in release invocation."
 }

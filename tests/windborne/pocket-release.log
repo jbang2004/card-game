@@ -1,0 +1,32 @@
+PASS 1 Portrait lobby uses native CSS pixels, with reachable primary actions and no desktop letterboxing
+PASS 2 Portrait hero power, end-turn, menu and collection buttons have at least 44 CSS-pixel height
+PASS 3 Tapping a hand card opens readable details and a separate play confirmation without spending resources
+PASS 4 Dismissing card details leaves hand, mana, board and RNG state unchanged
+PASS 5 Target choice has an explicit touch cancel; cancelling does not consume the selected spell
+PASS 6 Actual touch-cast frost spell freezes its target; repeated input during animation cannot spend twice or skip turns
+PASS 7 Aim origin matches the visible attacker and the initial curve tangent points towards the legal enemy target
+PASS 8 Touch melee performs simultaneous damage, removes a lethal target and cleans up lunge/death clones
+PASS 9 Long-press minion inspection does not attack; its first close tap is not swallowed by click suppression
+PASS 10 Hero long-press opens current health, armor and skill details without changing game state
+PASS 11 Native touch hero-power targeting uses the original cost, once-per-turn limit and enemy armor rules
+PASS 12 Untargeted minion summon requires confirmation, then places the unit on the correct mobile lane
+PASS 13 Native horizontal touch scrolling exposes a full ten-card hand without opening a card or triggering a drag/play
+PASS 14 The last card of a full hand is reachable, and closing its details preserves the hand scroll position
+PASS 15 The full-hand overview exposes all ten cards at a larger size without altering the match
+PASS 16 Ending a turn via touch runs real enemy AI actions and returns control to the player exactly once
+PASS 17 Rotating during an attack/spell flushes one pending presentation commit, preserves state and releases the input lock
+PASS 18 Repeated portrait/landscape switching keeps the same battle and all primary control hit boxes inside the viewport
+PASS 19 Normal campaign hero choice, selected mulligan replacement and confirmation survive rotation and start a real first turn
+PASS 20 Three normal campaign turns advance using touch-confirmed cards and real enemy AI, without controlled damage or victory injection
+PASS 21 Returning to the tavern and resuming preserves a real campaign in the original save schema (memory adapter only)
+PASS 22 Mobile collection/deck tabs support removing, adding and saving a valid 30-card deck without changing the active match
+PASS 23 Long-press collection details return to the same unsaved editor without adding a card or discarding edits
+PASS 24 Search text and native-sized input survive a reduced visible viewport (keyboard-size resize simulation)
+PASS 25 Adventure map, journal, rules, gallery and boss details remain reachable through the compact touch menu
+PASS 26 All seven effect-lab schools run at mobile coordinates and closing the lab clears timers and visual effects
+PASS 27 Reduced motion keeps touch actions and rule feedback while suppressing decorative particles
+PASS 28 A pending discover choice survives rotation and touch selection grants exactly one card
+PASS 29 Ten phone/tablet viewport sizes keep seven-versus-seven minions and unobscured primary controls in bounds; ten-card hands scroll
+PASS 30 Desktop direct-click targeting and original collection workflow remain intact
+PASS 31 No JavaScript page errors occurred in the executed desktop and touch-emulation checks
+DONE 31 checks

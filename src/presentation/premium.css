@@ -1,0 +1,648 @@
+/* EMBERFALL / IX. Tactile walnut, aged gold, parchment and sapphire.
+   This presentation layer owns materials and numeric geometry in all contexts. */
+:root {
+  --gold: #d9b570;
+  --text: #f4e4c4;
+  --muted: #b5a48a;
+  --serif: Georgia, "Songti SC", serif;
+}
+body {
+  background: #140f0d;
+  color: #f4e4c4;
+}
+#app {
+  background: #241910;
+}
+.grain,
+.ambient,
+.board-fallback,
+.board-center,
+.arena-corner {
+  display: none !important;
+}
+#fx-vignette {
+  box-shadow: inset 0 0 100px #10090355;
+}
+body .topbar,
+body.touch-layout .topbar {
+  background: linear-gradient(#21160ff5, #241912dc);
+  border-bottom: 1px solid #94744766;
+  box-shadow: 0 3px 18px #09050477;
+  color: #e8d5af;
+}
+.brand,
+.brand strong,
+.nav-link,
+.icon-btn,
+.top-actions,
+.local-status {
+  color: #e4cea4;
+}
+.nav-link.active {
+  color: #ffdc94;
+}
+.icon-btn,
+#wind-time {
+  background: linear-gradient(#513d2a, #2c211a);
+  border: 1px solid #99774488;
+  border-radius: 8px;
+  color: #efd3a2;
+  box-shadow:
+    inset 0 1px #f5d49433,
+    0 2px 5px #0005;
+}
+.gold-btn,
+.end-turn,
+body.touch-layout .end-turn {
+  background: linear-gradient(155deg, #fae1a0, #d4a44e 48%, #ad772d);
+  color: #382312;
+  border: 2px solid #6a4727;
+  border-radius: 12px;
+  box-shadow:
+    inset 0 0 0 1px #ffe9b6,
+    inset 0 -4px 6px #80552366,
+    0 4px 0 #382319,
+    0 7px 15px #0005;
+  text-shadow: 0 1px #ffe5a8;
+}
+.gold-btn:hover,
+.end-turn:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+.ghost-btn,
+.utility-tab,
+.info-toggle {
+  background: linear-gradient(#514131, #30231b);
+  border: 1px solid #a4825266;
+  color: #ebd6b0;
+  box-shadow:
+    inset 0 1px #dec09022,
+    0 3px 8px #0004;
+  border-radius: 8px;
+}
+body:not(.touch-layout) .campaign-panel {
+  background: linear-gradient(130deg, #302117f2, #4d3825e8);
+  border: 1px solid #b18c4e88;
+  border-radius: 9px;
+  box-shadow:
+    inset 0 0 0 3px #25180d66,
+    0 5px 12px #0004;
+}
+.chapter-name,
+.chapter-sub,
+.section-label {
+  color: #e9d4ad;
+}
+.board-empty {
+  color: #715432;
+  opacity: 0.65;
+  letter-spacing: 3px;
+}
+.lane-label {
+  color: #765833;
+}
+.mana-panel,
+body:not(.touch-layout) .mana-panel,
+.enemy-mana {
+  background: linear-gradient(135deg, #263e48f5, #13242ef5);
+  border: 1px solid #91adba99;
+  color: #def4ff;
+  box-shadow:
+    inset 0 0 0 3px #0a17284d,
+    0 4px 10px #0005;
+  border-radius: 11px;
+}
+.mana-caption,
+.mana-caption strong {
+  color: #d5f1ff;
+}
+.mana-gem {
+  filter: drop-shadow(0 1px 2px #0008);
+}
+#hint,
+#toast,
+.log-panel,
+#combat-preview {
+  background: #2b2118ed;
+  color: #f3dfba;
+  border-color: #a57e48;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px #0005;
+}
+#combat-preview .survive,
+#combat-preview small {
+  color: #bed99f;
+}
+#combat-preview .kill {
+  color: #ff9a82;
+}
+/* Card face: sculpted bronze frame, full bleed illustration, quiet rules paper. */
+body .card,
+body .card.common,
+body .card.rare,
+body .card.epic,
+body .card.legendary {
+  border: 2px solid #4b3120;
+  border-radius: 12px 12px 10px 10px;
+  background: linear-gradient(
+    130deg,
+    #c7a26a,
+    #694b30 35%,
+    #b8945a 70%,
+    #4e3425
+  );
+  box-shadow:
+    inset 0 0 0 1px #eed29a,
+    0 4px 8px #0e080880;
+  overflow: visible;
+}
+body .card-inner {
+  inset: 5px;
+  border: 1px solid #71583a;
+  border-radius: 8px;
+  background: radial-gradient(ellipse at top, #f6e7c6, #d8c093);
+  overflow: hidden;
+  box-shadow: inset 0 0 12px #79532544;
+}
+body .card .card-art {
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 60%;
+  border: 0;
+  border-radius: 6px 6px 35% 35% / 6px 6px 10% 10%;
+  box-shadow: 0 2px 0 #6c4e2e;
+}
+body .card .card-title {
+  left: 0;
+  right: 0;
+  top: 56%;
+  height: 12%;
+  padding: 0 2px;
+  border-radius: 4px;
+  border: 1px solid #6b4c2a;
+  background: linear-gradient(#7c5b39, #483021);
+  color: #fff0cd;
+  text-shadow: 0 1px #23150f;
+  box-shadow: inset 0 1px #d6b07677;
+  letter-spacing: 0;
+}
+body .card-text {
+  color: #3c2b1c;
+  top: 70%;
+  line-height: 1.4;
+}
+body .card-text b {
+  color: #6b351a;
+}
+body .card-type {
+  color: #846a45;
+  font-size: 7px;
+}
+body .hand-card.playable .card {
+  filter: drop-shadow(0 0 3px #78c9ae);
+}
+body .hand-card.selected .card {
+  filter: drop-shadow(0 0 5px #ffe094);
+}
+body .card-rarity {
+  box-shadow: 0 0 4px currentColor;
+}
+/* Never clip glyphs into a polygon. Badges carry their own line box and inset. */
+body .card-cost,
+body .card-preview .card-cost,
+body .library-item .card-cost,
+body.touch-layout .hand-card .card-cost,
+body:not(.touch-layout) .hand-card .card-cost {
+  left: 2%;
+  top: 1.5%;
+  width: 27%;
+  height: 20%;
+  clip-path: none;
+  border-radius: 45%;
+  border: 2px solid #2e5265;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  font-family: Georgia, serif;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: -1px;
+  box-sizing: border-box;
+  background: radial-gradient(at 30% 20%, #c1f4ff, #438eae 32%, #153953 77%);
+  box-shadow:
+    inset 0 0 0 1px #b4e6ee,
+    0 2px 3px #0008;
+  color: #fff9e8;
+  text-shadow: 0 2px 2px #061929;
+  transform: none;
+}
+body .card-cost:before {
+  display: none;
+}
+body .stat,
+body .card .stat {
+  display: grid;
+  place-items: center;
+  line-height: 1;
+  letter-spacing: -1px;
+  padding: 0;
+  font-family: Georgia, serif;
+  box-sizing: border-box;
+  font-size: 22px;
+}
+body .stat:before {
+  background: radial-gradient(at 30% 20%, #e7cb7d, #987238 70%);
+  border: 2px solid #644729;
+  box-shadow: inset 0 0 0 1px #efd59b;
+  border-radius: 50%;
+}
+body .stat.hp:before {
+  background: radial-gradient(at 30% 20%, #dc997a, #8b3428 70%);
+  border-color: #5b2920;
+}
+body .card .stat {
+  width: 25%;
+  height: 18%;
+  bottom: 1%;
+  font-size: 21px;
+}
+body .card .stat.atk {
+  left: 1%;
+}
+body .card .stat.hp {
+  right: 1%;
+}
+body .card-preview .card-cost {
+  font-size: 32px;
+}
+body .card-preview .card .stat {
+  font-size: 30px;
+}
+/* Hero portrait and nameplate are separate from the always-contained health seal. */
+body .hero .portrait-frame,
+body .hero.enemy .portrait-frame,
+body.touch-layout .hero .portrait-frame {
+  border: 4px solid #6c492a;
+  padding: 4px;
+  background: linear-gradient(135deg, #f3d394, #785330);
+  border-radius: 48% 48% 17% 17% / 33% 33% 15% 15%;
+  box-shadow:
+    0 0 0 1px #dbb675,
+    inset 0 0 0 1px #ffe1a0,
+    0 5px 12px #180b08aa;
+  overflow: hidden;
+}
+body .portrait-frame:after {
+  border-color: #f0c57b88;
+  border-radius: inherit;
+}
+body .hero-name {
+  left: 4%;
+  right: 4%;
+  bottom: 7%;
+  height: 20px;
+  line-height: 18px;
+  padding: 0 29px 0 3px;
+  background: linear-gradient(#725135, #382419);
+  color: #ffe6b3;
+  border: 1px solid #ad864d;
+  border-radius: 5px;
+  font-size: 10px;
+  letter-spacing: 0;
+  text-shadow: 0 1px #000;
+  overflow: hidden;
+}
+body .hero-health,
+body.touch-layout .hero-health {
+  right: 1%;
+  bottom: 0;
+  width: 44px;
+  height: 44px;
+  border: 2px solid #d7ab68;
+  border-radius: 50%;
+  clip-path: none;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  font:
+    bold 25px/1 Georgia,
+    serif;
+  letter-spacing: -1px;
+  padding: 0;
+  color: #fff4d9;
+  background: radial-gradient(at 30% 20%, #d9775a, #962d25 60%, #4e1918);
+  box-shadow:
+    0 0 0 2px #4b2c20,
+    inset 0 0 0 1px #f3c79b88,
+    0 3px 5px #0007;
+  text-shadow: 0 2px 1px #431513;
+}
+body .hero-armor {
+  left: 1%;
+  bottom: 1%;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 40%;
+  clip-path: none;
+  font:
+    bold 21px/1 Georgia,
+    serif;
+  padding: 0;
+  background: linear-gradient(#b9c5c8, #4b6676);
+  border: 2px solid #d4e3df;
+}
+body .power-button,
+body.touch-layout .power-button {
+  background: radial-gradient(at 35% 28%, #ad8b52, #503620 70%);
+  border: 3px solid #bc9658;
+  box-shadow:
+    inset 0 0 0 2px #503921,
+    0 4px 9px #0007;
+  color: #f5dab1;
+}
+body .power-button .power-cost {
+  display: grid;
+  place-items: center;
+  font:
+    bold 16px/1 Georgia,
+    serif;
+  padding: 0;
+}
+body .minion .minion-art,
+body.touch-layout .minion .minion-art {
+  border: 3px solid #9e7949;
+  background: #513722;
+  box-shadow:
+    0 0 0 1px #51351f,
+    inset 0 0 0 1px #f8db9f,
+    0 5px 8px #29150b66;
+  border-radius: 45% 45% 38% 38%;
+}
+body .minion.enemy .minion-art {
+  border-color: #a6765a;
+}
+body .minion.ready .minion-art {
+  outline: 2px solid #7cae87;
+  outline-offset: 2px;
+  box-shadow:
+    0 0 10px #80c9a044,
+    0 5px 7px #32180c66;
+}
+body .minion-name {
+  background: #392619de;
+  color: #f9e8c5;
+}
+/* Shared dialog and lobby materials. */
+.modal-overlay {
+  background: #0a070bc9;
+  backdrop-filter: blur(9px);
+}
+.modal-box {
+  background: linear-gradient(135deg, #3b2b20f9, #201912fc);
+  border: 1px solid #a8834e;
+  border-radius: 18px;
+  box-shadow:
+    inset 0 0 0 5px #130d0866,
+    0 25px 90px #000a;
+  color: #ecdab9;
+}
+.modal-heading h2,
+.modal-heading p,
+.hero-deck-note,
+.modal-box h3,
+.modal-box label,
+.modal-box p {
+  color: #e8d6b5;
+}
+.hero-option {
+  border-color: #9c774b;
+  background: #23180f;
+  border-radius: 12px;
+}
+.hero-option.selected {
+  border-color: #f0c977;
+  box-shadow: 0 0 0 2px #d4a75155;
+}
+.hero-option-text {
+  background: linear-gradient(transparent, #20160ff5 20%);
+  color: #ebd3a9;
+}
+.hero-option-text h3,
+.hero-option-text p,
+.hero-option-text small,
+.hero-option-text em {
+  color: #f4dfb8;
+}
+.lobby-copy {
+  background: radial-gradient(ellipse, #24170fd9, transparent 72%);
+}
+.lobby-chinese,
+.lobby-tagline,
+.lobby-desc,
+.lobby-copy .eyebrow,
+.lobby-title,
+.lobby-world-label,
+.lobby-bottom {
+  color: #f3dbad;
+  text-shadow: 0 2px 6px #160e09;
+}
+.lobby-title span {
+  color: #ffe1a5;
+}
+body.touch-layout .hand-zone {
+  background: linear-gradient(#20160a55, #1a110ce6);
+  border-top: 1px solid #b68c5066;
+}
+body.touch-layout #touch-match-chip {
+  background: #302218c9;
+  color: #f7dfb6;
+}
+body.touch-layout .hero-health {
+  width: 32px;
+  height: 32px;
+  font-size: 19px;
+}
+body.touch-layout .hero-name {
+  height: 16px;
+  line-height: 14px;
+  font-size: 8px;
+  padding-right: 18px;
+}
+body.touch-layout .hand-card .card-cost {
+  font-size: 17px;
+  border-width: 1px;
+}
+body.touch-layout .hand-card .card .stat {
+  font-size: 17px;
+}
+body.touch-layout .minion .stat {
+  font-size: 19px;
+}
+body.mobile-landscape .minion .stat {
+  font-size: 16px;
+}
+body.mobile-landscape .hero-health {
+  width: 28px;
+  height: 28px;
+  font-size: 17px;
+}
+body.touch-layout .battle-view #toast {
+  background: #302318;
+  color: #f5dcaf;
+  border-color: #bd995c;
+}
+body .minion .stat {
+  font-size: 22px;
+  line-height: 1.2;
+}
+body:not(.touch-layout) .hand-card .card .stat {
+  font-size: 21px;
+  line-height: 1.2;
+}
+body:not(.touch-layout) .compact-hand .card .stat,
+body:not(.touch-layout) .compact-hand .card-cost {
+  font-size: 17px;
+}
+body.touch-layout .hand-card .card-cost,
+body.touch-layout .hand-card .card .stat {
+  font-size: 14px;
+  line-height: 1.2;
+}
+body.touch-layout .minion .stat {
+  font-size: 16px;
+  line-height: 1.2;
+}
+body.mobile-landscape .minion .stat {
+  font-size: 14px;
+}
+body .power-button b {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  font:
+    bold 17px/1.2 Georgia,
+    serif;
+  border: 1px solid #acd7e6;
+  border-radius: 8px;
+  background: radial-gradient(at 30% 20%, #80c7dc, #21445c);
+  color: #fff4db;
+}
+body .card-back {
+  background: repeating-linear-gradient(45deg, #213847 0 3px, #294653 3px 6px);
+  border: 2px solid #c19b5a;
+  box-shadow:
+    inset 0 0 0 2px #1b2a33,
+    inset 0 0 0 3px #987743,
+    0 3px 5px #0008;
+  border-radius: 7px;
+}
+body .card-back:before {
+  border-color: #d8b97c;
+}
+body .card-back:after {
+  color: #efd29a;
+}
+body .library-box,
+body .settings-box,
+body .help-box {
+  background: linear-gradient(130deg, #3e2d20, #241a13);
+}
+body .deck-editor,
+body .setting-row,
+body .key-table > div {
+  background: #17100b33;
+  border-color: #ab87503d;
+}
+body .library-heading h2,
+body .library-heading p,
+body .deck-editor h3,
+body .library-foot,
+body .setting-label,
+body .setting-desc {
+  color: #ebd6b2;
+}
+body .library-search {
+  background: #20180f;
+  color: #f2d9ae;
+  border-color: #9e7c4d;
+  border-radius: 7px;
+}
+body .filter-btn {
+  color: #d8bd92;
+  border-color: #80623d;
+}
+body .filter-btn.active {
+  background: #a17a42;
+  color: #fff2d2;
+}
+body .deck-row {
+  background: linear-gradient(90deg, #38271b, #4e3928);
+  color: #eed7ae;
+  border-color: #6c4c2d;
+}
+body.touch-layout .minion .stat,
+body.touch-layout .minion[data-compact="true"] .stat {
+  width: 49%;
+  max-width: 28px;
+  height: 24px;
+  font-size: 14px;
+}
+body.touch-layout .minion[data-compact="true"] .stat {
+  font-size: 11px;
+  height: 20px;
+}
+
+body.touch-layout .enemy-mana {
+  background: linear-gradient(#355466, #182c3a);
+  color: #def2ff;
+  border-color: #8aaab8;
+}
+body.touch-layout .turn-number {
+  background: #302218d9;
+  color: #f5dfb5;
+}
+body.touch-layout .brand,
+body.touch-layout .brand strong {
+  color: #e6c994;
+}
+body.touch-layout .lobby-copy {
+  background: linear-gradient(120deg, #332317ed, #261b14ed);
+  border-color: #a17d49;
+  color: #efd7b0;
+  box-shadow: 0 6px 24px #0006;
+}
+body.touch-layout .lobby-chinese,
+body.touch-layout .lobby-title,
+body.touch-layout .lobby-tagline,
+body.touch-layout .lobby-desc {
+  color: #efd7b0;
+}
+body .hero-option:after,
+body.touch-layout .hero-option:after {
+  background: linear-gradient(transparent 32%, #23190fe8 68%, #1d140e);
+}
+body .hero-option .hero-option-text {
+  background: none;
+  color: #f5dfb9;
+}
+body .hero-option .hero-option-text small {
+  color: #c5aa80;
+}
+body .hero-option .hero-option-text h3,
+body .hero-option .hero-option-text p,
+body .hero-option .hero-option-text em {
+  color: #f2dab3;
+}
+body .modal-close {
+  background: #443122;
+  color: #e7c890;
+  border-color: #a17a46;
+}
+#modal {
+  background: #100b08b3;
+}

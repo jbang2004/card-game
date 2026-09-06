@@ -2,31 +2,31 @@
   {
     "suite": "engine",
     "exitCode": 0,
-    "seconds": 0.39
+    "seconds": 0.29
   },
   {
     "suite": "card-assets",
     "exitCode": 0,
-    "seconds": 0.51
+    "seconds": 0.34
   },
   {
     "suite": "pocket",
     "exitCode": 0,
-    "seconds": 104.64
+    "seconds": 96.76
   },
   {
     "suite": "pocket-extra",
     "exitCode": 0,
-    "seconds": 11.46
+    "seconds": 11.26
   },
   {
     "suite": "anime",
     "exitCode": 0,
-    "seconds": 27.43
+    "seconds": 26.75
   },
   {
     "suite": "world",
     "exitCode": 0,
-    "seconds": 12.92
+    "rerun": "Updated v0.9 scenery contracts; standalone rerun passed 14 checks"
   }
 ]
