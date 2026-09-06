@@ -100,3 +100,7 @@
 - 修复原版卡牌类型 `.minion` 与战场单位选择器重名的问题，改用 `.type-minion`。
 - `engine.js`、`data.js` 与存档结构保持不变。
 - 测试与截图是兼容渲染路径，不冒充真实 Three.js/GPU 验收。
+
+## v0.10.1 实玩修复
+
+Computer use 实玩发现并修复动画期间回合按钮无反馈、手机详情及失败结算对比度、手牌辅助说明旧张数和负生命播报。Sites 静态发布配置已登记，具体实玩记录见 `docs/PLAYTEST_RELEASE.md`。

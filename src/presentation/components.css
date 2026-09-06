@@ -302,3 +302,48 @@ body .card .card-type {
   background: var(--secondary-fill);
   color: var(--ink);
 }
+/* Live-play inspection panels use the same readable surfaces as the lobby. */
+.touch-live-stat {
+  background: var(--surface-raised);
+  color: var(--ink);
+  border: 1px solid #937045;
+}
+.touch-inspect-detail small,
+.touch-keywords,
+.touch-keywords strong {
+  color: var(--ink-secondary);
+}
+.anime-art-button {
+  background: var(--secondary-fill);
+  color: var(--ink);
+  border: 1px solid #9c7849;
+}
+.modal-footer {
+  background: transparent;
+  border-color: #93704555;
+}
+.end-turn:disabled {
+  filter: saturate(0.45);
+  opacity: 0.72;
+  cursor: wait;
+}
+.result-title {
+  color: var(--ink);
+  font-family: var(--ui-font);
+  text-shadow: none;
+}
+.result-stats strong {
+  color: #f1cc83;
+  font-family: var(--ui-font);
+  text-shadow: none;
+}
+.result-stats span,
+.result-sub {
+  color: var(--ink-secondary);
+}
+.result-sigil {
+  background: var(--secondary-fill);
+  color: #f1cc83;
+  border-color: #9c7849;
+  box-shadow: 0 0 0 3px #9c784933;
+}

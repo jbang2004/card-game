@@ -422,7 +422,7 @@
         "aria-label",
         data.name +
           "，生命 " +
-          p.hp +
+          Math.max(0, p.hp) +
           "，护甲 " +
           p.armor +
           (p.frozen ? "，已冻结" : ""),
@@ -430,7 +430,7 @@
       el.title =
         data.name +
         " · " +
-        p.hp +
+        Math.max(0, p.hp) +
         "/" +
         p.maxHp +
         (p.armor ? " · 护甲 " + p.armor : "");
@@ -520,6 +520,7 @@
       .join("");
     $("board-empty").style.display = s.p.board.length ? "none" : "block";
     $("hand-count").textContent = s.p.hand.length;
+    $("hand").setAttribute("aria-label", `你的 ${s.p.hand.length} 张手牌`);
     const metrics = EmberHand.metrics(s.p.hand.length);
     $("hand").style.setProperty("--desktop-card-w", metrics.width + "px");
     $("hand").style.setProperty("--desktop-card-h", metrics.height + "px");
@@ -539,9 +540,7 @@
       String(s.turn).padStart(2, "0") +
       " · " +
       (ours ? "你的回合" : "敌方回合");
-    $("end-turn").disabled = s.phase !== "battle" || !ours || !!s.choice;
-    $("end-turn").textContent =
-      s.phase === "over" ? "战斗结束" : ours ? "结束回合" : "敌方回合";
+    syncEndTurn(s);
     $("end-turn").classList.toggle("thinking", !ours);
     const anyAction =
       s.p.hand.some((c) => !game.legalCard("p", c.uid)) ||
@@ -1332,6 +1331,21 @@
       ? EmberMobile.tapUnit("e", "hero")
       : clickUnit("e", "hero");
   $("power-btn").onclick = usePower;
+  function syncEndTurn(s = game.s) {
+    if (!s) return;
+    const resolving = EmberFX.busy;
+    $("end-turn").disabled =
+      resolving || s.phase !== "battle" || s.active !== "p" || !!s.choice;
+    $("end-turn").textContent =
+      s.phase === "over"
+        ? "战斗结束"
+        : resolving
+          ? "结算中…"
+          : s.active === "p"
+            ? "结束回合"
+            : "敌方回合";
+  }
+  document.addEventListener("ember:fx-busy", () => syncEndTurn());
   $("end-turn").onclick = () => act(() => game.endTurn("p"));
   $("arena").onclick = () => clearSelection();
   document.addEventListener("pointerdown", () => EmberAudio.unlock(), {
