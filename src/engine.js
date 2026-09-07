@@ -54,11 +54,42 @@ const EmberEngine = (() => {
       if (this.s.log.length > 70) this.s.log.shift();
     }
     event(type, data = {}) {
+      // Public presentation snapshots describe an already resolved observation.
+      // They contain no deck identities, RNG or opponent hand identities and
+      // are ephemeral event data, never stored in a v1 save.
+      const view = {};
+      if (this.s && type !== "blockEnd") {
+        for (const side of ["p", "e"]) {
+          const p = this.s[side];
+          if (!p) continue;
+          view[side] = structuredClone({
+            hp: p.hp,
+            maxHp: p.maxHp,
+            armor: p.armor,
+            mana: p.mana,
+            maxMana: p.maxMana,
+            powerUsed: p.powerUsed,
+            attacks: p.attacks,
+            frozen: p.frozen,
+            weapon: p.weapon,
+            board: p.board,
+            hand: side === "p" ? p.hand : p.hand.map((c) => ({ uid: c.uid })),
+            deck: Array(p.deck.length).fill(null),
+            secrets: Array(p.secrets.length).fill(null),
+          });
+        }
+        Object.assign(view, {
+          active: this.s.active,
+          turn: this.s.turn,
+          phase2: this.s.phase2,
+        });
+      }
       this.events.push({
         id: "ev" + ++this.eventSeq,
         parentId: this.blocks.at(-1) || null,
         type,
         ...data,
+        ...(Object.keys(view).length ? { view } : {}),
       });
     }
     withBlock(kind, meta, fn) {
@@ -276,14 +307,18 @@ const EmberEngine = (() => {
         const c = p.deck.shift();
         if (p.hand.length < 10) {
           p.hand.push(c);
-          this.event("draw", { side, cid: c.cid });
+          this.event("draw", {
+            side,
+            uid: c.uid,
+            ...(side === "p" ? { cid: c.cid } : {}),
+          });
         } else {
           this.log("手牌已满，" + this.data.byId[c.cid].name + "被焚毁。");
-          this.event("burn", { side });
+          this.event("burn", { side, ...(side === "p" ? { cid: c.cid } : {}) });
         }
       }
     }
-    summon(side, cid, extra = {}) {
+    summon(side, cid, extra = {}, origin = {}) {
       const p = this.s[side];
       if (p.board.length >= 7) return null;
       const c = this.data.byId[cid],
@@ -302,7 +337,7 @@ const EmberEngine = (() => {
           ...extra,
         };
       p.board.push(m);
-      this.event("summon", { side, uid: m.uid, cid });
+      this.event("summon", { side, uid: m.uid, cid, ...origin });
       return m;
     }
     getTarget(t) {
@@ -378,7 +413,7 @@ const EmberEngine = (() => {
       p.hand = p.hand.filter((x) => x.uid !== uid);
       if (side === "p") this.s.stats.played++;
       this.log((side === "p" ? "你" : "敌人") + "打出「" + c.name + "」。");
-      this.event("play", { side, cid: c.id, target });
+      this.event("play", { side, uid, cid: c.id, target });
       if (c.type === "minion") {
         const m = this.summon(side, c.id);
         this.resolve(c.onPlay, { side, source: m, card: c, target });
@@ -459,24 +494,32 @@ const EmberEngine = (() => {
       };
     }
 
-    heal(side, n) {
+    heal(side, n, from = null) {
       const p = this.s[side],
         actual = Math.min(n, p.maxHp - p.hp);
       p.hp += actual;
-      if (actual > 0) this.event("heal", { side, uid: "hero", amount: actual });
+      if (actual > 0)
+        this.event("heal", { side, uid: "hero", amount: actual, from });
     }
-    damage(side, uid, n) {
+    damage(side, uid, n, from = null) {
       const target = this.getTarget({ side, uid });
       if (!target || n <= 0) return 0;
       const result = this.damageResult(side, uid, n);
       if (result.blocked) {
         target.tags = target.tags.filter((x) => x !== "shield");
-        this.event("shield", { side, uid });
+        this.event("shield", { side, uid, from });
         return 0;
       }
       if (uid === "hero") target.armor -= n - result.loss;
       target.hp -= result.loss;
-      this.event("damage", { side, uid, amount: n });
+      this.event("damage", {
+        side,
+        uid,
+        amount: n,
+        loss: result.loss,
+        absorbed: n - result.loss,
+        from,
+      });
       if (side === "e") this.s.stats.damage += n;
       return n;
     }
@@ -527,13 +570,13 @@ const EmberEngine = (() => {
             this.s[t.side].secrets = this.s[t.side].secrets.filter(
               (x) => x !== id,
             );
+            this.event("secret", { side: t.side, cid: id });
             const mirror = this.summon(
               t.side,
               this.data.byId[id].secret.summon,
             );
             if (mirror) t.uid = mirror.uid;
             this.log("奥秘「" + this.data.byId[id].name + "」触发！");
-            this.event("secret", { side: t.side });
           });
       }
       const d = this.getTarget(t);
@@ -545,18 +588,19 @@ const EmberEngine = (() => {
       m.attacks++;
       if (uid !== "hero") m.tags = m.tags.filter((x) => x !== "stealth");
       this.event("attack", { from: { side, uid }, to: t });
-      const dealt = this.damage(t.side, t.uid, atk),
-        back = this.damage(side, uid, retaliate);
+      const dealt = this.damage(t.side, t.uid, atk, { side, uid }),
+        back = this.damage(side, uid, retaliate, t);
       if (dealt > 0 && tags.includes("poison") && t.uid !== "hero") d.hp = 0;
       if (back > 0 && dtags.includes("poison") && uid !== "hero") m.hp = 0;
-      if (tags.includes("lifesteal")) this.heal(side, dealt);
-      if (dtags.includes("lifesteal")) this.heal(t.side, back);
+      if (tags.includes("lifesteal")) this.heal(side, dealt, t);
+      if (dtags.includes("lifesteal")) this.heal(t.side, back, { side, uid });
       if (uid === "hero") {
         m.weapon.durability--;
         if (m.weapon.durability <= 0) {
           m.weapon = null;
           this.log("武器已损坏。");
         }
+        this.event("weaponWear", { side, uid: "hero", broken: !m.weapon });
       }
       this.cleanup();
       return this.emit();
@@ -604,7 +648,21 @@ const EmberEngine = (() => {
           (a, b) => Number(a.m.uid.slice(1)) - Number(b.m.uid.slice(1)),
         );
         for (const { side, m } of dead) {
-          this.event("death", { side, uid: m.uid, cid: m.cid });
+          this.event("death", {
+            side,
+            uid: m.uid,
+            cid: m.cid,
+            // The batch left the board together, before individual deathrattles.
+            ...(m === dead[0].m
+              ? {
+                  departures: dead.map(({ side, m }) => ({
+                    side,
+                    uid: m.uid,
+                    cid: m.cid,
+                  })),
+                }
+              : {}),
+          });
           if (!m.silenced) {
             this.withBlock("deathrattle", { sourceId: m.uid }, () =>
               this.resolve(this.data.byId[m.cid].onDeath, {
@@ -616,10 +674,15 @@ const EmberEngine = (() => {
           }
           if (m.tags.includes("reborn")) {
             const c = this.data.byId[m.cid];
-            this.summon(side, m.cid, {
-              hp: 1,
-              tags: c.tags.filter((x) => x !== "reborn"),
-            });
+            this.summon(
+              side,
+              m.cid,
+              {
+                hp: 1,
+                tags: c.tags.filter((x) => x !== "reborn"),
+              },
+              { rebornFrom: m.uid },
+            );
           }
         }
       }
@@ -691,6 +754,15 @@ const EmberEngine = (() => {
       if (this.s.phase !== "battle" || this.s.active !== side || this.s.choice)
         return this.reject("现在不能结束回合");
       const p = this.s[side];
+      const thawed = [
+        ...(p.frozen ? [{ side, uid: "hero", kind: "thaw" }] : []),
+        ...p.board.flatMap((m) => [
+          ...(m.frozen ? [{ side, uid: m.uid, kind: "thaw" }] : []),
+          ...(m.tempAtk
+            ? [{ side, uid: m.uid, kind: "expire", attack: -m.tempAtk }]
+            : []),
+        ]),
+      ];
       p.frozen = false;
       for (const m of p.board) {
         m.frozen = false;
@@ -701,6 +773,7 @@ const EmberEngine = (() => {
         if (m.modifiers)
           m.modifiers = m.modifiers.filter((x) => x.duration !== "turn");
       }
+      for (const cue of thawed) this.event("status", cue);
       this.beginTurn(this.other(side));
       return this.emit();
     }

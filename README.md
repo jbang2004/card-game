@@ -39,4 +39,8 @@ npm run test:release
 
 详细说明见 [架构](docs/ARCHITECTURE.md)、[卡牌修改指南](docs/CARD_AUTHORING.md) 和 [v0.11 验证记录](docs/QA_V11.md)。`CODEX_HANDOFF.md`、旧 QA、`HANDOFF_*` 是历史输入记录，不再作为当前源码必须保持不变的要求。
 
-没有公网部署、账号、云存档或 PVP。浏览器回归属于 Chromium 桌面和触控模拟，不代表实体手机或其他浏览器验收。
+公开试玩：https://emberfall-gilded-tavern.jbang2004.chatgpt.site 。没有账号、云存档或 PVP。浏览器回归属于 Chromium 桌面和触控模拟，不代表实体手机或其他浏览器验收。
+
+## 角色制作
+
+统一清单为 `assets/characters.json`；制作与接入见 [角色制作规范](docs/CHARACTER_AUTHORING.md)。35 个上场随从（含 7 个衍生角色）均有分层待机，3 位英雄和 5 位首领按既有 portraitId 复用。其余 21 张法术/武器保持静态。运行 `python3 tools/characters.py --list` 查看完整静态/动态清单；`tools/animation-demo.html?zoom=1` 可分页查看所有角色。其他模型可直接读取项目内 [角色制作 Skill](.agents/skills/character-creation/SKILL.md)。

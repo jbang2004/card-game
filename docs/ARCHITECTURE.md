@@ -80,3 +80,17 @@ CSS 的四层约定继续有效。现有基础样式仍承载弹窗、触屏和�
 `presentation/components.css` 使用同一套配色，圣盾、冻结、可攻击边框仅由既有只读状态类决定。新增的 `unit-aura` 不接收输入；费用、攻血和文字仍为 DOM。可出牌的卡框有缓慢扫光，减少动态或低画质时关闭。
 
 `tests/e2e/effects.spec.cjs` 验证真实出牌的传说登场、桌面／触屏截图、视觉播放期间规则状态不变、动态设置中途切换，以及取消／重排后计时器、动画、节点和粒子归零。诊断值通过 `EmberFX.activeAnimations` / `transientNodes` 和既有计数器读取，不暴露新的规则写接口。
+
+## 因果演出与分层人物（2026-09-07）
+
+`presentation/combat.js` 将事件按因果块编成中间表现快照；`effects.js` 仍是唯一战斗演出所有者。引擎只发布已结算的公开观察数据，不等待动画，不新增存档字段。`presentation/portraits.js` 独立管理场上分层人物的共用时钟、可见性、冻结、品质降级及绘制上限；不读取或修改规则状态。详细范围见 [动画更新](ANIMATION_UPDATE.md)。
+
+人物动态使用下述统一目录；35 个随从及英雄/首领所复用的图版都有分层待机。手牌、选卡和自动悬停预览保持静态，场上与显式检查才播放；解码缓存和活跃画布受统一预算限制。
+
+## 统一角色目录（当前接口）
+
+`assets/characters.json` 是角色身份、静态焦点、动态来源、命名图层和 rig 参数的唯一手工配置入口，覆盖全部卡牌。它替代早期 `assets/motion/manifest.json` 与 `presentation/portrait-profiles.js`。静态图来源/哈希与规则定义仍由各自既有模块负责，不把美术配置混进规则层。
+
+`tools/characters.py` 在构建时校验并生成 `character-catalog.js` / `motion-assets.js`；打包器只更新清单的图层产物记录。`EmberArt` 和 `AtelierArt` 使用同一目录，渲染器按图层名称取图。UI 在表现快照渲染时传入明确 mode / instance / state 属性；冻结不再读取 CSS 类，双方英雄与同卡不同实体使用不同实例键。静态卡片不注册动画窗口，显式 detail 切回 static 会释放注册与画布。
+
+字段、命令、模板和验收以 `CHARACTER_AUTHORING.md` 为准。项目内 `.agents/skills/character-creation/SKILL.md` 为可携带的制作入口。

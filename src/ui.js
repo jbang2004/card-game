@@ -313,6 +313,7 @@
       ? $(side === "p" ? "player-hero" : "enemy-hero")
       : document.querySelector(`.minion[data-uid="${uid}"]`);
   }
+  let displayedState = null;
   function changed(s, events) {
     save();
     if (!inBattle) {
@@ -323,7 +324,7 @@
     EmberFX.present(
       events || [],
       s,
-      () => render(s),
+      (frame = s) => render(frame),
       () => {
         if (!inBattle || token !== runToken) return;
         handleEvents(events || []);
@@ -338,10 +339,12 @@
         } else scheduleAI();
       },
       cardHTML,
+      displayedState,
     );
   }
   function render(s) {
     if (!s) return;
+    displayedState = s;
     const handScroll = $("hand").scrollLeft;
     EmberFX.setTheme(s.bossIndex, s.phase2);
     const hero = D.heroes.find((h) => h.id === s.heroId),
@@ -382,7 +385,7 @@
       const p = s[side],
         data = side === "p" ? hero : boss,
         el = $(side === "p" ? "player-hero" : "enemy-hero");
-      el.innerHTML = `<div class="hero-carving" aria-hidden="true"></div><div class="portrait-frame"><img src="${A.character(data)}" alt="${data.name}" draggable="false" style="${artStyleForHero(data, "hero")}"></div><div class="hero-name">${data.name}</div><div class="hero-health ${p.hp < p.maxHp ? "damaged" : ""}">${Math.max(0, p.hp)}</div>${p.armor ? `<div class="hero-armor" title="护甲 ${p.armor}">${p.armor}</div>` : ""}${p.secrets.length ? '<div class="secret-indicator" title="奥秘已布置">?</div>' : ""}${side === "e" ? `<div class="hero-phase">${s.phase2 ? "阶段 II" : "阶段 I"}</div>` : ""}`;
+      el.innerHTML = `<div class="hero-carving" aria-hidden="true"></div><div class="portrait-frame"><img src="${A.character(data)}" data-art-key="${data.portraitId}" data-portrait-mode="hero" data-portrait-instance="${side}:hero" data-portrait-state="${p.frozen ? "frozen" : "idle"}" alt="${data.name}" draggable="false" style="${artStyleForHero(data, "hero")}"></div><div class="hero-name">${data.name}</div><div class="hero-health ${p.hp < p.maxHp ? "damaged" : ""}">${Math.max(0, p.hp)}</div>${p.armor ? `<div class="hero-armor" title="护甲 ${p.armor}">${p.armor}</div>` : ""}${p.secrets.length ? '<div class="secret-indicator" title="奥秘已布置">?</div>' : ""}${side === "e" ? `<div class="hero-phase">${s.phase2 ? "阶段 II" : "阶段 I"}</div>` : ""}`;
       el.classList.toggle("frozen", p.frozen);
       el.classList.toggle("ready", game.canAttack(side, "hero"));
       el.setAttribute(
@@ -476,7 +479,7 @@
                   })[t],
               )
               .join("");
-            return `<button class="minion ${side === "e" ? "enemy" : "friendly"} ${m.tags.join(" ")} ${ready ? "ready" : ""} ${m.frozen ? "frozen" : ""} ${c.rarity}" style="left:${x}px;top:${y}px;width:${geo.w}px;height:${geo.h}px;--unit-w:${geo.w}px" data-compact="${geo.w < 50}" data-side="${side}" data-uid="${m.uid}" data-cardid="${c.id}" aria-label="${c.name}，攻击 ${m.atk}，生命 ${m.hp}，${m.tags.map((t) => D.kw[t]).join("、")}${m.frozen ? "，被冻结" : ""}"><div class="minion-art"><img src="${A.card(c)}" alt="" draggable="false" data-art-key="${artKeyForCard(c)}" style="${artStyleForCard(c, "minion")}"></div><span class="unit-aura" aria-hidden="true"></span><div class="minion-name">${c.name}</div><span class="stat atk">${m.atk}</span><span class="stat hp ${m.hp < m.maxHp ? "hurt" : ""}">${m.hp}</span><span class="minion-status">${m.frozen ? "❄" : specials ? '<span class="special">' + specials + "</span>" : m.sick && !ready ? '<span class="sleep">z z</span>' : ""}</span>${ready ? '<span class="ready-dot"></span>' : ""}</button>`;
+            return `<button class="minion ${side === "e" ? "enemy" : "friendly"} ${m.tags.join(" ")} ${ready ? "ready" : ""} ${m.frozen ? "frozen" : ""} ${c.rarity}" style="left:${x}px;top:${y}px;width:${geo.w}px;height:${geo.h}px;--unit-w:${geo.w}px" data-compact="${geo.w < 50}" data-side="${side}" data-uid="${m.uid}" data-cardid="${c.id}" aria-label="${c.name}，攻击 ${m.atk}，生命 ${m.hp}，${m.tags.map((t) => D.kw[t]).join("、")}${m.frozen ? "，被冻结" : ""}"><div class="minion-art"><img src="${A.card(c)}" alt="" draggable="false" data-art-key="${artKeyForCard(c)}" data-portrait-mode="board" data-portrait-instance="${side}:${m.uid}" data-portrait-state="${m.frozen ? "frozen" : "idle"}" style="${artStyleForCard(c, "minion")}"></div><span class="unit-aura" aria-hidden="true"></span><div class="minion-name">${c.name}</div><span class="stat atk">${m.atk}</span><span class="stat hp ${m.hp < m.maxHp ? "hurt" : ""}">${Math.max(0, m.hp)}</span><span class="minion-status">${m.frozen ? "❄" : specials ? '<span class="special">' + specials + "</span>" : m.sick && !ready ? '<span class="sleep">z z</span>' : ""}</span>${ready ? '<span class="ready-dot"></span>' : ""}</button>`;
           })
           .join(""),
       )
@@ -555,6 +558,7 @@
     if (EmberViewport.mobile) $("hand").scrollLeft = handScroll;
     window.EmberMobile?.afterRender(s);
     updateSelection();
+    EmberPortraits.sync();
   }
   function preview(cid, el) {
     clearTimeout(previewTimer);

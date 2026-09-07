@@ -30,7 +30,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 常规改动先构建并运行规则/素材单元测试；交互变更再跑相关 Playwright 脚本并检查截图。浏览器可通过 `CHROMIUM_PATH` 指定，未指定时寻找系统 Chromium，否则使用 Playwright 默认浏览器。
 
-`VALIDATION.md` 与现有测试结果属于输入 v0.7.0 的历史验收记录；本次交接打包的复验见 `HANDOFF_CHECKS.json`。没有实体手机、真实 GPU 3D 或真实跨刷新存储测试时，不把模拟/内存适配器结果称为相应验收。桌面与手机只有 Canvas 路径，旧 Three.js 预览已经删除。当前没有已确认的公网部署。
+`VALIDATION.md` 与现有测试结果属于输入 v0.7.0 的历史验收记录；本次交接打包的复验见 `HANDOFF_CHECKS.json`。没有实体手机、真实 GPU 3D 或真实跨刷新存储测试时，不把模拟/内存适配器结果称为相应验收。桌面与手机只有 Canvas 路径，旧 Three.js 预览已经删除。现有公开站点为 https://emberfall-gilded-tavern.jbang2004.chatgpt.site ，Sites 项目绑定见 `.openai/hosting.json`；仅用户明确要求发布时更新。
 
 ## v0.11 内容与验证
 

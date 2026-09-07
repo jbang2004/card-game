@@ -1,7 +1,8 @@
 /* Strict, immutable asset API. Cards, characters and relics have explicit routes. */
 const EmberArt = (() => {
   function card(c) {
-    const image = AnimeAssets[c?.id];
+    const record = CharacterCatalog[c?.id];
+    const image = record && AnimeAssets[record.staticKey];
     if (!image) throw Error("Missing anime artwork for card: " + c?.id);
     return image;
   }
