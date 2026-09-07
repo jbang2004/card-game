@@ -15,14 +15,25 @@ const EmberData = (() => {
   function create(input = definitions, world = campaign) {
     const cards = input.map((c) => ({
       tags: [],
+      class: "neutral",
       onPlay: [],
       onDeath: [],
       ...structuredClone(c),
     }));
-    const { heroes, bosses, relics, kw } = structuredClone(world),
+    const {
+        heroes,
+        bosses,
+        relics,
+        kw,
+        archetypes = [],
+      } = structuredClone(world),
       byId = {};
     const cardFields = new Set([
       "id",
+      "class",
+      "tribe",
+      "set",
+      "triggers",
       "name",
       "cost",
       "atk",
@@ -82,6 +93,11 @@ const EmberData = (() => {
     }
     const db = { ...byId, $kw: kw };
     for (const c of cards) {
+      if (!["neutral", "mage", "paladin", "ranger"].includes(c.class))
+        throw Error(c.id + ": Invalid class");
+      if (c.tribe && !["beast", "undead", "dragon"].includes(c.tribe))
+        throw Error(c.id + ": Invalid tribe");
+      R.validateTriggers(c.triggers, db, c.id);
       R.validateEffects(c.onPlay, db, c.id);
       R.validateEffects(c.onDeath, db, c.id);
       if (c.onPlay.some((e) => e.to === "selected") && !c.target)
@@ -89,8 +105,11 @@ const EmberData = (() => {
       if (
         c.onPlay.some((e) => e.type === "secret") &&
         (!c.secret ||
-          c.secret.when !== "beforeHeroAttack" ||
-          byId[c.secret.summon]?.type !== "minion")
+          !["beforeHeroAttack", "beforeSpell"].includes(c.secret.when) ||
+          (c.secret.when === "beforeSpell"
+            ? c.secret.counter !== true
+            : !(Number.isInteger(c.secret.armor) && c.secret.armor > 0) &&
+              byId[c.secret.summon]?.type !== "minion"))
       )
         throw Error(c.id + ": Invalid secret");
       if (c.onDeath.some((e) => e.to === "selected"))
@@ -119,6 +138,7 @@ const EmberData = (() => {
       R.validateEffects(h.powerEffects, db, h.id);
       if (h.phaseEffects) R.validateEffects(h.phaseEffects, db, h.id);
     }
+    for (const r of relics) R.validateTriggers(r.triggers, db, r.id);
     for (const r of relics)
       for (const key of ["onStart", "onTurn"])
         if (r[key]) R.validateEffects(r[key], db, r.id);
@@ -145,7 +165,45 @@ const EmberData = (() => {
               ? "你的每个回合开始时，" + describe(r.onTurn)
               : "每场战斗开始时，" + describe(r.onStart);
     }
-    return R.freeze({ cards, byId, heroes, bosses, relics, kw });
+    for (const r of relics) r.text += R.triggerText(r.triggers, db);
+    for (const a of archetypes) {
+      if (
+        !heroes.some((h) => h.id === a.hero) ||
+        !Array.isArray(a.deck) ||
+        a.deck.length !== 30
+      )
+        throw Error(a.id + ": Invalid archetype");
+      const counts = {};
+      for (const id of a.deck) {
+        const c = byId[id];
+        if (
+          !c ||
+          c.token ||
+          !["neutral", a.hero].includes(c.class) ||
+          (counts[id] = (counts[id] || 0) + 1) >
+            (c.rarity === "legendary" ? 1 : 2)
+        )
+          throw Error(a.id + ": Illegal archetype card " + id);
+      }
+    }
+    const classNames = {
+      neutral: "中立",
+      mage: "法师",
+      paladin: "圣卫",
+      ranger: "游侠",
+    };
+    const tribeNames = { beast: "野兽", undead: "亡灵", dragon: "龙" };
+    return R.freeze({
+      cards,
+      byId,
+      heroes,
+      bosses,
+      relics,
+      kw,
+      archetypes,
+      classNames,
+      tribeNames,
+    });
   }
   return Object.freeze({ ...create(), create });
 })();

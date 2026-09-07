@@ -1,7 +1,7 @@
 {
   "version": "0.6.0",
-  "cards": 56,
-  "collectible": 48,
+  "cards": 62,
+  "collectible": 54,
   "tokens": 8,
   "sourceAtlases": 8,
   "description": "Every card has a separate panel from the user-approved anime atlas set. Hero/Boss portraits deliberately reuse matching panels, listed separately in runtime routing. Frames and scenery are retained from v0.5.",
@@ -1405,6 +1405,132 @@
       "bytes": 65396,
       "sha256": "71cb0f31ef137794e4ddb745dac690e18e1b1ecae71004e8457f77701784ad91",
       "method": "interior crop, caption removal, proportional downsampling, WebP; no upscaling"
+    },
+    "counterspell": {
+      "source": "expansion-sources/counterspell.png",
+      "sourceSHA256": "e14644c18ce29c2f091c7a2d171054dfcd79a35448e42044d6fceb861b667de8",
+      "sourceNote": "Tavern Oaths: generated with built-in image_gen, individually inspected; prompts in expansion-sources/provenance.json",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "cropBox": null,
+      "file": "counterspell.webp",
+      "sha256": "c3a6a08fd2de6ee6a621f63d1eb7764b9b0e1b947ebf0634e8d806c129d077fe",
+      "bytes": 66496,
+      "method": "Individual generated source, proportional resize, WebP",
+      "name": "破法之镜",
+      "type": "spell",
+      "token": false
+    },
+    "icebarrier": {
+      "source": "expansion-sources/icebarrier.png",
+      "sourceSHA256": "619e0a19fba07dcddd4ab9417220b94382312b6b8e682774d36fbe1bf6042131",
+      "sourceNote": "Tavern Oaths: generated with built-in image_gen, individually inspected; prompts in expansion-sources/provenance.json",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "cropBox": null,
+      "file": "icebarrier.webp",
+      "sha256": "3905393c6d1099d36ec93625f5b40eeb98ebd316e2396edd40392eb2995cae8c",
+      "bytes": 62934,
+      "method": "Individual generated source, proportional resize, WebP",
+      "name": "霜晶壁垒",
+      "type": "spell",
+      "token": false
+    },
+    "muster": {
+      "source": "expansion-sources/muster.png",
+      "sourceSHA256": "60bb99c10c9cdb5f668856d57ea76686e6c57a9955eb45326a4f3a3fb0277c04",
+      "sourceNote": "Tavern Oaths: generated with built-in image_gen, individually inspected; prompts in expansion-sources/provenance.json",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "cropBox": null,
+      "file": "muster.webp",
+      "sha256": "a052c8489064a559addb2fd8964590fceff42773937b183ce1160e9c8494ca18",
+      "bytes": 46668,
+      "method": "Individual generated source, proportional resize, WebP",
+      "name": "黎明集结",
+      "type": "spell",
+      "token": false
+    },
+    "absolution": {
+      "source": "expansion-sources/absolution.png",
+      "sourceSHA256": "d0376ea755acc51a8720c63a2c73c8726a1ad0045f6edc6efc528f7302b2cbf4",
+      "sourceNote": "Tavern Oaths: generated with built-in image_gen, individually inspected; prompts in expansion-sources/provenance.json",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "cropBox": null,
+      "file": "absolution.webp",
+      "sha256": "0c72924b4631c57b8e2409623308e5c741f9d1664afa07d634010cdeeb3110b7",
+      "bytes": 54402,
+      "method": "Individual generated source, proportional resize, WebP",
+      "name": "誓约祷言",
+      "type": "spell",
+      "token": false
+    },
+    "tracking": {
+      "source": "expansion-sources/tracking.png",
+      "sourceSHA256": "21523e266b8ba7aaa5516203fcf1bf963e722f15be77c8c31c1fd151b3775a85",
+      "sourceNote": "Tavern Oaths: generated with built-in image_gen, individually inspected; prompts in expansion-sources/provenance.json",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "cropBox": null,
+      "file": "tracking.webp",
+      "sha256": "a45291e2c711ee3e33526dad913d7972b333a3347d6c670c5f6a99809e568154",
+      "bytes": 53998,
+      "method": "Individual generated source, proportional resize, WebP",
+      "name": "月径追踪",
+      "type": "spell",
+      "token": false
+    },
+    "sabotage": {
+      "source": "expansion-sources/sabotage.png",
+      "sourceSHA256": "4d880079467efa62c0c247a100cde7a82e56b84583bad58774b27c91f5477bfc",
+      "sourceNote": "Tavern Oaths: generated with built-in image_gen, individually inspected; prompts in expansion-sources/provenance.json",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "outputSize": [
+        336,
+        448
+      ],
+      "cropBox": null,
+      "file": "sabotage.webp",
+      "sha256": "58e88f1c2232ac55a120ba24d163c9e878c830ce2c7aed67f8316c44cf6d3e8f",
+      "bytes": 46780,
+      "method": "Individual generated source, proportional resize, WebP",
+      "name": "断刃伏击",
+      "type": "spell",
+      "token": false
     }
   }
 }

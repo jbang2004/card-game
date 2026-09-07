@@ -1,0 +1,8 @@
+{
+  "id": "tracking",
+  "path": "/Users/yijun/.codex/generated_images/emberfall-expansion/tracking-clean.png",
+  "provider": "built-in image_gen edit",
+  "prompt": "Use case: precise-object-edit. Edit this image only to remove the tiny invented signature/lettering at the extreme bottom-right corner, filling that tiny area with seamlessly matching dark forest ground. Preserve all other artwork, the composition, moonlight, trees, emerald paw footprints, colors and portrait aspect ratio. Do not add any text or watermark. Change only the small bottom-right lettering.",
+  "source": "/Users/yijun/.codex/generated_images/emberfall-expansion/tracking.png",
+  "inspected": true
+}

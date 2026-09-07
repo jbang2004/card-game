@@ -1076,7 +1076,7 @@ const EmberFX = (() => {
       }
       if (e.type === "secret") {
         const p = fallback(s, e.side, "hero");
-        cue(p, "镜像伏击 · 拦截", "secret");
+        cue(p, (EmberData.byId[e.cid]?.name || "奥秘") + " · 触发", "secret");
         rune(p.x, p.y, "arcane", 65, 550);
         EmberAudio.fx("cast-arcane");
       }
@@ -1086,6 +1086,7 @@ const EmberFX = (() => {
         const p = at(e),
           el = unit(e.side, e.uid);
         const labels = {
+          trigger: "能力触发",
           freeze: "冻结",
           thaw: "解冻",
           silence: "沉默",

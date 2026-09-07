@@ -5,6 +5,14 @@ const EmberPreview = (() => {
     const { side, uid } = target,
       t = g.getTarget(target);
     if (!t) return null;
+    if (
+      g.s.ruleset >= 2 &&
+      ((g.s.e.secrets.length && selection.type !== "attack") ||
+        [...g.s.p.board, ...g.s.e.board].some(
+          (m) => !m.silenced && g.data.byId[m.cid].triggers?.length,
+        ))
+    )
+      return { kind: "uncertain", text: "触发能力或奥秘可能改变最终结果" };
     if (selection.type === "attack") {
       if (
         !g

@@ -5,7 +5,7 @@
   const E = Emberfall,
     $ = (s) => document.querySelector(s),
     root = document.documentElement.style;
-  document.title = "烬域 · 风起之境 — THE GILDED TAVERN v0.11.0";
+  document.title = "烬域 · 风起之境 — THE GILDED TAVERN v0.12.0";
   root.setProperty("--wind-paper-texture", `url("${WindborneAssets.paper}")`);
   root.setProperty(
     "--wind-leaf-seal",
@@ -16,7 +16,7 @@
   $(".lobby-copy>.eyebrow").textContent = "A LITTLE WORLD · A GREAT ADVENTURE";
   $(".lobby-chinese").textContent = "风起之境";
   $(".lobby-tagline").textContent = "风吹过山谷，好故事正要开始。";
-  $(".lobby-desc").textContent = "三位旅人 · 四十八张卡牌 · 五段首领冒险";
+  $(".lobby-desc").textContent = "三位旅人 · 五十四张卡牌 · 五段首领冒险";
   $(".lobby-world-label").innerHTML =
     "<span>THE WAYFARER’S TAVERN</span><i></i><span>旅人的酒馆 · 炉火正暖</span>";
   $(".lobby-bottom small").textContent = "VOL. X / THE GILDED TAVERN";
@@ -116,7 +116,7 @@
     version: "0.7.0",
     worldAssets: 9,
     buildings: 4,
-    cardAssetsUnchanged: 56,
+    cardAssets: 62,
     mechanics: "unchanged from v0.6",
     source: "approved-village concept extraction, authored surface and live UI",
     new3DMeshes: false,

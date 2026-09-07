@@ -19,8 +19,11 @@ const EmberLibrary = (() => {
       filterType = "all",
       filterCost = "all",
       filterSearch = "",
-      deckHero = "mage";
-    function showLibrary() {
+      deckHero = "mage",
+      presetId = "mage_burn";
+    function showLibrary(hero) {
+      if (hero) deckHero = hero;
+      presetId = D.archetypes.find((a) => a.hero === deckHero).id;
       editDeck = readStore(DECK) || [
         ...D.heroes.find((h) => h.id === deckHero).deck,
       ];
@@ -31,7 +34,15 @@ const EmberLibrary = (() => {
     }
     function renderLibrary() {
       showModal(
-        `<section class="modal-box library-box"><div class="library-heading"><div><h2>万象秘典</h2><p>THE COLLECTION · 48 张原创卡牌全部可用</p></div><input id="library-search" class="library-search" placeholder="搜索名称、关键词或效果…" aria-label="搜索卡牌" value="${escape(filterSearch)}"></div><div class="library-layout"><div class="library-main"><div class="filter-bar" id="filter-bar"><button class="filter-btn active" data-type="all">全部</button><button class="filter-btn" data-type="minion">随从</button><button class="filter-btn" data-type="spell">法术</button><button class="filter-btn" data-type="weapon">武器</button><span class="spacer"></span><button class="filter-btn mana active" data-mana="all">费用</button>${[0, 1, 2, 3, 4, 5, 6, 7].map((i) => `<button class="filter-btn mana" data-mana="${i}">${i === 7 ? "7+" : i}</button>`).join("")}</div><div class="library-grid" id="library-grid"></div><div class="library-foot" id="library-foot">点击卡牌加入牌组 · 右侧点击移除 · 同名最多 2 张，传说最多 1 张</div></div><aside class="deck-editor"><h3>你的牌组 <span class="deck-total" id="deck-total"></span></h3><p class="deck-intro">配置恰好 30 张卡牌。应用后用于新战役，<br>不会修改当前战斗的牌库。</p><div style="display:flex;gap:8px;align-items:center;margin-top:12px"><select class="library-search" id="deck-preset" aria-label="预设职业" style="width:160px;padding:7px">${D.heroes.map((h) => `<option value="${h.id}" ${deckHero === h.id ? "selected" : ""}>${h.name}预设</option>`).join("")}</select><button class="text-btn" id="deck-reset">套用</button><button class="text-btn" id="deck-clear">清空</button></div><div class="deck-list" id="deck-list"></div><div class="deck-curve" id="deck-curve"></div><div class="deck-actions"><button class="gold-btn small-btn" id="deck-save">应用牌组</button><button class="ghost-btn small-btn" id="deck-play">选择英雄</button></div></aside></div></section>`,
+        `<section class="modal-box library-box"><div class="library-heading"><div><h2>万象秘典</h2><p>THE COLLECTION · ${D.cards.filter((c) => !c.token).length} 张卡牌 · 酒馆誓约扩展</p></div><input id="library-search" class="library-search" placeholder="搜索名称、关键词或效果…" aria-label="搜索卡牌" value="${escape(filterSearch)}"></div><div class="library-layout"><div class="library-main"><div class="filter-bar" id="filter-bar"><button class="filter-btn active" data-type="all">全部</button><button class="filter-btn" data-type="minion">随从</button><button class="filter-btn" data-type="spell">法术</button><button class="filter-btn" data-type="weapon">武器</button><span class="spacer"></span><button class="filter-btn mana active" data-mana="all">费用</button>${[0, 1, 2, 3, 4, 5, 6, 7].map((i) => `<button class="filter-btn mana" data-mana="${i}">${i === 7 ? "7+" : i}</button>`).join("")}</div><div class="library-grid" id="library-grid"></div><div class="library-foot" id="library-foot">点击卡牌加入牌组 · 右侧点击移除 · 同名最多 2 张，传说最多 1 张</div></div><aside class="deck-editor"><h3>你的牌组 <span class="deck-total" id="deck-total"></span></h3><p class="deck-intro">30 张职业与中立牌。选择套牌查看打法，点击套用后可自由调整。</p><label>职业 <select id="deck-class" class="library-search">${D.heroes.map((h) => `<option value="${h.id}" ${h.id === deckHero ? "selected" : ""}>${h.name}</option>`).join("")}</select></label><div style="display:flex;gap:8px;align-items:center;margin-top:12px"><select class="library-search" id="deck-preset" aria-label="预设职业" style="width:160px;padding:7px">${D.archetypes
+          .filter((a) => a.hero === deckHero)
+          .map(
+            (a) =>
+              `<option value="${a.id}" ${a.id === presetId ? "selected" : ""}>${a.name}</option>`,
+          )
+          .join(
+            "",
+          )}</select><button class="text-btn" id="deck-reset">套用</button><button class="text-btn" id="deck-clear">清空</button></div><p class="deck-plan" id="deck-plan"></p><p role="status" id="deck-warning"></p><div class="deck-list" id="deck-list"></div><div class="deck-curve" id="deck-curve"></div><div class="deck-actions"><button class="gold-btn small-btn" id="deck-save">应用牌组</button><button class="ghost-btn small-btn" id="deck-play">选择英雄</button></div></aside></div></section>`,
         "library",
       );
       $("library-search").oninput = (e) => {
@@ -56,9 +67,17 @@ const EmberLibrary = (() => {
               renderLibraryCards();
             }),
         );
-      $("deck-preset").onchange = (e) => (deckHero = e.target.value);
+      $("deck-class").onchange = (e) => {
+        deckHero = e.target.value;
+        presetId = D.archetypes.find((a) => a.hero === deckHero).id;
+        renderLibrary();
+      };
+      $("deck-preset").onchange = (e) => {
+        presetId = e.target.value;
+        renderDeck();
+      };
       $("deck-reset").onclick = () => {
-        editDeck = [...D.heroes.find((h) => h.id === deckHero).deck];
+        editDeck = [...D.archetypes.find((a) => a.id === presetId).deck];
         renderDeck();
         renderLibraryCards();
       };
@@ -68,11 +87,11 @@ const EmberLibrary = (() => {
         renderLibraryCards();
       };
       $("deck-save").onclick = () => {
-        if (validateDeck(editDeck) && writeStore(DECK, editDeck))
+        if (validateDeck(editDeck, deckHero) && writeStore(DECK, editDeck))
           toast("30 张卡组已应用，将用于下一段新战役。");
       };
       $("deck-play").onclick = () => {
-        if (!validateDeck(editDeck)) {
+        if (!validateDeck(editDeck, deckHero)) {
           toast("请先完成 30 张卡组，或关闭图鉴使用英雄预设。");
           return;
         }
@@ -87,13 +106,20 @@ const EmberLibrary = (() => {
         .filter(
           (c) =>
             !c.token &&
+            (c.class === "neutral" || c.class === deckHero) &&
             (filterType === "all" || c.type === filterType) &&
             (filterCost === "all" ||
               (filterCost === "7"
                 ? c.cost >= 7
                 : c.cost === Number(filterCost))) &&
             (!filterSearch ||
-              (c.name + c.text + c.rarity)
+              (
+                c.name +
+                c.text +
+                c.rarity +
+                (D.tribeNames[c.tribe] || "") +
+                D.classNames[c.class]
+              )
                 .toLowerCase()
                 .includes(filterSearch.toLowerCase())),
         )
@@ -119,7 +145,7 @@ const EmberLibrary = (() => {
       $("library-foot").textContent =
         "显示 " +
         list.length +
-        " / 48 张 · 点击加入，右侧点击移除 · 同名最多 2 张，传说最多 1 张";
+        " 张可用职业与中立牌 · 同名最多 2 张，传说最多 1 张";
       document.querySelectorAll("[data-add]").forEach((b) => {
         b.onclick = () => {
           hidePreview();
@@ -151,11 +177,22 @@ const EmberLibrary = (() => {
     }
     function renderDeck() {
       window.EmberMobile?.syncDeck(editDeck.length);
+      const foreign = editDeck.filter(
+        (id) => D.byId[id].class !== "neutral" && D.byId[id].class !== deckHero,
+      );
+      $("deck-warning").textContent = foreign.length
+        ? `有 ${foreign.length} 张其他职业牌，请移除或套用预设。旧牌组保留到你点击应用。`
+        : editDeck.length !== 30
+          ? `还需调整到 30 张（当前 ${editDeck.length} 张）`
+          : "牌组可用";
+      $("deck-plan").textContent = D.archetypes.find(
+        (a) => a.id === presetId,
+      ).plan;
       const counts = {};
       editDeck.forEach((id) => (counts[id] = (counts[id] || 0) + 1));
       $("deck-total").textContent = editDeck.length + "/30";
       $("deck-total").classList.toggle("full", editDeck.length === 30);
-      $("deck-save").disabled = !validateDeck(editDeck);
+      $("deck-save").disabled = !validateDeck(editDeck, deckHero);
       $("deck-list").innerHTML = Object.keys(counts)
         .sort((a, b) => D.byId[a].cost - D.byId[b].cost)
         .map((id) => {

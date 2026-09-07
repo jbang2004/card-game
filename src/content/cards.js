@@ -1,4 +1,4 @@
-/* Authored card definitions. Text is derived from effects by EmberRules. */
+/* Authored cards: class identity and Tavern Oaths expansion. */
 const EmberCardDefinitions = [
   {
     id: "spark",
@@ -18,6 +18,22 @@ const EmberCardDefinitions = [
         spell: false,
       },
     ],
+    class: "mage",
+    triggers: [
+      {
+        event: "spellCast",
+        effects: [
+          {
+            type: "buff",
+            attack: 1,
+            health: 0,
+            to: "self",
+            duration: "turn",
+          },
+        ],
+        maxPerTurn: 3,
+      },
+    ],
   },
   {
     id: "squire",
@@ -30,6 +46,7 @@ const EmberCardDefinitions = [
     rarity: "common",
     type: "minion",
     tags: ["shield"],
+    class: "paladin",
   },
   {
     id: "wolf",
@@ -48,6 +65,8 @@ const EmberCardDefinitions = [
         count: 1,
       },
     ],
+    class: "ranger",
+    tribe: "beast",
   },
   {
     id: "archer",
@@ -68,6 +87,7 @@ const EmberCardDefinitions = [
         spell: false,
       },
     ],
+    class: "ranger",
   },
   {
     id: "guard",
@@ -80,6 +100,7 @@ const EmberCardDefinitions = [
     rarity: "common",
     type: "minion",
     tags: ["taunt"],
+    class: "neutral",
   },
   {
     id: "oracle",
@@ -97,6 +118,7 @@ const EmberCardDefinitions = [
         count: 1,
       },
     ],
+    class: "neutral",
   },
   {
     id: "wisp",
@@ -109,6 +131,21 @@ const EmberCardDefinitions = [
     rarity: "rare",
     type: "minion",
     tags: ["spellpower"],
+    class: "mage",
+    triggers: [
+      {
+        event: "spellCast",
+        effects: [
+          {
+            type: "damage",
+            amount: 1,
+            to: "enemyHero",
+            spell: false,
+          },
+        ],
+        maxPerTurn: 2,
+      },
+    ],
   },
   {
     id: "spider",
@@ -121,6 +158,8 @@ const EmberCardDefinitions = [
     rarity: "rare",
     type: "minion",
     tags: ["poison"],
+    class: "ranger",
+    tribe: "beast",
   },
   {
     id: "sentinel",
@@ -133,6 +172,7 @@ const EmberCardDefinitions = [
     rarity: "common",
     type: "minion",
     tags: ["rush"],
+    class: "neutral",
   },
   {
     id: "assassin",
@@ -145,6 +185,19 @@ const EmberCardDefinitions = [
     rarity: "rare",
     type: "minion",
     tags: ["stealth"],
+    class: "ranger",
+    triggers: [
+      {
+        event: "afterAttack",
+        effects: [
+          {
+            type: "draw",
+            count: 1,
+          },
+        ],
+        maxPerTurn: 1,
+      },
+    ],
   },
   {
     id: "cleric",
@@ -162,6 +215,7 @@ const EmberCardDefinitions = [
         amount: 4,
       },
     ],
+    class: "neutral",
   },
   {
     id: "berserker",
@@ -174,6 +228,7 @@ const EmberCardDefinitions = [
     rarity: "rare",
     type: "minion",
     tags: ["windfury"],
+    class: "neutral",
   },
   {
     id: "golem",
@@ -192,6 +247,7 @@ const EmberCardDefinitions = [
         amount: 3,
       },
     ],
+    class: "neutral",
   },
   {
     id: "leech",
@@ -204,6 +260,22 @@ const EmberCardDefinitions = [
     rarity: "rare",
     type: "minion",
     tags: ["lifesteal"],
+    class: "ranger",
+    tribe: "undead",
+    triggers: [
+      {
+        event: "friendlyDeath",
+        effects: [
+          {
+            type: "buff",
+            attack: 1,
+            health: 1,
+            to: "self",
+          },
+        ],
+        maxPerTurn: 2,
+      },
+    ],
   },
   {
     id: "treant",
@@ -216,6 +288,7 @@ const EmberCardDefinitions = [
     rarity: "common",
     type: "minion",
     tags: ["taunt"],
+    class: "neutral",
   },
   {
     id: "phoenix",
@@ -228,6 +301,7 @@ const EmberCardDefinitions = [
     rarity: "epic",
     type: "minion",
     tags: ["reborn"],
+    class: "mage",
   },
   {
     id: "rider",
@@ -240,6 +314,8 @@ const EmberCardDefinitions = [
     rarity: "rare",
     type: "minion",
     tags: ["rush"],
+    class: "neutral",
+    tribe: "beast",
   },
   {
     id: "necromancer",
@@ -258,6 +334,20 @@ const EmberCardDefinitions = [
         count: 2,
       },
     ],
+    class: "ranger",
+    tribe: "undead",
+    triggers: [
+      {
+        event: "friendlyDeath",
+        effects: [
+          {
+            type: "draw",
+            count: 1,
+          },
+        ],
+        maxPerTurn: 1,
+      },
+    ],
   },
   {
     id: "paladin",
@@ -270,6 +360,19 @@ const EmberCardDefinitions = [
     rarity: "epic",
     type: "minion",
     tags: ["taunt", "shield"],
+    class: "paladin",
+    triggers: [
+      {
+        event: "shieldLost",
+        effects: [
+          {
+            type: "heal",
+            amount: 2,
+          },
+        ],
+        maxPerTurn: 2,
+      },
+    ],
   },
   {
     id: "titan",
@@ -288,6 +391,7 @@ const EmberCardDefinitions = [
         count: 1,
       },
     ],
+    class: "neutral",
   },
   {
     id: "huntress",
@@ -300,6 +404,23 @@ const EmberCardDefinitions = [
     rarity: "epic",
     type: "minion",
     tags: ["charge"],
+    class: "ranger",
+    tribe: "beast",
+    triggers: [
+      {
+        event: "afterAttack",
+        effects: [
+          {
+            type: "buff",
+            attack: 1,
+            health: 0,
+            to: "friendlyBeasts",
+            duration: "turn",
+          },
+        ],
+        maxPerTurn: 1,
+      },
+    ],
   },
   {
     id: "dragon",
@@ -319,6 +440,8 @@ const EmberCardDefinitions = [
         spell: false,
       },
     ],
+    class: "neutral",
+    tribe: "dragon",
   },
   {
     id: "reaper",
@@ -331,6 +454,8 @@ const EmberCardDefinitions = [
     rarity: "epic",
     type: "minion",
     tags: ["lifesteal", "rush"],
+    class: "ranger",
+    tribe: "undead",
   },
   {
     id: "colossus",
@@ -343,6 +468,7 @@ const EmberCardDefinitions = [
     rarity: "epic",
     type: "minion",
     tags: ["taunt"],
+    class: "neutral",
   },
   {
     id: "solaris",
@@ -363,6 +489,20 @@ const EmberCardDefinitions = [
         to: "friendlyOthers",
       },
     ],
+    class: "paladin",
+    triggers: [
+      {
+        event: "turnEnd",
+        effects: [
+          {
+            type: "grant",
+            tag: "shield",
+            to: "friendlyLowest",
+          },
+        ],
+        maxPerTurn: 1,
+      },
+    ],
   },
   {
     id: "nyx",
@@ -379,6 +519,19 @@ const EmberCardDefinitions = [
       {
         type: "draw",
         count: 2,
+      },
+    ],
+    class: "mage",
+    triggers: [
+      {
+        event: "spellCast",
+        effects: [
+          {
+            type: "draw",
+            count: 1,
+          },
+        ],
+        maxPerTurn: 1,
       },
     ],
   },
@@ -400,6 +553,8 @@ const EmberCardDefinitions = [
         spell: false,
       },
     ],
+    class: "neutral",
+    tribe: "dragon",
   },
   {
     id: "frostking",
@@ -418,6 +573,7 @@ const EmberCardDefinitions = [
         to: "enemyMinions",
       },
     ],
+    class: "mage",
   },
   {
     id: "bolt",
@@ -436,6 +592,7 @@ const EmberCardDefinitions = [
         spell: true,
       },
     ],
+    class: "mage",
   },
   {
     id: "frostbolt",
@@ -458,6 +615,7 @@ const EmberCardDefinitions = [
         to: "selected",
       },
     ],
+    class: "mage",
   },
   {
     id: "fireball",
@@ -476,6 +634,7 @@ const EmberCardDefinitions = [
         spell: true,
       },
     ],
+    class: "mage",
   },
   {
     id: "nova",
@@ -495,6 +654,7 @@ const EmberCardDefinitions = [
         count: 1,
       },
     ],
+    class: "mage",
   },
   {
     id: "storm",
@@ -512,6 +672,7 @@ const EmberCardDefinitions = [
         spell: true,
       },
     ],
+    class: "mage",
   },
   {
     id: "wisdom",
@@ -527,6 +688,7 @@ const EmberCardDefinitions = [
         count: 2,
       },
     ],
+    class: "mage",
   },
   {
     id: "blessing",
@@ -545,6 +707,7 @@ const EmberCardDefinitions = [
         to: "selected",
       },
     ],
+    class: "paladin",
   },
   {
     id: "renew",
@@ -564,6 +727,7 @@ const EmberCardDefinitions = [
         count: 1,
       },
     ],
+    class: "paladin",
   },
   {
     id: "execute",
@@ -580,6 +744,7 @@ const EmberCardDefinitions = [
         to: "selected",
       },
     ],
+    class: "ranger",
   },
   {
     id: "silence",
@@ -596,6 +761,7 @@ const EmberCardDefinitions = [
         to: "selected",
       },
     ],
+    class: "neutral",
   },
   {
     id: "rally",
@@ -613,6 +779,7 @@ const EmberCardDefinitions = [
         to: "friendlyMinions",
       },
     ],
+    class: "paladin",
   },
   {
     id: "wolves",
@@ -630,6 +797,7 @@ const EmberCardDefinitions = [
         requireSpace: true,
       },
     ],
+    class: "ranger",
   },
   {
     id: "shield",
@@ -647,6 +815,7 @@ const EmberCardDefinitions = [
         to: "selected",
       },
     ],
+    class: "paladin",
   },
   {
     id: "lifedrain",
@@ -669,6 +838,7 @@ const EmberCardDefinitions = [
         amount: 3,
       },
     ],
+    class: "ranger",
   },
   {
     id: "dagger",
@@ -680,6 +850,7 @@ const EmberCardDefinitions = [
     palette: "steel",
     rarity: "rare",
     type: "weapon",
+    class: "ranger",
   },
   {
     id: "sunblade",
@@ -692,6 +863,7 @@ const EmberCardDefinitions = [
     rarity: "epic",
     type: "weapon",
     tags: ["lifesteal"],
+    class: "paladin",
   },
   {
     id: "polymorph",
@@ -709,6 +881,7 @@ const EmberCardDefinitions = [
         to: "selected",
       },
     ],
+    class: "mage",
   },
   {
     id: "discovery",
@@ -725,6 +898,7 @@ const EmberCardDefinitions = [
         cardType: "spell",
       },
     ],
+    class: "mage",
   },
   {
     id: "ambush",
@@ -743,6 +917,7 @@ const EmberCardDefinitions = [
       when: "beforeHeroAttack",
       summon: "stone",
     },
+    class: "mage",
   },
   {
     id: "battlecry",
@@ -762,6 +937,7 @@ const EmberCardDefinitions = [
         duration: "turn",
       },
     ],
+    class: "ranger",
   },
   {
     id: "coin",
@@ -778,6 +954,7 @@ const EmberCardDefinitions = [
         amount: 1,
       },
     ],
+    class: "neutral",
   },
   {
     id: "pup",
@@ -790,6 +967,8 @@ const EmberCardDefinitions = [
     rarity: "common",
     type: "minion",
     token: true,
+    class: "neutral",
+    tribe: "beast",
   },
   {
     id: "spiritwolf",
@@ -803,6 +982,8 @@ const EmberCardDefinitions = [
     type: "minion",
     tags: ["rush"],
     token: true,
+    class: "neutral",
+    tribe: "beast",
   },
   {
     id: "skeleton",
@@ -815,6 +996,8 @@ const EmberCardDefinitions = [
     rarity: "common",
     type: "minion",
     token: true,
+    class: "neutral",
+    tribe: "undead",
   },
   {
     id: "stone",
@@ -828,6 +1011,7 @@ const EmberCardDefinitions = [
     type: "minion",
     tags: ["taunt"],
     token: true,
+    class: "neutral",
   },
   {
     id: "sheep",
@@ -840,6 +1024,7 @@ const EmberCardDefinitions = [
     rarity: "common",
     type: "minion",
     token: true,
+    class: "neutral",
   },
   {
     id: "recruit",
@@ -852,6 +1037,7 @@ const EmberCardDefinitions = [
     rarity: "common",
     type: "minion",
     token: true,
+    class: "neutral",
   },
   {
     id: "thorn",
@@ -865,6 +1051,127 @@ const EmberCardDefinitions = [
     type: "minion",
     tags: ["taunt"],
     token: true,
+    class: "neutral",
+  },
+  {
+    id: "counterspell",
+    name: "破法之镜",
+    cost: 3,
+    class: "mage",
+    palette: "arcane",
+    type: "spell",
+    rarity: "rare",
+    art: "sigil",
+    set: "tavern_oaths",
+    onPlay: [
+      {
+        type: "secret",
+      },
+    ],
+    secret: {
+      when: "beforeSpell",
+      counter: true,
+    },
+  },
+  {
+    id: "icebarrier",
+    name: "霜晶壁垒",
+    cost: 2,
+    class: "mage",
+    palette: "ice",
+    type: "spell",
+    rarity: "rare",
+    art: "sigil",
+    set: "tavern_oaths",
+    onPlay: [
+      {
+        type: "secret",
+      },
+    ],
+    secret: {
+      when: "beforeHeroAttack",
+      armor: 8,
+    },
+  },
+  {
+    id: "muster",
+    name: "黎明集结",
+    cost: 3,
+    class: "paladin",
+    palette: "gold",
+    type: "spell",
+    rarity: "rare",
+    art: "sigil",
+    set: "tavern_oaths",
+    onPlay: [
+      {
+        type: "summon",
+        card: "recruit",
+        count: 3,
+        requireSpace: true,
+      },
+    ],
+  },
+  {
+    id: "absolution",
+    name: "誓约祷言",
+    cost: 3,
+    class: "paladin",
+    palette: "gold",
+    type: "spell",
+    rarity: "rare",
+    art: "sigil",
+    set: "tavern_oaths",
+    onPlay: [
+      {
+        type: "draw",
+        count: 2,
+      },
+      {
+        type: "grant",
+        tag: "shield",
+        to: "friendlyLowest",
+      },
+    ],
+  },
+  {
+    id: "tracking",
+    name: "月径追踪",
+    cost: 2,
+    class: "ranger",
+    palette: "nature",
+    type: "spell",
+    rarity: "rare",
+    art: "sigil",
+    set: "tavern_oaths",
+    onPlay: [
+      {
+        type: "drawFiltered",
+        count: 2,
+        cardType: "minion",
+        tribe: "beast",
+      },
+    ],
+  },
+  {
+    id: "sabotage",
+    name: "断刃伏击",
+    cost: 2,
+    class: "ranger",
+    palette: "steel",
+    type: "spell",
+    rarity: "rare",
+    art: "sigil",
+    set: "tavern_oaths",
+    onPlay: [
+      {
+        type: "destroyWeapon",
+      },
+      {
+        type: "draw",
+        count: 1,
+      },
+    ],
   },
 ];
 if (typeof module !== "undefined") module.exports = EmberCardDefinitions;

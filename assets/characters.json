@@ -1672,6 +1672,36 @@
           }
         ]
       }
+    },
+    "counterspell": {
+      "staticKey": "counterspell",
+      "focus": 40,
+      "motion": null
+    },
+    "icebarrier": {
+      "staticKey": "icebarrier",
+      "focus": 40,
+      "motion": null
+    },
+    "muster": {
+      "staticKey": "muster",
+      "focus": 40,
+      "motion": null
+    },
+    "absolution": {
+      "staticKey": "absolution",
+      "focus": 40,
+      "motion": null
+    },
+    "tracking": {
+      "staticKey": "tracking",
+      "focus": 40,
+      "motion": null
+    },
+    "sabotage": {
+      "staticKey": "sabotage",
+      "focus": 40,
+      "motion": null
     }
   }
 }

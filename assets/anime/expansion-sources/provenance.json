@@ -1,0 +1,52 @@
+{
+  "assets": [
+    {
+      "id": "counterspell",
+      "source": "/Users/yijun/.codex/generated_images/01a07d34-0f9e-7272-b3d3-2ec8dc804327/exec-bf544d8c-c5f6-46cb-a533-3b30768fedb5.png",
+      "path": "/Users/yijun/.codex/generated_images/emberfall-expansion/counterspell.png",
+      "prompt": "Use case: stylized-concept. Asset type: fantasy spell card illustration for Emberfall ornate tavern card game. Subject: A purple arcane mirror shattering an incoming fire spell into glittering shards, dramatic violet magic and orange embers. Rich hand-painted anime fantasy illustration with detailed atmospheric background, expressive painterly rendering, refined silhouettes, premium collectible card artwork. Portrait 3:4 composition, clear large central symbol readable at small size, full-bleed artwork. No text, letters, numbers, UI, card borders, logos or watermark. Generate one distinct final image.",
+      "provider": "built-in image_gen",
+      "inspected": true
+    },
+    {
+      "id": "icebarrier",
+      "source": "/Users/yijun/.codex/generated_images/01a07d34-0f9e-7272-b3d3-2ec8dc804327/exec-e087e8eb-e6f3-41d4-af75-98ef8087408f.png",
+      "path": "/Users/yijun/.codex/generated_images/emberfall-expansion/icebarrier.png",
+      "prompt": "Use case: stylized-concept. Asset type: fantasy spell card illustration for Emberfall ornate tavern card game. Subject: A luminous cyan crystal barrier standing protectively amid swirling snowfall, luminous crystalline facets and distant winter ruins. Rich hand-painted anime fantasy illustration with detailed atmospheric background, expressive painterly rendering, refined silhouettes, premium collectible card artwork. Portrait 3:4 composition, clear large central symbol readable at small size, full-bleed artwork. No text, letters, numbers, UI, card borders, logos or watermark. Generate one distinct final image.",
+      "provider": "built-in image_gen",
+      "inspected": true
+    },
+    {
+      "id": "muster",
+      "source": "/Users/yijun/.codex/generated_images/01a07d34-0f9e-7272-b3d3-2ec8dc804327/exec-bf48f2b8-f7a3-4750-92b2-f3170d28504e.png",
+      "path": "/Users/yijun/.codex/generated_images/emberfall-expansion/muster.png",
+      "prompt": "Use case: stylized-concept. Asset type: fantasy spell card illustration for Emberfall ornate tavern card game. Subject: Exactly three golden spectral banners rising above a dawn battlefield, luminous cloth streaming over distant mist and abandoned shields. Rich hand-painted anime fantasy illustration with detailed atmospheric background, expressive painterly rendering, refined silhouettes, premium collectible card artwork. Portrait 3:4 composition, clear large central symbol readable at small size, full-bleed artwork. No text, letters, numbers, UI, card borders, logos or watermark. Generate one distinct final image.",
+      "provider": "built-in image_gen",
+      "inspected": true
+    },
+    {
+      "id": "absolution",
+      "source": "/Users/yijun/.codex/generated_images/01a07d34-0f9e-7272-b3d3-2ec8dc804327/exec-5e9f515c-384c-4e6b-a22d-309d842011e9.png",
+      "path": "/Users/yijun/.codex/generated_images/emberfall-expansion/absolution.png",
+      "prompt": "Use case: stylized-concept. Asset type: fantasy spell card illustration for Emberfall ornate tavern card game. Subject: A golden radiant prayer book floating within a protective halo, warm sacred light spilling from blank luminous pages inside a vaulted sanctuary. Rich hand-painted anime fantasy illustration with detailed atmospheric background, expressive painterly rendering, refined silhouettes, premium collectible card artwork. Portrait 3:4 composition, clear large central symbol readable at small size, full-bleed artwork. No text, letters, numbers, UI, card borders, logos or watermark. Generate one distinct final image.",
+      "provider": "built-in image_gen",
+      "inspected": true
+    },
+    {
+      "id": "tracking",
+      "source": "/Users/yijun/.codex/generated_images/01a07d34-0f9e-7272-b3d3-2ec8dc804327/exec-3e13d49c-9439-40b0-bd2c-b7e84b5825fc.png",
+      "path": "/Users/yijun/.codex/generated_images/emberfall-expansion/tracking.png",
+      "prompt": "Use case: stylized-concept. Asset type: fantasy spell card illustration for Emberfall ornate tavern card game. Subject: Emerald magical animal paw footprints winding through a moonlit forest, glowing tracks central in foreground leading into misty ancient trees. Rich hand-painted anime fantasy illustration with detailed atmospheric background, expressive painterly rendering, refined silhouettes, premium collectible card artwork. Portrait 3:4 composition, clear large central symbol readable at small size, full-bleed artwork. No text, letters, numbers, UI, card borders, logos or watermark. Generate one distinct final image.",
+      "provider": "built-in image_gen",
+      "inspected": true
+    },
+    {
+      "id": "sabotage",
+      "source": "/Users/yijun/.codex/generated_images/01a07d34-0f9e-7272-b3d3-2ec8dc804327/exec-72dd3b3c-e1c1-4db6-8970-a6b20208ef74.png",
+      "path": "/Users/yijun/.codex/generated_images/emberfall-expansion/sabotage.png",
+      "prompt": "Use case: stylized-concept. Asset type: fantasy spell card illustration for Emberfall ornate tavern card game. Subject: A silver dagger severing a dark enchanted sword, the shattered sword fragments separating with bright sparks and dissipating dark magic. Rich hand-painted anime fantasy illustration with detailed atmospheric background, expressive painterly rendering, refined silhouettes, premium collectible card artwork. Portrait 3:4 composition, clear large central symbol readable at small size, full-bleed artwork. No text, letters, numbers, UI, card borders, logos or watermark. Generate one distinct final image.",
+      "provider": "built-in image_gen",
+      "inspected": true
+    }
+  ]
+}

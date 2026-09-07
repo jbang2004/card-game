@@ -1,0 +1,667 @@
+{
+  "seeds": 12,
+  "totalGames": 792,
+  "method": "Deterministic same-policy bots; alternating first player in practice; boss tests use no relics. This is smoke/balance screening, not human win rates.",
+  "rows": [
+    {
+      "mode": "practice",
+      "deck": "mage_burn",
+      "opponent": "mage_burn",
+      "wins": 6,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 12.25,
+      "maxDecisionMs": 5
+    },
+    {
+      "mode": "practice",
+      "deck": "mage_burn",
+      "opponent": "mage_frost",
+      "wins": 2,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 13.416666666666666,
+      "maxDecisionMs": 5
+    },
+    {
+      "mode": "practice",
+      "deck": "mage_burn",
+      "opponent": "paladin_swarm",
+      "wins": 7,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 11.75,
+      "maxDecisionMs": 10
+    },
+    {
+      "mode": "practice",
+      "deck": "mage_burn",
+      "opponent": "paladin_guard",
+      "wins": 4,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 12.166666666666666,
+      "maxDecisionMs": 5
+    },
+    {
+      "mode": "practice",
+      "deck": "mage_burn",
+      "opponent": "ranger_pack",
+      "wins": 6,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 11.083333333333334,
+      "maxDecisionMs": 5
+    },
+    {
+      "mode": "practice",
+      "deck": "mage_burn",
+      "opponent": "ranger_death",
+      "wins": 6,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 12.166666666666666,
+      "maxDecisionMs": 6
+    },
+    {
+      "mode": "practice",
+      "deck": "mage_frost",
+      "opponent": "mage_burn",
+      "wins": 9,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 14.333333333333334,
+      "maxDecisionMs": 8
+    },
+    {
+      "mode": "practice",
+      "deck": "mage_frost",
+      "opponent": "mage_frost",
+      "wins": 7,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 20.25,
+      "maxDecisionMs": 9
+    },
+    {
+      "mode": "practice",
+      "deck": "mage_frost",
+      "opponent": "paladin_swarm",
+      "wins": 8,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 11.583333333333334,
+      "maxDecisionMs": 12
+    },
+    {
+      "mode": "practice",
+      "deck": "mage_frost",
+      "opponent": "paladin_guard",
+      "wins": 7,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 15.75,
+      "maxDecisionMs": 12
+    },
+    {
+      "mode": "practice",
+      "deck": "mage_frost",
+      "opponent": "ranger_pack",
+      "wins": 7,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 10.333333333333334,
+      "maxDecisionMs": 5
+    },
+    {
+      "mode": "practice",
+      "deck": "mage_frost",
+      "opponent": "ranger_death",
+      "wins": 9,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 13.5,
+      "maxDecisionMs": 6
+    },
+    {
+      "mode": "practice",
+      "deck": "paladin_swarm",
+      "opponent": "mage_burn",
+      "wins": 8,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 11.333333333333334,
+      "maxDecisionMs": 10
+    },
+    {
+      "mode": "practice",
+      "deck": "paladin_swarm",
+      "opponent": "mage_frost",
+      "wins": 1,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 13,
+      "maxDecisionMs": 6
+    },
+    {
+      "mode": "practice",
+      "deck": "paladin_swarm",
+      "opponent": "paladin_swarm",
+      "wins": 3,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 10,
+      "maxDecisionMs": 7
+    },
+    {
+      "mode": "practice",
+      "deck": "paladin_swarm",
+      "opponent": "paladin_guard",
+      "wins": 6,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 10.916666666666666,
+      "maxDecisionMs": 10
+    },
+    {
+      "mode": "practice",
+      "deck": "paladin_swarm",
+      "opponent": "ranger_pack",
+      "wins": 4,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 10.333333333333334,
+      "maxDecisionMs": 14
+    },
+    {
+      "mode": "practice",
+      "deck": "paladin_swarm",
+      "opponent": "ranger_death",
+      "wins": 7,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 10.083333333333334,
+      "maxDecisionMs": 7
+    },
+    {
+      "mode": "practice",
+      "deck": "paladin_guard",
+      "opponent": "mage_burn",
+      "wins": 7,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 13.5,
+      "maxDecisionMs": 10
+    },
+    {
+      "mode": "practice",
+      "deck": "paladin_guard",
+      "opponent": "mage_frost",
+      "wins": 4,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 16.583333333333332,
+      "maxDecisionMs": 10
+    },
+    {
+      "mode": "practice",
+      "deck": "paladin_guard",
+      "opponent": "paladin_swarm",
+      "wins": 4,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 9.5,
+      "maxDecisionMs": 12
+    },
+    {
+      "mode": "practice",
+      "deck": "paladin_guard",
+      "opponent": "paladin_guard",
+      "wins": 6,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 13.083333333333334,
+      "maxDecisionMs": 11
+    },
+    {
+      "mode": "practice",
+      "deck": "paladin_guard",
+      "opponent": "ranger_pack",
+      "wins": 5,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 9.5,
+      "maxDecisionMs": 7
+    },
+    {
+      "mode": "practice",
+      "deck": "paladin_guard",
+      "opponent": "ranger_death",
+      "wins": 9,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 12.166666666666666,
+      "maxDecisionMs": 11
+    },
+    {
+      "mode": "practice",
+      "deck": "ranger_pack",
+      "opponent": "mage_burn",
+      "wins": 5,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 11.083333333333334,
+      "maxDecisionMs": 5
+    },
+    {
+      "mode": "practice",
+      "deck": "ranger_pack",
+      "opponent": "mage_frost",
+      "wins": 4,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 11.416666666666666,
+      "maxDecisionMs": 13
+    },
+    {
+      "mode": "practice",
+      "deck": "ranger_pack",
+      "opponent": "paladin_swarm",
+      "wins": 5,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 8.416666666666666,
+      "maxDecisionMs": 8
+    },
+    {
+      "mode": "practice",
+      "deck": "ranger_pack",
+      "opponent": "paladin_guard",
+      "wins": 5,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 9.75,
+      "maxDecisionMs": 10
+    },
+    {
+      "mode": "practice",
+      "deck": "ranger_pack",
+      "opponent": "ranger_pack",
+      "wins": 6,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 9.666666666666666,
+      "maxDecisionMs": 6
+    },
+    {
+      "mode": "practice",
+      "deck": "ranger_pack",
+      "opponent": "ranger_death",
+      "wins": 8,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 11.416666666666666,
+      "maxDecisionMs": 11
+    },
+    {
+      "mode": "practice",
+      "deck": "ranger_death",
+      "opponent": "mage_burn",
+      "wins": 5,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 12.416666666666666,
+      "maxDecisionMs": 11
+    },
+    {
+      "mode": "practice",
+      "deck": "ranger_death",
+      "opponent": "mage_frost",
+      "wins": 1,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 12.083333333333334,
+      "maxDecisionMs": 14
+    },
+    {
+      "mode": "practice",
+      "deck": "ranger_death",
+      "opponent": "paladin_swarm",
+      "wins": 5,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 9.666666666666666,
+      "maxDecisionMs": 171
+    },
+    {
+      "mode": "practice",
+      "deck": "ranger_death",
+      "opponent": "paladin_guard",
+      "wins": 4,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 11.25,
+      "maxDecisionMs": 7
+    },
+    {
+      "mode": "practice",
+      "deck": "ranger_death",
+      "opponent": "ranger_pack",
+      "wins": 3,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 9.5,
+      "maxDecisionMs": 6
+    },
+    {
+      "mode": "practice",
+      "deck": "ranger_death",
+      "opponent": "ranger_death",
+      "wins": 9,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 11.75,
+      "maxDecisionMs": 13
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "mage_burn",
+      "opponent": "warden",
+      "wins": 9,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 13.916666666666666,
+      "maxDecisionMs": 6
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "mage_burn",
+      "opponent": "queen",
+      "wins": 5,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 13.25,
+      "maxDecisionMs": 8
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "mage_burn",
+      "opponent": "oracle",
+      "wins": 7,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 15.5,
+      "maxDecisionMs": 9
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "mage_burn",
+      "opponent": "frost",
+      "wins": 2,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 18.833333333333332,
+      "maxDecisionMs": 11
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "mage_burn",
+      "opponent": "dragon",
+      "wins": 0,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 12.5,
+      "maxDecisionMs": 6
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "mage_frost",
+      "opponent": "warden",
+      "wins": 11,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 14,
+      "maxDecisionMs": 6
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "mage_frost",
+      "opponent": "queen",
+      "wins": 11,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 16.083333333333332,
+      "maxDecisionMs": 9
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "mage_frost",
+      "opponent": "oracle",
+      "wins": 11,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 17,
+      "maxDecisionMs": 6
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "mage_frost",
+      "opponent": "frost",
+      "wins": 10,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 20.25,
+      "maxDecisionMs": 9
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "mage_frost",
+      "opponent": "dragon",
+      "wins": 0,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 17.416666666666668,
+      "maxDecisionMs": 8
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "paladin_swarm",
+      "opponent": "warden",
+      "wins": 9,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 10.583333333333334,
+      "maxDecisionMs": 7
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "paladin_swarm",
+      "opponent": "queen",
+      "wins": 7,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 11.916666666666666,
+      "maxDecisionMs": 8
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "paladin_swarm",
+      "opponent": "oracle",
+      "wins": 8,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 13.5,
+      "maxDecisionMs": 7
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "paladin_swarm",
+      "opponent": "frost",
+      "wins": 4,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 15.583333333333334,
+      "maxDecisionMs": 7
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "paladin_swarm",
+      "opponent": "dragon",
+      "wins": 0,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 12.916666666666666,
+      "maxDecisionMs": 6
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "paladin_guard",
+      "opponent": "warden",
+      "wins": 10,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 13.75,
+      "maxDecisionMs": 7
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "paladin_guard",
+      "opponent": "queen",
+      "wins": 7,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 12.25,
+      "maxDecisionMs": 7
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "paladin_guard",
+      "opponent": "oracle",
+      "wins": 8,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 16.583333333333332,
+      "maxDecisionMs": 12
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "paladin_guard",
+      "opponent": "frost",
+      "wins": 7,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 18.416666666666668,
+      "maxDecisionMs": 13
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "paladin_guard",
+      "opponent": "dragon",
+      "wins": 0,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 13.25,
+      "maxDecisionMs": 11
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "ranger_pack",
+      "opponent": "warden",
+      "wins": 5,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 11.166666666666666,
+      "maxDecisionMs": 14
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "ranger_pack",
+      "opponent": "queen",
+      "wins": 6,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 11,
+      "maxDecisionMs": 12
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "ranger_pack",
+      "opponent": "oracle",
+      "wins": 6,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 13.25,
+      "maxDecisionMs": 13
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "ranger_pack",
+      "opponent": "frost",
+      "wins": 0,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 14,
+      "maxDecisionMs": 13
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "ranger_pack",
+      "opponent": "dragon",
+      "wins": 0,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 10.75,
+      "maxDecisionMs": 5
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "ranger_death",
+      "opponent": "warden",
+      "wins": 10,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 13.833333333333334,
+      "maxDecisionMs": 8
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "ranger_death",
+      "opponent": "queen",
+      "wins": 5,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 13.083333333333334,
+      "maxDecisionMs": 15
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "ranger_death",
+      "opponent": "oracle",
+      "wins": 7,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 14.416666666666666,
+      "maxDecisionMs": 16
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "ranger_death",
+      "opponent": "frost",
+      "wins": 2,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 17.083333333333332,
+      "maxDecisionMs": 10
+    },
+    {
+      "mode": "boss-no-relics",
+      "deck": "ranger_death",
+      "opponent": "dragon",
+      "wins": 0,
+      "draws": 0,
+      "games": 12,
+      "meanTurns": 12.333333333333334,
+      "maxDecisionMs": 6
+    }
+  ]
+}

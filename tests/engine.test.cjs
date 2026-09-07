@@ -24,9 +24,9 @@ function min(g, id, side = "p", extra = {}) {
 }
 const target = (m, side = "e") => ({ side, uid: m?.uid || "hero" });
 
-test("48 collectible cards, 8 tokens; all three 30-card decks valid", () => {
-  assert.equal(D.cards.filter((c) => !c.token).length, 48);
-  assert.equal(D.cards.length, 56);
+test("54 collectible cards, 8 tokens; all three 30-card decks valid", () => {
+  assert.equal(D.cards.filter((c) => !c.token).length, 54);
+  assert.equal(D.cards.length, 62);
   const g = new Game();
   for (const h of D.heroes) {
     assert.equal(h.deck.length, 30);
@@ -179,9 +179,9 @@ test("spell damage stacks with relic, but not hero powers", () => {
   const g = game("mage", 0, ["lens"]);
   min(g, "wisp");
   g.play("p", hand(g, "bolt"), target(null));
-  assert.equal(g.s.e.hp, 26);
+  assert.equal(g.s.e.hp, 25); // 4 spell damage plus wisp's separate trigger
   g.power("p", target(null));
-  assert.equal(g.s.e.hp, 25);
+  assert.equal(g.s.e.hp, 24);
 });
 test("freeze blocks next own turn and thaws at own end", () => {
   const g = game();

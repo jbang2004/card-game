@@ -94,3 +94,11 @@ CSS 的四层约定继续有效。现有基础样式仍承载弹窗、触屏和�
 `tools/characters.py` 在构建时校验并生成 `character-catalog.js` / `motion-assets.js`；打包器只更新清单的图层产物记录。`EmberArt` 和 `AtelierArt` 使用同一目录，渲染器按图层名称取图。UI 在表现快照渲染时传入明确 mode / instance / state 属性；冻结不再读取 CSS 类，双方英雄与同卡不同实体使用不同实例键。静态卡片不注册动画窗口，显式 detail 切回 static 会释放注册与画布。
 
 字段、命令、模板和验收以 `CHARACTER_AUTHORING.md` 为准。项目内 `.agents/skills/character-creation/SKILL.md` 为可携带的制作入口。
+
+## v0.12 扩展
+
+在原模块边界内增加职业/种族元数据、六套 archetypes、带每回合上限的声明式 triggers、新奥秘与筛选抽牌。触发由规则调用，不使用表现层事件驱动；表现层只观察已结算事件。规则版本为 v1 存档上的可选 `ruleset:2`，旧存档不自动启用触发。
+
+AI 使用同一个 Game 实现进行有限回合搜索，simulation 分支不构造表现快照。根搜索状态清除对方牌身份和奥秘类型、替换双方未知牌库顺序，模拟抽到的未知卡不可打出。搜索不修改正式状态、随机种子或事件。
+
+练习与战役共用规则，mode:practice 禁用首领觉醒并选用对手的职业技能。练习状态不写战役 localStorage。所有新增可选状态由 rules/state.js 验证。

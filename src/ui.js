@@ -59,7 +59,7 @@
     data: D,
     readStore,
     writeStore,
-    validateDeck: (d) => game.validateDeck(d),
+    validateDeck: (d, h) => game.validateDeck(d, h),
     showModal,
     toast,
     preview,
@@ -104,7 +104,8 @@
     EmberFX.configure(settings.reduced, settings.low);
   }
   function save() {
-    if (game.s && !isDemo) writeStore(STORE, game.s);
+    if (game.s && !isDemo && game.s.mode !== "practice")
+      writeStore(STORE, game.s);
   }
   function validSave() {
     const s = readStore(STORE);
@@ -123,7 +124,7 @@
       ? "开始新战役（确认后覆盖当前进度）"
       : "从第 6 回合开始的示范战斗，不影响战役存档";
   }
-  function startGame(hero, boss = 0, relics = [], deck = null) {
+  function startGame(hero, boss = 0, relics = [], deck = null, options = {}) {
     EmberFX.cancel();
     runToken++;
     clearTimeout(aiTimer);
@@ -134,7 +135,12 @@
     selection = null;
     closeModal(false);
     setView(true);
-    game.start(hero, boss, relics, deck);
+    const result = game.start(hero, boss, relics, deck, Date.now(), options);
+    if (!result.ok) {
+      toast(result.error);
+      home();
+      return;
+    }
     showMulligan();
   }
   function continueGame() {
@@ -261,7 +267,12 @@
   function showHeroes() {
     const custom = readStore(DECK);
     showModal(
-      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">CHOOSE YOUR PATH</div><h2>选择你的英雄</h2><p>三种信仰，同一束不灭的星火。你的英雄技能将贯穿整段旅程。</p></div><div class="hero-options">${D.heroes.map((h) => `<button class="hero-option hero-${h.id} ${h.id === chosenHero ? "selected" : ""}" data-hero="${h.id}"><img src="${A.character(h)}" alt="${h.name}" draggable="false" style="${artStyleForHero(h, "option")}"><div class="hero-option-text"><small>${h.sub}</small><h3>${h.name}</h3><p>${h.desc}</p><em>${h.powerText}</em></div>${h.id === chosenHero ? '<span class="selected-check">' + A.icon("check") + "</span>" : ""}</button>`).join("")}</div><p class="hero-deck-note">${game.validateDeck(custom) ? "已装配你的自定义 30 张卡组。" : "每位英雄均配有经过费用曲线配置的 30 张起始牌组。"} · 战役共五场，关卡之间恢复全部生命。</p><div class="modal-footer"><button class="ghost-btn" id="hero-deck-btn">先去组牌</button><button class="gold-btn" id="hero-confirm">踏入余火之门 ${A.icon("arrow")}</button></div></section>`,
+      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">CHOOSE YOUR PATH</div><h2>选择你的英雄</h2><p>三种信仰，同一束不灭的星火。你的英雄技能将贯穿整段旅程。</p></div><div class="hero-options">${D.heroes.map((h) => `<button class="hero-option hero-${h.id} ${h.id === chosenHero ? "selected" : ""}" data-hero="${h.id}"><img src="${A.character(h)}" alt="${h.name}" draggable="false" style="${artStyleForHero(h, "option")}"><div class="hero-option-text"><small>${h.sub}</small><h3>${h.name}</h3><p>${h.desc}</p><em>${h.powerText}</em></div>${h.id === chosenHero ? '<span class="selected-check">' + A.icon("check") + "</span>" : ""}</button>`).join("")}</div><p class="hero-deck-note">${game.validateDeck(custom, chosenHero) ? "可选用已保存的职业牌组。" : "请选择职业套牌；已有旧牌组仍保留，可在组牌中调整。"} · 战役共五场，关卡之间恢复全部生命。</p><label class="archetype-picker">套牌 <select class="library-search" id="hero-archetype">${game.validateDeck(custom, chosenHero) ? '<option value="custom">已保存的自定义牌组</option>' : ""}${D.archetypes
+        .filter((a) => a.hero === chosenHero)
+        .map((a) => `<option value="${a.id}">${a.name}</option>`)
+        .join(
+          "",
+        )}</select></label><p id="hero-plan" class="deck-plan"></p><label class="archetype-picker">玩法 <select id="game-mode" class="library-search"><option value="campaign">五关战役 · 遗物与整备</option><option value="practice">练习对战 · 不覆盖战役存档</option></select></label><label class="archetype-picker" id="opponent-picker" hidden>对手 <select id="practice-opponent" class="library-search">${D.archetypes.map((a) => `<option value="${a.id}">${D.classNames[a.hero]} · ${a.name}</option>`).join("")}</select></label><div class="modal-footer"><button class="ghost-btn" id="hero-deck-btn">先去组牌</button><button class="gold-btn" id="hero-confirm">踏入余火之门 ${A.icon("arrow")}</button></div></section>`,
       "heroes",
     );
     document.querySelectorAll("[data-hero]").forEach(
@@ -272,13 +283,36 @@
           showHeroes();
         }),
     );
+    const plan = () => {
+      $("hero-plan").textContent =
+        D.archetypes.find((a) => a.id === $("hero-archetype").value)?.plan ||
+        "使用已保存的 30 张职业牌组。";
+    };
+    $("hero-archetype").onchange = plan;
+    plan();
+    $("game-mode").onchange = () => {
+      $("opponent-picker").hidden = $("game-mode").value !== "practice";
+      $("hero-confirm").textContent =
+        $("game-mode").value === "practice" ? "开始练习对战" : "踏入余火之门";
+    };
     $("hero-confirm").onclick = () => {
       const d = readStore(DECK);
-      startGame(chosenHero, 0, [], game.validateDeck(d) ? d : null);
+      const id = $("hero-archetype").value;
+      const selected =
+        id === "custom" ? d : D.archetypes.find((a) => a.id === id).deck;
+      startGame(
+        chosenHero,
+        0,
+        [],
+        selected,
+        $("game-mode").value === "practice"
+          ? { opponent: $("practice-opponent").value }
+          : {},
+      );
     };
     $("hero-deck-btn").onclick = () => {
       deckHero = chosenHero;
-      showLibrary();
+      library.show(chosenHero);
     };
   }
   function showMulligan() {
@@ -287,7 +321,7 @@
   }
   function renderMulligan() {
     showModal(
-      `<section class="modal-box mulligan-box"><div class="modal-heading"><div class="eyebrow">YOUR OPENING HAND</div><h2>命运的第一手</h2><p>点击不想保留的卡牌进行替换。优先留下低费随从，建立你的战场。</p></div><div class="mulligan-cards">${game.s.p.hand.map((c) => `<button class="mulligan-card ${mulliganSet.has(c.uid) ? "replace" : ""}" data-mulligan="${c.uid}" aria-label="${D.byId[c.cid].name}，点击${mulliganSet.has(c.uid) ? "保留" : "替换"}">${cardHTML(D.byId[c.cid])}</button>`).join("")}</div><div class="modal-footer"><button class="gold-btn" id="mulligan-confirm">${mulliganSet.size ? "替换 " + mulliganSet.size + " 张并开始" : "保留手牌，开始战斗"} ${A.icon("arrow")}</button></div><p class="hero-deck-note">你先手。每个回合开始时，抽一张牌。</p></section>`,
+      `<section class="modal-box mulligan-box"><div class="modal-heading"><div class="eyebrow">YOUR OPENING HAND</div><h2>命运的第一手</h2><p>点击不想保留的卡牌进行替换。优先留下低费随从，建立你的战场。</p></div><div class="mulligan-cards">${game.s.p.hand.map((c) => `<button class="mulligan-card ${mulliganSet.has(c.uid) ? "replace" : ""}" data-mulligan="${c.uid}" aria-label="${D.byId[c.cid].name}，点击${mulliganSet.has(c.uid) ? "保留" : "替换"}">${cardHTML(D.byId[c.cid])}</button>`).join("")}</div><div class="modal-footer"><button class="gold-btn" id="mulligan-confirm">${mulliganSet.size ? "替换 " + mulliganSet.size + " 张并开始" : "保留手牌，开始战斗"} ${A.icon("arrow")}</button></div><p class="hero-deck-note">${game.s.first === "e" ? "你后手，换牌后获得硬币。" : "你先手。"}每个回合开始时，抽一张牌。</p></section>`,
       "mulligan",
       true,
     );
@@ -348,7 +382,14 @@
     const handScroll = $("hand").scrollLeft;
     EmberFX.setTheme(s.bossIndex, s.phase2);
     const hero = D.heroes.find((h) => h.id === s.heroId),
-      boss = D.bosses[s.bossIndex];
+      boss =
+        s.mode === "practice"
+          ? {
+              ...D.heroes.find((h) => h.id === s.opponentHero),
+              en: "PRACTICE DUEL",
+              phaseText: "双方 30 血，无遗物与首领觉醒。",
+            }
+          : D.bosses[s.bossIndex];
     $("chapter-name").textContent = boss.title;
     $("chapter-sub").textContent =
       "CHAPTER " +
@@ -374,18 +415,29 @@
       ).join("");
     $("boss-order").textContent =
       "BOSS ENCOUNTER · " + String(s.bossIndex + 1).padStart(2, "0");
+    if (s.mode === "practice") {
+      $("chapter-name").textContent = "酒馆练习";
+      $("chapter-sub").textContent = D.archetypes.find(
+        (a) => a.id === s.opponent,
+      ).name;
+      $("boss-order").textContent = "PRACTICE DUEL";
+      $("path-list").innerHTML =
+        '<p class="deck-plan">' +
+        D.archetypes.find((a) => a.id === s.opponent).plan +
+        "</p>";
+    }
     $("boss-name").textContent = boss.name;
     $("boss-english").textContent = boss.en;
     $("boss-power-info").innerHTML =
       `<strong>${boss.power}</strong><p>${boss.powerText}</p>`;
     $("phase-info").classList.toggle("awaken", s.phase2);
     $("phase-info").innerHTML =
-      `<small>${s.phase2 ? "PHASE II · 已觉醒" : "PHASE II · 半血觉醒"}</small><p>${boss.phaseText}</p>`;
+      `<small>${s.mode === "practice" ? "公平练习" : s.phase2 ? "PHASE II · 已觉醒" : "PHASE II · 半血觉醒"}</small><p>${boss.phaseText}</p>`;
     for (const side of ["p", "e"]) {
       const p = s[side],
         data = side === "p" ? hero : boss,
         el = $(side === "p" ? "player-hero" : "enemy-hero");
-      el.innerHTML = `<div class="hero-carving" aria-hidden="true"></div><div class="portrait-frame"><img src="${A.character(data)}" data-art-key="${data.portraitId}" data-portrait-mode="hero" data-portrait-instance="${side}:hero" data-portrait-state="${p.frozen ? "frozen" : "idle"}" alt="${data.name}" draggable="false" style="${artStyleForHero(data, "hero")}"></div><div class="hero-name">${data.name}</div><div class="hero-health ${p.hp < p.maxHp ? "damaged" : ""}">${Math.max(0, p.hp)}</div>${p.armor ? `<div class="hero-armor" title="护甲 ${p.armor}">${p.armor}</div>` : ""}${p.secrets.length ? '<div class="secret-indicator" title="奥秘已布置">?</div>' : ""}${side === "e" ? `<div class="hero-phase">${s.phase2 ? "阶段 II" : "阶段 I"}</div>` : ""}`;
+      el.innerHTML = `<div class="hero-carving" aria-hidden="true"></div><div class="portrait-frame"><img src="${A.character(data)}" data-art-key="${data.portraitId}" data-portrait-mode="hero" data-portrait-instance="${side}:hero" data-portrait-state="${p.frozen ? "frozen" : "idle"}" alt="${data.name}" draggable="false" style="${artStyleForHero(data, "hero")}"></div><div class="hero-name">${data.name}</div><div class="hero-health ${p.hp < p.maxHp ? "damaged" : ""}">${Math.max(0, p.hp)}</div>${p.armor ? `<div class="hero-armor" title="护甲 ${p.armor}">${p.armor}</div>` : ""}${p.secrets.length ? '<div class="secret-indicator" title="奥秘已布置">?</div>' : ""}${side === "e" && s.mode !== "practice" ? `<div class="hero-phase">${s.phase2 ? "阶段 II" : "阶段 I"}</div>` : ""}`;
       el.classList.toggle("frozen", p.frozen);
       el.classList.toggle("ready", game.canAttack(side, "hero"));
       el.setAttribute(
@@ -962,7 +1014,8 @@
         EmberAudio.fx("turn");
       }
       if (e.type === "over") EmberAudio.fx("over");
-      if (e.type === "secret") toast("镜像伏击触发：镜卫代替英雄承受攻击。");
+      if (e.type === "secret")
+        toast((D.byId[e.cid]?.name || "奥秘") + "触发。");
     }
   }
   function showDiscover() {
@@ -986,16 +1039,26 @@
     if (!inBattle || game.s.phase !== "over") return;
     const s = game.s,
       win = s.winner === "p",
-      last = s.bossIndex === 4;
+      last = s.bossIndex === 4 || s.mode === "practice";
     clearSelection();
     showModal(
       `<section class="modal-box result-box"><div class="result-sigil">${A.icon(win ? "fire" : "skull")}</div><div class="result-sub">${win ? (last ? "THE LAST EMBER BURNS" : "ENCOUNTER CLEARED") : s.winner === "draw" ? "A SHARED FATE" : "THE FLAME WILL RISE AGAIN"}</div><h2 class="result-title">${win ? (last ? "余火不灭" : "战役告捷") : s.winner === "draw" ? "同归于尽" : "火种未熄"}</h2><p class="boss-quote">${win ? (last ? "最后一颗星辰，因你重新燃起。" : "「" + D.bosses[s.bossIndex].name + "」已被击败。") : "每一次陨落，都是下一次重燃的序章。"}</p><div class="result-stats"><div><strong>${s.turn}</strong><span>战斗回合</span></div><div><strong>${s.stats.played}</strong><span>打出卡牌</span></div><div><strong>${s.stats.damage}</strong><span>造成伤害</span></div></div><div class="modal-footer"><button class="ghost-btn" id="result-home">返回营地</button><button class="gold-btn" id="result-next">${isDemo ? "开启正式旅程" : win ? (last ? "新的旅程" : "选择遗物") : "重试本关"} ${A.icon("arrow")}</button></div></section>`,
       "result",
       true,
     );
+    if (s.mode === "practice") {
+      $("modal").querySelector(".result-title").textContent = win
+        ? "对战胜利"
+        : s.winner === "draw"
+          ? "平局"
+          : "对战落败";
+      $("modal").querySelector(".boss-quote").textContent =
+        "调整卡组或更换对手，再试一次。战役存档未被覆盖。";
+      $("result-next").textContent = "再选一局";
+    }
     $("result-home").onclick = home;
     $("result-next").onclick = () => {
-      if (isDemo) {
+      if (isDemo || s.mode === "practice") {
         closeModal(false);
         showHeroes();
       } else if (win && !last) showRewards();
@@ -1004,7 +1067,10 @@
         showHeroes();
       } else {
         closeModal(false);
-        startGame(s.heroId, s.bossIndex, s.relics, s.customDeck);
+        startGame(s.heroId, s.bossIndex, s.relics, s.customDeck, {
+          legacyDeck: !s.ruleset || s.legacyDeck,
+          ...(s.mode === "practice" ? { opponent: s.opponent } : {}),
+        });
       }
     };
   }
@@ -1013,7 +1079,14 @@
     game.rewardOffers();
     save();
     showModal(
-      `<section class="modal-box" style="width:880px"><div class="modal-heading"><div class="eyebrow">RELICS OF A FORGOTTEN AGE</div><h2>拾起古老的力量</h2><p>选择一件遗物。它将强化之后的每一场战斗，英雄生命也将完全恢复。</p></div><div class="relic-options">${s.rewardOffers
+      `<section class="modal-box" style="width:880px"><div class="modal-heading"><div class="eyebrow">RELICS OF A FORGOTTEN AGE</div><h2>拾起古老的力量</h2><p>选择一件遗物。它将强化之后的每一场战斗，英雄生命也将完全恢复。</p></div><div class="campaign-refit"><strong>酒馆整备 · 可选更换一张牌</strong><p>选择要移除的牌和补给牌；默认保留原牌组。</p><select id="refit-remove" class="library-search" aria-label="移除卡牌"><option value="">保留原牌组</option>${[...new Set(s.customDeck || D.heroes.find((h) => h.id === s.heroId).deck)].map((id) => `<option value="${id}">${D.byId[id].name}</option>`).join("")}</select><select id="refit-add" class="library-search" aria-label="补给卡牌">${D.cards
+        .filter(
+          (c) => !c.token && (c.class === "neutral" || c.class === s.heroId),
+        )
+        .map((c) => `<option value="${c.id}">${c.cost}费 · ${c.name}</option>`)
+        .join(
+          "",
+        )}</select><p id="refit-status" role="status">选择遗物后进入下一关。</p></div><div class="relic-options">${s.rewardOffers
         .map((id) => {
           const r = D.relics.find((r) => r.id === id);
           return `<button class="relic-choice" data-relic="${id}"><img src="${A.relic(r.id)}" alt=""><h3>${r.name}</h3><p>${r.text}</p></button>`;
@@ -1028,7 +1101,19 @@
       (b) =>
         (b.onclick = () => {
           const relics = [...s.relics, b.dataset.relic];
-          startGame(s.heroId, s.bossIndex + 1, relics, s.customDeck);
+          const deck = [
+            ...(s.customDeck || D.heroes.find((h) => h.id === s.heroId).deck),
+          ];
+          const remove = $("refit-remove").value,
+            add = $("refit-add").value;
+          if (remove) deck[deck.indexOf(remove)] = add;
+          if (!game.validateDeck(deck)) {
+            $("refit-status").textContent = "补给会超过同名牌上限，请换一张。";
+            return;
+          }
+          startGame(s.heroId, s.bossIndex + 1, relics, deck, {
+            legacyDeck: !s.ruleset || s.legacyDeck,
+          });
         }),
     );
   }
@@ -1075,7 +1160,10 @@
             const s = game.s;
             isDemo
               ? demo()
-              : startGame(s.heroId, s.bossIndex, s.relics, s.customDeck);
+              : startGame(s.heroId, s.bossIndex, s.relics, s.customDeck, {
+                  legacyDeck: !s.ruleset || s.legacyDeck,
+                  ...(s.mode === "practice" ? { opponent: s.opponent } : {}),
+                });
           },
           "重试本关",
         );
@@ -1083,7 +1171,7 @@
   }
   function showHelp() {
     showModal(
-      `<section class="modal-box help-box"><div class="modal-heading"><div class="eyebrow">THE WAYFARER'S HANDBOOK</div><h2>旅人手册</h2><p>让策略成为锋刃，让每一点法力都物有所值。</p></div><div class="help-columns"><div><section class="help-section"><h3>01 · 一场战斗如何获胜</h3><p>将敌方英雄生命降至 <b>0</b>。你有 <b>30 点基础生命、30 张牌库</b>，双方最多拥有 <b>7 个随从、10 张手牌</b>。你先手并可替换初始 3 张牌，敌方后手获得硬币。每个回合增加一枚法力水晶，上限 10，并补满法力、抽一张牌。</p></section><section class="help-section"><h3>02 · 出牌与攻击</h3><p><b>点击手牌</b>即可打出；需要目标时，再点击相应角色。也可以拖动卡牌。<br><b>点击己方随从 → 点击敌人</b>即可攻击。新召唤的随从通常需要等待一回合。双方随从同时对彼此造成攻击力数值的伤害。装备武器后，点击自己的英雄攻击。<br><b>2 法力</b>使用英雄技能，每回合一次。空格结束回合，Esc 取消选择，M 静音。</p></section><section class="help-section"><h3>03 · 构筑与冒险</h3><p>图鉴中 48 张卡全部开放。自定义牌组恰好 <b>30 张</b>，普通卡同名最多 2 张，传说最多 1 张。五位首领均在半血时进入第二阶段。每次胜利选择一件遗物，下一关生命完全恢复。进度自动保存在当前浏览器。<br>牌库耗尽后，每次抽牌依次受到 <b>1、2、3…</b> 点疲劳伤害。第 51 个玩家回合开始时判为平局。</p></section></div><div><section class="help-section"><h3>04 · 关键词速查</h3><div class="key-table">${Object.entries(
+      `<section class="modal-box help-box"><div class="modal-heading"><div class="eyebrow">THE WAYFARER'S HANDBOOK</div><h2>旅人手册</h2><p>让策略成为锋刃，让每一点法力都物有所值。</p></div><div class="help-columns"><div><section class="help-section"><h3>01 · 一场战斗如何获胜</h3><p>将敌方英雄生命降至 <b>0</b>。你有 <b>30 点基础生命、30 张牌库</b>，双方最多拥有 <b>7 个随从、10 张手牌</b>。战役中你先手；练习对战随机先后手。先手起始三张、后手四张并在换牌后获得硬币。每个回合增加一枚法力水晶，上限 10，并补满法力、抽一张牌。</p></section><section class="help-section"><h3>02 · 出牌与攻击</h3><p><b>点击手牌</b>即可打出；需要目标时，再点击相应角色。也可以拖动卡牌。<br><b>点击己方随从 → 点击敌人</b>即可攻击。新召唤的随从通常需要等待一回合。双方随从同时对彼此造成攻击力数值的伤害。装备武器后，点击自己的英雄攻击。<br><b>2 法力</b>使用英雄技能，每回合一次。空格结束回合，Esc 取消选择，M 静音。</p></section><section class="help-section"><h3>03 · 构筑与冒险</h3><p>图鉴中 54 张卡全部开放，构筑使用所选职业与中立牌。六套预设分别提供打法说明。自定义牌组恰好 <b>30 张</b>，普通卡同名最多 2 张，传说最多 1 张。五位首领均在半血时进入第二阶段。每次胜利可更换一张牌并选择遗物，下一关生命完全恢复。练习对战可挑战六套牌，随机先后手、双方三十血，不覆盖战役进度。进度自动保存在当前浏览器。<br>牌库耗尽后，每次抽牌依次受到 <b>1、2、3…</b> 点疲劳伤害。第 51 个玩家回合开始时判为平局。</p></section></div><div><section class="help-section"><h3>04 · 关键词速查</h3><div class="key-table">${Object.entries(
         keywords,
       )
         .map(([k, v]) => `<div><b>${D.kw[k]}</b>${v}</div>`)

@@ -27,7 +27,7 @@
  document.addEventListener('keydown',ev=>{if(!viewer)return;if(ev.key==='Escape'){ev.preventDefault();ev.stopImmediatePropagation();close();}else if(ev.key==='Tab'){ev.preventDefault();viewer.querySelector('button').focus();}},true);
  window.addEventListener('ember:viewport',close);
  E.showFullArt=open;
- window.AnimeDiagnostics=Object.freeze({version:'0.6.0',cardImages:56,collectible:48,tokens:8,sourceAtlases:8,
+ window.AnimeDiagnostics=Object.freeze({version:'0.6.0',cardImages:62,collectible:54,tokens:8,sourceAtlases:8,
   legacyCardFallbacks:0,
-  source:'eight approved anime atlas sheets; caption-free individual panel assets',nativePanelOutput:'336×448',publicDeployment:'not configured'});
+  source:'original anime atlases plus six individual Tavern Oaths illustrations',nativePanelOutput:'336×448',publicDeployment:'not configured'});
 })();
