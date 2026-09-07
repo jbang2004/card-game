@@ -630,3 +630,19 @@ body .minion {
     #c5f4ff22
   );
 }
+
+/* Only a newly summoned portrait reveals; steady idle frames never crossfade. */
+.motion-entering > img[data-art-key] {
+  transition: opacity 160ms ease-out;
+}
+body .motion-arriving:not(.motion-ready) > img[data-art-key] {
+  transition: none;
+  opacity: 0;
+}
+.motion-entering.motion-ready > .portrait-motion {
+  animation: portrait-arrival 160ms ease-out both;
+}
+@keyframes portrait-arrival {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

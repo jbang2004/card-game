@@ -614,3 +614,65 @@ test("every on-board portrait paints, moves and freezes independently across ros
     ).toBeLessThanOrEqual(16);
   }
 });
+
+for (const slow of [false, true]) {
+  test(`summon preloads motion before landing and reveals without a hard swap ${slow ? "slow network" : "normal network"}`, async ({ page }) => {
+    await demo(page);
+    await prepare(page, { hand: ["solaris"] });
+    const urls = await page.evaluate(() => Object.values(MotionAssets.solaris).map(src => new URL(src, location.href).href));
+    let release;
+    const gate = new Promise(resolve => { release = resolve; });
+    const requested = [];
+    for (const url of urls) await page.route(url, async route => {
+      requested.push(await page.locator('#minions [data-cardid="solaris"]').count());
+      if (slow) await gate;
+      await route.continue();
+    });
+    await page.evaluate(() => {
+      window.arrivalSamples = [];
+      window.captureArrival = true;
+      function sample() {
+        const art = document.querySelector('#minions [data-cardid="solaris"] .minion-art');
+        if (art) arrivalSamples.push({ ready: art.classList.contains('motion-ready'), opacity: Number(getComputedStyle(art.querySelector('img')).opacity) });
+        if (captureArrival) requestAnimationFrame(sample);
+      }
+      requestAnimationFrame(sample);
+    });
+    await cast(page, "solaris");
+    await expect.poll(() => requested.length).toBe(urls.length);
+    expect(requested.every(count => count === 0)).toBe(true);
+    const art = page.locator('#minions [data-cardid="solaris"] .minion-art');
+    await expect(art).toHaveCount(1);
+    if (slow) {
+      // The image may wait briefly, but rules and input cannot wait on the network.
+      await page.waitForFunction(() => !EmberFX.busy);
+      await expect(art.locator('img')).toHaveCSS('opacity', '1');
+      await expect(art).not.toHaveClass(/motion-arriving/);
+      release();
+    }
+    await expect(art).toHaveClass(/motion-ready/);
+    await expect(art.locator('canvas')).toHaveCSS('opacity', '1');
+    await expect(art.locator('img')).toHaveCSS('opacity', '0');
+    await expect(page.locator('#hand canvas')).toHaveCount(0);
+    const samples = await page.evaluate(() => { captureArrival = false; return arrivalSamples; });
+    expect(samples.length).toBeGreaterThan(0);
+    if (!slow) expect(samples.filter(s => !s.ready && s.opacity > 0.05)).toEqual([]);
+    await page.screenshot({ path: path.resolve(`artifacts/qa/arrival-${slow ? "slow" : "normal"}.png`) });
+  });
+}
+
+test("failed summon layers leave static art visible and reduced motion skips preloading", async ({ page }) => {
+  await demo(page);
+  await prepare(page, { hand: ["solaris", "nyx"] });
+  const urls = await page.evaluate(() => Object.values(MotionAssets.solaris).map(src => new URL(src, location.href).href));
+  for (const url of urls) await page.route(url, route => route.abort());
+  await cast(page, "solaris");
+  await page.waitForFunction(() => !EmberFX.busy);
+  const art = page.locator('#minions [data-cardid="solaris"] .minion-art');
+  await expect(art.locator('img')).toHaveCSS('opacity', '1');
+  await expect(art).not.toHaveClass(/motion-arriving|motion-ready/);
+  await page.evaluate(() => { EmberFX.configure(true, false); EmberDebug.game.s.p.mana = 10; });
+  await cast(page, "nyx");
+  expect(await page.evaluate(() => EmberPortraits.diagnostics.loadedIds.includes('nyx'))).toBe(false);
+  await expect(page.locator('#minions [data-cardid="nyx"] .minion-art img')).toHaveCSS('opacity', '1');
+});

@@ -778,6 +778,7 @@ const EmberFX = (() => {
       after?.();
       return;
     }
+    EmberPortraits.prepareSummons(events);
     const primary = events.find((e) =>
       ["play", "attack", "power"].includes(e.type),
     );
