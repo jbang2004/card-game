@@ -71,7 +71,6 @@
 }
 /* The archive has its own optical scale, rather than a small card stretched up. */
 .card {
-  --frame: var(--atelier-frame-minion);
   border: 0;
   padding: 0;
   border-radius: 10% 10% 5% 5%;
@@ -89,17 +88,7 @@
     inset 0 0 0 2px #201f1a;
   isolation: isolate;
 }
-.card.spell {
-  --frame: var(--atelier-frame-spell);
-}
-.card.school-nature {
-  --frame: var(--atelier-frame-nature);
-}
-.card.weapon {
-  --frame: var(--atelier-frame-weapon);
-}
 .card.legendary {
-  --frame: var(--atelier-frame-legendary);
   border: 0;
   background: linear-gradient(
     125deg,
@@ -136,7 +125,6 @@
   border-radius: 0;
   box-shadow: none;
   z-index: 5;
-  background: var(--frame) center/100% 100% no-repeat;
   pointer-events: none;
 }
 .card-inner {
@@ -1610,7 +1598,6 @@
   border: 0;
   border-radius: 0;
   box-shadow: none;
-  background: var(--atelier-frame-hero) center/100% 100% no-repeat;
   z-index: 3;
   pointer-events: none;
 }

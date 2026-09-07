@@ -16,27 +16,10 @@
     artStyleForHero,
     cardHTML,
   } = EmberCards;
-  function readStore(key, fallback = null) {
-    try {
-      const t = localStorage.getItem(key);
-      return t ? JSON.parse(t) : fallback;
-    } catch {
-      return fallback;
-    }
-  }
-  let storeWarning = false;
-  function writeStore(key, value) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-      return true;
-    } catch {
-      if (!storeWarning) {
-        storeWarning = true;
-        toast("浏览器未允许本地存档，本次游戏仍可继续。");
-      }
-      return false;
-    }
-  }
+  const { read: readStore, write: writeStore } = EmberStorage.create(
+    () => localStorage,
+    () => toast("浏览器未允许本地存档，本次游戏仍可继续。"),
+  );
   const defaults = {
     sound: true,
     reduced: matchMedia("(prefers-reduced-motion: reduce)").matches,
@@ -57,12 +40,7 @@
     lastFocus = null,
     drag = null,
     suppressClick = false;
-  let editDeck = [],
-    filterType = "all",
-    filterCost = "all",
-    filterSearch = "",
-    deckHero = "mage",
-    mulliganSet = new Set(),
+  let mulliganSet = new Set(),
     pointer = { x: 800, y: 470 };
   const keywords = {
     taunt: "敌方必须先攻击具有嘲讽的随从。",
@@ -77,6 +55,30 @@
     spellpower: "使你的伤害法术额外造成 1 点伤害。",
   };
   const game = new EmberEngine.Game({ onChange: changed });
+  const library = EmberLibrary.create({
+    data: D,
+    readStore,
+    writeStore,
+    validateDeck: (d) => game.validateDeck(d),
+    showModal,
+    toast,
+    preview,
+    hidePreview,
+    onStart(hero) {
+      chosenHero = hero;
+      if (inBattle && !isDemo)
+        showConfirm(
+          "开启新的战役",
+          "当前战役进度将被新战役覆盖。已应用的卡组会保留。",
+          showHeroes,
+          "选择英雄",
+        );
+      else showHeroes();
+    },
+  });
+  function showLibrary() {
+    library.show();
+  }
   const coarsePointer = () =>
     matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
 
@@ -99,7 +101,6 @@
     $("sound-btn").innerHTML = A.icon(settings.sound ? "sound" : "mute");
     $("sound-btn").setAttribute("aria-pressed", String(settings.sound));
     EmberAudio.toggle(settings.sound);
-    EmberScene.quality(settings.reduced, settings.low);
     EmberFX.configure(settings.reduced, settings.low);
   }
   function save() {
@@ -164,7 +165,6 @@
     app.classList.toggle("lobby-view", !battle);
     $("lobby").style.display = battle ? "none" : "block";
     $("battle").style.display = battle ? "block" : "none";
-    EmberScene.setView(battle ? "battle" : "lobby");
     EmberFX.setView(battle ? "battle" : "lobby");
     document
       .querySelectorAll(".nav-link")
@@ -204,38 +204,7 @@
     inBattle = true;
     closeModal(false);
     setView(true);
-    game.start("mage", 0, [], null, 372149);
-    game.mulligan();
-    const s = game.s;
-    s.turn = 6;
-    s.stats.turns = 6;
-    s.p.maxMana = s.p.mana = 6;
-    s.e.maxMana = 5;
-    s.e.mana = 0;
-    s.p.hp = 26;
-    s.e.hp = 27;
-    s.e.armor = 3;
-    s.p.board = [];
-    s.e.board = [];
-    s.p.hand = [
-      "frostbolt",
-      "phoenix",
-      "fireball",
-      "wisdom",
-      "sunblade",
-      "bolt",
-    ].map((id) => game.card(id));
-    for (const id of ["guard", "oracle", "wisp"])
-      game.summon("p", id, { sick: false });
-    for (const id of ["squire", "golem", "leech"])
-      game.summon("e", id, { sick: false });
-    s.log = [
-      "战斗试玩 · 从第 6 回合开始，不覆盖战役存档。",
-      "敌方铁卫具有嘲讽，必须先解决它。",
-      "星界精灵使你的法术伤害提高 1 点。",
-      "你的随从已准备好攻击。",
-    ];
-    game.emit();
+    game.demo();
     $("turn-banner").classList.remove("show");
     toast("战斗试玩：点击手牌或己方随从，再选择目标。");
   }
@@ -293,7 +262,7 @@
   function showHeroes() {
     const custom = readStore(DECK);
     showModal(
-      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">CHOOSE YOUR PATH</div><h2>选择你的英雄</h2><p>三种信仰，同一束不灭的星火。你的英雄技能将贯穿整段旅程。</p></div><div class="hero-options">${D.heroes.map((h) => `<button class="hero-option hero-${h.id} ${h.id === chosenHero ? "selected" : ""}" data-hero="${h.id}"><img src="${A.url(h.art, h.palette, h.id)}" alt="${h.name}" draggable="false" style="${artStyleForHero(h, "option")}"><div class="hero-option-text"><small>${h.sub}</small><h3>${h.name}</h3><p>${h.desc}</p><em>${h.powerText}</em></div>${h.id === chosenHero ? '<span class="selected-check">' + A.icon("check") + "</span>" : ""}</button>`).join("")}</div><p class="hero-deck-note">${game.validateDeck(custom) ? "已装配你的自定义 30 张卡组。" : "每位英雄均配有经过费用曲线配置的 30 张起始牌组。"} · 战役共五场，关卡之间恢复全部生命。</p><div class="modal-footer"><button class="ghost-btn" id="hero-deck-btn">先去组牌</button><button class="gold-btn" id="hero-confirm">踏入余火之门 ${A.icon("arrow")}</button></div></section>`,
+      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">CHOOSE YOUR PATH</div><h2>选择你的英雄</h2><p>三种信仰，同一束不灭的星火。你的英雄技能将贯穿整段旅程。</p></div><div class="hero-options">${D.heroes.map((h) => `<button class="hero-option hero-${h.id} ${h.id === chosenHero ? "selected" : ""}" data-hero="${h.id}"><img src="${A.character(h)}" alt="${h.name}" draggable="false" style="${artStyleForHero(h, "option")}"><div class="hero-option-text"><small>${h.sub}</small><h3>${h.name}</h3><p>${h.desc}</p><em>${h.powerText}</em></div>${h.id === chosenHero ? '<span class="selected-check">' + A.icon("check") + "</span>" : ""}</button>`).join("")}</div><p class="hero-deck-note">${game.validateDeck(custom) ? "已装配你的自定义 30 张卡组。" : "每位英雄均配有经过费用曲线配置的 30 张起始牌组。"} · 战役共五场，关卡之间恢复全部生命。</p><div class="modal-footer"><button class="ghost-btn" id="hero-deck-btn">先去组牌</button><button class="gold-btn" id="hero-confirm">踏入余火之门 ${A.icon("arrow")}</button></div></section>`,
       "heroes",
     );
     document.querySelectorAll("[data-hero]").forEach(
@@ -334,7 +303,7 @@
     $("mulligan-confirm").onclick = () => {
       const ids = [...mulliganSet];
       closeModal(false);
-      game.mulligan(ids);
+      game.dispatch({ type: "mulligan", ids });
     };
   }
   function centerOf(el) {
@@ -376,7 +345,6 @@
     if (!s) return;
     const handScroll = $("hand").scrollLeft;
     EmberFX.setTheme(s.bossIndex, s.phase2);
-    EmberScene.setTheme?.(s.bossIndex, s.phase2);
     const hero = D.heroes.find((h) => h.id === s.heroId),
       boss = D.bosses[s.bossIndex];
     $("chapter-name").textContent = boss.title;
@@ -415,7 +383,7 @@
       const p = s[side],
         data = side === "p" ? hero : boss,
         el = $(side === "p" ? "player-hero" : "enemy-hero");
-      el.innerHTML = `<div class="hero-carving" aria-hidden="true"></div><div class="portrait-frame"><img src="${A.url(data.art, data.palette, data.id)}" alt="${data.name}" draggable="false" style="${artStyleForHero(data, "hero")}"></div><div class="hero-name">${data.name}</div><div class="hero-health ${p.hp < p.maxHp ? "damaged" : ""}">${Math.max(0, p.hp)}</div>${p.armor ? `<div class="hero-armor" title="护甲 ${p.armor}">${p.armor}</div>` : ""}${p.secrets.length ? '<div class="secret-indicator" title="奥秘已布置">?</div>' : ""}${side === "e" ? `<div class="hero-phase">${s.phase2 ? "阶段 II" : "阶段 I"}</div>` : ""}`;
+      el.innerHTML = `<div class="hero-carving" aria-hidden="true"></div><div class="portrait-frame"><img src="${A.character(data)}" alt="${data.name}" draggable="false" style="${artStyleForHero(data, "hero")}"></div><div class="hero-name">${data.name}</div><div class="hero-health ${p.hp < p.maxHp ? "damaged" : ""}">${Math.max(0, p.hp)}</div>${p.armor ? `<div class="hero-armor" title="护甲 ${p.armor}">${p.armor}</div>` : ""}${p.secrets.length ? '<div class="secret-indicator" title="奥秘已布置">?</div>' : ""}${side === "e" ? `<div class="hero-phase">${s.phase2 ? "阶段 II" : "阶段 I"}</div>` : ""}`;
       el.classList.toggle("frozen", p.frozen);
       el.classList.toggle("ready", game.canAttack(side, "hero"));
       el.setAttribute(
@@ -445,17 +413,13 @@
             ? "shield"
             : "sword",
       ) +
-      "<b>2</b><span>" +
+      "<b>" +
+      hero.powerCost +
+      "</b><span>" +
       hero.power +
       "</span>";
     $("power-btn").title = hero.powerText;
-    $("power-btn").disabled =
-      s.phase !== "battle" ||
-      s.active !== "p" ||
-      s.p.powerUsed ||
-      s.p.mana < 2 ||
-      !!s.choice ||
-      (hero.id === "paladin" && s.p.board.length >= 7);
+    $("power-btn").disabled = !!game.legalPower("p");
     $("enemy-mana").innerHTML =
       "<i></i><span>" + s.e.mana + " / " + s.e.maxMana + "</span>";
     $("enemy-hand").innerHTML = s.e.hand
@@ -592,7 +556,6 @@
     if (EmberViewport.mobile) $("hand").scrollLeft = handScroll;
     window.EmberMobile?.afterRender(s);
     updateSelection();
-    EmberScene.sync(s);
   }
   function preview(cid, el) {
     clearTimeout(previewTimer);
@@ -676,7 +639,7 @@
       updateSelection(targets);
       hidePreview();
       EmberAudio.fx("ui");
-    } else act(() => game.play("p", uid));
+    } else act(() => game.dispatch({ type: "play", side: "p", uid }));
   }
   function clickUnit(side, uid) {
     if (modalType || !inBattle || EmberFX.busy) return;
@@ -691,7 +654,14 @@
         return;
       }
       if (sel.type === "card")
-        act(() => game.play("p", sel.uid, { side, uid }));
+        act(() =>
+          game.dispatch({
+            type: "play",
+            side: "p",
+            uid: sel.uid,
+            target: { side, uid },
+          }),
+        );
       else if (sel.type === "attack") {
         if (side === "p") {
           if (game.canAttack("p", uid)) {
@@ -700,9 +670,19 @@
             pointer = targetAnchor(targets) || pointer;
             updateSelection(targets);
           } else clearSelection();
-        } else act(() => game.attack("p", sel.uid, { side, uid }));
+        } else
+          act(() =>
+            game.dispatch({
+              type: "attack",
+              side: "p",
+              uid: sel.uid,
+              target: { side, uid },
+            }),
+          );
       } else if (sel.type === "power")
-        act(() => game.power("p", { side, uid }));
+        act(() =>
+          game.dispatch({ type: "power", side: "p", target: { side, uid } }),
+        );
       return;
     }
     if (side === "p") {
@@ -736,13 +716,14 @@
   }
   function usePower() {
     if ($("power-btn").disabled || EmberFX.busy) return;
-    if (game.s.heroId === "mage") {
+    const power = game.powerDefinition("p");
+    if (power.target) {
       selection = { type: "power" };
-      const targets = game.targets("enemy", "p");
+      const targets = game.targets(power.target, "p");
       pointer = targetAnchor(targets) || pointer;
-      hint("星火 · 选择一个敌人，造成 1 点伤害");
+      hint(power.power + " · " + power.powerText);
       updateSelection(targets);
-    } else act(() => game.power("p"));
+    } else act(() => game.dispatch({ type: "power", side: "p" }));
   }
   function hint(t) {
     clearTimeout(toastTimer);
@@ -778,7 +759,7 @@
         document
           .querySelector(`[data-hand="${selection.uid}"]`)
           ?.classList.add("selected");
-      } else targets = game.targets("enemy", "p");
+      } else targets = game.targets(game.powerDefinition("p").target, "p");
     }
     if (selection.type === "attack")
       findUnit("p", selection.uid)?.classList.add("selected");
@@ -915,7 +896,12 @@
     clearSelection();
     if (c.target && el)
       act(() =>
-        game.play("p", d.uid, { side: el.dataset.side, uid: el.dataset.uid }),
+        game.dispatch({
+          type: "play",
+          side: "p",
+          uid: d.uid,
+          target: { side: el.dataset.side, uid: el.dataset.uid },
+        }),
       );
     else if (c.target) {
       if (
@@ -923,10 +909,10 @@
         game.targets(c.target, "p").length === 0 &&
         p.y < 720
       )
-        act(() => game.play("p", d.uid));
+        act(() => game.dispatch({ type: "play", side: "p", uid: d.uid }));
       else if (p.y < 730) selectCard(d.uid);
     } else if (p.y < 730 && p.x > 270 && p.x < 1330)
-      act(() => game.play("p", d.uid));
+      act(() => game.dispatch({ type: "play", side: "p", uid: d.uid }));
   });
   document.addEventListener("pointercancel", () => {
     if (drag) {
@@ -959,8 +945,9 @@
         const r = game.aiStep();
         if (!r.ok) {
           console.warn("AI action rejected", r.error);
-          if (game.s.choice?.side === "e") game.choose(game.s.choice.cards[0]);
-          else game.endTurn("e");
+          if (game.s.choice?.side === "e")
+            game.dispatch({ type: "choose", cid: game.s.choice.cards[0] });
+          else game.dispatch({ type: "end", side: "e" });
         }
       },
       settings.fast ? 240 : 720,
@@ -1001,7 +988,7 @@
         (b.onclick = () => {
           const id = b.dataset.discover;
           closeModal(false);
-          game.choose(id);
+          game.dispatch({ type: "choose", cid: id });
         }),
     );
   }
@@ -1033,18 +1020,13 @@
   }
   function showRewards() {
     const s = game.s;
-    if (!s.rewardOffers) {
-      const candidates = D.relics
-        .filter((r) => !s.relics.includes(r.id))
-        .map((r) => r.id);
-      s.rewardOffers = game.shuffle(candidates).slice(0, 3);
-      save();
-    }
+    game.rewardOffers();
+    save();
     showModal(
       `<section class="modal-box" style="width:880px"><div class="modal-heading"><div class="eyebrow">RELICS OF A FORGOTTEN AGE</div><h2>拾起古老的力量</h2><p>选择一件遗物。它将强化之后的每一场战斗，英雄生命也将完全恢复。</p></div><div class="relic-options">${s.rewardOffers
         .map((id) => {
           const r = D.relics.find((r) => r.id === id);
-          return `<button class="relic-choice" data-relic="${id}"><img src="${A.url(r.icon, "gold", r.id)}" alt=""><h3>${r.name}</h3><p>${r.text}</p></button>`;
+          return `<button class="relic-choice" data-relic="${id}"><img src="${A.relic(r.id)}" alt=""><h3>${r.name}</h3><p>${r.text}</p></button>`;
         })
         .join(
           "",
@@ -1060,175 +1042,6 @@
         }),
     );
   }
-  function showLibrary() {
-    editDeck = readStore(DECK) || [
-      ...D.heroes.find((h) => h.id === deckHero).deck,
-    ];
-    filterType = "all";
-    filterCost = "all";
-    filterSearch = "";
-    renderLibrary();
-  }
-  function renderLibrary() {
-    showModal(
-      `<section class="modal-box library-box"><div class="library-heading"><div><h2>万象秘典</h2><p>THE COLLECTION · 48 张原创卡牌全部可用</p></div><input id="library-search" class="library-search" placeholder="搜索名称、关键词或效果…" aria-label="搜索卡牌" value="${escape(filterSearch)}"></div><div class="library-layout"><div class="library-main"><div class="filter-bar" id="filter-bar"><button class="filter-btn active" data-type="all">全部</button><button class="filter-btn" data-type="minion">随从</button><button class="filter-btn" data-type="spell">法术</button><button class="filter-btn" data-type="weapon">武器</button><span class="spacer"></span><button class="filter-btn mana active" data-mana="all">费用</button>${[0, 1, 2, 3, 4, 5, 6, 7].map((i) => `<button class="filter-btn mana" data-mana="${i}">${i === 7 ? "7+" : i}</button>`).join("")}</div><div class="library-grid" id="library-grid"></div><div class="library-foot" id="library-foot">点击卡牌加入牌组 · 右侧点击移除 · 同名最多 2 张，传说最多 1 张</div></div><aside class="deck-editor"><h3>你的牌组 <span class="deck-total" id="deck-total"></span></h3><p class="deck-intro">配置恰好 30 张卡牌。应用后用于新战役，<br>不会修改当前战斗的牌库。</p><div style="display:flex;gap:8px;align-items:center;margin-top:12px"><select class="library-search" id="deck-preset" aria-label="预设职业" style="width:160px;padding:7px">${D.heroes.map((h) => `<option value="${h.id}" ${deckHero === h.id ? "selected" : ""}>${h.name}预设</option>`).join("")}</select><button class="text-btn" id="deck-reset">套用</button><button class="text-btn" id="deck-clear">清空</button></div><div class="deck-list" id="deck-list"></div><div class="deck-curve" id="deck-curve"></div><div class="deck-actions"><button class="gold-btn small-btn" id="deck-save">应用牌组</button><button class="ghost-btn small-btn" id="deck-play">选择英雄</button></div></aside></div></section>`,
-      "library",
-    );
-    $("library-search").oninput = (e) => {
-      filterSearch = e.target.value;
-      renderLibraryCards();
-    };
-    $("filter-bar")
-      .querySelectorAll("[data-type]")
-      .forEach(
-        (b) =>
-          (b.onclick = () => {
-            filterType = b.dataset.type;
-            renderLibraryCards();
-          }),
-      );
-    $("filter-bar")
-      .querySelectorAll("[data-mana]")
-      .forEach(
-        (b) =>
-          (b.onclick = () => {
-            filterCost = b.dataset.mana;
-            renderLibraryCards();
-          }),
-      );
-    $("deck-preset").onchange = (e) => (deckHero = e.target.value);
-    $("deck-reset").onclick = () => {
-      editDeck = [...D.heroes.find((h) => h.id === deckHero).deck];
-      renderDeck();
-      renderLibraryCards();
-    };
-    $("deck-clear").onclick = () => {
-      editDeck = [];
-      renderDeck();
-      renderLibraryCards();
-    };
-    $("deck-save").onclick = () => {
-      if (game.validateDeck(editDeck) && writeStore(DECK, editDeck))
-        toast("30 张卡组已应用，将用于下一段新战役。");
-    };
-    $("deck-play").onclick = () => {
-      if (!game.validateDeck(editDeck)) {
-        toast("请先完成 30 张卡组，或关闭图鉴使用英雄预设。");
-        return;
-      }
-      writeStore(DECK, editDeck);
-      chosenHero = deckHero;
-      if (inBattle && !isDemo) {
-        showConfirm(
-          "开启新的战役",
-          "当前战役进度将被新战役覆盖。已应用的卡组会保留。",
-          showHeroes,
-          "选择英雄",
-        );
-      } else showHeroes();
-    };
-    renderLibraryCards();
-    renderDeck();
-  }
-  function renderLibraryCards() {
-    const list = D.cards
-      .filter(
-        (c) =>
-          !c.token &&
-          (filterType === "all" || c.type === filterType) &&
-          (filterCost === "all" ||
-            (filterCost === "7"
-              ? c.cost >= 7
-              : c.cost === Number(filterCost))) &&
-          (!filterSearch ||
-            (c.name + c.text + c.rarity)
-              .toLowerCase()
-              .includes(filterSearch.toLowerCase())),
-      )
-      .sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name, "zh"));
-    $("filter-bar")
-      .querySelectorAll("[data-type]")
-      .forEach((b) =>
-        b.classList.toggle("active", b.dataset.type === filterType),
-      );
-    $("filter-bar")
-      .querySelectorAll("[data-mana]")
-      .forEach((b) =>
-        b.classList.toggle("active", b.dataset.mana === filterCost),
-      );
-    $("library-grid").innerHTML = list.length
-      ? list
-          .map(
-            (c) =>
-              `<button class="library-item" data-add="${c.id}" title="${c.name}：${c.text}">${cardHTML(c)}<span class="add-label">+ 加入牌组</span><span class="owned-count">${editDeck.filter((id) => id === c.id).length} / ${c.rarity === "legendary" ? 1 : 2}</span></button>`,
-          )
-          .join("")
-      : '<p style="color:#879990;font-size:12px;padding:25px;grid-column:1/-1">没有符合筛选条件的卡牌。</p>';
-    $("library-foot").textContent =
-      "显示 " +
-      list.length +
-      " / 48 张 · 点击加入，右侧点击移除 · 同名最多 2 张，传说最多 1 张";
-    document.querySelectorAll("[data-add]").forEach((b) => {
-      b.onclick = () => {
-        hidePreview();
-        const id = b.dataset.add,
-          c = D.byId[id],
-          max = c.rarity === "legendary" ? 1 : 2;
-        if (editDeck.length >= 30) {
-          toast("牌组已满。先在右侧移除卡牌。");
-          return;
-        }
-        if (editDeck.filter((x) => x === id).length >= max) {
-          toast(
-            c.rarity === "legendary"
-              ? "每张传说只能携带 1 张。"
-              : "同名卡牌最多携带 2 张。",
-          );
-          return;
-        }
-        editDeck.push(id);
-        renderDeck();
-        const count = b.querySelector(".owned-count");
-        count.textContent =
-          editDeck.filter((x) => x === id).length + " / " + max;
-        EmberAudio.fx("ui");
-      };
-      b.onmouseenter = () => preview(b.dataset.add, b);
-      b.onmouseleave = hidePreview;
-    });
-  }
-  function renderDeck() {
-    window.EmberMobile?.syncDeck(editDeck.length);
-    const counts = {};
-    editDeck.forEach((id) => (counts[id] = (counts[id] || 0) + 1));
-    $("deck-total").textContent = editDeck.length + "/30";
-    $("deck-total").classList.toggle("full", editDeck.length === 30);
-    $("deck-save").disabled = !game.validateDeck(editDeck);
-    $("deck-list").innerHTML = Object.keys(counts)
-      .sort((a, b) => D.byId[a].cost - D.byId[b].cost)
-      .map((id) => {
-        const c = D.byId[id];
-        return `<button class="deck-row" data-remove="${id}" title="点击移除一张 ${c.name}"><span class="cost">${c.cost}</span><span>${c.name}</span><span class="count">${counts[id] > 1 ? "×" + counts[id] : c.rarity === "legendary" ? "✦" : "1"}</span></button>`;
-      })
-      .join("");
-    const curve = Array(8).fill(0);
-    editDeck.forEach((id) => curve[Math.min(7, D.byId[id].cost)]++);
-    const max = Math.max(1, ...curve);
-    $("deck-curve").innerHTML = curve
-      .map(
-        (n, i) =>
-          `<div class="curve-bar" style="height:${(n / max) * 43}px" title="${i === 7 ? "7+" : i} 费：${n} 张"><small>${i === 7 ? "7+" : i}</small></div>`,
-      )
-      .join("");
-    document.querySelectorAll("[data-remove]").forEach(
-      (b) =>
-        (b.onclick = () => {
-          editDeck.splice(editDeck.indexOf(b.dataset.remove), 1);
-          renderDeck();
-          renderLibraryCards();
-        }),
-    );
-  }
   function showSettings() {
     showModal(
       `<section class="modal-box settings-box"><div class="modal-heading"><div class="eyebrow">MAKE YOURSELF AT HOME</div><h2>旅途设置</h2></div>${[
@@ -1238,7 +1051,7 @@
           "减弱动态效果",
           "关闭粒子、镜头震动；保留伤害、状态和回合信息",
         ],
-        ["low", "轻量画质", "减少粒子数量与帧率，关闭 3D 阴影"],
+        ["low", "轻量画质", "减少粒子数量，降低环境绘制帧率"],
         ["fast", "加速敌方行动", "缩短 AI 每次行动之间的间隔"],
       ]
         .map(
@@ -1346,7 +1159,8 @@
             : "敌方回合";
   }
   document.addEventListener("ember:fx-busy", () => syncEndTurn());
-  $("end-turn").onclick = () => act(() => game.endTurn("p"));
+  $("end-turn").onclick = () =>
+    act(() => game.dispatch({ type: "end", side: "p" }));
   $("arena").onclick = () => clearSelection();
   document.addEventListener("pointerdown", () => EmberAudio.unlock(), {
     once: true,
@@ -1400,7 +1214,7 @@
   window.addEventListener("beforeunload", save);
   resize();
   iconify();
-  $("lobby-art").src = A.portrait("dragon", "ember", "worldender");
+  $("lobby-art").src = A.card(D.byId.ashdragon);
   $("lobby-card-one").innerHTML = cardHTML(D.byId.ashdragon);
   $("lobby-card-two").innerHTML = cardHTML(D.byId.phoenix);
   for (let i = 0; i < 35; i++) {
@@ -1414,7 +1228,6 @@
   }
   applySettings();
   updateStart();
-  EmberScene.load();
   window.Emberfall = {
     selectCard,
     clickUnit,
@@ -1426,7 +1239,7 @@
     hidePreview,
     act,
     formatText,
-    game,
+    game: game.view(),
     startGame,
     demo,
     home,
@@ -1447,6 +1260,11 @@
       return modalType;
     },
   };
+  if (
+    ["127.0.0.1", "localhost"].includes(location.hostname) &&
+    new URLSearchParams(location.search).get("debug") === "1"
+  )
+    window.EmberDebug = Object.freeze({ game });
   window.addEventListener("ember:viewport", () => {
     if (drag) {
       drag.ghost?.remove();

@@ -2,14 +2,6 @@
 (()=>{
  'use strict';
  const E=Emberfall,D=EmberData;
- document.title='烬域 · 动漫秘境 — ANIME ATELIER v0.6';
- document.querySelector('.lobby-copy>.eyebrow').textContent='EMBERFALL · ANIME ATELIER';
- document.querySelector('.lobby-chinese').textContent='动漫秘境';
- document.querySelector('.lobby-tagline').textContent='让每一张卡牌，成为一段新的冒险。';
- document.querySelector('.lobby-bottom small').textContent='VOL. VI / ANIME ATELIER';
- // Keep diagnostics current without displaying developer UI on the board.
- Object.assign(window.AtelierDiagnostics,{version:'0.6.0',paintedCards:56,animeSourceAtlases:8,legacyCardFallbacks:0});
- if(window.PocketDiagnostics)PocketDiagnostics.version='0.6.0';
  const modal=document.getElementById('modal');
  let viewer=null,previousFocus=null;
  function close(){if(!viewer)return;viewer.remove();viewer=null;if(previousFocus?.isConnected)previousFocus.focus({preventScroll:true});previousFocus=null;}
@@ -36,6 +28,6 @@
  window.addEventListener('ember:viewport',close);
  E.showFullArt=open;
  window.AnimeDiagnostics=Object.freeze({version:'0.6.0',cardImages:56,collectible:48,tokens:8,sourceAtlases:8,
-  legacyCardFallbacks:0,heroPanels:AtelierArt.heroPanels,bossPanels:AtelierArt.bossPanels,
+  legacyCardFallbacks:0,
   source:'eight approved anime atlas sheets; caption-free individual panel assets',nativePanelOutput:'336×448',publicDeployment:'not configured'});
 })();

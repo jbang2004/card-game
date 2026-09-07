@@ -1,0 +1,378 @@
+{
+  "version": 1,
+  "seq": 67,
+  "rng": 1923013341,
+  "turn": 1,
+  "active": "p",
+  "phase": "battle",
+  "heroId": "mage",
+  "bossIndex": 0,
+  "phase2": false,
+  "relics": [
+    "lens"
+  ],
+  "log": [
+    "你抵达了余火之门。",
+    "选择需要替换的起始卡牌。",
+    "第 1 回合 · 你的回合"
+  ],
+  "choice": null,
+  "winner": null,
+  "stats": {
+    "played": 0,
+    "damage": 0,
+    "turns": 1
+  },
+  "customDeck": null,
+  "p": {
+    "hp": 18,
+    "maxHp": 30,
+    "armor": 0,
+    "mana": 10,
+    "maxMana": 1,
+    "hand": [],
+    "deck": [
+      {
+        "uid": "u27",
+        "cid": "renew"
+      },
+      {
+        "uid": "u10",
+        "cid": "sentinel"
+      },
+      {
+        "uid": "u24",
+        "cid": "fireball"
+      },
+      {
+        "uid": "u21",
+        "cid": "frostbolt"
+      },
+      {
+        "uid": "u23",
+        "cid": "fireball"
+      },
+      {
+        "uid": "u8",
+        "cid": "oracle"
+      },
+      {
+        "uid": "u17",
+        "cid": "nyx"
+      },
+      {
+        "uid": "u28",
+        "cid": "storm"
+      },
+      {
+        "uid": "u25",
+        "cid": "nova"
+      },
+      {
+        "uid": "u19",
+        "cid": "bolt"
+      },
+      {
+        "uid": "u15",
+        "cid": "paladin"
+      },
+      {
+        "uid": "u6",
+        "cid": "guard"
+      },
+      {
+        "uid": "u13",
+        "cid": "phoenix"
+      },
+      {
+        "uid": "u4",
+        "cid": "wolf"
+      },
+      {
+        "uid": "u11",
+        "cid": "golem"
+      },
+      {
+        "uid": "u18",
+        "cid": "ashdragon"
+      },
+      {
+        "uid": "u2",
+        "cid": "spark"
+      },
+      {
+        "uid": "u14",
+        "cid": "rider"
+      },
+      {
+        "uid": "u30",
+        "cid": "discovery"
+      },
+      {
+        "uid": "u12",
+        "cid": "cleric"
+      },
+      {
+        "uid": "u3",
+        "cid": "squire"
+      },
+      {
+        "uid": "u20",
+        "cid": "bolt"
+      },
+      {
+        "uid": "u5",
+        "cid": "guard"
+      },
+      {
+        "uid": "u29",
+        "cid": "polymorph"
+      },
+      {
+        "uid": "u22",
+        "cid": "frostbolt"
+      },
+      {
+        "uid": "u16",
+        "cid": "dragon"
+      }
+    ],
+    "board": [
+      {
+        "uid": "u62",
+        "cid": "guard",
+        "atk": 2,
+        "hp": 3,
+        "maxHp": 3,
+        "tags": [
+          "taunt"
+        ],
+        "sick": false,
+        "attacks": 0,
+        "frozen": false,
+        "silenced": false,
+        "tempAtk": 0
+      },
+      {
+        "uid": "u63",
+        "cid": "squire",
+        "atk": 1,
+        "hp": 2,
+        "maxHp": 2,
+        "tags": [
+          "shield"
+        ],
+        "sick": false,
+        "attacks": 0,
+        "frozen": false,
+        "silenced": false,
+        "tempAtk": 0
+      },
+      {
+        "uid": "u64",
+        "cid": "wolf",
+        "atk": 2,
+        "hp": 1,
+        "maxHp": 1,
+        "tags": [],
+        "sick": false,
+        "attacks": 0,
+        "frozen": false,
+        "silenced": false,
+        "tempAtk": 0
+      }
+    ],
+    "fatigue": 0,
+    "powerUsed": false,
+    "attacks": 0,
+    "frozen": false,
+    "weapon": null,
+    "secrets": []
+  },
+  "e": {
+    "hp": 30,
+    "maxHp": 30,
+    "armor": 0,
+    "mana": 0,
+    "maxMana": 0,
+    "hand": [
+      {
+        "uid": "u51",
+        "cid": "golem"
+      },
+      {
+        "uid": "u41",
+        "cid": "titan"
+      },
+      {
+        "uid": "u31",
+        "cid": "squire"
+      },
+      {
+        "uid": "u38",
+        "cid": "cleric"
+      },
+      {
+        "uid": "u61",
+        "cid": "coin"
+      }
+    ],
+    "deck": [
+      {
+        "uid": "u37",
+        "cid": "berserker"
+      },
+      {
+        "uid": "u34",
+        "cid": "sentinel"
+      },
+      {
+        "uid": "u43",
+        "cid": "wisdom"
+      },
+      {
+        "uid": "u52",
+        "cid": "berserker"
+      },
+      {
+        "uid": "u54",
+        "cid": "fireball"
+      },
+      {
+        "uid": "u55",
+        "cid": "phoenix"
+      },
+      {
+        "uid": "u58",
+        "cid": "wisdom"
+      },
+      {
+        "uid": "u60",
+        "cid": "renew"
+      },
+      {
+        "uid": "u47",
+        "cid": "spark"
+      },
+      {
+        "uid": "u57",
+        "cid": "dragon"
+      },
+      {
+        "uid": "u36",
+        "cid": "golem"
+      },
+      {
+        "uid": "u53",
+        "cid": "cleric"
+      },
+      {
+        "uid": "u42",
+        "cid": "dragon"
+      },
+      {
+        "uid": "u56",
+        "cid": "titan"
+      },
+      {
+        "uid": "u33",
+        "cid": "guard"
+      },
+      {
+        "uid": "u44",
+        "cid": "dagger"
+      },
+      {
+        "uid": "u59",
+        "cid": "dagger"
+      },
+      {
+        "uid": "u49",
+        "cid": "sentinel"
+      },
+      {
+        "uid": "u46",
+        "cid": "squire"
+      },
+      {
+        "uid": "u35",
+        "cid": "bolt"
+      },
+      {
+        "uid": "u32",
+        "cid": "spark"
+      },
+      {
+        "uid": "u45",
+        "cid": "renew"
+      },
+      {
+        "uid": "u40",
+        "cid": "phoenix"
+      },
+      {
+        "uid": "u50",
+        "cid": "bolt"
+      },
+      {
+        "uid": "u48",
+        "cid": "guard"
+      },
+      {
+        "uid": "u39",
+        "cid": "fireball"
+      }
+    ],
+    "board": [
+      {
+        "uid": "u65",
+        "cid": "guard",
+        "atk": 2,
+        "hp": 3,
+        "maxHp": 3,
+        "tags": [
+          "taunt"
+        ],
+        "sick": false,
+        "attacks": 0,
+        "frozen": false,
+        "silenced": false,
+        "tempAtk": 0
+      },
+      {
+        "uid": "u66",
+        "cid": "squire",
+        "atk": 1,
+        "hp": 2,
+        "maxHp": 2,
+        "tags": [
+          "shield"
+        ],
+        "sick": false,
+        "attacks": 0,
+        "frozen": false,
+        "silenced": false,
+        "tempAtk": 0
+      },
+      {
+        "uid": "u67",
+        "cid": "wolf",
+        "atk": 2,
+        "hp": 1,
+        "maxHp": 1,
+        "tags": [],
+        "sick": false,
+        "attacks": 0,
+        "frozen": false,
+        "silenced": false,
+        "tempAtk": 0
+      }
+    ],
+    "fatigue": 0,
+    "powerUsed": false,
+    "attacks": 0,
+    "frozen": false,
+    "weapon": null,
+    "secrets": []
+  }
+}

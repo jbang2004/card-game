@@ -246,13 +246,6 @@ const EmberFX = (() => {
     if (quality.reduced) {
       return;
     }
-    if (!EmberViewport.mobile)
-      EmberScene.burst(
-        x,
-        y,
-        parseInt(colors[school][1].slice(1), 16),
-        quality.low ? 14 : 26,
-      );
     const s = clamp(strength, 0.6, 2.2);
     glow(x, y, school, 80 * s, 510);
     if (school === "steel") {
@@ -671,6 +664,7 @@ const EmberFX = (() => {
     let c = primary?.cid ? EmberData.byId[primary.cid] : null;
     if (primary?.type === "attack")
       c = EmberData.byId[old[primary.from.side + primary.from.uid]?.cid];
+    const profile = EmberRules.profile(c);
     let school = classification(c, primary?.type === "attack");
     if (primary?.type === "power") {
       const side = primary.side;
@@ -729,10 +723,7 @@ const EmberFX = (() => {
           600,
         );
         EmberAudio.fx("equip");
-      } else if (
-        c &&
-        ["aoe", "nova", "rally", "wolves", "inferno"].includes(c.effect)
-      ) {
+      } else if (c && profile.area) {
         add(
           "wave",
           {
@@ -752,10 +743,7 @@ const EmberFX = (() => {
         );
         rune(to.x, to.y, school, 165, 860);
         schedule(() => EmberAudio.fx("cast-" + school), 120);
-      } else if (
-        c &&
-        ["draw", "discover", "secret", "coin"].includes(c.effect)
-      ) {
+      } else if (c && profile.self) {
         rune(from.x, from.y, school, 78, 850);
         add("starburst", { x: from.x, y: from.y, school, radius: 80 }, 650);
         EmberAudio.fx("cast-" + school);
@@ -790,21 +778,13 @@ const EmberFX = (() => {
         max = Math.max(1, ...damage.map((e) => e.amount));
       if (
         primary?.type === "attack" ||
-        (primary &&
-          target &&
-          !(
-            c &&
-            ["heal", "buff", "shield", "silence", "tempBuff"].includes(c.effect)
-          ))
+        (primary && target && !(c && profile.gentle))
       ) {
         impact(to.x, to.y, school, Math.min(2, 0.7 + max / 8));
         EmberAudio.fx("impact-" + school);
         if (max >= 6) vignette(school, 630, to.x, to.y);
       }
-      if (
-        c &&
-        ["buff", "rally", "shield", "tempBuff", "silence"].includes(c.effect)
-      ) {
+      if (c && profile.enhance) {
         impact(to.x, to.y, school, 0.8);
         EmberAudio.fx("cast-" + school);
       }
@@ -1390,26 +1370,7 @@ const EmberFX = (() => {
   // This layer is always available, independently of the optional WebGL renderer.
   function paintWorld(t) {
     wc.clearRect(0, 0, W, H);
-    if (EmberViewport.mobile)
-      EmberMobileWorld.paint(
-        wc,
-        t,
-        view,
-        theme,
-        phase,
-        quality.reduced,
-        quality.low,
-      );
-    else
-      TavernWorld.paint(
-        wc,
-        t,
-        view,
-        theme,
-        phase,
-        quality.reduced,
-        quality.low,
-      );
+    AtelierWorld.paint(wc, t, view, theme, phase, quality.reduced, quality.low);
     worldDirty = false;
   }
   let worldLast = 0;
@@ -1449,7 +1410,7 @@ const EmberFX = (() => {
     if (
       worldDirty ||
       AtelierWorld.loading ||
-      (EmberViewport.mobile && EmberMobileWorld.loading) ||
+      AtelierWorld.loading ||
       (!quality.reduced && t - worldLast > (EmberViewport.mobile ? 80 : min))
     ) {
       paintWorld(quality.reduced ? 0 : t / 1000);

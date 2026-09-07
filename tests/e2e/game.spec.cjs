@@ -11,7 +11,7 @@ async function idle(page) {
   await page.waitForFunction(() => !EmberFX.busy);
 }
 async function demo(page) {
-  await page.goto("./");
+  await page.goto("./?debug=1");
   await ready(page);
   await page.locator("#quick-btn").click();
   await idle(page);
@@ -69,7 +69,7 @@ test("web build: all assets decode, no external dependencies, actual spells, mel
   ).toBe(false);
   await page.locator('.enemy[data-cardid="golem"]').click();
   await idle(page);
-  expect(await page.evaluate(() => Emberfall.game.s.p.mana)).toBe(4);
+  expect(await page.evaluate(() => EmberDebug.game.s.p.mana)).toBe(4);
   await expect(page.locator('.enemy[data-cardid="golem"]')).toHaveClass(
     /frozen/,
   );
@@ -77,15 +77,15 @@ test("web build: all assets decode, no external dependencies, actual spells, mel
   await page.locator('.enemy[data-cardid="golem"]').click();
   await idle(page);
   await expect(page.locator('.enemy[data-cardid="golem"]')).toHaveCount(0);
-  expect(await page.evaluate(() => Emberfall.game.s.p.board[0].hp)).toBe(1);
+  expect(await page.evaluate(() => EmberDebug.game.s.p.board[0].hp)).toBe(1);
   await page.locator('#hand [data-cardid="phoenix"]').click();
   await idle(page);
   await expect(page.locator('.friendly[data-cardid="phoenix"]')).toHaveCount(1);
   await page.locator("#end-turn").click();
   await page.waitForFunction(
     () =>
-      Emberfall.game.s.active === "p" &&
-      Emberfall.game.s.turn > 6 &&
+      EmberDebug.game.s.active === "p" &&
+      EmberDebug.game.s.turn > 6 &&
       !EmberFX.busy,
     { timeout: 20000 },
   );
@@ -102,7 +102,7 @@ test("web build: all assets decode, no external dependencies, actual spells, mel
 test("real origin: campaign, settings and day/night survive reload; demo leaves save intact", async ({
   page,
 }) => {
-  await page.goto("./");
+  await page.goto("./?debug=1");
   await ready(page);
   await page.locator("#start-btn").click();
   await page.locator('[data-hero="paladin"]').click();
@@ -122,7 +122,7 @@ test("real origin: campaign, settings and day/night survive reload; demo leaves 
   await expect(page.locator("#start-btn")).toContainText("继续冒险");
   await page.locator("#start-btn").click();
   await idle(page);
-  expect(await page.evaluate(() => JSON.stringify(Emberfall.game.s))).toBe(
+  expect(await page.evaluate(() => JSON.stringify(EmberDebug.game.s))).toBe(
     before,
   );
   expect(
@@ -161,14 +161,14 @@ for (const [width, height, touch] of screens) {
     const page = await context.newPage();
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
-    await page.goto("http://127.0.0.1:8000/dist/");
+    await page.goto("http://127.0.0.1:8000/dist/?debug=1");
     await ready(page);
     await page.evaluate(() => {
       Emberfall.settings.reduced = true;
       EmberFX.configure(true, false);
       document.body.classList.add("reduced-motion");
       Emberfall.demo();
-      const g = Emberfall.game,
+      const g = EmberDebug.game,
         s = g.s;
       s.p.board = [];
       s.e.board = [];
@@ -284,18 +284,18 @@ test("touch: inspect, confirm, rotate during spell, same match and no stuck effe
     hasTouch: true,
   });
   const p = await c.newPage();
-  await p.goto("http://127.0.0.1:8000/dist/");
+  await p.goto("http://127.0.0.1:8000/dist/?debug=1");
   await ready(p);
   await p.locator("#quick-btn").tap();
   await idle(p);
   await p.locator('#hand [data-cardid="frostbolt"]').tap();
   await expect(p.locator(".touch-rule")).toContainText("冻结");
-  expect(await p.evaluate(() => Emberfall.game.s.p.mana)).toBe(6);
+  expect(await p.evaluate(() => EmberDebug.game.s.p.mana)).toBe(6);
   await p.locator("#touch-card-play").tap();
   await p.locator('.enemy[data-cardid="golem"]').tap();
   await p.setViewportSize({ width: 844, height: 390 });
   await idle(p);
-  expect(await p.evaluate(() => Emberfall.game.s.p.mana)).toBe(4);
+  expect(await p.evaluate(() => EmberDebug.game.s.p.mana)).toBe(4);
   await expect(p.locator('.enemy[data-cardid="golem"]')).toHaveClass(/frozen/);
   await expect(p.locator("#end-turn")).toBeEnabled();
   await p.screenshot({ path: path.join(out, "touch-landscape.png") });
@@ -316,13 +316,13 @@ for (const [width, height, touch] of [
       hasTouch: touch,
     });
     const page = await context.newPage();
-    await page.goto("http://127.0.0.1:8000/dist/");
+    await page.goto("http://127.0.0.1:8000/dist/?debug=1");
     await ready(page);
     await page.evaluate(() => {
       Emberfall.settings.reduced = true;
       EmberFX.configure(true, false);
       Emberfall.demo();
-      const s = Emberfall.game.s;
+      const s = EmberDebug.game.s;
       s.p.hp = 30;
       s.e.hp = 30;
       Emberfall.renderNow();
@@ -380,7 +380,7 @@ test("shared desktop and touch materials, readable lobby, single card aperture",
       hasTouch: touch,
     });
     const page = await context.newPage();
-    await page.goto("http://127.0.0.1:8000/dist/");
+    await page.goto("http://127.0.0.1:8000/dist/?debug=1");
     await ready(page);
     materials.push(
       await page.evaluate(() =>
@@ -475,7 +475,7 @@ test("overkill health announcement matches the visible zero", async ({
 }) => {
   await demo(page);
   await page.evaluate(() => {
-    Emberfall.game.s.p.hp = -1;
+    EmberDebug.game.s.p.hp = -1;
     Emberfall.renderNow();
   });
   await expect(page.locator("#player-hero")).toHaveAttribute(
@@ -483,4 +483,121 @@ test("overkill health announcement matches the visible zero", async ({
     /生命 0，/,
   );
   await expect(page.locator("#player-hero .hero-health")).toHaveText("0");
+});
+
+test("production API is read-only and has one renderer/art implementation", async ({
+  page,
+}) => {
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.goto("./");
+  await ready(page);
+  expect(
+    await page.evaluate(() => ({
+      debug: typeof EmberDebug,
+      legacyWorld: typeof TavernWorld,
+      three: typeof EmberScene,
+      legacyArt: typeof TavernArt,
+      write: typeof Emberfall.game.summon,
+    })),
+  ).toEqual({
+    debug: "undefined",
+    legacyWorld: "undefined",
+    three: "undefined",
+    legacyArt: "undefined",
+    write: "undefined",
+  });
+  await page.locator("#quick-btn").click();
+  await idle(page);
+  expect(
+    await page.evaluate(() => {
+      const s = Emberfall.game.s;
+      try {
+        s.p.hp = 1;
+      } catch {}
+      return Emberfall.game.s.p.hp;
+    }),
+  ).toBe(26);
+  await page.locator("#home-btn").click();
+  await page.locator("#atelier-open").click();
+  expect(await page.locator(".atelier-vignette img").count()).toBe(4);
+  await page.locator("#atelier-done").click();
+  await page.evaluate(() => Emberfall.showFullArt("cleric"));
+  await expect(page.locator(".anime-viewer img")).toBeVisible();
+  await page.keyboard.press("Escape");
+  expect(errors).toEqual([]);
+});
+
+test("portable build starts without retired globals and plays a spell", async ({
+  page,
+}) => {
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.goto("http://127.0.0.1:8000/index.html");
+  await ready(page);
+  await page.locator("#quick-btn").click();
+  await idle(page);
+  await page.locator('#hand [data-cardid="frostbolt"]').click();
+  await page.locator('.enemy[data-cardid="golem"]').click();
+  await idle(page);
+  expect(await page.evaluate(() => Emberfall.game.s.p.mana)).toBe(4);
+  expect(errors).toEqual([]);
+});
+
+test("pre-upgrade v1 fixture resumes through actual browser storage", async ({
+  page,
+}) => {
+  const old = JSON.parse(
+    fs.readFileSync(path.resolve("tests/fixtures/save-v1.json"), "utf8"),
+  );
+  await page.goto("./");
+  await ready(page);
+  await page.evaluate(
+    (save) => localStorage.setItem("emberfall.v1", JSON.stringify(save)),
+    old,
+  );
+  await page.reload();
+  await ready(page);
+  await page.locator("#start-btn").click();
+  await idle(page);
+  expect(await page.evaluate(() => Emberfall.game.s)).toEqual(old);
+  await page.reload();
+  await ready(page);
+  await page.locator("#start-btn").click();
+  await idle(page);
+  expect(await page.evaluate(() => Emberfall.game.s)).toEqual(old);
+});
+
+test("campaign rewards and deck editor use the new state boundary", async ({
+  page,
+}) => {
+  await page.goto("./?debug=1");
+  await ready(page);
+  await page.locator("#start-btn").click();
+  await page.locator("#hero-confirm").click();
+  await page.locator("#mulligan-confirm").click();
+  await idle(page);
+  await page.evaluate(() => {
+    Emberfall.settings.reduced = true;
+    EmberFX.configure(true, false);
+    EmberDebug.game.s.e.hp = 0;
+    EmberDebug.game.cleanup();
+    EmberDebug.game.emit();
+  });
+  await page.locator("#result-next").click();
+  await expect(page.locator(".relic-choice")).toHaveCount(3);
+  await page.locator(".relic-choice").first().click();
+  expect(await page.evaluate(() => Emberfall.game.s.bossIndex)).toBe(1);
+  expect(await page.evaluate(() => Emberfall.game.s.relics.length)).toBe(1);
+  await page.locator("#mulligan-confirm").click();
+  await idle(page);
+  await page.locator("#home-btn").click();
+  await page.locator("#collection-nav").click();
+  await page.locator("#deck-reset").click();
+  await page.locator("#deck-save").click();
+  expect(
+    await page.evaluate(
+      () => JSON.parse(localStorage.getItem("emberfall.deck.v1")).length,
+    ),
+  ).toBe(30);
 });

@@ -39,7 +39,7 @@ const EmberCards = (() => {
     return s;
   }
   function artKeyForCard(c) {
-    return AtelierArt.mapFor(c.art, c.palette, c.id) || c.id;
+    return c.id;
   }
   function artVars(key, context) {
     return AtelierArt.framing(key, context);
@@ -65,7 +65,7 @@ const EmberCards = (() => {
   }
   function cardHTML(c, opts = {}) {
     const stat = c.type === "minion" || c.type === "weapon",
-      painted = !!AtelierArt.mapFor(c.art, c.palette, c.id);
+      painted = true;
     return `<div data-card-key="${c.id}" class="card school-${c.palette} ${painted ? "art-painted" : "art-original"} ${c.text.length > 43 ? "dense" : ""} ${c.rarity} ${c.type === "minion" ? "type-minion" : c.type}"><div class="card-inner"><div class="card-art"><img src="${A.card(c)}" alt="${escape(c.name)}" draggable="false" data-art-key="${artKeyForCard(c)}" style="${artStyleForCard(c, "card")}"></div><div class="card-title ${c.name.length > 7 ? "long" : ""}">${c.name}</div><div class="card-text">${formatText(c.text)}</div><div class="card-type">${c.type === "spell" ? "法 术" : c.type === "weapon" ? "武 器" : "随 从"}${c.rarity === "legendary" ? " · 传说" : ""}</div></div><div class="card-cost">${opts.cost ?? c.cost}</div><div class="card-rarity"></div><div class="card-decoration" aria-hidden="true"></div>${stat ? `<div class="stat atk">${opts.atk ?? c.atk}</div><div class="stat hp ${(opts.hp ?? c.hp) < c.hp ? "hurt" : ""}">${opts.hp ?? c.hp}</div>` : ""}</div>`;
   }
   return Object.freeze({

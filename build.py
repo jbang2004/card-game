@@ -26,16 +26,15 @@ def build():
         raise ValueError('Template tokens must match build registry exactly')
     sources = {k: (SRC / v).read_text() for k, v in registry.items()}
     portable = TOKEN.sub(lambda m: sources[m[1]], template)
-    vendor = ROOT / 'vendor/three.min.js'
-    if vendor.exists():
-        library = vendor.read_text()
-        if len(library) < 100000 or 'REVISION' not in library:
-            raise ValueError('Invalid Three.js UMD build')
-        library = re.sub(r'</script', r'<\\/script', library, flags=re.I)
-        portable = portable.replace('</head>', '<script>' + library + '</script></head>', 1)
     (ROOT / 'index.html').write_text(portable)
 
     dist = ROOT / 'dist'
+    previous = dist / 'build-manifest.json'
+    if previous.exists():
+        for name in json.loads(previous.read_text()).get('files', {}):
+            target = (dist / name).resolve()
+            if dist.resolve() in target.parents and target.is_file():
+                target.unlink()
     (dist / 'assets').mkdir(parents=True, exist_ok=True)
     records = {}
 
@@ -72,7 +71,7 @@ def build():
         raise ValueError('Unresolved web build token')
     for name in ('index.html', 'styles.css'):
         records[name] = (dist / name).stat().st_size
-    report = {'version': '0.8.0', 'portableBytes': len(portable.encode()),
+    report = {'version': json.loads((ROOT / 'package.json').read_text())['version'], 'portableBytes': len(portable.encode()),
               'webBytes': sum(records.values()), 'files': records,
               'portableSha256': hashlib.sha256(portable.encode()).hexdigest()}
     (dist / 'build-manifest.json').write_text(json.dumps(report, indent=2) + '\n')

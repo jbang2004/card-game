@@ -2,7 +2,6 @@
  * change deck order, advance a boss or overwrite a save. */
 (()=>{
  'use strict';const E=window.Emberfall,A=EmberArt,$=id=>document.getElementById(id);
- document.title='烬域 · 酒馆秘境 — ATELIER EDITION';
  const props={
   chimney:['叩叩酒馆的铜灯，让炉火更暖一些','炉火与麦香'],
   crystals:['轻拨黄铜星盘，点亮一条星轨','星辉观测台'],
@@ -17,17 +16,11 @@
  const b=document.createElement('button');b.className='atelier-open';b.id='atelier-open';b.innerHTML='工匠画廊<small>THE ARTISAN’S ATELIER</small>';$('lobby').appendChild(b);
  function showAtelier(){if(EmberFX.busy)return;
   const names=[['brewery','旅人的酒馆','屋檐小猫 · 铜灯 · 木窗'],['observatory','星辉观测台','观星旅人 · 黄铜星环'],['mine','蓝晶矿脉','蓝晶矿洞 · 山谷矿工'],['forge','余烬锻炉','暖色炉火 · 铁匠的故事']];
-  E.showModal(`<section class="modal-box atelier-box"><div class="modal-heading"><div class="eyebrow">EMBERFALL · THE ARTISAN’S ATELIER</div><h2>旅人的原画档案</h2><p>早期山谷场景的四幅建筑原画。当前对战采用全新完整酒馆桌面，旧画作在此留档。</p></div><div class="atelier-architecture">${names.map(([k,n,t])=>`<article class="atelier-vignette"><img src="${AtelierAssets['building-'+k]}" alt="${n}" draggable="false"><h3>${n}</h3><p>${t}</p></article>`).join('')}</div><div class="atelier-specimens">${['paladin','fireball','huntress','ashdragon','sunblade'].map(id=>`<div>${E.cardHTML(EmberData.byId[id])}</div>`).join('')}</div><div class="atelier-foot"><p>卡牌文字、费用与属性均来自当前卡牌数据。<br>画廊仅供欣赏，不会改变牌组或冒险进度。</p><button class="gold-btn small-btn" id="atelier-done">回到酒馆 ${A.icon('arrow')}</button></div></section>`,'atelier');
+  E.showModal(`<section class="modal-box atelier-box"><div class="modal-heading"><div class="eyebrow">EMBERFALL · THE ARTISAN’S ATELIER</div><h2>旅人的原画档案</h2><p>早期山谷场景的四幅建筑原画。当前对战采用全新完整酒馆桌面，旧画作在此留档。</p></div><div class="atelier-architecture">${names.map(([k,n,t])=>`<article class="atelier-vignette"><img src="${WindborneAssets['building-'+k]}" alt="${n}" draggable="false"><h3>${n}</h3><p>${t}</p></article>`).join('')}</div><div class="atelier-specimens">${['paladin','fireball','huntress','ashdragon','sunblade'].map(id=>`<div>${E.cardHTML(EmberData.byId[id])}</div>`).join('')}</div><div class="atelier-foot"><p>卡牌文字、费用与属性均来自当前卡牌数据。<br>画廊仅供欣赏，不会改变牌组或冒险进度。</p><button class="gold-btn small-btn" id="atelier-done">回到酒馆 ${A.icon('arrow')}</button></div></section>`,'atelier');
   $('atelier-done').onclick=()=>E.closeModal();
  }
  b.onclick=showAtelier;E.showAtelier=showAtelier;
  // The opening cabinet uses two illustrations actually adapted in this edition.
- $('lobby-card-one').innerHTML=E.cardHTML(EmberData.byId.ashdragon);
- $('lobby-card-two').innerHTML=E.cardHTML(EmberData.byId.nyx);
- document.querySelector('.lobby-copy>.eyebrow').textContent='EMBERFALL · ATELIER EDITION';
- document.querySelector('.lobby-chinese').textContent='酒馆秘境';
- document.querySelector('.lobby-tagline').textContent='万千世界，尽在一方棋盘。';
- document.querySelector('.lobby-bottom small').textContent='VOL. IV / ATELIER';
  // Expose diagnostics without adding a permanent debug panel to the game.
- window.AtelierDiagnostics={version:'0.4.0',assets:Object.keys(AtelierAssets).length,paintedCards:AtelierArt.paintedCards.length,buildings:4,frames:5,layout:'1600x940',input:'live DOM',get renderer(){return EmberScene.active?'WebGL':'Canvas 2D';}};
+ window.AtelierDiagnostics={version:'0.11.0',assets:Object.keys(WindborneAssets).length,paintedCards:AtelierArt.paintedCards.length,buildings:4,frames:0,layout:'1600x940',input:'live DOM',renderer:'Canvas 2D'};
 })();

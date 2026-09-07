@@ -1,47 +1,72 @@
-# v0.8 开发结构
+# v0.11 架构
 
-## 原则
+## 依赖与职责
 
-既有规则引擎、卡牌数据和素材 ID 保持稳定。界面只订阅状态、派发规则动作；画面、音频和环境不决定伤害或随机结果。没有引入新的 UI 框架。
+```text
+content/cards.js ───────┐
+content/campaign.js ────┼→ data.js（校验、派生文案、冻结）
+rules/effects.js ───────┘              ↓
+                                  engine.js
+                         ↙          ↓           ↘
+                    rules/ai    rules/state   rules/preview
+                                      ↓
+ui.js（流程、输入、动画协调） ← 快照与因果事件
+   ├─ application/library.js（收藏、组牌）
+   ├─ platform/storage.js（浏览器存储）
+   ├─ presentation/cards.js（卡牌 DOM）
+   ├─ effects.js（Canvas 演出）→ atelier-world.js（唯一场景）
+   └─ mobile-ui.js / mobile-view.js（触屏与视口）
+```
 
-| 边界 | 入口 | 职责 |
-| --- | --- | --- |
-| 规则与数据 | `src/engine.js`, `src/data.js` | 纯规则、AI、确定性 RNG、v1 对局序列化；保留基线字节 |
-| 卡牌表示 | `src/presentation/cards.js` | 统一转义、规则强调、角色焦点与实时卡牌 DOM；无状态写入 |
-| 手牌布局 | `src/presentation/hand.js` | 根据 1–10 张手牌计算完整槽位，给费用和攻血留空间 |
-| 战场表现 | `src/presentation/battle.css` | 桌面手牌与右侧操作区、通知安全区域；明确最终布局所有权 |
-| 触屏坐标 | `src/mobile-view.js` | 安全区、横竖屏几何、命中坐标、通知条预留空间 |
-| 应用流程 | `src/ui.js` | 战役、输入、存档、AI 调度和模态流程；通过 EmberCards 共享卡牌表示 |
-| 触屏输入 | `src/mobile-ui.js` | 手势、点牌确认、长按详情、旋转保持 |
-| 战斗演出 | `src/effects.js` | 规则事件的演出与清理，统一使用视口坐标 |
-| 音频 | `src/platform/audio.js` | 独立 Web Audio 合成与生命周期，不再耦合可选 3D 初始化 |
-| 世界 | `src/atelier-world.js` | 缓存的分层绘画、日夜氛围，使用已有来源明确的资产 |
-| 可选 3D | `src/scene.js` | 显式 `?renderer=three` 开启的继承预览；生产路径无 CDN 请求 |
+`data.js` 是内容组合入口，不再包含位置数组或执行代码。`Game` 接收内容目录，规则模块不访问 DOM、浏览器存储、动画或网络。AI 从当前己方手牌与公开棋盘选行动，不读取对方手牌内容或牌库顺序。
 
-## 构建
+## 单一规则路径
 
-`config/build.json` 映射源文件，`src/template.html` 表达实际依赖顺序。`build.py` 检查未知、重复和未使用的占位符，同一次构建生成：
+卡牌使用 `onPlay` / `onDeath` 效果数组；英雄技能、首领阶段和遗物也使用同一注册表。伤害、治疗、召唤、冻结、抽牌、增益等是具名操作；不再有 `heal4`、`skeletons`、`wolves` 等把参数藏在效果名字里的专用分支。
 
-- `index.html`：内嵌脚本、样式与图片，离线可用，也用于既有内存页面回归。
-- `dist/index.html`：使用有序 `defer` 脚本、单独 CSS 和按内容哈希去重的图片。图片相对页面路径解析，支持 `/dist/` 等子目录。
-- `dist/build-manifest.json`：输出文件字节数、版本及单文件 SHA-256。
+`rules/effects.js` 为每种操作定义允许字段、必填字段、执行与文案。未知操作或拼错字段明确报错。`data.js` 校验卡牌 ID、属性、引用与技能，生成描述后深度冻结。特殊行为作为具名操作进入注册表，不绕过引擎直接写 UI。
 
-Web 图片从同一份内嵌源缓存提取，没有重新压缩原画。素材生产管线仍按 `docs/ASSETS.md` 运作：改图后重建缓存，再构建游戏。
+AI 是独立的参数化启发式策略。其取舍会与旧版略有不同，不承诺复刻旧 AI 的所有行动；规则结果通过旧版行为样本单独对照。演出从效果结构取得表现分类，不再维护旧效果名称列表。
 
-历史 CSS 仍作为兼容基础保留，并已格式化为可阅读规则。主题属于 `windborne.css`，触屏基础属于 `mobile.css`，此次桌面对战几何属于 `presentation/battle.css`。后续避免往多个历史文件重复添加同一布局补丁。没有宣称本轮已彻底消除全部历史样式。
+## 动作、结算与事件
 
-## 验证
+应用和 AI 通过 `dispatch({type, side, uid, target, ...})` 提交动作。保留纯引擎的低层方法供内部结算和 Node 测试使用，不暴露给生产页面。
 
-`npm test` 验证规则与素材；`npm run test:e2e` 验证真实 HTTP 来源、独立资产加载、完整交互、跨刷新存档、11 种满场布局和旋转。截图与机器报告在 `artifacts/qa/`。原 Python 回归保留，用于离线嵌入版和更多卡牌机制的兼容验证。
+每次成功分派在完整结算后通知一次，事件携带 `id` / `parentId`，动作、效果、亡语和奥秘触发产生配对的块。事件和通知快照冻结，动画不持有可写规则状态。无效动作不花费资源、不发布事件。
 
-不把元素在视口内当成无遮挡：新增回归额外检查卡牌间矩形重叠、攻血中心的真实命中元素，以及通知／法力区域与角色、按钮之间的相交。
+结算仍遵循当前游戏规则：效果列表顺序执行，同一群体效果选取一批目标；一次出牌完成效果后清理死亡。死亡先释放场位，再按实体序号处理亡语和复生；之后检查胜负与首领阶段。没有为未来玩法引入未经验证的通用事件总线或异步规则队列。
 
-## v0.9 场景重构
+`modifiers` 记录增益来源及 permanent/turn 期限；当前支持永久攻血和本回合攻击增益。攻击/生命仍是权威运行时数值，`tempAtk` 保留 v1 语义。回合结束移除临时攻击记录，沉默/变形清空增益。尚未实现光环、任意层叠覆盖、墓地复活等新玩法，不把记录增益来源称为完整光环系统。
 
-`src/atelier-world.js` 用单张连续原画替换建筑蒙版拼接，独立缓存随视口和昼夜失效；保留调用接口。`src/presentation/premium.css` 负责新材质和数值徽章尺寸，布局仍由原生视口模块管理。`src/premium-assets.js` 由 `tools/build_premium_assets.py` 从审核后的 WebP 生成；生产构建提取为独立图片，单文件构建保留内嵌资源。原始 PNG 与提示词见 `assets/premium/`。
+## 预览与状态边界
 
-## v0.10 样式层级与组件契约
+`rules/preview.js` 只返回已知的立即结果，伤害计算复用引擎 `damageResult()`。不调用 RNG；复杂组合没有预览时返回空，对英雄攻击存在奥秘时显示不确定性，不提前揭示内容。不会用完整状态模拟泄露隐藏结果。
 
-模板声明 CSS cascade layers：`legacy → layout → theme → components`。旧样式保留基础布局兼容；`battle.css` 管理专属几何，`premium.css` 提供材质，`components.css` 唯一定义大厅色彩、按钮色彩、正文排版与卡图裁切。不再依赖新规则拥有更长选择器来胜过历史移动端或稀有度样式。组件响应式规则只改变字号与几何，不改变配色。
+生产 `Emberfall.game` 只提供深度冻结的状态快照、目标/费用/合法性查询和预览。`ui.js` 内部保留引擎所有权；示范局和奖励抽取也由引擎方法生成，视图不自行编辑对局。
 
-卡面使用一个内框、一个矩形图片窗口及 `object-fit: cover`；图片不再额外缩放，去掉历史伪元素纸面和竞争的拱形轮廓。费用与攻血仍在独立的外层徽章，不会被图片裁切影响。
+`rules/state.js` 校验 v1 存档，`platform/storage.js` 独立处理 JSON 与不可用存储。保留：
+
+- `emberfall.v1`
+- `emberfall.deck.v1`
+- `emberfall.settings.v1`
+- `emberfall.world.v1`
+
+旧存档无 `modifiers` 也可原样恢复；新记录是可选 v1 元数据，不重新计算或覆盖旧数值。没有删除 ID、改变实体编号分配或改变阶段索引。测试以真实旧版 fixture 验证浏览器跨刷新恢复。
+
+## 唯一表现与素材路径
+
+`atelier-world.js` 是桌面、手机共用的 Canvas 场景，无代理层，无 WebGL/CDN 加载。旧 Three.js、TavernWorld、MobileWorld、程序化卡图及未使用的兼容素材缓存已删除。
+
+`art.js` 只有 `card` / `character` / `relic` / `icon` 四种明确接口，启动时校验所有图片。角色通过 `portraitId` 指定图像，卡牌与首领同名不会再依赖 palette 猜路由。`atelier-art.js` 仅负责裁切焦点。接口不再被后续脚本覆盖。
+
+`application/library.js` 拥有组牌草稿和过滤器，应用只注入导航、存储、牌组校验和预览回调。界面其余流程仍在 `ui.js`，没有为拆文件而引入框架。
+
+CSS 的四层约定继续有效。现有基础样式仍承载弹窗、触屏和布局；清理了旧帧图绑定，没有将所有历史 CSS 粗暴移除。原始美术输入与历史 QA 文档仅留档，不作为另一套可执行游戏加载。
+
+## 构建与验证
+
+`config/build.json` 和模板明确模块加载顺序，构建检查占位符。单文件与网页来自同一份源码；网页图片按内容哈希去重。构建只清理上次 manifest 登记的输出，避免移除源码或用户文件。
+
+统一入口 `npm run test:release`：构建、Node 规则/素材/架构测试、Playwright。原 Python 内存页面回归已退役。历史文件哈希检查不再阻止合法改卡；`tests/fixtures/card-behavior-v1.json` 保留迁移前 56 张卡在固定局面的行为，而不保留可执行旧引擎。
+
+新增机制需增加其行为、顺序、状态与必要 UI 回归。改变预期玩法时应审查行为 fixture，而不是自动覆盖所有预期来让测试变绿。
