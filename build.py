@@ -11,6 +11,7 @@ import base64
 import hashlib
 import json
 import re
+from tools.characters import generate as generate_characters
 
 ROOT = Path(__file__).resolve().parent
 SRC = ROOT / 'src'
@@ -19,6 +20,7 @@ IMAGE = re.compile(r'data:image/(png|webp|jpeg|gif);base64,([A-Za-z0-9+/=]+)')
 
 
 def build():
+    generate_characters()
     registry = json.loads((ROOT / 'config/build.json').read_text())
     template = (SRC / 'template.html').read_text()
     tokens = TOKEN.findall(template)

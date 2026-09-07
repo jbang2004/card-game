@@ -21,6 +21,9 @@
   "TAVERN_UI": "tavern-ui.js",
   "REFINEMENT": "refinement.css",
   "EFFECTS": "effects.js",
+  "COMBAT_PLAN": "presentation/combat.js",
+  "MOTION_ASSETS": "motion-assets.js",
+  "PORTRAITS": "presentation/portraits.js",
   "ENHANCEMENTS": "enhancements.js",
   "CARD_VIEW": "presentation/cards.js",
   "HAND_LAYOUT": "presentation/hand.js",
@@ -37,5 +40,6 @@
   "RULE_STATE": "rules/state.js",
   "STORAGE": "platform/storage.js",
   "LIBRARY": "application/library.js",
-  "RELIC_ASSETS": "relic-assets.js"
+  "RELIC_ASSETS": "relic-assets.js",
+  "CHARACTER_CATALOG": "character-catalog.js"
 }

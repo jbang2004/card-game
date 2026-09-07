@@ -530,3 +530,103 @@ body.touch-layout .summon-seal {
 .turn-cue.compact .turn-cue-gem {
   font-size: 12px;
 }
+
+/* Short, local event labels: meaning remains available with motion disabled. */
+.combat-cue {
+  position: absolute;
+  z-index: 88;
+  transform: translate(-50%, -50%);
+  max-width: 240px;
+  padding: 4px 10px;
+  border: 1px solid var(--combat-gold);
+  border-radius: 5px;
+  background: #24170bf2;
+  color: var(--combat-gold);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  pointer-events: none;
+  text-shadow: 0 1px 2px #120a06;
+}
+.cue-freeze,
+.cue-thaw {
+  color: var(--combat-ice);
+  border-color: currentColor;
+}
+.cue-silence,
+.cue-transform,
+.cue-deathrattle {
+  color: #d8bef5;
+  border-color: currentColor;
+}
+.cue-burn,
+.cue-expire,
+.cue-weapon {
+  color: #ffb59d;
+  border-color: currentColor;
+}
+body.touch-layout .combat-cue {
+  font-size: 10px;
+  max-width: 160px;
+  padding: 3px 6px;
+}
+
+/* Layer canvases occupy only the illustration window; all card information stays DOM. */
+.portrait-motion {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  display: none;
+}
+.motion-ready > .portrait-motion {
+  display: block;
+}
+body .motion-ready > img[data-art-key] {
+  opacity: 0;
+}
+.fx-low .portrait-motion,
+.fx-reduced .portrait-motion,
+.reduced-motion .portrait-motion {
+  display: none;
+}
+body .fx-low .motion-ready > img[data-art-key],
+body .fx-reduced .motion-ready > img[data-art-key],
+body.reduced-motion .motion-ready > img[data-art-key] {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .portrait-motion {
+    display: none !important;
+  }
+  body .motion-ready > img[data-art-key] {
+    opacity: 1;
+  }
+}
+
+/* No perpetual sheen competing with the animated subject. */
+.hand-card.playable .card-decoration {
+  animation: none;
+  background: none;
+}
+/* FLIP / combat owns movement. CSS filter/transform transitions must not trail it. */
+body .minion {
+  transition:
+    box-shadow 120ms ease,
+    border-color 120ms ease;
+}
+.freeze-lock {
+  position: absolute;
+  pointer-events: none;
+  z-index: 84;
+  border: 3px solid var(--combat-ice);
+  border-radius: 35% 35% 28% 28%;
+  background: linear-gradient(
+    130deg,
+    #c5f4ff22,
+    transparent 40% 70%,
+    #c5f4ff22
+  );
+}

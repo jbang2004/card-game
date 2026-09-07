@@ -43,8 +43,13 @@ const EmberRules = (() => {
       fields: ["amount", "to", "spell"],
       required: ["amount", "to"],
       run(g, e, c) {
-        for (const t of targets(g, c, e.to))
-          g.damage(t.side, t.uid, e.amount + (e.spell ? c.spellBonus : 0));
+        const affected = targets(g, c, e.to);
+        c.damageSource = affected.length === 1 ? affected[0] : null;
+        for (const t of affected)
+          g.damage(t.side, t.uid, e.amount + (e.spell ? c.spellBonus : 0), {
+            side: c.side,
+            uid: c.source?.uid || "hero",
+          });
       },
       text: (e) => `对${labels[e.to]}造成 ${e.amount} 点伤害`,
     },
@@ -52,7 +57,12 @@ const EmberRules = (() => {
       fields: ["to"],
       required: ["to"],
       run(g, e, c) {
-        for (const t of targets(g, c, e.to)) g.getTarget(t).frozen = true;
+        for (const t of targets(g, c, e.to)) {
+          const m = g.getTarget(t),
+            changed = !m.frozen;
+          m.frozen = true;
+          if (changed) g.event("status", { ...t, kind: "freeze" });
+        }
       },
       text: (e) => `冻结${labels[e.to]}`,
     },
@@ -65,7 +75,7 @@ const EmberRules = (() => {
     heal: {
       fields: ["amount"],
       required: ["amount"],
-      run: (g, e, c) => g.heal(c.side, e.amount),
+      run: (g, e, c) => g.heal(c.side, e.amount, c.damageSource || null),
       text: (e) => `为你的英雄恢复 ${e.amount} 点生命`,
     },
     armor: {
@@ -73,6 +83,12 @@ const EmberRules = (() => {
       required: ["amount"],
       run(g, e, c) {
         g.s[c.side].armor += e.amount;
+        g.event("status", {
+          side: c.side,
+          uid: "hero",
+          kind: "armor",
+          amount: e.amount,
+        });
       },
       text: (e) => `获得 ${e.amount} 点护甲`,
     },
@@ -81,6 +97,12 @@ const EmberRules = (() => {
       required: ["amount"],
       run(g, e, c) {
         g.s[c.side].mana = Math.min(10, g.s[c.side].mana + e.amount);
+        g.event("status", {
+          side: c.side,
+          uid: "hero",
+          kind: "mana",
+          amount: e.amount,
+        });
       },
       text: (e) => `本回合获得 ${e.amount} 点法力`,
     },
@@ -99,11 +121,18 @@ const EmberRules = (() => {
       fields: ["attack", "health", "to", "duration"],
       required: ["attack", "health", "to"],
       run(g, e, c) {
-        for (const t of targets(g, c, e.to))
+        for (const t of targets(g, c, e.to)) {
           g.buff(g.getTarget(t), e.attack, e.health, {
             duration: e.duration,
             source: c.source?.uid || c.card.id,
           });
+          g.event("status", {
+            ...t,
+            kind: "buff",
+            attack: e.attack,
+            health: e.health,
+          });
+        }
       },
       text: (e) =>
         `使${labels[e.to]}${e.duration === "turn" ? "本回合" : ""}获得 +${e.attack}${e.health ? "/+" + e.health : " 攻击力"}`,
@@ -123,7 +152,10 @@ const EmberRules = (() => {
       fields: ["to"],
       required: ["to"],
       run(g, e, c) {
-        for (const t of targets(g, c, e.to)) g.silence(g.getTarget(t));
+        for (const t of targets(g, c, e.to)) {
+          g.silence(g.getTarget(t));
+          g.event("status", { ...t, kind: "silence" });
+        }
       },
       text: (e) => `沉默${labels[e.to]}，移除其关键词和增益`,
     },
@@ -133,7 +165,10 @@ const EmberRules = (() => {
       run(g, e, c) {
         for (const t of targets(g, c, e.to)) {
           const m = g.getTarget(t);
-          if (!m.tags.includes(e.tag)) m.tags.push(e.tag);
+          if (!m.tags.includes(e.tag)) {
+            m.tags.push(e.tag);
+            g.event("status", { ...t, kind: "grant", tag: e.tag });
+          }
         }
       },
       text: (e, db) => `使${labels[e.to]}获得${db.$kw[e.tag]}`,
@@ -142,7 +177,10 @@ const EmberRules = (() => {
       fields: ["to", "card"],
       required: ["to", "card"],
       run(g, e, c) {
-        for (const t of targets(g, c, e.to)) g.transform(t, e.card);
+        for (const t of targets(g, c, e.to)) {
+          g.transform(t, e.card);
+          g.event("status", { ...t, kind: "transform", cid: e.card });
+        }
       },
       text: (e, db) =>
         `将${labels[e.to]}变为 ${db[e.card].atk}/${db[e.card].hp} 的${db[e.card].name}`,
@@ -182,8 +220,16 @@ const EmberRules = (() => {
         const a = g.s[g.other(c.side)].board;
         if (a.length) {
           const m = a[Math.floor(g.rand() * a.length)];
-          g.damage(g.other(c.side), m.uid, e.amount);
+          g.damage(g.other(c.side), m.uid, e.amount, {
+            side: c.side,
+            uid: "hero",
+          });
           m.frozen = true;
+          g.event("status", {
+            side: g.other(c.side),
+            uid: m.uid,
+            kind: "freeze",
+          });
         }
       },
       text: (e) => `对随机敌方随从造成 ${e.amount} 点伤害并冻结`,

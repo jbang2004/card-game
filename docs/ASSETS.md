@@ -1,3 +1,5 @@
+> 当前统一角色配置与制作契约见 [CHARACTER_AUTHORING.md](CHARACTER_AUTHORING.md)。下文涉及独立 motion manifest / portrait-profiles 的描述是早期阶段记录，已由 `assets/characters.json` 取代。
+
 # v0.11 素材与加工
 
 运行时保留 56 张已确认卡图、6 张遗物、当前完整酒馆图和山谷原画档案。角色明确复用卡图；不加载旧程序化人物、旧 Three.js 场景、旧卡框缓存或旧酒馆背景。
@@ -105,3 +107,13 @@
 ## 权利与分发说明
 
 代码许可和第三方说明见根目录`LICENSE`、`THIRD_PARTY.md`。素材来源说明不是额外的商业版权担保。不要将这些素材描述为原版炉石素材或独立手绘原画，也不要分发系统字体、未附许可的依赖二进制。
+
+## 角色动态素材
+
+`assets/characters.json` 是唯一正式角色配置源，`assets/motion/` 保存按 ID 命名的背景、主体与必要前景 WebP，`sources/` 保存可复现的生成输入。实际动态覆盖以 `python3 tools/characters.py --list` 为准；上场角色来自游戏的随从定义及英雄/首领 `portraitId`。
+
+原 56 张静态卡图保留，手牌、选卡与自动悬停预览使用原图；场上及显式检查窗口播放动态。网页版本按需加载、限额解码，离线单文件版内嵌压缩素材并按需解码。没有恢复 Three.js、视频播放器或独立角色时钟。
+
+制作与验收命令见 [角色制作规范](CHARACTER_AUTHORING.md)。共用打包器为 `tools/pack_motion_assets.cjs`；纯色底输入可用 `tools/chroma_motion_atlas.cjs` 转为真实 alpha，此素材制作步骤需要本机 FFmpeg 和项目已声明的 Playwright，普通构建与游戏运行均不需要 FFmpeg。
+
+初始素材来源见 [PROMPTS.md](../assets/motion/PROMPTS.md)，本轮逐角色请求与处理记录见 [BATCH_A.md](../assets/motion/BATCH_A.md)、[BATCH_B.md](../assets/motion/BATCH_B.md)、[BATCH_TOKENS.md](../assets/motion/BATCH_TOKENS.md)。它们记录制作过程；最终动作参数始终以正式清单为准。

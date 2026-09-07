@@ -18,6 +18,7 @@ const ctx = vm.createContext({
 for (const name of [
   "anime-assets.js",
   "relic-assets.js",
+  "character-catalog.js",
   "atelier-art.js",
   "art.js",
 ])
@@ -107,4 +108,96 @@ test("All focal calibrations are valid and bounded to small non-distorting overs
       assert.ok(/^50% \d+%$/.test(f.pos));
       assert.ok(f.scale >= 1 && f.scale <= 1.04);
     }
+});
+
+test("all on-board characters have distinct motion layers with strict IDs, packed bytes and real alpha", () => {
+  const motion = JSON.parse(
+    fs.readFileSync(path.join(root, "assets/characters.json")),
+  );
+  const motionContext = vm.createContext({});
+  vm.runInContext(
+    fs.readFileSync(path.join(root, "src/motion-assets.js"), "utf8"),
+    motionContext,
+  );
+  const cache = JSON.parse(
+    vm.runInContext("JSON.stringify(MotionAssets)", motionContext),
+  );
+  const expected = D.cards
+    .filter((c) => c.type === "minion")
+    .map((c) => c.id)
+    .sort();
+  assert.deepEqual(Object.keys(cache).sort(), expected);
+  for (const character of [...D.heroes, ...D.bosses])
+    assert.ok(cache[character.portraitId]);
+  const subjectHashes = new Set();
+  for (const [id, card] of Object.entries(motion.cards)) {
+    const meta = card.motion;
+    if (!meta) continue;
+    assert.ok(D.byId[id]);
+    assert.equal(
+      meta.files.length,
+      meta.rig.template === "whole-subject" ? 2 : 3,
+    );
+    subjectHashes.add(meta.files.find((f) => f.role === "subject").sha256);
+    meta.files.forEach((record, i) => {
+      const data = fs.readFileSync(
+        path.join(root, "assets/motion", record.file),
+      );
+      assert.equal(sha(data), record.sha256);
+      assert.deepEqual(
+        Buffer.from(cache[id][record.role].split(",")[1], "base64"),
+        data,
+      );
+      // Extended WebP uses the alpha flag for transparent subject/accent layers.
+      if (i) {
+        assert.equal(data.toString("ascii", 12, 16), "VP8X");
+        assert.ok(data[20] & 0x10);
+      }
+    });
+  }
+  assert.equal(subjectHashes.size, expected.length);
+});
+
+test("the complete catalog matches game IDs and publishes immutable runtime metadata", () => {
+  const catalog = JSON.parse(
+    fs.readFileSync(path.join(root, "assets/characters.json")),
+  );
+  assert.deepEqual(
+    Object.keys(catalog.cards).sort(),
+    D.cards.map((c) => c.id).sort(),
+  );
+  assert.ok(evalJS("Object.isFrozen(CharacterCatalog.wolf.motion.rig)"));
+  assert.equal(evalJS("CharacterCatalog.wolf.motion.layers.length"), 2);
+  for (const [id, c] of Object.entries(catalog.cards)) {
+    assert.equal(c.staticKey, id);
+    assert.equal(evalJS(`AtelierArt.focuses['${id}']`), c.focus);
+  }
+});
+
+test("catalog validation rejects missing IDs, wrong artwork, invalid rigs and stale layer hashes", () => {
+  const { execFileSync } = require("node:child_process");
+  execFileSync(
+    "python3",
+    [
+      "-c",
+      `
+import copy,json
+from tools.characters import validate,generate
+base=json.load(open('assets/characters.json'))
+generate(check=True)
+for change in ['missing','static','template','hash','role','parameter']:
+ d=copy.deepcopy(base)
+ if change=='missing': del d['cards']['wolf']
+ if change=='static': d['cards']['wolf']['staticKey']='oracle'
+ if change=='template': d['cards']['wolf']['motion']['rig']['template']='unknown'
+ if change=='hash': d['cards']['wolf']['motion']['files'][0]['sha256']='0'*64
+ if change=='role': d['cards']['wolf']['motion']['files'][0]['role']='head'
+ if change=='parameter': d['cards']['wolf']['motion']['rig']['speeed']=1
+ try: validate(d)
+ except ValueError: pass
+ else: raise AssertionError(change+' was accepted')
+ `,
+    ],
+    { cwd: root },
+  );
 });

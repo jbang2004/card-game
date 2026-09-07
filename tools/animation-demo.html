@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="zh-CN">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>烬域 · 动画演示</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: #17100c;
+      color: #f4dfb2;
+      font-family: system-ui;
+    }
+    header {
+      padding: 14px 20px;
+      background: #281b12;
+      border-bottom: 1px solid #85623b;
+    }
+    h1 {
+      font-size: 18px;
+      margin: 0 0 6px;
+    }
+    p {
+      margin: 0 0 10px;
+      font-size: 13px;
+      color: #dac9ad;
+    }
+    nav {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+    button {
+      border: 1px solid #89683e;
+      background: #3c2919;
+      color: #f4dfb2;
+      border-radius: 6px;
+      padding: 7px 12px;
+      cursor: pointer;
+    }
+    button:hover,
+    button.active {
+      background: #775324;
+    }
+    #status {
+      margin: 9px 0 0;
+      min-height: 20px;
+      color: #f3d68c;
+    }
+    iframe {
+      width: 100%;
+      height: calc(100vh - 155px);
+      min-height: 540px;
+      border: 0;
+      display: block;
+    }
+    small {
+      float: right;
+      color: #bfa98b;
+      font-weight: 400;
+      font-size: 12px;
+    }
+  </style>
+  <header>
+    <h1>烬域 · 动画演示 <small>本地试玩，不覆盖正式存档</small></h1>
+    <p>
+      手牌保持静态原图，场上角色播放动态。可自动播放，也可点击单项反复观看。卡面文字与数值始终由游戏实时显示。
+    </p>
+    <nav id="controls">
+      <button id="zoom-open">放大观察人物</button
+      ><button id="auto">▶ 自动演示</button
+      ><button data-demo="portraits">人物动态</button
+      ><button data-demo="attack">攻击与受击</button
+      ><button data-demo="freeze">冻结暂停</button
+      ><button data-demo="transform">变形</button
+      ><button data-demo="death">死亡 → 亡语</button
+      ><button data-demo="drain">吸血回流</button
+      ><button data-demo="draw">逐张抽牌</button>
+    </nav>
+    <p id="status">正在加载游戏…</p>
+  </header>
+  <iframe id="game" src="../dist/?debug=1" title="烬域本地战斗演示"></iframe>
+  <dialog id="zoom">
+    <button id="zoom-close">关闭</button>
+    <h2>人物动作放大观察</h2>
+    <p>
+      按游戏清单逐页检查全部上场角色；每页最多六个，使用游戏本身的动画与播放预算。
+    </p>
+    <nav>
+      <button id="page-prev">上一组</button><span id="page-label"></span
+      ><button id="page-next">下一组</button>
+    </nav>
+    <div class="zoom-grid"></div>
+    <p id="budget"></p>
+  </dialog>
+  <style>
+    dialog {
+      background: #25190f;
+      color: #f4dfb2;
+      border: 1px solid #94704b;
+      border-radius: 14px;
+      width: min(1000px, 96vw);
+      padding: 24px;
+    }
+    dialog::backdrop {
+      background: #000b;
+    }
+    .zoom-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+      justify-content: center;
+    }
+    .zoom-grid figure {
+      margin: 0;
+      flex: 1;
+      min-width: 0;
+    }
+    .zoom-grid canvas {
+      width: 100%;
+      height: 250px;
+      object-fit: contain;
+    }
+    .zoom-grid figcaption {
+      text-align: center;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+    #zoom-close {
+      float: right;
+    }
+    dialog h2 {
+      font-size: 20px;
+      margin-top: 0;
+    }
+    @media (max-width: 600px) {
+      .zoom-grid {
+        gap: 6px;
+      }
+      .zoom-grid canvas {
+        height: 180px;
+      }
+      .zoom-grid figcaption {
+        font-size: 10px;
+      }
+      dialog {
+        padding: 14px;
+      }
+    }
+  </style>
+  <script>
+    const frame = document.getElementById("game"),
+      status = document.getElementById("status");
+    let generation = 0;
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    function run(fn, args) {
+      return frame.contentWindow.eval(
+        "(" + fn.toString() + ")(" + JSON.stringify(args) + ")",
+      );
+    }
+    async function ready() {
+      for (let i = 0; i < 150; i++) {
+        if (frame.contentWindow.EmberDebug) return;
+        await sleep(100);
+      }
+      throw Error("游戏加载超时");
+    }
+    const configs = {
+      portraits: {
+        friends: ["oracle", "phoenix", "frostking", "wolf", "golem", "treant"],
+        enemies: [],
+        hand: ["oracle", "phoenix", "frostking", "wolf", "golem", "treant"],
+      },
+      attack: { friends: ["frostking"], enemies: ["treant"], hand: [] },
+      freeze: {
+        friends: ["oracle"],
+        enemies: ["phoenix"],
+        hand: ["frostbolt"],
+        extraHp: true,
+      },
+      transform: {
+        friends: ["oracle"],
+        enemies: ["treant"],
+        hand: ["polymorph"],
+      },
+      death: { friends: ["oracle"], enemies: ["wolf"], hand: ["fireball"] },
+      drain: { friends: ["oracle"], enemies: ["treant"], hand: ["lifedrain"] },
+      draw: { friends: ["oracle"], enemies: [], hand: ["wisdom"] },
+    };
+    const labels = {
+      portraits:
+        "观察场上角色与静态手牌；点击放大观察，可按清单逐组检查所有角色。",
+      attack: "白霜之王冲撞目标；受击方向对应来袭方向，伤害与死亡分段显示。",
+      freeze: "先造成伤害，再出现冻结提示；凤凰冻结后会停止待机动作。",
+      transform: "古木守护者在原位置变成绵羊，攻血同步变为 1 / 1。",
+      death: "先命中月影幼狼，再离场，随后亡语召唤幽灵狼。",
+      drain: "能量从实际受伤的随从回流到己方英雄，抵达时显示治疗。",
+      draw: "观察右侧牌库与手牌区：每张新牌按独立顺序进入手牌。",
+    };
+    async function show(name, token) {
+      await ready();
+      if (token !== generation) return;
+      document
+        .querySelectorAll("[data-demo]")
+        .forEach((b) => b.classList.toggle("active", b.dataset.demo === name));
+      status.textContent = labels[name];
+      run((c) => {
+        EmberFX.cancel(true);
+        EmberFX.configure(false, false);
+        const g = EmberDebug.game;
+        g.s.active = "p";
+        g.s.phase = "battle";
+        g.s.phase2 = false;
+        g.s.p.mana = g.s.p.maxMana = 10;
+        g.s.p.hp = 15;
+        g.s.e.hp = g.s.e.maxHp;
+        g.s.p.board = [];
+        g.s.e.board = [];
+        g.s.e.secrets = [];
+        g.s.p.secrets = [];
+        for (const id of c.friends) g.summon("p", id, { sick: false });
+        for (const id of c.enemies)
+          g.summon("e", id, {
+            sick: false,
+            ...(c.extraHp ? { hp: 8, maxHp: 8 } : {}),
+          });
+        g.s.p.hand = c.hand.map((id) => g.card(id));
+        g.events = [];
+        g.emit();
+      }, configs[name]);
+      if (name === "portraits") return;
+      await sleep(1000);
+      if (token !== generation) return;
+      run((name) => {
+        const g = EmberDebug.game;
+        const action =
+          name === "attack"
+            ? {
+                type: "attack",
+                side: "p",
+                uid: g.s.p.board[0].uid,
+                target: { side: "e", uid: g.s.e.board[0].uid },
+              }
+            : {
+                type: "play",
+                side: "p",
+                uid: g.s.p.hand[0].uid,
+                ...(name === "draw"
+                  ? {}
+                  : { target: { side: "e", uid: g.s.e.board[0].uid } }),
+              };
+        const r = Emberfall.act(() => g.dispatch(action));
+        if (!r.ok) throw Error(r.error);
+      }, name);
+    }
+    async function auto() {
+      const token = ++generation;
+      document.getElementById("auto").textContent = "■ 停止自动";
+      for (const name of [
+        "portraits",
+        "attack",
+        "freeze",
+        "transform",
+        "death",
+        "drain",
+        "draw",
+      ]) {
+        if (token !== generation) return;
+        await show(name, token);
+        await sleep(name === "portraits" ? 6000 : 4500);
+      }
+      if (token === generation) {
+        document.getElementById("auto").textContent = "▶ 再看一遍";
+        status.textContent =
+          "演示完成。点击上方单项可重复观看，或回到人物动态继续观察。";
+      }
+    }
+    document.querySelectorAll("[data-demo]").forEach(
+      (b) =>
+        (b.onclick = () => {
+          generation++;
+          document.getElementById("auto").textContent = "▶ 自动演示";
+          show(b.dataset.demo, generation).catch(
+            (e) => (status.textContent = e.message),
+          );
+        }),
+    );
+    document.getElementById("auto").onclick = () => {
+      if (document.getElementById("auto").textContent.includes("停止")) {
+        generation++;
+        document.getElementById("auto").textContent = "▶ 自动演示";
+        return;
+      }
+      auto().catch((e) => (status.textContent = e.message));
+    };
+    document.getElementById("zoom-close").onclick = () =>
+      document.getElementById("zoom").close();
+    document
+      .getElementById("zoom")
+      .addEventListener("close", () =>
+        run(() => document.getElementById("portrait-inspection")?.remove()),
+      );
+    let portraitPage = 0;
+    async function showPortraitPage() {
+      const roster = run(() =>
+        EmberData.cards
+          .filter((c) => c.type === "minion")
+          .map((c) => ({
+            id: c.id,
+            name: c.name,
+            animated: !!CharacterCatalog[c.id].motion,
+          })),
+      );
+      const pages = Math.ceil(roster.length / 6);
+      portraitPage = (portraitPage + pages) % pages;
+      const selected = roster.slice(portraitPage * 6, portraitPage * 6 + 6);
+      document.getElementById("page-label").textContent =
+        portraitPage + 1 + " / " + pages + " · 共 " + roster.length + " 个角色";
+      const grid = document.querySelector(".zoom-grid");
+      grid.replaceChildren();
+      for (const card of selected) {
+        const figure = document.createElement("figure"),
+          canvas = document.createElement("canvas"),
+          caption = document.createElement("figcaption");
+        canvas.dataset.zoom = card.id;
+        caption.textContent = card.name + (card.animated ? "" : " · 待制作");
+        figure.append(canvas, caption);
+        grid.append(figure);
+      }
+      configs.portraits = {
+        friends: selected.map((c) => c.id),
+        enemies: [],
+        hand: selected.map((c) => c.id),
+      };
+      await show("portraits", generation);
+      run(
+        (ids) => {
+          document.getElementById("portrait-inspection")?.remove();
+          const holder = document.createElement("div");
+          holder.id = "portrait-inspection";
+          holder.className = "selected";
+          holder.style.cssText =
+            "position:absolute;left:10px;top:100px;opacity:0;pointer-events:none";
+          for (const id of ids) {
+            const host = document.createElement("div");
+            host.className = "card-art";
+            host.dataset.inspection = id;
+            host.style.cssText =
+              "position:absolute;left:0;top:0;width:300px;height:400px;overflow:hidden";
+            host.innerHTML =
+              '<img src="' +
+              EmberArt.card(EmberData.byId[id]) +
+              '" data-art-key="' +
+              id +
+              '" data-portrait-mode="detail" data-portrait-instance="inspect:' +
+              id +
+              '" data-portrait-state="idle" style="width:100%;height:100%;object-fit:cover;object-position:50% 40%">';
+            holder.appendChild(host);
+          }
+          document.getElementById("app").appendChild(holder);
+          EmberPortraits.sync();
+        },
+        selected.map((c) => c.id),
+      );
+    }
+    document.getElementById("page-prev").onclick = () => {
+      portraitPage--;
+      showPortraitPage();
+    };
+    document.getElementById("page-next").onclick = () => {
+      portraitPage++;
+      showPortraitPage();
+    };
+    document.getElementById("zoom-open").onclick = async () => {
+      generation++;
+      document.getElementById("auto").textContent = "▶ 自动演示";
+      await showPortraitPage();
+      document.getElementById("zoom").showModal();
+    };
+    function zoomFrame() {
+      requestAnimationFrame(zoomFrame);
+      if (!document.getElementById("zoom").open) return;
+      const d = run(() => EmberPortraits.diagnostics);
+      document.getElementById("budget").textContent =
+        "活跃 " +
+        d.active +
+        " / " +
+        d.cap +
+        " · 已解码 " +
+        (d.decodedBytes / 1048576).toFixed(1) +
+        " MiB · 缓存 " +
+        d.cached +
+        " / " +
+        d.cacheLimit;
+      for (const c of document.querySelectorAll("[data-zoom]")) {
+        const source = frame.contentWindow.document.querySelector(
+          '#portrait-inspection [data-inspection="' +
+            c.dataset.zoom +
+            '"] canvas',
+        );
+        if (!source) continue;
+        if (c.width !== source.width || c.height !== source.height) {
+          c.width = source.width;
+          c.height = source.height;
+        }
+        const ctx = c.getContext("2d");
+        ctx.clearRect(0, 0, c.width, c.height);
+        ctx.drawImage(source, 0, 0);
+      }
+    }
+    requestAnimationFrame(zoomFrame);
+    (async () => {
+      await ready();
+      frame.contentWindow.document.getElementById("quick-btn").click();
+      await sleep(800);
+      await show("portraits", generation);
+      status.textContent = labels.portraits + " 点击“自动演示”观看完整过程。";
+      if (new URLSearchParams(location.search).has("zoom"))
+        document.getElementById("zoom-open").click();
+    })();
+  </script>
+</html>

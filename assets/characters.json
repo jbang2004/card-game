@@ -1,0 +1,1677 @@
+{
+  "version": 1,
+  "cards": {
+    "spark": {
+      "staticKey": "spark",
+      "focus": 12,
+      "motion": {
+        "source": "assets/anime/spark.webp",
+        "atlas": "sources/spark-atlas-alpha.png",
+        "nativeAlpha": true,
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1.34,
+          "lift": 0.013,
+          "sway": 0.008,
+          "turn": 0.014
+        },
+        "files": [
+          {
+            "file": "spark-background.webp",
+            "role": "background",
+            "bytes": 75830,
+            "sha256": "7efd05fcbab3e8dae1aee3ec0bc99d98e42cb2f66c88c3cae0168319e370db94"
+          },
+          {
+            "file": "spark-subject.webp",
+            "role": "subject",
+            "bytes": 49868,
+            "sha256": "a6ef65bdb60a3f8ec708f294042380389cd3f060349df00b09ed04065dbc681e"
+          }
+        ]
+      }
+    },
+    "squire": {
+      "staticKey": "squire",
+      "focus": 14,
+      "motion": {
+        "source": "assets/anime/squire.webp",
+        "atlas": "sources/squire-atlas-alpha.png",
+        "nativeAlpha": true,
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1.08,
+          "lift": 0.009,
+          "sway": 0.009,
+          "turn": 0.02
+        },
+        "files": [
+          {
+            "file": "squire-background.webp",
+            "role": "background",
+            "bytes": 68884,
+            "sha256": "db56470c19ee89394de6059e50bf5cf636e45182f99594c26e697702758c4591"
+          },
+          {
+            "file": "squire-subject.webp",
+            "role": "subject",
+            "bytes": 73368,
+            "sha256": "d1daef73570c28d77c4c505236c56ce8fd5c44854c120f6582255d56b9e4f96c"
+          }
+        ]
+      }
+    },
+    "wolf": {
+      "staticKey": "wolf",
+      "focus": 20,
+      "motion": {
+        "source": "assets/anime/wolf.webp",
+        "atlas": "sources/wolf-v2-atlas.png",
+        "mask": "sources/wolf-v2-mask.png",
+        "cuts": [
+          0,
+          632,
+          1254,
+          1881
+        ],
+        "maskCuts": [
+          0,
+          627,
+          1254,
+          1881
+        ],
+        "preserveHighlights": true,
+        "files": [
+          {
+            "file": "wolf-background.webp",
+            "role": "background",
+            "bytes": 50060,
+            "sha256": "a5cef1298a97566cfb2073ee192a5f95b7555c40e7ffcd722b5695ec8f97cfdc"
+          },
+          {
+            "file": "wolf-subject.webp",
+            "role": "subject",
+            "bytes": 19658,
+            "sha256": "b60b86c7108ebb0f32e8cff1e8cbe92945d4d1006bbe33b2e10ab6b3cec6c2cb"
+          }
+        ],
+        "edgeTrim": [
+          5,
+          0
+        ],
+        "backgroundWidth": 632,
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1.5,
+          "lift": 0.012,
+          "sway": 0.009,
+          "turn": 0.018
+        },
+        "size": [
+          384,
+          512
+        ]
+      }
+    },
+    "archer": {
+      "staticKey": "archer",
+      "focus": 21,
+      "motion": {
+        "source": "assets/anime/archer.webp",
+        "atlas": "sources/archer-atlas-alpha.png",
+        "nativeAlpha": true,
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1.22,
+          "lift": 0.007,
+          "sway": 0.009,
+          "turn": 0.014
+        },
+        "files": [
+          {
+            "file": "archer-background.webp",
+            "role": "background",
+            "bytes": 72126,
+            "sha256": "92a9305650c8f1e2f9820eb2b33e417e7787127ec79b6d6d441c7053f7d82542"
+          },
+          {
+            "file": "archer-subject.webp",
+            "role": "subject",
+            "bytes": 53262,
+            "sha256": "230720b45d1bc57c76913830756c3e636e7ceb33e11be195a031d4dc9dc53482"
+          }
+        ]
+      }
+    },
+    "guard": {
+      "staticKey": "guard",
+      "focus": 21,
+      "motion": {
+        "source": "assets/anime/guard.webp",
+        "atlas": "sources/guard-atlas-alpha.png",
+        "nativeAlpha": true,
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 0.9,
+          "lift": 0.007,
+          "sway": 0.008,
+          "turn": 0.018
+        },
+        "files": [
+          {
+            "file": "guard-background.webp",
+            "role": "background",
+            "bytes": 74530,
+            "sha256": "65c69cbe61844eeb4f498198c6fb9246cfdaa97e29d5cdfc7bbbf7a53d7355aa"
+          },
+          {
+            "file": "guard-subject.webp",
+            "role": "subject",
+            "bytes": 55352,
+            "sha256": "ca462f395035c775a1793d11b85e368cf904680229516009157099a4683a37f1"
+          }
+        ]
+      }
+    },
+    "oracle": {
+      "staticKey": "oracle",
+      "focus": 24,
+      "motion": {
+        "source": "assets/anime/oracle.webp",
+        "atlas": "sources/oracle-atlas.png",
+        "mask": "sources/oracle-mask.png",
+        "cuts": [
+          0,
+          625,
+          1254,
+          1881
+        ],
+        "maskCuts": [
+          0,
+          624,
+          1254,
+          1881
+        ],
+        "accent": "stars",
+        "files": [
+          {
+            "file": "oracle-background.webp",
+            "role": "background",
+            "bytes": 53868,
+            "sha256": "851c0d8a8c10b16b8acbb7c40a1239f9643de453022c20327f6ab6905cbe8372"
+          },
+          {
+            "file": "oracle-subject.webp",
+            "role": "subject",
+            "bytes": 52460,
+            "sha256": "3a6af004b257ea26691ff85fd747f6dce13b916d3a944335450aad2f9f1f3780"
+          },
+          {
+            "file": "oracle-accent.webp",
+            "role": "accent",
+            "bytes": 1318,
+            "sha256": "dd19ee7c434fb699a82873a7e48580943cf7eebd86d43a642bcf070cd66f2843"
+          }
+        ],
+        "rig": {
+          "template": "held-accent",
+          "speed": 1.2,
+          "lift": 0.018,
+          "sway": 0.014,
+          "turn": 0.028
+        },
+        "size": [
+          384,
+          512
+        ]
+      }
+    },
+    "wisp": {
+      "staticKey": "wisp",
+      "focus": 27,
+      "motion": {
+        "source": "assets/anime/wisp.webp",
+        "atlas": "sources/wisp-atlas-alpha.png",
+        "nativeAlpha": true,
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1.42,
+          "lift": 0.014,
+          "sway": 0.011,
+          "turn": 0.016
+        },
+        "files": [
+          {
+            "file": "wisp-background.webp",
+            "role": "background",
+            "bytes": 71802,
+            "sha256": "996322a842759d740edd251f97d77bb2be8ed64342d30d59001272f7c1d87b1e"
+          },
+          {
+            "file": "wisp-subject.webp",
+            "role": "subject",
+            "bytes": 46746,
+            "sha256": "9d4c94751f6d2f98ccfafd6139c2f3191b6a3d004d93ada3994f04778ea8b4d2"
+          }
+        ]
+      }
+    },
+    "spider": {
+      "staticKey": "spider",
+      "focus": 14,
+      "motion": {
+        "source": "assets/anime/spider.webp",
+        "atlas": "sources/spider-atlas-alpha.png",
+        "nativeAlpha": true,
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 0.94,
+          "lift": 0.008,
+          "sway": 0.01,
+          "turn": 0.02
+        },
+        "files": [
+          {
+            "file": "spider-background.webp",
+            "role": "background",
+            "bytes": 63578,
+            "sha256": "44754b0128331039ce601a299bfed90028c114d6ce15ea782ecce08606a71ddc"
+          },
+          {
+            "file": "spider-subject.webp",
+            "role": "subject",
+            "bytes": 49938,
+            "sha256": "395f4e21f377d8292ff9c41484bc53eeec0e9d98892ff4e76e65590b416c4a83"
+          }
+        ]
+      }
+    },
+    "sentinel": {
+      "staticKey": "sentinel",
+      "focus": 29,
+      "motion": {
+        "source": "assets/anime/sentinel.webp",
+        "atlas": "sources/sentinel-atlas-alpha.png",
+        "nativeAlpha": true,
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1.7,
+          "lift": 0.02,
+          "sway": 0.013,
+          "turn": 0.02
+        },
+        "files": [
+          {
+            "file": "sentinel-background.webp",
+            "role": "background",
+            "bytes": 71338,
+            "sha256": "cde00a501c69303a27f8685c3803349469aa58832d4b743a6fba8d14019f8bb7"
+          },
+          {
+            "file": "sentinel-subject.webp",
+            "role": "subject",
+            "bytes": 41620,
+            "sha256": "4017ba17f316d8ef513919a8cde589946e89cded2ed089ba425250d8031778a1"
+          }
+        ]
+      }
+    },
+    "assassin": {
+      "staticKey": "assassin",
+      "focus": 17,
+      "motion": {
+        "source": "assets/anime/assassin.webp",
+        "atlas": "sources/assassin-atlas-alpha.png",
+        "nativeAlpha": true,
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1.56,
+          "lift": 0.009,
+          "sway": 0.013,
+          "turn": 0.021
+        },
+        "files": [
+          {
+            "file": "assassin-background.webp",
+            "role": "background",
+            "bytes": 55962,
+            "sha256": "0ed2ce6ea208cec2a132236e51ef7d7458db38ff58e693e9df7242f23701325b"
+          },
+          {
+            "file": "assassin-subject.webp",
+            "role": "subject",
+            "bytes": 38450,
+            "sha256": "48cc05a2c5ae65954d41eec801284e11c982bd3c0071ed68ef94f4a21feff75f"
+          }
+        ]
+      }
+    },
+    "cleric": {
+      "staticKey": "cleric",
+      "focus": 21,
+      "motion": {
+        "source": "assets/anime/cleric.webp",
+        "atlas": "sources/cleric-atlas-alpha.png",
+        "nativeAlpha": true,
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1.18,
+          "lift": 0.012,
+          "sway": 0.01,
+          "turn": 0.02
+        },
+        "files": [
+          {
+            "file": "cleric-background.webp",
+            "role": "background",
+            "bytes": 74326,
+            "sha256": "ac7dd4b1eb9bae75bb8ade355bd19d98dde47a99e85df67206e7252fc68a35df"
+          },
+          {
+            "file": "cleric-subject.webp",
+            "role": "subject",
+            "bytes": 68856,
+            "sha256": "fb8f95e078a2f1bf0f2e25661c0eda9443ba3c1dda4d6ba7173e813e36fb48af"
+          }
+        ]
+      }
+    },
+    "berserker": {
+      "staticKey": "berserker",
+      "focus": 24,
+      "motion": {
+        "source": "assets/anime/berserker.webp",
+        "atlas": "sources/berserker-atlas-alpha.png",
+        "nativeAlpha": true,
+        "cuts": [
+          0,
+          769,
+          1536
+        ],
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1.05,
+          "lift": 0.009,
+          "sway": 0.012,
+          "turn": 0.022
+        },
+        "files": [
+          {
+            "file": "berserker-background.webp",
+            "role": "background",
+            "bytes": 73024,
+            "sha256": "e35070c0d9918b43e445e4470919cd188c89e495a3f767b1331b7444e5de0c64"
+          },
+          {
+            "file": "berserker-subject.webp",
+            "role": "subject",
+            "bytes": 66976,
+            "sha256": "3de862d476c24a542d3c18190100af0d69271687ce0ad7a1d4b1d5c903623740"
+          }
+        ]
+      }
+    },
+    "golem": {
+      "staticKey": "golem",
+      "focus": 13,
+      "motion": {
+        "source": "assets/anime/golem.webp",
+        "atlas": "sources/golem-atlas.png",
+        "mask": "sources/golem-mask.png",
+        "cuts": [
+          0,
+          627,
+          1254,
+          1881
+        ],
+        "maskCuts": [
+          0,
+          627,
+          1254,
+          1881
+        ],
+        "accent": "head",
+        "preserveHighlights": true,
+        "files": [
+          {
+            "file": "golem-background.webp",
+            "role": "background",
+            "bytes": 85526,
+            "sha256": "16e14b6c0bc5fd812022639faf6ee1cee1d3a366e275f06043f9b267a9cbb084"
+          },
+          {
+            "file": "golem-subject.webp",
+            "role": "subject",
+            "bytes": 68952,
+            "sha256": "c00f0157c226e471a04dd8e3644486921ee9e9d2855ca9e098e499c8867fc10b"
+          },
+          {
+            "file": "golem-accent.webp",
+            "role": "accent",
+            "bytes": 9474,
+            "sha256": "ebdf08a6fc7af63fa33b93dee4c4ba903f07e30c6e2d7e4da6783032c0a05c21"
+          }
+        ],
+        "rig": {
+          "template": "joint",
+          "speed": 0.65,
+          "lift": 0.008,
+          "sway": 0.008,
+          "turn": 0.075,
+          "pivot": [
+            210,
+            128
+          ],
+          "offset": [
+            26,
+            -78
+          ]
+        },
+        "size": [
+          384,
+          512
+        ]
+      }
+    },
+    "leech": {
+      "staticKey": "leech",
+      "focus": 25,
+      "motion": {
+        "source": "assets/anime/leech.webp",
+        "atlas": "sources/leech-atlas.png",
+        "mask": "sources/leech-mask.png",
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "maskCuts": [
+          0,
+          768,
+          1536
+        ],
+        "preserveHighlights": true,
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1.34,
+          "lift": 0.014,
+          "sway": 0.011,
+          "turn": 0.017
+        },
+        "files": [
+          {
+            "file": "leech-background.webp",
+            "role": "background",
+            "bytes": 37840,
+            "sha256": "215cb3f6914efaf419774076544fe5fa6a27d0cd0f6a27278d8457962050dc19"
+          },
+          {
+            "file": "leech-subject.webp",
+            "role": "subject",
+            "bytes": 49846,
+            "sha256": "b8dea61fa69a8450e0f9e4523178483b105c5765ff220b1c7a8c821d771ffbf5"
+          }
+        ]
+      }
+    },
+    "treant": {
+      "staticKey": "treant",
+      "focus": 26,
+      "motion": {
+        "source": "assets/anime/treant.webp",
+        "atlas": "sources/treant-atlas.png",
+        "mask": "sources/treant-mask.png",
+        "cuts": [
+          0,
+          627,
+          1254,
+          1881
+        ],
+        "maskCuts": [
+          0,
+          627,
+          1254,
+          1881
+        ],
+        "accent": "canopy",
+        "preserveHighlights": true,
+        "files": [
+          {
+            "file": "treant-background.webp",
+            "role": "background",
+            "bytes": 81864,
+            "sha256": "82e6c5ad0f99ba7506c483ba0005b76ae693ef3922ea2618cee7163a43b96c12"
+          },
+          {
+            "file": "treant-subject.webp",
+            "role": "subject",
+            "bytes": 87942,
+            "sha256": "257943f2525588495ffb6b1e9bf9a451caea6e4c937d8bf08c0e0007f256e556"
+          },
+          {
+            "file": "treant-accent.webp",
+            "role": "accent",
+            "bytes": 40772,
+            "sha256": "0041a43ee2d3a10cdb0031672ebead491e5abb6d966091af128f923f8d7ef601"
+          }
+        ],
+        "edgeTrim": [
+          8,
+          5
+        ],
+        "backgroundWidth": 616,
+        "rig": {
+          "template": "canopy",
+          "speed": 0.65,
+          "lift": 0,
+          "sway": 0.009,
+          "turn": 0.065,
+          "pivot": [
+            192,
+            150
+          ],
+          "offset": [
+            0,
+            0
+          ],
+          "crop": [
+            0,
+            0,
+            384,
+            150
+          ]
+        },
+        "size": [
+          384,
+          512
+        ]
+      }
+    },
+    "phoenix": {
+      "staticKey": "phoenix",
+      "focus": 26,
+      "motion": {
+        "source": "assets/anime/phoenix.webp",
+        "atlas": "sources/phoenix-atlas.png",
+        "mask": "sources/phoenix-mask.png",
+        "cuts": [
+          0,
+          627,
+          1254,
+          1881
+        ],
+        "maskCuts": [
+          0,
+          627,
+          1254,
+          1881
+        ],
+        "accent": "wings",
+        "files": [
+          {
+            "file": "phoenix-background.webp",
+            "role": "background",
+            "bytes": 41342,
+            "sha256": "ae4e999e7bf07dd612979e19ec926228ad520631fe63a2287a136e3233b499bf"
+          },
+          {
+            "file": "phoenix-subject.webp",
+            "role": "subject",
+            "bytes": 38254,
+            "sha256": "bb4e71bbc4a0f33bcf5e80f09b58bc2d6f5574ed9b0ac1bfe9b97179c5a7aa00"
+          },
+          {
+            "file": "phoenix-accent.webp",
+            "role": "accent",
+            "bytes": 27222,
+            "sha256": "ffd8755510816e8928cf4148d10e7973ef991aabde7438afd2f0e6aee4e793e3"
+          }
+        ],
+        "rig": {
+          "template": "wings",
+          "speed": 1.4,
+          "lift": 0.009,
+          "turn": 0.095,
+          "wingSpeed": 1.65,
+          "wings": [
+            [
+              0,
+              68,
+              40,
+              1,
+              166,
+              184
+            ],
+            [
+              192,
+              -30,
+              30,
+              -1,
+              264,
+              193
+            ]
+          ]
+        },
+        "size": [
+          384,
+          512
+        ]
+      }
+    },
+    "rider": {
+      "staticKey": "rider",
+      "focus": 19,
+      "motion": {
+        "source": "assets/anime/rider.webp",
+        "atlas": "sources/rider-atlas.png",
+        "mask": "sources/rider-mask.png",
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "maskCuts": [
+          0,
+          768,
+          1536
+        ],
+        "preserveHighlights": true,
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1.12,
+          "lift": 0.01,
+          "sway": 0.007,
+          "turn": 0.01
+        },
+        "files": [
+          {
+            "file": "rider-background.webp",
+            "role": "background",
+            "bytes": 83286,
+            "sha256": "67e5990ca65a83c883f0257e81f3ec0e5a1bb76493d1fdedc0c8bb347064fbb8"
+          },
+          {
+            "file": "rider-subject.webp",
+            "role": "subject",
+            "bytes": 53614,
+            "sha256": "44903e76f0affa4f7e7070f183ac17383794a55639c1532a0c683f1e575ede0d"
+          }
+        ]
+      }
+    },
+    "necromancer": {
+      "staticKey": "necromancer",
+      "focus": 17,
+      "motion": {
+        "source": "assets/anime/necromancer.webp",
+        "atlas": "sources/necromancer-atlas.png",
+        "mask": "sources/necromancer-mask.png",
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "maskCuts": [
+          0,
+          768,
+          1536
+        ],
+        "preserveHighlights": true,
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1.22,
+          "lift": 0.018,
+          "sway": 0.012,
+          "turn": 0.02
+        },
+        "files": [
+          {
+            "file": "necromancer-background.webp",
+            "role": "background",
+            "bytes": 46260,
+            "sha256": "b4cfc09561505357aa6ebefd285d9485433ab5457e772335695b2ee371d4a30b"
+          },
+          {
+            "file": "necromancer-subject.webp",
+            "role": "subject",
+            "bytes": 64852,
+            "sha256": "7910adb68ae026ebccc9cf077b32786c2061c550c7f6080197e07dfce3c7b953"
+          }
+        ]
+      }
+    },
+    "paladin": {
+      "staticKey": "paladin",
+      "focus": 12,
+      "motion": {
+        "source": "assets/anime/paladin.webp",
+        "atlas": "sources/paladin-atlas.png",
+        "mask": "sources/paladin-mask.png",
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "maskCuts": [
+          0,
+          768,
+          1536
+        ],
+        "preserveHighlights": true,
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1.05,
+          "lift": 0.009,
+          "sway": 0.009,
+          "turn": 0.022
+        },
+        "files": [
+          {
+            "file": "paladin-background.webp",
+            "role": "background",
+            "bytes": 83198,
+            "sha256": "6f56e3002aee9fd9bc6152d369f437790ad2995a43d20a48ce94e6e2a1f1a3dc"
+          },
+          {
+            "file": "paladin-subject.webp",
+            "role": "subject",
+            "bytes": 67792,
+            "sha256": "b7881f027975aad1d7d11542670a16151975ce0239b4192bcb350b2623e42a42"
+          }
+        ]
+      }
+    },
+    "titan": {
+      "staticKey": "titan",
+      "focus": 16,
+      "motion": {
+        "source": "assets/anime/titan.webp",
+        "atlas": "sources/titan-atlas.png",
+        "mask": "sources/titan-mask.png",
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "maskCuts": [
+          0,
+          768,
+          1536
+        ],
+        "preserveHighlights": true,
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 0.75,
+          "lift": 0.006,
+          "sway": 0.008,
+          "turn": 0.018
+        },
+        "files": [
+          {
+            "file": "titan-background.webp",
+            "role": "background",
+            "bytes": 76700,
+            "sha256": "71aa59b00d24f01dec6f8536f9d2504cc641115a054166566f517baffa747e07"
+          },
+          {
+            "file": "titan-subject.webp",
+            "role": "subject",
+            "bytes": 74710,
+            "sha256": "2522181fec27c24b1ea31be9d6ffa46ab5d48a6320d3ee531aefa9b1d0415d06"
+          }
+        ]
+      }
+    },
+    "huntress": {
+      "staticKey": "huntress",
+      "focus": 22,
+      "motion": {
+        "source": "assets/anime/huntress.webp",
+        "atlas": "sources/huntress-atlas.png",
+        "mask": "sources/huntress-mask.png",
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "maskCuts": [
+          0,
+          768,
+          1536
+        ],
+        "preserveHighlights": true,
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1.56,
+          "lift": 0.009,
+          "sway": 0.012,
+          "turn": 0.018
+        },
+        "files": [
+          {
+            "file": "huntress-background.webp",
+            "role": "background",
+            "bytes": 89866,
+            "sha256": "0ad8c61b31d92c44aaff8dea6ba658e3e4c22c790a9828381f444e39b35509e1"
+          },
+          {
+            "file": "huntress-subject.webp",
+            "role": "subject",
+            "bytes": 38474,
+            "sha256": "f821fc96900eeaf23f924232a9b6c278122a16515ae7745bf9480f4d0c88daa3"
+          }
+        ]
+      }
+    },
+    "dragon": {
+      "staticKey": "dragon",
+      "focus": 23,
+      "motion": {
+        "source": "assets/anime/dragon.webp",
+        "atlas": "sources/dragon-atlas.png",
+        "mask": "sources/dragon-mask.png",
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "maskCuts": [
+          0,
+          768,
+          1536
+        ],
+        "preserveHighlights": true,
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1.18,
+          "lift": 0.014,
+          "sway": 0.01,
+          "turn": 0.015
+        },
+        "files": [
+          {
+            "file": "dragon-background.webp",
+            "role": "background",
+            "bytes": 67354,
+            "sha256": "4a306a6d4d99e4eb86e1933d59abaca12e3c2e27538b6eb927d100b03785edf5"
+          },
+          {
+            "file": "dragon-subject.webp",
+            "role": "subject",
+            "bytes": 50276,
+            "sha256": "33bc5ed1ee385ad3ee3e91edfce528e9ebb2db84098eaa2a1e81bf217ceae434"
+          }
+        ]
+      }
+    },
+    "reaper": {
+      "staticKey": "reaper",
+      "focus": 23,
+      "motion": {
+        "source": "assets/anime/reaper.webp",
+        "atlas": "sources/reaper-atlas.png",
+        "mask": "sources/reaper-mask.png",
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "maskCuts": [
+          0,
+          768,
+          1536
+        ],
+        "preserveHighlights": true,
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1.38,
+          "lift": 0.015,
+          "sway": 0.012,
+          "turn": 0.018
+        },
+        "files": [
+          {
+            "file": "reaper-background.webp",
+            "role": "background",
+            "bytes": 56000,
+            "sha256": "567a23780b48920e43162c2c6cbdfba4eede88f3399883ca99a91684fdf90a1b"
+          },
+          {
+            "file": "reaper-subject.webp",
+            "role": "subject",
+            "bytes": 64086,
+            "sha256": "ec4f89b6627a7c2f02698909702611e4f70ddedcc0c688b9ff483f0ec3d8c283"
+          }
+        ]
+      }
+    },
+    "colossus": {
+      "staticKey": "colossus",
+      "focus": 16,
+      "motion": {
+        "source": "assets/anime/colossus.webp",
+        "atlas": "sources/colossus-atlas.png",
+        "mask": "sources/colossus-mask.png",
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "maskCuts": [
+          0,
+          768,
+          1536
+        ],
+        "preserveHighlights": true,
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 0.58,
+          "lift": 0.004,
+          "sway": 0.007,
+          "turn": 0.015
+        },
+        "files": [
+          {
+            "file": "colossus-background.webp",
+            "role": "background",
+            "bytes": 70032,
+            "sha256": "087cf18a4a26793cfb4b6c7ba4a94beeedfddd299c225e6de27ae42a2aae34b9"
+          },
+          {
+            "file": "colossus-subject.webp",
+            "role": "subject",
+            "bytes": 60276,
+            "sha256": "bad14a359b118de142e1f31db23d9a3e9da179b5c42985d1e0385981d4728c34"
+          }
+        ]
+      }
+    },
+    "solaris": {
+      "staticKey": "solaris",
+      "focus": 28,
+      "motion": {
+        "source": "assets/anime/solaris.webp",
+        "atlas": "sources/solaris-atlas.png",
+        "mask": "sources/solaris-mask.png",
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "maskCuts": [
+          0,
+          768,
+          1536
+        ],
+        "preserveHighlights": true,
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 0.98,
+          "lift": 0.011,
+          "sway": 0.009,
+          "turn": 0.024
+        },
+        "files": [
+          {
+            "file": "solaris-background.webp",
+            "role": "background",
+            "bytes": 78702,
+            "sha256": "897143cb2e8887faaffd0781eaf33d86b34c43f75e41c203ef77f3c84797d2b4"
+          },
+          {
+            "file": "solaris-subject.webp",
+            "role": "subject",
+            "bytes": 52058,
+            "sha256": "9fba12902b26924fab489f11e8b5ee3de2829899678035844e4e80f8896f9631"
+          }
+        ]
+      }
+    },
+    "nyx": {
+      "staticKey": "nyx",
+      "focus": 19,
+      "motion": {
+        "source": "assets/anime/nyx.webp",
+        "atlas": "sources/nyx-atlas.png",
+        "mask": "sources/nyx-mask.png",
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "maskCuts": [
+          0,
+          768,
+          1536
+        ],
+        "preserveHighlights": true,
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1.14,
+          "lift": 0.019,
+          "sway": 0.011,
+          "turn": 0.02
+        },
+        "files": [
+          {
+            "file": "nyx-background.webp",
+            "role": "background",
+            "bytes": 63434,
+            "sha256": "4ece8f2f6fe8000caa016464c93f1cd3af66eb491352ff709480093f0275dcf5"
+          },
+          {
+            "file": "nyx-subject.webp",
+            "role": "subject",
+            "bytes": 54912,
+            "sha256": "a3df6f4dc46a82649a77482e0c213cd0a79baa9a25c6ac7cfe4b98c5e66bd3a7"
+          }
+        ]
+      }
+    },
+    "ashdragon": {
+      "staticKey": "ashdragon",
+      "focus": 20,
+      "motion": {
+        "source": "assets/anime/ashdragon.webp",
+        "atlas": "sources/ashdragon-atlas.png",
+        "mask": "sources/ashdragon-mask.png",
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "maskCuts": [
+          0,
+          768,
+          1536
+        ],
+        "preserveHighlights": true,
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 0.72,
+          "lift": 0.008,
+          "sway": 0.01,
+          "turn": 0.022
+        },
+        "files": [
+          {
+            "file": "ashdragon-background.webp",
+            "role": "background",
+            "bytes": 68180,
+            "sha256": "4be77d64b702affbd3502ceed4470b01d8f3413dcb71184cc8f8be999b1eac41"
+          },
+          {
+            "file": "ashdragon-subject.webp",
+            "role": "subject",
+            "bytes": 51008,
+            "sha256": "5483eb3f0eb087d1ae3e878147b7731d9b7e9164bd04831dcb79972f21fe4a3e"
+          }
+        ]
+      }
+    },
+    "frostking": {
+      "staticKey": "frostking",
+      "focus": 24,
+      "motion": {
+        "source": "assets/anime/frostking.webp",
+        "atlas": "sources/frostking-atlas.png",
+        "mask": "sources/frostking-mask.png",
+        "cuts": [
+          0,
+          637,
+          1254,
+          1881
+        ],
+        "maskCuts": [
+          0,
+          637,
+          1248,
+          1881
+        ],
+        "accent": "ice",
+        "files": [
+          {
+            "file": "frostking-background.webp",
+            "role": "background",
+            "bytes": 71372,
+            "sha256": "0f378ccd6bd999b4b93be71711f5ba6141158f8477a61b290c917c62bc3d2804"
+          },
+          {
+            "file": "frostking-subject.webp",
+            "role": "subject",
+            "bytes": 56626,
+            "sha256": "f77e43b99832ac77f10417c394c426591e6c6a05fb2e7f4141e91f1af340cef9"
+          },
+          {
+            "file": "frostking-accent.webp",
+            "role": "accent",
+            "bytes": 24924,
+            "sha256": "4b75ee66cff7fa114393d37c2866854d9dc1e67b4fd39c6ba3d456b0e3381c4c"
+          }
+        ],
+        "rig": {
+          "template": "anchored-accent",
+          "speed": 1.2,
+          "lift": 0.016,
+          "sway": 0.012,
+          "turn": 0.026
+        },
+        "size": [
+          384,
+          512
+        ]
+      }
+    },
+    "bolt": {
+      "staticKey": "bolt",
+      "focus": 15,
+      "motion": null
+    },
+    "frostbolt": {
+      "staticKey": "frostbolt",
+      "focus": 17,
+      "motion": null
+    },
+    "fireball": {
+      "staticKey": "fireball",
+      "focus": 20,
+      "motion": null
+    },
+    "nova": {
+      "staticKey": "nova",
+      "focus": 51,
+      "motion": null
+    },
+    "storm": {
+      "staticKey": "storm",
+      "focus": 52,
+      "motion": null
+    },
+    "wisdom": {
+      "staticKey": "wisdom",
+      "focus": 49,
+      "motion": null
+    },
+    "blessing": {
+      "staticKey": "blessing",
+      "focus": 32,
+      "motion": null
+    },
+    "renew": {
+      "staticKey": "renew",
+      "focus": 27,
+      "motion": null
+    },
+    "execute": {
+      "staticKey": "execute",
+      "focus": 30,
+      "motion": null
+    },
+    "silence": {
+      "staticKey": "silence",
+      "focus": 46,
+      "motion": null
+    },
+    "rally": {
+      "staticKey": "rally",
+      "focus": 24,
+      "motion": null
+    },
+    "wolves": {
+      "staticKey": "wolves",
+      "focus": 42,
+      "motion": null
+    },
+    "shield": {
+      "staticKey": "shield",
+      "focus": 26,
+      "motion": null
+    },
+    "lifedrain": {
+      "staticKey": "lifedrain",
+      "focus": 37,
+      "motion": null
+    },
+    "dagger": {
+      "staticKey": "dagger",
+      "focus": 42,
+      "motion": null
+    },
+    "sunblade": {
+      "staticKey": "sunblade",
+      "focus": 41,
+      "motion": null
+    },
+    "polymorph": {
+      "staticKey": "polymorph",
+      "focus": 52,
+      "motion": null
+    },
+    "discovery": {
+      "staticKey": "discovery",
+      "focus": 24,
+      "motion": null
+    },
+    "ambush": {
+      "staticKey": "ambush",
+      "focus": 31,
+      "motion": null
+    },
+    "battlecry": {
+      "staticKey": "battlecry",
+      "focus": 44,
+      "motion": null
+    },
+    "coin": {
+      "staticKey": "coin",
+      "focus": 56,
+      "motion": null
+    },
+    "pup": {
+      "staticKey": "pup",
+      "focus": 40,
+      "motion": {
+        "source": "assets/anime/pup.webp",
+        "atlas": "sources/pup-atlas-alpha.png",
+        "cuts": [
+          0,
+          729,
+          1536
+        ],
+        "nativeAlpha": true,
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1.3,
+          "lift": 0.012,
+          "sway": 0.011,
+          "turn": 0.014
+        },
+        "files": [
+          {
+            "file": "pup-background.webp",
+            "role": "background",
+            "bytes": 74732,
+            "sha256": "dfd8a1b3ba66d3770cb2d94636919042ec89b16398d69de0518d3f0391a10acc"
+          },
+          {
+            "file": "pup-subject.webp",
+            "role": "subject",
+            "bytes": 67760,
+            "sha256": "399a6e94932575508bd65d8f7d130d234e8c6700273e99a927cac1b3e14f2fe0"
+          }
+        ]
+      }
+    },
+    "spiritwolf": {
+      "staticKey": "spiritwolf",
+      "focus": 33,
+      "motion": {
+        "source": "assets/anime/spiritwolf.webp",
+        "atlas": "sources/spiritwolf-atlas-alpha.png",
+        "cuts": [
+          0,
+          766,
+          1536
+        ],
+        "nativeAlpha": true,
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1.5,
+          "lift": 0.014,
+          "sway": 0.012,
+          "turn": 0.016
+        },
+        "files": [
+          {
+            "file": "spiritwolf-background.webp",
+            "role": "background",
+            "bytes": 88230,
+            "sha256": "f9e60f5f848f3efe255a70b4a3843450afea343947bba5a5e831e7432e7c0326"
+          },
+          {
+            "file": "spiritwolf-subject.webp",
+            "role": "subject",
+            "bytes": 58888,
+            "sha256": "0be148b6fafe341b6c88ac7e6ed4815cfcdbe200902c90800ec5a1b845e3776b"
+          }
+        ]
+      }
+    },
+    "skeleton": {
+      "staticKey": "skeleton",
+      "focus": 29,
+      "motion": {
+        "source": "assets/anime/skeleton.webp",
+        "atlas": "sources/skeleton-atlas-alpha.png",
+        "cuts": [
+          0,
+          770,
+          1536
+        ],
+        "nativeAlpha": true,
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1.6,
+          "lift": 0.008,
+          "sway": 0.012,
+          "turn": 0.018
+        },
+        "files": [
+          {
+            "file": "skeleton-background.webp",
+            "role": "background",
+            "bytes": 49212,
+            "sha256": "d5952777f438e782d661cc0c717dde2f3d004f57ff6b3c2d4a718423a6b25f42"
+          },
+          {
+            "file": "skeleton-subject.webp",
+            "role": "subject",
+            "bytes": 51150,
+            "sha256": "7da4e99b638fbf0524de115b94faf9075e705ba720027301bf9d39efc3d8978b"
+          }
+        ]
+      }
+    },
+    "stone": {
+      "staticKey": "stone",
+      "focus": 19,
+      "motion": {
+        "source": "assets/anime/stone.webp",
+        "atlas": "sources/stone-atlas-alpha.png",
+        "cuts": [
+          0,
+          769,
+          1536
+        ],
+        "nativeAlpha": true,
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 0.72,
+          "lift": 0.006,
+          "sway": 0.01,
+          "turn": 0.018
+        },
+        "files": [
+          {
+            "file": "stone-background.webp",
+            "role": "background",
+            "bytes": 66090,
+            "sha256": "2749718d8f097a6ef4415ccd391679ecbd2c04697b5c2d3589f474f1339cbf17"
+          },
+          {
+            "file": "stone-subject.webp",
+            "role": "subject",
+            "bytes": 70106,
+            "sha256": "5a65cd486d621292e2990d6d94fa4b701fb864ebf93a8cb21a446321ea41e0ff"
+          }
+        ]
+      }
+    },
+    "sheep": {
+      "staticKey": "sheep",
+      "focus": 45,
+      "motion": {
+        "source": "assets/anime/sheep.webp",
+        "atlas": "sources/sheep-atlas-alpha.png",
+        "cuts": [
+          0,
+          769,
+          1536
+        ],
+        "nativeAlpha": true,
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1,
+          "lift": 0.009,
+          "sway": 0.011,
+          "turn": 0.018
+        },
+        "files": [
+          {
+            "file": "sheep-background.webp",
+            "role": "background",
+            "bytes": 78178,
+            "sha256": "031f31626746aa25d41e8e7d9591353ab46f0e0123bac564e4f9cd4fe2def5be"
+          },
+          {
+            "file": "sheep-subject.webp",
+            "role": "subject",
+            "bytes": 29314,
+            "sha256": "5491a3885634521fdb7961d2b5857dee588a0fb59264c95fe63a60f230d56ff1"
+          }
+        ]
+      }
+    },
+    "recruit": {
+      "staticKey": "recruit",
+      "focus": 25,
+      "motion": {
+        "source": "assets/anime/recruit.webp",
+        "atlas": "sources/recruit-atlas-alpha.png",
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "nativeAlpha": true,
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1.15,
+          "lift": 0.009,
+          "sway": 0.01,
+          "turn": 0.022
+        },
+        "files": [
+          {
+            "file": "recruit-background.webp",
+            "role": "background",
+            "bytes": 70248,
+            "sha256": "2a4896b74aee1862e7ab934891beb69e38232d34f72f42336d9d82d73e25bd33"
+          },
+          {
+            "file": "recruit-subject.webp",
+            "role": "subject",
+            "bytes": 65108,
+            "sha256": "f85074b9654707c69035ef92c58fc7077dc6fe20a105ff8c2a86206a51e8daa7"
+          }
+        ]
+      }
+    },
+    "thorn": {
+      "staticKey": "thorn",
+      "focus": 37,
+      "motion": {
+        "source": "assets/anime/thorn.webp",
+        "atlas": "sources/thorn-atlas-alpha.png",
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "nativeAlpha": true,
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 0.86,
+          "lift": 0.008,
+          "sway": 0.012,
+          "turn": 0.024
+        },
+        "files": [
+          {
+            "file": "thorn-background.webp",
+            "role": "background",
+            "bytes": 66542,
+            "sha256": "acc7b303ae0c7b65643b8b1bd9b9538878f306ca0ad454f503974656b4592cf6"
+          },
+          {
+            "file": "thorn-subject.webp",
+            "role": "subject",
+            "bytes": 64902,
+            "sha256": "4edfac2cfc2aa981a303d46ca366f3dfad9e371729f92bd7b1a429ca9e4e92e3"
+          }
+        ]
+      }
+    }
+  }
+}

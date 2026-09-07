@@ -1,0 +1,4 @@
+interface:
+  display_name: "角色制作"
+  short_description: "为烬域制作角色素材、统一清单与动态绑定，并完成游戏接入和验收"
+  default_prompt: "使用 $character-creation 按项目规范制作指定角色，更新完整角色清单并完成游戏接入与验证。"
