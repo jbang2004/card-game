@@ -9,7 +9,7 @@
 | `assets/anime/*.webp` / `manifest.json` | 56 张运行卡图、来源和文件哈希 |
 | `assets/anime/sources/*.png` | 八张已确认原始图集，原始输入留档 |
 | `assets/anime/overrides.json` / `overrides/`（有替换时创建） | 独立卡图来源，整体裁图时仍优先使用 |
-| `assets/anime/non-card-relics.json` | 六张已有遗物的原始内嵌图 |
+| `assets/anime/non-card-relics.json` | 六张当前遗物的运行内嵌图（来自 assets/relics） |
 | `src/anime-assets.js` / `src/relic-assets.js` | 由同一个 packer 生成的运行缓存 |
 | `src/art.js` | 严格 card / character / relic 路由，无隐式回退 |
 | `src/atelier-art.js` | 卡图焦点与裁切参数 |
@@ -123,3 +123,7 @@
 新增 `counterspell`、`icebarrier`、`muster`、`absolution`、`tracking`、`sabotage` 六张独立法术插画，总计 62 张卡图（54 可组牌 + 8 衍生）。源图及提示词保存在 `assets/anime/expansion-sources/`。每张图片使用内置 image_gen 独立生成并检查，tracking 对右下角伪文字做过一次局部修正。源文件和运行文件哈希均记录在原统一 manifest 中；原有 56 个图像文件没有替换。
 
 六张新法术在 `assets/characters.json` 中注册为静态，不需要随从分层动作；原 35 个动态随从保持完整。
+
+## v0.12.1 遗物图标
+
+`assets/relics/sources/` 保存六张独立生成原画及 provenance.json；`assets/relics/*.webp` 为 256px 运行图。打包输入仍使用 `assets/anime/non-card-relics.json`，由现有 packer 生成 `src/relic-assets.js`。原 62 张卡图未改动。

@@ -230,12 +230,15 @@ test("campaign refit rejects a third copy and carries a legal replacement forwar
     return { twice, remove, add, deck: [...deck] };
   });
   await page.locator("#result-next").click();
+  await page.locator(".campaign-refit summary").click();
   await page.locator("#refit-remove").selectOption(choices.remove);
   await page.locator("#refit-add").selectOption(choices.twice);
   await page.locator(".relic-choice").first().click();
+  await page.locator("#reward-confirm").click();
   await expect(page.locator("#refit-status")).toContainText("超过同名牌上限");
   await page.locator("#refit-add").selectOption(choices.add);
   await page.locator(".relic-choice").first().click();
+  await page.locator("#reward-confirm").click();
   const expected = [...choices.deck];
   expected[expected.indexOf(choices.remove)] = choices.add;
   expect(await page.evaluate(() => Emberfall.game.s.customDeck)).toEqual(

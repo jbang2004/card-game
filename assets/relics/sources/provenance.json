@@ -1,0 +1,52 @@
+{
+  "assets": [
+    {
+      "id": "heart",
+      "path": "/Users/yijun/.codex/generated_images/emberfall-relics/heart.png",
+      "original": "/Users/yijun/.codex/generated_images/01a07d72-5909-72f3-93bb-c237fbca884a/exec-bcb37781-f2ec-492c-9dc7-a2967e38d1ec.png",
+      "prompt": "Use case: stylized-concept. Asset type: premium fantasy game relic icon. Create one original square 1:1 full bleed artwork. Subject: a glowing ruby ember heart gemstone, unmistakable sculpted heart shape with two lobes and pointed base, fractured ruby facets filled with hot ember light. Large single central object filling 78 percent of the square, completely contained, very readable silhouette even as a thumbnail. Premium painterly fantasy item illustration with realistic dimensional materials, rich brushwork, warm upper-left light, bronze gold and jewel colors. Subtle deep walnut brown background with restrained atmospheric depth. No text, no letters, no frame, no border, no UI, no watermark. No additional objects.",
+      "mode": "built-in image_gen",
+      "inspection": "Distinct dimensional object; no text/frame/UI. Source is tightly framed. For circle mask, render source at 80% size on deep walnut background to preserve tips."
+    },
+    {
+      "id": "lens",
+      "path": "/Users/yijun/.codex/generated_images/emberfall-relics/lens.png",
+      "original": "/Users/yijun/.codex/generated_images/01a07d72-5909-72f3-93bb-c237fbca884a/exec-7c52dc31-734c-4c81-945c-4fedbe78a3cb.png",
+      "prompt": "Use case: stylized-concept. Asset type: premium fantasy game relic icon. Create one original square 1:1 full bleed artwork. Subject: an ornate brass magnifying lens with luminous blue glass, clear circular glass lens and long diagonal carved brass handle. Large single central object filling 78 percent of the square, completely contained, very readable silhouette even as a thumbnail. Premium painterly fantasy item illustration with realistic dimensional materials, rich brushwork, warm upper-left light, bronze gold and jewel colors. Subtle deep walnut brown background with restrained atmospheric depth. No text, no letters, no frame, no border, no UI, no watermark. No additional objects.",
+      "mode": "built-in image_gen",
+      "inspection": "Distinct dimensional object; no text/frame/UI. Source is tightly framed. For circle mask, render source at 80% size on deep walnut background to preserve tips."
+    },
+    {
+      "id": "crown",
+      "path": "/Users/yijun/.codex/generated_images/emberfall-relics/crown.png",
+      "original": "/Users/yijun/.codex/generated_images/01a07d72-5909-72f3-93bb-c237fbca884a/exec-871d68ab-eb16-4724-bb90-4fd79d01882e.png",
+      "prompt": "Use case: stylized-concept. Asset type: premium fantasy game relic icon. Create one original square 1:1 full bleed artwork. Subject: a heavy gold royal crown with tall sculptural points and a large sapphire, solid dimensional gold circlet in three quarter view. Large single central object filling 78 percent of the square, completely contained, very readable silhouette even as a thumbnail. Premium painterly fantasy item illustration with realistic dimensional materials, rich brushwork, warm upper-left light, bronze gold and jewel colors. Subtle deep walnut brown background with restrained atmospheric depth. No text, no letters, no frame, no border, no UI, no watermark. No additional objects.",
+      "mode": "built-in image_gen",
+      "inspection": "Distinct dimensional object; no text/frame/UI. Source is tightly framed. For circle mask, render source at 80% size on deep walnut background to preserve tips."
+    },
+    {
+      "id": "feather",
+      "path": "/Users/yijun/.codex/generated_images/emberfall-relics/feather.png",
+      "original": "/Users/yijun/.codex/generated_images/01a07d72-5909-72f3-93bb-c237fbca884a/exec-7323528a-5fe3-474a-92e1-a5ac8f8a3e42.png",
+      "prompt": "Use case: stylized-concept. Asset type: premium fantasy game relic icon. Create one original square 1:1 full bleed artwork. Subject: a single curved silver raven feather with a cyan glow along its barbs, graceful long diagonal silhouette and visible silver quill. Large single central object filling 78 percent of the square, completely contained, very readable silhouette even as a thumbnail. Premium painterly fantasy item illustration with realistic dimensional materials, rich brushwork, warm upper-left light, bronze gold and jewel colors. Subtle deep walnut brown background with restrained atmospheric depth. No text, no letters, no frame, no border, no UI, no watermark. No additional objects.",
+      "mode": "built-in image_gen",
+      "inspection": "Distinct dimensional object; no text/frame/UI. Source is tightly framed. For circle mask, render source at 80% size on deep walnut background to preserve tips."
+    },
+    {
+      "id": "ember",
+      "path": "/Users/yijun/.codex/generated_images/emberfall-relics/ember.png",
+      "original": "/Users/yijun/.codex/generated_images/01a07d72-5909-72f3-93bb-c237fbca884a/exec-8f4019f4-a028-4b56-957c-095f7948456d.png",
+      "prompt": "Use case: stylized-concept. Asset type: premium fantasy game relic icon. Create one original square 1:1 full bleed artwork. Subject: an amber crystal shard containing living fire, tall angular asymmetric crystal with bright orange fire suspended inside. Large single central object filling 78 percent of the square, completely contained, very readable silhouette even as a thumbnail. Premium painterly fantasy item illustration with realistic dimensional materials, rich brushwork, warm upper-left light, bronze gold and jewel colors. Subtle deep walnut brown background with restrained atmospheric depth. No text, no letters, no frame, no border, no UI, no watermark. No additional objects.",
+      "mode": "built-in image_gen",
+      "inspection": "Distinct dimensional object; no text/frame/UI. Source is tightly framed. For circle mask, render source at 80% size on deep walnut background to preserve tips."
+    },
+    {
+      "id": "banner",
+      "path": "/Users/yijun/.codex/generated_images/emberfall-relics/banner.png",
+      "original": "/Users/yijun/.codex/generated_images/01a07d72-5909-72f3-93bb-c237fbca884a/exec-e035eeda-276b-4f72-9d39-26feb7e17f3c.png",
+      "prompt": "Use case: stylized-concept. Asset type: premium fantasy game relic icon. Create one original square 1:1 full bleed artwork. Subject: a crimson battle standard with a gold sun insignia without letters, rich crimson hanging cloth suspended from bronze crossbar on a short visible pole, wind-curved cloth. Large single central object filling 78 percent of the square, completely contained, very readable silhouette even as a thumbnail. Premium painterly fantasy item illustration with realistic dimensional materials, rich brushwork, warm upper-left light, bronze gold and jewel colors. Subtle deep walnut brown background with restrained atmospheric depth. No text, no letters, no frame, no border, no UI, no watermark. No additional objects.",
+      "mode": "built-in image_gen",
+      "inspection": "Distinct dimensional object; no text/frame/UI. Source is tightly framed. For circle mask, render source at 80% size on deep walnut background to preserve tips."
+    }
+  ]
+}
