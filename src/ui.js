@@ -22,6 +22,9 @@
   );
   const defaults = {
     sound: true,
+    volume: 0.75,
+    sfxVolume: 0.85,
+    ambienceVolume: 0.35,
     reduced: matchMedia("(prefers-reduced-motion: reduce)").matches,
     low: false,
     fast: false,
@@ -100,6 +103,7 @@
     document.body.classList.toggle("reduced-motion", !!settings.reduced);
     $("sound-btn").innerHTML = A.icon(settings.sound ? "sound" : "mute");
     $("sound-btn").setAttribute("aria-pressed", String(settings.sound));
+    EmberAudio.configure(settings);
     EmberAudio.toggle(settings.sound);
     EmberFX.configure(settings.reduced, settings.low);
   }
@@ -662,7 +666,10 @@
     hidePreview();
     clearSelection();
     const r = fn();
-    if (!r?.ok) toast(r?.error || "无法执行此操作");
+    if (!r?.ok) {
+      EmberAudio.fx("error");
+      toast(r?.error || "无法执行此操作");
+    }
     return r;
   }
   function targetAnchor(targets) {
@@ -677,6 +684,7 @@
     if (!inBattle || modalType || EmberFX.busy) return;
     const err = game.legalCard("p", uid);
     if (err) {
+      EmberAudio.fx("error");
       toast(err);
       return;
     }
@@ -693,7 +701,7 @@
       );
       updateSelection(targets);
       hidePreview();
-      EmberAudio.fx("ui");
+      EmberAudio.fx("select");
     } else act(() => game.dispatch({ type: "play", side: "p", uid }));
   }
   function clickUnit(side, uid) {
@@ -912,6 +920,7 @@
         Math.hypot(pointer.x - drag.x, pointer.y - drag.y) > 12
       ) {
         drag.started = true;
+        EmberAudio.fx("select");
         clearSelection();
         hidePreview();
         drag.el.classList.add("drag-source");
@@ -1010,10 +1019,6 @@
   }
   function handleEvents(events) {
     for (const e of events) {
-      if (e.type === "turn" && e.side === "p" && !modalType) {
-        EmberAudio.fx("turn");
-      }
-      if (e.type === "over") EmberAudio.fx("over");
       if (e.type === "secret")
         toast((D.byId[e.cid]?.name || "奥秘") + "触发。");
     }
@@ -1132,7 +1137,7 @@
   function showSettings() {
     showModal(
       `<section class="modal-box settings-box"><div class="modal-heading"><div class="eyebrow">游戏设置</div><h2>旅途设置</h2></div>${[
-        ["sound", "声音与氛围", "环境音乐与战斗音效"],
+        ["sound", "开启声音", "卡牌、战斗音效与酒馆底声"],
         ["reduced", "减弱动态效果", "减少粒子与镜头震动，保留战斗提示"],
         ["low", "轻量画质", "降低画面负担，适合节能游玩"],
         ["fast", "加速敌方行动", "缩短 AI 每次行动之间的间隔"],
@@ -1141,9 +1146,18 @@
           ([k, n, d]) =>
             `<div class="setting-row"><div><h3>${n}</h3><p>${d}</p></div><button class="toggle ${settings[k] ? "on" : ""}" data-setting="${k}" role="switch" aria-checked="${settings[k]}" aria-label="${n}"></button></div>`,
         )
+        .join("")}<div class="audio-sliders">${[
+        ["volume", "总音量"],
+        ["sfxVolume", "战斗与操作"],
+        ["ambienceVolume", "酒馆氛围"],
+      ]
+        .map(
+          ([k, label]) =>
+            `<label class="audio-level" for="audio-${k}"><span>${label}</span><input id="audio-${k}" data-audio-level="${k}" type="range" min="0" max="100" step="5" value="${Math.round((Number.isFinite(settings[k]) ? Math.max(0, Math.min(1, settings[k])) : defaults[k]) * 100)}"><output for="audio-${k}">${Math.round((Number.isFinite(settings[k]) ? Math.max(0, Math.min(1, settings[k])) : defaults[k]) * 100)}%</output></label>`,
+        )
         .join(
           "",
-        )}<div class="modal-footer">${inBattle ? '<button class="ghost-btn small-btn" id="settings-home">返回营地</button><button class="ghost-btn small-btn" id="restart-battle">重试本关</button>' : '<button class="ghost-btn small-btn" id="settings-how">游戏玩法</button>'}<button class="gold-btn small-btn" id="settings-done">完成</button></div><p class="hero-deck-note">进度自动保存在当前浏览器。</p></section>`,
+        )}</div><div class="modal-footer">${inBattle ? '<button class="ghost-btn small-btn" id="settings-home">返回营地</button><button class="ghost-btn small-btn" id="restart-battle">重试本关</button>' : '<button class="ghost-btn small-btn" id="settings-how">游戏玩法</button>'}<button class="gold-btn small-btn" id="settings-done">完成</button></div><p class="hero-deck-note">进度自动保存在当前浏览器。</p></section>`,
       "settings",
     );
     document.querySelectorAll("[data-setting]").forEach(
@@ -1157,6 +1171,15 @@
           applySettings();
         }),
     );
+    document.querySelectorAll("[data-audio-level]").forEach((input) => {
+      input.oninput = () => {
+        settings[input.dataset.audioLevel] = Number(input.value) / 100;
+        input.nextElementSibling.textContent = input.value + "%";
+        EmberAudio.configure(settings);
+        writeStore(SETTINGS, settings);
+      };
+      input.onchange = () => EmberAudio.fx("ui");
+    });
     $("settings-done").onclick = () => closeModal();
     if (inBattle) {
       $("settings-home").onclick = home;
@@ -1249,8 +1272,27 @@
     act(() => game.dispatch({ type: "end", side: "p" }));
   $("arena").onclick = () => clearSelection();
   document.addEventListener("pointerdown", () => EmberAudio.unlock(), {
-    once: true,
+    passive: true,
   });
+  document.addEventListener("keydown", () => EmberAudio.unlock(), {
+    capture: true,
+  });
+  document.addEventListener(
+    "click",
+    (event) => {
+      const button = event.target.closest("button");
+      if (
+        !button ||
+        button.disabled ||
+        button.closest(
+          ".hand-card,.minion,.hero,#power-btn,#end-turn,#sound-btn,[data-setting='sound']",
+        )
+      )
+        return;
+      EmberAudio.fx("ui");
+    },
+    { capture: true },
+  );
   document.addEventListener("keydown", (e) => {
     const input = /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
     if (e.key === "Tab" && modalType) {

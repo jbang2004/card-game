@@ -2,7 +2,7 @@
 """Reproducible portable and web builds from a single ordered template.
 
 index.html: fully embedded, suitable for offline transfer and legacy tests.
-dist/: external scripts, styles and content-addressed images for HTTP caching.
+dist/: external scripts, styles and content-addressed images/audio for HTTP caching.
 The registry maps template tokens to source files; dependencies follow template
 order. Unknown, duplicate or unused tokens fail the build instead of shipping.
 """
@@ -12,15 +12,19 @@ import hashlib
 import json
 import re
 from tools.characters import generate as generate_characters
+from tools.audio_assets import generate as generate_audio
+from tools.vfx_assets import generate as generate_vfx
 
 ROOT = Path(__file__).resolve().parent
 SRC = ROOT / 'src'
 TOKEN = re.compile(r'/\*([A-Z_]+)\*/')
-IMAGE = re.compile(r'data:image/(png|webp|jpeg|gif);base64,([A-Za-z0-9+/=]+)')
+MEDIA = re.compile(r'data:(?:image|audio)/(png|webp|jpeg|gif|mpeg);base64,([A-Za-z0-9+/=]+)')
 
 
 def build():
     generate_characters()
+    generate_audio()
+    generate_vfx()
     registry = json.loads((ROOT / 'config/build.json').read_text())
     template = (SRC / 'template.html').read_text()
     tokens = TOKEN.findall(template)
@@ -40,9 +44,9 @@ def build():
     (dist / 'assets').mkdir(parents=True, exist_ok=True)
     records = {}
 
-    def extract_image(match):
+    def extract_media(match):
         data = base64.b64decode(match[2], validate=True)
-        suffix = 'jpg' if match[1] == 'jpeg' else match[1]
+        suffix = {'jpeg': 'jpg', 'mpeg': 'mp3'}.get(match[1], match[1])
         name = f'assets/{hashlib.sha256(data).hexdigest()[:20]}.{suffix}'
         (dist / name).write_bytes(data)
         records[name] = len(data)
@@ -51,7 +55,7 @@ def build():
 
     def web_script(match):
         key = match[1]
-        text = IMAGE.sub(extract_image, sources[key])
+        text = MEDIA.sub(extract_media, sources[key])
         name = 'scripts/' + registry[key]
         target = dist / name
         target.parent.mkdir(parents=True, exist_ok=True)

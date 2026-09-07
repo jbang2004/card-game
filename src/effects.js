@@ -47,7 +47,9 @@ const EmberFX = (() => {
     phase = false,
     quality = { reduced: false, low: false },
     worldDirty = true,
-    lab = false;
+    lab = false,
+    labBounds = null,
+    readableStats = [];
   let counts = { actions: 0, previews: 0, school: {}, maxParticles: 0 };
   const rnd = (a, b) => a + Math.random() * (b - a),
     clamp = (n, a = 0, b = 1) => Math.max(a, Math.min(b, n)),
@@ -193,9 +195,14 @@ const EmberFX = (() => {
           html: el.outerHTML,
         };
       });
-    document
-      .querySelectorAll(".hand-card")
-      .forEach((el) => (m["hand" + el.dataset.hand] = { ...pos(el) }));
+    document.querySelectorAll(".hand-card").forEach(
+      (el) =>
+        (m["hand" + el.dataset.hand] = {
+          ...pos(el),
+          el,
+          html: el.outerHTML,
+        }),
+    );
     return m;
   }
   function settleLayout(old) {
@@ -235,7 +242,7 @@ const EmberFX = (() => {
       for (const k of ["radius", "size", "wide", "vx", "vy", "gravity"])
         if (typeof data[k] === "number") data[k] *= EmberViewport.effectScale;
     }
-    const budget = quality.low ? 220 : EmberViewport.mobile ? 360 : 800;
+    const budget = quality.low ? 196 : EmberViewport.mobile ? 312 : 704;
     if (items.length >= budget) items.splice(0, items.length - budget + 1);
     items.push({ kind, ...data, start: performance.now() + delay, d });
     counts.maxParticles = Math.max(counts.maxParticles, items.length);
@@ -285,8 +292,11 @@ const EmberFX = (() => {
     if (quality.reduced) return;
     add("glow", { x, y, school, radius }, d);
   }
+  let lastShake = -1000;
   function shake(amount = 3) {
-    if (quality.reduced) return;
+    if (quality.reduced || performance.now() - lastShake < 100) return;
+    lastShake = performance.now();
+    amount = Math.min(amount, EmberViewport.mobile ? 2 : 4);
     for (const el of [world, document.getElementById("scene")]) {
       if (!el?.animate) continue;
       animate(
@@ -316,6 +326,7 @@ const EmberFX = (() => {
   }
   function number(p, n, type = "damage") {
     const el = document.createElement("div");
+    el.setAttribute("aria-hidden", "true");
     el.className =
       "damage-number " +
       (type === "heal"
@@ -338,11 +349,25 @@ const EmberFX = (() => {
       nodes.delete(el);
     }, 1150);
   }
-  function impact(x, y, school = "fire", strength = 1) {
+  function sound(type, p, options = {}) {
+    EmberAudio.fx(type, { pan: p ? (p.x / W - 0.5) * 1.1 : 0, ...options });
+  }
+  function impact(
+    x,
+    y,
+    school = "fire",
+    strength = 1,
+    kind = "element",
+    from = null,
+  ) {
     if (quality.reduced) {
       return;
     }
     const s = clamp(strength, 0.6, 2.2);
+    if (EmberVFX.hit({ x, y }, school, s, kind, from)) {
+      if (s > 1.25) shake(2.5 * s);
+      return;
+    }
     glow(x, y, school, 80 * s, school === "frost" ? 150 : 510);
     if (school === "steel") {
       add("slash", { x, y, school, a: rnd(-1, 1), radius: 85 * s }, 360);
@@ -559,18 +584,13 @@ const EmberFX = (() => {
       nodes.delete(el);
     }, 660);
   }
-  function lunge(from, to, dies = false) {
+  function lunge(from, to, contact = 220, heavy = false) {
     if (!from?.el || quality.reduced) return;
     const el = from.el.cloneNode(true);
     copyPortraits(from.el, el);
     el.removeAttribute("id");
-    el.classList.add("death-ghost");
-    el.style.left = from.left + "px";
-    el.style.top = from.top + "px";
-    el.style.width = from.w + "px";
-    el.style.height = from.h + "px";
-    el.style.margin = "0";
-    el.style.visibility = "visible";
+    el.classList.add("death-ghost", "attack-actor");
+    el.style.cssText += `;left:${from.left}px;top:${from.top}px;width:${from.w}px;height:${from.h}px;margin:0;visibility:visible`;
     el.tabIndex = -1;
     el.setAttribute("aria-hidden", "true");
     app.appendChild(el);
@@ -578,36 +598,61 @@ const EmberFX = (() => {
     from.el.style.visibility = "hidden";
     const dx = (to.x - from.x) * 0.77,
       dy = (to.y - from.y) * 0.77;
+    const duration = contact + Math.min(250, (contact / 220) * 250),
+      hit = contact / duration;
+    el.dataset.contactMs = contact;
     animate(
       el,
       [
-        { transform: "translate(0,0) scale(1)", offset: 0 },
+        { transform: "translate(0,0) scale(1)", offset: 0, easing: "ease-out" },
         {
-          transform: `translate(${-dx * 0.08}px,${-dy * 0.08}px) scale(1.06)`,
-          offset: 0.24,
+          transform: `translate(${-dx * 0.065}px,${-dy * 0.065}px) scale(1.055)`,
+          offset: hit * 0.4,
+          easing: "cubic-bezier(.6,0,.9,.5)",
         },
-        { transform: `translate(${dx}px,${dy}px) scale(1.08)`, offset: 0.5 },
+        { transform: `translate(${dx}px,${dy}px) scale(1.045)`, offset: hit },
+        // A short contact hold, then a single controlled return. The death beat
+        // owns deaths, so a lethal attacker cannot dissolve twice in two places.
         {
-          transform: `translate(${dx * 0.92}px,${dy * 0.92}px) scale(1.04)`,
-          offset: 0.57,
+          transform: `translate(${dx}px,${dy}px) scale(1.045)`,
+          offset: (contact + contact * (heavy ? 0.218 : 0.1)) / duration,
+          easing: "cubic-bezier(.16,.8,.3,1)",
         },
-        {
-          transform: dies
-            ? `translate(${dx}px,${dy + 10}px) scale(.85)`
-            : "translate(0,0) scale(1)",
-          opacity: dies ? 0 : 1,
-          offset: 1,
-        },
+        { transform: "translate(0,0) scale(1)", offset: 1 },
       ],
-      { duration: 710, easing: "linear", fill: "forwards" },
+      { duration, fill: "forwards" },
     );
     schedule(() => {
       el.remove();
       nodes.delete(el);
       const current = unit(from.el.dataset.side, from.el.dataset.uid);
       if (current) current.style.visibility = "";
-    }, 715);
+    }, duration + 2);
     return el;
+  }
+  function cardFlight(c, from, to, duration, cardHTML) {
+    if (!from || !cardHTML || quality.reduced) return;
+    const el = transient("card-flight", duration + 8);
+    el.innerHTML = cardHTML(c);
+    const width = EmberViewport.mobile ? 90 : 125,
+      height = width * 1.44;
+    el.style.cssText = `left:${from.x - width / 2}px;top:${from.y - height / 2}px;width:${width}px;height:${height}px`;
+    animate(
+      el,
+      [
+        { opacity: 0.95, transform: "translate(0,0) rotate(-5deg) scale(1)" },
+        {
+          opacity: 1,
+          transform: `translate(${(to.x - from.x) * 0.78}px,${(to.y - from.y) * 0.78 - 18}px) rotate(2deg) scale(.85)`,
+          offset: 0.7,
+        },
+        {
+          opacity: 0,
+          transform: `translate(${to.x - from.x}px,${to.y - from.y}px) rotate(0) scale(.63)`,
+        },
+      ],
+      { duration, easing: "cubic-bezier(.2,.7,.3,1)", fill: "forwards" },
+    );
   }
   function reveal(c, side, cardHTML) {
     if (!c || !cardHTML || quality.reduced) return;
@@ -671,6 +716,20 @@ const EmberFX = (() => {
       life: 2000,
       size: 4,
     });
+    EmberVFX.arrival(
+      {
+        fire: "dragon-wake",
+        frost: "frost-throne",
+        arcane: "astral-gate",
+        shadow: "astral-gate",
+        holy: "solar-crown",
+        nature: "solar-crown",
+        steel: "solar-crown",
+        blood: "dragon-wake",
+      }[school],
+      ep,
+      school,
+    );
     EmberAudio.fx("phase");
     schedule(() => {
       el.classList.remove("visible");
@@ -678,18 +737,7 @@ const EmberFX = (() => {
     }, 1770);
   }
   function paletteSchool(p) {
-    return (
-      {
-        ember: "fire",
-        ice: "frost",
-        arcane: "arcane",
-        nature: "nature",
-        gold: "holy",
-        void: "shadow",
-        blood: "blood",
-        steel: "steel",
-      }[p] || "arcane"
-    );
+    return EmberFXProfiles.fromPalette(p);
   }
   function classification(c, attack = false) {
     if (!c) return attack ? "steel" : "fire";
@@ -724,6 +772,13 @@ const EmberFX = (() => {
       { duration: 320, easing: "ease-out" },
     );
   }
+  function cacheReadableStats() {
+    readableStats = [
+      ...document.querySelectorAll(
+        "#battle .stat, #battle .hero-health, #battle .hero-armor, .attack-actor .stat, .attack-actor .hero-health, .attack-actor .hero-armor",
+      ),
+    ];
+  }
   function cleanupVisuals() {
     timers.forEach(clearTimeout);
     timers.clear();
@@ -732,15 +787,18 @@ const EmberFX = (() => {
     nodes.forEach((el) => el.remove());
     nodes.clear();
     items = [];
+    EmberVFX.clear();
+    readableStats = [];
     ctx.clearRect(0, 0, W, H);
     document.getElementById("cinematic").classList.remove("visible");
     document
-      .querySelectorAll(".hero,.minion")
+      .querySelectorAll(".hero,.minion,#hand .hand-card")
       .forEach((el) => (el.style.visibility = ""));
     setBusy(false);
   }
   function cancel(commit = false) {
     generation++;
+    EmberAudio.stop();
     if (commit && pendingCommit) {
       const fn = pendingCommit;
       pendingCommit = null;
@@ -768,6 +826,27 @@ const EmberFX = (() => {
         { duration: 940 },
       );
   }
+  function signatureCue(c, duration) {
+    if (!c || quality.reduced) return;
+    const d = Math.min(540, duration * 0.88),
+      laneP = EmberViewport.lane("p"),
+      laneE = EmberViewport.lane("e");
+    const el = transient("signature-cue", d);
+    el.innerHTML = `<small>${c.type === "minion" ? "传说降临" : "法术施放"}</small><strong>${c.name}</strong>`;
+    el.style.left = W / 2 + "px";
+    el.style.top = (laneP.y + laneE.y) / 2 + "px";
+    el.style.setProperty("--signature-color", colors[classification(c)][1]);
+    animate(
+      el,
+      [
+        { opacity: 0, scale: ".88", translate: "0 10px" },
+        { opacity: 1, scale: "1.02", translate: "0 0", offset: 0.23 },
+        { opacity: 1, scale: "1", offset: 0.62 },
+        { opacity: 0, scale: "1.07", translate: "0 -8px" },
+      ],
+      { duration: d },
+    );
+  }
   function present(events, s, render, after, cardHTML, before = null) {
     if (busy) cancel(true);
     clearTurnCue();
@@ -779,6 +858,7 @@ const EmberFX = (() => {
       return;
     }
     EmberPortraits.prepareSummons(events);
+    EmberVFX.prepare();
     const primary = events.find((e) =>
       ["play", "attack", "power"].includes(e.type),
     );
@@ -786,13 +866,42 @@ const EmberFX = (() => {
     const initial = capture(),
       history = { ...initial };
     if (primary?.type === "attack")
-      c = EmberData.byId[initial[primary.from.side + primary.from.uid]?.cid];
+      c =
+        EmberData.byId[
+          initial[primary.from.side + primary.from.uid]?.cid ||
+            (primary.from.uid === "hero"
+              ? s[primary.from.side].weapon?.cid
+              : null)
+        ];
     let school = classification(c, primary?.type === "attack");
     if (primary?.type === "power")
       school =
-        primary.side === "e"
+        primary.side === "e" && s.mode !== "practice"
           ? paletteSchool(EmberData.bosses[s.bossIndex].palette)
-          : { mage: "fire", paladin: "holy", ranger: "steel" }[s.heroId];
+          : { mage: "fire", paladin: "holy", ranger: "steel" }[
+              primary.side === "e" ? s.opponentHero : s.heroId
+            ];
+    const visualProfile = EmberFXProfiles.get(c);
+    const countered = events.some(
+      (e) => e.type === "secret" && e.cid === "counterspell",
+    );
+    const affected = plan.beats
+      .filter((b) => !b.sourceId)
+      .flatMap((b) => b.events)
+      .filter(
+        (e) => ["damage", "heal", "status"].includes(e.type) && e.side && e.uid,
+      );
+    const effectTargets = (map, state, list = affected) => {
+      const seen = new Set();
+      return list
+        .filter((e) => {
+          const id = e.side + e.uid;
+          if (seen.has(id)) return false;
+          seen.add(id);
+          return true;
+        })
+        .map((e) => map[e.side + e.uid] || fallback(state, e.side, e.uid));
+    };
     counts.actions++;
     counts.school[school] = (counts.school[school] || 0) + 1;
     setBusy(true);
@@ -833,11 +942,16 @@ const EmberFX = (() => {
           cue(p, "亡语", "deathrattle");
         }
         if (["play", "power"].includes(event.type)) {
-          if (c) reveal(c, event.side, cardHTML);
+          if (c && event.side === "e") reveal(c, event.side, cardHTML);
+          if (visualProfile.signature) signatureCue(c, beat.hold);
           const from = locate(
             old,
             { side: event.side, uid: "hero" },
             beat.frame,
+          );
+          sound(
+            c?.type === "minion" ? "select" : "play",
+            old["hand" + event.uid] || from,
           );
           const target = event.target;
           const profile = EmberRules.profile(c);
@@ -860,50 +974,42 @@ const EmberFX = (() => {
                     profile.self ? event.side : event.side === "p" ? "e" : "p",
                   );
           if (c?.type === "minion") {
-            rune(to.x, to.y, school, 70, 760);
-            add("pillar", { ...to, school, radius: 50 }, 610);
-          } else if (
-            c?.type === "weapon" ||
-            profile.self ||
-            (!target &&
-              firstEffect?.uid === "hero" &&
-              firstEffect.side === event.side)
-          ) {
-            rune(from.x, from.y, school, 70, 700);
-            EmberAudio.fx(c?.type === "weapon" ? "equip" : "cast-" + school);
-          } else if (profile.area) {
-            const stop = events.findIndex(
-              (e) => e.type === "death" || e.type === "phase",
+            cardFlight(
+              c,
+              old["hand" + event.uid] || from,
+              to,
+              beat.hold,
+              cardHTML,
             );
-            const sides = new Set(
-              events
-                .slice(0, stop < 0 ? events.length : stop)
-                .filter(
-                  (e) =>
-                    ["damage", "status", "summon"].includes(e.type) && e.side,
-                )
-                .map((e) => e.side),
-            );
-            if (!sides.size) sides.add(event.side);
-            for (const side of sides) {
-              const lane = EmberViewport.lane(side);
-              add(
-                "wave",
+            rune(to.x, to.y, school, 62, beat.hold);
+            add("pillar", { ...to, school, radius: 38 }, beat.hold);
+          } else {
+            let kind = visualProfile.cast;
+            if (event.type === "power")
+              kind =
                 {
-                  from: { x: lane.x - W * 0.3, y: lane.y },
-                  to: { x: lane.x + W * 0.3, y: lane.y },
-                  school,
-                },
+                  fire: "ember",
+                  frost: "ice-lance",
+                  nature: "wildgate",
+                  holy: "benediction",
+                  shadow: "siphon",
+                  blood: "dragon-breath",
+                  steel: "arrow",
+                }[school] || "ember";
+            if (countered) {
+              // An intercepted spell gathers at its source, then dissipates at
+              // the reveal; it must not depict damage that never happened.
+              EmberVFX.spell("starwell", from, from, [from], school, beat.hold);
+            } else
+              EmberVFX.spell(
+                kind,
+                from,
+                to,
+                effectTargets(old, beat.frame),
+                school,
                 beat.hold,
               );
-            }
-            EmberAudio.fx("cast-" + school);
-          } else {
-            glow(from.x, from.y, school, 65, 220);
-            schedule(() => {
-              projectile(from, to, school, Math.max(100, beat.hold - 170));
-              EmberAudio.fx("cast-" + school);
-            }, 170);
+            sound(c?.type === "weapon" ? "equip" : "cast-" + school, from);
           }
         }
         if (event.type === "attack") {
@@ -916,12 +1022,9 @@ const EmberFX = (() => {
               e.side === event.from.side &&
               e.uid === event.from.uid,
           );
-          const ranged =
-            c && ["archer", "mage", "dragon", "phoenix"].includes(c.art);
-          if (ranged) {
-            rune(from.x, from.y, school, 35, 350);
-            projectile(from, to, school, beat.hold);
-          } else {
+          const ranged = EmberFXProfiles.ranged(c);
+          EmberVFX.attack(visualProfile.attack, from, to, school, beat.hold);
+          if (!ranged) {
             // render() has replaced the live DOM; its new canvas is not painted
             // until the observer/frame runs. Copy the last painted source now.
             const actor = lunge(
@@ -932,12 +1035,22 @@ const EmberFX = (() => {
                   : old[event.from.side + event.from.uid]?.el || from.el,
               },
               to,
-              dies,
+              beat.hold,
+              events.some(
+                (e) =>
+                  e.type === "damage" &&
+                  e.from?.uid === event.from.uid &&
+                  e.amount >= 6,
+              ),
             );
             attackFlight = {
               side: event.from.side,
               uid: event.from.uid,
-              until: performance.now() + 715,
+              until:
+                performance.now() +
+                beat.hold +
+                Math.min(250, (beat.hold / 220) * 250) +
+                2,
               dies,
               impact: {
                 ...from,
@@ -949,11 +1062,25 @@ const EmberFX = (() => {
               },
             };
           }
-          EmberAudio.fx("swing");
+          schedule(() => sound("swing", from), beat.hold * 0.4);
         }
         if (attackFlight && performance.now() < attackFlight.until) {
           const current = unit(attackFlight.side, attackFlight.uid);
           if (current) {
+            const actor = attackFlight.impact.el;
+            for (const selector of [
+              ".stat.atk",
+              ".stat.hp",
+              ".hero-health",
+              ".hero-armor",
+            ]) {
+              const live = current.querySelector(selector),
+                copy = actor?.querySelector(selector);
+              if (live && copy) {
+                copy.textContent = live.textContent;
+                copy.className = live.className;
+              } else if (!live && copy) copy.remove();
+            }
             current.style.visibility = "hidden";
             schedule(() => {
               current.style.visibility = "";
@@ -961,12 +1088,38 @@ const EmberFX = (() => {
           }
         }
         const positions = { ...history, ...old };
-        if (
-          attackFlight &&
-          (attackFlight.dies || performance.now() < attackFlight.until)
-        )
+        if (attackFlight && performance.now() < attackFlight.until)
           positions[attackFlight.side + attackFlight.uid] = attackFlight.impact;
+        if (
+          event.type === "summon" &&
+          c?.id === event.cid &&
+          visualProfile.battlecry &&
+          !countered
+        ) {
+          const source =
+            pos(unit(event.side, event.uid)) ||
+            fallback(beat.frame, event.side, event.uid);
+          const targets = effectTargets(
+            { ...positions, ...capture() },
+            beat.frame,
+          );
+          EmberVFX.spell(
+            visualProfile.battlecry,
+            source,
+            targets[0] || source,
+            targets,
+            classification(c),
+            beat.hold,
+          );
+        }
         postEvents(beat.events, beat.frame, positions, primary, school);
+        cacheReadableStats();
+        if (event.type === "secret" && event.cid === "counterspell") {
+          EmberVFX.clear();
+          EmberVFX.interrupt(
+            fallback(beat.frame, primary?.side || "p", "hero"),
+          );
+        }
         if (event.type === "phase") phaseChange(s);
       }, beat.at);
     schedule(() => {
@@ -974,6 +1127,7 @@ const EmberFX = (() => {
         cb = doneCallback;
       pendingCommit = doneCallback = null;
       commit?.();
+      cacheReadableStats();
       setBusy(false);
       cb?.();
     }, plan.duration + 80);
@@ -983,13 +1137,69 @@ const EmberFX = (() => {
       pos(unit(e.side, e.uid)) ||
       old[e.side + e.uid] ||
       fallback(s, e.side, e.uid);
+    const hits = events.filter(
+      (e) => e.type === "damage" && (e.loss ?? e.amount) > 0,
+    );
+    if (hits.length) {
+      const amount = Math.max(...hits.map((e) => e.amount));
+      const positions = hits.map((e) => old[e.side + e.uid] || at(e));
+      const p = {
+        x: positions.reduce((n, p) => n + p.x, 0) / positions.length,
+      };
+      sound(primary ? "impact-" + (school || "steel") : "damage", p, {
+        strength: 0.78 + Math.min(amount, 10) * 0.045,
+        heavy: amount >= 6,
+      });
+    }
+    if (events.some((e) => e.type === "damage" && e.absorbed))
+      sound("armor", at(events.find((e) => e.absorbed)));
+    for (const [type, audio] of [
+      ["shield", "shield"],
+      ["heal", "heal"],
+      ["death", "death"],
+    ]) {
+      const event = events.find((e) => e.type === type);
+      if (event) sound(audio, old[event.side + event.uid] || at(event));
+    }
     events.forEach((e) => {
-      if (e.type === "turn") turnCue(e.side, s.turn);
+      if (e.type === "turn") {
+        turnCue(e.side, s.turn);
+        sound(e.side === "p" ? "turn" : "turn-enemy");
+      }
+      if (e.type === "over") {
+        sound(
+          e.winner === "p"
+            ? "victory"
+            : e.winner === "draw"
+              ? "draw-result"
+              : "defeat",
+        );
+        const p = fallback(s, e.winner === "p" ? "e" : "p", "hero");
+        if (e.winner !== "draw") {
+          cue(p, "英雄倒下", "defeat");
+          if (!quality.reduced) {
+            ring(p.x, p.y, e.winner === "p" ? "holy" : "shadow", 130, 700);
+            hitReaction(unit(e.winner === "p" ? "e" : "p", "hero"), true);
+          }
+        }
+      }
       if (e.type === "damage") {
         const p = old[e.side + e.uid] || at(e);
         if (e.absorbed)
           cue({ ...p, y: p.y - 24 }, `护甲吸收 ${e.absorbed}`, "armor");
-        if ((e.loss ?? e.amount) > 0) number(p, e.loss ?? e.amount);
+        if ((e.loss ?? e.amount) > 0) {
+          const melee = primary?.type === "attack";
+          const retaliation =
+            melee && e.side === primary.from.side && e.uid === primary.from.uid;
+          const display = melee
+            ? {
+                ...p,
+                x: clamp(p.x + (retaliation ? -1 : 1) * p.w * 0.38, 30, W - 30),
+                y: p.y + (retaliation ? 1 : -1) * p.h * 0.1,
+              }
+            : p;
+          number(display, e.loss ?? e.amount);
+        }
         hitReaction(
           p.el?.isConnected && p.el.matches(".death-ghost")
             ? p.el
@@ -999,18 +1209,33 @@ const EmberFX = (() => {
             (old[e.from.side + e.from.uid] ||
               fallback(s, e.from.side, e.from.uid)),
         );
-        impact(p.x, p.y, school || "steel", 0.7 + e.amount / 15);
-        if (primary) EmberAudio.fx("impact-" + (school || "steel"));
-        if (!primary) EmberAudio.fx("damage");
+        if ((e.loss ?? e.amount) > 0) {
+          const source = e.from && old[e.from.side + e.from.uid];
+          const attacker =
+            EmberData.byId[
+              source?.cid ||
+                (e.from?.uid === "hero" ? s[e.from.side].weapon?.cid : null)
+            ];
+          impact(
+            p.x,
+            p.y,
+            primary?.type === "attack" && attacker
+              ? classification(attacker, true)
+              : school || "steel",
+            0.7 + e.amount / 15,
+            primary?.type === "attack"
+              ? EmberFXProfiles.get(attacker).attack
+              : "element",
+            source,
+          );
+        } else ring(p.x, p.y, "steel", 48, 240);
       }
       if (e.type === "heal") {
         // Health is revealed with this beat, at the end of the incoming flow.
         heal(at(e), e.amount);
-        EmberAudio.fx("heal");
       }
       if (e.type === "shield") {
         shieldBreak(old[e.side + e.uid] || at(e));
-        EmberAudio.fx("shield");
       }
       if (e.type === "summon") {
         const p = at(e),
@@ -1026,21 +1251,33 @@ const EmberFX = (() => {
         const el = unit(e.side, e.uid);
         if (el && !quality.reduced) {
           arrival(p, EmberData.byId[e.cid]);
+          EmberVFX.arrival(EmberFXProfiles.get(e.cid).arrival, p, cl);
           animate(
             el,
             [
-              { opacity: 0, translate: "0 -32px", scale: ".65" },
-              { opacity: 1, translate: "0 4px", scale: "1.07", offset: 0.65 },
+              { opacity: 1, translate: "0 3px", scale: "1.09 .93" },
+              {
+                opacity: 1,
+                translate: "0 -2px",
+                scale: ".985 1.025",
+                offset: 0.45,
+              },
               { opacity: 1, translate: "0 0", scale: "1" },
             ],
-            { duration: 520, easing: "cubic-bezier(.16,.8,.24,1)" },
+            { duration: 280, easing: "cubic-bezier(.16,.8,.24,1)" },
           );
         }
-        EmberAudio.fx("summon");
+        if (primary?.type === "play" && primary.cid === e.cid && !e.rebornFrom)
+          sound("play", p, { gain: 0.8 });
+        sound("summon", p);
+        if (EmberData.byId[e.cid]?.rarity === "legendary")
+          sound("legendary", p);
         if (e.rebornFrom) cue(p, "复生 · 1 生命", "reborn");
       }
       if (e.type === "death")
         death(old[e.side + e.uid], classification(EmberData.byId[e.cid]));
+      if (e.type === "draw")
+        sound("draw", e.side === "p" ? { x: W * 0.72 } : { x: W * 0.55 });
       if (e.type === "draw" && e.side === "p" && !quality.reduced) {
         const el = document.querySelector(`#hand [data-hand="${e.uid}"]`),
           end = pos(el);
@@ -1050,7 +1287,8 @@ const EmberFX = (() => {
           el.style.visibility = "";
           if (el.isConnected)
             animate(el, [{ opacity: 0 }, { opacity: 1 }], { duration: 100 });
-        }, 220);
+          sound("land", end, { gain: 0.42 });
+        }, 200);
         add(
           "draw",
           {
@@ -1060,11 +1298,12 @@ const EmberFX = (() => {
             to: end,
             school: "holy",
           },
-          220,
+          200,
         );
       }
       if (e.type === "burn") {
         const p = fallback(s, e.side, "hero");
+        sound("burn", p);
         cue(
           p,
           e.side === "p" && e.cid
@@ -1080,8 +1319,10 @@ const EmberFX = (() => {
         rune(p.x, p.y, "arcane", 65, 550);
         EmberAudio.fx("cast-arcane");
       }
-      if (e.type === "weaponWear")
+      if (e.type === "weaponWear") {
         cue(at(e), e.broken ? "武器损坏" : "耐久 −1", "weapon");
+        if (e.broken) sound("weapon-break", at(e));
+      }
       if (e.type === "status") {
         const p = at(e),
           el = unit(e.side, e.uid);
@@ -1098,6 +1339,27 @@ const EmberFX = (() => {
           mana: `法力 +${e.amount}`,
         };
         cue(p, labels[e.kind] || e.kind, e.kind);
+        if (
+          [
+            "freeze",
+            "silence",
+            "buff",
+            "armor",
+            "mana",
+            "grant",
+            "transform",
+          ].includes(e.kind)
+        )
+          sound(
+            {
+              freeze: "freeze",
+              silence: "silence",
+              transform: "cast-shadow",
+              armor: "armor",
+            }[e.kind] || "buff",
+            p,
+            { gain: 0.6 },
+          );
         const cl = ["freeze", "thaw"].includes(e.kind)
           ? "frost"
           : ["silence", "transform"].includes(e.kind)
@@ -1141,34 +1403,64 @@ const EmberFX = (() => {
       }
     });
   }
-  function preview(school, from, to) {
+  function preview(school, from, to, variant = "element") {
     if (busy) return false;
+    labBounds = pos(document.querySelector(".lab-stage"));
     counts.previews++;
     counts.school[school] = (counts.school[school] || 0) + 1;
+    const card = EmberData.byId[variant];
+    const profile = card ? EmberFXProfiles.get(card) : null;
+    const attack = variant.startsWith("attack:")
+      ? variant.slice(7)
+      : school === "steel" && !card
+        ? "blade"
+        : null;
+    const cast =
+      profile?.cast ||
+      {
+        fire: "meteor",
+        frost: "ice-lance",
+        arcane: "starwell",
+        nature: "bloom",
+        holy: "benediction",
+        shadow: "void-collapse",
+      }[school] ||
+      "ember";
+    const contact = quality.reduced
+      ? 100
+      : attack
+        ? 280
+        : profile?.windup || 580;
     setBusy(true);
-    rune(from.x, from.y, school, 48, 750);
-    schedule(
-      () => {
-        projectile(from, to, school, 500);
-        EmberAudio.fx("cast-" + school);
-      },
-      quality.reduced ? 0 : 140,
-    );
-    schedule(
-      () => {
-        impact(to.x, to.y, school, 1.4);
-        number(
-          to,
-          school === "holy" ? 4 : 6,
-          school === "nature" ? "heal" : "damage",
-        );
+    EmberVFX.prepare();
+    if (attack) EmberVFX.attack(attack, from, to, school, contact);
+    else if (!profile?.arrival)
+      EmberVFX.spell(cast, from, to, [to], school, contact);
+    else rune(from.x, from.y, school, 65, contact);
+    EmberAudio.fx(attack ? "swing" : "cast-" + school);
+    schedule(() => {
+      if (profile?.arrival) {
+        EmberVFX.arrival(profile.arrival, from, school);
+        cue(from, "传说降临", "summon");
+        EmberAudio.fx("legendary");
+      } else if (variant === "nova") {
+        EmberVFX.hit(to, "frost", 1.4);
+        cue(to, "冻结", "freeze");
+        EmberAudio.fx("freeze");
+      } else {
+        impact(to.x, to.y, school, 1.4, attack || "element", from);
+        if (variant === "execute") cue(to, "消灭", "death");
+        else
+          number(
+            to,
+            6,
+            !attack && ["holy", "nature"].includes(school) ? "heal" : "damage",
+          );
         EmberAudio.fx("impact-" + school);
-        vignette(school, 650, to.x, to.y);
         hitReaction(document.querySelector(".lab-token.target"), true);
-      },
-      quality.reduced ? 100 : 645,
-    );
-    schedule(() => setBusy(false), quality.reduced ? 400 : 1350);
+      }
+    }, contact);
+    schedule(() => setBusy(false), contact + (quality.reduced ? 350 : 900));
     return true;
   }
   // ---- Vector compositing primitives --------------------------------------------------
@@ -1687,12 +1979,26 @@ const EmberFX = (() => {
         const p = bezier({ ...e, bend: -90 }, ease(k));
         ctx.translate(p.x, p.y);
         ctx.rotate((1 - k) * -0.5);
-        ctx.globalAlpha = Math.sin(k * Math.PI) * 0.5;
-        ctx.fillStyle = "#d4bd8c22";
-        ctx.strokeStyle = cc[1];
-        ctx.lineWidth = 1;
-        ctx.fillRect(-20, -28, 40, 56);
-        ctx.strokeRect(-20, -28, 40, 56);
+        const size = EmberViewport.mobile ? 0.72 : 1;
+        ctx.scale(size, size);
+        ctx.globalCompositeOperation = "source-over";
+        ctx.globalAlpha = Math.min(1, (1 - k) * 10);
+        ctx.shadowColor = "#140b07aa";
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetY = 6;
+        ctx.fillStyle = "#342019";
+        ctx.strokeStyle = "#c49954";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(-24, -34, 48, 68, 5);
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.strokeRect(-18, -28, 36, 56);
+        ctx.rotate(Math.PI / 4);
+        ctx.fillStyle = "#ddb575";
+        ctx.fillRect(-7, -7, 14, 14);
         break;
       }
     }
@@ -1747,6 +2053,12 @@ const EmberFX = (() => {
       worldLast = t;
     }
     ctx.clearRect(0, 0, W, H);
+    ctx.save();
+    if (lab && labBounds) {
+      ctx.beginPath();
+      ctx.rect(labBounds.left, labBounds.top, labBounds.w, labBounds.h);
+      ctx.clip();
+    }
     let keep = [];
     for (const e of items) {
       let progress = (t - e.start) / e.d;
@@ -1759,9 +2071,34 @@ const EmberFX = (() => {
       keep.push(e);
     }
     items = keep;
+    EmberVFX.draw(ctx, t);
+    ctx.restore();
+    // Live DOM numbers always win over decorative light and smoke. Cache the
+    // nodes per event; read their current position so hit reactions also track.
+    if (!lab && (items.length || EmberVFX.active)) {
+      for (const el of readableStats) {
+        if (
+          !el.isConnected ||
+          el.closest(".minion,.hero")?.style.visibility === "hidden"
+        )
+          continue;
+        const p = pos(el);
+        if (p) {
+          ctx.save();
+          ctx.globalAlpha = 1;
+          ctx.globalCompositeOperation = "destination-out";
+          ctx.fillStyle = "#000";
+          ctx.beginPath();
+          ctx.ellipse(p.x, p.y, p.w / 2 + 1, p.h / 2 + 1, 0, 0, TAU);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+    }
   }
   function setView(v) {
     view = v;
+    EmberAudio.setScene(v);
     worldDirty = true;
     if (v !== "battle") cancel();
   }
@@ -1774,6 +2111,7 @@ const EmberFX = (() => {
   }
   function configure(reduced, low) {
     quality = { reduced: !!reduced, low: !!low };
+    EmberVFX.configure(reduced, low);
     if (typeof EmberPortraits !== "undefined")
       EmberPortraits.configure(reduced, low);
     app.classList.toggle("fx-low", quality.low);
@@ -1791,13 +2129,19 @@ const EmberFX = (() => {
       for (const a of animations) a.cancel();
       animations.clear();
       for (const el of [...nodes])
-        if (el.matches(".death-ghost,.cast-card,.summon-seal")) {
+        if (
+          el.matches(
+            ".death-ghost,.cast-card,.summon-seal,.card-flight,.signature-cue",
+          )
+        ) {
           el.remove();
           nodes.delete(el);
         }
-      document.querySelectorAll(".minion[data-uid],.hero").forEach((el) => {
-        el.style.visibility = "";
-      });
+      document
+        .querySelectorAll(".minion[data-uid],.hero,#hand .hand-card")
+        .forEach((el) => {
+          el.style.visibility = "";
+        });
       for (const el of [
         world,
         document.getElementById("scene"),
@@ -1807,9 +2151,10 @@ const EmberFX = (() => {
     }
   }
   function setLab(v) {
+    cancel();
     lab = !!v;
     app.classList.toggle("lab-open", lab);
-    if (!v) cancel();
+    labBounds = lab ? pos(document.querySelector(".lab-stage")) : null;
   }
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) worldDirty = true;
@@ -1846,7 +2191,7 @@ const EmberFX = (() => {
       return nodes.size;
     },
     get particles() {
-      return items.length;
+      return items.length + EmberVFX.active;
     },
     get pendingTimers() {
       return timers.size;

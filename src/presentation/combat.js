@@ -1,5 +1,9 @@
 /* Compile immutable observations into presentation beats. No rules, RNG or DOM. */
 const EmberCombat = (() => {
+  const profiles =
+    typeof EmberFXProfiles !== "undefined"
+      ? EmberFXProfiles
+      : require("./fx-profiles.js");
   const visible = new Set([
     "play",
     "power",
@@ -16,6 +20,7 @@ const EmberCombat = (() => {
     "weaponWear",
     "phase",
     "turn",
+    "over",
   ]);
   const family = (e) =>
     ["damage", "shield"].includes(e.type)
@@ -79,18 +84,21 @@ const EmberCombat = (() => {
       }
       group.hold =
         {
-          play: 610,
-          power: 610,
-          attack: 350,
-          hit: 320,
-          death: 360,
-          summon: 360,
+          play: 460,
+          power: 420,
+          attack: 220,
+          hit: 300,
+          death: 400,
+          summon: 300,
           secret: 420,
           heal: 300,
-          draw: 260,
+          draw: 240,
           phase: 1800,
-          turn: 160,
+          turn: 220,
+          over: 700,
         }[group.kind] || 260;
+      if (group.kind === "play")
+        group.hold = profiles.get(group.events[0].cid).windup;
       if (group.events.some((e) => e.type === "heal" && e.from))
         group.hold = 360;
       at += group.hold;

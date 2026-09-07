@@ -54,6 +54,7 @@
     if (blocked() || (E.modal && E.modal !== "touch-hand")) return;
     const card = E.game.s.p.hand.find((x) => x.uid === uid);
     if (!card) return;
+    EmberAudio.fx("select");
     const c = D.byId[card.cid],
       err = E.game.legalCard("p", uid),
       cost = E.game.cost(card);

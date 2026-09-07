@@ -127,3 +127,15 @@
 ## v0.12.1 遗物图标
 
 `assets/relics/sources/` 保存六张独立生成原画及 provenance.json；`assets/relics/*.webp` 为 256px 运行图。打包输入仍使用 `assets/anime/non-card-relics.json`，由现有 packer 生成 `src/relic-assets.js`。原 62 张卡图未改动。
+
+## 本地战斗音效（2026-09-08）
+
+12 段 Kenney CC0 Foley、原件、许可和测量位于 `assets/audio/`。`tools/audio_assets.py` 校验清单哈希，构建时生成 `src/audio-assets.js`；单文件内嵌，网页构建提取成哈希命名 MP3。声音总线和元素合成在 `src/platform/audio.js`，事件时序由 `src/presentation/combat.js` / `src/effects.js` 驱动。详见 [音画反馈优化](AUDIO_FEEDBACK.md)。
+
+## 本地攻击与法术特效（2026-09-08）
+
+清理后保留 13 张有透明通道的 CC0 无损 WebP 纹理/图集：Kenney Particle Pack 的 8 张刀光、爪痕、烟尘与光纹；Mikodrak 2D Spell Effects 的 5 套火焰斩、爆破、电光及能量动画。作者页面、许可快照、选用原件、逐文件/逐帧 SHA-256、处理尺寸与落点锚点都保留在 [assets/vfx](../assets/vfx/README.md)。这些素材通过合法公开来源引入，不包含炉石游戏文件。
+
+`tools/vfx_assets.py` 使用标准库校验并内嵌素材，网页构建提取为本地内容哈希 WebP；`tools/repack_vfx.py` 可使用已声明的 Pillow 从原件重建。运行时的七类攻击、具名施法与四张传说签名由 `presentation/fx-profiles.js` 注册，`presentation/vfx.js` 使用现有 Canvas 时钟。详见 [战斗特效记录](VFX_FEEDBACK.md)。
+
+2026-09-08 的资源清理将特效下载量减少至 879,870 字节，删除闲置 smoke，保留所有使用中图片的精确 RGBA。体积与加载隔离验证见 [清理记录](MEDIA_CLEANUP.md)。

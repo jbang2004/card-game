@@ -33,11 +33,28 @@
     shadow: ["虚空湮灭", "VOID", "暗影光核 → 内缩漩涡 → 破碎符文与暗雾"],
   };
   let selected = "fire",
+    selectedVariant = "element",
     labInterval = null;
+  const labVariants = [
+    ["element", "元素基础"],
+    ["attack:blade", "攻击 · 刀剑斩击"],
+    ["attack:claw", "攻击 · 利爪撕裂"],
+    ["attack:slam", "攻击 · 重击震地"],
+    ["attack:arrow", "攻击 · 弓箭飞行"],
+    ["attack:breath", "攻击 · 巨龙吐息"],
+    ["fireball", "大法术 · 陨火"],
+    ["storm", "大法术 · 火焰风暴"],
+    ["nova", "大法术 · 冰霜新星"],
+    ["execute", "大法术 · 虚空坍缩"],
+    ["solaris", "传说 · 日曜王冠"],
+    ["nyx", "传说 · 星界之门"],
+    ["ashdragon", "传说 · 灰烬龙翼"],
+    ["frostking", "传说 · 冰霜王座"],
+  ];
   function showFXLab() {
     if (F.busy) return;
     E.showModal(
-      `<section class="modal-box lab-box"><div class="modal-heading"><div class="eyebrow">THE ART OF COMBAT</div><h2>余火演武场</h2><p>七种力量，七种完全不同的战斗语言。此处不会消耗卡牌或修改战役存档。</p></div><div class="lab-grid"><div class="lab-controls">${Object.entries(
+      `<section class="modal-box lab-box"><div class="modal-heading"><div class="eyebrow">THE ART OF COMBAT</div><h2>余火演武场</h2><p>切换武器、元素法术与传说登场，体验实战中的施放、命中和收势。演示不会消耗卡牌或修改存档。</p></div><div class="lab-grid"><div class="lab-controls">${Object.entries(
         labData,
       )
         .map(
@@ -46,13 +63,19 @@
         )
         .join(
           "",
-        )}</div><div class="lab-stage"><div class="lab-token source"><img src="${A.card(D.byId.nyx)}" alt="施法者"></div><div class="lab-token target"><img src="${A.card(D.byId.titan)}" alt="训练傀儡"></div><div class="lab-mark">CASTER &nbsp; / &nbsp; THE PROVING GROUND &nbsp; / &nbsp; TARGET</div></div></div><div class="lab-details" id="lab-details"></div><div class="lab-footer"><span>点击左侧元素切换 · ESC 返回${E.settings.reduced ? " · 当前为减弱动态模式" : ""}</span><button class="gold-btn" id="lab-replay">再次施放 ${A.icon("refresh")}</button></div></section>`,
+        )}</div><div class="lab-stage"><div class="lab-token source"><img src="${A.card(D.byId.nyx)}" alt="施法者"></div><div class="lab-token target"><img src="${A.card(D.byId.titan)}" alt="训练傀儡"></div><div class="lab-mark">CASTER &nbsp; / &nbsp; THE PROVING GROUND &nbsp; / &nbsp; TARGET</div></div></div><div class="lab-details" id="lab-details"></div><div class="lab-footer"><span>点击左侧元素切换 · ESC 返回${E.settings.reduced ? " · 当前为减弱动态模式" : ""}</span><label class="lab-variant">演出类型<select id="lab-variant">${labVariants.map(([id, name]) => `<option value="${id}" ${id === selectedVariant ? "selected" : ""}>${name}</option>`).join("")}</select></label><button class="gold-btn" id="lab-replay">再次施放 ${A.icon("refresh")}</button></div></section>`,
       "lab",
     );
     F.setLab(true);
     function refresh() {
+      const card = D.byId[selectedVariant];
+      if (card) selected = EmberFXProfiles.school(card);
       const d = labData[selected];
-      $("lab-details").innerHTML = `<strong>${d[0]}</strong>${d[2]}`;
+      const source = document.querySelector(".lab-token.source img");
+      source.src = A.card(card || D.byId.nyx);
+      source.alt = card?.name || "施法者";
+      $("lab-details").innerHTML =
+        `<strong>${card?.name || d[0]}</strong>${card ? "蓄力预告 → 专属演出 → 余辉消散，与实战共用同一套特效。" : d[2]}`;
       document
         .querySelectorAll("[data-school]")
         .forEach((el) =>
@@ -63,18 +86,25 @@
       if (E.modal !== "lab" || F.busy) return;
       const from = F.pos(document.querySelector(".lab-token.source")),
         to = F.pos(document.querySelector(".lab-token.target"));
-      if (from && to) F.preview(selected, from, to);
+      if (from && to) F.preview(selected, from, to, selectedVariant);
     }
     document.querySelectorAll("[data-school]").forEach(
       (el) =>
         (el.onclick = () => {
           if (F.busy) return;
           selected = el.dataset.school;
+          selectedVariant = "element";
+          $("lab-variant").value = selectedVariant;
           refresh();
           play();
         }),
     );
     $("lab-replay").onclick = play;
+    $("lab-variant").onchange = () => {
+      selectedVariant = $("lab-variant").value;
+      refresh();
+      play();
+    };
     refresh();
     clearInterval(labInterval);
     labInterval = setInterval(() => {
@@ -84,6 +114,7 @@
         return;
       }
       if ($("lab-replay")) $("lab-replay").disabled = F.busy;
+      if ($("lab-variant")) $("lab-variant").disabled = F.busy;
       document
         .querySelectorAll("[data-school]")
         .forEach((el) => (el.disabled = F.busy));

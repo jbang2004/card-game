@@ -1,0 +1,503 @@
+{
+  "createdAt": "2026-09-08",
+  "creator": "Kenney / Kenney Vleugels",
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "provenance": "Downloaded directly from official Kenney asset pages; selected original audio, source filenames, hashes and license text retained in this directory.",
+  "providerGeneration": {
+    "requested": "ElevenLabs",
+    "executed": false,
+    "probePlain": "ELEVENLABS_API_KEY=MISSING",
+    "probeShellProfiles": "ELEVENLABS_API_KEY=MISSING"
+  },
+  "verification": {
+    "mp3Decode": true,
+    "samplePeakCeilingDbfs": -3.0,
+    "maximumMeasuredOnsetSeconds": 0.002971,
+    "totalDecodedSeconds": 5.977075,
+    "totalMp3Bytes": 108775,
+    "subjectiveListening": "Not claimed: selection verified by material labels, decoded waveform, onset and loudness metrics."
+  },
+  "assets": [
+    {
+      "id": "card-pickup",
+      "path": "card-pickup.mp3",
+      "sourcePack": "casino-audio",
+      "sourceFilename": "card-slide-1.ogg",
+      "sourcePath": "sources/casino-audio/card-slide-1.ogg",
+      "sourceUrl": "https://kenney.nl/assets/casino-audio",
+      "license": "CC0-1.0",
+      "licensePath": "LICENSES/casino-audio.txt",
+      "sourceSha256": "006cf9822d15d7063f8899e56041f41646df30adb6fbd8b974ee5d5420012690",
+      "sha256": "d991aaebcba84f90f95078f940c0a35a25736edbb267aa4de63d5ed33dbf44ba",
+      "sourceMetrics": {
+        "decodedDurationSeconds": 0.600771,
+        "peakDbfs": 0.517,
+        "rmsDbfs": -24.838,
+        "onsetSecondsAtMinus45DbRelative": 0.079093,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.151723,
+        "peakTimeSeconds": 0.159433
+      },
+      "metrics": {
+        "decodedDurationSeconds": 0.432222,
+        "peakDbfs": -5.414,
+        "rmsDbfs": -29.369,
+        "onsetSecondsAtMinus45DbRelative": 0.000975,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.058617,
+        "peakTimeSeconds": 0.066327
+      },
+      "containerDurationSeconds": 0.432222,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "44100",
+        "channels": 1
+      },
+      "loop": false,
+      "trimStartSeconds": 0.093107,
+      "trimEndSeconds": 0.075442,
+      "processing": "Decoded mono float PCM; relative -41 dB start / -50 dB end threshold with 3 ms leading/40 ms trailing guard; peak scaled to -5 dBFS; 1 ms fade-in / 12 ms fade-out; MP3 128k encode; decode reverified.",
+      "recommendedGainBeforeMaster038": 0.32,
+      "trigger": "Card first lifts/selects; play once per selection, not every pointermove."
+    },
+    {
+      "id": "card-draw",
+      "path": "card-draw.mp3",
+      "sourcePack": "casino-audio",
+      "sourceFilename": "card-slide-6.ogg",
+      "sourcePath": "sources/casino-audio/card-slide-6.ogg",
+      "sourceUrl": "https://kenney.nl/assets/casino-audio",
+      "license": "CC0-1.0",
+      "licensePath": "LICENSES/casino-audio.txt",
+      "sourceSha256": "be85da181ac879c20cb667d0f9f156dbdc236d3751737ad27359a15e946430a0",
+      "sha256": "21cef7a4607e26a33fbe83cd05dc511155b53e669151281a12c87407ecf2af75",
+      "sourceMetrics": {
+        "decodedDurationSeconds": 0.600771,
+        "peakDbfs": -1.736,
+        "rmsDbfs": -29.876,
+        "onsetSecondsAtMinus45DbRelative": 0.011315,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.167279,
+        "peakTimeSeconds": 0.169705
+      },
+      "metrics": {
+        "decodedDurationSeconds": 0.582948,
+        "peakDbfs": -5.119,
+        "rmsDbfs": -33.423,
+        "onsetSecondsAtMinus45DbRelative": 0.00127,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.149773,
+        "peakTimeSeconds": 0.151882
+      },
+      "containerDurationSeconds": 0.582948,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "44100",
+        "channels": 1
+      },
+      "loop": false,
+      "trimStartSeconds": 0.017823,
+      "trimEndSeconds": 0.0,
+      "processing": "Decoded mono float PCM; relative -41 dB start / -50 dB end threshold with 3 ms leading/40 ms trailing guard; peak scaled to -5 dBFS; 1 ms fade-in / 12 ms fade-out; MP3 128k encode; decode reverified.",
+      "recommendedGainBeforeMaster038": 0.44,
+      "trigger": "Draw from deck / travel begins; offset image travel as needed."
+    },
+    {
+      "id": "card-play",
+      "path": "card-play.mp3",
+      "sourcePack": "casino-audio",
+      "sourceFilename": "card-place-1.ogg",
+      "sourcePath": "sources/casino-audio/card-place-1.ogg",
+      "sourceUrl": "https://kenney.nl/assets/casino-audio",
+      "license": "CC0-1.0",
+      "licensePath": "LICENSES/casino-audio.txt",
+      "sourceSha256": "d8f26c33a665dcbdcc6f632f6050bc9dd548feb0d4942d4547615926d3926810",
+      "sha256": "da91449582963dfa6fb4ac57040610250342f03504b28fd97943857d60ead047",
+      "sourceMetrics": {
+        "decodedDurationSeconds": 0.689116,
+        "peakDbfs": 1.328,
+        "rmsDbfs": -24.657,
+        "onsetSecondsAtMinus45DbRelative": 0.067143,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.158617,
+        "peakTimeSeconds": 0.159161
+      },
+      "metrics": {
+        "decodedDurationSeconds": 0.4961,
+        "peakDbfs": -5.429,
+        "rmsDbfs": -30.243,
+        "onsetSecondsAtMinus45DbRelative": 0.0,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.002993,
+        "peakTimeSeconds": 0.003537
+      },
+      "containerDurationSeconds": 0.4961,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "44100",
+        "channels": 1
+      },
+      "loop": false,
+      "trimStartSeconds": 0.155624,
+      "trimEndSeconds": 0.037392,
+      "processing": "Decoded mono float PCM; relative -12 dB start / -50 dB end threshold with 3 ms leading/40 ms trailing guard; peak scaled to -5 dBFS; 1 ms fade-in / 12 ms fade-out; MP3 128k encode; decode reverified.",
+      "recommendedGainBeforeMaster038": 0.58,
+      "trigger": "Card contacts table, dry card material transient."
+    },
+    {
+      "id": "card-play-alt",
+      "path": "card-play-alt.mp3",
+      "sourcePack": "casino-audio",
+      "sourceFilename": "card-place-2.ogg",
+      "sourcePath": "sources/casino-audio/card-place-2.ogg",
+      "sourceUrl": "https://kenney.nl/assets/casino-audio",
+      "license": "CC0-1.0",
+      "licensePath": "LICENSES/casino-audio.txt",
+      "sourceSha256": "903d5050718595e87864dd755643b476ab1a5533080dcc2dddc72570d33ba9f8",
+      "sha256": "13d8304976a636d0fb70206c4c680ae282c220583ada302ea34b5a2b7da92776",
+      "sourceMetrics": {
+        "decodedDurationSeconds": 0.456485,
+        "peakDbfs": 1.019,
+        "rmsDbfs": -28.907,
+        "onsetSecondsAtMinus45DbRelative": 0.041814,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.150045,
+        "peakTimeSeconds": 0.198277
+      },
+      "metrics": {
+        "decodedDurationSeconds": 0.210045,
+        "peakDbfs": -5.377,
+        "rmsDbfs": -32.055,
+        "onsetSecondsAtMinus45DbRelative": 0.00034,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.002993,
+        "peakTimeSeconds": 0.051224
+      },
+      "containerDurationSeconds": 0.210045,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "44100",
+        "channels": 1
+      },
+      "loop": false,
+      "trimStartSeconds": 0.147052,
+      "trimEndSeconds": 0.099841,
+      "processing": "Decoded mono float PCM; relative -12 dB start / -50 dB end threshold with 3 ms leading/40 ms trailing guard; peak scaled to -5 dBFS; 1 ms fade-in / 12 ms fade-out; MP3 128k encode; decode reverified.",
+      "recommendedGainBeforeMaster038": 0.62,
+      "trigger": "Second card contact variant; alternate with card-play."
+    },
+    {
+      "id": "table-thump",
+      "path": "table-thump.mp3",
+      "sourcePack": "impact-sounds",
+      "sourceFilename": "impactWood_heavy_001.ogg",
+      "sourcePath": "sources/impact-sounds/impactWood_heavy_001.ogg",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+      "license": "CC0-1.0",
+      "licensePath": "LICENSES/impact-sounds.txt",
+      "sourceSha256": "f1b07a53ac10c615fff9ba470511fdeb722b5902e1a8520759fc20ad6f546015",
+      "sha256": "beaaa2881977386d9fdaa389e902eab4135f0d8cc8c6aefe441083a47cbcffaf",
+      "sourceMetrics": {
+        "decodedDurationSeconds": 0.310136,
+        "peakDbfs": 2.078,
+        "rmsDbfs": -16.702,
+        "onsetSecondsAtMinus45DbRelative": 2.3e-05,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.000249,
+        "peakTimeSeconds": 0.003764
+      },
+      "metrics": {
+        "decodedDurationSeconds": 0.310136,
+        "peakDbfs": -5.446,
+        "rmsDbfs": -24.303,
+        "onsetSecondsAtMinus45DbRelative": 0.000113,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.00059,
+        "peakTimeSeconds": 0.003764
+      },
+      "containerDurationSeconds": 0.310136,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "44100",
+        "channels": 1
+      },
+      "loop": false,
+      "trimStartSeconds": 0.0,
+      "trimEndSeconds": 0.0,
+      "processing": "Decoded mono float PCM; relative -41 dB start / -50 dB end threshold with 3 ms leading/40 ms trailing guard; peak scaled to -5 dBFS; 1 ms fade-in / 12 ms fade-out; MP3 128k encode; decode reverified.",
+      "recommendedGainBeforeMaster038": 0.28,
+      "trigger": "Very quiet low material body under expensive summon landing."
+    },
+    {
+      "id": "swing",
+      "path": "swing.mp3",
+      "sourcePack": "rpg-audio",
+      "sourceFilename": "knifeSlice.ogg",
+      "sourcePath": "sources/rpg-audio/knifeSlice.ogg",
+      "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+      "license": "CC0-1.0",
+      "licensePath": "LICENSES/rpg-audio.txt",
+      "sourceSha256": "4cd96dc630bed9840c15f1dd2306da2cc56a4da26a5d3f1a03c5a7265ac5e54f",
+      "sha256": "5561e23afa4c059f8785fbab0abf844b6b38ee6546687240a91aacce24ed916e",
+      "sourceMetrics": {
+        "decodedDurationSeconds": 0.599546,
+        "peakDbfs": 0.16,
+        "rmsDbfs": -19.014,
+        "onsetSecondsAtMinus45DbRelative": 0.080703,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.08229,
+        "peakTimeSeconds": 0.237166
+      },
+      "metrics": {
+        "decodedDurationSeconds": 0.412653,
+        "peakDbfs": -5.046,
+        "rmsDbfs": -23.04,
+        "onsetSecondsAtMinus45DbRelative": 0.000363,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.004399,
+        "peakTimeSeconds": 0.159274
+      },
+      "containerDurationSeconds": 0.412653,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "44100",
+        "channels": 1
+      },
+      "loop": false,
+      "trimStartSeconds": 0.077891,
+      "trimEndSeconds": 0.109002,
+      "processing": "Decoded mono float PCM; relative -41 dB start / -50 dB end threshold with 3 ms leading/40 ms trailing guard; peak scaled to -5 dBFS; 1 ms fade-in / 12 ms fade-out; MP3 128k encode; decode reverified.",
+      "recommendedGainBeforeMaster038": 0.45,
+      "trigger": "Attack acceleration / windup; impact cue only at contact."
+    },
+    {
+      "id": "impact-light",
+      "path": "impact-light.mp3",
+      "sourcePack": "impact-sounds",
+      "sourceFilename": "impactPunch_medium_001.ogg",
+      "sourcePath": "sources/impact-sounds/impactPunch_medium_001.ogg",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+      "license": "CC0-1.0",
+      "licensePath": "LICENSES/impact-sounds.txt",
+      "sourceSha256": "e71d23abcc3f10d9d6bc9615b2a431fff70b12333a5fcdd9964457564ace4349",
+      "sha256": "d6dfdad18aaf995d3cf146c72ea8f2ed44d97048dd6dfcedcdac5311956c4342",
+      "sourceMetrics": {
+        "decodedDurationSeconds": 0.401701,
+        "peakDbfs": 1.873,
+        "rmsDbfs": -13.855,
+        "onsetSecondsAtMinus45DbRelative": 0.000408,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.017392,
+        "peakTimeSeconds": 0.030499
+      },
+      "metrics": {
+        "decodedDurationSeconds": 0.307596,
+        "peakDbfs": -5.431,
+        "rmsDbfs": -20.016,
+        "onsetSecondsAtMinus45DbRelative": 0.000567,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.017392,
+        "peakTimeSeconds": 0.030499
+      },
+      "containerDurationSeconds": 0.307596,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "44100",
+        "channels": 1
+      },
+      "loop": false,
+      "trimStartSeconds": 0.0,
+      "trimEndSeconds": 0.094104,
+      "processing": "Decoded mono float PCM; relative -41 dB start / -50 dB end threshold with 3 ms leading/40 ms trailing guard; peak scaled to -5 dBFS; 1 ms fade-in / 12 ms fade-out; MP3 128k encode; decode reverified.",
+      "recommendedGainBeforeMaster038": 0.64,
+      "trigger": "Melee contact, small/medium damage; short dry thump."
+    },
+    {
+      "id": "impact-heavy",
+      "path": "impact-heavy.mp3",
+      "sourcePack": "impact-sounds",
+      "sourceFilename": "impactPunch_heavy_000.ogg",
+      "sourcePath": "sources/impact-sounds/impactPunch_heavy_000.ogg",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+      "license": "CC0-1.0",
+      "licensePath": "LICENSES/impact-sounds.txt",
+      "sourceSha256": "b33a8f14068aec24ec69ba85e5e87fdc41228975f6a1a3e44a6e7d6fc3d9f8d8",
+      "sha256": "d4f70b63f8e6ee01ff413ace5512d3e23e5d87a3a8e05d31a227c3077a7f745c",
+      "sourceMetrics": {
+        "decodedDurationSeconds": 0.649025,
+        "peakDbfs": 2.043,
+        "rmsDbfs": -14.973,
+        "onsetSecondsAtMinus45DbRelative": 0.000658,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.023492,
+        "peakTimeSeconds": 0.024399
+      },
+      "metrics": {
+        "decodedDurationSeconds": 0.53381,
+        "peakDbfs": -5.436,
+        "rmsDbfs": -21.612,
+        "onsetSecondsAtMinus45DbRelative": 0.000816,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.023492,
+        "peakTimeSeconds": 0.024399
+      },
+      "containerDurationSeconds": 0.53381,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "44100",
+        "channels": 1
+      },
+      "loop": false,
+      "trimStartSeconds": 0.0,
+      "trimEndSeconds": 0.115215,
+      "processing": "Decoded mono float PCM; relative -41 dB start / -50 dB end threshold with 3 ms leading/40 ms trailing guard; peak scaled to -5 dBFS; 1 ms fade-in / 12 ms fade-out; MP3 128k encode; decode reverified.",
+      "recommendedGainBeforeMaster038": 0.79,
+      "trigger": "Melee heavy contact; scale with damage, avoid stacking repeated bass."
+    },
+    {
+      "id": "death-debris",
+      "path": "death-debris.mp3",
+      "sourcePack": "impact-sounds",
+      "sourceFilename": "impactMining_003.ogg",
+      "sourcePath": "sources/impact-sounds/impactMining_003.ogg",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+      "license": "CC0-1.0",
+      "licensePath": "LICENSES/impact-sounds.txt",
+      "sourceSha256": "4237fa2cd80364ad81cd0af44f67d7497f1c5edcc7bdb02cd22be2ba4580c83d",
+      "sha256": "04f22bc5748d856eec38a123b7a8ef3402c3d2f84f5679d2879b51bf9b0f93a3",
+      "sourceMetrics": {
+        "decodedDurationSeconds": 0.991723,
+        "peakDbfs": 1.991,
+        "rmsDbfs": -20.403,
+        "onsetSecondsAtMinus45DbRelative": 0.0,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.000317,
+        "peakTimeSeconds": 0.005692
+      },
+      "metrics": {
+        "decodedDurationSeconds": 0.708345,
+        "peakDbfs": -5.481,
+        "rmsDbfs": -26.411,
+        "onsetSecondsAtMinus45DbRelative": 0.000136,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.000658,
+        "peakTimeSeconds": 0.005692
+      },
+      "containerDurationSeconds": 0.708345,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "44100",
+        "channels": 1
+      },
+      "loop": false,
+      "trimStartSeconds": 0.0,
+      "trimEndSeconds": 0.283379,
+      "processing": "Decoded mono float PCM; relative -41 dB start / -50 dB end threshold with 3 ms leading/40 ms trailing guard; peak scaled to -5 dBFS; 1 ms fade-in / 12 ms fade-out; MP3 128k encode; decode reverified.",
+      "recommendedGainBeforeMaster038": 0.39,
+      "trigger": "Mineral impact/debris texture under death crumble; not a full fantasy death cue."
+    },
+    {
+      "id": "shield-crack",
+      "path": "shield-crack.mp3",
+      "sourcePack": "impact-sounds",
+      "sourceFilename": "impactGlass_heavy_001.ogg",
+      "sourcePath": "sources/impact-sounds/impactGlass_heavy_001.ogg",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+      "license": "CC0-1.0",
+      "licensePath": "LICENSES/impact-sounds.txt",
+      "sourceSha256": "58686e0e562612cc566791844a10e269f8d1921f4766c14ba43976fd0a429f4e",
+      "sha256": "1db4cb1679092b2418070545628f48c429ac62f6a4ac3d9f42644cbf044e886f",
+      "sourceMetrics": {
+        "decodedDurationSeconds": 0.429002,
+        "peakDbfs": 2.049,
+        "rmsDbfs": -22.261,
+        "onsetSecondsAtMinus45DbRelative": 4.5e-05,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.000159,
+        "peakTimeSeconds": 0.001859
+      },
+      "metrics": {
+        "decodedDurationSeconds": 0.429002,
+        "peakDbfs": -5.447,
+        "rmsDbfs": -30.217,
+        "onsetSecondsAtMinus45DbRelative": 9.1e-05,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.000454,
+        "peakTimeSeconds": 0.001882
+      },
+      "containerDurationSeconds": 0.429002,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "44100",
+        "channels": 1
+      },
+      "loop": false,
+      "trimStartSeconds": 0.0,
+      "trimEndSeconds": 0.0,
+      "processing": "Decoded mono float PCM; relative -41 dB start / -50 dB end threshold with 3 ms leading/40 ms trailing guard; peak scaled to -5 dBFS; 1 ms fade-in / 12 ms fade-out; MP3 128k encode; decode reverified.",
+      "recommendedGainBeforeMaster038": 0.52,
+      "trigger": "Glassy material crack when shield breaks; optional short magic harmonics."
+    },
+    {
+      "id": "turn-bell",
+      "path": "turn-bell.mp3",
+      "sourcePack": "impact-sounds",
+      "sourceFilename": "impactBell_heavy_000.ogg",
+      "sourcePath": "sources/impact-sounds/impactBell_heavy_000.ogg",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+      "license": "CC0-1.0",
+      "licensePath": "LICENSES/impact-sounds.txt",
+      "sourceSha256": "94b8bb5f2d43ab65e4bcc32b28562416e9bc2c51d9fd4be1e333660ee52f977f",
+      "sha256": "cb4a9d359c4ed1190f809086e6dc9c4065a98a6a0824516dbfd7fc9833df2332",
+      "sourceMetrics": {
+        "decodedDurationSeconds": 1.480181,
+        "peakDbfs": 1.873,
+        "rmsDbfs": -23.253,
+        "onsetSecondsAtMinus45DbRelative": 0.0,
+        "strongOnsetSecondsAtMinus12DbRelative": 6.8e-05,
+        "peakTimeSeconds": 0.001338
+      },
+      "metrics": {
+        "decodedDurationSeconds": 1.316032,
+        "peakDbfs": -5.453,
+        "rmsDbfs": -30.25,
+        "onsetSecondsAtMinus45DbRelative": 4.5e-05,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.000454,
+        "peakTimeSeconds": 0.001338
+      },
+      "containerDurationSeconds": 1.316032,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "44100",
+        "channels": 1
+      },
+      "loop": false,
+      "trimStartSeconds": 0.0,
+      "trimEndSeconds": 0.16415,
+      "processing": "Decoded mono float PCM; relative -41 dB start / -50 dB end threshold with 3 ms leading/40 ms trailing guard; peak scaled to -5 dBFS; 1 ms fade-in / 12 ms fade-out; MP3 128k encode; decode reverified.",
+      "recommendedGainBeforeMaster038": 0.27,
+      "trigger": "Quiet once-per-player-turn bell accent; combine only with restrained musical cue."
+    },
+    {
+      "id": "equip-latch",
+      "path": "equip-latch.mp3",
+      "sourcePack": "rpg-audio",
+      "sourceFilename": "metalLatch.ogg",
+      "sourcePath": "sources/rpg-audio/metalLatch.ogg",
+      "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+      "license": "CC0-1.0",
+      "licensePath": "LICENSES/rpg-audio.txt",
+      "sourceSha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+      "sha256": "faed581d9898fd9b03efec1c993509969520b353b83a0fe86600da5217465f3e",
+      "sourceMetrics": {
+        "decodedDurationSeconds": 0.261338,
+        "peakDbfs": 3.662,
+        "rmsDbfs": -18.41,
+        "onsetSecondsAtMinus45DbRelative": 0.013401,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.043333,
+        "peakTimeSeconds": 0.045057
+      },
+      "metrics": {
+        "decodedDurationSeconds": 0.238186,
+        "peakDbfs": -4.947,
+        "rmsDbfs": -26.991,
+        "onsetSecondsAtMinus45DbRelative": 0.002971,
+        "strongOnsetSecondsAtMinus12DbRelative": 0.032902,
+        "peakTimeSeconds": 0.034263
+      },
+      "containerDurationSeconds": 0.238186,
+      "format": {
+        "codec_name": "mp3",
+        "sample_rate": "44100",
+        "channels": 1
+      },
+      "loop": false,
+      "trimStartSeconds": 0.010431,
+      "trimEndSeconds": 0.012721,
+      "processing": "Decoded mono float PCM; relative -41 dB start / -50 dB end threshold with 3 ms leading/40 ms trailing guard; peak scaled to -5 dBFS; 1 ms fade-in / 12 ms fade-out; MP3 128k encode; decode reverified.",
+      "recommendedGainBeforeMaster038": 0.48,
+      "trigger": "Equipment seats or tactile button confirmation; no repeated hover playback."
+    }
+  ]
+}

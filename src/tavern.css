@@ -1995,49 +1995,7 @@ button:not(:disabled) {
   letter-spacing: 1px;
   font-size: 8px;
 }
-.damage-number {
-  font:
-    900 45px Georgia,
-    serif !important;
-  color: #fff3ce !important;
-  text-shadow:
-    0 3px #582926,
-    3px 0 #582926,
-    -3px 0 #582926,
-    0 -3px #582926,
-    0 6px 5px #251e2966 !important;
-  filter: none;
-}
-.damage-number.crit {
-  font-size: 59px !important;
-  color: #ffe28e !important;
-}
-.damage-number.heal {
-  color: #cbed87 !important;
-  text-shadow:
-    0 3px #355331,
-    2px 0 #355331,
-    -2px 0 #355331,
-    0 -2px #355331 !important;
-}
-.damage-number.block {
-  font: 700 22px var(--serif) !important;
-  color: #ffeaa9 !important;
-}
-.damage-number:before {
-  content: "";
-  position: absolute;
-  width: 71px;
-  height: 64px;
-  left: calc(50% - 36px);
-  top: calc(50% - 32px);
-  background: radial-gradient(#cf6a3544, transparent 72%);
-  z-index: -1;
-}
-.damage-number small {
-  font: 10px var(--sans);
-  letter-spacing: 1px;
-}
+/* Combat number styling is owned by presentation/components.css. */
 .cast-card .card-title {
   font-size: 14px;
 }

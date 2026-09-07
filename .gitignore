@@ -8,6 +8,8 @@ tests/*-run.log
 # Developer handoff: generated output and local-only dependencies.
 /index.html
 /dist/
+/src/audio-assets.js
+/src/vfx-assets.js
 /.venv/
 /venv/
 /.pytest_cache/
