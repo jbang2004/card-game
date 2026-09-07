@@ -643,30 +643,1072 @@ body .motion-arriving:not(.motion-ready) > img[data-art-key] {
   animation: portrait-arrival 160ms ease-out both;
 }
 @keyframes portrait-arrival {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Tavern Oaths deck planning and campaign refit share desktop/touch materials. */
-.deck-plan { color: var(--gold, #e7c37f); font-size: 14px; line-height: 1.6; margin: 12px 0; }
-#deck-warning { color: #efc78a; font-size: 13px; line-height: 1.5; }
-.archetype-picker { display: flex; align-items: center; gap: 16px; margin-top: 16px; }
-.archetype-picker select { flex: 1; }
-.campaign-refit { padding: 14px; margin: 16px 0; border: 1px solid #79603d; background: #241b16; color: #ead9b7; }
-.campaign-refit p { font-size: 14px; line-height: 1.5; }
-.campaign-refit select { width: 46%; margin-right: 2%; }
-.deck-editor label { display:flex; align-items:center; gap:12px; color:#ead9b7; }
-.deck-editor label select { min-width:0; flex:1; }
+.deck-plan {
+  color: var(--gold, #e7c37f);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 12px 0;
+}
+#deck-warning {
+  color: #efc78a;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.archetype-picker {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+.archetype-picker select {
+  flex: 1;
+}
+.campaign-refit {
+  padding: 14px;
+  margin: 16px 0;
+  border: 1px solid #79603d;
+  background: #241b16;
+  color: #ead9b7;
+}
+.campaign-refit p {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.campaign-refit select {
+  width: 46%;
+  margin-right: 2%;
+}
+.deck-editor label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #ead9b7;
+}
+.deck-editor label select {
+  min-width: 0;
+  flex: 1;
+}
 
-.archetype-picker[hidden] { display: none; }
+.archetype-picker[hidden] {
+  display: none;
+}
 
-body.touch-layout #modal[data-type="heroes"] .hero-option { height: 110px; min-height: 110px; }
-body.touch-layout #modal[data-type="heroes"] .hero-option .hero-option-text small,
-body.touch-layout #modal[data-type="heroes"] .hero-option p { display: none; }
-body.touch-layout #modal[data-type="heroes"] .hero-option h3 { margin-top: 4px; }
-body.touch-layout #modal[data-type="heroes"] .hero-option em { font-size: 13px; }
-body.touch-layout #modal[data-type="heroes"] .hero-options { gap: 8px; }
-body.touch-layout #modal[data-type="heroes"] .modal-box { padding-bottom: 86px; }
-body.touch-layout #modal[data-type="heroes"] .archetype-picker { margin-top: 10px; }
+body.touch-layout #modal[data-type="heroes"] .hero-option {
+  height: 110px;
+  min-height: 110px;
+}
+body.touch-layout
+  #modal[data-type="heroes"]
+  .hero-option
+  .hero-option-text
+  small,
+body.touch-layout #modal[data-type="heroes"] .hero-option p {
+  display: none;
+}
+body.touch-layout #modal[data-type="heroes"] .hero-option h3 {
+  margin-top: 4px;
+}
+body.touch-layout #modal[data-type="heroes"] .hero-option em {
+  font-size: 13px;
+}
+body.touch-layout #modal[data-type="heroes"] .hero-options {
+  gap: 8px;
+}
+body.touch-layout #modal[data-type="heroes"] .modal-box {
+  padding-bottom: 86px;
+}
+body.touch-layout #modal[data-type="heroes"] .archetype-picker {
+  margin-top: 10px;
+}
 /* The longer deck/mode form must scroll without a footer covering its fields. */
-body.touch-layout #modal[data-type="heroes"] .modal-footer { position: static; }
+body.touch-layout #modal[data-type="heroes"] .modal-footer {
+  position: static;
+}
+
+/* Gilded cabinet UI: structural bronze, recessed walnut, quiet rule paper. */
+:root {
+  --panel-wood:
+    linear-gradient(110deg, #23160ef5, #493021e8 48%, #251910f5),
+    var(--wood-texture);
+  --rim-light: #d6b77b;
+  --rim-dark: #51351e;
+  --paper: #efdfbd;
+  --paper-ink: #332519;
+  --muted-ink: #c9b594;
+  --panel-shadow:
+    inset 0 1px 0 #ffe0a570, inset 0 0 0 5px #1a100acc,
+    inset 0 0 0 7px #946b3955, 0 7px 0 #160d08, 0 9px 0 #74502b,
+    0 24px 65px #000a;
+}
+body .modal-box,
+body.touch-layout #modal .modal-box {
+  background: var(--panel-wood);
+  background-size: auto, 460px;
+  border: 2px solid #ad8650;
+  border-radius: 20px;
+  box-shadow: var(--panel-shadow);
+  color: var(--ink);
+  padding: 30px 36px;
+}
+body #modal {
+  background: #090704bd;
+  backdrop-filter: blur(5px);
+}
+body .modal-heading {
+  margin: 0 0 24px;
+  padding: 0 44px 20px 0;
+  text-align: left;
+  border-bottom: 1px solid #ba93564d;
+}
+body .modal-heading h2 {
+  font-size: 30px;
+  line-height: 1.35;
+  color: #ffe6b4;
+  text-shadow: 0 2px 1px #160b08;
+}
+body .modal-heading p {
+  font-size: 16px;
+  line-height: 1.6;
+  margin-top: 10px;
+}
+body .modal-heading .eyebrow {
+  font-size: 12px;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+  color: var(--muted-ink);
+}
+body .modal-close {
+  width: 44px;
+  height: 44px;
+  border: 2px solid #a17b48;
+  background: var(--secondary-fill);
+  color: var(--ink);
+  box-shadow:
+    inset 0 1px #f7d39877,
+    0 3px 5px #0009;
+}
+body .modal-footer {
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid #b68e5144;
+}
+body .gold-btn,
+body.touch-layout .gold-btn,
+body .end-turn {
+  background: linear-gradient(
+    #fae3a7 0%,
+    #e9c575 12%,
+    #c69747 65%,
+    #ab732e 100%
+  );
+  border: 2px solid #644422;
+  box-shadow:
+    inset 0 0 0 1px #ffedb7,
+    inset 0 3px 0 #fff0be88,
+    inset 0 -4px 0 #70471755,
+    0 4px 0 #392318,
+    0 6px 0 #977341,
+    0 10px 14px #0006;
+  color: #302013;
+  text-shadow: 0 1px #ffe4a677;
+  border-radius: 10px;
+  min-height: 48px;
+}
+body .ghost-btn,
+body.touch-layout .ghost-btn,
+body .text-btn,
+body .filter-btn,
+body .wind-time-setting {
+  background: linear-gradient(#624934, #332319);
+  color: var(--ink);
+  border: 1px solid #a47b43;
+  border-radius: 7px;
+  box-shadow:
+    inset 0 1px #eacc9566,
+    inset 0 -2px #1b110a99,
+    0 3px 4px #0006;
+}
+body .ghost-btn::before,
+body .ghost-btn::after {
+  display: none;
+}
+body .gold-btn:active:not(:disabled),
+body .ghost-btn:active:not(:disabled) {
+  transform: translateY(2px);
+  filter: brightness(0.94);
+}
+body button:disabled {
+  cursor: not-allowed;
+}
+body .gold-btn:disabled {
+  filter: saturate(0.25);
+  opacity: 0.6;
+  box-shadow:
+    inset 0 0 0 1px #ffe6b044,
+    0 2px 0 #24150d;
+}
+body button:focus-visible,
+body select:focus-visible,
+body input:focus-visible,
+body summary:focus-visible {
+  outline: 3px solid #f8dc88;
+  outline-offset: 3px;
+}
+body .library-search {
+  min-height: 44px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--ink);
+  background: #201710;
+  border: 1px solid #9c7642;
+  border-radius: 7px;
+  box-shadow:
+    inset 0 2px 5px #0008,
+    0 1px #e7c58922;
+}
+body .library-search::placeholder {
+  color: #c5b394;
+  opacity: 1;
+}
+body .library-search option {
+  color: var(--ink);
+  background: #201710;
+}
+
+/* Main menu: one cabinet of actions, with artwork around it. */
+body:not(.touch-layout) .lobby-copy {
+  left: 490px;
+  top: 196px;
+  width: 620px;
+  height: auto;
+  padding: 32px 48px 36px;
+  background: var(--panel-wood);
+  background-size: auto, 460px;
+  border: 2px solid #bb9559;
+  border-radius: 24px;
+  box-shadow: var(--panel-shadow);
+}
+body .lobby-copy:before {
+  inset: 10px;
+  border-color: #b78c4744;
+  pointer-events: none;
+}
+body:not(.touch-layout) .lobby-title {
+  position: static;
+  transform: none;
+  margin: 0 0 4px;
+  padding: 0;
+  width: auto;
+  height: auto;
+  line-height: 1.15;
+}
+body:not(.touch-layout) .lobby-title span {
+  font-size: 76px;
+  letter-spacing: 12px;
+}
+body .lobby-copy > .eyebrow,
+body .lobby-tagline,
+body .lobby-world-label,
+body .lobby-bottom small,
+body .lobby-collection > .section-label {
+  display: none;
+}
+body .lobby-chinese {
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: 5px;
+  margin: 6px 0 20px;
+  color: #d8bc83;
+}
+body .lobby-desc {
+  margin: 0 0 24px;
+  font-size: 14px;
+  color: var(--muted-ink);
+}
+body:not(.touch-layout) .lobby-actions {
+  margin: 0;
+  gap: 16px;
+}
+body .lobby-actions button {
+  font-size: 20px;
+  min-height: 60px;
+}
+body .showcase-link {
+  margin-top: 24px;
+  padding: 12px;
+  font-size: 14px;
+  border: 0;
+}
+body .showcase-link span:last-child {
+  display: none;
+}
+body:not(.touch-layout) .lobby-collection {
+  right: 120px;
+  bottom: 124px;
+  transform: scale(0.86);
+  transform-origin: bottom right;
+}
+body .lobby-bottom {
+  font-size: 12px;
+  letter-spacing: 0;
+  background: #170e08bf;
+}
+body .topbar {
+  background: linear-gradient(#463122f5, #20160ff5);
+  box-shadow:
+    inset 0 -1px #c49a5455,
+    0 4px 10px #0005;
+}
+body .nav-link {
+  font-size: 14px;
+  color: var(--ink-secondary);
+}
+body .nav-link.active {
+  color: #ffe1a0;
+  background: #a57b3822;
+}
+body .nav-link.active:after {
+  background: #d5ae62;
+}
+
+/* Rewards: artwork above, dark ink on quiet parchment, deliberate selection. */
+body .rewards-box {
+  width: 1020px;
+}
+body .relic-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+  margin: 6px 0 26px;
+  align-items: stretch;
+}
+body .relic-choice {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  min-width: 0;
+  min-height: 335px;
+  padding: 22px 20px 16px;
+  background: var(--paper);
+  border: 3px solid #a77d43;
+  border-radius: 14px;
+  box-shadow:
+    inset 0 0 0 2px #fff0ce,
+    inset 0 0 0 6px #a27a3930,
+    0 5px 0 #4a2e1a,
+    0 9px 12px #0006;
+  color: var(--paper-ink);
+  transition:
+    transform 140ms,
+    box-shadow 140ms;
+}
+body .relic-choice:hover {
+  background: var(--paper);
+  transform: translateY(-3px);
+  border-color: #dfbb72;
+}
+body .relic-choice[aria-pressed="true"] {
+  background: var(--paper);
+  border-color: #ffe5a0;
+  box-shadow:
+    inset 0 0 0 2px #c69340,
+    0 0 0 3px #d29b44,
+    0 0 26px #e9b64d44,
+    0 8px 12px #0006;
+}
+body .relic-art {
+  display: grid;
+  place-items: center;
+  width: 106px;
+  height: 106px;
+  border-radius: 50%;
+  padding: 6px;
+  background: linear-gradient(
+    135deg,
+    #fff1b2,
+    #91652f 45%,
+    #d3ac65 70%,
+    #50321e
+  );
+  box-shadow:
+    inset 0 1px #fff5d4,
+    0 4px 5px #58321966;
+  margin-bottom: 18px;
+}
+body .relic-choice .relic-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 2px solid #644627;
+  border-radius: 50%;
+  margin: 0;
+  opacity: 1;
+  visibility: visible;
+}
+body .relic-choice h3 {
+  font: 750 21px/1.35 var(--ui-font);
+  color: #392415;
+  letter-spacing: 0;
+  margin: 0 0 12px;
+  text-shadow: 0 1px #fff9;
+}
+body .relic-choice p {
+  color: var(--paper-ink);
+  font: 500 16px/1.65 var(--ui-font);
+  margin: 0;
+  text-align: left;
+  width: 100%;
+  text-shadow: none;
+}
+body .relic-pick-label {
+  display: block;
+  margin-top: auto;
+  padding-top: 16px;
+  font-size: 13px;
+  font-weight: 750;
+  color: #674923;
+}
+body .relic-choice[aria-pressed="true"] .relic-pick-label {
+  font-size: 0;
+}
+body .relic-choice[aria-pressed="true"] .relic-pick-label:after {
+  content: "✓ 已选择";
+  font-size: 14px;
+}
+body .campaign-refit {
+  padding: 0;
+  margin: 0;
+  background: #1e150db3;
+  border: 1px solid #a57c3f66;
+  border-radius: 8px;
+}
+body .campaign-refit summary {
+  cursor: pointer;
+  padding: 14px 18px;
+  font-size: 16px;
+  color: var(--ink);
+}
+body .campaign-refit summary span {
+  margin-left: 12px;
+  color: var(--muted-ink);
+  font-size: 14px;
+}
+body .refit-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 4px 18px 0;
+}
+body .refit-fields label {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+}
+body .campaign-refit .library-search {
+  width: 100%;
+  margin: 0;
+}
+body #refit-status {
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 12px 18px 16px;
+}
+body .reward-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 24px;
+}
+body .reward-next {
+  font-size: 14px;
+  color: var(--muted-ink);
+}
+body #reward-selection {
+  font-size: 16px;
+  margin-top: 7px;
+  color: var(--ink);
+}
+body #reward-confirm {
+  font-size: 17px;
+  min-width: 240px;
+}
+
+/* Collection and settings use fixed action space and naturally scrolling content. */
+body:not(.touch-layout) .library-box {
+  display: flex;
+  flex-direction: column;
+  height: 830px;
+  padding: 28px 34px;
+}
+body .library-heading {
+  margin-bottom: 20px;
+}
+body .library-heading p {
+  font-size: 13px;
+  margin-top: 8px;
+  color: var(--muted-ink);
+  letter-spacing: 0;
+}
+body:not(.touch-layout) .library-layout {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+body:not(.touch-layout) .library-main {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+body:not(.touch-layout) .library-grid {
+  height: auto;
+  min-height: 0;
+  flex: 1;
+  padding: 24px 8px;
+}
+body:not(.touch-layout) .deck-editor {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  padding: 16px 18px;
+  border: 1px solid #96703c77;
+  border-radius: 10px;
+  background: #1d140dc9;
+  box-shadow: inset 0 2px 8px #0007;
+}
+body .deck-editor h3 {
+  color: var(--ink);
+  font: 700 22px/1.3 var(--ui-font);
+}
+body .deck-total {
+  color: #d8c689;
+  font-variant-numeric: tabular-nums;
+}
+body .deck-intro {
+  font-size: 13px;
+  margin: 8px 0 14px;
+}
+body .deck-presets {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+}
+body .deck-presets select {
+  flex: 1;
+  min-width: 0;
+}
+body .deck-presets button {
+  min-height: 40px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+body .deck-plan,
+body #deck-warning {
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 10px 0;
+}
+body:not(.touch-layout) .deck-list {
+  flex: 1;
+  min-height: 90px;
+  height: auto;
+  margin-top: 6px;
+  overflow-y: auto;
+}
+body .deck-row {
+  min-height: 34px;
+  background: linear-gradient(#523b29, #322319);
+  color: var(--ink);
+  border-color: #99723d77;
+}
+body .deck-row .deck-count {
+  color: var(--ink-secondary);
+}
+body .deck-curve {
+  flex-shrink: 0;
+  height: 44px;
+  margin-top: 12px;
+}
+body .deck-actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  padding-bottom: 6px;
+}
+body .deck-actions button {
+  flex: 1;
+  font-size: 14px;
+  min-height: 46px;
+  padding: 8px;
+}
+body .filter-btn {
+  min-height: 36px;
+  font-size: 14px;
+}
+body .filter-btn.active {
+  background: #d3ad67;
+  color: #302013;
+  border-color: #efd49b;
+}
+body .library-foot {
+  flex-shrink: 0;
+  padding-top: 12px;
+  font-size: 12px;
+}
+body .settings-box {
+  width: 640px;
+}
+body .setting-row {
+  padding: 18px 0;
+  gap: 22px;
+  border-bottom: 1px solid #ae854747;
+  background: none;
+}
+body .setting-row h3 {
+  font: 650 17px/1.4 var(--ui-font);
+  color: var(--ink);
+}
+body .setting-row p {
+  font: 400 14px/1.6 var(--ui-font);
+  margin-top: 6px;
+  color: var(--muted-ink);
+}
+body .toggle {
+  width: 56px;
+  height: 44px;
+  min-width: 56px;
+  border: 1px solid #997545;
+  border-radius: 22px;
+  background: #1d1812;
+  box-shadow: inset 0 3px 6px #0009;
+}
+body .toggle:after {
+  width: 26px;
+  height: 26px;
+  top: 8px;
+  left: 6px;
+  background: linear-gradient(#f2dfb4, #b49258);
+  box-shadow: 0 2px 4px #0009;
+}
+body .toggle.on {
+  background: #46645a;
+  border-color: #96b8a1;
+}
+body .toggle.on:after {
+  left: 24px;
+}
+body .wind-time-setting {
+  padding: 10px 14px;
+  min-height: 44px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+body .settings-box > .hero-deck-note {
+  font-size: 13px;
+  line-height: 1.6;
+  margin-top: 20px;
+}
+body .result-stats span,
+body .boss-quote {
+  color: var(--ink-secondary);
+}
+body .result-stats span {
+  font-size: 14px;
+}
+body .result-sigil {
+  background: #1d150f;
+  border-color: #bc9956;
+  box-shadow:
+    inset 0 0 0 4px #382919,
+    0 5px 8px #0007;
+}
+body .result-sigil svg {
+  color: #efcd82;
+}
+body .hero-option {
+  box-shadow:
+    inset 0 0 0 3px #170e09,
+    0 5px 7px #0006;
+}
+body .hero-option.selected {
+  border-color: #f4d28a;
+  box-shadow:
+    inset 0 0 0 2px #b18139,
+    0 0 0 2px #d5a34455,
+    0 6px 10px #0006;
+}
+body .hero-option em {
+  font: 500 15px/1.55 var(--ui-font);
+}
+body .hero-deck-note {
+  font-size: 14px;
+  line-height: 1.6;
+}
+body .archetype-picker {
+  font-size: 16px;
+}
+body .hero-deck-note + .archetype-picker {
+  margin-top: 20px;
+}
+body .log-panel {
+  box-shadow: var(--panel-shadow);
+  background: var(--panel-wood);
+}
+body .battle-log {
+  color: var(--ink);
+}
+@media (prefers-reduced-motion: reduce) {
+  body .relic-choice,
+  body .gold-btn,
+  body .ghost-btn {
+    transition: none;
+  }
+}
+/* Geometry-only touch overrides; material and ink remain shared above. */
+body.touch-layout #modal .modal-box {
+  padding: 22px 18px;
+  border-radius: 16px;
+}
+body.touch-layout .modal-heading {
+  padding: 0 0 16px;
+  margin-bottom: 18px;
+}
+body.touch-layout .modal-heading h2 {
+  font-size: 24px;
+}
+body.touch-layout .modal-heading p {
+  font-size: 14px;
+}
+body.touch-layout .modal-footer {
+  position: static;
+  margin: 20px 0 0;
+  padding: 16px 0 4px;
+}
+body.touch-layout .lobby-copy {
+  padding: 24px;
+  background: var(--panel-wood);
+  box-shadow: var(--panel-shadow);
+}
+body.touch-layout .lobby-desc {
+  font-size: 14px;
+}
+body.touch-layout .lobby-actions button {
+  font-size: 17px;
+  min-height: 50px;
+}
+body.touch-layout .relic-options {
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+body.touch-layout .relic-choice {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr);
+  column-gap: 16px;
+  padding: 16px;
+  text-align: left;
+}
+body.touch-layout .relic-art {
+  grid-row: 1 / 4;
+  width: 68px;
+  height: 68px;
+  padding: 4px;
+  margin: 0;
+  align-self: start;
+}
+body.touch-layout .relic-choice h3 {
+  font-size: 19px;
+  margin: 0 0 8px;
+}
+body.touch-layout .relic-choice p {
+  font-size: 16px;
+  line-height: 1.6;
+}
+body.touch-layout .relic-pick-label {
+  padding-top: 10px;
+}
+body.touch-layout .refit-fields {
+  grid-template-columns: 1fr;
+}
+body.touch-layout .campaign-refit summary span {
+  display: block;
+  margin: 6px 0 0 18px;
+}
+body.touch-layout .reward-footer {
+  flex-direction: column;
+  align-items: stretch;
+  margin-top: 20px;
+  gap: 16px;
+}
+body.touch-layout #reward-confirm {
+  width: 100%;
+  min-width: 0;
+  min-height: 50px;
+}
+body.touch-layout .setting-row {
+  padding: 16px 0;
+  gap: 14px;
+}
+body.touch-layout .setting-row h3 {
+  font-size: 16px;
+}
+body.touch-layout .setting-row p {
+  font-size: 14px;
+}
+body.touch-layout .deck-actions {
+  padding: 12px 0 6px;
+}
+body.touch-layout #modal[data-type="heroes"] .modal-box {
+  padding-bottom: 24px;
+}
+body.touch-layout #modal[data-type="heroes"] .hero-option {
+  height: auto;
+  min-height: 108px;
+}
+/* Cancel the legacy full-card absolute image geometry inside the new medallion. */
+body .relic-art {
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+body .relic-choice .relic-art img {
+  position: static;
+  inset: auto;
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 1;
+}
+/* The map and rulebook also used pale legacy surfaces under pale theme text. */
+body .map-stop,
+body .map-stop.locked,
+body .map-stop.current {
+  opacity: 1;
+  background: var(--paper);
+  color: var(--paper-ink);
+  border: 2px solid #a78248;
+  box-shadow:
+    inset 0 0 0 2px #fff0ce,
+    0 5px 0 #332015,
+    0 9px 12px #0005;
+}
+body .map-stop.current {
+  border-color: #f0ce80;
+  box-shadow:
+    0 0 0 2px #d4a653,
+    0 5px 0 #4a2e18;
+}
+body .map-stop h3 {
+  color: var(--paper-ink);
+  font: 700 18px/1.4 var(--ui-font);
+  margin: 14px 12px 6px;
+}
+body .map-stop p {
+  color: #513c25;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 4px 12px;
+}
+body .map-stop p:last-child {
+  margin-bottom: 14px;
+}
+body .map-stop .map-index {
+  background: #38271c;
+  color: #f8dba0;
+  font-size: 23px;
+  border: 1px solid #c5a268;
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+body .map-stop.locked img {
+  filter: saturate(0.6) brightness(0.8);
+}
+body .map-relics span {
+  background: #20150e;
+  color: var(--ink-secondary);
+  border: 1px solid #9c7946;
+  font-size: 14px;
+}
+body .map-foot {
+  font-size: 14px;
+  line-height: 1.6;
+}
+body .help-box {
+  max-height: 850px;
+  display: flex;
+  flex-direction: column;
+}
+body .help-columns {
+  min-height: 0;
+  overflow-y: auto;
+  gap: 24px;
+  padding: 2px 4px 8px;
+}
+body .help-section {
+  padding: 18px;
+  margin-bottom: 16px;
+  background: var(--paper);
+  border: 1px solid #b79962;
+  border-radius: 8px;
+  box-shadow:
+    inset 0 0 0 2px #fff0d088,
+    0 3px 5px #0004;
+}
+body .help-section h3 {
+  font: 700 18px/1.5 var(--ui-font);
+  color: var(--paper-ink);
+  margin-bottom: 12px;
+  letter-spacing: 0;
+}
+body .help-section p,
+body .help-section p b,
+body .key-table > div,
+body .key-table b {
+  color: var(--paper-ink);
+  font-size: 15px;
+  line-height: 1.8;
+}
+body .key-table {
+  gap: 0 16px;
+}
+body .key-table > div {
+  background: transparent;
+  padding: 10px 0;
+  border-bottom: 1px solid #97764655;
+  font-size: 14px;
+}
+body .key-table b {
+  display: block;
+  font-size: 16px;
+}
+body .help-box > .modal-footer {
+  flex-shrink: 0;
+}
+body .touch-menu-grid button {
+  background: var(--secondary-fill);
+  color: var(--ink);
+  border: 1px solid #b08a50;
+  border-radius: 10px;
+  box-shadow:
+    inset 0 1px #e5c88b55,
+    0 4px 5px #0006;
+  font-size: 16px;
+}
+body .touch-menu-grid button svg {
+  color: #ebce8c;
+}
+body .touch-menu-note,
+body .touch-log p {
+  color: var(--ink-secondary);
+  font-size: 14px;
+  line-height: 1.7;
+}
+body .touch-inspect-detail p,
+body .touch-inspect-detail b {
+  color: var(--ink);
+}
+body.touch-layout .help-box {
+  max-height: 100%;
+}
+body.touch-layout .help-columns {
+  overflow: visible;
+}
+body.touch-layout .help-section {
+  padding: 16px;
+}
+body.touch-layout .map-stop p {
+  font-size: 14px;
+}
+/* Collection rules flow naturally; long trigger text cannot run under attack/health. */
+body .library-item .card {
+  height: auto;
+  aspect-ratio: auto;
+  padding: 4px;
+}
+body .library-item .card-inner {
+  position: relative;
+  inset: auto;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: auto;
+}
+body .library-item .card .card-art {
+  position: relative;
+  inset: auto;
+  height: auto;
+  aspect-ratio: 1.18;
+  flex: none;
+}
+body .library-item .card .card-title {
+  position: relative;
+  inset: auto;
+  height: auto;
+  min-height: 28px;
+  font-size: 14px;
+  padding: 5px 2px;
+}
+body .library-item .card .card-text {
+  position: relative;
+  inset: auto;
+  min-height: 105px;
+  padding: 10px 7px;
+  font-size: 12px;
+  line-height: 1.55;
+}
+body .library-item .card .card-type {
+  position: relative;
+  inset: auto;
+  min-height: 32px;
+  padding: 8px 28px;
+  font-size: 8px;
+  line-height: 1.4;
+}
+body .library-item .card .stat {
+  width: 36px;
+  height: 36px;
+  bottom: 3px;
+  font-size: 24px;
+}
+body .library-item .card-rarity {
+  display: none;
+}
+body.touch-layout .library-item .card .card-text {
+  min-height: 116px;
+  font-size: 12px;
+}
+body .library-item .card-cost {
+  width: 42px;
+  height: 42px;
+  font-size: 28px;
+}
+body.touch-layout .library-item .card-cost {
+  width: 36px;
+  height: 36px;
+  font-size: 25px;
+}
+body .library-item {
+  height: auto;
+  padding-bottom: 26px;
+}
+body .library-item .card .card-type {
+  min-height: 44px;
+  padding-top: 12px;
+}

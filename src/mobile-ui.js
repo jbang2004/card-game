@@ -205,7 +205,7 @@
       );
     opts.push(["full", "full", "全屏"]);
     E.showModal(
-      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">EMBERFALL / POCKET ATELIER</div><h2>旅人行囊</h2><p>把世界装进口袋，把好牌留在手中。</p></div><div class="touch-menu-grid">${opts.map(([id, icon, label]) => `<button data-touch-menu="${id}">${A.icon(icon)}<span>${label}</span></button>`).join("")}</div><p class="touch-menu-note">点手牌查看 → 确认出牌 → 选择高亮目标。<br>手牌可以左右滑动；长按随从或英雄查看详情。横屏、竖屏都能继续当前对局。</p></section>`,
+      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">酒馆菜单</div><h2>菜单</h2></div><div class="touch-menu-grid">${opts.map(([id, icon, label]) => `<button data-touch-menu="${id}">${A.icon(icon)}<span>${label}</span></button>`).join("")}</div><p class="touch-menu-note">点手牌查看 → 确认出牌 → 选择高亮目标。<br>手牌可以左右滑动；长按随从或英雄查看详情。横屏、竖屏都能继续当前对局。</p></section>`,
       "touch-menu",
     );
     const fn = {
@@ -344,7 +344,7 @@
   const menu = document.createElement("button");
   menu.className = "icon-btn touch-only";
   menu.id = "touch-menu";
-  menu.setAttribute("aria-label", "打开旅人行囊菜单");
+  menu.setAttribute("aria-label", "打开菜单菜单");
   menu.innerHTML =
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 6h14M5 12h14M5 18h14"/><circle cx="8" cy="6" r="1" fill="currentColor"/></svg>';
   menu.onclick = showMenu;

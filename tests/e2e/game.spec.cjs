@@ -587,6 +587,7 @@ test("campaign rewards and deck editor use the new state boundary", async ({
   await page.locator("#result-next").click();
   await expect(page.locator(".relic-choice")).toHaveCount(3);
   await page.locator(".relic-choice").first().click();
+  await page.locator("#reward-confirm").click();
   expect(await page.evaluate(() => Emberfall.game.s.bossIndex)).toBe(1);
   expect(await page.evaluate(() => Emberfall.game.s.relics.length)).toBe(1);
   await page.locator("#mulligan-confirm").click();

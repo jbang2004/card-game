@@ -1,6 +1,6 @@
 {
   "name": "emberfall-card-game",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "private": true,
   "description": "Emberfall: single-player fantasy card battles, responsive UI and offline rules",
   "license": "MIT",

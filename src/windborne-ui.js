@@ -5,7 +5,7 @@
   const E = Emberfall,
     $ = (s) => document.querySelector(s),
     root = document.documentElement.style;
-  document.title = "烬域 · 风起之境 — THE GILDED TAVERN v0.12.0";
+  document.title = "烬域 · 风起之境 — THE GILDED TAVERN v0.12.1";
   root.setProperty("--wind-paper-texture", `url("${WindborneAssets.paper}")`);
   root.setProperty(
     "--wind-leaf-seal",
@@ -13,9 +13,9 @@
   );
   root.setProperty("--parchment-texture", `url("${WindborneAssets.paper}")`);
   root.setProperty("--wood-texture", `url("${WindborneAssets.wood}")`);
-  $(".lobby-copy>.eyebrow").textContent = "A LITTLE WORLD · A GREAT ADVENTURE";
+  $(".lobby-copy>.eyebrow").textContent = "鎏金酒馆";
   $(".lobby-chinese").textContent = "风起之境";
-  $(".lobby-tagline").textContent = "风吹过山谷，好故事正要开始。";
+  $(".lobby-tagline").textContent = "";
   $(".lobby-desc").textContent = "三位旅人 · 五十四张卡牌 · 五段首领冒险";
   $(".lobby-world-label").innerHTML =
     "<span>THE WAYFARER’S TAVERN</span><i></i><span>旅人的酒馆 · 炉火正暖</span>";
@@ -96,7 +96,7 @@
     const row = document.createElement("div");
     row.className = "setting-row wind-light-row";
     row.innerHTML =
-      '<div><h3>山谷时光</h3><p>晴昼或暮色，仅改变环境氛围</p></div><button type="button" class="wind-time-setting" aria-label="切换环境时光"></button>';
+      '<div><h3>酒馆时光</h3><p>晴昼或暮色，仅改变环境氛围</p></div><button type="button" class="wind-time-setting" aria-label="切换环境时光"></button>';
     box.insertBefore(row, box.querySelector(".modal-footer"));
     row.querySelector("button").onclick = toggle;
     sync();
