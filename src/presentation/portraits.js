@@ -3,7 +3,8 @@
 const EmberPortraits = (() => {
   const entries = new Map(),
     assets = new Map(),
-    phases = new Map();
+    phases = new Map(),
+    arrivals = new Map();
   const motionPreference = matchMedia("(prefers-reduced-motion: reduce)");
   let reduced = false,
     low = false,
@@ -34,7 +35,12 @@ const EmberPortraits = (() => {
           ([role, src]) =>
             new Promise((resolve, reject) => {
               const image = new Image();
-              image.onload = () => resolve([role, image]);
+              image.onload = async () => {
+                try {
+                  await image.decode();
+                  resolve([role, image]);
+                } catch (error) { reject(error); }
+              };
               image.onerror = reject;
               image.src = src;
             }),
@@ -55,6 +61,18 @@ const EmberPortraits = (() => {
     const record = assets.get(id);
     record.used = performance.now();
     return record;
+  }
+  function prepareSummons(events) {
+    if (disabled()) return;
+    const now = performance.now();
+    for (const e of events) {
+      if (e.type !== "summon" || !MotionAssets[e.cid]) continue;
+      const key = JSON.stringify([e.side + ":" + e.uid, e.cid]);
+      arrivals.set(key, now + 7000);
+      // Share the normal loader and its two-request limit; never animate hand art.
+      load(e.cid);
+    }
+    wake();
   }
   function trimCache(keep) {
     for (const [id, record] of [...assets].sort(
@@ -114,7 +132,7 @@ const EmberPortraits = (() => {
       ) {
         if (img.isConnected) {
           e.canvas.remove();
-          e.host.classList.remove("motion-ready");
+          e.host.classList.remove("motion-ready", "motion-arriving", "motion-entering");
         }
         entries.delete(img);
         hosts.delete(e.host);
@@ -166,10 +184,23 @@ const EmberPortraits = (() => {
         visible: previous?.visible ?? false,
         painted: previous?.painted ?? false,
         priority: 0,
+        entering: previous?.entering ?? (context === "board" && arrivals.has(key)),
+        revealUntil: previous?.revealUntil ?? performance.now() + 180,
       };
+      arrivals.delete(key);
+      if (e.entering && !e.painted && !disabled()) {
+        host.classList.add("motion-entering");
+        if (performance.now() < e.revealUntil) host.classList.add("motion-arriving");
+      }
       entries.set(img, e);
       hosts.set(host, e);
       measure(e);
+      // The summon beat has already laid out this unit. Paint a warm rig before
+      // its first visible frame instead of waiting for IntersectionObserver/RAF.
+      if (e.entering && e.sized && assets.get(id)?.ready && !disabled()) {
+        e.art = assets.get(id);
+        paint(e, performance.now());
+      }
       resize.observe(host);
       visibility.observe(host);
       // Reuse the last completed bitmap before the browser paints the replacement DOM.
@@ -299,7 +330,9 @@ const EmberPortraits = (() => {
       else draw("accent", -dx * 0.3, 0, 0, 0.9);
     }
     e.painted = true;
+    e.host.classList.remove("motion-arriving");
     e.host.classList.add("motion-ready");
+    e.entering = false;
     frames++;
   }
   function priority(e) {
@@ -315,11 +348,16 @@ const EmberPortraits = (() => {
     const cap = mobile() ? 6 : 12,
       keep = new Set();
     let hasWork = false;
+    for (const [key, until] of arrivals) if (now > until) arrivals.delete(key);
     candidates.forEach((e) => {
       e.priority = priority(e);
     });
     candidates.sort((a, b) => b.priority - a.priority);
     for (const e of candidates) {
+      if (e.entering && !e.painted) {
+        if (now >= e.revealUntil) e.host.classList.remove("motion-arriving");
+        else hasWork = true;
+      }
       e.frozen = e.img.dataset.portraitState === "frozen";
       // A frozen bitmap needs neither a live slot nor decoded source layers.
       if (e.frozen && e.painted && e.priority > 0 && e.visible && e.sized) {
@@ -373,7 +411,7 @@ const EmberPortraits = (() => {
       // Hiding the tab keeps its last frame; reduced motion shows original art.
       if (!document.hidden)
         for (const e of entries.values())
-          e.host.classList.remove("motion-ready");
+          e.host.classList.remove("motion-ready", "motion-arriving", "motion-entering");
     } else wake();
   }
   for (const type of ["pointerover", "pointerout", "focusin", "focusout"])
@@ -388,6 +426,7 @@ const EmberPortraits = (() => {
   wake();
   return Object.freeze({
     sync,
+    prepareSummons,
     configure(r, l) {
       reduced = !!r;
       low = !!l;
