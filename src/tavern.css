@@ -1995,29 +1995,6 @@ button:not(:disabled) {
   letter-spacing: 1px;
   font-size: 8px;
 }
-#turn-banner {
-  font: 700 38px var(--serif);
-  letter-spacing: 8px;
-  color: #ffe9a4;
-  text-shadow:
-    0 3px #634428,
-    0 5px 10px #2b1629;
-  left: 50%;
-  top: 370px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    #643f2bf7 23%,
-    #775638f7 50%,
-    #643f2bf7 77%,
-    transparent
-  );
-  border-top: 2px solid #dbb66377;
-  border-bottom: 2px solid #dbb66377;
-  width: 790px;
-  padding: 27px 50px;
-  box-shadow: none;
-}
 .damage-number {
   font:
     900 45px Georgia,

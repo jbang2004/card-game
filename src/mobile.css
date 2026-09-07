@@ -707,23 +707,6 @@ body.touch-layout .cast-card .card-text {
 body.mobile-portrait .cast-card {
   display: none;
 }
-body.touch-layout #turn-banner {
-  left: 50%;
-  top: calc(var(--view-h) * 0.37);
-  width: calc(var(--view-w) - 48px);
-  max-width: 450px;
-  transform: translateX(-50%);
-  font-size: 24px;
-  letter-spacing: 3px;
-  padding: 15px 8px;
-  pointer-events: none;
-  z-index: 48;
-}
-body.touch-layout #turn-banner small {
-  font-size: 8px;
-  letter-spacing: 1px;
-  margin-top: 6px;
-}
 body.touch-layout #cinematic {
   inset: 0;
   display: flex;
@@ -2282,10 +2265,6 @@ body.touch-layout #cinematic {
 body.touch-layout #cinematic.visible {
   display: flex;
 }
-body.touch-layout #turn-banner {
-  min-width: 0;
-}
-
 .touch-library-tabs {
   display: none;
 }

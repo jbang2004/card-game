@@ -42,14 +42,11 @@ const EmberFX = (() => {
     pendingCommit = null,
     doneCallback = null;
   let last = 0,
-    now = 0,
     view = "lobby",
     theme = 0,
     phase = false,
     quality = { reduced: false, low: false },
     worldDirty = true,
-    backdrop = null,
-    frame = 0,
     lab = false;
   let counts = { actions: 0, previews: 0, school: {}, maxParticles: 0 };
   const rnd = (a, b) => a + Math.random() * (b - a),
@@ -66,6 +63,105 @@ const EmberFX = (() => {
     }, ms);
     timers.add(id);
     return id;
+  }
+  function animate(el, frames, options) {
+    const animation = el.animate(frames, options);
+    animations.add(animation);
+    animation.onfinish = () => {
+      animation.cancel();
+      animations.delete(animation);
+    };
+    animation.oncancel = () => animations.delete(animation);
+    return animation;
+  }
+  function transient(className, duration) {
+    const el = document.createElement("div");
+    el.className = className;
+    el.setAttribute("aria-hidden", "true");
+    app.appendChild(el);
+    nodes.add(el);
+    schedule(() => {
+      el.remove();
+      nodes.delete(el);
+    }, duration);
+    return el;
+  }
+  // Event cues are decorative; they never delay dispatch or own rule state.
+  function clearTurnCue() {
+    for (const node of [...nodes]) {
+      if (!node.matches(".turn-cue")) continue;
+      node.getAnimations().forEach((a) => a.cancel());
+      node.remove();
+      nodes.delete(node);
+    }
+  }
+  function turnCue(side, turn) {
+    clearTurnCue();
+    const el = transient(
+      "turn-cue " + (side === "p" ? "ours" : "theirs"),
+      1250,
+    );
+    const laneP = EmberViewport.lane("p"),
+      laneE = EmberViewport.lane("e");
+    el.style.left = (laneP.x + laneE.x) / 2 + "px";
+    const enemy = pos(document.querySelector("#battle .minion.enemy")),
+      friendly = pos(document.querySelector("#battle .minion.friendly"));
+    const upper = enemy ? enemy.top + enemy.h : laneE.y + 50,
+      lower = friendly ? friendly.top : laneP.y - 50,
+      gap = lower - upper;
+    el.style.top = (upper + lower) / 2 + "px";
+    if (gap < 52) el.classList.add("compact");
+    el.innerHTML = `<span class="turn-cue-gem">✦</span><div><small>TURN ${String(turn).padStart(2, "0")}</small><strong>${side === "p" ? "你的回合" : "敌方回合"}</strong></div><span class="turn-cue-gem">✦</span>`;
+    if (!quality.reduced)
+      animate(
+        el,
+        [
+          { opacity: 0, translate: "0 9px", scale: ".84" },
+          { opacity: 1, translate: "0 0", scale: "1.04", offset: 0.18 },
+          { opacity: 1, scale: "1", offset: 0.72 },
+          { opacity: 0, translate: "0 -8px", scale: "1" },
+        ],
+        { duration: 1250, easing: "ease-out" },
+      );
+  }
+  function arrival(p, card) {
+    if (quality.reduced) return;
+    const school = classification(card),
+      legendary = card?.rarity === "legendary";
+    add(
+      "portal",
+      {
+        x: p.x,
+        y: p.y + p.h * 0.3,
+        school,
+        radius: legendary ? 125 : 70,
+        legendary,
+      },
+      legendary ? 1250 : 700,
+    );
+    if (legendary) {
+      spark(p.x, p.y, school, 56, {
+        up: 100,
+        speed: 130,
+        gravity: -30,
+        life: 1200,
+      });
+      const seal = transient("summon-seal", 1250);
+      seal.textContent = "✦ 传说降临 ✦";
+      seal.style.left = p.x + "px";
+      seal.style.top = p.y - p.h / 2 - 20 + "px";
+      animate(
+        seal,
+        [
+          { opacity: 0, translate: "0 8px" },
+          { opacity: 1, translate: "0 0", offset: 0.2 },
+          { opacity: 1, offset: 0.7 },
+          { opacity: 0, translate: "0 -12px" },
+        ],
+        { duration: 1250 },
+      );
+      shake(3);
+    }
   }
   function setBusy(v) {
     busy = v;
@@ -126,21 +222,21 @@ const EmberFX = (() => {
             { opacity: 1, translate: "0px 0px" },
           ];
         } else return;
-        const a = el.animate(frames, {
+        animate(el, frames, {
           duration: 420,
           easing: "cubic-bezier(.18,.72,.24,1)",
         });
-        animations.add(a);
-        a.onfinish = () => animations.delete(a);
       });
   }
   function add(kind, data, d = 800, delay = 0) {
+    if (quality.reduced) return;
     if (EmberViewport.mobile) {
       data = { ...data };
       for (const k of ["radius", "size", "wide", "vx", "vy", "gravity"])
         if (typeof data[k] === "number") data[k] *= EmberViewport.effectScale;
     }
-    if (items.length > 800) items.splice(0, items.length - 780);
+    const budget = quality.low ? 220 : EmberViewport.mobile ? 360 : 800;
+    if (items.length >= budget) items.splice(0, items.length - budget + 1);
     items.push({ kind, ...data, start: performance.now() + delay, d });
     counts.maxParticles = Math.max(counts.maxParticles, items.length);
   }
@@ -193,7 +289,8 @@ const EmberFX = (() => {
     if (quality.reduced) return;
     for (const el of [world, document.getElementById("scene")]) {
       if (!el?.animate) continue;
-      const a = el.animate(
+      animate(
+        el,
         [
           { transform: "translate(0,0)" },
           { transform: `translate(${amount}px,${amount * 0.45}px)` },
@@ -203,8 +300,6 @@ const EmberFX = (() => {
         ],
         { duration: 260, easing: "ease-out" },
       );
-      animations.add(a);
-      a.onfinish = () => animations.delete(a);
     }
   }
   function vignette(school = "fire", d = 600, x = 800, y = 430) {
@@ -213,7 +308,8 @@ const EmberFX = (() => {
     v.style.setProperty("--vcolor", colors[school][2]);
     v.style.setProperty("--vx", (x / W) * 100 + "%");
     v.style.setProperty("--vy", (y / H) * 100 + "%");
-    v.animate(
+    animate(
+      v,
       [{ opacity: 0 }, { opacity: 0.7, offset: 0.22 }, { opacity: 0 }],
       { duration: d, easing: "ease-out" },
     );
@@ -434,7 +530,8 @@ const EmberFX = (() => {
     el.tabIndex = -1;
     app.appendChild(el);
     nodes.add(el);
-    const a = el.animate(
+    animate(
+      el,
       [
         {
           opacity: 0.9,
@@ -455,11 +552,9 @@ const EmberFX = (() => {
       ],
       { duration: 650, easing: "ease-out", fill: "forwards" },
     );
-    animations.add(a);
     schedule(() => {
       el.remove();
       nodes.delete(el);
-      animations.delete(a);
     }, 660);
   }
   function lunge(from, to, dies = false) {
@@ -480,7 +575,8 @@ const EmberFX = (() => {
     from.el.style.visibility = "hidden";
     const dx = (to.x - from.x) * 0.77,
       dy = (to.y - from.y) * 0.77;
-    const a = el.animate(
+    animate(
+      el,
       [
         { transform: "translate(0,0) scale(1)", offset: 0 },
         {
@@ -502,11 +598,9 @@ const EmberFX = (() => {
       ],
       { duration: 710, easing: "cubic-bezier(.2,.65,.15,1)", fill: "forwards" },
     );
-    animations.add(a);
     schedule(() => {
       el.remove();
       nodes.delete(el);
-      animations.delete(a);
       const current = unit(from.el.dataset.side, from.el.dataset.uid);
       if (current) current.style.visibility = "";
     }, 715);
@@ -525,7 +619,8 @@ const EmberFX = (() => {
       "</div>";
     app.appendChild(el);
     nodes.add(el);
-    el.animate(
+    animate(
+      el,
       [
         { opacity: 0, transform: "translateX(24px) rotateY(30deg) scale(.9)" },
         {
@@ -550,7 +645,8 @@ const EmberFX = (() => {
     el.innerHTML = `<div class="cinematic-inner" style="--theme:${colors[school][1]}"><div class="cinematic-kicker">PHASE II · ${boss.en}</div><div class="cinematic-title">${boss.name} · 觉醒</div><div class="cinematic-quote">「${boss.quote}」</div></div>`;
     el.classList.add("visible");
     if (!quality.reduced)
-      el.animate(
+      animate(
+        el,
         [
           { opacity: 0, transform: "scale(1.035)" },
           { opacity: 1, transform: "scale(1)", offset: 0.2 },
@@ -605,7 +701,8 @@ const EmberFX = (() => {
   }
   function hitReaction(el, heavy = false) {
     if (!el || quality.reduced) return;
-    const a = el.animate(
+    animate(
+      el,
       [
         { filter: "brightness(1.85)", transform: "translate(0,0)" },
         {
@@ -617,8 +714,6 @@ const EmberFX = (() => {
       ],
       { duration: 320, easing: "ease-out" },
     );
-    animations.add(a);
-    a.onfinish = () => animations.delete(a);
   }
   function cleanupVisuals() {
     timers.forEach(clearTimeout);
@@ -648,6 +743,7 @@ const EmberFX = (() => {
   }
   function present(events, s, render, after, cardHTML) {
     if (busy) cancel(true);
+    clearTurnCue();
     const old = capture(),
       primary = events.find((e) =>
         ["play", "attack", "power"].includes(e.type),
@@ -813,7 +909,8 @@ const EmberFX = (() => {
       pos(unit(e.side, e.uid)) ||
       old[e.side + e.uid] ||
       fallback(s, e.side, e.uid);
-    events.forEach((e, i) => {
+    events.forEach((e) => {
+      if (e.type === "turn") turnCue(e.side, s.turn);
       if (e.type === "damage") {
         const p = old[e.side + e.uid] || at(e);
         number(p, e.amount);
@@ -848,7 +945,18 @@ const EmberFX = (() => {
           shape: cl === "frost" ? "shard" : "spark",
         });
         const el = unit(e.side, e.uid);
-        if (el && !quality.reduced) el.classList.add("summon-reveal");
+        if (el && !quality.reduced) {
+          arrival(p, EmberData.byId[e.cid]);
+          animate(
+            el,
+            [
+              { opacity: 0, translate: "0 -32px", scale: ".65" },
+              { opacity: 1, translate: "0 4px", scale: "1.07", offset: 0.65 },
+              { opacity: 1, translate: "0 0", scale: "1" },
+            ],
+            { duration: 520, easing: "cubic-bezier(.16,.8,.24,1)" },
+          );
+        }
         EmberAudio.fx("summon");
       }
       if (e.type === "death")
@@ -953,6 +1061,41 @@ const EmberFX = (() => {
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
     switch (e.kind) {
+      case "portal": {
+        const reveal = Math.sin(Math.PI * k),
+          r = e.radius * (0.65 + ease(k) * 0.35);
+        ctx.translate(e.x, e.y);
+        ctx.scale(1, 0.36);
+        ctx.rotate(k * (e.legendary ? 1 : -0.6));
+        ctx.globalAlpha = reveal * 0.8;
+        ctx.strokeStyle = cc[1];
+        ctx.lineWidth = e.legendary ? 3 : 2;
+        for (const scale of [1, 0.83]) {
+          ctx.beginPath();
+          ctx.arc(0, 0, r * scale, 0, TAU);
+          ctx.stroke();
+        }
+        const segments = e.legendary ? 12 : 8;
+        for (let i = 0; i < segments; i++) {
+          ctx.save();
+          ctx.rotate((i * TAU) / segments);
+          ctx.fillStyle = cc[0];
+          ctx.beginPath();
+          ctx.moveTo(r * 0.92, -5);
+          ctx.lineTo(r * 1.07, 0);
+          ctx.lineTo(r * 0.92, 5);
+          ctx.lineTo(r * 0.87, 0);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+        ctx.globalAlpha = reveal * 0.22;
+        ctx.fillStyle = cc[2];
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.78, 0, TAU);
+        ctx.fill();
+        break;
+      }
       case "particle": {
         let x = e.x + e.vx * sec,
           y = e.y + e.vy * sec + (e.gravity * sec * sec) / 2,
@@ -1367,7 +1510,7 @@ const EmberFX = (() => {
     ctx.restore();
   }
   // Original pre-rendered tavern diorama + lightweight real-time atmosphere.
-  // This layer is always available, independently of the optional WebGL renderer.
+  // Desktop and touch share this single Canvas scene.
   function paintWorld(t) {
     wc.clearRect(0, 0, W, H);
     AtelierWorld.paint(wc, t, view, theme, phase, quality.reduced, quality.low);
@@ -1401,15 +1544,13 @@ const EmberFX = (() => {
     after?.();
   }
   function tick(t) {
-    frame = requestAnimationFrame(tick);
+    requestAnimationFrame(tick);
     if (document.hidden) return;
     const min = quality.low ? 40 : EmberViewport.mobile ? 16 : 30;
     if (t - last < min) return;
     last = t;
-    now = t;
     if (
       worldDirty ||
-      AtelierWorld.loading ||
       AtelierWorld.loading ||
       (!quality.reduced && t - worldLast > (EmberViewport.mobile ? 80 : min))
     ) {
@@ -1444,6 +1585,7 @@ const EmberFX = (() => {
   }
   function configure(reduced, low) {
     quality = { reduced: !!reduced, low: !!low };
+    app.classList.toggle("fx-low", quality.low);
     worldDirty = true;
     // Turning accessibility on is immediate, even during an effect's tail.
     // Keep the rule-commit timers and busy lifecycle; only remove decoration.
@@ -1452,13 +1594,12 @@ const EmberFX = (() => {
       for (const a of animations) a.cancel();
       animations.clear();
       for (const el of [...nodes])
-        if (el.matches(".death-ghost,.cast-card")) {
+        if (el.matches(".death-ghost,.cast-card,.summon-seal")) {
           el.remove();
           nodes.delete(el);
         }
       document.querySelectorAll(".minion[data-uid],.hero").forEach((el) => {
         el.style.visibility = "";
-        el.classList.remove("summon-reveal");
       });
       for (const el of [
         world,
@@ -1477,7 +1618,7 @@ const EmberFX = (() => {
     if (!document.hidden) worldDirty = true;
   });
   resizeCanvas();
-  frame = requestAnimationFrame(tick);
+  requestAnimationFrame(tick);
   return {
     reflow,
     present,
@@ -1500,6 +1641,12 @@ const EmberFX = (() => {
     counts,
     get busy() {
       return busy;
+    },
+    get activeAnimations() {
+      return animations.size;
+    },
+    get transientNodes() {
+      return nodes.size;
     },
     get particles() {
       return items.length;

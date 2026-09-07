@@ -1984,39 +1984,6 @@ button {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
-#turn-banner {
-  position: absolute;
-  top: 397px;
-  left: 400px;
-  width: 800px;
-  z-index: 40;
-  text-align: center;
-  pointer-events: none;
-  opacity: 0;
-  color: #e2c08a;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    #101a23ed 22%,
-    #101a23ed 78%,
-    transparent
-  );
-  padding: 16px;
-  font: 33px var(--serif);
-  letter-spacing: 10px;
-  border-top: 1px solid #d3ae6638;
-  border-bottom: 1px solid #d3ae6638;
-}
-#turn-banner.show {
-  animation: banner 1.8s ease forwards;
-}
-#turn-banner small {
-  display: block;
-  font: 9px var(--sans);
-  letter-spacing: 6px;
-  color: #8c9d9e;
-  margin-top: 10px;
-}
 .damage-number {
   position: absolute;
   z-index: 60;
@@ -2089,21 +2056,7 @@ button {
     stroke-dashoffset: -24;
   }
 }
-@keyframes banner {
-  0% {
-    opacity: 0;
-    transform: scaleX(0.7);
-  }
-  15%,
-  65% {
-    opacity: 1;
-    transform: scaleX(1);
-  }
-  100% {
-    opacity: 0;
-    transform: scaleX(1.05);
-  }
-}
+
 @keyframes endglow {
   to {
     filter: brightness(1.13) drop-shadow(0 0 15px #bc9e5d4d);
@@ -2819,9 +2772,6 @@ body.reduced-motion * {
 }
 body.reduced-motion .damage-number {
   animation: damageFloat 0.01s forwards !important;
-}
-body.reduced-motion #turn-banner.show {
-  animation: banner 1.8s forwards !important;
 }
 .visually-hidden {
   position: absolute;

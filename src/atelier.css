@@ -328,9 +328,6 @@
     #ffe5a2
   );
 }
-.card-decoration {
-  display: none !important;
-}
 .card-cost,
 .card-preview .card-cost,
 .library-item .card-cost {
