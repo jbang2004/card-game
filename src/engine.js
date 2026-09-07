@@ -50,10 +50,12 @@ const EmberEngine = (() => {
       return side === "p" ? "e" : "p";
     }
     log(text) {
+      if (this.simulation) return;
       this.s.log.push(text);
       if (this.s.log.length > 70) this.s.log.shift();
     }
     event(type, data = {}) {
+      if (this.simulation) return;
       // Public presentation snapshots describe an already resolved observation.
       // They contain no deck identities, RNG or opponent hand identities and
       // are ephemeral event data, never stored in a v1 save.
@@ -93,6 +95,7 @@ const EmberEngine = (() => {
       });
     }
     withBlock(kind, meta, fn) {
+      if (this.simulation) return fn();
       const id = "ev" + ++this.eventSeq;
       this.events.push({
         id,
@@ -191,6 +194,7 @@ const EmberEngine = (() => {
     }
 
     emit() {
+      if (this.simulation) return { ok: true };
       if (this.deferEmit) return { ok: true };
       const ev = this.events.splice(0);
       this.onChange(this.snapshot(), R.freeze(ev));
@@ -205,12 +209,25 @@ const EmberEngine = (() => {
       relics = [],
       deck = null,
       seed = Date.now(),
+      options = {},
     ) {
       const hero =
           this.data.heroes.find((h) => h.id === heroId) || this.data.heroes[0],
         boss = this.data.bosses[bossIndex] || this.data.bosses[0];
+      if (
+        deck &&
+        (!this.validateDeck(deck) ||
+          (!options.legacyDeck && !this.validateDeck(deck, hero.id)))
+      )
+        return this.reject("牌组必须为该职业与中立的 30 张牌");
+      const opponent = options.opponent
+        ? this.data.archetypes.find((a) => a.id === options.opponent)
+        : null;
+      if (options.opponent && !opponent) return this.reject("未知练习对手");
+      if (opponent) relics = [];
       this.s = {
         version: 1,
+        ruleset: 2,
         seq: 0,
         rng: seed >>> 0 || 12345,
         turn: 0,
@@ -226,6 +243,20 @@ const EmberEngine = (() => {
         stats: { played: 0, damage: 0, turns: 0 },
         customDeck: deck ? [...deck] : null,
       };
+      const archetype = this.data.archetypes.find(
+        (a) =>
+          a.hero === hero.id &&
+          JSON.stringify([...a.deck].sort()) ===
+            JSON.stringify([...(deck || hero.deck)].sort()),
+      );
+      if (archetype) this.s.archetype = archetype.id;
+      if (options.legacyDeck) this.s.legacyDeck = true;
+      if (opponent) {
+        this.s.mode = "practice";
+        this.s.opponent = opponent.id;
+        this.s.opponentHero = opponent.hero;
+        this.s.first = options.first || (this.rand() < 0.5 ? "p" : "e");
+      }
       const unit = (hp) => ({
         hp,
         maxHp: hp,
@@ -243,29 +274,50 @@ const EmberEngine = (() => {
         secrets: [],
       });
       this.s.p = unit(30 + this.relicValue("maxHealth"));
-      this.s.e = unit(boss.hp);
+      this.s.e = unit(opponent ? 30 : boss.hp);
       const valid = this.validateDeck(deck);
       this.s.p.deck = this.shuffle(
         (valid ? deck : hero.deck).map((x) => this.card(x)),
       );
       this.s.e.deck = this.shuffle(
-        [...boss.deck, ...boss.deck].map((x) => this.card(x)),
+        (opponent ? opponent.deck : [...boss.deck, ...boss.deck]).map((x) =>
+          this.card(x),
+        ),
       );
-      this.draw("p", 3);
-      this.draw("e", 4);
-      this.s.e.hand.push(this.card("coin"));
+      const second = this.s.first === "e";
+      this.draw("p", second ? 4 : 3);
+      this.draw("e", second ? 3 : 4);
+      if (!second) this.s.e.hand.push(this.card("coin"));
+      if (opponent) {
+        const returned = this.s.e.hand.filter(
+          (c) => this.data.byId[c.cid].cost > 3,
+        );
+        this.s.e.hand = this.s.e.hand.filter((c) => !returned.includes(c));
+        this.draw("e", returned.length);
+        this.s.e.deck.push(...returned);
+        this.shuffle(this.s.e.deck);
+      }
       this.s.p.maxMana = this.relicValue("startingMana");
       this.relicEffects("onStart");
-      this.log("你抵达了" + boss.title + "。");
+      this.log(
+        opponent
+          ? "练习对战 · " + opponent.name
+          : "你抵达了" + boss.title + "。",
+      );
       this.log("选择需要替换的起始卡牌。");
       return this.emit();
     }
-    validateDeck(deck) {
+    validateDeck(deck, heroId = null) {
       if (!Array.isArray(deck) || deck.length !== 30) return false;
       const counts = {};
       for (const id of deck) {
         const c = this.data.byId[id];
-        if (!c || c.token) return false;
+        if (
+          !c ||
+          c.token ||
+          (heroId && c.class !== "neutral" && c.class !== heroId)
+        )
+          return false;
         counts[id] = (counts[id] || 0) + 1;
         if (counts[id] > (c.rarity === "legendary" ? 1 : 2)) return false;
       }
@@ -287,7 +339,8 @@ const EmberEngine = (() => {
       p.deck.push(...returned);
       this.shuffle(p.deck);
       this.s.phase = "battle";
-      this.beginTurn("p");
+      if (this.s.first === "e") this.s.p.hand.push(this.card("coin"));
+      this.beginTurn(this.s.first || "p");
       return this.emit();
     }
     draw(side, n = 1) {
@@ -414,6 +467,14 @@ const EmberEngine = (() => {
       if (side === "p") this.s.stats.played++;
       this.log((side === "p" ? "你" : "敌人") + "打出「" + c.name + "」。");
       this.event("play", { side, uid, cid: c.id, target });
+      if (
+        c.type === "spell" &&
+        this.revealSecret(this.other(side), "beforeSpell")
+      ) {
+        this.log("法术被反制。");
+        this.cleanup();
+        return this.emit();
+      }
       if (c.type === "minion") {
         const m = this.summon(side, c.id);
         this.resolve(c.onPlay, { side, source: m, card: c, target });
@@ -427,6 +488,10 @@ const EmberEngine = (() => {
         this.event("equip", { side });
       } else this.resolve(c.onPlay, { side, card: c, target });
       this.cleanup();
+      if (c.type === "spell" && this.s.phase === "battle") {
+        this.trigger("spellCast", side);
+        this.cleanup();
+      }
       return this.emit();
     }
     choose(cid) {
@@ -508,6 +573,7 @@ const EmberEngine = (() => {
       if (result.blocked) {
         target.tags = target.tags.filter((x) => x !== "shield");
         this.event("shield", { side, uid, from });
+        this.trigger("shieldLost", side, target);
         return 0;
       }
       if (uid === "hero") target.armor -= n - result.loss;
@@ -562,22 +628,27 @@ const EmberEngine = (() => {
       const m = this.getTarget({ side, uid });
       let t = { ...target };
       if (t.uid === "hero") {
-        const id = this.s[t.side].secrets.find(
-          (id) => this.data.byId[id].secret.when === "beforeHeroAttack",
-        );
-        if (id)
-          this.withBlock("trigger", { sourceId: id }, () => {
-            this.s[t.side].secrets = this.s[t.side].secrets.filter(
-              (x) => x !== id,
-            );
-            this.event("secret", { side: t.side, cid: id });
-            const mirror = this.summon(
-              t.side,
-              this.data.byId[id].secret.summon,
-            );
+        // Resolve in registration order, rechecking the attack target after each secret.
+        for (const id of [...this.s[t.side].secrets]) {
+          if (t.uid !== "hero") break;
+          const secret = this.data.byId[id].secret;
+          if (secret.when !== "beforeHeroAttack") continue;
+          if (secret.summon && this.s[t.side].board.length >= 7) continue;
+          this.consumeSecret(t.side, id);
+          if (secret.armor) {
+            this.s[t.side].armor += secret.armor;
+            this.event("status", {
+              side: t.side,
+              uid: "hero",
+              kind: "armor",
+              amount: secret.armor,
+            });
+          }
+          if (secret.summon) {
+            const mirror = this.summon(t.side, secret.summon);
             if (mirror) t.uid = mirror.uid;
-            this.log("奥秘「" + this.data.byId[id].name + "」触发！");
-          });
+          }
+        }
       }
       const d = this.getTarget(t);
       if (!d) return this.reject("目标已消失");
@@ -603,12 +674,22 @@ const EmberEngine = (() => {
         this.event("weaponWear", { side, uid: "hero", broken: !m.weapon });
       }
       this.cleanup();
+      if (
+        this.s.phase === "battle" &&
+        uid !== "hero" &&
+        this.getTarget({ side, uid })
+      ) {
+        this.trigger("afterAttack", side, m);
+        this.cleanup();
+      }
       return this.emit();
     }
     powerDefinition(side) {
       return side === "p"
         ? this.data.heroes.find((h) => h.id === this.s.heroId)
-        : this.data.bosses[this.s.bossIndex];
+        : this.s.mode === "practice"
+          ? this.data.heroes.find((h) => h.id === this.s.opponentHero)
+          : this.data.bosses[this.s.bossIndex];
     }
     legalPower(side) {
       if (this.s.phase !== "battle" || this.s.active !== side || this.s.choice)
@@ -672,6 +753,7 @@ const EmberEngine = (() => {
               }),
             );
           }
+          this.trigger("friendlyDeath", side, m);
           if (m.tags.includes("reborn")) {
             const c = this.data.byId[m.cid];
             this.summon(
@@ -702,6 +784,7 @@ const EmberEngine = (() => {
         return;
       }
       if (
+        this.s.mode !== "practice" &&
         !this.s.phase2 &&
         this.s.e.hp <= this.s.e.maxHp / 2 &&
         this.s.phase === "battle"
@@ -753,6 +836,9 @@ const EmberEngine = (() => {
     endTurn(side) {
       if (this.s.phase !== "battle" || this.s.active !== side || this.s.choice)
         return this.reject("现在不能结束回合");
+      this.trigger("turnEnd", side);
+      this.cleanup();
+      if (this.s.phase !== "battle") return this.emit();
       const p = this.s[side];
       const thawed = [
         ...(p.frozen ? [{ side, uid: "hero", kind: "thaw" }] : []),
@@ -776,6 +862,87 @@ const EmberEngine = (() => {
       for (const cue of thawed) this.event("status", cue);
       this.beginTurn(this.other(side));
       return this.emit();
+    }
+    consumeSecret(side, id) {
+      this.s[side].secrets = this.s[side].secrets.filter((x) => x !== id);
+      this.event("secret", { side, cid: id });
+      this.log("奥秘「" + this.data.byId[id].name + "」触发！");
+    }
+    revealSecret(side, when) {
+      const id = this.s[side].secrets.find(
+        (id) => this.data.byId[id].secret.when === when,
+      );
+      if (!id) return false;
+      this.consumeSecret(side, id);
+      return true;
+    }
+    trigger(event, side, target = null) {
+      if (!(this.s.ruleset >= 2)) return;
+      (this.triggerQueue ??= []).push({ event, side, target });
+      if (this.triggerRunning) return;
+      this.triggerRunning = true;
+      try {
+        let steps = 0;
+        while (this.triggerQueue.length) {
+          if (++steps > 100)
+            throw Error("Trigger chain exceeded content limit");
+          const e = this.triggerQueue.shift();
+          const sources = [...this.s[e.side].board].filter(
+            (m) => m.hp > 0 && !m.silenced,
+          );
+          const relics =
+            e.side === "p"
+              ? this.data.relics.filter((r) => this.s.relics.includes(r.id))
+              : [];
+          for (const source of [...sources, ...relics]) {
+            const card = source.cid ? this.data.byId[source.cid] : source;
+            if (
+              source.cid &&
+              (source.hp <= 0 ||
+                source.silenced ||
+                !this.s[e.side].board.includes(source))
+            )
+              continue;
+            if (e.event === "friendlyDeath" && source === e.target) continue;
+            if (e.event === "afterAttack" && source !== e.target) continue;
+            for (const [i, t] of (card.triggers || []).entries()) {
+              if (t.event !== e.event) continue;
+              const owner = source.cid ? source : this.s;
+              const key = (source.uid || card.id) + ":" + i;
+              const clock = this.s.turn + ":" + this.s.active;
+              const used = owner.triggerUses?.[key];
+              if (used?.clock === clock && used.count >= t.maxPerTurn) continue;
+              (owner.triggerUses ??= {})[key] = {
+                clock,
+                count: used?.clock === clock ? used.count + 1 : 1,
+              };
+              this.withBlock(
+                "trigger",
+                { sourceId: source.uid || card.id },
+                () => {
+                  this.log(card.name + "的能力触发。");
+                  this.event("status", {
+                    side: e.side,
+                    uid: source.uid || "hero",
+                    kind: "trigger",
+                  });
+                  this.resolve(t.effects, {
+                    side: e.side,
+                    source: source.cid ? source : null,
+                    card,
+                  });
+                },
+              );
+            }
+          }
+        }
+      } finally {
+        this.triggerRunning = false;
+        this.triggerQueue = [];
+      }
+    }
+    trainingAction(side = "p", options = {}) {
+      return AI.choose(this, side, options);
     }
     demo() {
       this.start("mage", 0, [], null, 372149);

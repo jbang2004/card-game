@@ -22,5 +22,5 @@
  b.onclick=showAtelier;E.showAtelier=showAtelier;
  // The opening cabinet uses two illustrations actually adapted in this edition.
  // Expose diagnostics without adding a permanent debug panel to the game.
- window.AtelierDiagnostics={version:'0.11.0',assets:Object.keys(WindborneAssets).length,paintedCards:AtelierArt.paintedCards.length,buildings:4,frames:0,layout:'1600x940',input:'live DOM',renderer:'Canvas 2D'};
+ window.AtelierDiagnostics={version:'0.12.0',assets:Object.keys(WindborneAssets).length,paintedCards:AtelierArt.paintedCards.length,buildings:4,frames:0,layout:'1600x940',input:'live DOM',renderer:'Canvas 2D'};
 })();

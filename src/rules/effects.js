@@ -4,6 +4,9 @@ const EmberRules = (() => {
   "use strict";
   const selectors = new Set([
     "selected",
+    "self",
+    "friendlyLowest",
+    "friendlyBeasts",
     "enemyHero",
     "enemyMinions",
     "friendlyMinions",
@@ -18,6 +21,23 @@ const EmberRules = (() => {
       g.s[s].board
         .filter((m) => m !== source)
         .map((m) => ({ side: s, uid: m.uid }));
+    if (to === "self")
+      return source && g.getTarget({ side, uid: source.uid })
+        ? [{ side, uid: source.uid }]
+        : [];
+    if (to === "friendlyBeasts")
+      return g.s[side].board
+        .filter((m) => g.data.byId[m.cid].tribe === "beast")
+        .map((m) => ({ side, uid: m.uid }));
+    if (to === "friendlyLowest")
+      return g.s[side].board
+        .filter((m) => m.hp > 0 && !m.tags.includes("shield"))
+        .sort(
+          (a, b) =>
+            a.atk - b.atk || Number(a.uid.slice(1)) - Number(b.uid.slice(1)),
+        )
+        .slice(0, 1)
+        .map((m) => ({ side, uid: m.uid }));
     if (to === "selected") return target && g.getTarget(target) ? [target] : [];
     if (to === "enemyHero") return [{ side: opp, uid: "hero" }];
     if (to === "enemyMinions") return board(opp);
@@ -31,6 +51,9 @@ const EmberRules = (() => {
   }
   const labels = {
     selected: "目标",
+    self: "自身",
+    friendlyLowest: "攻击力最低且没有圣盾的友方随从",
+    friendlyBeasts: "所有友方野兽",
     enemyHero: "敌方英雄",
     enemyMinions: "所有敌方随从",
     friendlyMinions: "所有友方随从",
@@ -52,6 +75,38 @@ const EmberRules = (() => {
           });
       },
       text: (e) => `对${labels[e.to]}造成 ${e.amount} 点伤害`,
+    },
+    drawFiltered: {
+      fields: ["count", "cardType", "tribe"],
+      required: ["count", "cardType"],
+      run(g, e, c) {
+        const p = g.s[c.side];
+        for (let n = 0; n < e.count; n++) {
+          const i = p.deck.findIndex(
+            (x) =>
+              g.data.byId[x.cid].type === e.cardType &&
+              (!e.tribe || g.data.byId[x.cid].tribe === e.tribe),
+          );
+          if (i < 0) break;
+          const [card] = p.deck.splice(i, 1);
+          p.deck.unshift(card);
+          g.draw(c.side);
+        }
+      },
+      text: (e) =>
+        `从牌库抽取 ${e.count} 张${e.tribe === "beast" ? "野兽" : "随从"}牌（不足时抽取剩余牌）`,
+    },
+    destroyWeapon: {
+      fields: [],
+      required: [],
+      run(g, e, c) {
+        const side = g.other(c.side);
+        if (g.s[side].weapon) {
+          g.s[side].weapon = null;
+          g.event("weaponWear", { side, uid: "hero", broken: true });
+        }
+      },
+      text: () => "摧毁敌方武器",
     },
     freeze: {
       fields: ["to"],
@@ -194,7 +249,20 @@ const EmberRules = (() => {
           cards: g
             .shuffle(
               g.data.cards
-                .filter((x) => x.type === e.cardType && !x.token)
+                .filter(
+                  (x) =>
+                    x.type === e.cardType &&
+                    !x.token &&
+                    (g.s.ruleset >= 2
+                      ? x.class === "neutral" ||
+                        x.class ===
+                          (c.side === "p"
+                            ? g.s.heroId
+                            : g.s.opponentHero ||
+                              g.data.bosses[g.s.bossIndex].discoverClass ||
+                              "mage")
+                      : !x.set),
+                )
                 .map((x) => x.id),
             )
             .slice(0, e.count),
@@ -209,6 +277,9 @@ const EmberRules = (() => {
         g.s[c.side].secrets.push(c.card.id);
       },
       text: (e, db, c) => {
+        if (c.secret.counter) return "奥秘：敌人施放法术时，反制该法术";
+        if (c.secret.armor)
+          return `奥秘：敌人攻击你的英雄时，获得 ${c.secret.armor} 点护甲`;
         const m = db[c.secret.summon];
         return `奥秘：敌人攻击你的英雄时，召唤一个 ${m.atk}/${m.hp} ${m.tags.map((t) => db.$kw[t]).join("、")}镜卫代为承受攻击`;
       },
@@ -258,6 +329,9 @@ const EmberRules = (() => {
         ["buff", "grant", "silence", "transform", "destroy"].includes(e.type) &&
         ![
           "selected",
+          "self",
+          "friendlyLowest",
+          "friendlyBeasts",
           "enemyMinions",
           "friendlyMinions",
           "friendlyOthers",
@@ -266,6 +340,12 @@ const EmberRules = (() => {
         throw Error(owner + ": This effect requires minion targets");
       if (e.card && db[e.card]?.type !== "minion")
         throw Error(owner + ": Invalid summoned/transformed card " + e.card);
+      if (
+        e.type === "drawFiltered" &&
+        (e.cardType !== "minion" ||
+          (e.tribe && !["beast", "undead", "dragon"].includes(e.tribe)))
+      )
+        throw Error(owner + ": Invalid draw filter");
       if (e.tag && !db.$kw[e.tag])
         throw Error(owner + ": Unknown keyword " + e.tag);
       if (e.duration !== undefined && (e.duration !== "turn" || e.health !== 0))
@@ -292,6 +372,8 @@ const EmberRules = (() => {
       g.s[side].board.length >= 7
     )
       return "战场已满";
+    if (c.secret && g.s[side].secrets.length >= 5)
+      return "奥秘已满（最多 5 个）";
     if (c.secret && g.s[side].secrets.includes(c.id)) return "相同的奥秘已存在";
     return null;
   }
@@ -306,6 +388,7 @@ const EmberRules = (() => {
       result +=
         (c.type === "minion" ? "战吼：" : "") + describe(c.onPlay) + "。";
     if (c.onDeath.length) result += "亡语：" + describe(c.onDeath) + "。";
+    if (c.triggers?.length) result += triggerText(c.triggers, db);
     return result.replaceAll(
       "目标",
       {
@@ -315,6 +398,45 @@ const EmberRules = (() => {
         minion: "一个随从",
       }[c.target] || "目标",
     );
+  }
+  const triggerLabels = {
+    spellCast: "你施放法术后",
+    friendlyDeath: "其他友方随从死亡后",
+    shieldLost: "友方随从失去圣盾后",
+    turnEnd: "你的回合结束时",
+    afterAttack: "该随从攻击后",
+  };
+  function validateTriggers(triggers, db, owner) {
+    if (triggers === undefined) return;
+    if (!Array.isArray(triggers)) throw Error(owner + ": Invalid triggers");
+    for (const t of triggers) {
+      if (
+        Object.keys(t).some(
+          (k) => !["event", "effects", "maxPerTurn"].includes(k),
+        ) ||
+        !triggerLabels[t.event] ||
+        !Number.isInteger(t.maxPerTurn) ||
+        t.maxPerTurn < 1 ||
+        t.maxPerTurn > 5
+      )
+        throw Error(owner + ": Invalid trigger");
+      validateEffects(t.effects, db, owner);
+      if (
+        t.effects.some(
+          (e) =>
+            e.to === "selected" || e.type === "discover" || e.type === "secret",
+        )
+      )
+        throw Error(owner + ": Trigger must resolve without a choice");
+    }
+  }
+  function triggerText(ts, db) {
+    return (ts || [])
+      .map(
+        (t) =>
+          `${triggerLabels[t.event]}，${t.effects.map((e) => registry[e.type].text(e, db, {})).join("，")}（每回合最多 ${t.maxPerTurn} 次）。`,
+      )
+      .join("");
   }
   function profile(c) {
     const ops = c?.onPlay || [];
@@ -351,6 +473,8 @@ const EmberRules = (() => {
   }
   return Object.freeze({
     validateEffects,
+    validateTriggers,
+    triggerText,
     execute,
     legal,
     text,

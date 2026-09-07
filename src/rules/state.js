@@ -38,6 +38,30 @@ const EmberState = (() => {
         )
       )
         return false;
+      if (s.ruleset !== undefined && ![1, 2].includes(s.ruleset)) return false;
+      if (s.mode !== undefined && s.mode !== "practice") return false;
+      if (
+        s.mode === "practice" &&
+        (!data.archetypes.some(
+          (a) => a.id === s.opponent && a.hero === s.opponentHero,
+        ) ||
+          !["p", "e"].includes(s.first))
+      )
+        return false;
+      const validUses = (u) =>
+        u === undefined ||
+        (u &&
+          typeof u === "object" &&
+          !Array.isArray(u) &&
+          Object.values(u).every(
+            (v) =>
+              v &&
+              typeof v.clock === "string" &&
+              Number.isInteger(v.count) &&
+              v.count >= 0 &&
+              v.count <= 5,
+          ));
+      if (!validUses(s.triggerUses)) return false;
       const seen = new Set();
       for (const side of ["p", "e"]) {
         const p = s[side];
@@ -90,6 +114,7 @@ const EmberState = (() => {
         }
         for (const m of p.board)
           if (
+            !validUses(m.triggerUses) ||
             ![m.hp, m.maxHp, m.atk, m.attacks, m.tempAtk].every(
               Number.isFinite,
             ) ||

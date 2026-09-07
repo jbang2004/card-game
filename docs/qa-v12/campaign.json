@@ -1,0 +1,89 @@
+{
+  "method": "Same-policy automated campaign runs, at most 3 attempts per boss, class-aware relic choices. Not human completion rates.",
+  "rows": [
+    {
+      "deck": "mage_burn",
+      "runs": 6,
+      "cleared": 3,
+      "stages": [
+        6,
+        6,
+        6,
+        6,
+        3
+      ],
+      "tries": 43,
+      "wins": 27
+    },
+    {
+      "deck": "mage_frost",
+      "runs": 6,
+      "cleared": 0,
+      "stages": [
+        6,
+        6,
+        6,
+        6,
+        0
+      ],
+      "tries": 43,
+      "wins": 24
+    },
+    {
+      "deck": "paladin_swarm",
+      "runs": 6,
+      "cleared": 5,
+      "stages": [
+        6,
+        6,
+        6,
+        6,
+        5
+      ],
+      "tries": 38,
+      "wins": 29
+    },
+    {
+      "deck": "paladin_guard",
+      "runs": 6,
+      "cleared": 3,
+      "stages": [
+        6,
+        6,
+        6,
+        6,
+        3
+      ],
+      "tries": 47,
+      "wins": 27
+    },
+    {
+      "deck": "ranger_pack",
+      "runs": 6,
+      "cleared": 0,
+      "stages": [
+        5,
+        5,
+        5,
+        3,
+        0
+      ],
+      "tries": 44,
+      "wins": 18
+    },
+    {
+      "deck": "ranger_death",
+      "runs": 6,
+      "cleared": 1,
+      "stages": [
+        5,
+        5,
+        5,
+        5,
+        1
+      ],
+      "tries": 40,
+      "wins": 21
+    }
+  ]
+}
