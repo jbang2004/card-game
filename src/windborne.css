@@ -774,21 +774,6 @@ body:not(.touch-layout) .lobby-collection {
 #target-circle {
   stroke: #be985e;
 }
-#turn-banner {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    #edf0dbe6 25%,
-    #dfdcc2f5 65%,
-    transparent
-  );
-  color: #4c694f;
-  text-shadow: none;
-  box-shadow: none;
-}
-#turn-banner small {
-  color: #899674;
-}
 #action-status {
   color: #81936d;
 }
@@ -1397,19 +1382,6 @@ body.touch-layout #toast {
   background: #f4eed6f7;
   color: #627d50;
   border-color: #b7c49a;
-}
-.touch-layout #turn-banner {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    #ecedd2ed,
-    #dfe6c4ed,
-    transparent
-  );
-  color: #56764a;
-}
-.touch-layout #turn-banner small {
-  color: #839e6c;
 }
 .anime-art-button {
   color: #74915f;

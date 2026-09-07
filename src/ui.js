@@ -205,7 +205,6 @@
     closeModal(false);
     setView(true);
     game.demo();
-    $("turn-banner").classList.remove("show");
     toast("战斗试玩：点击手牌或己方随从，再选择目标。");
   }
   function showModal(html, type, locked = false) {
@@ -477,7 +476,7 @@
                   })[t],
               )
               .join("");
-            return `<button class="minion ${side === "e" ? "enemy" : "friendly"} ${m.tags.join(" ")} ${ready ? "ready" : ""} ${m.frozen ? "frozen" : ""} ${c.rarity}" style="left:${x}px;top:${y}px;width:${geo.w}px;height:${geo.h}px;--unit-w:${geo.w}px" data-compact="${geo.w < 50}" data-side="${side}" data-uid="${m.uid}" data-cardid="${c.id}" aria-label="${c.name}，攻击 ${m.atk}，生命 ${m.hp}，${m.tags.map((t) => D.kw[t]).join("、")}${m.frozen ? "，被冻结" : ""}"><div class="minion-art"><img src="${A.card(c)}" alt="" draggable="false" data-art-key="${artKeyForCard(c)}" style="${artStyleForCard(c, "minion")}"></div><div class="minion-name">${c.name}</div><span class="stat atk">${m.atk}</span><span class="stat hp ${m.hp < m.maxHp ? "hurt" : ""}">${m.hp}</span><span class="minion-status">${m.frozen ? "❄" : specials ? '<span class="special">' + specials + "</span>" : m.sick && !ready ? '<span class="sleep">z z</span>' : ""}</span>${ready ? '<span class="ready-dot"></span>' : ""}</button>`;
+            return `<button class="minion ${side === "e" ? "enemy" : "friendly"} ${m.tags.join(" ")} ${ready ? "ready" : ""} ${m.frozen ? "frozen" : ""} ${c.rarity}" style="left:${x}px;top:${y}px;width:${geo.w}px;height:${geo.h}px;--unit-w:${geo.w}px" data-compact="${geo.w < 50}" data-side="${side}" data-uid="${m.uid}" data-cardid="${c.id}" aria-label="${c.name}，攻击 ${m.atk}，生命 ${m.hp}，${m.tags.map((t) => D.kw[t]).join("、")}${m.frozen ? "，被冻结" : ""}"><div class="minion-art"><img src="${A.card(c)}" alt="" draggable="false" data-art-key="${artKeyForCard(c)}" style="${artStyleForCard(c, "minion")}"></div><span class="unit-aura" aria-hidden="true"></span><div class="minion-name">${c.name}</div><span class="stat atk">${m.atk}</span><span class="stat hp ${m.hp < m.maxHp ? "hurt" : ""}">${m.hp}</span><span class="minion-status">${m.frozen ? "❄" : specials ? '<span class="special">' + specials + "</span>" : m.sick && !ready ? '<span class="sleep">z z</span>' : ""}</span>${ready ? '<span class="ready-dot"></span>' : ""}</button>`;
           })
           .join(""),
       )
@@ -953,22 +952,9 @@
       settings.fast ? 240 : 720,
     );
   }
-  function banner(text, sub) {
-    const el = $("turn-banner");
-    el.innerHTML = text + (sub ? "<small>" + sub + "</small>" : "");
-    el.classList.remove("show");
-    void el.offsetWidth;
-    el.classList.add("show");
-  }
   function handleEvents(events) {
     for (const e of events) {
       if (e.type === "turn" && e.side === "p" && !modalType) {
-        banner(
-          "你的回合",
-          "TURN " +
-            String(game.s.turn).padStart(2, "0") +
-            " · THE EMBER IS YOURS",
-        );
         EmberAudio.fx("turn");
       }
       if (e.type === "over") EmberAudio.fx("over");

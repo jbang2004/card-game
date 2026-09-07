@@ -2333,24 +2333,6 @@
 .death-ghost.minion:before {
   display: none;
 }
-.summon-reveal {
-  animation: summon-in 0.7s cubic-bezier(0.12, 0.75, 0.18, 1);
-}
-@keyframes summon-in {
-  0% {
-    opacity: 0;
-    transform: translateY(-45px) scale(0.65);
-    filter: brightness(3);
-  }
-  50% {
-    opacity: 1;
-    transform: translateY(4px) scale(1.08);
-  }
-  100% {
-    transform: translateY(0) scale(1);
-    filter: brightness(1);
-  }
-}
 #toast {
   top: 90px;
   bottom: auto;
@@ -2371,50 +2353,6 @@
 }
 #toast.visible {
   transform: translate(-50%, 0);
-}
-#turn-banner {
-  position: absolute;
-  left: 50%;
-  top: 450px;
-  transform: translate(-50%, -50%);
-  min-width: 460px;
-  padding: 25px 80px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    #101c22df 20%,
-    #101c22ef 80%,
-    transparent
-  );
-  border: 0;
-  color: #e8d6b3;
-  font: 30px var(--serif);
-  letter-spacing: 7px;
-  z-index: 54;
-  pointer-events: none;
-  text-shadow: 0 2px 15px #000;
-}
-#turn-banner:before,
-#turn-banner:after {
-  content: "";
-  position: absolute;
-  left: 10%;
-  right: 10%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #d0b38166, transparent);
-}
-#turn-banner:before {
-  top: 0;
-}
-#turn-banner:after {
-  bottom: 0;
-}
-#turn-banner small {
-  display: block;
-  font: 8px var(--sans);
-  letter-spacing: 3px;
-  margin-top: 12px;
-  color: #a29e8b;
 }
 .screen-flash {
   display: none;
@@ -3189,9 +3127,6 @@ body.reduced-motion #target-path {
 }
 body.reduced-motion .damage-number {
   animation: staticDamage 0.9s forwards !important;
-}
-body.reduced-motion #turn-banner.show {
-  animation: banner 1.8s forwards !important;
 }
 .portrait-orientation {
   background: #162422f2;
