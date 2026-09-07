@@ -1,34 +1,24 @@
-# 素材目录与加工关系
+# v0.11 素材与加工
 
-## 当前版本的真实来源
+运行时保留 56 张已确认卡图、6 张遗物、当前完整酒馆图和山谷原画档案。角色明确复用卡图；不加载旧程序化人物、旧 Three.js 场景、旧卡框缓存或旧酒馆背景。
 
-- 卡牌：56张不同的WebP图版（48张可组牌卡+8张衍生牌），每张336×448。由用户确认的8张素材表裁切、去标题条和等比处理得到；原始PNG全部保留。没有声称56次独立高清生成。
-- 新环境：9个运行时图版，含4座建筑、天际、纸纹、木纹、棋盘与叶片徽章。建筑/天际按批准环境示意图提取；界面/表面素材由脚本制作。不是完整三维建筑网格。
-- 英雄/首领：显式复用主题卡图。不要以同名ID覆盖卡牌原画；路由需结合角色上下文/配色。
-- 六件非卡牌遗物保留继承图；人物卡图不回退到旧程序化插画。
-- 字体不随包提供。音频由Web Audio合成，没有外部BGM或音效文件遗漏。
+| 输入/源码 | 用途 |
+|---|---|
+| `assets/anime/*.webp` / `manifest.json` | 56 张运行卡图、来源和文件哈希 |
+| `assets/anime/sources/*.png` | 八张已确认原始图集，原始输入留档 |
+| `assets/anime/overrides.json` / `overrides/`（有替换时创建） | 独立卡图来源，整体裁图时仍优先使用 |
+| `assets/anime/non-card-relics.json` | 六张已有遗物的原始内嵌图 |
+| `src/anime-assets.js` / `src/relic-assets.js` | 由同一个 packer 生成的运行缓存 |
+| `src/art.js` | 严格 card / character / relic 路由，无隐式回退 |
+| `src/atelier-art.js` | 卡图焦点与裁切参数 |
+| `assets/premium/` / `src/premium-assets.js` | 当前完整酒馆画面与生成缓存 |
+| `assets/windborne/` / `src/world-assets.js` | 原画档案及当前使用的纹理资源 |
 
-## 文件与编辑方式
+常规代码改动只运行 `python3 build.py`。元数据更新或重新打包运行 `python3 tools/pack_card_assets.py`。单张替换见 [卡牌修改指南](CARD_AUTHORING.md)。重新裁切八张原图运行 `python3 tools/build_anime_assets.py`，需要 `requirements-art.txt` 的 Pillow；最终仍调用统一 packer。
 
-| 路径 | 用途 |
-| --- | --- |
-| `assets/anime/*.webp` | 56张实际运行卡图；`manifest.json`逐张记录名称、类型、原图、裁切窗口与哈希 |
-| `assets/anime/sources/*.png` | 8张批准卡牌素材表；不是依赖或可随意删除的下载缓存 |
-| `assets/anime/Contact_Sheet.jpg` | 56张实际图版的美术总览 |
-| `assets/anime/frame-sources/` | 兼容卡框加工输入；`prepare_anime_runtime.py`需要它们 |
-| `assets/anime/non-card-relics.json` | 六种非卡牌遗物图输入 |
-| `assets/references/world/*.png` | 两张批准的环境参考；本轮生产提取使用`approved-village.png` |
-| `assets/windborne/*.webp` | 新环境/材质独立资产；来源与蒙版见同目录`manifest.json` |
-| `assets/atelier/*.webp` | 历史兼容环境/卡框输入；已有场景回退和缓存重建仍使用，未作为新角色插画回退 |
-| `src/anime-assets.js` | 56张卡图内嵌缓存，由`tools/build_anime_assets.py`生成 |
-| `src/world-assets.js` | 新环境内嵌缓存，由`tools/build_world_assets.py`生成 |
-| `src/atelier-assets.js` / `src/portraits.js` | 兼容环境/卡框及遗物缓存，由`tools/prepare_anime_runtime.py`生成 |
-| `src/materials.js` / `src/backdrops.js` | 继承的内嵌纹理/场景输入，仍被当前构建引用 |
-| `src/atelier-art.js` | 卡图路由、英雄/首领复用关系、焦点/缩放参数 |
+打包器也生成六张遗物缓存。旧 `prepare_anime_runtime.py` 已删除；不会重新生成废弃卡框。`assets/atelier/` 和 frame-sources 只作历史原始资产保留，不进入当前构建。
 
-正常改代码不需要重新生图或裁图。新增卡牌时必须同步`src/data.js`、素材映射/清单、图片缓存和测试。替换WebP文件本身不会自动更新已经内嵌的JavaScript缓存；需要同步加工管线再运行`build.py`。费用、描述和属性必须继续由DOM动态显示。
-
-原始素材和当前图版都保留，是为了后续可以重新裁切、修正蒙版或替换美术；这也是压缩包主要体积来源。没有PSD/分层绘画工程可提供；当前真正的可编辑输入是PNG、WebP、JSON蒙版/焦点配置与生成脚本。
+网页构建直接从同一份缓存提取图片，不重复压缩。单文件与网页的卡图内容一致。下面的图集清单描述当前确认素材来源；将来替换某图时以 manifest 的逐图记录为准。
 
 ## 全部56张卡图
 
@@ -110,7 +100,7 @@
 英雄：星焰法师→`oracle`，黎明圣卫→`paladin`，暗影游侠→`archer`。
 首领：灰烬监守→`berserker`，荆棘女王→`treant`，深渊先知→`necromancer`，霜狱君王→`frostking`，终焉巨龙→`ashdragon`。
 
-注意卡牌`oracle`与深渊先知、卡牌`dragon`与终焉巨龙存在ID重名。`EmberArt.card()`读取卡牌专属图，角色肖像通过当前`AtelierArt`路由处理。改动后运行`node --test tests/anime_assets.test.cjs`。
+注意卡牌`oracle`与深渊先知、卡牌`dragon`与终焉巨龙存在ID重名。`EmberArt.card()`读取卡牌专属图，`EmberArt.character()`读取角色定义中的 `portraitId`。改动后运行`node --test tests/anime_assets.test.cjs`。
 
 ## 权利与分发说明
 

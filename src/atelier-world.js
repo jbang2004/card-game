@@ -21,8 +21,6 @@ const AtelierWorld = (() => {
     { id: "tree", key: "mine", focus: [125, 690], light: "#75d9ff" },
     { id: "forge", key: "forge", focus: [1460, 700], light: "#ffc180" },
   ];
-  for (const k of ["brewery", "observatory", "mine", "forge"])
-    AtelierAssets["building-" + k] = WindborneAssets["building-" + k];
   image.onload = () => {
     ready = true;
     dirty = true;
@@ -116,7 +114,6 @@ const AtelierWorld = (() => {
       glow(c, h.x, h.y, 40 + p * 55, h.color, (1 - p) * 0.25);
     }
   }
-  TavernWorld.paint = paint;
   return {
     paint,
     layers,

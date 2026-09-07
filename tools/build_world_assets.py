@@ -85,7 +85,8 @@ save('board',board,quality=92,kind='authored transparent stone/wood board, no ga
 # A carved leaf medallion for card backs and small UI use; no typography.
 svg='''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g fill="none" stroke="#d9c79c" stroke-width="2"><circle cx="50" cy="50" r="40"/><circle cx="50" cy="50" r="34" opacity=".45"/><path d="M31 69Q24 29 70 26Q82 65 34 72M31 72L69 28M42 61L38 43M49 54L66 56M57 44L55 32"/><path d="M50 2v10M50 88v10M2 50h10M88 50h10"/></g></svg>'''
 p=OUT/'leaf-seal.svg';p.write_text(svg);cache['leaf-seal']='data:image/svg+xml;base64,'+base64.b64encode(svg.encode()).decode();manifest['assets']['leaf-seal']={'file':p.name,'kind':'authored vector UI emblem'}
-(ROOT/'src/world-assets.js').write_text('/* Approved illustration layers + authored interface textures. */\nconst WindborneAssets='+json.dumps(cache,separators=(',',':'))+';\n')
+from pack_world_assets import pack
+pack()
 (OUT/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2))
 # Visual audit of extracted source layers, not a concept design pretending to be gameplay.
 contact=Image.new('RGB',(1200,420),(229,221,195))

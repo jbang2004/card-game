@@ -1,24 +1,20 @@
 {
   "name": "emberfall-card-game",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "private": true,
   "description": "Emberfall: single-player fantasy card battles, responsive UI and offline rules",
   "license": "MIT",
   "scripts": {
     "build": "python3 build.py",
-    "test": "node --test tests/engine.test.cjs tests/anime_assets.test.cjs",
-    "serve": "python3 -m http.server 8000",
-    "test:browser": "python3 tests/browser_pocket.py",
-    "test:touch-extra": "python3 tests/pocket_additional.py",
-    "test:anime": "node --test tests/anime_assets.test.cjs && python3 tests/browser_anime.py",
-    "art:anime": "python3 tools/build_anime_assets.py && python3 tools/prepare_anime_runtime.py",
-    "test:additional": "python3 tests/pocket_additional.py",
-    "test:world": "python3 tests/browser_windborne.py",
-    "test:release": "python3 tests/run_release_checks.py",
-    "art:world": "python3 tools/build_world_assets.py",
-    "dev": "python3 build.py && python3 -m http.server 8000 --bind 127.0.0.1 --directory dist",
+    "test": "node --test tests/*.test.cjs",
     "test:e2e": "playwright test",
-    "format": "prettier --write src/presentation src/platform src/ui.js src/mobile-view.js"
+    "test:release": "npm run build && npm test && npm run test:e2e",
+    "serve": "python3 -m http.server 8000 --bind 127.0.0.1",
+    "dev": "python3 build.py && python3 -m http.server 8000 --bind 127.0.0.1 --directory dist",
+    "art:anime": "python3 tools/pack_card_assets.py",
+    "art:atlas": "python3 tools/build_anime_assets.py",
+    "art:world": "python3 tools/build_world_assets.py",
+    "format": "prettier --write src/content src/rules src/presentation src/platform src/data.js src/engine.js src/ui.js"
   },
   "engines": {
     "node": ">=18"

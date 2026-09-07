@@ -46,7 +46,7 @@
         )
         .join(
           "",
-        )}</div><div class="lab-stage"><div class="lab-token source"><img src="${A.url("mage", "arcane", "nyx")}" alt="施法者"></div><div class="lab-token target"><img src="${A.url("knight", "steel", "titan")}" alt="训练傀儡"></div><div class="lab-mark">CASTER &nbsp; / &nbsp; THE PROVING GROUND &nbsp; / &nbsp; TARGET</div></div></div><div class="lab-details" id="lab-details"></div><div class="lab-footer"><span>点击左侧元素切换 · ESC 返回${E.settings.reduced ? " · 当前为减弱动态模式" : ""}</span><button class="gold-btn" id="lab-replay">再次施放 ${A.icon("refresh")}</button></div></section>`,
+        )}</div><div class="lab-stage"><div class="lab-token source"><img src="${A.card(D.byId.nyx)}" alt="施法者"></div><div class="lab-token target"><img src="${A.card(D.byId.titan)}" alt="训练傀儡"></div><div class="lab-mark">CASTER &nbsp; / &nbsp; THE PROVING GROUND &nbsp; / &nbsp; TARGET</div></div></div><div class="lab-details" id="lab-details"></div><div class="lab-footer"><span>点击左侧元素切换 · ESC 返回${E.settings.reduced ? " · 当前为减弱动态模式" : ""}</span><button class="gold-btn" id="lab-replay">再次施放 ${A.icon("refresh")}</button></div></section>`,
       "lab",
     );
     F.setLab(true);
@@ -106,63 +106,20 @@
   });
   // A side-by-side combat forecast is informational only and deliberately omits
   // hidden information, secret identities and random outcomes.
-  function damageResult(side, uid, n, poison = false) {
-    const g = E.game,
-      t = g.getTarget({ side, uid });
-    if (!t) return null;
-    let actual = n,
-      blocked = n > 0 && uid !== "hero" && t.tags.includes("shield");
-    if (blocked) actual = 0;
-    let loss = uid === "hero" ? Math.max(0, actual - t.armor) : actual;
-    let dead = loss >= t.hp || (poison && actual > 0 && uid !== "hero");
-    return { hp: Math.max(0, t.hp - loss), dead, blocked };
-  }
   function forecast(el) {
-    const sel = E.selection,
-      g = E.game,
-      s = g.s;
-    if (!sel || !s || !el.classList.contains("valid-target")) return null;
-    const side = el.dataset.side,
-      uid = el.dataset.uid,
-      t = g.getTarget({ side, uid });
-    if (!t) return null;
-    if (sel.type === "attack") {
-      const source = g.getTarget({ side: "p", uid: sel.uid }),
-        atk = sel.uid === "hero" ? s.p.weapon?.atk || 0 : source.atk,
-        ret = uid === "hero" ? 0 : t.atk;
-      const target = damageResult(
-          side,
-          uid,
-          atk,
-          source.tags?.includes("poison"),
-        ),
-        self = damageResult("p", sel.uid, ret, t.tags?.includes("poison"));
-      return `<span>${target.blocked ? "击破圣盾" : `${atk} 点伤害`}</span><small><span class="${target.dead ? "kill" : "survive"}">${target.dead ? "目标被消灭" : `目标余 ${target.hp} 生命`}</span> · <span class="${self?.dead ? "kill" : "survive"}">${self?.dead ? "我方也将阵亡" : self?.blocked ? "我方圣盾抵挡" : `我方余 ${self?.hp ?? source.hp}`}</span></small>`;
-    }
-    const c = sel.type === "card" ? D.byId[sel.cid] : null;
-    let n =
-      sel.type === "power"
-        ? 1
-        : c && ["damage", "frost", "drain"].includes(c.effect)
-          ? c.value + g.spellBonus("p")
-          : 0;
-    if (n) {
-      const target = damageResult(side, uid, n);
-      return `<span>${target.blocked ? "圣盾抵挡伤害" : `${n} 点伤害`}</span><small class="${target.dead ? "kill" : "survive"}">${target.dead ? "致命伤害" : `目标余 ${target.hp} 生命`}${c?.effect === "frost" ? " · 附加冻结" : ""}</small>`;
-    }
-    if (c?.effect === "destroy")
-      return '<span>消灭目标</span><small class="kill">无视当前生命值</small>';
-    if (c?.effect === "transform")
-      return "<span>变形为绵羊</span><small>1 攻击 / 1 生命 · 移除原有能力</small>";
-    if (c?.effect === "buff")
-      return `<span>获得 +${c.value}/+${c.value}</span><small class="survive">${t.atk + c.value} 攻击 / ${t.hp + c.value} 生命</small>`;
-    if (c?.effect === "shield")
-      return "<span>获得圣盾</span><small>抵挡下一次伤害</small>";
-    if (c?.effect === "silence")
-      return "<span>施加沉默</span><small>移除关键词、亡语和增益</small>";
-    if (c?.effect === "tempBuff")
-      return `<span>本回合 +${c.value} 攻击</span><small>${t.atk + c.value} 攻击力</small>`;
-    return null;
+    if (!el.classList.contains("valid-target")) return null;
+    const r = E.game.preview(E.selection, {
+      side: el.dataset.side,
+      uid: el.dataset.uid,
+    });
+    if (!r) return null;
+    const esc = E.formatText;
+    if (r.kind === "uncertain") return `<span>${esc(r.text)}</span>`;
+    if (r.kind === "message")
+      return `<span>${esc(r.text)}</span><small>${esc(r.detail)}</small>`;
+    const result = (x) =>
+      x.blocked ? "圣盾抵挡" : x.dead ? "本次伤害致死" : `余 ${x.hp} 生命`;
+    return `<span>${r.amount} 点伤害${r.frozen ? " · 冻结" : ""}</span><small>${result(r.target)}${r.self ? " · 我方" + result(r.self) : ""}</small>`;
   }
   document.addEventListener(
     "pointermove",
