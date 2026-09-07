@@ -41,5 +41,9 @@
   "STORAGE": "platform/storage.js",
   "LIBRARY": "application/library.js",
   "RELIC_ASSETS": "relic-assets.js",
-  "CHARACTER_CATALOG": "character-catalog.js"
+  "CHARACTER_CATALOG": "character-catalog.js",
+  "AUDIO_ASSETS": "audio-assets.js",
+  "VFX_ASSETS": "vfx-assets.js",
+  "VFX_PROFILES": "presentation/fx-profiles.js",
+  "VFX_RENDERER": "presentation/vfx.js"
 }

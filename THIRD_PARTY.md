@@ -45,3 +45,15 @@ Artwork build helpers use Pillow, NumPy, OpenCV and CairoSVG at development time
 All 56 active card images use the eight approved anime atlases introduced in v0.6; no active card illustration falls back to the historical procedural portraits. See `assets/anime/manifest.json` for the extraction sources and mappings. Six non-card relic images remain inherited.
 
 The approved environment images are provided in `assets/references/world/`. Four building layers and the clear skyline are derived from the approved village painting. The clean board, paper / wood material plates and leaf emblem are authored UI / surface assets. Extraction polygons and exact source/output SHA-256 values are recorded in `assets/windborne/manifest.json`. No original Hearthstone game media, downloaded reference photos, recordings, font files or engine binaries are redistributed in this edition. This source archive makes no assertion of a separate commercial-art license for generated concepts beyond their documented conversation provenance.
+
+## Current runtime note · v0.12.1
+
+The sections above describe historical editions. The current game uses Canvas/DOM on desktop and mobile, with no Three.js download, procedural character fallback or bundled font. Current artwork mapping is documented in `docs/ASSETS.md`.
+
+## Bundled combat Foley and VFX · 2026-09-08
+
+- Kenney: Casino Audio, Impact Sounds and RPG Audio — CC0 1.0. Twelve processed MP3 files plus retained originals and license evidence in `assets/audio/`. See `assets/audio/CREDITS.md`.
+- Kenney: Particle Pack — https://kenney.nl/assets/particle-pack — CC0 1.0. Eight adapted RGBA masks (the unused smoke mask was removed during cleanup); original license at `assets/vfx/KENNEY-LICENSE.txt`.
+- Mikodrak: 2D Spell Effects — https://opengameart.org/content/2d-spell-effects — author's CC0 1.0 submission. Five adapted animation atlases. Original frames and the author's license declaration are retained under `assets/vfx/sources/`.
+
+CC0 terms: https://creativecommons.org/publicdomain/zero/1.0/. Manifests record source URLs, original/derived hashes, author and processing. The game loads these locally, including the portable build. Elemental sound design also uses Web Audio synthesis. No Blizzard/Hearthstone audio or effect assets are redistributed.

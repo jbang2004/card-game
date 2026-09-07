@@ -1,109 +1,171 @@
-/* Procedural layered audio: transient, body and tail have separate envelopes.
- * A shared convolution send keeps nodes bounded. Audio starts on user gesture,
- * never on loading the page. Volume is deliberately restrained. */
+/* Event-synchronous mixer. All samples are bundled locally; decoding never
+ * delays a combat beat. Each cue owns bounded, cancellable nodes and tails. */
 const EmberAudio = (() => {
-  let ctx,
-    master,
-    dry,
-    wet,
-    convolver,
-    noiseBuffer,
-    enabled = true,
-    started = false;
-  const played = {};
+  let ctx, master, compressor, convolver, noiseBuffer, room;
+  let enabled = true,
+    started = false,
+    currentVoice = null,
+    scene = "lobby";
+  const buses = {},
+    buffers = new Map(),
+    voices = new Set(),
+    recent = new Map();
+  const played = {},
+    history = [],
+    failed = new Set();
+  const levels = { volume: 0.75, sfxVolume: 0.85, ambienceVolume: 0.35 };
+  let peakVoices = 0,
+    dropped = 0,
+    runtimeErrors = 0,
+    ready = Promise.resolve();
+  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+  const bank = () =>
+    typeof EmberSoundBank === "undefined" ? {} : EmberSoundBank;
+  function ramp(param, value, time = 0.025) {
+    param.cancelScheduledValues(ctx.currentTime);
+    param.setTargetAtTime(value, ctx.currentTime, time);
+  }
+  function mix() {
+    if (!ctx) return;
+    ramp(master.gain, enabled ? levels.volume : 0);
+    ramp(buses.sfx.gain, levels.sfxVolume);
+    ramp(buses.ui.gain, levels.sfxVolume * 0.62);
+    ramp(
+      buses.ambience.gain,
+      levels.ambienceVolume * (scene === "battle" ? 0.55 : 1),
+      0.12,
+    );
+  }
+  function dispose(voice) {
+    if (!voices.delete(voice)) return;
+    clearTimeout(voice.timer);
+    for (const source of voice.sources) {
+      try {
+        source.stop();
+      } catch {}
+    }
+    for (const node of voice.nodes) {
+      try {
+        node.disconnect();
+      } catch {}
+    }
+  }
+  function stop() {
+    for (const voice of [...voices]) dispose(voice);
+    recent.clear();
+  }
+  async function preload() {
+    await Promise.all(
+      Object.entries(bank()).map(async ([id, entry]) => {
+        try {
+          const response = await fetch(entry.src);
+          if (!response.ok) throw Error("audio response");
+          buffers.set(
+            id,
+            await ctx.decodeAudioData(await response.arrayBuffer()),
+          );
+        } catch {
+          failed.add(id);
+        }
+      }),
+    );
+  }
   function init() {
     if (started) return;
     try {
       const C = window.AudioContext || window.webkitAudioContext;
       if (!C) return;
-      ctx = new C();
+      ctx = new C({ latencyHint: "interactive" });
       master = ctx.createGain();
-      master.gain.value = enabled ? 0.38 : 0;
-      const limiter = ctx.createDynamicsCompressor();
-      limiter.threshold.value = -15;
-      limiter.knee.value = 18;
-      limiter.ratio.value = 4;
-      limiter.attack.value = 0.004;
-      limiter.release.value = 0.18;
-      master.connect(limiter);
-      limiter.connect(ctx.destination);
-      dry = ctx.createGain();
-      dry.gain.value = 1;
-      dry.connect(master);
-      wet = ctx.createGain();
-      wet.gain.value = 0.16;
+      master.gain.value = 0;
+      compressor = ctx.createDynamicsCompressor();
+      compressor.threshold.value = -8;
+      compressor.knee.value = 6;
+      compressor.ratio.value = 12;
+      compressor.attack.value = 0.002;
+      compressor.release.value = 0.14;
+      const highpass = ctx.createBiquadFilter();
+      highpass.type = "highpass";
+      highpass.frequency.value = 36;
+      master.connect(highpass).connect(compressor).connect(ctx.destination);
+      for (const name of ["sfx", "ui", "ambience"]) {
+        buses[name] = ctx.createGain();
+        buses[name].connect(master);
+      }
       convolver = ctx.createConvolver();
       const ir = ctx.createBuffer(
         2,
-        Math.floor(ctx.sampleRate * 1.5),
+        Math.floor(ctx.sampleRate * 0.48),
         ctx.sampleRate,
       );
       for (let ch = 0; ch < 2; ch++) {
         const a = ir.getChannelData(ch);
         for (let i = 0; i < a.length; i++)
-          a[i] =
-            (Math.random() * 2 - 1) * Math.pow(1 - i / a.length, 3.7) * 0.55;
+          a[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / a.length, 4) * 0.3;
       }
       convolver.buffer = ir;
-      convolver.connect(wet);
-      wet.connect(master);
+      const wet = ctx.createGain();
+      wet.gain.value = 0.09;
+      convolver.connect(wet).connect(buses.sfx);
       noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
       const a = noiseBuffer.getChannelData(0);
       for (let i = 0; i < a.length; i++) a[i] = Math.random() * 2 - 1;
-      const ambience = ctx.createGain();
-      ambience.gain.value = 0.026;
-      ambience.connect(dry);
-      for (const [i, f] of [55, 82.407, 110, 164.814].entries()) {
-        const o = ctx.createOscillator(),
-          g = ctx.createGain(),
-          filter = ctx.createBiquadFilter();
-        o.type = "triangle";
-        o.frequency.value = f;
-        o.detune.value = i % 2 ? 2.4 : -2.4;
-        g.gain.value = 0.18;
-        filter.type = "lowpass";
-        filter.frequency.value = 240;
-        o.connect(filter);
-        filter.connect(g);
-        g.connect(ambience);
-        o.start();
-      }
+      // A quiet, unpitched room bed leaves speech-like and magical cues clear.
+      room = ctx.createBufferSource();
+      room.buffer = noiseBuffer;
+      room.loop = true;
+      const filter = ctx.createBiquadFilter(),
+        gain = ctx.createGain();
+      filter.type = "lowpass";
+      filter.frequency.value = 230;
+      gain.gain.value = 0.035;
+      room.connect(filter).connect(gain).connect(buses.ambience);
+      room.start();
       started = true;
-    } catch (e) {
-      enabled = false;
+      mix();
+      ready = preload();
+    } catch {
+      ctx?.close().catch(() => {});
+      ctx = null;
     }
   }
   function unlock() {
-    if (!enabled) return;
+    if (!enabled || document.hidden) return;
     init();
-    ctx?.resume().catch(() => {});
+    if (ctx && ctx.state !== "running") ctx.resume().catch(() => {});
   }
   function connect(node, tail = true) {
-    node.connect(dry);
-    if (tail) node.connect(convolver);
+    node.connect(currentVoice.input);
+    if (tail) node.connect(currentVoice.send);
+  }
+  function track(source, nodes, end) {
+    const voice = currentVoice;
+    voice.sources.push(source);
+    voice.nodes.push(...nodes);
+    voice.end = Math.max(voice.end, end);
   }
   function tone(f, end = f, d = 0.35, v = 0.1, type = "sine", delay = 0) {
-    if (!started || !enabled) return;
     const t = ctx.currentTime + delay,
       o = ctx.createOscillator(),
       g = ctx.createGain();
     o.type = type;
-    o.frequency.setValueAtTime(Math.max(22, f), t);
-    o.frequency.exponentialRampToValueAtTime(Math.max(22, end), t + d);
+    const variation = currentVoice.pitch;
+    o.frequency.setValueAtTime(Math.max(22, f * variation), t);
+    o.frequency.exponentialRampToValueAtTime(
+      Math.max(22, end * variation),
+      t + d,
+    );
     g.gain.setValueAtTime(0.0001, t);
     g.gain.exponentialRampToValueAtTime(
       Math.max(0.0002, v),
-      t + Math.min(0.025, d * 0.15),
+      t + Math.min(0.008, d * 0.12),
     );
     g.gain.exponentialRampToValueAtTime(0.0001, t + d);
     o.connect(g);
     connect(g);
+    track(o, [o, g], t + d + 0.025);
     o.start(t);
     o.stop(t + d + 0.025);
-    o.onended = () => {
-      o.disconnect();
-      g.disconnect();
-    };
   }
   function noise(
     d = 0.25,
@@ -113,28 +175,40 @@ const EmberAudio = (() => {
     type = "bandpass",
     delay = 0,
   ) {
-    if (!started || !enabled) return;
     const t = ctx.currentTime + delay,
       s = ctx.createBufferSource(),
       g = ctx.createGain(),
       filter = ctx.createBiquadFilter();
     s.buffer = noiseBuffer;
     filter.type = type;
-    filter.Q.value = 0.7;
+    filter.Q.value = 0.65;
     filter.frequency.setValueAtTime(f, t);
     filter.frequency.exponentialRampToValueAtTime(Math.max(30, end), t + d);
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(v, t + 0.025);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002, v), t + 0.004);
     g.gain.exponentialRampToValueAtTime(0.0001, t + d);
-    s.connect(filter);
-    filter.connect(g);
+    s.connect(filter).connect(g);
     connect(g, false);
+    track(s, [s, filter, g], t + d + 0.01);
     s.start(t, Math.random() * 0.5, d + 0.01);
-    s.onended = () => {
-      s.disconnect();
-      filter.disconnect();
-      g.disconnect();
-    };
+  }
+  function sample(id, gain = 0.3) {
+    const buffer = buffers.get(id);
+    if (!buffer) return false;
+    const source = ctx.createBufferSource(),
+      level = ctx.createGain();
+    source.buffer = buffer;
+    source.playbackRate.value = currentVoice.pitch;
+    level.gain.value = gain * (bank()[id]?.gain || 1);
+    source.connect(level);
+    connect(level, false);
+    track(
+      source,
+      [source, level],
+      ctx.currentTime + buffer.duration / currentVoice.pitch,
+    );
+    source.start();
+    return true;
   }
   function cast(s) {
     switch (s) {
@@ -225,91 +299,283 @@ const EmberAudio = (() => {
         );
     }
   }
-  function fx(type) {
-    if (!enabled || !started) return;
-    played[type] = (played[type] || 0) + 1;
-    if (type.startsWith("cast-")) {
-      cast(type.slice(5));
-      return;
-    }
-    if (type.startsWith("impact-")) {
-      impact(type.slice(7));
-      return;
-    }
+  function synth(type) {
+    if (type.startsWith("cast-")) return cast(type.slice(5));
+    if (type.startsWith("impact-")) return impact(type.slice(7));
     switch (type) {
       case "swing":
-        noise(0.2, 0.19, 700, 3700);
+        noise(0.16, 0.12, 600, 4100);
         break;
       case "attack":
         impact("steel");
         break;
       case "damage":
-        tone(70, 40, 0.18, 0.1);
+        tone(78, 38, 0.17, 0.12);
+        noise(0.09, 0.1, 1800, 420);
         break;
       case "equip":
         impact("steel");
-        tone(523, 780, 0.65, 0.06);
+        tone(523, 780, 0.38, 0.04);
         break;
+      case "select":
       case "play":
-        noise(0.12, 0.07, 2600, 900);
-        tone(329, 493, 0.2, 0.04);
+      case "draw":
+        noise(0.09, 0.12, 3200, 850);
+        noise(0.07, 0.045, 900, 1900, "bandpass", 0.06);
+        break;
+      case "land":
+        tone(110, 56, 0.13, 0.15);
+        noise(0.06, 0.11, 1300, 220);
         break;
       case "summon":
-        tone(90, 130, 0.4, 0.09, "triangle");
-        tone(261, 392, 0.6, 0.04);
+        tone(100, 64, 0.22, 0.14);
+        noise(0.08, 0.14, 800, 160);
+        break;
+      case "legendary":
+        tone(82, 41, 0.6, 0.16);
+        [196, 293.66, 392].forEach((f, i) =>
+          tone(f, f, 0.75, 0.04, "triangle", i * 0.045),
+        );
         break;
       case "power":
         cast("arcane");
         break;
       case "turn":
         [261.63, 392, 523.25].forEach((f, i) =>
-          tone(f, f, 0.95, 0.058, "sine", i * 0.095),
+          tone(f, f, 0.58, 0.06, "sine", i * 0.09),
         );
         break;
+      case "turn-enemy":
+        noise(0.1, 0.09, 900, 230);
+        tone(196, 147, 0.2, 0.055, "triangle");
+        break;
+      case "victory":
       case "over":
         [261.63, 329.63, 392, 523.25, 659.25].forEach((f, i) =>
-          tone(f, f, 1.7, 0.075, "sine", i * 0.13),
+          tone(f, f, 1.25, 0.065, "triangle", i * 0.12),
+        );
+        break;
+      case "defeat":
+        [196, 185, 146.83, 98].forEach((f, i) =>
+          tone(f, f * 0.98, 0.9, 0.07, "triangle", i * 0.18),
+        );
+        break;
+      case "draw-result":
+        [261.63, 392, 261.63].forEach((f, i) =>
+          tone(f, f, 0.6, 0.05, "sine", i * 0.18),
         );
         break;
       case "phase":
-        tone(78, 32, 1.8, 0.17, "triangle");
-        tone(117, 43, 1.6, 0.065);
-        noise(1.4, 0.18, 2100, 90, "lowpass");
+        tone(78, 32, 1.2, 0.13, "triangle");
+        noise(0.85, 0.17, 2100, 90, "lowpass");
         break;
       case "shield":
         [1320, 1760, 2340].forEach((f, i) =>
-          tone(f, f * 0.85, 0.4, 0.05, "sine", i * 0.025),
+          tone(f, f * 0.85, 0.27, 0.045, "sine", i * 0.018),
         );
+        noise(0.12, 0.12, 6200, 2200, "highpass");
+        break;
+      case "armor":
+        tone(640, 390, 0.16, 0.07, "triangle");
+        noise(0.09, 0.12, 2700, 900);
+        break;
+      case "death":
+      case "weapon-break":
+        noise(0.38, 0.19, 1800, 120, "lowpass");
+        tone(105, 35, 0.3, 0.1);
+        break;
+      case "burn":
+        noise(0.45, 0.12, 3200, 350);
         break;
       case "heal":
         cast("nature");
         break;
+      case "freeze":
+        tone(1760, 2200, 0.22, 0.035);
+        noise(0.16, 0.05, 6500, 2600, "highpass");
+        break;
+      case "buff":
+        [392, 587.33].forEach((f, i) =>
+          tone(f, f, 0.32, 0.038, "sine", i * 0.08),
+        );
+        break;
+      case "silence":
+        noise(0.18, 0.08, 2400, 110);
+        break;
+      case "error":
+        tone(185, 155, 0.1, 0.055, "triangle");
+        tone(155, 130, 0.12, 0.04, "triangle", 0.11);
+        break;
       default:
-        tone(520, 580, 0.08, 0.035);
+        noise(0.035, 0.04, 1800, 950);
+        tone(640, 420, 0.045, 0.028);
     }
   }
-  function toggle(v) {
-    enabled = !!v;
-    if (ctx) {
-      if (v) ctx.resume().catch(() => {});
-      master.gain.setTargetAtTime(v ? 0.38 : 0, ctx.currentTime, 0.08);
+  function fx(type, options = {}) {
+    if (!enabled || !started || document.hidden || ctx.state !== "running")
+      return false;
+    const ui = ["ui", "select", "error"].includes(type),
+      now = ctx.currentTime;
+    const key = type;
+    if (now - (recent.get(key) ?? -100) < (ui ? 0.065 : 0.035)) {
+      dropped++;
+      return false;
     }
+    recent.set(key, now);
+    const priority = ui
+      ? 0
+      : /victory|defeat|phase|legendary/.test(type)
+        ? 3
+        : 1;
+    if (voices.size >= 20) {
+      const victim = [...voices].find((v) => v.priority <= priority);
+      if (!victim) {
+        dropped++;
+        return false;
+      }
+      dispose(victim);
+    }
+    const input = ctx.createGain(),
+      send = ctx.createGain(),
+      pan = ctx.createStereoPanner();
+    const intensity = clamp(
+      Number.isFinite(options.strength) ? options.strength : 1,
+      0.5,
+      1.55,
+    );
+    input.gain.value =
+      intensity *
+      (Number.isFinite(options.gain) ? clamp(options.gain, 0, 1.5) : 1);
+    send.gain.value = input.gain.value * 0.45;
+    pan.pan.value = clamp(
+      Number.isFinite(options.pan) ? options.pan : 0,
+      -0.65,
+      0.65,
+    );
+    input.connect(pan).connect(buses[ui ? "ui" : "sfx"]);
+    send.connect(convolver);
+    const voice = {
+      input,
+      send,
+      nodes: [input, send, pan],
+      sources: [],
+      end: now,
+      priority,
+      pitch: /turn|victory|defeat|draw-result/.test(type)
+        ? 1
+        : 0.97 + Math.random() * 0.06,
+    };
+    voices.add(voice);
+    currentVoice = voice;
+    try {
+      let id = type;
+      if (type.startsWith("impact-"))
+        id = options.heavy ? "impact-heavy" : "impact-light";
+      if (type === "summon" || type === "land") id = "table-thump";
+      if (type === "select") id = "card-pickup";
+      if (type === "play")
+        id = (played.play || 0) % 2 ? "card-play-alt" : "card-play";
+      if (type === "draw") id = "card-draw";
+      id =
+        {
+          death: "death-debris",
+          shield: "shield-crack",
+          turn: "turn-bell",
+          equip: "equip-latch",
+          "weapon-break": "death-debris",
+        }[id] || id;
+      const sampled = sample(
+        id,
+        ui ? 0.18 : type.startsWith("impact-") ? 0.23 : 0.3,
+      );
+      // Elemental magic and weight remain responsive, even before decoding.
+      if (
+        !sampled ||
+        type.startsWith("impact-") ||
+        ["legendary", "death", "turn", "equip", "summon"].includes(type)
+      )
+        synth(type);
+      played[type] = (played[type] || 0) + 1;
+      history.push({
+        type,
+        at: performance.now(),
+        sampled,
+        pan: pan.pan.value,
+        strength: intensity,
+      });
+      if (history.length > 96) history.shift();
+      peakVoices = Math.max(peakVoices, voices.size);
+      voice.timer = setTimeout(
+        () => dispose(voice),
+        Math.max(20, (voice.end - now) * 1000 + 60),
+      );
+      if (!ui) {
+        ramp(buses.ambience.gain, levels.ambienceVolume * 0.16, 0.035);
+        buses.ambience.gain.setTargetAtTime(
+          levels.ambienceVolume * (scene === "battle" ? 0.55 : 1),
+          now + 0.28,
+          0.25,
+        );
+      }
+      return true;
+    } catch {
+      runtimeErrors++;
+      dispose(voice);
+      return false;
+    } finally {
+      currentVoice = null;
+    }
+  }
+  function configure(values = {}) {
+    for (const key of Object.keys(levels))
+      if (Number.isFinite(values[key])) levels[key] = clamp(values[key], 0, 1);
+    mix();
+  }
+  function toggle(value) {
+    enabled = !!value;
+    if (!enabled) stop();
+    else if (started || navigator.userActivation?.isActive) unlock();
+    mix();
   }
   document.addEventListener("visibilitychange", () => {
     if (!ctx) return;
-    if (document.hidden) ctx.suspend().catch(() => {});
-    else if (enabled) ctx.resume().catch(() => {});
+    if (document.hidden) {
+      stop();
+      ctx.suspend().catch(() => {});
+    } else if (enabled) ctx.resume().catch(() => {});
   });
-  return {
+  return Object.freeze({
     unlock,
     fx,
     toggle,
+    configure,
+    stop,
     played,
+    setScene(value) {
+      scene = value;
+      mix();
+    },
+    get ready() {
+      return ready;
+    },
     get started() {
       return started;
     },
     get state() {
       return ctx?.state || "not-started";
     },
-  };
+    get diagnostics() {
+      return {
+        activeVoices: voices.size,
+        peakVoices,
+        dropped,
+        runtimeErrors,
+        loaded: [...buffers.keys()],
+        failed: [...failed],
+        levels: { ...levels },
+        enabled,
+        history: history.map((e) => ({ ...e })),
+      };
+    },
+  });
 })();
