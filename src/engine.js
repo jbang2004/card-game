@@ -15,6 +15,10 @@ const EmberEngine = (() => {
     typeof EmberState !== "undefined"
       ? EmberState
       : require("./rules/state.js");
+  const Decks =
+    typeof EmberDeckRules !== "undefined"
+      ? EmberDeckRules
+      : require("./rules/decks.js");
   class Game {
     constructor(opts = {}) {
       this.data = opts.data || D;
@@ -204,30 +208,36 @@ const EmberEngine = (() => {
       return { ok: false, error };
     }
     start(
-      heroId = "mage",
+      heroId = this.data.heroes[0].id,
       bossIndex = 0,
       relics = [],
       deck = null,
       seed = Date.now(),
       options = {},
     ) {
-      const hero =
-          this.data.heroes.find((h) => h.id === heroId) || this.data.heroes[0],
-        boss = this.data.bosses[bossIndex] || this.data.bosses[0];
+      const hero = this.data.heroes.find((h) => h.id === heroId),
+        boss = this.data.bosses[bossIndex];
+      if (!hero || !Number.isInteger(bossIndex) || !boss)
+        return this.reject("未知英雄或关卡");
       if (
-        deck &&
-        (!this.validateDeck(deck) ||
-          (!options.legacyDeck && !this.validateDeck(deck, hero.id)))
+        !Array.isArray(relics) ||
+        new Set(relics).size !== relics.length ||
+        relics.some((id) => !this.data.relics.some((r) => r.id === id))
       )
-        return this.reject("牌组必须为该职业与中立的 30 张牌");
+        return this.reject("未知或重复遗物");
+      if (options.first !== undefined && !["p", "e"].includes(options.first))
+        return this.reject("无效先后手");
+      if (deck !== null && !this.validateDeck(deck, hero.id))
+        return this.reject(
+          Decks.check(this.data, deck, hero.id).errors.join("；"),
+        );
       const opponent = options.opponent
         ? this.data.archetypes.find((a) => a.id === options.opponent)
         : null;
       if (options.opponent && !opponent) return this.reject("未知练习对手");
       if (opponent) relics = [];
       this.s = {
-        version: 1,
-        ruleset: 2,
+        version: State.VERSION,
         seq: 0,
         rng: seed >>> 0 || 12345,
         turn: 0,
@@ -245,12 +255,11 @@ const EmberEngine = (() => {
       };
       const archetype = this.data.archetypes.find(
         (a) =>
-          a.hero === hero.id &&
+          a.classId === hero.classId &&
           JSON.stringify([...a.deck].sort()) ===
             JSON.stringify([...(deck || hero.deck)].sort()),
       );
       if (archetype) this.s.archetype = archetype.id;
-      if (options.legacyDeck) this.s.legacyDeck = true;
       if (opponent) {
         this.s.mode = "practice";
         this.s.opponent = opponent.id;
@@ -308,20 +317,14 @@ const EmberEngine = (() => {
       return this.emit();
     }
     validateDeck(deck, heroId = null) {
-      if (!Array.isArray(deck) || deck.length !== 30) return false;
-      const counts = {};
-      for (const id of deck) {
-        const c = this.data.byId[id];
-        if (
-          !c ||
-          c.token ||
-          (heroId && c.class !== "neutral" && c.class !== heroId)
-        )
-          return false;
-        counts[id] = (counts[id] || 0) + 1;
-        if (counts[id] > (c.rarity === "legendary" ? 1 : 2)) return false;
-      }
-      return true;
+      return Decks.check(this.data, deck, heroId).ok;
+    }
+    classFor(side) {
+      return side === "p"
+        ? Decks.classFor(this.data, this.s.heroId)
+        : this.s.mode === "practice"
+          ? Decks.classFor(this.data, this.s.opponentHero)
+          : this.data.bosses[this.s.bossIndex].discoverClass;
     }
     restore(s) {
       if (!State.valid(s, this.data)) return false;
@@ -386,7 +389,7 @@ const EmberEngine = (() => {
           attacks: 0,
           frozen: false,
           silenced: false,
-          tempAtk: 0,
+          modifiers: [],
           ...extra,
         };
       p.board.push(m);
@@ -510,13 +513,12 @@ const EmberEngine = (() => {
       m.atk += a;
       m.hp += h;
       m.maxHp += h;
-      (m.modifiers ??= []).push({
+      m.modifiers.push({
         attack: a,
         health: h,
         source: meta.source || "rule",
         duration: meta.duration || "permanent",
       });
-      if (meta.duration === "turn") m.tempAtk += a;
     }
     silence(m) {
       const base = this.data.byId[m.cid];
@@ -524,7 +526,6 @@ const EmberEngine = (() => {
       m.maxHp = base.hp;
       m.hp = Math.min(m.hp, m.maxHp);
       m.tags = [];
-      m.tempAtk = 0;
       m.modifiers = [];
       m.silenced = true;
     }
@@ -539,7 +540,6 @@ const EmberEngine = (() => {
         hp: base.hp,
         maxHp: base.hp,
         tags: [...base.tags],
-        tempAtk: 0,
         modifiers: [],
         silenced: false,
       };
@@ -840,24 +840,17 @@ const EmberEngine = (() => {
       this.cleanup();
       if (this.s.phase !== "battle") return this.emit();
       const p = this.s[side];
-      const thawed = [
-        ...(p.frozen ? [{ side, uid: "hero", kind: "thaw" }] : []),
-        ...p.board.flatMap((m) => [
-          ...(m.frozen ? [{ side, uid: m.uid, kind: "thaw" }] : []),
-          ...(m.tempAtk
-            ? [{ side, uid: m.uid, kind: "expire", attack: -m.tempAtk }]
-            : []),
-        ]),
-      ];
+      const thawed = p.frozen ? [{ side, uid: "hero", kind: "thaw" }] : [];
       p.frozen = false;
       for (const m of p.board) {
+        if (m.frozen) thawed.push({ side, uid: m.uid, kind: "thaw" });
         m.frozen = false;
-        if (m.tempAtk) {
-          m.atk -= m.tempAtk;
-          m.tempAtk = 0;
-        }
-        if (m.modifiers)
-          m.modifiers = m.modifiers.filter((x) => x.duration !== "turn");
+        const expired = m.modifiers.filter((x) => x.duration === "turn");
+        const attack = expired.reduce((n, x) => n + x.attack, 0);
+        m.atk -= attack;
+        m.modifiers = m.modifiers.filter((x) => x.duration !== "turn");
+        if (attack)
+          thawed.push({ side, uid: m.uid, kind: "expire", attack: -attack });
       }
       for (const cue of thawed) this.event("status", cue);
       this.beginTurn(this.other(side));
@@ -877,7 +870,6 @@ const EmberEngine = (() => {
       return true;
     }
     trigger(event, side, target = null) {
-      if (!(this.s.ruleset >= 2)) return;
       (this.triggerQueue ??= []).push({ event, side, target });
       if (this.triggerRunning) return;
       this.triggerRunning = true;

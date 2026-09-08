@@ -1,7 +1,7 @@
 {
-  "version": 1,
+  "version": 2,
   "seq": 67,
-  "rng": 1923013341,
+  "rng": 80443104,
   "turn": 1,
   "active": "p",
   "phase": "battle",
@@ -24,117 +24,118 @@
     "turns": 1
   },
   "customDeck": null,
+  "archetype": "mage_burn",
   "p": {
     "hp": 18,
     "maxHp": 30,
     "armor": 0,
     "mana": 10,
-    "maxMana": 1,
+    "maxMana": 10,
     "hand": [],
     "deck": [
       {
-        "uid": "u27",
-        "cid": "renew"
+        "uid": "u14",
+        "cid": "rider"
+      },
+      {
+        "uid": "u1",
+        "cid": "spark"
+      },
+      {
+        "uid": "u17",
+        "cid": "frostbolt"
+      },
+      {
+        "uid": "u5",
+        "cid": "oracle"
+      },
+      {
+        "uid": "u15",
+        "cid": "bolt"
       },
       {
         "uid": "u10",
         "cid": "sentinel"
       },
       {
-        "uid": "u24",
-        "cid": "fireball"
-      },
-      {
-        "uid": "u21",
-        "cid": "frostbolt"
-      },
-      {
-        "uid": "u23",
-        "cid": "fireball"
-      },
-      {
-        "uid": "u8",
-        "cid": "oracle"
-      },
-      {
-        "uid": "u17",
-        "cid": "nyx"
-      },
-      {
-        "uid": "u28",
-        "cid": "storm"
-      },
-      {
-        "uid": "u25",
-        "cid": "nova"
-      },
-      {
-        "uid": "u19",
-        "cid": "bolt"
-      },
-      {
-        "uid": "u15",
-        "cid": "paladin"
-      },
-      {
-        "uid": "u6",
-        "cid": "guard"
-      },
-      {
         "uid": "u13",
-        "cid": "phoenix"
-      },
-      {
-        "uid": "u4",
-        "cid": "wolf"
-      },
-      {
-        "uid": "u11",
-        "cid": "golem"
-      },
-      {
-        "uid": "u18",
-        "cid": "ashdragon"
-      },
-      {
-        "uid": "u2",
-        "cid": "spark"
-      },
-      {
-        "uid": "u14",
         "cid": "rider"
       },
       {
-        "uid": "u30",
-        "cid": "discovery"
-      },
-      {
-        "uid": "u12",
-        "cid": "cleric"
+        "uid": "u19",
+        "cid": "fireball"
       },
       {
         "uid": "u3",
-        "cid": "squire"
+        "cid": "wisp"
       },
       {
-        "uid": "u20",
-        "cid": "bolt"
+        "uid": "u24",
+        "cid": "nova"
       },
       {
-        "uid": "u5",
-        "cid": "guard"
+        "uid": "u30",
+        "cid": "golem"
       },
       {
-        "uid": "u29",
-        "cid": "polymorph"
+        "uid": "u12",
+        "cid": "phoenix"
+      },
+      {
+        "uid": "u23",
+        "cid": "nova"
+      },
+      {
+        "uid": "u28",
+        "cid": "dragon"
+      },
+      {
+        "uid": "u9",
+        "cid": "sentinel"
       },
       {
         "uid": "u22",
-        "cid": "frostbolt"
+        "cid": "wisdom"
       },
       {
         "uid": "u16",
+        "cid": "bolt"
+      },
+      {
+        "uid": "u6",
+        "cid": "oracle"
+      },
+      {
+        "uid": "u29",
+        "cid": "golem"
+      },
+      {
+        "uid": "u26",
+        "cid": "counterspell"
+      },
+      {
+        "uid": "u7",
+        "cid": "guard"
+      },
+      {
+        "uid": "u4",
+        "cid": "wisp"
+      },
+      {
+        "uid": "u21",
+        "cid": "wisdom"
+      },
+      {
+        "uid": "u25",
         "cid": "dragon"
+      },
+      {
+        "uid": "u8",
+        "cid": "guard"
+      },
+      {
+        "uid": "u18",
+        "cid": "frostbolt"
       }
     ],
     "board": [
@@ -151,7 +152,7 @@
         "attacks": 0,
         "frozen": false,
         "silenced": false,
-        "tempAtk": 0
+        "modifiers": []
       },
       {
         "uid": "u63",
@@ -166,7 +167,7 @@
         "attacks": 0,
         "frozen": false,
         "silenced": false,
-        "tempAtk": 0
+        "modifiers": []
       },
       {
         "uid": "u64",
@@ -179,7 +180,7 @@
         "attacks": 0,
         "frozen": false,
         "silenced": false,
-        "tempAtk": 0
+        "modifiers": []
       }
     ],
     "fatigue": 0,
@@ -197,97 +198,11 @@
     "maxMana": 0,
     "hand": [
       {
-        "uid": "u51",
-        "cid": "golem"
-      },
-      {
-        "uid": "u41",
-        "cid": "titan"
-      },
-      {
-        "uid": "u31",
-        "cid": "squire"
-      },
-      {
-        "uid": "u38",
-        "cid": "cleric"
-      },
-      {
-        "uid": "u61",
-        "cid": "coin"
-      }
-    ],
-    "deck": [
-      {
-        "uid": "u37",
-        "cid": "berserker"
-      },
-      {
-        "uid": "u34",
-        "cid": "sentinel"
-      },
-      {
-        "uid": "u43",
-        "cid": "wisdom"
-      },
-      {
-        "uid": "u52",
-        "cid": "berserker"
-      },
-      {
-        "uid": "u54",
-        "cid": "fireball"
-      },
-      {
-        "uid": "u55",
-        "cid": "phoenix"
-      },
-      {
-        "uid": "u58",
-        "cid": "wisdom"
-      },
-      {
-        "uid": "u60",
-        "cid": "renew"
-      },
-      {
-        "uid": "u47",
-        "cid": "spark"
-      },
-      {
-        "uid": "u57",
-        "cid": "dragon"
-      },
-      {
-        "uid": "u36",
-        "cid": "golem"
-      },
-      {
         "uid": "u53",
         "cid": "cleric"
       },
       {
-        "uid": "u42",
-        "cid": "dragon"
-      },
-      {
-        "uid": "u56",
-        "cid": "titan"
-      },
-      {
-        "uid": "u33",
-        "cid": "guard"
-      },
-      {
-        "uid": "u44",
-        "cid": "dagger"
-      },
-      {
-        "uid": "u59",
-        "cid": "dagger"
-      },
-      {
-        "uid": "u49",
+        "uid": "u34",
         "cid": "sentinel"
       },
       {
@@ -299,28 +214,114 @@
         "cid": "bolt"
       },
       {
+        "uid": "u61",
+        "cid": "coin"
+      }
+    ],
+    "deck": [
+      {
         "uid": "u32",
         "cid": "spark"
       },
       {
-        "uid": "u45",
-        "cid": "renew"
+        "uid": "u52",
+        "cid": "berserker"
       },
       {
-        "uid": "u40",
-        "cid": "phoenix"
-      },
-      {
-        "uid": "u50",
-        "cid": "bolt"
+        "uid": "u36",
+        "cid": "golem"
       },
       {
         "uid": "u48",
         "cid": "guard"
       },
       {
+        "uid": "u41",
+        "cid": "titan"
+      },
+      {
+        "uid": "u59",
+        "cid": "dagger"
+      },
+      {
+        "uid": "u56",
+        "cid": "titan"
+      },
+      {
+        "uid": "u49",
+        "cid": "sentinel"
+      },
+      {
+        "uid": "u58",
+        "cid": "wisdom"
+      },
+      {
+        "uid": "u38",
+        "cid": "cleric"
+      },
+      {
+        "uid": "u31",
+        "cid": "squire"
+      },
+      {
         "uid": "u39",
         "cid": "fireball"
+      },
+      {
+        "uid": "u43",
+        "cid": "wisdom"
+      },
+      {
+        "uid": "u45",
+        "cid": "shield"
+      },
+      {
+        "uid": "u51",
+        "cid": "golem"
+      },
+      {
+        "uid": "u33",
+        "cid": "guard"
+      },
+      {
+        "uid": "u37",
+        "cid": "berserker"
+      },
+      {
+        "uid": "u54",
+        "cid": "fireball"
+      },
+      {
+        "uid": "u55",
+        "cid": "phoenix"
+      },
+      {
+        "uid": "u47",
+        "cid": "spark"
+      },
+      {
+        "uid": "u57",
+        "cid": "dragon"
+      },
+      {
+        "uid": "u60",
+        "cid": "shield"
+      },
+      {
+        "uid": "u40",
+        "cid": "phoenix"
+      },
+      {
+        "uid": "u42",
+        "cid": "dragon"
+      },
+      {
+        "uid": "u44",
+        "cid": "dagger"
+      },
+      {
+        "uid": "u50",
+        "cid": "bolt"
       }
     ],
     "board": [
@@ -337,7 +338,7 @@
         "attacks": 0,
         "frozen": false,
         "silenced": false,
-        "tempAtk": 0
+        "modifiers": []
       },
       {
         "uid": "u66",
@@ -352,7 +353,7 @@
         "attacks": 0,
         "frozen": false,
         "silenced": false,
-        "tempAtk": 0
+        "modifiers": []
       },
       {
         "uid": "u67",
@@ -365,7 +366,7 @@
         "attacks": 0,
         "frozen": false,
         "silenced": false,
-        "tempAtk": 0
+        "modifiers": []
       }
     ],
     "fatigue": 0,

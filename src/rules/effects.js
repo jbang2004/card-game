@@ -93,8 +93,8 @@ const EmberRules = (() => {
           g.draw(c.side);
         }
       },
-      text: (e) =>
-        `从牌库抽取 ${e.count} 张${e.tribe === "beast" ? "野兽" : "随从"}牌（不足时抽取剩余牌）`,
+      text: (e, db) =>
+        `从牌库抽取 ${e.count} 张${e.tribe ? db.$tribes[e.tribe] : "随从"}牌（不足时抽取剩余牌）`,
     },
     destroyWeapon: {
       fields: [],
@@ -253,15 +253,7 @@ const EmberRules = (() => {
                   (x) =>
                     x.type === e.cardType &&
                     !x.token &&
-                    (g.s.ruleset >= 2
-                      ? x.class === "neutral" ||
-                        x.class ===
-                          (c.side === "p"
-                            ? g.s.heroId
-                            : g.s.opponentHero ||
-                              g.data.bosses[g.s.bossIndex].discoverClass ||
-                              "mage")
-                      : !x.set),
+                    (x.class === "neutral" || x.class === g.classFor(c.side)),
                 )
                 .map((x) => x.id),
             )
@@ -343,7 +335,7 @@ const EmberRules = (() => {
       if (
         e.type === "drawFiltered" &&
         (e.cardType !== "minion" ||
-          (e.tribe && !["beast", "undead", "dragon"].includes(e.tribe)))
+          (e.tribe && !Object.hasOwn(db.$tribes, e.tribe)))
       )
         throw Error(owner + ": Invalid draw filter");
       if (e.tag && !db.$kw[e.tag])
@@ -351,7 +343,7 @@ const EmberRules = (() => {
       if (e.duration !== undefined && (e.duration !== "turn" || e.health !== 0))
         throw Error(owner + ": Only attack-only turn buffs are supported");
       if (e.type === "discover" && (e.count !== 3 || e.cardType !== "spell"))
-        throw Error(owner + ": v1 discovery requires three spells");
+        throw Error(owner + ": Discovery requires three spells");
       for (const k of ["spell", "requireSpace"])
         if (e[k] !== undefined && typeof e[k] !== "boolean")
           throw Error(owner + ": Invalid " + k);

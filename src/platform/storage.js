@@ -3,6 +3,14 @@ const EmberStorage = (() => {
   function create(getStorage, onUnavailable = () => {}) {
     let warned = false;
     return Object.freeze({
+      readResult(key) {
+        try {
+          const raw = getStorage().getItem(key);
+          return { ok: true, value: raw === null ? null : JSON.parse(raw) };
+        } catch {
+          return { ok: false };
+        }
+      },
       read(key, fallback = null) {
         try {
           const raw = getStorage().getItem(key);
