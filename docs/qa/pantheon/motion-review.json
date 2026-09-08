@@ -1,0 +1,426 @@
+{
+  "method": "Two existing roster pages, seven five-second samples per page (30 seconds each), real board and detail renderer; not video or device testing.",
+  "samples": [
+    {
+      "group": "jingchen",
+      "seconds": 0,
+      "frames": [
+        {
+          "id": "moonfox",
+          "width": 296,
+          "height": 396,
+          "hash": "a92f8408b9e905c5dc7654058d989c651023cce1269a602eb37c39946429a2fa"
+        },
+        {
+          "id": "duskstag",
+          "width": 296,
+          "height": 396,
+          "hash": "8fde5c2a2525d5f1b3bad530a97061cf9c709152e63f77222331f6118a172c14"
+        },
+        {
+          "id": "eclipsewolf",
+          "width": 296,
+          "height": 396,
+          "hash": "83e01942300e097e5a19bbcb448c33779220c7425666a267d3e179190c51289d"
+        },
+        {
+          "id": "moonguard",
+          "width": 296,
+          "height": 396,
+          "hash": "f187c687181523ac721f5419dc780468352db1afdbd4a5300b05969c978a1315"
+        },
+        {
+          "id": "selmyra",
+          "width": 296,
+          "height": 396,
+          "hash": "faa531fe7560a6c7bcc6271cb1406aa63c9a8b907f9e9bcf1e908f114ead9ed8"
+        },
+        {
+          "id": "jingchen",
+          "width": 296,
+          "height": 396,
+          "hash": "714749ef4d5aca3e818d71f3406b2393ec12fcb96b766b5552f3a39dd57c2868"
+        }
+      ]
+    },
+    {
+      "group": "jingchen",
+      "seconds": 5,
+      "frames": [
+        {
+          "id": "moonfox",
+          "width": 296,
+          "height": 396,
+          "hash": "77f775f9ccf70ad20a7cfb0331896b368e18547477a9b9eace65716a0aee4e47"
+        },
+        {
+          "id": "duskstag",
+          "width": 296,
+          "height": 396,
+          "hash": "d7a95c0726a67830a88c14d72c3add646f2ee059ee65e0333425a1e798ef9aec"
+        },
+        {
+          "id": "eclipsewolf",
+          "width": 296,
+          "height": 396,
+          "hash": "f7efe09c1e6c51dfb0baa5b2d79dc6593aa75f20a97c1b2c6d0af1fd3d377fa0"
+        },
+        {
+          "id": "moonguard",
+          "width": 296,
+          "height": 396,
+          "hash": "0da4c0ad5a3a6f8b00d8b529df043186873a566a93be030a05358442a86c8772"
+        },
+        {
+          "id": "selmyra",
+          "width": 296,
+          "height": 396,
+          "hash": "d28703d5ac012aabc99611cd02f782871a623a76c6aa51288a224a5f357131e7"
+        },
+        {
+          "id": "jingchen",
+          "width": 296,
+          "height": 396,
+          "hash": "9f850a85db44541622679843fab60c0d05009b0c084309271e64c7a94909121a"
+        }
+      ]
+    },
+    {
+      "group": "jingchen",
+      "seconds": 10,
+      "frames": [
+        {
+          "id": "moonfox",
+          "width": 296,
+          "height": 396,
+          "hash": "61913ae9db40cde72ee3b68461b83b59e0afb578a8e6cf8b910039e586b1b74e"
+        },
+        {
+          "id": "duskstag",
+          "width": 296,
+          "height": 396,
+          "hash": "89af503c2b52856ed6d097315b57d800cf5c43517472e68965f06896c251d4e7"
+        },
+        {
+          "id": "eclipsewolf",
+          "width": 296,
+          "height": 396,
+          "hash": "8ca18c1a577458ac74924c32b28b45ab872d026a8e20a7b8d590094e624404d1"
+        },
+        {
+          "id": "moonguard",
+          "width": 296,
+          "height": 396,
+          "hash": "59cbb6b285a1cc2fc2b42bf855ba8acdd7776bb8d09471b9086e5c9593d6a40f"
+        },
+        {
+          "id": "selmyra",
+          "width": 296,
+          "height": 396,
+          "hash": "3af146ca0749e7dbaea875304c26661cdc58e67ea4141a2ed29c383c1d24173c"
+        },
+        {
+          "id": "jingchen",
+          "width": 296,
+          "height": 396,
+          "hash": "569c17d0228604c5255171acb944ff3eee5f5122a51a8ee5409ec927c7c2e0ef"
+        }
+      ]
+    },
+    {
+      "group": "jingchen",
+      "seconds": 15,
+      "frames": [
+        {
+          "id": "moonfox",
+          "width": 296,
+          "height": 396,
+          "hash": "61361b59b4016419106c7c78dc376b481f0b41a64083130f7f43b4152b6fbee3"
+        },
+        {
+          "id": "duskstag",
+          "width": 296,
+          "height": 396,
+          "hash": "2b502060a676a5452427ab829202122dbcf773c4678ac9565a412760097ba708"
+        },
+        {
+          "id": "eclipsewolf",
+          "width": 296,
+          "height": 396,
+          "hash": "48d41adf224438981c923bfb5408ddd8fe0e056e8a69135a87193f3411759d82"
+        },
+        {
+          "id": "moonguard",
+          "width": 296,
+          "height": 396,
+          "hash": "a81642df9effa2320153f78de9ab3295727d8dbd4cf14ebeba70e7a3270df093"
+        },
+        {
+          "id": "selmyra",
+          "width": 296,
+          "height": 396,
+          "hash": "81e7a67579b325a57739bda4579fb705b09d35e64cac68a7fd51dd900bc2b57a"
+        },
+        {
+          "id": "jingchen",
+          "width": 296,
+          "height": 396,
+          "hash": "ad3c05b14d0e5510bef6dbf8afd44c0bf2ec1d30932067ba22e0c8e0c4abaa4f"
+        }
+      ]
+    },
+    {
+      "group": "jingchen",
+      "seconds": 20,
+      "frames": [
+        {
+          "id": "moonfox",
+          "width": 296,
+          "height": 396,
+          "hash": "5efaa7a704623100b55445c1b0a4f4ee21ddb85acb110f61e8cb0959935df12f"
+        },
+        {
+          "id": "duskstag",
+          "width": 296,
+          "height": 396,
+          "hash": "de876fb5de4f5de072a9c28473e96222b1df824343a1409cbf79de351e9b3924"
+        },
+        {
+          "id": "eclipsewolf",
+          "width": 296,
+          "height": 396,
+          "hash": "0c04e606b4bcde5e85ae00e3136d170174c0d5109e3cc87a6b75bdfede0295c3"
+        },
+        {
+          "id": "moonguard",
+          "width": 296,
+          "height": 396,
+          "hash": "53573f967ed47bc5e9fed10011463529bfcb74d34c2454d32fed11a13eff1b07"
+        },
+        {
+          "id": "selmyra",
+          "width": 296,
+          "height": 396,
+          "hash": "473e4c6dbd27210c075765d22b742bbab901b8e423c86bef670516979b30fe70"
+        },
+        {
+          "id": "jingchen",
+          "width": 296,
+          "height": 396,
+          "hash": "e7c3ecd7a1a5ff0d7d6e04dff103d232dacf380e531cf1825a267cfc8da4f4fe"
+        }
+      ]
+    },
+    {
+      "group": "jingchen",
+      "seconds": 25,
+      "frames": [
+        {
+          "id": "moonfox",
+          "width": 296,
+          "height": 396,
+          "hash": "f38868fb2e54feab2813d908e98161abec9d25c67801b0b0cc8dd92892443d85"
+        },
+        {
+          "id": "duskstag",
+          "width": 296,
+          "height": 396,
+          "hash": "eaba9065d56555042adb57b7b92f0ebf58a23c962d10b83757ea7e4877c8f850"
+        },
+        {
+          "id": "eclipsewolf",
+          "width": 296,
+          "height": 396,
+          "hash": "a0535de0271d4a1e85d29c66f4abd5c2383a687255bc0ab88ccd19662cbbe3bb"
+        },
+        {
+          "id": "moonguard",
+          "width": 296,
+          "height": 396,
+          "hash": "e6262a306c88ca499303f133b8e715dfaa172e62f4cca97dd4f5568922c50813"
+        },
+        {
+          "id": "selmyra",
+          "width": 296,
+          "height": 396,
+          "hash": "70efcfc7675a8c670cc60f19fd8c3758743672ba0c0d54d5ad48656148c81426"
+        },
+        {
+          "id": "jingchen",
+          "width": 296,
+          "height": 396,
+          "hash": "131fa8f52e695ee13b9727f4042cd8d04a920d994bd0e146d515646f1d49556f"
+        }
+      ]
+    },
+    {
+      "group": "jingchen",
+      "seconds": 30,
+      "frames": [
+        {
+          "id": "moonfox",
+          "width": 296,
+          "height": 396,
+          "hash": "f62bcc2e7e5ac5c626206e4944205f114ce4c738bfafa688e5f7af10f70aba9a"
+        },
+        {
+          "id": "duskstag",
+          "width": 296,
+          "height": 396,
+          "hash": "02af13ea5d2c4108e7e6ff67c4b8d021b60fee8260a369b57ec9c51be7da88b0"
+        },
+        {
+          "id": "eclipsewolf",
+          "width": 296,
+          "height": 396,
+          "hash": "fb1a2e6d76df6ab0f4432c06384584e436d93e36118a3a2a45bc398e451fdc73"
+        },
+        {
+          "id": "moonguard",
+          "width": 296,
+          "height": 396,
+          "hash": "27779062a652549e61973aef5f79f4b75c6fd216026c73a0ab33ebd97fad9afc"
+        },
+        {
+          "id": "selmyra",
+          "width": 296,
+          "height": 396,
+          "hash": "659158f62d989776119f22b9d563eb1ca2ba10070246e63691e2fcf0084fbbb2"
+        },
+        {
+          "id": "jingchen",
+          "width": 296,
+          "height": 396,
+          "hash": "6e9af038e7b912a30c1e0b1d81dbfd8b4882c32683868b84445495daeeeb65ce"
+        }
+      ]
+    },
+    {
+      "group": "aurion",
+      "seconds": 0,
+      "frames": [
+        {
+          "id": "aurion",
+          "width": 296,
+          "height": 396,
+          "hash": "94258454321299ac3ec587c2de01d01bce49687b4679beab6ffb0bcfb5bcaee6"
+        },
+        {
+          "id": "fenlos",
+          "width": 296,
+          "height": 396,
+          "hash": "3f9bf096f40626f1b77f9b2cfcf352dc6ef103b0fa44ddff066035a4bfddf53e"
+        }
+      ]
+    },
+    {
+      "group": "aurion",
+      "seconds": 5,
+      "frames": [
+        {
+          "id": "aurion",
+          "width": 296,
+          "height": 396,
+          "hash": "875dd2361a775b75ca3412155a7c0769402492b3d79d385ae42868b2621a4fbd"
+        },
+        {
+          "id": "fenlos",
+          "width": 296,
+          "height": 396,
+          "hash": "f43009b989010be2d8ca1e322c4d23b5bd55555c3a0ecabf7166ad9e820a1bca"
+        }
+      ]
+    },
+    {
+      "group": "aurion",
+      "seconds": 10,
+      "frames": [
+        {
+          "id": "aurion",
+          "width": 296,
+          "height": 396,
+          "hash": "85a4ce20e80861c2cb184ce1b2e7f1fef58a5c1850bb61c552e877e73cb69447"
+        },
+        {
+          "id": "fenlos",
+          "width": 296,
+          "height": 396,
+          "hash": "eef9dd6c7e4110fd478aa5a2e9faa51249dc15d15153762b46104e2d0ccdb10d"
+        }
+      ]
+    },
+    {
+      "group": "aurion",
+      "seconds": 15,
+      "frames": [
+        {
+          "id": "aurion",
+          "width": 296,
+          "height": 396,
+          "hash": "03f161a167511d00e5e81dff4b272e72d97508aa67c4a55215b058482fc92e03"
+        },
+        {
+          "id": "fenlos",
+          "width": 296,
+          "height": 396,
+          "hash": "c026f7b5f018aaf094d37a0655b03978e3ac17747380bfec6f67ad32dd158920"
+        }
+      ]
+    },
+    {
+      "group": "aurion",
+      "seconds": 20,
+      "frames": [
+        {
+          "id": "aurion",
+          "width": 296,
+          "height": 396,
+          "hash": "069f9c63aa94c8a9e8e1ef0719808db84140545d1c3626060cc7070046c61bec"
+        },
+        {
+          "id": "fenlos",
+          "width": 296,
+          "height": 396,
+          "hash": "aff20f9e39dc160867e7737d6c0d1f1f341e020313e1c3862b1db3c8557a5fe7"
+        }
+      ]
+    },
+    {
+      "group": "aurion",
+      "seconds": 25,
+      "frames": [
+        {
+          "id": "aurion",
+          "width": 296,
+          "height": 396,
+          "hash": "8c8ae54347facea965138a249670e876a4aa2329d98248e95d7f8307d80acc78"
+        },
+        {
+          "id": "fenlos",
+          "width": 296,
+          "height": 396,
+          "hash": "30fe3bd1565982dc59ce74c7b2dd138e7117837175ab648270b5eae93a6f14cb"
+        }
+      ]
+    },
+    {
+      "group": "aurion",
+      "seconds": 30,
+      "frames": [
+        {
+          "id": "aurion",
+          "width": 296,
+          "height": 396,
+          "hash": "36f8b84e77dd5e05dcc9d908e67e67629d1c4e017db7c53d7a8b7b602ded9735"
+        },
+        {
+          "id": "fenlos",
+          "width": 296,
+          "height": 396,
+          "hash": "2cbb19364fbd1707fc016c1bf4ec48ed9c2c28240c219467e11b1d5d53753d83"
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

@@ -19,7 +19,13 @@ const EmberFXProfiles = (() => {
   register("soulguide selmyra", "bolt");
   register("moonfox eclipsewolf", "claw");
   register("duskstag moonguard", "slam");
+  register("jingchen", "bolt");
+  register("aurion", "slam");
+  register("fenlos", "claw");
   const spells = {
+    starweave: ["starwell", 480],
+    dawnvow: ["aegis", 440],
+    huntinghorn: ["wildgate", 480],
     graveoffering: ["siphon", 480],
     mooncall: ["wildgate", 480],
     soultether: ["benediction", 420],
@@ -71,6 +77,9 @@ const EmberFXProfiles = (() => {
   for (const [id, arrival] of Object.entries(legends))
     Object.assign(records[id], { arrival, windup: 620, signature: true });
   const battlecries = {
+    jingchen: "firestorm",
+    aurion: "sunrise",
+    fenlos: "wildgate",
     spark: "ember",
     archer: "arrow",
     oracle: "starwell",
@@ -84,6 +93,34 @@ const EmberFXProfiles = (() => {
   };
   for (const [id, battlecry] of Object.entries(battlecries))
     records[id].battlecry = battlecry;
+  const deities = {
+    jingchen: {
+      theme: "stars",
+      title: "群星为薪，天火为证",
+      sigil: "✦",
+      english: "THE STARS IGNITE",
+    },
+    aurion: {
+      theme: "dawn",
+      title: "长夜止步，誓光永存",
+      sigil: "☀",
+      english: "THE DAWN ENDURES",
+    },
+    fenlos: {
+      theme: "hunt",
+      title: "古林苏醒，万兽同行",
+      sigil: "❧",
+      english: "THE WILD ANSWERS",
+    },
+    selmyra: {
+      theme: "moon",
+      title: "月记众生，魂归银灯",
+      sigil: "☾",
+      english: "THE MOON REMEMBERS",
+    },
+  };
+  for (const [id, deity] of Object.entries(deities))
+    records[id].deity = Object.freeze(deity);
   for (const value of Object.values(records)) Object.freeze(value);
   const schools = Object.freeze({
     ember: "fire",

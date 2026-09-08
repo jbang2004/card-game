@@ -11,9 +11,90 @@ const EmberContracts = (() => {
       ids.filter((id) => data.byId[id].contract.divine).length <= 1
     );
   }
+  const rituals = Object.freeze({
+    spells: { label: "星火", requirement: "成功施放不同名称的非衍生法术" },
+    shields: { label: "誓光", requirement: "友方随从的圣盾被敌方伤害击破" },
+    hunts: {
+      label: "狩猎",
+      requirement: "野兽主动攻击敌方随从（每回合最多计两次）",
+    },
+  });
+  function progress(p, c) {
+    const r = c.contract;
+    if (r.ritual) {
+      const { kind, amount } = r.ritual;
+      return [
+        {
+          label: rituals[kind].label,
+          current:
+            kind === "spells" ? p.devotion.spells.length : p.devotion[kind],
+          required: amount,
+        },
+      ];
+    }
+    return [
+      { label: "印记", current: p.souls.length, required: r.souls },
+      { label: "阵亡", current: p.fallen, required: r.deaths },
+    ];
+  }
   function describe(c) {
     const r = c.contract;
-    return `${r.divine ? "神祇" : "契约"} · 本局非衍生随从死亡 ${r.deaths} 次，消耗最早获得的 ${r.souls} 枚不同名称灵魂印记及 ${c.cost} 法力。每局一次${r.divine ? "；无法复生，降临当回合不能攻击英雄" : ""}。`;
+    const need = r.ritual
+      ? `${rituals[r.ritual.kind].requirement}，累计 ${r.ritual.amount} 次；支付 ${c.cost} 法力`
+      : `本局非衍生随从死亡 ${r.deaths} 次，消耗最早获得的 ${r.souls} 枚不同名称灵魂印记及 ${c.cost} 法力`;
+    return `${r.divine ? "神祇" : "契约"} · ${need}。每局一次${r.divine ? "；无法复生，降临当回合不能攻击英雄" : ""}。`;
+  }
+  function validDevotion(d, data, turn) {
+    if (
+      !d ||
+      typeof d !== "object" ||
+      Array.isArray(d) ||
+      Object.keys(d).some(
+        (k) =>
+          !["spells", "shields", "hunts", "huntTurn", "huntCount"].includes(k),
+      )
+    )
+      return false;
+    return (
+      Array.isArray(d.spells) &&
+      new Set(d.spells).size === d.spells.length &&
+      d.spells.every(
+        (id) => data.byId[id]?.type === "spell" && !data.byId[id].token,
+      ) &&
+      ["shields", "hunts", "huntTurn", "huntCount"].every(
+        (k) => Number.isInteger(d[k]) && d[k] >= 0,
+      ) &&
+      d.shields <= 1000 &&
+      d.hunts <= turn * 2 &&
+      d.huntTurn <= turn &&
+      d.huntCount <= 2 &&
+      d.huntCount <= d.hunts
+    );
+  }
+  function spell(g, side, c) {
+    const d = g.s[side].devotion;
+    if (!c.token && !d.spells.includes(c.id)) d.spells.push(c.id);
+  }
+  function shield(g, side, from) {
+    if (from?.side === g.other(side)) g.s[side].devotion.shields++;
+  }
+  function hunt(g, side, m, target) {
+    if (
+      !m ||
+      g.data.byId[m.cid].tribe !== "beast" ||
+      target.uid === "hero" ||
+      target.side !== g.other(side)
+    )
+      return;
+    const d = g.s[side].devotion;
+    if (d.huntTurn !== g.s.turn) {
+      d.huntTurn = g.s.turn;
+      d.huntCount = 0;
+    }
+    if (d.huntCount < 2) {
+      d.hunts++;
+      d.huntCount++;
+    }
   }
   function legal(g, side, id) {
     if (
@@ -33,10 +114,9 @@ const EmberContracts = (() => {
       p.usedContracts.some((x) => g.data.byId[x].contract.divine)
     )
       return "本局神祇已经降临";
-    if (p.fallen < c.contract.deaths)
-      return `需要 ${c.contract.deaths} 次非衍生随从死亡（当前 ${p.fallen}）`;
-    if (p.souls.length < c.contract.souls)
-      return `需要 ${c.contract.souls} 枚不同名称印记（当前 ${p.souls.length}）`;
+    for (const gate of progress(p, c))
+      if (gate.current < gate.required)
+        return `需要 ${gate.required} ${gate.label}（当前 ${gate.current}）`;
     if (p.mana < c.cost) return "法力不足";
     if (p.board.length >= 7) return "战场已满";
     return null;
@@ -47,7 +127,7 @@ const EmberContracts = (() => {
     const p = g.s[side],
       c = g.data.byId[id];
     p.mana -= c.cost;
-    p.souls.splice(0, c.contract.souls);
+    if (!c.contract.ritual) p.souls.splice(0, c.contract.souls);
     p.usedContracts.push(id);
     g.log(`${side === "p" ? "你" : "敌人"}唤醒「${c.name}」。`);
     g.event("contract", {
@@ -72,6 +152,17 @@ const EmberContracts = (() => {
     p.fallen++;
     if (!p.souls.includes(c.id)) p.souls.push(c.id);
   }
-  return Object.freeze({ check, describe, legal, summon, death });
+  return Object.freeze({
+    check,
+    describe,
+    legal,
+    summon,
+    death,
+    progress,
+    validDevotion,
+    spell,
+    shield,
+    hunt,
+  });
 })();
 if (typeof module !== "undefined") module.exports = EmberContracts;

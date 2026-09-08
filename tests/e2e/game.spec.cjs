@@ -47,7 +47,7 @@ test("web build: all assets decode, no external dependencies, actual spells, mel
       }
       return EmberData.cards.length;
     }),
-  ).toBe(73);
+  ).toBe(79);
   await page.screenshot({ path: path.join(out, "desktop.png") });
   await page.locator('#hand [data-cardid="frostbolt"]').click();
   const line = await page.locator("#target-path").getAttribute("d");

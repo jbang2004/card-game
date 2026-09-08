@@ -1,0 +1,170 @@
+{
+  "method": "Same-policy automated campaign runs, at most 3 attempts per boss, class-aware relic choices. Not human completion rates.",
+  "rows": [
+    {
+      "deck": "mage_burn",
+      "runs": 2,
+      "cleared": 1,
+      "stages": [
+        2,
+        2,
+        2,
+        2,
+        1,
+        1
+      ],
+      "tries": 16,
+      "wins": 10
+    },
+    {
+      "deck": "mage_frost",
+      "runs": 2,
+      "cleared": 1,
+      "stages": [
+        2,
+        2,
+        2,
+        2,
+        1,
+        1
+      ],
+      "tries": 14,
+      "wins": 10
+    },
+    {
+      "deck": "paladin_swarm",
+      "runs": 2,
+      "cleared": 2,
+      "stages": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "tries": 14,
+      "wins": 12
+    },
+    {
+      "deck": "paladin_guard",
+      "runs": 2,
+      "cleared": 0,
+      "stages": [
+        2,
+        2,
+        2,
+        1,
+        0,
+        0
+      ],
+      "tries": 14,
+      "wins": 7
+    },
+    {
+      "deck": "ranger_pack",
+      "runs": 2,
+      "cleared": 0,
+      "stages": [
+        2,
+        2,
+        2,
+        2,
+        0,
+        0
+      ],
+      "tries": 14,
+      "wins": 8
+    },
+    {
+      "deck": "ranger_death",
+      "runs": 2,
+      "cleared": 0,
+      "stages": [
+        2,
+        2,
+        2,
+        2,
+        0,
+        0
+      ],
+      "tries": 15,
+      "wins": 8
+    },
+    {
+      "deck": "moon_covenant",
+      "runs": 2,
+      "cleared": 0,
+      "stages": [
+        2,
+        2,
+        2,
+        1,
+        0,
+        0
+      ],
+      "tries": 13,
+      "wins": 7
+    },
+    {
+      "deck": "moon_hunt",
+      "runs": 2,
+      "cleared": 0,
+      "stages": [
+        2,
+        2,
+        2,
+        2,
+        0,
+        0
+      ],
+      "tries": 17,
+      "wins": 8
+    },
+    {
+      "deck": "pantheon_stars",
+      "runs": 2,
+      "cleared": 2,
+      "stages": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "tries": 14,
+      "wins": 12
+    },
+    {
+      "deck": "pantheon_dawn",
+      "runs": 2,
+      "cleared": 2,
+      "stages": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "tries": 15,
+      "wins": 12
+    },
+    {
+      "deck": "pantheon_hunt",
+      "runs": 2,
+      "cleared": 0,
+      "stages": [
+        2,
+        2,
+        2,
+        2,
+        0,
+        0
+      ],
+      "tries": 14,
+      "wins": 8
+    }
+  ]
+}

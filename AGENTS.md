@@ -2,7 +2,7 @@
 
 ## 先阅读
 
-`README.md` → `docs/CODEX_HANDOFF.md` → `docs/ASSETS.md`。本项目是 v0.13.0 的既有可玩游戏，不需要从零另建框架。
+`README.md` → `docs/CODEX_HANDOFF.md` → `docs/ASSETS.md`。本项目是 v0.14.0 的既有可玩游戏，不需要从零另建框架。
 
 ## 最小启动与检查
 
@@ -19,7 +19,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 - 组件样式遵循 `legacy → layout → theme → components` 层级；新配色与卡图容器放在 `presentation/components.css`，手机规则不要另外定义主题颜色。
 - 修改 `src/` 与素材源，然后构建；不要只改生成的 `index.html`。
 - `config/build.json` / `src/template.html` 决定模块顺序。只有当前注册表中的实现进入运行；不能因历史文档提及就恢复已经退役的 Three.js、程序化插画或旧素材缓存。仍有引用的 `tavern-ui.js` / `atelier*` 承担当前 UI 和 Canvas 职责。
-- 73 个卡牌 ID 必须各有新动漫插画；保持严格映射，不让缺图静默回退到旧程序化角色图。
+- 79 个卡牌 ID 必须各有新动漫插画；保持严格映射，不让缺图静默回退到旧程序化角色图。
 - 按用户 2026-09-07 全面视觉重构要求，当前采用完整酒馆桌面、胡桃木与古金 UI（旧山谷原画仅留档）；卡名、费用、攻血和规则文字保持实时 DOM，不烘焙进画面。
 - 手机端是专用横/竖屏布局，不退回到把 1600×940 桌面等比缩小；保留滑动、点牌确认、长按、旋转后的同局状态。
 - `engine.js` 与 `rules/` 是纯规则层，AI 独立在 `rules/ai.js`；不要让画面粒子、昼夜切换、建筑互动改变对局状态。
@@ -38,4 +38,4 @@ python3 -m http.server 8000 --bind 127.0.0.1
 - 新效果注册字段校验、执行和文案，补充 AI / 必要预览；纯规则不依赖表现。
 - 生产界面使用只读状态和动作接口；仅本地 `?debug=1` 暴露 `EmberDebug.game` 给测试。
 - 当前完整入口为 `npm run test:release`；旧 Python 浏览器脚本已退役，旧 QA 仅作历史记录。
-- 当前存档必须具备 modifiers；临时攻击仅从 modifiers 结算，不再维护 tempAtk。格式不支持或数据损坏时明确失效，不做隐式旧版本转换。
+- 当前存档必须具备 modifiers 与 devotion（当前公开仪式进度）；临时攻击仅从 modifiers 结算，不再维护 tempAtk。格式不支持或数据损坏时明确失效，不做隐式旧版本转换。

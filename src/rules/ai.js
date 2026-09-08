@@ -31,6 +31,25 @@ const EmberAI = (() => {
       (a) => a.id === (side === "p" ? g.s.archetype : g.s.opponent),
     );
     const pressure = archetype?.strategy === "pressure" ? 1.6 : 1;
+    const contracts =
+      typeof EmberContracts !== "undefined"
+        ? EmberContracts
+        : require("./contracts.js");
+    const potential = (x) =>
+      x.contracts
+        .filter((id) => !x.usedContracts.includes(id))
+        .reduce((n, id) => {
+          const gates = contracts.progress(x, g.data.byId[id]);
+          return (
+            n +
+            (2 *
+              gates.reduce(
+                (sum, gate) => sum + Math.min(1, gate.current / gate.required),
+                0,
+              )) /
+              gates.length
+          );
+        }, 0);
     return (
       board(p) -
       board(e) * 1.12 +
@@ -42,8 +61,8 @@ const EmberAI = (() => {
       (e.weapon ? e.weapon.atk * Math.min(2, e.weapon.durability) * 0.8 : 0) +
       // A discovered card provides a hand slot plus selection flexibility.
       (g.s.choice?.side === side ? 2.6 + 1 : 0) +
-      Math.min(4, p.souls.length) * 0.7 -
-      Math.min(4, e.souls.length) * 0.4 +
+      potential(p) -
+      potential(e) * 0.6 +
       p.secrets.length * 2.2 -
       e.secrets.length * 1.2
     );

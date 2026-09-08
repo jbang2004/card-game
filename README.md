@@ -1,6 +1,6 @@
-# 烬域 · 鎏金酒馆 v0.13.0 · 月影神契
+# 烬域 · 鎏金酒馆 v0.14.0 · 诸神同辉
 
-可离线运行的单人策略卡牌游戏：62 张可组牌卡、8 张普通衍生牌、3 张契约牌、4 位英雄、8 套职业预设、6 场首领战役与公平练习对战。桌面与手机使用同一 Canvas 酒馆场景，手机保留独立横竖屏布局与触屏操作。
+可离线运行的单人策略卡牌游戏：65 张可组牌卡、8 张普通衍生牌、6 张契约牌、4 位英雄、11 套职业预设、6 场首领战役与公平练习对战。桌面与手机使用同一 Canvas 酒馆场景，手机保留独立横竖屏布局与触屏操作。
 
 ## 开发与运行
 
@@ -39,6 +39,14 @@ npm run test:release
 
 刀剑、利爪、重击、弓箭、投矛、能量弹和吐息具有不同攻击语言；陨火、火焰风暴、冰封领域、暗影湮灭与四张传说牌具有具名演出。13 张本地 CC0 无损 WebP 纹理/动画图集与事件结算同步，演武场可切换 14 种预览。详见 [战斗特效记录](docs/VFX_FEEDBACK.md) 与 [资源清理记录](docs/MEDIA_CLEANUP.md)。
 
+## v0.14 诸神同辉
+
+四位英雄现在各有默认神祇：星焰神·烬辰、曙日神·奥瑞恩、荒猎神·芬洛斯与冥月神·瑟弥拉。前三位分别通过不同法术、敌方破盾、野兽主动交换唤醒，配有三张新法术和三套预设。契约仍按职业共享、最多三张且至多一位神祇，旧预设仍可使用。
+
+六张独立动漫原画、三位神的真实透明分层、四种降临仪式与公开进度已接入桌面及手机。测试期对局仍为 version 3，但必须含当前 devotion 计数；缺字段的旧测试对局明确失效，不做迁移。命名卡组维持当前格式。
+
+设计见 [诸神同辉](docs/design/PANTHEON.md)，平衡数据和实际验收见 [v0.14 验证](docs/QA_PANTHEON.md)。自动筛查：`node tools/playtest-pantheon.cjs`。
+
 ## v0.13 月影神契
 
 新增送魂人·莫菈、八张可组牌卡与「月影神契」「契兽群猎」两套预设；第六关为断契监誓者。契约栏独立于三十张主牌组，最多三张、至多一位神祇，同职业英雄共享契约池。
@@ -74,4 +82,4 @@ npm run test:release
 
 ## 角色制作
 
-统一清单为 `assets/characters.json`；制作与接入见 [角色制作规范](docs/CHARACTER_AUTHORING.md)。41 个上场随从（含 7 个普通衍生角色及 3 个契约角色）均有分层待机，4 位英雄和 6 位首领按既有 portraitId 复用。其余 32 张法术/武器保持静态。运行 `python3 tools/characters.py --list` 查看完整静态/动态清单；`tools/animation-demo.html?zoom=1` 可分页查看所有角色。其他模型可直接读取项目内 [角色制作 Skill](.agents/skills/character-creation/SKILL.md)。
+统一清单为 `assets/characters.json`；制作与接入见 [角色制作规范](docs/CHARACTER_AUTHORING.md)。44 个上场随从（含 7 个普通衍生角色及 6 个契约角色）均有分层待机，4 位英雄和 6 位首领按既有 portraitId 复用。其余 35 张法术/武器保持静态。运行 `python3 tools/characters.py --list` 查看完整静态/动态清单；`tools/animation-demo.html?zoom=1` 可分页查看所有角色。其他模型可直接读取项目内 [角色制作 Skill](.agents/skills/character-creation/SKILL.md)。

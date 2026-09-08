@@ -189,16 +189,34 @@ const EmberData = (() => {
       if (Boolean(c.secret) !== c.onPlay.some((e) => e.type === "secret"))
         throw Error(c.id + ": Secret definition/effect mismatch");
       if (c.contract) {
-        Schema.fields(c.contract, ["souls", "deaths", "divine"], c.id);
+        Schema.fields(
+          c.contract,
+          ["souls", "deaths", "divine", "ritual"],
+          c.id,
+        );
+        if (c.contract.ritual) {
+          Schema.fields(c.contract.ritual, ["kind", "amount"], c.id);
+          if (
+            !["spells", "shields", "hunts"].includes(c.contract.ritual.kind) ||
+            !Number.isInteger(c.contract.ritual.amount) ||
+            c.contract.ritual.amount < 1 ||
+            c.contract.ritual.amount > 20 ||
+            !c.contract.divine ||
+            "souls" in c.contract ||
+            "deaths" in c.contract
+          )
+            throw Error(c.id + ": Invalid ritual");
+        }
         if (
           !c.token ||
           c.type !== "minion" ||
           c.rarity !== "legendary" ||
-          !Number.isInteger(c.contract.souls) ||
-          c.contract.souls < 1 ||
-          c.contract.souls > 10 ||
-          !Number.isInteger(c.contract.deaths) ||
-          c.contract.deaths < c.contract.souls ||
+          (!c.contract.ritual &&
+            (!Number.isInteger(c.contract.souls) ||
+              c.contract.souls < 1 ||
+              c.contract.souls > 10 ||
+              !Number.isInteger(c.contract.deaths) ||
+              c.contract.deaths < c.contract.souls)) ||
           typeof c.contract.divine !== "boolean"
         )
           throw Error(c.id + ": Invalid contract");

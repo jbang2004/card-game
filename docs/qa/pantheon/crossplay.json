@@ -1,0 +1,2764 @@
+{
+  "method": "Same public-information AI, fixed node budget, paired first/second for each seed; exploratory balance screening, not human win rates.",
+  "seeds": 4,
+  "offset": 50,
+  "budget": 100,
+  "noGod": false,
+  "opponents": "pantheon",
+  "rows": [
+    {
+      "deck": "pantheon_stars",
+      "opponent": "pantheon_stars",
+      "wins": 2,
+      "games": 8,
+      "details": [
+        {
+          "seed": 5341179,
+          "first": "p",
+          "winner": "e",
+          "turn": 21,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "jingchen",
+              "turn": 11
+            },
+            {
+              "side": "e",
+              "cid": "jingchen",
+              "turn": 12
+            }
+          ],
+          "fallen": 10,
+          "souls": 6,
+          "devotion": {
+            "spells": [
+              "frostbolt",
+              "polymorph",
+              "wisdom",
+              "starweave",
+              "nova",
+              "storm",
+              "discovery",
+              "icebarrier",
+              "fireball"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5341179,
+          "first": "e",
+          "winner": "e",
+          "turn": 19,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "jingchen",
+              "turn": 11
+            },
+            {
+              "side": "p",
+              "cid": "jingchen",
+              "turn": 12
+            }
+          ],
+          "fallen": 10,
+          "souls": 5,
+          "devotion": {
+            "spells": [
+              "starweave",
+              "frostbolt",
+              "polymorph",
+              "nova",
+              "wisdom",
+              "storm",
+              "fireball",
+              "discovery"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5445908,
+          "first": "p",
+          "winner": "e",
+          "turn": 18,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "jingchen",
+              "turn": 11
+            },
+            {
+              "side": "e",
+              "cid": "jingchen",
+              "turn": 12
+            }
+          ],
+          "fallen": 10,
+          "souls": 6,
+          "devotion": {
+            "spells": [
+              "starweave",
+              "fireball",
+              "frostbolt",
+              "wisdom",
+              "polymorph",
+              "discovery",
+              "nova",
+              "storm"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5445908,
+          "first": "e",
+          "winner": "e",
+          "turn": 22,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "jingchen",
+              "turn": 13
+            },
+            {
+              "side": "p",
+              "cid": "jingchen",
+              "turn": 14
+            }
+          ],
+          "fallen": 10,
+          "souls": 6,
+          "devotion": {
+            "spells": [
+              "discovery",
+              "wisdom",
+              "frostbolt",
+              "fireball",
+              "starweave",
+              "icebarrier",
+              "polymorph",
+              "storm"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5550637,
+          "first": "p",
+          "winner": "p",
+          "turn": 20,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "jingchen",
+              "turn": 11
+            },
+            {
+              "side": "e",
+              "cid": "jingchen",
+              "turn": 11
+            }
+          ],
+          "fallen": 10,
+          "souls": 6,
+          "devotion": {
+            "spells": [
+              "wisdom",
+              "discovery",
+              "polymorph",
+              "frostbolt",
+              "starweave",
+              "fireball",
+              "storm",
+              "nova",
+              "icebarrier"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5550637,
+          "first": "e",
+          "winner": "p",
+          "turn": 21,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "jingchen",
+              "turn": 11
+            },
+            {
+              "side": "p",
+              "cid": "jingchen",
+              "turn": 13
+            }
+          ],
+          "fallen": 10,
+          "souls": 6,
+          "devotion": {
+            "spells": [
+              "fireball",
+              "wisdom",
+              "frostbolt",
+              "polymorph",
+              "starweave",
+              "storm",
+              "discovery",
+              "nova"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5655366,
+          "first": "p",
+          "winner": "e",
+          "turn": 22,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "jingchen",
+              "turn": 13
+            },
+            {
+              "side": "e",
+              "cid": "jingchen",
+              "turn": 14
+            }
+          ],
+          "fallen": 10,
+          "souls": 6,
+          "devotion": {
+            "spells": [
+              "frostbolt",
+              "wisdom",
+              "fireball",
+              "discovery",
+              "storm",
+              "icebarrier",
+              "polymorph",
+              "starweave"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5655366,
+          "first": "e",
+          "winner": "e",
+          "turn": 17,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "jingchen",
+              "turn": 9
+            },
+            {
+              "side": "e",
+              "cid": "jingchen",
+              "turn": 13
+            }
+          ],
+          "fallen": 10,
+          "souls": 6,
+          "devotion": {
+            "spells": [
+              "starweave",
+              "frostbolt",
+              "nova",
+              "discovery",
+              "wisdom",
+              "storm",
+              "polymorph",
+              "fireball"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "deck": "pantheon_stars",
+      "opponent": "pantheon_dawn",
+      "wins": 2,
+      "games": 8,
+      "details": [
+        {
+          "seed": 5341179,
+          "first": "p",
+          "winner": "e",
+          "turn": 12,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "aurion",
+              "turn": 9
+            },
+            {
+              "side": "p",
+              "cid": "jingchen",
+              "turn": 11
+            }
+          ],
+          "fallen": 8,
+          "souls": 5,
+          "devotion": {
+            "spells": [
+              "polymorph",
+              "starweave",
+              "frostbolt",
+              "storm",
+              "nova",
+              "discovery",
+              "wisdom"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5341179,
+          "first": "e",
+          "winner": "e",
+          "turn": 19,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "aurion",
+              "turn": 11
+            },
+            {
+              "side": "p",
+              "cid": "jingchen",
+              "turn": 12
+            }
+          ],
+          "fallen": 11,
+          "souls": 6,
+          "devotion": {
+            "spells": [
+              "starweave",
+              "polymorph",
+              "storm",
+              "frostbolt",
+              "nova",
+              "wisdom",
+              "fireball",
+              "icebarrier"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5445908,
+          "first": "p",
+          "winner": "e",
+          "turn": 22,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "jingchen",
+              "turn": 11
+            },
+            {
+              "side": "e",
+              "cid": "aurion",
+              "turn": 13
+            }
+          ],
+          "fallen": 12,
+          "souls": 7,
+          "devotion": {
+            "spells": [
+              "starweave",
+              "frostbolt",
+              "fireball",
+              "polymorph",
+              "nova",
+              "storm",
+              "wisdom",
+              "discovery"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5445908,
+          "first": "e",
+          "winner": "e",
+          "turn": 9,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "aurion",
+              "turn": 8
+            },
+            {
+              "side": "p",
+              "cid": "jingchen",
+              "turn": 9
+            }
+          ],
+          "fallen": 5,
+          "souls": 4,
+          "devotion": {
+            "spells": [
+              "frostbolt",
+              "wisdom",
+              "discovery",
+              "fireball",
+              "nova",
+              "storm"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5550637,
+          "first": "p",
+          "winner": "e",
+          "turn": 15,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "jingchen",
+              "turn": 11
+            },
+            {
+              "side": "e",
+              "cid": "aurion",
+              "turn": 11
+            }
+          ],
+          "fallen": 9,
+          "souls": 6,
+          "devotion": {
+            "spells": [
+              "frostbolt",
+              "polymorph",
+              "starweave",
+              "wisdom",
+              "nova",
+              "storm",
+              "fireball",
+              "discovery"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5550637,
+          "first": "e",
+          "winner": "p",
+          "turn": 15,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "jingchen",
+              "turn": 11
+            },
+            {
+              "side": "e",
+              "cid": "aurion",
+              "turn": 14
+            }
+          ],
+          "fallen": 6,
+          "souls": 4,
+          "devotion": {
+            "spells": [
+              "fireball",
+              "nova",
+              "wisdom",
+              "polymorph",
+              "storm",
+              "starweave",
+              "frostbolt"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5655366,
+          "first": "p",
+          "winner": "e",
+          "turn": 22,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "jingchen",
+              "turn": 11
+            },
+            {
+              "side": "e",
+              "cid": "aurion",
+              "turn": 12
+            }
+          ],
+          "fallen": 11,
+          "souls": 7,
+          "devotion": {
+            "spells": [
+              "frostbolt",
+              "wisdom",
+              "starweave",
+              "fireball",
+              "nova",
+              "discovery",
+              "polymorph",
+              "storm"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5655366,
+          "first": "e",
+          "winner": "p",
+          "turn": 15,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "aurion",
+              "turn": 8
+            },
+            {
+              "side": "p",
+              "cid": "jingchen",
+              "turn": 10
+            }
+          ],
+          "fallen": 4,
+          "souls": 4,
+          "devotion": {
+            "spells": [
+              "wisdom",
+              "frostbolt",
+              "polymorph",
+              "starweave",
+              "storm",
+              "nova",
+              "fireball"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "deck": "pantheon_stars",
+      "opponent": "pantheon_hunt",
+      "wins": 3,
+      "games": 8,
+      "details": [
+        {
+          "seed": 5341179,
+          "first": "p",
+          "winner": "p",
+          "turn": 16,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 7
+            },
+            {
+              "side": "e",
+              "cid": "eclipsewolf",
+              "turn": 8
+            },
+            {
+              "side": "e",
+              "cid": "fenlos",
+              "turn": 9
+            },
+            {
+              "side": "p",
+              "cid": "jingchen",
+              "turn": 11
+            }
+          ],
+          "fallen": 10,
+          "souls": 5,
+          "devotion": {
+            "spells": [
+              "frostbolt",
+              "starweave",
+              "storm",
+              "polymorph",
+              "wisdom",
+              "nova",
+              "discovery"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5341179,
+          "first": "e",
+          "winner": "e",
+          "turn": 12,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "eclipsewolf",
+              "turn": 6
+            },
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 7
+            },
+            {
+              "side": "e",
+              "cid": "fenlos",
+              "turn": 11
+            },
+            {
+              "side": "p",
+              "cid": "jingchen",
+              "turn": 12
+            }
+          ],
+          "fallen": 9,
+          "souls": 6,
+          "devotion": {
+            "spells": [
+              "starweave",
+              "storm",
+              "nova",
+              "frostbolt",
+              "wisdom",
+              "fireball"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5445908,
+          "first": "p",
+          "winner": "e",
+          "turn": 11,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "eclipsewolf",
+              "turn": 7
+            },
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 9
+            }
+          ],
+          "fallen": 6,
+          "souls": 4,
+          "devotion": {
+            "spells": [
+              "starweave",
+              "wisdom",
+              "fireball",
+              "frostbolt",
+              "storm",
+              "discovery"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5445908,
+          "first": "e",
+          "winner": "e",
+          "turn": 9,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 7
+            }
+          ],
+          "fallen": 5,
+          "souls": 4,
+          "devotion": {
+            "spells": [
+              "discovery",
+              "starweave",
+              "wisdom",
+              "storm",
+              "fireball",
+              "frostbolt"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5550637,
+          "first": "p",
+          "winner": "p",
+          "turn": 13,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 6
+            },
+            {
+              "side": "e",
+              "cid": "eclipsewolf",
+              "turn": 9
+            },
+            {
+              "side": "e",
+              "cid": "fenlos",
+              "turn": 10
+            },
+            {
+              "side": "p",
+              "cid": "jingchen",
+              "turn": 11
+            }
+          ],
+          "fallen": 7,
+          "souls": 5,
+          "devotion": {
+            "spells": [
+              "wisdom",
+              "starweave",
+              "polymorph",
+              "storm",
+              "frostbolt",
+              "fireball",
+              "discovery"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5550637,
+          "first": "e",
+          "winner": "e",
+          "turn": 12,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 7
+            },
+            {
+              "side": "e",
+              "cid": "eclipsewolf",
+              "turn": 8
+            },
+            {
+              "side": "e",
+              "cid": "fenlos",
+              "turn": 9
+            },
+            {
+              "side": "p",
+              "cid": "jingchen",
+              "turn": 12
+            }
+          ],
+          "fallen": 8,
+          "souls": 5,
+          "devotion": {
+            "spells": [
+              "starweave",
+              "nova",
+              "storm",
+              "polymorph",
+              "frostbolt",
+              "wisdom",
+              "discovery"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5655366,
+          "first": "p",
+          "winner": "p",
+          "turn": 13,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 6
+            },
+            {
+              "side": "e",
+              "cid": "eclipsewolf",
+              "turn": 9
+            },
+            {
+              "side": "p",
+              "cid": "jingchen",
+              "turn": 12
+            }
+          ],
+          "fallen": 5,
+          "souls": 4,
+          "devotion": {
+            "spells": [
+              "frostbolt",
+              "wisdom",
+              "nova",
+              "starweave",
+              "storm",
+              "fireball",
+              "discovery"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5655366,
+          "first": "e",
+          "winner": "e",
+          "turn": 14,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 4
+            },
+            {
+              "side": "e",
+              "cid": "eclipsewolf",
+              "turn": 6
+            },
+            {
+              "side": "p",
+              "cid": "jingchen",
+              "turn": 10
+            },
+            {
+              "side": "e",
+              "cid": "fenlos",
+              "turn": 10
+            }
+          ],
+          "fallen": 8,
+          "souls": 6,
+          "devotion": {
+            "spells": [
+              "frostbolt",
+              "starweave",
+              "polymorph",
+              "nova",
+              "storm",
+              "fireball",
+              "wisdom",
+              "discovery"
+            ],
+            "shields": 0,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "deck": "pantheon_dawn",
+      "opponent": "pantheon_stars",
+      "wins": 4,
+      "games": 8,
+      "details": [
+        {
+          "seed": 5341179,
+          "first": "p",
+          "winner": "p",
+          "turn": 19,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "aurion",
+              "turn": 10
+            },
+            {
+              "side": "e",
+              "cid": "jingchen",
+              "turn": 12
+            }
+          ],
+          "fallen": 17,
+          "souls": 10,
+          "devotion": {
+            "spells": [
+              "blessing",
+              "muster",
+              "absolution"
+            ],
+            "shields": 14,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5341179,
+          "first": "e",
+          "winner": "e",
+          "turn": 16,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "aurion",
+              "turn": 11
+            },
+            {
+              "side": "e",
+              "cid": "jingchen",
+              "turn": 12
+            }
+          ],
+          "fallen": 11,
+          "souls": 8,
+          "devotion": {
+            "spells": [
+              "muster",
+              "absolution",
+              "blessing",
+              "shield",
+              "dawnvow"
+            ],
+            "shields": 9,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5445908,
+          "first": "p",
+          "winner": "e",
+          "turn": 14,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "aurion",
+              "turn": 10
+            },
+            {
+              "side": "e",
+              "cid": "jingchen",
+              "turn": 10
+            }
+          ],
+          "fallen": 11,
+          "souls": 7,
+          "devotion": {
+            "spells": [
+              "absolution",
+              "muster",
+              "blessing",
+              "dawnvow"
+            ],
+            "shields": 13,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5445908,
+          "first": "e",
+          "winner": "e",
+          "turn": 16,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "aurion",
+              "turn": 12
+            },
+            {
+              "side": "e",
+              "cid": "jingchen",
+              "turn": 13
+            }
+          ],
+          "fallen": 12,
+          "souls": 8,
+          "devotion": {
+            "spells": [
+              "absolution",
+              "muster",
+              "blessing"
+            ],
+            "shields": 8,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5550637,
+          "first": "p",
+          "winner": "p",
+          "turn": 10,
+          "arrivals": [],
+          "fallen": 6,
+          "souls": 6,
+          "devotion": {
+            "spells": [
+              "blessing",
+              "absolution"
+            ],
+            "shields": 3,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5550637,
+          "first": "e",
+          "winner": "p",
+          "turn": 12,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "aurion",
+              "turn": 10
+            },
+            {
+              "side": "e",
+              "cid": "jingchen",
+              "turn": 11
+            }
+          ],
+          "fallen": 7,
+          "souls": 6,
+          "devotion": {
+            "spells": [
+              "absolution",
+              "blessing"
+            ],
+            "shields": 14,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5655366,
+          "first": "p",
+          "winner": "e",
+          "turn": 17,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "aurion",
+              "turn": 10
+            },
+            {
+              "side": "e",
+              "cid": "jingchen",
+              "turn": 13
+            }
+          ],
+          "fallen": 16,
+          "souls": 11,
+          "devotion": {
+            "spells": [
+              "absolution",
+              "blessing",
+              "dawnvow",
+              "muster"
+            ],
+            "shields": 11,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5655366,
+          "first": "e",
+          "winner": "p",
+          "turn": 17,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "jingchen",
+              "turn": 11
+            },
+            {
+              "side": "p",
+              "cid": "aurion",
+              "turn": 12
+            }
+          ],
+          "fallen": 12,
+          "souls": 7,
+          "devotion": {
+            "spells": [
+              "blessing",
+              "absolution"
+            ],
+            "shields": 11,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "deck": "pantheon_dawn",
+      "opponent": "pantheon_dawn",
+      "wins": 2,
+      "games": 8,
+      "details": [
+        {
+          "seed": 5341179,
+          "first": "p",
+          "winner": "e",
+          "turn": 14,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "aurion",
+              "turn": 9
+            },
+            {
+              "side": "p",
+              "cid": "aurion",
+              "turn": 10
+            }
+          ],
+          "fallen": 15,
+          "souls": 10,
+          "devotion": {
+            "spells": [
+              "blessing",
+              "muster",
+              "shield"
+            ],
+            "shields": 9,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5341179,
+          "first": "e",
+          "winner": "e",
+          "turn": 14,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "aurion",
+              "turn": 10
+            },
+            {
+              "side": "e",
+              "cid": "aurion",
+              "turn": 10
+            }
+          ],
+          "fallen": 11,
+          "souls": 8,
+          "devotion": {
+            "spells": [
+              "blessing",
+              "shield",
+              "muster",
+              "absolution",
+              "dawnvow"
+            ],
+            "shields": 12,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5445908,
+          "first": "p",
+          "winner": "p",
+          "turn": 11,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "aurion",
+              "turn": 9
+            }
+          ],
+          "fallen": 4,
+          "souls": 4,
+          "devotion": {
+            "spells": [
+              "absolution",
+              "blessing"
+            ],
+            "shields": 10,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5445908,
+          "first": "e",
+          "winner": "e",
+          "turn": 10,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "aurion",
+              "turn": 8
+            }
+          ],
+          "fallen": 8,
+          "souls": 8,
+          "devotion": {
+            "spells": [
+              "absolution",
+              "muster"
+            ],
+            "shields": 3,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5550637,
+          "first": "p",
+          "winner": "p",
+          "turn": 11,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "aurion",
+              "turn": 9
+            },
+            {
+              "side": "p",
+              "cid": "aurion",
+              "turn": 10
+            }
+          ],
+          "fallen": 6,
+          "souls": 5,
+          "devotion": {
+            "spells": [
+              "absolution",
+              "blessing"
+            ],
+            "shields": 9,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5550637,
+          "first": "e",
+          "winner": "e",
+          "turn": 9,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "aurion",
+              "turn": 9
+            }
+          ],
+          "fallen": 6,
+          "souls": 5,
+          "devotion": {
+            "spells": [
+              "absolution"
+            ],
+            "shields": 8,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5655366,
+          "first": "p",
+          "winner": "e",
+          "turn": 15,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "aurion",
+              "turn": 9
+            },
+            {
+              "side": "e",
+              "cid": "aurion",
+              "turn": 9
+            }
+          ],
+          "fallen": 14,
+          "souls": 9,
+          "devotion": {
+            "spells": [
+              "absolution",
+              "blessing",
+              "dawnvow",
+              "muster"
+            ],
+            "shields": 14,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5655366,
+          "first": "e",
+          "winner": "e",
+          "turn": 10,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "aurion",
+              "turn": 9
+            }
+          ],
+          "fallen": 8,
+          "souls": 7,
+          "devotion": {
+            "spells": [
+              "absolution"
+            ],
+            "shields": 3,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "deck": "pantheon_dawn",
+      "opponent": "pantheon_hunt",
+      "wins": 5,
+      "games": 8,
+      "details": [
+        {
+          "seed": 5341179,
+          "first": "p",
+          "winner": "p",
+          "turn": 17,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "eclipsewolf",
+              "turn": 7
+            },
+            {
+              "side": "e",
+              "cid": "fenlos",
+              "turn": 9
+            },
+            {
+              "side": "p",
+              "cid": "aurion",
+              "turn": 10
+            },
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 10
+            }
+          ],
+          "fallen": 15,
+          "souls": 10,
+          "devotion": {
+            "spells": [
+              "blessing",
+              "muster",
+              "shield",
+              "absolution"
+            ],
+            "shields": 11,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5341179,
+          "first": "e",
+          "winner": "e",
+          "turn": 9,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "eclipsewolf",
+              "turn": 6
+            },
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 7
+            },
+            {
+              "side": "e",
+              "cid": "fenlos",
+              "turn": 8
+            }
+          ],
+          "fallen": 7,
+          "souls": 5,
+          "devotion": {
+            "spells": [
+              "shield",
+              "muster",
+              "absolution"
+            ],
+            "shields": 3,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5445908,
+          "first": "p",
+          "winner": "p",
+          "turn": 13,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "eclipsewolf",
+              "turn": 8
+            },
+            {
+              "side": "p",
+              "cid": "aurion",
+              "turn": 9
+            },
+            {
+              "side": "e",
+              "cid": "fenlos",
+              "turn": 9
+            },
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 10
+            }
+          ],
+          "fallen": 11,
+          "souls": 6,
+          "devotion": {
+            "spells": [
+              "absolution",
+              "muster",
+              "blessing",
+              "dawnvow"
+            ],
+            "shields": 12,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5445908,
+          "first": "e",
+          "winner": "p",
+          "turn": 15,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "eclipsewolf",
+              "turn": 6
+            },
+            {
+              "side": "e",
+              "cid": "fenlos",
+              "turn": 9
+            },
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 10
+            },
+            {
+              "side": "p",
+              "cid": "aurion",
+              "turn": 11
+            }
+          ],
+          "fallen": 12,
+          "souls": 10,
+          "devotion": {
+            "spells": [
+              "absolution",
+              "muster",
+              "dawnvow",
+              "shield",
+              "blessing"
+            ],
+            "shields": 10,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5550637,
+          "first": "p",
+          "winner": "p",
+          "turn": 14,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "eclipsewolf",
+              "turn": 7
+            },
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 9
+            },
+            {
+              "side": "p",
+              "cid": "aurion",
+              "turn": 12
+            },
+            {
+              "side": "e",
+              "cid": "fenlos",
+              "turn": 12
+            }
+          ],
+          "fallen": 11,
+          "souls": 9,
+          "devotion": {
+            "spells": [
+              "absolution",
+              "blessing",
+              "dawnvow"
+            ],
+            "shields": 9,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5550637,
+          "first": "e",
+          "winner": "p",
+          "turn": 15,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "eclipsewolf",
+              "turn": 7
+            },
+            {
+              "side": "e",
+              "cid": "fenlos",
+              "turn": 8
+            },
+            {
+              "side": "p",
+              "cid": "aurion",
+              "turn": 9
+            },
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 9
+            }
+          ],
+          "fallen": 13,
+          "souls": 10,
+          "devotion": {
+            "spells": [
+              "absolution",
+              "muster",
+              "blessing"
+            ],
+            "shields": 11,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5655366,
+          "first": "p",
+          "winner": "e",
+          "turn": 10,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 6
+            },
+            {
+              "side": "e",
+              "cid": "eclipsewolf",
+              "turn": 8
+            },
+            {
+              "side": "e",
+              "cid": "fenlos",
+              "turn": 9
+            }
+          ],
+          "fallen": 10,
+          "souls": 7,
+          "devotion": {
+            "spells": [
+              "absolution",
+              "blessing",
+              "dawnvow"
+            ],
+            "shields": 3,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        },
+        {
+          "seed": 5655366,
+          "first": "e",
+          "winner": "e",
+          "turn": 9,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 5
+            },
+            {
+              "side": "e",
+              "cid": "eclipsewolf",
+              "turn": 6
+            },
+            {
+              "side": "e",
+              "cid": "fenlos",
+              "turn": 8
+            }
+          ],
+          "fallen": 8,
+          "souls": 7,
+          "devotion": {
+            "spells": [
+              "absolution"
+            ],
+            "shields": 2,
+            "hunts": 0,
+            "huntTurn": 0,
+            "huntCount": 0
+          }
+        }
+      ]
+    },
+    {
+      "deck": "pantheon_hunt",
+      "opponent": "pantheon_stars",
+      "wins": 4,
+      "games": 8,
+      "details": [
+        {
+          "seed": 5341179,
+          "first": "p",
+          "winner": "p",
+          "turn": 11,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "moonguard",
+              "turn": 6
+            },
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 8
+            },
+            {
+              "side": "p",
+              "cid": "fenlos",
+              "turn": 9
+            }
+          ],
+          "fallen": 8,
+          "souls": 3,
+          "devotion": {
+            "spells": [
+              "wolves",
+              "mooncall",
+              "huntinghorn"
+            ],
+            "shields": 0,
+            "hunts": 8,
+            "huntTurn": 10,
+            "huntCount": 2
+          }
+        },
+        {
+          "seed": 5341179,
+          "first": "e",
+          "winner": "e",
+          "turn": 14,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 7
+            },
+            {
+              "side": "p",
+              "cid": "moonguard",
+              "turn": 9
+            },
+            {
+              "side": "e",
+              "cid": "jingchen",
+              "turn": 12
+            }
+          ],
+          "fallen": 16,
+          "souls": 6,
+          "devotion": {
+            "spells": [
+              "mooncall",
+              "stillness",
+              "wolves",
+              "lifedrain",
+              "huntinghorn",
+              "moonlance"
+            ],
+            "shields": 0,
+            "hunts": 5,
+            "huntTurn": 10,
+            "huntCount": 1
+          }
+        },
+        {
+          "seed": 5445908,
+          "first": "p",
+          "winner": "p",
+          "turn": 19,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "moonguard",
+              "turn": 8
+            },
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 10
+            },
+            {
+              "side": "e",
+              "cid": "jingchen",
+              "turn": 11
+            },
+            {
+              "side": "p",
+              "cid": "fenlos",
+              "turn": 13
+            }
+          ],
+          "fallen": 15,
+          "souls": 5,
+          "devotion": {
+            "spells": [
+              "tracking",
+              "mooncall",
+              "wolves",
+              "huntinghorn",
+              "lifedrain",
+              "stillness",
+              "moonlance"
+            ],
+            "shields": 0,
+            "hunts": 8,
+            "huntTurn": 13,
+            "huntCount": 2
+          }
+        },
+        {
+          "seed": 5445908,
+          "first": "e",
+          "winner": "e",
+          "turn": 16,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 7
+            },
+            {
+              "side": "p",
+              "cid": "moonguard",
+              "turn": 8
+            },
+            {
+              "side": "p",
+              "cid": "fenlos",
+              "turn": 9
+            },
+            {
+              "side": "e",
+              "cid": "jingchen",
+              "turn": 14
+            }
+          ],
+          "fallen": 16,
+          "souls": 6,
+          "devotion": {
+            "spells": [
+              "stillness",
+              "mooncall",
+              "huntinghorn",
+              "tracking",
+              "moonlance",
+              "lifedrain",
+              "wolves"
+            ],
+            "shields": 0,
+            "hunts": 7,
+            "huntTurn": 9,
+            "huntCount": 1
+          }
+        },
+        {
+          "seed": 5550637,
+          "first": "p",
+          "winner": "p",
+          "turn": 8,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "moonguard",
+              "turn": 5
+            },
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 7
+            }
+          ],
+          "fallen": 5,
+          "souls": 0,
+          "devotion": {
+            "spells": [
+              "mooncall",
+              "stillness",
+              "wolves",
+              "lifedrain"
+            ],
+            "shields": 0,
+            "hunts": 2,
+            "huntTurn": 7,
+            "huntCount": 2
+          }
+        },
+        {
+          "seed": 5550637,
+          "first": "e",
+          "winner": "e",
+          "turn": 11,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "moonguard",
+              "turn": 6
+            },
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 7
+            }
+          ],
+          "fallen": 8,
+          "souls": 3,
+          "devotion": {
+            "spells": [
+              "lifedrain",
+              "mooncall",
+              "huntinghorn",
+              "wolves",
+              "stillness",
+              "moonlance",
+              "tracking"
+            ],
+            "shields": 0,
+            "hunts": 1,
+            "huntTurn": 4,
+            "huntCount": 1
+          }
+        },
+        {
+          "seed": 5655366,
+          "first": "p",
+          "winner": "p",
+          "turn": 10,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "moonguard",
+              "turn": 7
+            },
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 9
+            }
+          ],
+          "fallen": 6,
+          "souls": 2,
+          "devotion": {
+            "spells": [
+              "wolves",
+              "mooncall",
+              "tracking",
+              "moonlance",
+              "huntinghorn"
+            ],
+            "shields": 0,
+            "hunts": 5,
+            "huntTurn": 10,
+            "huntCount": 1
+          }
+        },
+        {
+          "seed": 5655366,
+          "first": "e",
+          "winner": "e",
+          "turn": 17,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "moonguard",
+              "turn": 6
+            },
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 7
+            },
+            {
+              "side": "p",
+              "cid": "fenlos",
+              "turn": 13
+            },
+            {
+              "side": "e",
+              "cid": "jingchen",
+              "turn": 13
+            }
+          ],
+          "fallen": 17,
+          "souls": 7,
+          "devotion": {
+            "spells": [
+              "mooncall",
+              "huntinghorn",
+              "tracking",
+              "lifedrain",
+              "moonlance",
+              "wolves",
+              "stillness"
+            ],
+            "shields": 0,
+            "hunts": 7,
+            "huntTurn": 13,
+            "huntCount": 2
+          }
+        }
+      ]
+    },
+    {
+      "deck": "pantheon_hunt",
+      "opponent": "pantheon_dawn",
+      "wins": 3,
+      "games": 8,
+      "details": [
+        {
+          "seed": 5341179,
+          "first": "p",
+          "winner": "p",
+          "turn": 7,
+          "arrivals": [],
+          "fallen": 2,
+          "souls": 2,
+          "devotion": {
+            "spells": [
+              "wolves",
+              "stillness",
+              "huntinghorn"
+            ],
+            "shields": 0,
+            "hunts": 3,
+            "huntTurn": 4,
+            "huntCount": 1
+          }
+        },
+        {
+          "seed": 5341179,
+          "first": "e",
+          "winner": "p",
+          "turn": 10,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "moonguard",
+              "turn": 6
+            },
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 7
+            },
+            {
+              "side": "p",
+              "cid": "fenlos",
+              "turn": 9
+            }
+          ],
+          "fallen": 7,
+          "souls": 2,
+          "devotion": {
+            "spells": [
+              "mooncall",
+              "wolves"
+            ],
+            "shields": 0,
+            "hunts": 12,
+            "huntTurn": 9,
+            "huntCount": 2
+          }
+        },
+        {
+          "seed": 5445908,
+          "first": "p",
+          "winner": "e",
+          "turn": 14,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 7
+            },
+            {
+              "side": "p",
+              "cid": "fenlos",
+              "turn": 9
+            },
+            {
+              "side": "p",
+              "cid": "moonguard",
+              "turn": 10
+            },
+            {
+              "side": "e",
+              "cid": "aurion",
+              "turn": 11
+            }
+          ],
+          "fallen": 12,
+          "souls": 4,
+          "devotion": {
+            "spells": [
+              "tracking",
+              "mooncall",
+              "wolves",
+              "lifedrain",
+              "stillness",
+              "moonlance",
+              "huntinghorn"
+            ],
+            "shields": 0,
+            "hunts": 11,
+            "huntTurn": 14,
+            "huntCount": 2
+          }
+        },
+        {
+          "seed": 5445908,
+          "first": "e",
+          "winner": "e",
+          "turn": 13,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 7
+            },
+            {
+              "side": "p",
+              "cid": "moonguard",
+              "turn": 8
+            },
+            {
+              "side": "e",
+              "cid": "aurion",
+              "turn": 8
+            },
+            {
+              "side": "p",
+              "cid": "fenlos",
+              "turn": 13
+            }
+          ],
+          "fallen": 12,
+          "souls": 5,
+          "devotion": {
+            "spells": [
+              "tracking",
+              "mooncall",
+              "stillness",
+              "moonlance",
+              "lifedrain",
+              "huntinghorn"
+            ],
+            "shields": 0,
+            "hunts": 7,
+            "huntTurn": 13,
+            "huntCount": 2
+          }
+        },
+        {
+          "seed": 5550637,
+          "first": "p",
+          "winner": "p",
+          "turn": 9,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 7
+            }
+          ],
+          "fallen": 5,
+          "souls": 2,
+          "devotion": {
+            "spells": [
+              "mooncall",
+              "stillness",
+              "wolves",
+              "lifedrain",
+              "moonlance"
+            ],
+            "shields": 0,
+            "hunts": 9,
+            "huntTurn": 8,
+            "huntCount": 2
+          }
+        },
+        {
+          "seed": 5550637,
+          "first": "e",
+          "winner": "e",
+          "turn": 13,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 7
+            },
+            {
+              "side": "p",
+              "cid": "moonguard",
+              "turn": 8
+            },
+            {
+              "side": "p",
+              "cid": "fenlos",
+              "turn": 11
+            }
+          ],
+          "fallen": 9,
+          "souls": 2,
+          "devotion": {
+            "spells": [
+              "tracking",
+              "mooncall",
+              "stillness",
+              "lifedrain",
+              "wolves",
+              "huntinghorn",
+              "moonlance"
+            ],
+            "shields": 0,
+            "hunts": 9,
+            "huntTurn": 13,
+            "huntCount": 1
+          }
+        },
+        {
+          "seed": 5655366,
+          "first": "p",
+          "winner": "e",
+          "turn": 16,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 7
+            },
+            {
+              "side": "p",
+              "cid": "moonguard",
+              "turn": 8
+            },
+            {
+              "side": "p",
+              "cid": "fenlos",
+              "turn": 9
+            },
+            {
+              "side": "e",
+              "cid": "aurion",
+              "turn": 11
+            }
+          ],
+          "fallen": 16,
+          "souls": 7,
+          "devotion": {
+            "spells": [
+              "wolves",
+              "mooncall",
+              "lifedrain",
+              "stillness",
+              "huntinghorn",
+              "tracking",
+              "moonlance"
+            ],
+            "shields": 0,
+            "hunts": 9,
+            "huntTurn": 15,
+            "huntCount": 1
+          }
+        },
+        {
+          "seed": 5655366,
+          "first": "e",
+          "winner": "e",
+          "turn": 15,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "moonguard",
+              "turn": 6
+            },
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 7
+            },
+            {
+              "side": "e",
+              "cid": "aurion",
+              "turn": 10
+            },
+            {
+              "side": "p",
+              "cid": "fenlos",
+              "turn": 11
+            }
+          ],
+          "fallen": 16,
+          "souls": 7,
+          "devotion": {
+            "spells": [
+              "mooncall",
+              "stillness",
+              "lifedrain",
+              "tracking",
+              "moonlance",
+              "huntinghorn",
+              "wolves"
+            ],
+            "shields": 0,
+            "hunts": 9,
+            "huntTurn": 11,
+            "huntCount": 2
+          }
+        }
+      ]
+    },
+    {
+      "deck": "pantheon_hunt",
+      "opponent": "pantheon_hunt",
+      "wins": 5,
+      "games": 8,
+      "details": [
+        {
+          "seed": 5341179,
+          "first": "p",
+          "winner": "p",
+          "turn": 13,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "moonguard",
+              "turn": 6
+            },
+            {
+              "side": "e",
+              "cid": "eclipsewolf",
+              "turn": 7
+            },
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 8
+            },
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 8
+            },
+            {
+              "side": "p",
+              "cid": "fenlos",
+              "turn": 9
+            },
+            {
+              "side": "e",
+              "cid": "fenlos",
+              "turn": 10
+            }
+          ],
+          "fallen": 12,
+          "souls": 5,
+          "devotion": {
+            "spells": [
+              "wolves",
+              "mooncall",
+              "huntinghorn",
+              "stillness",
+              "moonlance"
+            ],
+            "shields": 0,
+            "hunts": 10,
+            "huntTurn": 12,
+            "huntCount": 1
+          }
+        },
+        {
+          "seed": 5341179,
+          "first": "e",
+          "winner": "p",
+          "turn": 16,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 5
+            },
+            {
+              "side": "p",
+              "cid": "moonguard",
+              "turn": 6
+            },
+            {
+              "side": "e",
+              "cid": "eclipsewolf",
+              "turn": 6
+            },
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 7
+            },
+            {
+              "side": "e",
+              "cid": "fenlos",
+              "turn": 8
+            },
+            {
+              "side": "p",
+              "cid": "fenlos",
+              "turn": 9
+            }
+          ],
+          "fallen": 15,
+          "souls": 6,
+          "devotion": {
+            "spells": [
+              "mooncall",
+              "wolves",
+              "stillness",
+              "moonlance",
+              "huntinghorn",
+              "lifedrain",
+              "tracking"
+            ],
+            "shields": 0,
+            "hunts": 11,
+            "huntTurn": 13,
+            "huntCount": 1
+          }
+        },
+        {
+          "seed": 5445908,
+          "first": "p",
+          "winner": "e",
+          "turn": 7,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 7
+            }
+          ],
+          "fallen": 4,
+          "souls": 2,
+          "devotion": {
+            "spells": [
+              "tracking"
+            ],
+            "shields": 0,
+            "hunts": 4,
+            "huntTurn": 7,
+            "huntCount": 2
+          }
+        },
+        {
+          "seed": 5445908,
+          "first": "e",
+          "winner": "e",
+          "turn": 14,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "moonguard",
+              "turn": 6
+            },
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 7
+            },
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 7
+            },
+            {
+              "side": "e",
+              "cid": "eclipsewolf",
+              "turn": 8
+            },
+            {
+              "side": "e",
+              "cid": "fenlos",
+              "turn": 12
+            },
+            {
+              "side": "p",
+              "cid": "fenlos",
+              "turn": 13
+            }
+          ],
+          "fallen": 12,
+          "souls": 5,
+          "devotion": {
+            "spells": [
+              "lifedrain",
+              "mooncall",
+              "tracking",
+              "moonlance",
+              "stillness",
+              "huntinghorn"
+            ],
+            "shields": 0,
+            "hunts": 8,
+            "huntTurn": 13,
+            "huntCount": 2
+          }
+        },
+        {
+          "seed": 5550637,
+          "first": "p",
+          "winner": "p",
+          "turn": 12,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 6
+            },
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 7
+            },
+            {
+              "side": "p",
+              "cid": "moonguard",
+              "turn": 8
+            },
+            {
+              "side": "e",
+              "cid": "eclipsewolf",
+              "turn": 8
+            },
+            {
+              "side": "p",
+              "cid": "fenlos",
+              "turn": 9
+            },
+            {
+              "side": "e",
+              "cid": "fenlos",
+              "turn": 11
+            }
+          ],
+          "fallen": 9,
+          "souls": 2,
+          "devotion": {
+            "spells": [
+              "mooncall",
+              "wolves",
+              "lifedrain",
+              "moonlance",
+              "stillness",
+              "huntinghorn"
+            ],
+            "shields": 0,
+            "hunts": 8,
+            "huntTurn": 10,
+            "huntCount": 1
+          }
+        },
+        {
+          "seed": 5550637,
+          "first": "e",
+          "winner": "p",
+          "turn": 12,
+          "arrivals": [
+            {
+              "side": "p",
+              "cid": "moonguard",
+              "turn": 6
+            },
+            {
+              "side": "e",
+              "cid": "eclipsewolf",
+              "turn": 6
+            },
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 7
+            },
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 8
+            },
+            {
+              "side": "p",
+              "cid": "fenlos",
+              "turn": 9
+            }
+          ],
+          "fallen": 9,
+          "souls": 3,
+          "devotion": {
+            "spells": [
+              "tracking",
+              "mooncall",
+              "lifedrain",
+              "wolves",
+              "huntinghorn",
+              "moonlance"
+            ],
+            "shields": 0,
+            "hunts": 9,
+            "huntTurn": 9,
+            "huntCount": 2
+          }
+        },
+        {
+          "seed": 5655366,
+          "first": "p",
+          "winner": "p",
+          "turn": 14,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 5
+            },
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 7
+            },
+            {
+              "side": "e",
+              "cid": "eclipsewolf",
+              "turn": 7
+            },
+            {
+              "side": "p",
+              "cid": "moonguard",
+              "turn": 8
+            },
+            {
+              "side": "p",
+              "cid": "fenlos",
+              "turn": 9
+            },
+            {
+              "side": "e",
+              "cid": "fenlos",
+              "turn": 9
+            }
+          ],
+          "fallen": 12,
+          "souls": 6,
+          "devotion": {
+            "spells": [
+              "tracking",
+              "wolves",
+              "mooncall",
+              "huntinghorn",
+              "stillness",
+              "lifedrain",
+              "moonlance"
+            ],
+            "shields": 0,
+            "hunts": 10,
+            "huntTurn": 10,
+            "huntCount": 2
+          }
+        },
+        {
+          "seed": 5655366,
+          "first": "e",
+          "winner": "e",
+          "turn": 10,
+          "arrivals": [
+            {
+              "side": "e",
+              "cid": "moonguard",
+              "turn": 5
+            },
+            {
+              "side": "p",
+              "cid": "moonguard",
+              "turn": 6
+            },
+            {
+              "side": "e",
+              "cid": "eclipsewolf",
+              "turn": 6
+            },
+            {
+              "side": "p",
+              "cid": "eclipsewolf",
+              "turn": 7
+            },
+            {
+              "side": "e",
+              "cid": "fenlos",
+              "turn": 8
+            }
+          ],
+          "fallen": 11,
+          "souls": 4,
+          "devotion": {
+            "spells": [
+              "mooncall",
+              "lifedrain",
+              "stillness",
+              "huntinghorn",
+              "tracking"
+            ],
+            "shields": 0,
+            "hunts": 6,
+            "huntTurn": 10,
+            "huntCount": 1
+          }
+        }
+      ]
+    }
+  ]
+}

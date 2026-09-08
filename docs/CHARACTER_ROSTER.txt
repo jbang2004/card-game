@@ -509,5 +509,47 @@
     "status": "animated",
     "template": "whole-subject",
     "layers": 2
+  },
+  {
+    "id": "jingchen",
+    "name": "星焰神·烬辰",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "aurion",
+    "name": "曙日神·奥瑞恩",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "fenlos",
+    "name": "荒猎神·芬洛斯",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "starweave",
+    "name": "星轨织火",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "dawnvow",
+    "name": "晨光守誓",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "huntinghorn",
+    "name": "古林猎号",
+    "status": "static",
+    "template": null,
+    "layers": 0
   }
 ]

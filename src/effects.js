@@ -1124,7 +1124,9 @@ const EmberFX = (() => {
           const name = EmberData.byId[event.cid].name;
           if (event.divine && !quality.reduced) {
             const seal = transient("divine-arrival", beat.hold);
-            seal.innerHTML = `<div class="divine-halo"></div><img src="${EmberArt.card(EmberData.byId[event.cid])}" alt=""><small>THE MOON REMEMBERS</small><strong>${name}</strong><span>神祇降临</span>`;
+            const deity = EmberFXProfiles.get(event.cid).deity;
+            seal.dataset.deity = deity.theme;
+            seal.innerHTML = `<div class="divine-atmosphere"></div><div class="divine-halo"></div><div class="divine-orbit orbit-one"></div><div class="divine-orbit orbit-two"></div><div class="divine-rays"><i></i><i></i><i></i><i></i><i></i></div><img src="${EmberArt.card(EmberData.byId[event.cid])}" alt=""><div class="divine-caption"><small>${deity.english}</small><strong>${name}</strong><span>${deity.title}</span><em>${deity.sigil} 神祇降临 ${deity.sigil}</em></div>`;
             sound(
               "phase",
               pos(unit(event.side, event.uid)) ||

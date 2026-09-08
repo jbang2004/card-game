@@ -21,7 +21,14 @@ test("collection: all presets, class filters, rule text and expansion artwork", 
   await page.goto("./?debug=1");
   await ready(page);
   await page.locator("#collection-nav").click();
-  await expect(page.locator("#deck-plan")).toContainText("施法核心");
+  await expect(page.locator("#deck-plan")).toContainText(
+    await page.evaluate(
+      () =>
+        EmberData.archetypes.find(
+          (a) => a.id === EmberData.heroes[0].defaultDeckId,
+        ).plan,
+    ),
+  );
   for (const hero of ["mage", "paladin", "ranger"]) {
     await page.locator("#deck-class").selectOption(hero);
     await expect(page.locator("#deck-preset option")).toHaveCount(
@@ -60,7 +67,7 @@ test("collection: all presets, class filters, rule text and expansion artwork", 
       }
       return EmberData.cards.filter((c) => c.set).length;
     }),
-  ).toBe(17);
+  ).toBe(23);
   await page.screenshot({ path: "artifacts/qa/oaths-library.png" });
 });
 test("practice preserves an existing campaign save, survives both hero powers and exits cleanly", async ({

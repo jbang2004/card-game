@@ -129,11 +129,15 @@ test("a second mage and sixth boss work through production screens with only con
   await open(page);
   await page.locator("#start-btn").click();
   await expect(page.locator(".hero-option")).toHaveCount(D.heroes.length + 1);
-  await expect(page.locator("#game-mode option").first()).toContainText(`${D.bosses.length + 1} 关`);
+  await expect(page.locator("#game-mode option").first()).toContainText(
+    `${D.bosses.length + 1} 关`,
+  );
   await page.locator('[data-hero="arcanist"]').click();
   await page.locator("#hero-deck-btn").click();
   await expect(page.locator("#deck-class")).toHaveValue("arcanist");
-  await expect(page.locator("#deck-preset option")).toHaveCount(2);
+  await expect(page.locator("#deck-preset option")).toHaveCount(
+    D.archetypes.filter((a) => a.classId === "mage").length,
+  );
   await page.locator("#deck-name").fill("第二法师牌组");
   await page.screenshot({ path: "artifacts/qa/model-desktop.png" });
   await page.locator("#deck-play").click();
@@ -155,11 +159,15 @@ test("a second mage and sixth boss work through production screens with only con
   await page.locator("#result-next").click();
   await expect(page.locator("#reward-confirm")).toBeEnabled();
   await page.locator("#reward-confirm").click();
-  expect(await page.evaluate(() => Emberfall.game.s.bossIndex)).toBe(D.bosses.length);
+  expect(await page.evaluate(() => Emberfall.game.s.bossIndex)).toBe(
+    D.bosses.length,
+  );
   await page.reload();
   await ready(page);
   await page.locator("#start-btn").click();
-  expect(await page.evaluate(() => Emberfall.game.s.bossIndex)).toBe(D.bosses.length);
+  expect(await page.evaluate(() => Emberfall.game.s.bossIndex)).toBe(
+    D.bosses.length,
+  );
   await page.locator("#mulligan-confirm").click();
   await page.waitForFunction(() => !EmberFX.busy);
   await page.evaluate(() => {

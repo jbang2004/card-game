@@ -55,7 +55,7 @@
 
 `atlas` 和 `mask` 相对于 `assets/motion/`，原始输入留在其 `sources/`。优先真正透明 alpha；若图集确有 alpha，可省略 mask/maskCuts 并设 `nativeAlpha: true`。画出来的棋盘背景不算 alpha；此时需制作对齐技术遮罩。`preserveHighlights`、`edgeTrim` 与 `backgroundWidth` 是特定输入修整参数，只有发现实际问题时才设置。
 
-若工具输出绘制棋盘，可重新要求纯键色底，再用 `tools/chroma_motion_atlas.cjs` 转 alpha（素材制作时需要 FFmpeg）。默认品红键色；紫红、肤色或魔法主体优先选择不会和本体混淆的绿色键色。记录 `--color`、`--split`、`--similarity` 与 `--blend` 的实际值以便重做，不能把默认阈值当成所有素材通用值。青色灯光或衣料明显时优先 `--despill green-edge`，它只移除透明边缘附近的过量绿色；全图 green 去溢色可能改变主体内部颜色。检查肤色、口腔、火焰和毛边：真实 alpha 仍可能错误抠穿内部或保留键色溢边。
+若工具输出绘制棋盘，可重新要求纯键色底，再用 `tools/chroma_motion_atlas.cjs` 转 alpha（素材制作时需要 FFmpeg）。默认品红键色；可用 `--despill magenta-edge` 去除透明轮廓附近的洋红溢色，并保留内部翠绿、肤色和白毛。紫红、肤色或魔法主体优先选择不会和本体混淆的绿色键色。记录 `--color`、`--split`、`--similarity` 与 `--blend` 的实际值以便重做，不能把默认阈值当成所有素材通用值。青色灯光或衣料明显时优先 `--despill green-edge`，它只移除透明边缘附近的过量绿色；全图 green 去溢色可能改变主体内部颜色。检查肤色、口腔、火焰和毛边：真实 alpha 仍可能错误抠穿内部或保留键色溢边。
 
 ## 制作与接入顺序
 

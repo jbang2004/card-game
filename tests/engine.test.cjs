@@ -24,9 +24,9 @@ function min(g, id, side = "p", extra = {}) {
 }
 const target = (m, side = "e") => ({ side, uid: m?.uid || "hero" });
 
-test("62 collectible cards, 8 tokens and 3 contracts; all hero decks valid", () => {
-  assert.equal(D.cards.filter((c) => !c.token).length, 62);
-  assert.equal(D.cards.length, 73);
+test("65 collectible cards, 8 tokens and 6 contracts; all hero decks valid", () => {
+  assert.equal(D.cards.filter((c) => !c.token).length, 65);
+  assert.equal(D.cards.length, 79);
   const g = new Game();
   for (const h of D.heroes) {
     assert.equal(h.deck.length, 30);
