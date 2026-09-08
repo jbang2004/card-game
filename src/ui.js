@@ -61,6 +61,12 @@
     spellpower: "使你的伤害法术额外造成 1 点伤害。",
   };
   const game = new EmberEngine.Game({ onChange: changed });
+  const contractUI = EmberContractUI.create({
+    game,
+    showModal,
+    closeModal,
+    act,
+  });
   const deckStore = EmberDeckStore.create({
     data: D,
     read: readResult,
@@ -287,10 +293,24 @@
     );
     showModal(
       `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">准备出发</div><h2>选择你的英雄</h2><p>选择英雄、套牌与对战方式。</p></div><div class="hero-options">${D.heroes.map((h) => `<button class="hero-option hero-${h.id} ${h.id === chosenHero ? "selected" : ""}" data-hero="${h.id}"><img src="${A.character(h)}" alt="${h.name}" draggable="false" style="${artStyleForHero(h, "option")}"><div class="hero-option-text"><small>${h.sub}</small><h3>${h.name}</h3><p>${h.desc}</p><em>${h.powerText}</em></div>${h.id === chosenHero ? '<span class="selected-check">' + A.icon("check") + "</span>" : ""}</button>`).join("")}</div><p class="hero-deck-note">${escape(loaded.ok ? (customs.length ? "可选用已保存的英雄牌组。" : "请选择职业套牌，或到收藏中建立命名牌组。") : loaded.error)} · 战役共 ${D.bosses.length} 场，关卡之间恢复全部生命。</p><label class="archetype-picker">套牌 <select class="library-search" id="hero-archetype">${customs.map((d) => `<option value="saved:${d.id}" ${d.id === collection.activeId ? "selected" : ""}>${escape(d.name)}</option>`).join("")}${presets
-        .map((a) => `<option value="${a.id}">${a.name}</option>`)
+        .map(
+          (a) =>
+            `<option value="${a.id}" ${!customs.length && a.id === D.heroes.find((h) => h.id === chosenHero).defaultDeckId ? "selected" : ""}>${a.name}</option>`,
+        )
         .join(
           "",
-        )}</select></label><p id="hero-plan" class="deck-plan"></p><label class="archetype-picker">玩法 <select id="game-mode" class="library-search"><option value="campaign">${D.bosses.length} 关战役 · 遗物与整备</option><option value="practice">练习对战 · 不覆盖战役存档</option></select></label><label class="archetype-picker" id="opponent-picker" hidden>对手 <select id="practice-opponent" class="library-search">${D.archetypes.map((a) => `<option value="${a.id}">${D.classNames[a.classId]} · ${a.name}</option>`).join("")}</select></label><div class="modal-footer"><button class="ghost-btn" id="hero-deck-btn">先去组牌</button><button class="gold-btn" id="hero-confirm">踏入余火之门 ${A.icon("arrow")}</button></div></section>`,
+        )}</select></label><p id="hero-plan" class="deck-plan"></p><details class="contract-setup"><summary>契约栏 · 最多三张，一位神祇</summary><p>契约不占主卡组，无需抽取；战斗中可查看召唤进度。</p>${
+        D.cards
+          .filter(
+            (c) =>
+              c.contract && c.class === EmberDeckRules.classFor(D, chosenHero),
+          )
+          .map(
+            (c) =>
+              `<label><input type="checkbox" data-contract="${c.id}" checked><strong>${c.name}</strong><span>${EmberContracts.describe(c)}</span></label>`,
+          )
+          .join("") || "该职业尚无契约。"
+      }</details><label class="archetype-picker">玩法 <select id="game-mode" class="library-search"><option value="campaign">${D.bosses.length} 关战役 · 遗物与整备</option><option value="practice">练习对战 · 不覆盖战役存档</option></select></label><label class="archetype-picker" id="opponent-picker" hidden>对手 <select id="practice-opponent" class="library-search">${D.archetypes.map((a) => `<option value="${a.id}">${D.classNames[a.classId]} · ${a.name}</option>`).join("")}</select></label><div class="modal-footer"><button class="ghost-btn" id="hero-deck-btn">先去组牌</button><button class="gold-btn" id="hero-confirm">踏入余火之门 ${A.icon("arrow")}</button></div></section>`,
       "heroes",
     );
     document.querySelectorAll("[data-hero]").forEach(
@@ -302,6 +322,14 @@
         }),
     );
     const plan = () => {
+      const loadout =
+        customs.find((d) => "saved:" + d.id === $("hero-archetype").value)
+          ?.contracts ??
+        D.heroes.find((h) => h.id === chosenHero).defaultContracts ??
+        [];
+      document
+        .querySelectorAll("[data-contract]")
+        .forEach((el) => (el.checked = loadout.includes(el.dataset.contract)));
       $("hero-plan").textContent =
         D.archetypes.find((a) => a.id === $("hero-archetype").value)?.plan ||
         `使用已保存的 ${D.deckRules.size} 张英雄牌组。`;
@@ -328,8 +356,17 @@
         [],
         selected,
         $("game-mode").value === "practice"
-          ? { opponent: $("practice-opponent").value }
-          : {},
+          ? {
+              opponent: $("practice-opponent").value,
+              contracts: [
+                ...document.querySelectorAll("[data-contract]:checked"),
+              ].map((el) => el.dataset.contract),
+            }
+          : {
+              contracts: [
+                ...document.querySelectorAll("[data-contract]:checked"),
+              ].map((el) => el.dataset.contract),
+            },
       );
     };
     $("hero-deck-btn").onclick = () => {
@@ -400,6 +437,7 @@
   function render(s) {
     if (!s) return;
     displayedState = s;
+    contractUI.render(s);
     const handScroll = $("hand").scrollLeft;
     EmberFX.setTheme(s.bossIndex, s.phase2);
     const hero = D.heroes.find((h) => h.id === s.heroId),
@@ -1084,6 +1122,7 @@
       } else {
         closeModal(false);
         startGame(s.heroId, s.bossIndex, s.relics, s.customDeck, {
+          contracts: s.p.contracts,
           ...(s.mode === "practice" ? { opponent: s.opponent } : {}),
         });
       }
@@ -1146,6 +1185,7 @@
         s.bossIndex + 1,
         selected ? [...s.relics, selected] : [...s.relics],
         deck,
+        { contracts: s.p.contracts },
       );
     };
   }
@@ -1207,6 +1247,7 @@
             isDemo
               ? demo()
               : startGame(s.heroId, s.bossIndex, s.relics, s.customDeck, {
+                  contracts: s.p.contracts,
                   ...(s.mode === "practice" ? { opponent: s.opponent } : {}),
                 });
           },
@@ -1222,7 +1263,7 @@
         .map(([k, v]) => `<div><b>${D.kw[k]}</b>${v}</div>`)
         .join(
           "",
-        )}<div><b>战吼 / 亡语</b>分别在从手牌打出随从时、随从死亡后触发。</div><div><b>冻结 / 沉默</b>冻结阻止攻击，直到自己的回合结束。沉默移除关键词、亡语和增益。</div><div><b>奥秘</b>隐藏的触发式法术。镜像伏击会用嘲讽镜卫拦截一次对英雄的攻击。</div><div><b>发现</b>从三个随机法术中选一张加入手牌。</div></div></section></div></div><div class="modal-footer"><button class="gold-btn small-btn" id="help-done">让冒险开始 ${A.icon("arrow")}</button></div></section>`,
+        )}<div><b>战吼 / 亡语</b>分别在从手牌打出或契约召唤随从时、随从死亡后触发。</div><div><b>冻结 / 沉默</b>冻结阻止攻击，直到自己的回合结束。沉默移除关键词、亡语和增益。</div><div><b>奥秘</b>隐藏的触发式法术。镜像伏击会用嘲讽镜卫拦截一次对英雄的攻击。</div><div><b>契约 / 神祇</b>开局可额外携带三张同职业契约、至多一位神祇，不占主牌组。己方非衍生随从死亡积累阵亡数和同名唯一的灵魂印记。打开「月影契约」查看双方进度，支付法力和最早取得的印记唤醒，每张每局一次。神祇无法复生，降临当回合不能攻击英雄。</div><div><b>发现</b>从三个随机法术中选一张加入手牌。</div></div></section></div></div><div class="modal-footer"><button class="gold-btn small-btn" id="help-done">让冒险开始 ${A.icon("arrow")}</button></div></section>`,
       "help",
     );
     $("help-done").onclick = () => closeModal();

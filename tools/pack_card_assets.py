@@ -32,15 +32,16 @@ def pack():
     cache = {}
     for cid, c in cards.items():
         m = manifest['items'][cid]
+        output_size = (768, 1024) if c.get('contract', {}).get('divine') else (336, 448)
         if cid in overrides:
             from PIL import Image, ImageOps
             entry = overrides[cid]
             source = ART / entry['source']
             with Image.open(source) as image:
                 native = list(image.size)
-                if min(native) < 336:
+                if image.width < output_size[0] or image.height < output_size[1]:
                     raise ValueError(f'{cid}: source too small')
-                output = ImageOps.fit(image.convert('RGB'), (336, 448), method=Image.Resampling.LANCZOS)
+                output = ImageOps.fit(image.convert('RGB'), output_size, method=Image.Resampling.LANCZOS)
                 output.save(ART / m['file'], 'WEBP', quality=91, method=6)
             m.update(source=entry['source'], sourceSHA256=sha(source.read_bytes()),
                      sourceNote=entry['note'], cropNativeSize=native,
@@ -49,7 +50,7 @@ def pack():
         if cid not in overrides and sha(blob) != m['sha256']:
             raise ValueError(f'{cid}: unrecorded image edit; use --card/--image/--source-note')
         m.update(name=c['name'], type=c['type'], token=bool(c.get('token')),
-                 bytes=len(blob), sha256=sha(blob), outputSize=[336, 448])
+                 bytes=len(blob), sha256=sha(blob), outputSize=list(output_size))
         cache[cid] = 'data:image/webp;base64,' + base64.b64encode(blob).decode()
     if len({m['sha256'] for m in manifest['items'].values()}) != len(cards):
         raise ValueError('Every card requires distinct artwork')

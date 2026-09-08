@@ -5,7 +5,7 @@
   const E = Emberfall,
     $ = (s) => document.querySelector(s),
     root = document.documentElement.style;
-  document.title = "烬域 · 风起之境 — THE GILDED TAVERN v0.12.1";
+  document.title = "烬域 · 风起之境 — MOON COVENANT v0.13.0";
   root.setProperty("--wind-paper-texture", `url("${WindborneAssets.paper}")`);
   root.setProperty(
     "--wind-leaf-seal",

@@ -1,0 +1,20 @@
+{
+  "input": "assets/motion/moon-anime-v2/selmyra-atlas-key.png",
+  "output": "assets/motion/moon-anime-v2/selmyra-atlas.png",
+  "color": "0x00ff00",
+  "similarity": 0.22,
+  "blend": 0.06,
+  "despill": "green-edge",
+  "cuts": [
+    0,
+    771,
+    1536
+  ],
+  "alpha": {
+    "leftTransparent": 0,
+    "rightTransparent": 327576,
+    "rightVisible": 455741,
+    "residualKey": 0,
+    "edgePixels": 5898
+  }
+}

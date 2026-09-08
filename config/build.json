@@ -48,5 +48,7 @@
   "VFX_RENDERER": "presentation/vfx.js",
   "DECK_RULES": "rules/decks.js",
   "CONTENT_SCHEMA": "rules/catalog.js",
-  "DECK_STORE": "application/decks.js"
+  "DECK_STORE": "application/decks.js",
+  "CONTRACT_RULES": "rules/contracts.js",
+  "CONTRACT_UI": "application/contracts.js"
 }

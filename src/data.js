@@ -20,6 +20,10 @@ const EmberData = (() => {
     typeof EmberCatalog !== "undefined"
       ? EmberCatalog
       : require("./rules/catalog.js");
+  const Contracts =
+    typeof EmberContracts !== "undefined"
+      ? EmberContracts
+      : require("./rules/contracts.js");
   function create(input = definitions, world = campaign) {
     Schema.validate(world);
     const cards = input.map((c) => ({
@@ -60,6 +64,7 @@ const EmberData = (() => {
       "onPlay",
       "onDeath",
       "secret",
+      "contract",
     ]);
     for (const c of cards) {
       for (const key of Object.keys(c))
@@ -109,6 +114,11 @@ const EmberData = (() => {
     const catalog = { byId, heroes, deckRules };
     function targeted(ops, owner, target, allowTarget = true) {
       R.validateEffects(ops, db, owner);
+      if (
+        ops.some((e) => e.type === "sacrifice") &&
+        target !== "friendlyMinion"
+      )
+        throw Error(owner + ": Sacrifice must target friendly minion");
       const selected = ops.filter((e) => e.to === "selected");
       if (selected.length && (!allowTarget || !target))
         throw Error(owner + ": Selected effect requires a target");
@@ -116,7 +126,14 @@ const EmberData = (() => {
         throw Error(owner + ": Unused target declaration");
       if (
         selected.some((e) =>
-          ["buff", "grant", "silence", "transform", "destroy"].includes(e.type),
+          [
+            "buff",
+            "grant",
+            "silence",
+            "transform",
+            "destroy",
+            "sacrifice",
+          ].includes(e.type),
         ) &&
         !["enemyMinion", "friendlyMinion", "minion"].includes(target)
       )
@@ -131,6 +148,11 @@ const EmberData = (() => {
         throw Error(c.id + ": Invalid class");
       if (c.tribe && !Object.hasOwn(tribeNames, c.tribe))
         throw Error(c.id + ": Invalid tribe");
+      if (
+        c.onPlay.some((e) => e.type === "sacrifice") &&
+        c.target !== "friendlyMinion"
+      )
+        throw Error(c.id + ": Sacrifice must target friendly minion");
       R.validateTriggers(c.triggers, db, c.id);
       R.validateEffects(c.onPlay, db, c.id);
       R.validateEffects(c.onDeath, db, c.id);
@@ -152,15 +174,35 @@ const EmberData = (() => {
         c.onPlay.some(
           (e) =>
             e.to === "selected" &&
-            ["buff", "grant", "silence", "transform", "destroy"].includes(
-              e.type,
-            ),
+            [
+              "buff",
+              "grant",
+              "silence",
+              "transform",
+              "destroy",
+              "sacrifice",
+            ].includes(e.type),
         ) &&
         !["enemyMinion", "friendlyMinion", "minion"].includes(c.target)
       )
         throw Error(c.id + ": Effect requires a minion target");
       if (Boolean(c.secret) !== c.onPlay.some((e) => e.type === "secret"))
         throw Error(c.id + ": Secret definition/effect mismatch");
+      if (c.contract) {
+        Schema.fields(c.contract, ["souls", "deaths", "divine"], c.id);
+        if (
+          !c.token ||
+          c.type !== "minion" ||
+          c.rarity !== "legendary" ||
+          !Number.isInteger(c.contract.souls) ||
+          c.contract.souls < 1 ||
+          c.contract.souls > 10 ||
+          !Number.isInteger(c.contract.deaths) ||
+          c.contract.deaths < c.contract.souls ||
+          typeof c.contract.divine !== "boolean"
+        )
+          throw Error(c.id + ": Invalid contract");
+      }
       c.text = R.text(c, db);
     }
     for (const h of [...heroes, ...bosses]) {
@@ -217,6 +259,11 @@ const EmberData = (() => {
       const preset = archetypes.find((a) => a.id === h.defaultDeckId);
       if (!preset || preset.classId !== h.classId)
         throw Error(h.id + ": Invalid defaultDeckId");
+      if (
+        h.defaultContracts !== undefined &&
+        !Contracts.check({ byId }, h.defaultContracts, h.classId)
+      )
+        throw Error(h.id + ": Invalid default contracts");
       h.deck = [...preset.deck];
       const result = Decks.check(catalog, h.deck, h.id);
       if (!result.ok) throw Error(h.id + ": " + result.errors.join("; "));

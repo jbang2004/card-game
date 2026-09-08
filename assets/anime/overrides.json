@@ -1,0 +1,46 @@
+{
+  "soulguide": {
+    "source": "moon-anime-v2/soulguide.png",
+    "note": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2."
+  },
+  "moonfox": {
+    "source": "moon-anime-v2/moonfox.png",
+    "note": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2."
+  },
+  "duskstag": {
+    "source": "moon-anime-v2/duskstag.png",
+    "note": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2."
+  },
+  "graveoffering": {
+    "source": "moon-anime-v2/graveoffering.png",
+    "note": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2."
+  },
+  "mooncall": {
+    "source": "moon-anime-v2/mooncall.png",
+    "note": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2."
+  },
+  "soultether": {
+    "source": "moon-anime-v2/soultether.png",
+    "note": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2."
+  },
+  "moonlance": {
+    "source": "moon-anime-v2/moonlance.png",
+    "note": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2."
+  },
+  "stillness": {
+    "source": "moon-anime-v2/stillness.png",
+    "note": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2."
+  },
+  "eclipsewolf": {
+    "source": "moon-anime-v2/eclipsewolf.png",
+    "note": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2."
+  },
+  "moonguard": {
+    "source": "moon-anime-v2/moonguard.png",
+    "note": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2."
+  },
+  "selmyra": {
+    "source": "moon-anime-v2/selmyra.png",
+    "note": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2."
+  }
+}

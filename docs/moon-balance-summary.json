@@ -1,0 +1,322 @@
+{
+  "contracts-before": {
+    "method": "Same public-information AI, fixed node budget, paired first/second for each seed; exploratory balance screening, not human win rates.",
+    "seeds": 2,
+    "offset": 0,
+    "budget": 100,
+    "rows": [
+      {
+        "deck": "moon_covenant",
+        "opponent": "mage_burn",
+        "wins": 2,
+        "games": 4
+      },
+      {
+        "deck": "moon_covenant",
+        "opponent": "mage_frost",
+        "wins": 1,
+        "games": 4
+      },
+      {
+        "deck": "moon_covenant",
+        "opponent": "paladin_swarm",
+        "wins": 4,
+        "games": 4
+      },
+      {
+        "deck": "moon_covenant",
+        "opponent": "paladin_guard",
+        "wins": 0,
+        "games": 4
+      },
+      {
+        "deck": "moon_covenant",
+        "opponent": "ranger_pack",
+        "wins": 3,
+        "games": 4
+      },
+      {
+        "deck": "moon_covenant",
+        "opponent": "ranger_death",
+        "wins": 0,
+        "games": 4
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "mage_burn",
+        "wins": 2,
+        "games": 4
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "mage_frost",
+        "wins": 1,
+        "games": 4
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "paladin_swarm",
+        "wins": 4,
+        "games": 4
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "paladin_guard",
+        "wins": 2,
+        "games": 4
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "ranger_pack",
+        "wins": 0,
+        "games": 4
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "ranger_death",
+        "wins": 1,
+        "games": 4
+      }
+    ]
+  },
+  "contracts-ai-fixed": {
+    "method": "Same public-information AI, fixed node budget, paired first/second for each seed; exploratory balance screening, not human win rates.",
+    "seeds": 2,
+    "offset": 0,
+    "budget": 100,
+    "rows": [
+      {
+        "deck": "moon_covenant",
+        "opponent": "mage_burn",
+        "wins": 1,
+        "games": 4
+      },
+      {
+        "deck": "moon_covenant",
+        "opponent": "mage_frost",
+        "wins": 0,
+        "games": 4
+      },
+      {
+        "deck": "moon_covenant",
+        "opponent": "paladin_swarm",
+        "wins": 3,
+        "games": 4
+      },
+      {
+        "deck": "moon_covenant",
+        "opponent": "paladin_guard",
+        "wins": 1,
+        "games": 4
+      },
+      {
+        "deck": "moon_covenant",
+        "opponent": "ranger_pack",
+        "wins": 2,
+        "games": 4
+      },
+      {
+        "deck": "moon_covenant",
+        "opponent": "ranger_death",
+        "wins": 0,
+        "games": 4
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "mage_burn",
+        "wins": 1,
+        "games": 4
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "mage_frost",
+        "wins": 1,
+        "games": 4
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "paladin_swarm",
+        "wins": 4,
+        "games": 4
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "paladin_guard",
+        "wins": 2,
+        "games": 4
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "ranger_pack",
+        "wins": 0,
+        "games": 4
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "ranger_death",
+        "wins": 1,
+        "games": 4
+      }
+    ]
+  },
+  "contracts-tuned": {
+    "method": "Same public-information AI, fixed node budget, paired first/second for each seed; exploratory balance screening, not human win rates.",
+    "seeds": 2,
+    "offset": 0,
+    "budget": 100,
+    "rows": [
+      {
+        "deck": "moon_covenant",
+        "opponent": "mage_burn",
+        "wins": 2,
+        "games": 4
+      },
+      {
+        "deck": "moon_covenant",
+        "opponent": "mage_frost",
+        "wins": 0,
+        "games": 4
+      },
+      {
+        "deck": "moon_covenant",
+        "opponent": "paladin_swarm",
+        "wins": 4,
+        "games": 4
+      },
+      {
+        "deck": "moon_covenant",
+        "opponent": "paladin_guard",
+        "wins": 2,
+        "games": 4
+      },
+      {
+        "deck": "moon_covenant",
+        "opponent": "ranger_pack",
+        "wins": 2,
+        "games": 4
+      },
+      {
+        "deck": "moon_covenant",
+        "opponent": "ranger_death",
+        "wins": 0,
+        "games": 4
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "mage_burn",
+        "wins": 1,
+        "games": 4
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "mage_frost",
+        "wins": 1,
+        "games": 4
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "paladin_swarm",
+        "wins": 4,
+        "games": 4
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "paladin_guard",
+        "wins": 1,
+        "games": 4
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "ranger_pack",
+        "wins": 1,
+        "games": 4
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "ranger_death",
+        "wins": 1,
+        "games": 4
+      }
+    ]
+  },
+  "contracts-holdout": {
+    "method": "Same public-information AI, fixed node budget, paired first/second for each seed; exploratory balance screening, not human win rates.",
+    "seeds": 8,
+    "offset": 20,
+    "budget": 160,
+    "rows": [
+      {
+        "deck": "moon_covenant",
+        "opponent": "mage_burn",
+        "wins": 9,
+        "games": 16
+      },
+      {
+        "deck": "moon_covenant",
+        "opponent": "mage_frost",
+        "wins": 7,
+        "games": 16
+      },
+      {
+        "deck": "moon_covenant",
+        "opponent": "paladin_swarm",
+        "wins": 10,
+        "games": 16
+      },
+      {
+        "deck": "moon_covenant",
+        "opponent": "paladin_guard",
+        "wins": 7,
+        "games": 16
+      },
+      {
+        "deck": "moon_covenant",
+        "opponent": "ranger_pack",
+        "wins": 5,
+        "games": 16
+      },
+      {
+        "deck": "moon_covenant",
+        "opponent": "ranger_death",
+        "wins": 4,
+        "games": 16
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "mage_burn",
+        "wins": 6,
+        "games": 16
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "mage_frost",
+        "wins": 8,
+        "games": 16
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "paladin_swarm",
+        "wins": 11,
+        "games": 16
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "paladin_guard",
+        "wins": 8,
+        "games": 16
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "ranger_pack",
+        "wins": 4,
+        "games": 16
+      },
+      {
+        "deck": "moon_hunt",
+        "opponent": "ranger_death",
+        "wins": 4,
+        "games": 16
+      }
+    ]
+  }
+}

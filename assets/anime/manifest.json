@@ -1,8 +1,8 @@
 {
   "version": "0.6.0",
-  "cards": 62,
-  "collectible": 54,
-  "tokens": 8,
+  "cards": 73,
+  "collectible": 62,
+  "tokens": 11,
   "sourceAtlases": 8,
   "description": "Every card has a separate panel from the user-approved anime atlas set. Hero/Boss portraits deliberately reuse matching panels, listed separately in runtime routing. Frames and scenery are retained from v0.5.",
   "items": {
@@ -1531,6 +1531,237 @@
       "name": "断刃伏击",
       "type": "spell",
       "token": false
+    },
+    "soulguide": {
+      "file": "soulguide.webp",
+      "source": "moon-anime-v2/soulguide.png",
+      "sourceSHA256": "846fba32697dde2bc9a0dbadbba63718eaeb5eb6d6cbc71ab9f1db6afb088baf",
+      "sourceNote": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2.",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "cropBox": null,
+      "method": "Approved individual source; proportional crop and WebP",
+      "name": "渡魂引路人",
+      "type": "minion",
+      "token": false,
+      "bytes": 54420,
+      "sha256": "276e126742958d325b04cf678540b9d33660e289ba52c962d6154a8bae334f22",
+      "outputSize": [
+        336,
+        448
+      ]
+    },
+    "moonfox": {
+      "file": "moonfox.webp",
+      "source": "moon-anime-v2/moonfox.png",
+      "sourceSHA256": "2e0e60d2e43fb9ec08d77cfeee0f19449bc3be1ef1aeacc2bcde8270fb834c5d",
+      "sourceNote": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2.",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "cropBox": null,
+      "method": "Approved individual source; proportional crop and WebP",
+      "name": "银灯灵狐",
+      "type": "minion",
+      "token": false,
+      "bytes": 59478,
+      "sha256": "c266c2bef5f1377b55f8d1549c5ea67b5981d047a78687e210582a5729953cb5",
+      "outputSize": [
+        336,
+        448
+      ]
+    },
+    "duskstag": {
+      "file": "duskstag.webp",
+      "source": "moon-anime-v2/duskstag.png",
+      "sourceSHA256": "74afeed0c4f731569f226dff5a2574570acdb53a8d6d9325c4568cfe2261f06a",
+      "sourceNote": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2.",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "cropBox": null,
+      "method": "Approved individual source; proportional crop and WebP",
+      "name": "暮角契鹿",
+      "type": "minion",
+      "token": false,
+      "bytes": 62768,
+      "sha256": "cb68749a641d21d65a7fa4045cc24d46b426f0cc265967398d9706aab1299eb8",
+      "outputSize": [
+        336,
+        448
+      ]
+    },
+    "graveoffering": {
+      "file": "graveoffering.webp",
+      "source": "moon-anime-v2/graveoffering.png",
+      "sourceSHA256": "cc3d2e6a5f4fe1e7425e9c391d54a5de520a3636ae6a3e4713b660f630a38426",
+      "sourceNote": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2.",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "cropBox": null,
+      "method": "Approved individual source; proportional crop and WebP",
+      "name": "归月献仪",
+      "type": "spell",
+      "token": false,
+      "bytes": 66990,
+      "sha256": "7d3f14de7010a1d21597ea2f0ed0e0a3e6d38972269f5873b2f47ce844b6f0b1",
+      "outputSize": [
+        336,
+        448
+      ]
+    },
+    "mooncall": {
+      "file": "mooncall.webp",
+      "source": "moon-anime-v2/mooncall.png",
+      "sourceSHA256": "8c6381b0e5eb72cda7d89a994e7ab2fa3a046155962d33bd88d65a9fe4c10e29",
+      "sourceNote": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2.",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "cropBox": null,
+      "method": "Approved individual source; proportional crop and WebP",
+      "name": "月径结伴",
+      "type": "spell",
+      "token": false,
+      "bytes": 73420,
+      "sha256": "b58b42a3677680fe61d1372762315a7279d1cb4e4500f2fae9fee36d0b31223a",
+      "outputSize": [
+        336,
+        448
+      ]
+    },
+    "soultether": {
+      "file": "soultether.webp",
+      "source": "moon-anime-v2/soultether.png",
+      "sourceSHA256": "568990d94676ebedc7ea0f74c88170b5523b6bbff8aa5ac698305c212851d76e",
+      "sourceNote": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2.",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "cropBox": null,
+      "method": "Approved individual source; proportional crop and WebP",
+      "name": "系魂银线",
+      "type": "spell",
+      "token": false,
+      "bytes": 67664,
+      "sha256": "f82ed43b3e89cd494ca1597435f62bf5104ff6ad6bffbaea89a1c36a5a4b3b7d",
+      "outputSize": [
+        336,
+        448
+      ]
+    },
+    "moonlance": {
+      "file": "moonlance.webp",
+      "source": "moon-anime-v2/moonlance.png",
+      "sourceSHA256": "fbf39cf360e74f41f9fb0bff5771de4ada0cbd3390fb435fb2b82f313ba6a1bc",
+      "sourceNote": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2.",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "cropBox": null,
+      "method": "Approved individual source; proportional crop and WebP",
+      "name": "碎月长矛",
+      "type": "spell",
+      "token": false,
+      "bytes": 65226,
+      "sha256": "03e5ebfb957f8f27c8c26429e0260731a0412acba0bf5df223e2868ba45665a7",
+      "outputSize": [
+        336,
+        448
+      ]
+    },
+    "stillness": {
+      "file": "stillness.webp",
+      "source": "moon-anime-v2/stillness.png",
+      "sourceSHA256": "8810997d7cb30c1662945550fee8555c0f9f016c01cdb9e906518a663dce5a0f",
+      "sourceNote": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2.",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "cropBox": null,
+      "method": "Approved individual source; proportional crop and WebP",
+      "name": "寂静封印",
+      "type": "spell",
+      "token": false,
+      "bytes": 61402,
+      "sha256": "34f52876c72448925088d957b4ee982cec9bb006398a23eaf893ce1a81a3ba69",
+      "outputSize": [
+        336,
+        448
+      ]
+    },
+    "eclipsewolf": {
+      "file": "eclipsewolf.webp",
+      "source": "moon-anime-v2/eclipsewolf.png",
+      "sourceSHA256": "ed42f532caec73ed0e19623e3611a5449434c8a351618247da61b2566ec45eff",
+      "sourceNote": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2.",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "cropBox": null,
+      "method": "Approved individual source; proportional crop and WebP",
+      "name": "蚀月狼王",
+      "type": "minion",
+      "token": true,
+      "bytes": 51178,
+      "sha256": "0d32a680568f0d89e14ff7833ef5f60c21e1e3cfdc8e326554d07df14b373ba6",
+      "outputSize": [
+        336,
+        448
+      ]
+    },
+    "moonguard": {
+      "file": "moonguard.webp",
+      "source": "moon-anime-v2/moonguard.png",
+      "sourceSHA256": "d60f79dc9f8d08e7a6e840e1ec4530cb5a7e38976ef39e9b2edc336a330ee5c9",
+      "sourceNote": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2.",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "cropBox": null,
+      "method": "Approved individual source; proportional crop and WebP",
+      "name": "守灯巨兽",
+      "type": "minion",
+      "token": true,
+      "bytes": 64960,
+      "sha256": "6c080a179cfbdcce55e7480d0eeabe0ab897ab7fa6c9775f2be71720347aa9d6",
+      "outputSize": [
+        336,
+        448
+      ]
+    },
+    "selmyra": {
+      "file": "selmyra.webp",
+      "source": "moon-anime-v2/selmyra.png",
+      "sourceSHA256": "a4354da3d2274c7db10ee1c3fe307e784a05a98fdcad3bc4107fd70443546b41",
+      "sourceNote": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2.",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "cropBox": null,
+      "method": "Approved individual source; proportional crop and WebP",
+      "name": "冥月神·瑟弥拉",
+      "type": "minion",
+      "token": true,
+      "bytes": 240290,
+      "sha256": "2dc6099b433cf0645e512b9bb3bea475ab7b7f96fc4d8283934513d0a29625ed",
+      "outputSize": [
+        768,
+        1024
+      ]
     }
   }
 }

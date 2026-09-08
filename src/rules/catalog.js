@@ -65,7 +65,15 @@ const EmberCatalog = (() => {
     ];
     list(
       world.heroes,
-      [...common, "classId", "defaultDeckId", "powerIcon", "sub", "desc"],
+      [
+        ...common,
+        "classId",
+        "defaultDeckId",
+        "powerIcon",
+        "sub",
+        "desc",
+        "defaultContracts",
+      ],
       "heroes",
     );
     list(

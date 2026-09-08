@@ -8,7 +8,8 @@ const EmberAI = (() => {
     (m.tags.includes("taunt") ? 1 : 0) +
     (m.tags.includes("poison") ? 2 : 0) +
     (m.tags.includes("windfury") ? m.atk : 0) +
-    (m.tags.includes("lifesteal") ? 1 : 0) -
+    (m.tags.includes("lifesteal") ? 1 : 0) +
+    (m.tags.includes("reborn") ? Math.max(0, m.atk) * 0.7 + 1 : 0) -
     (m.frozen ? m.atk * 0.55 : 0);
   function evaluate(g, side) {
     const p = g.s[side],
@@ -41,6 +42,8 @@ const EmberAI = (() => {
       (e.weapon ? e.weapon.atk * Math.min(2, e.weapon.durability) * 0.8 : 0) +
       // A discovered card provides a hand slot plus selection flexibility.
       (g.s.choice?.side === side ? 2.6 + 1 : 0) +
+      Math.min(4, p.souls.length) * 0.7 -
+      Math.min(4, e.souls.length) * 0.4 +
       p.secrets.length * 2.2 -
       e.secrets.length * 1.2
     );
@@ -64,6 +67,8 @@ const EmberAI = (() => {
       for (const target of ts)
         a.push({ type: "play", side, uid: card.uid, target });
     }
+    for (const cid of g.s[side].contracts)
+      if (!g.legalContract(side, cid)) a.push({ type: "contract", side, cid });
     if (!g.legalPower(side)) {
       const c = g.powerDefinition(side);
       for (const target of c.target ? g.targets(c.target, side) : [null])
@@ -158,6 +163,15 @@ const EmberAI = (() => {
             0.8;
         if (e.type === "summon") n += Math.min(e.count, 7 - p.board.length) * 3;
         if (e.type === "secret") n += p.secrets.includes(id) ? -5 : 2;
+        if (e.type === "sacrifice")
+          n += Math.max(
+            -4,
+            ...p.board.map(
+              (m) =>
+                (g.data.byId[m.cid].onDeath.length && !m.silenced ? 3 : 0) -
+                value(m) * 0.6,
+            ),
+          );
         if (e.type === "destroyWeapon")
           n += enemy.weapon ? enemy.weapon.atk * enemy.weapon.durability : 0;
       }

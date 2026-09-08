@@ -62,6 +62,19 @@ const EmberRules = (() => {
     enemies: "所有敌人",
   };
   const registry = {
+    sacrifice: {
+      fields: ["to"],
+      required: ["to"],
+      run(g, e, c) {
+        const t = c.target,
+          m = g.getTarget(t);
+        if (t?.side === c.side && t.uid !== "hero" && m) {
+          m.hp = 0;
+          g.event("status", { ...t, kind: "sacrifice" });
+        }
+      },
+      text: () => "献祭一个友方随从（触发亡语，并记录非衍生随从的灵魂印记）",
+    },
     damage: {
       fields: ["amount", "to", "spell"],
       required: ["amount", "to"],
@@ -315,6 +328,8 @@ const EmberRules = (() => {
           (!Number.isInteger(e[k]) || e[k] < 0 || (k === "count" && e[k] < 1))
         )
           throw Error(owner + ": Invalid " + k);
+      if (e.type === "sacrifice" && e.to !== "selected")
+        throw Error(owner + ": Sacrifice requires selected target");
       if (e.to && !selectors.has(e.to))
         throw Error(owner + ": Unknown selector " + e.to);
       if (
@@ -381,6 +396,12 @@ const EmberRules = (() => {
         (c.type === "minion" ? "战吼：" : "") + describe(c.onPlay) + "。";
     if (c.onDeath.length) result += "亡语：" + describe(c.onDeath) + "。";
     if (c.triggers?.length) result += triggerText(c.triggers, db);
+    if (c.contract)
+      result =
+        (typeof EmberContracts !== "undefined"
+          ? EmberContracts
+          : require("./contracts.js")
+        ).describe(c) + result;
     return result.replaceAll(
       "目标",
       {

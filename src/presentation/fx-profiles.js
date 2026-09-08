@@ -16,7 +16,15 @@ const EmberFXProfiles = (() => {
   register("huntress", "spear");
   register("spark oracle wisp cleric necromancer nyx", "bolt");
   register("phoenix dragon ashdragon", "breath");
+  register("soulguide selmyra", "bolt");
+  register("moonfox eclipsewolf", "claw");
+  register("duskstag moonguard", "slam");
   const spells = {
+    graveoffering: ["siphon", 480],
+    mooncall: ["wildgate", 480],
+    soultether: ["benediction", 420],
+    moonlance: ["ice-lance", 480],
+    stillness: ["dispel", 440],
     bolt: ["ember", 420],
     frostbolt: ["ice-lance", 440],
     fireball: ["meteor", 640],

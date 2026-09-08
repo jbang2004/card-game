@@ -90,3 +90,9 @@ npm run test:release
 `deckRules: {size: 30, maxCopies: 2, rarityCopies: {legendary: 1}}` 是构筑规则的唯一配置源。修改时同时调整所有预设到新规则；加载器会拒绝不合法内容。改变已发布构筑规则时，还需审查旧战役继续游玩与卡组迁移策略，不代表任何规则变动都能无条件兼容。
 
 首领 `deck` 仍是战役专用牌表种子，开局复制两份，因此无需遵守玩家职业和同名限制；引用必须有效，展开后不超过 当前存档的 100 张牌库容量。首领配置明确 `discoverClass`，`phaseEffects` 在半血时执行。追加首领后，地图、通关和奖励流程自动延长；不要重排现有首领而不迁移存档。
+
+## 契约牌与送魂（v0.13）
+
+契约使用 `contract: { souls: 4, deaths: 8, divine: true }`，同时声明 `type: "minion"`、`token: true`、传说稀有度和所属职业。法力仍来自 `cost`；需求文字由 `EmberContracts.describe` 自动生成。契约不是三十张主牌组中的可收集牌。英雄的 `defaultContracts` 经过同职业、最多三张、最多一位神祇和无重复校验。新神祇必须补齐动作、AI 和保存恢复测试。
+
+`sacrifice` 使用 `target: "selected"`，卡牌或英雄技能必须声明 `target: "friendlyMinion"`。牺牲设置生命为零，再走正常死亡清理，因此亡语正常触发；消耗契约印记没有亡语。

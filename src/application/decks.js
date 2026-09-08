@@ -4,15 +4,19 @@ const EmberDeckStore = (() => {
     typeof EmberDeckRules !== "undefined"
       ? EmberDeckRules
       : require("../rules/decks.js");
+  const Contracts =
+    typeof EmberContracts !== "undefined"
+      ? EmberContracts
+      : require("../rules/contracts.js");
   const KEY = "emberfall.deck.v1";
-  const empty = () => ({ version: 2, activeId: null, decks: [] });
+  const empty = () => ({ version: 3, activeId: null, decks: [] });
   const cardsValid = (cards) =>
     Array.isArray(cards) && cards.every((id) => typeof id === "string");
   function decode(raw, data) {
     if (raw === null) return empty();
     if (
       !raw ||
-      raw.version !== 2 ||
+      raw.version !== 3 ||
       !Array.isArray(raw.decks) ||
       Object.keys(raw).some(
         (k) => !["version", "activeId", "decks"].includes(k),
@@ -31,8 +35,9 @@ const EmberDeckStore = (() => {
         d.name.length > 40 ||
         !data.heroes.some((h) => h.id === d.heroId) ||
         !cardsValid(d.cards) ||
+        !Contracts.check(data, d.contracts, Rules.classFor(data, d.heroId)) ||
         Object.keys(d).some(
-          (k) => !["id", "name", "heroId", "cards"].includes(k),
+          (k) => !["id", "name", "heroId", "cards", "contracts"].includes(k),
         )
       )
         throw Error("牌组收藏内容损坏，已保留原数据。");
@@ -52,7 +57,7 @@ const EmberDeckStore = (() => {
         return { ok: false, error: error.message };
       }
     }
-    function save({ id = null, name, heroId, cards }) {
+    function save({ id = null, name, heroId, cards, contracts }) {
       const loaded = load();
       if (!loaded.ok) return loaded;
       const result = Rules.check(data, cards, heroId);
@@ -60,6 +65,13 @@ const EmberDeckStore = (() => {
         return { ok: false, error: result.errors.join("；") || "请选择英雄" };
       if (typeof name !== "string" || !name.trim() || name.trim().length > 40)
         return { ok: false, error: "牌组名称需要 1–40 个字" };
+      contracts ??=
+        data.heroes.find((h) => h.id === heroId).defaultContracts || [];
+      if (!Contracts.check(data, contracts, Rules.classFor(data, heroId)))
+        return {
+          ok: false,
+          error: "契约必须同职业、至多三张，且最多一位神祇。",
+        };
       const collection = loaded.collection;
       const index = collection.decks.findIndex((d) => d.id === id);
       if (id !== null && index < 0)
@@ -69,7 +81,13 @@ const EmberDeckStore = (() => {
         while (collection.decks.some((d) => d.id === "deck_" + n)) n++;
         id = "deck_" + n;
       }
-      const record = { id, name: name.trim(), heroId, cards: [...cards] };
+      const record = {
+        id,
+        name: name.trim(),
+        heroId,
+        cards: [...cards],
+        contracts: [...contracts],
+      };
       if (index < 0) collection.decks.push(record);
       else collection.decks[index] = record;
       collection.activeId = id;

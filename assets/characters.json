@@ -34,8 +34,8 @@
           {
             "file": "spark-subject.webp",
             "role": "subject",
-            "bytes": 49868,
-            "sha256": "a6ef65bdb60a3f8ec708f294042380389cd3f060349df00b09ed04065dbc681e"
+            "bytes": 50954,
+            "sha256": "e48d78efff1be4fc3e8dae4104dab7d0aab822dc17c644444280634be578d6db"
           }
         ]
       }
@@ -73,8 +73,8 @@
           {
             "file": "squire-subject.webp",
             "role": "subject",
-            "bytes": 73368,
-            "sha256": "d1daef73570c28d77c4c505236c56ce8fd5c44854c120f6582255d56b9e4f96c"
+            "bytes": 57574,
+            "sha256": "6452f98653eebdeb848fcfab504f2fb6416cde541567d119d663abe948af9416"
           }
         ]
       }
@@ -164,8 +164,8 @@
           {
             "file": "archer-subject.webp",
             "role": "subject",
-            "bytes": 53262,
-            "sha256": "230720b45d1bc57c76913830756c3e636e7ceb33e11be195a031d4dc9dc53482"
+            "bytes": 56156,
+            "sha256": "55772de89d4faa71f7ed3666d8f7d7ceeb431c0c62233a57c2ffd7ba345c0cd2"
           }
         ]
       }
@@ -203,8 +203,8 @@
           {
             "file": "guard-subject.webp",
             "role": "subject",
-            "bytes": 55352,
-            "sha256": "ca462f395035c775a1793d11b85e368cf904680229516009157099a4683a37f1"
+            "bytes": 54488,
+            "sha256": "8025f13c18ba150f2425be8457b40a904161b228d09867d5f13fddc72c07a413"
           }
         ]
       }
@@ -1702,6 +1702,272 @@
       "staticKey": "sabotage",
       "focus": 40,
       "motion": null
+    },
+    "soulguide": {
+      "staticKey": "soulguide",
+      "focus": 27,
+      "motion": {
+        "source": "assets/anime/soulguide.webp",
+        "atlas": "moon-anime-v2/soulguide-atlas.png",
+        "nativeAlpha": true,
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "accent": "unused",
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 0.9,
+          "lift": 0.012,
+          "sway": 0.006,
+          "turn": 0.007
+        },
+        "files": [
+          {
+            "file": "soulguide-background.webp",
+            "role": "background",
+            "bytes": 82996,
+            "sha256": "09bf25c8aeb4059358ddc5fbc3d21338243199f6eddded5df8bf2e2e4d37c72e"
+          },
+          {
+            "file": "soulguide-subject.webp",
+            "role": "subject",
+            "bytes": 55298,
+            "sha256": "acad0b3649892bfd4b83942705ea9f2cae8e8ebaabb6680cf58fe489a095527a"
+          }
+        ]
+      }
+    },
+    "moonfox": {
+      "staticKey": "moonfox",
+      "focus": 27,
+      "motion": {
+        "source": "assets/anime/moonfox.webp",
+        "atlas": "moon-anime-v2/moonfox-atlas.png",
+        "nativeAlpha": true,
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "accent": "unused",
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 1.3,
+          "lift": 0.014,
+          "sway": 0.009,
+          "turn": 0.012
+        },
+        "files": [
+          {
+            "file": "moonfox-background.webp",
+            "role": "background",
+            "bytes": 82010,
+            "sha256": "408a11ec2d36332c7173cbe6ba89e63b2f4c9d884d70ae2a230ed24ca2856382"
+          },
+          {
+            "file": "moonfox-subject.webp",
+            "role": "subject",
+            "bytes": 32442,
+            "sha256": "fcfa64332992624f1d3b8a7987b5b6fa637e378f95cc3f09d54cdc5d64cecdbc"
+          }
+        ]
+      }
+    },
+    "duskstag": {
+      "staticKey": "duskstag",
+      "focus": 27,
+      "motion": {
+        "source": "assets/anime/duskstag.webp",
+        "atlas": "moon-anime-v2/duskstag-atlas.png",
+        "nativeAlpha": true,
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "accent": "unused",
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 0.75,
+          "lift": 0.01,
+          "sway": 0.005,
+          "turn": 0.007
+        },
+        "files": [
+          {
+            "file": "duskstag-background.webp",
+            "role": "background",
+            "bytes": 72808,
+            "sha256": "97f484f46b335e30793193500744fd1a4baa110ca1250a98727d82078d9f1880"
+          },
+          {
+            "file": "duskstag-subject.webp",
+            "role": "subject",
+            "bytes": 38098,
+            "sha256": "1d855b27ac2b7fd990adc924aec23bcce595cdac537c7be8c3f3f7384762fa3d"
+          }
+        ]
+      }
+    },
+    "graveoffering": {
+      "staticKey": "graveoffering",
+      "focus": 27,
+      "motion": null
+    },
+    "mooncall": {
+      "staticKey": "mooncall",
+      "focus": 27,
+      "motion": null
+    },
+    "soultether": {
+      "staticKey": "soultether",
+      "focus": 27,
+      "motion": null
+    },
+    "moonlance": {
+      "staticKey": "moonlance",
+      "focus": 27,
+      "motion": null
+    },
+    "stillness": {
+      "staticKey": "stillness",
+      "focus": 27,
+      "motion": null
+    },
+    "eclipsewolf": {
+      "staticKey": "eclipsewolf",
+      "focus": 27,
+      "motion": {
+        "source": "assets/anime/eclipsewolf.webp",
+        "atlas": "moon-anime-v2/eclipsewolf-atlas.png",
+        "nativeAlpha": true,
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "accent": "unused",
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 0.8,
+          "lift": 0.012,
+          "sway": 0.006,
+          "turn": 0.007
+        },
+        "files": [
+          {
+            "file": "eclipsewolf-background.webp",
+            "role": "background",
+            "bytes": 59286,
+            "sha256": "3464d3effe3f9a495f49fcb378f7d148966ca2fb4324d7bf27db6e0d35848091"
+          },
+          {
+            "file": "eclipsewolf-subject.webp",
+            "role": "subject",
+            "bytes": 40298,
+            "sha256": "0aa8ec24ba98bb0bb0ab0e543c8a6a78a4070121f868ca5a4983684012fcf8f0"
+          }
+        ]
+      }
+    },
+    "moonguard": {
+      "staticKey": "moonguard",
+      "focus": 27,
+      "motion": {
+        "source": "assets/anime/moonguard.webp",
+        "atlas": "moon-anime-v2/moonguard-atlas.png",
+        "nativeAlpha": true,
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "accent": "unused",
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 0.6,
+          "lift": 0.009,
+          "sway": 0.003,
+          "turn": 0.004
+        },
+        "files": [
+          {
+            "file": "moonguard-background.webp",
+            "role": "background",
+            "bytes": 77642,
+            "sha256": "67f9d1650721102c9ef29bed036ecb877a4cdb89a255be7514c9c3549f1bd529"
+          },
+          {
+            "file": "moonguard-subject.webp",
+            "role": "subject",
+            "bytes": 65594,
+            "sha256": "40cf08c7fda0746ce2a270b6fb3f69f84db31cd9f3975c5b33efa9bcfff2d200"
+          }
+        ]
+      }
+    },
+    "selmyra": {
+      "staticKey": "selmyra",
+      "focus": 22,
+      "motion": {
+        "source": "assets/anime/selmyra.webp",
+        "atlas": "moon-anime-v2/selmyra-atlas.png",
+        "nativeAlpha": true,
+        "cuts": [
+          0,
+          771,
+          1536
+        ],
+        "accent": "unused",
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 0.55,
+          "lift": 0.009,
+          "sway": 0.002,
+          "turn": 0.003
+        },
+        "files": [
+          {
+            "file": "selmyra-background.webp",
+            "role": "background",
+            "bytes": 73056,
+            "sha256": "cbe941f6adda2c646359fbc5f3ba95542785bd91e546482550c8689eb0991efd"
+          },
+          {
+            "file": "selmyra-subject.webp",
+            "role": "subject",
+            "bytes": 52996,
+            "sha256": "e1e570b5ea368906ed3b19bfdc54adcbdd5fae56ee367bd0973e1f1797203637"
+          }
+        ],
+        "backgroundWidth": 767
+      }
     }
   }
 }

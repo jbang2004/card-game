@@ -15,7 +15,7 @@ async function practice(page) {
   await page.locator("#mulligan-confirm").click();
   await idle(page);
 }
-test("new collection: six decks, class filters, rule text and all expansion artwork", async ({
+test("collection: all presets, class filters, rule text and expansion artwork", async ({
   page,
 }) => {
   await page.goto("./?debug=1");
@@ -24,7 +24,12 @@ test("new collection: six decks, class filters, rule text and all expansion artw
   await expect(page.locator("#deck-plan")).toContainText("施法核心");
   for (const hero of ["mage", "paladin", "ranger"]) {
     await page.locator("#deck-class").selectOption(hero);
-    await expect(page.locator("#deck-preset option")).toHaveCount(2);
+    await expect(page.locator("#deck-preset option")).toHaveCount(
+      await page.evaluate(
+        (id) => EmberData.archetypes.filter((a) => a.classId === id).length,
+        hero,
+      ),
+    );
     const ids = await page
       .locator("#deck-preset option")
       .evaluateAll((xs) => xs.map((x) => x.value));
@@ -55,7 +60,7 @@ test("new collection: six decks, class filters, rule text and all expansion artw
       }
       return EmberData.cards.filter((c) => c.set).length;
     }),
-  ).toBe(6);
+  ).toBe(17);
   await page.screenshot({ path: "artifacts/qa/oaths-library.png" });
 });
 test("practice preserves an existing campaign save, survives both hero powers and exits cleanly", async ({
@@ -164,6 +169,14 @@ test("full practice game through visible card/target controls with no stuck trig
         moves,
         await page.evaluate(() => EmberDebug.game.s.turn),
       );
+    expect(["choose", "end", "contract", "play", "attack", "power"]).toContain(
+      a.type,
+    );
+    if (a.type === "contract") {
+      await page.locator("#contract-open").click();
+      await page.locator(`[data-invoke="${a.cid}"]`).click();
+      continue;
+    }
     if (a.type === "choose") {
       await page.locator(`[data-discover="${a.cid}"]`).click();
       continue;

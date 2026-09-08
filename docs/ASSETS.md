@@ -139,3 +139,21 @@
 `tools/vfx_assets.py` 使用标准库校验并内嵌素材，网页构建提取为本地内容哈希 WebP；`tools/repack_vfx.py` 可使用已声明的 Pillow 从原件重建。运行时的七类攻击、具名施法与四张传说签名由 `presentation/fx-profiles.js` 注册，`presentation/vfx.js` 使用现有 Canvas 时钟。详见 [战斗特效记录](VFX_FEEDBACK.md)。
 
 2026-09-08 的资源清理将特效下载量减少至 879,870 字节，删除闲置 smoke，保留所有使用中图片的精确 RGBA。体积与加载隔离验证见 [清理记录](MEDIA_CLEANUP.md)。
+
+## 月影神契（v0.13）
+
+本轮新增十一张独立 AI 插画，总计 73 张严格 ID 映射卡图。`assets/anime/moon-sources/` 保存原画及提示词，`overrides.json` 注册来源，运行文件为同名 WebP。未使用《游戏王》的角色或素材；以庄严巨像、月蚀、祭坛和渺小朝圣者构成原创神祇。
+
+六个新随从（soulguide、moonfox、duskstag、eclipsewolf、moonguard、selmyra）都有背景与主体两层。源图集、参考静态原画和逐角色提示词位于 `assets/motion/moon-sources/`；完整技术参数及切分坐标见其中的 `processing.json`。本轮采用绿色键色、0.30 similarity、0.08 blend 与 green despill，消除透明边缘绿色污染。保留生成原图和真实 alpha 处理结果，最终 rig 仍以 `assets/characters.json` 为唯一来源。
+
+莫菈复用 soulguide，断契监誓者复用 moonguard。全游戏 41 个随从均有分层待机，其余 32 张法术/武器保持静态。完整清单见 [CHARACTER_ROSTER.txt](CHARACTER_ROSTER.txt)。
+
+神祇的运行卡图保留 768×1024，以支持全屏仪式；普通卡仍为 336×448。该尺寸由统一 packer 依据 divine 元数据派生，网页与离线单文件使用同一张图。
+
+## 月影系列动漫风统一（2026-09-08）
+
+按用户确认，对月影扩展全部十一张插画做 style-transfer 重绘。当前静态来源改为 `assets/anime/moon-anime-v2/`，逐卡提示词、身份/风格参考、哈希及美术方向均留档。原 `moon-sources/` 仅作为前版来源保留。原有其他卡牌不重画。
+
+六个随从对应分层改为 `assets/motion/moon-anime-v2/`，仍为背景/主体两层。新版 `green-edge` 去溢色仅处理透明轮廓附近的过量绿色，保留内部青色灯光、衣料和肤色；各卡实际 split 与处理参数见 `*-processing.json`。神祇 split 771、背景宽 767，其余 split 768，均按各自图集观察确认。
+
+清单、静态与动态缓存已重新构建。验证见 [月影画风统一记录](QA_MOON_ART_RESTYLE.md)。

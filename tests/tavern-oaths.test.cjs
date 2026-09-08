@@ -19,12 +19,12 @@ function play(g, id, target, side = "p") {
   return g.dispatch({ type: "play", side, uid: c.uid, target });
 }
 const hero = (side) => ({ side, uid: "hero" });
-test("six distinct class-legal archetypes and strict duplicate limits", () => {
+test("eight distinct class-legal archetypes and strict duplicate limits", () => {
   const g = new Game();
-  assert.equal(D.archetypes.length, 6);
+  assert.equal(D.archetypes.length, 8);
   for (const a of D.archetypes) {
     assert.ok(g.validateDeck(a.deck, a.hero), a.id);
-    assert.equal(D.archetypes.filter((b) => b.hero === a.hero).length, 2);
+    assert.ok(D.heroes.some(h=>h.id===a.hero));
   }
   assert.equal(g.validateDeck(D.archetypes[0].deck, "ranger"), false);
 });

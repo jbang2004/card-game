@@ -1,0 +1,122 @@
+{
+  "color": "0x00ff00",
+  "similarity": 0.3,
+  "blend": 0.08,
+  "despill": "green",
+  "records": {
+    "selmyra": {
+      "input": "assets/motion/moon-sources/selmyra-atlas-key.png",
+      "output": "assets/motion/moon-sources/selmyra-atlas.png",
+      "color": "0x00ff00",
+      "similarity": 0.3,
+      "blend": 0.08,
+      "despill": "green",
+      "cuts": [
+        0,
+        768,
+        1536
+      ],
+      "alpha": {
+        "leftTransparent": 0,
+        "rightTransparent": 388363,
+        "rightVisible": 397990,
+        "residualKey": 0
+      }
+    },
+    "soulguide": {
+      "input": "assets/motion/moon-sources/soulguide-atlas-key.png",
+      "output": "assets/motion/moon-sources/soulguide-atlas.png",
+      "color": "0x00ff00",
+      "similarity": 0.3,
+      "blend": 0.08,
+      "despill": "green",
+      "cuts": [
+        0,
+        780,
+        1536
+      ],
+      "alpha": {
+        "leftTransparent": 0,
+        "rightTransparent": 304215,
+        "rightVisible": 469889,
+        "residualKey": 0
+      }
+    },
+    "moonfox": {
+      "input": "assets/motion/moon-sources/moonfox-atlas-key.png",
+      "output": "assets/motion/moon-sources/moonfox-atlas.png",
+      "color": "0x00ff00",
+      "similarity": 0.3,
+      "blend": 0.08,
+      "despill": "green",
+      "cuts": [
+        0,
+        768,
+        1536
+      ],
+      "alpha": {
+        "leftTransparent": 0,
+        "rightTransparent": 571000,
+        "rightVisible": 215300,
+        "residualKey": 0
+      }
+    },
+    "duskstag": {
+      "input": "assets/motion/moon-sources/duskstag-atlas-key.png",
+      "output": "assets/motion/moon-sources/duskstag-atlas.png",
+      "color": "0x00ff00",
+      "similarity": 0.3,
+      "blend": 0.08,
+      "despill": "green",
+      "cuts": [
+        0,
+        768,
+        1536
+      ],
+      "alpha": {
+        "leftTransparent": 0,
+        "rightTransparent": 565770,
+        "rightVisible": 220518,
+        "residualKey": 0
+      }
+    },
+    "eclipsewolf": {
+      "input": "assets/motion/moon-sources/eclipsewolf-atlas-key.png",
+      "output": "assets/motion/moon-sources/eclipsewolf-atlas.png",
+      "color": "0x00ff00",
+      "similarity": 0.3,
+      "blend": 0.08,
+      "despill": "green",
+      "cuts": [
+        0,
+        769,
+        1536
+      ],
+      "alpha": {
+        "leftTransparent": 0,
+        "rightTransparent": 558048,
+        "rightVisible": 227222,
+        "residualKey": 0
+      }
+    },
+    "moonguard": {
+      "input": "assets/motion/moon-sources/moonguard-atlas-key.png",
+      "output": "assets/motion/moon-sources/moonguard-atlas.png",
+      "color": "0x00ff00",
+      "similarity": 0.3,
+      "blend": 0.08,
+      "despill": "green",
+      "cuts": [
+        0,
+        768,
+        1536
+      ],
+      "alpha": {
+        "leftTransparent": 0,
+        "rightTransparent": 480252,
+        "rightVisible": 306081,
+        "residualKey": 0
+      }
+    }
+  }
+}

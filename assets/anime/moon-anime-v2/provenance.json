@@ -1,0 +1,127 @@
+{
+  "tool": "built-in image_gen",
+  "mode": "style-transfer",
+  "date": "2026-09-08",
+  "cards": {
+    "soulguide": {
+      "identityReference": "assets/anime/moon-sources/soulguide.png",
+      "styleReferences": [
+        "assets/anime/oracle.webp",
+        "assets/anime/solaris.webp"
+      ],
+      "static": "assets/anime/moon-anime-v2/soulguide.png",
+      "prompt": "assets/anime/moon-anime-v2/soulguide.prompt.txt",
+      "sha256": "846fba32697dde2bc9a0dbadbba63718eaeb5eb6d6cbc71ab9f1db6afb088baf",
+      "identityReferenceNote": "Previous packed card WebP was supplied; original prior artwork retained at identityReference."
+    },
+    "moonfox": {
+      "identityReference": "assets/anime/moon-sources/moonfox.png",
+      "styleReferences": [
+        "assets/anime/wolf.webp"
+      ],
+      "static": "assets/anime/moon-anime-v2/moonfox.png",
+      "prompt": "assets/anime/moon-anime-v2/moonfox.prompt.txt",
+      "sha256": "2e0e60d2e43fb9ec08d77cfeee0f19449bc3be1ef1aeacc2bcde8270fb834c5d",
+      "identityReferenceNote": "Previous packed card WebP was supplied; original prior artwork retained at identityReference."
+    },
+    "duskstag": {
+      "identityReference": "assets/anime/moon-sources/duskstag.png",
+      "styleReferences": [
+        "assets/anime/wolf.webp",
+        "assets/anime/solaris.webp"
+      ],
+      "static": "assets/anime/moon-anime-v2/duskstag.png",
+      "prompt": "assets/anime/moon-anime-v2/duskstag.prompt.txt",
+      "sha256": "74afeed0c4f731569f226dff5a2574570acdb53a8d6d9325c4568cfe2261f06a",
+      "identityReferenceNote": "Previous packed card WebP was supplied; original prior artwork retained at identityReference."
+    },
+    "graveoffering": {
+      "identityReference": "assets/anime/moon-sources/graveoffering.png",
+      "styleReferences": [
+        "assets/anime/blessing.webp",
+        "assets/anime/wolves.webp"
+      ],
+      "static": "assets/anime/moon-anime-v2/graveoffering.png",
+      "prompt": "assets/anime/moon-anime-v2/graveoffering.prompt.txt",
+      "sha256": "cc3d2e6a5f4fe1e7425e9c391d54a5de520a3636ae6a3e4713b660f630a38426",
+      "identityReferenceNote": "Previous packed card WebP was supplied; original prior artwork retained at identityReference."
+    },
+    "mooncall": {
+      "identityReference": "assets/anime/moon-sources/mooncall.png",
+      "styleReferences": [
+        "assets/anime/wolf.webp",
+        "assets/anime/wolves.webp"
+      ],
+      "static": "assets/anime/moon-anime-v2/mooncall.png",
+      "prompt": "assets/anime/moon-anime-v2/mooncall.prompt.txt",
+      "sha256": "8c6381b0e5eb72cda7d89a994e7ab2fa3a046155962d33bd88d65a9fe4c10e29",
+      "identityReferenceNote": "Previous packed card WebP was supplied; original prior artwork retained at identityReference."
+    },
+    "soultether": {
+      "identityReference": "assets/anime/moon-sources/soultether.png",
+      "styleReferences": [
+        "assets/anime/wolf.webp",
+        "assets/anime/wolves.webp"
+      ],
+      "static": "assets/anime/moon-anime-v2/soultether.png",
+      "prompt": "assets/anime/moon-anime-v2/soultether.prompt.txt",
+      "sha256": "568990d94676ebedc7ea0f74c88170b5523b6bbff8aa5ac698305c212851d76e",
+      "identityReferenceNote": "Previous packed card WebP was supplied; original prior artwork retained at identityReference."
+    },
+    "moonlance": {
+      "identityReference": "assets/anime/moon-sources/moonlance.png",
+      "styleReferences": [
+        "assets/anime/wolves.webp",
+        "assets/anime/blessing.webp"
+      ],
+      "static": "assets/anime/moon-anime-v2/moonlance.png",
+      "prompt": "assets/anime/moon-anime-v2/moonlance.prompt.txt",
+      "sha256": "fbf39cf360e74f41f9fb0bff5771de4ada0cbd3390fb435fb2b82f313ba6a1bc",
+      "identityReferenceNote": "Previous packed card WebP was supplied; original prior artwork retained at identityReference."
+    },
+    "stillness": {
+      "identityReference": "assets/anime/moon-sources/stillness.png",
+      "styleReferences": [
+        "assets/anime/wolves.webp",
+        "assets/anime/blessing.webp"
+      ],
+      "static": "assets/anime/moon-anime-v2/stillness.png",
+      "prompt": "assets/anime/moon-anime-v2/stillness.prompt.txt",
+      "sha256": "8810997d7cb30c1662945550fee8555c0f9f016c01cdb9e906518a663dce5a0f",
+      "identityReferenceNote": "Previous packed card WebP was supplied; original prior artwork retained at identityReference."
+    },
+    "eclipsewolf": {
+      "identityReference": "assets/anime/moon-sources/eclipsewolf.png",
+      "styleReferences": [
+        "assets/anime/wolf.webp",
+        "assets/anime/wolves.webp"
+      ],
+      "static": "assets/anime/moon-anime-v2/eclipsewolf.png",
+      "prompt": "assets/anime/moon-anime-v2/eclipsewolf.prompt.txt",
+      "sha256": "ed42f532caec73ed0e19623e3611a5449434c8a351618247da61b2566ec45eff",
+      "identityReferenceNote": "Previous packed card WebP was supplied; original prior artwork retained at identityReference."
+    },
+    "moonguard": {
+      "identityReference": "assets/anime/moon-sources/moonguard.png",
+      "styleReferences": [
+        "assets/anime/wolf.webp",
+        "assets/anime/solaris.webp"
+      ],
+      "static": "assets/anime/moon-anime-v2/moonguard.png",
+      "prompt": "assets/anime/moon-anime-v2/moonguard.prompt.txt",
+      "sha256": "d60f79dc9f8d08e7a6e840e1ec4530cb5a7e38976ef39e9b2edc336a330ee5c9",
+      "identityReferenceNote": "Previous packed card WebP was supplied; original prior artwork retained at identityReference."
+    },
+    "selmyra": {
+      "identityReference": "assets/anime/moon-sources/selmyra.png",
+      "styleReferences": [
+        "assets/anime/oracle.webp",
+        "assets/anime/solaris.webp"
+      ],
+      "static": "assets/anime/moon-anime-v2/selmyra.png",
+      "prompt": "assets/anime/moon-anime-v2/selmyra.prompt.txt",
+      "sha256": "a4354da3d2274c7db10ee1c3fe307e784a05a98fdcad3bc4107fd70443546b41",
+      "identityReferenceNote": "Previous packed card WebP was supplied; original prior artwork retained at identityReference."
+    }
+  }
+}

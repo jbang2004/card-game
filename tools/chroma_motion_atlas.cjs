@@ -15,6 +15,7 @@ function parseArgs(argv) {
     "--color",
     "--similarity",
     "--blend",
+    "--despill",
   ]);
   const out = {};
   for (let i = 0; i < argv.length; i += 2) {
@@ -45,6 +46,9 @@ function parseArgs(argv) {
       (colorNumber >> 8) & 255,
       colorNumber & 255,
     ];
+  const despill = args["--despill"] || "none";
+  if (!["none", "green", "blue", "green-edge"].includes(despill))
+    throw Error("--despill must be none, green, blue or green-edge");
   const similarity = Number(args["--similarity"] ?? 0.18),
     blend = Number(args["--blend"] ?? 0.06);
   if (!Number.isFinite(similarity) || similarity < 0.00001 || similarity > 1)
@@ -125,7 +129,7 @@ function parseArgs(argv) {
     const filter =
       `[0:v]crop=${metrics.split}:${metrics.height}:0:0,format=rgba[left];` +
       `[0:v]crop=${right}:${metrics.height}:${metrics.split}:0,format=rgba,` +
-      `colorkey=${colorText}:${similarity}:${blend}[right];` +
+      `colorkey=${colorText}:${similarity}:${blend}${["none", "green-edge"].includes(despill) ? "" : ",despill=type=" + despill + ":mix=1"}[right];` +
       `[left][right]hstack=inputs=2,format=rgba`;
     execFileSync(
       "ffmpeg",
@@ -146,7 +150,7 @@ function parseArgs(argv) {
     const converted =
       "data:image/png;base64," + fs.readFileSync(output).toString("base64");
     const result = await page.evaluate(
-      async ({ src, split, keyColor }) => {
+      async ({ src, split, keyColor, despill }) => {
         const image = new Image();
         image.src = src;
         await image.decode();
@@ -155,7 +159,41 @@ function parseArgs(argv) {
         canvas.height = image.height;
         const ctx = canvas.getContext("2d", { willReadFrequently: true });
         ctx.drawImage(image, 0, 0);
-        const pixels = ctx.getImageData(0, 0, image.width, image.height).data;
+        const frame = ctx.getImageData(0, 0, image.width, image.height);
+        const pixels = frame.data;
+        let edgePixels = 0;
+        if (despill === "green-edge") {
+          // Only remove excess green near the keyed silhouette. Preserve cyan
+          // lights and original opaque skin/fabric colors inside the subject.
+          for (let y = 0; y < image.height; y++)
+            for (let x = split; x < image.width; x++) {
+              const i = (y * image.width + x) * 4;
+              if (
+                !pixels[i + 3] ||
+                pixels[i + 1] <= Math.max(pixels[i], pixels[i + 2])
+              )
+                continue;
+              let edge = pixels[i + 3] < 250;
+              for (let dy = -3; !edge && dy <= 3; dy++)
+                for (let dx = -3; !edge && dx <= 3; dx++) {
+                  const nx = x + dx,
+                    ny = y + dy;
+                  if (
+                    nx < split ||
+                    nx >= image.width ||
+                    ny < 0 ||
+                    ny >= image.height ||
+                    pixels[(ny * image.width + nx) * 4 + 3] < 250
+                  )
+                    edge = true;
+                }
+              if (edge) {
+                pixels[i + 1] = Math.max(pixels[i], pixels[i + 2]);
+                edgePixels++;
+              }
+            }
+          ctx.putImageData(frame, 0, 0);
+        }
         let leftTransparent = 0,
           rightTransparent = 0,
           rightVisible = 0,
@@ -194,10 +232,22 @@ function parseArgs(argv) {
           throw Error(
             "Converted subject panel retains obvious chroma-color spill",
           );
-        return { leftTransparent, rightTransparent, rightVisible, residualKey };
+        return {
+          leftTransparent,
+          rightTransparent,
+          rightVisible,
+          residualKey,
+          edgePixels,
+          png:
+            despill === "green-edge"
+              ? canvas.toDataURL("image/png").split(",")[1]
+              : null,
+        };
       },
-      { src: converted, split: metrics.split, keyColor },
+      { src: converted, split: metrics.split, keyColor, despill },
     );
+    if (result.png) fs.writeFileSync(output, Buffer.from(result.png, "base64"));
+    delete result.png;
     console.log(
       JSON.stringify({
         input,
@@ -205,6 +255,7 @@ function parseArgs(argv) {
         color: colorText,
         similarity,
         blend,
+        despill,
         cuts: [0, metrics.split, metrics.width],
         alpha: result,
       }),

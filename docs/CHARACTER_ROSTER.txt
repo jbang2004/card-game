@@ -1,0 +1,513 @@
+[
+  {
+    "id": "spark",
+    "name": "引火学徒",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "squire",
+    "name": "晨曦侍从",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "wolf",
+    "name": "月影幼狼",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "archer",
+    "name": "边境游侠",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "guard",
+    "name": "铁誓卫士",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "oracle",
+    "name": "星界观测者",
+    "status": "animated",
+    "template": "held-accent",
+    "layers": 3
+  },
+  {
+    "id": "wisp",
+    "name": "暮光精灵",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "spider",
+    "name": "幽谷蛛后",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "sentinel",
+    "name": "烬翼斥候",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "assassin",
+    "name": "夜幕刺客",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "cleric",
+    "name": "曙光祭司",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "berserker",
+    "name": "赤岩狂战士",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "golem",
+    "name": "符文石像",
+    "status": "animated",
+    "template": "joint",
+    "layers": 3
+  },
+  {
+    "id": "leech",
+    "name": "血月行者",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "treant",
+    "name": "古木守护者",
+    "status": "animated",
+    "template": "canopy",
+    "layers": 3
+  },
+  {
+    "id": "phoenix",
+    "name": "不灭凤凰",
+    "status": "animated",
+    "template": "wings",
+    "layers": 3
+  },
+  {
+    "id": "rider",
+    "name": "霜牙狼骑",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "necromancer",
+    "name": "亡者织梦师",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "paladin",
+    "name": "圣光裁决者",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "titan",
+    "name": "玄铁泰坦",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "huntress",
+    "name": "荒野之矛",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "dragon",
+    "name": "烬喉幼龙",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "reaper",
+    "name": "黯月收割者",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "colossus",
+    "name": "远古山岳",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "solaris",
+    "name": "逐日者·索拉",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "nyx",
+    "name": "星陨女王·妮克丝",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "ashdragon",
+    "name": "终焰·阿什拉",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "frostking",
+    "name": "白霜之王",
+    "status": "animated",
+    "template": "anchored-accent",
+    "layers": 3
+  },
+  {
+    "id": "bolt",
+    "name": "星火箭",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "frostbolt",
+    "name": "寒霜之触",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "fireball",
+    "name": "陨火术",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "nova",
+    "name": "冰封领域",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "storm",
+    "name": "烈焰风暴",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "wisdom",
+    "name": "星界密卷",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "blessing",
+    "name": "黎明祝福",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "renew",
+    "name": "生命之泉",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "execute",
+    "name": "暗影湮灭",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "silence",
+    "name": "遗忘咒印",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "rally",
+    "name": "王者号令",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "wolves",
+    "name": "群狼呼唤",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "shield",
+    "name": "圣光庇佑",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "lifedrain",
+    "name": "灵魂虹吸",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "dagger",
+    "name": "银月双刃",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "sunblade",
+    "name": "日耀圣剑",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "polymorph",
+    "name": "迷途化形",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "discovery",
+    "name": "虚空洞见",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "ambush",
+    "name": "镜像伏击",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "battlecry",
+    "name": "战意沸腾",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "coin",
+    "name": "以太硬币",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "pup",
+    "name": "幽灵狼",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "spiritwolf",
+    "name": "灵狼",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "skeleton",
+    "name": "骸骨",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "stone",
+    "name": "石卫",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "sheep",
+    "name": "绵羊",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "recruit",
+    "name": "曙光新兵",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "thorn",
+    "name": "荆棘树灵",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "counterspell",
+    "name": "破法之镜",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "icebarrier",
+    "name": "霜晶壁垒",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "muster",
+    "name": "黎明集结",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "absolution",
+    "name": "誓约祷言",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "tracking",
+    "name": "月径追踪",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "sabotage",
+    "name": "断刃伏击",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "soulguide",
+    "name": "渡魂引路人",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "moonfox",
+    "name": "银灯灵狐",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "duskstag",
+    "name": "暮角契鹿",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "graveoffering",
+    "name": "归月献仪",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "mooncall",
+    "name": "月径结伴",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "soultether",
+    "name": "系魂银线",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "moonlance",
+    "name": "碎月长矛",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "stillness",
+    "name": "寂静封印",
+    "status": "static",
+    "template": null,
+    "layers": 0
+  },
+  {
+    "id": "eclipsewolf",
+    "name": "蚀月狼王",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "moonguard",
+    "name": "守灯巨兽",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  },
+  {
+    "id": "selmyra",
+    "name": "冥月神·瑟弥拉",
+    "status": "animated",
+    "template": "whole-subject",
+    "layers": 2
+  }
+]
