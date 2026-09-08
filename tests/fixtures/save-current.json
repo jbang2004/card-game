@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "seq": 67,
   "rng": 80443104,
   "turn": 1,
@@ -188,7 +188,11 @@
     "attacks": 0,
     "frozen": false,
     "weapon": null,
-    "secrets": []
+    "secrets": [],
+    "souls": [],
+    "fallen": 0,
+    "contracts": [],
+    "usedContracts": []
   },
   "e": {
     "hp": 30,
@@ -374,6 +378,10 @@
     "attacks": 0,
     "frozen": false,
     "weapon": null,
-    "secrets": []
+    "secrets": [],
+    "souls": [],
+    "fallen": 0,
+    "contracts": [],
+    "usedContracts": []
   }
 }

@@ -58,6 +58,12 @@ const EmberPreview = (() => {
         : g.data.byId[selection.cid];
     if (!c || !g.hasTarget(c.target, "p", target)) return null;
     const ops = selection.type === "power" ? c.powerEffects : c.onPlay;
+    if (ops.some((e) => e.type === "sacrifice"))
+      return {
+        kind: "message",
+        text: "献祭目标",
+        detail: "触发亡语；非衍生随从留下印记，随后结算死亡触发",
+      };
     // More complicated multi-hit/transform chains need an explicit preview implementation.
     const damage = ops.filter(
       (e) => e.type === "damage" && e.to === "selected",

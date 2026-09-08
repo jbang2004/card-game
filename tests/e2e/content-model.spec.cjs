@@ -40,7 +40,7 @@ test("obsolete deck can be reset; two current named decks persist and launch ind
   await page.locator("#deck-name").fill("我的永冬");
   await page.locator("#deck-copy").click();
   const saved = await stored(page);
-  expect(saved.version).toBe(2);
+  expect(saved.version).toBe(3);
   expect(saved.decks).toHaveLength(2);
   expect(saved.decks[0].cards).toEqual(legacy);
   expect(saved.decks[1].cards).toEqual(
@@ -128,8 +128,8 @@ test("a second mage and sixth boss work through production screens with only con
   });
   await open(page);
   await page.locator("#start-btn").click();
-  await expect(page.locator(".hero-option")).toHaveCount(4);
-  await expect(page.locator("#game-mode option").first()).toContainText("6 关");
+  await expect(page.locator(".hero-option")).toHaveCount(D.heroes.length + 1);
+  await expect(page.locator("#game-mode option").first()).toContainText(`${D.bosses.length + 1} 关`);
   await page.locator('[data-hero="arcanist"]').click();
   await page.locator("#hero-deck-btn").click();
   await expect(page.locator("#deck-class")).toHaveValue("arcanist");
@@ -145,7 +145,7 @@ test("a second mage and sixth boss work through production screens with only con
     Emberfall.settings.reduced = true;
     EmberFX.configure(true, false);
     const g = EmberDebug.game;
-    g.s.bossIndex = 4;
+    g.s.bossIndex = EmberData.bosses.length - 2;
     g.s.relics = EmberData.relics.map((r) => r.id);
     g.s.e.hp = 0;
     g.cleanup();
@@ -155,11 +155,11 @@ test("a second mage and sixth boss work through production screens with only con
   await page.locator("#result-next").click();
   await expect(page.locator("#reward-confirm")).toBeEnabled();
   await page.locator("#reward-confirm").click();
-  expect(await page.evaluate(() => Emberfall.game.s.bossIndex)).toBe(5);
+  expect(await page.evaluate(() => Emberfall.game.s.bossIndex)).toBe(D.bosses.length);
   await page.reload();
   await ready(page);
   await page.locator("#start-btn").click();
-  expect(await page.evaluate(() => Emberfall.game.s.bossIndex)).toBe(5);
+  expect(await page.evaluate(() => Emberfall.game.s.bossIndex)).toBe(D.bosses.length);
   await page.locator("#mulligan-confirm").click();
   await page.waitForFunction(() => !EmberFX.busy);
   await page.evaluate(() => {
@@ -173,7 +173,7 @@ test("a second mage and sixth boss work through production screens with only con
   await expect(page.locator("#result-next")).toContainText("新的旅程");
   await page.locator("#result-home").click();
   await page.locator("#adventure-nav").click();
-  await expect(page.locator(".map-stop.done")).toHaveCount(6);
+  await expect(page.locator(".map-stop.done")).toHaveCount(D.bosses.length + 1);
   expect(errors).toEqual([]);
 });
 
@@ -194,7 +194,7 @@ test("obsolete campaign is not resumed and a new match uses the current schema",
   await expect(page.locator("#hero-confirm")).toBeVisible();
   await page.locator("#hero-confirm").click();
   const s = await page.evaluate(() => Emberfall.game.s);
-  expect(s.version).toBe(2);
+  expect(s.version).toBe(3);
   expect(s).not.toHaveProperty("ruleset");
   expect(s).not.toHaveProperty("legacyDeck");
 });

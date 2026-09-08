@@ -1,6 +1,6 @@
 /* Current match schema only. Old test saves are intentionally rejected. */
 const EmberState = (() => {
-  const VERSION = 2;
+  const VERSION = 3;
   function valid(s, data) {
     try {
       if (
@@ -102,6 +102,37 @@ const EmberState = (() => {
           !p.secrets.every((x) => data.byId[x]?.secret)
         )
           return false;
+        const cls =
+          side === "p"
+            ? data.heroes.find((h) => h.id === s.heroId).classId
+            : s.mode === "practice"
+              ? data.heroes.find((h) => h.id === s.opponentHero).classId
+              : data.bosses[s.bossIndex].discoverClass;
+        const contracts =
+          typeof EmberContracts !== "undefined"
+            ? EmberContracts
+            : require("./contracts.js");
+        if (
+          !contracts.check(data, p.contracts, cls) ||
+          !Array.isArray(p.usedContracts) ||
+          new Set(p.usedContracts).size !== p.usedContracts.length ||
+          p.usedContracts.some((id) => !p.contracts.includes(id)) ||
+          !Number.isInteger(p.fallen) ||
+          p.fallen < 0 ||
+          p.fallen > 1000 ||
+          !Array.isArray(p.souls) ||
+          new Set(p.souls).size !== p.souls.length ||
+          p.souls.length > p.fallen ||
+          p.souls.some(
+            (id) =>
+              !data.byId[id] ||
+              data.byId[id].token ||
+              data.byId[id].type !== "minion",
+          )
+        )
+          return false;
+        if ([...p.hand, ...p.deck].some((c) => data.byId[c.cid]?.contract))
+          return false;
         for (const c of [...p.board, ...p.hand, ...p.deck]) {
           if (
             !data.byId[c.cid] ||
@@ -114,6 +145,10 @@ const EmberState = (() => {
         }
         for (const m of p.board)
           if (
+            (m.divineArrival !== undefined &&
+              (!Number.isInteger(m.divineArrival) ||
+                m.divineArrival < 0 ||
+                m.divineArrival > s.turn)) ||
             !validUses(m.triggerUses) ||
             ![m.hp, m.maxHp, m.atk, m.attacks].every(Number.isFinite) ||
             m.hp <= 0 ||

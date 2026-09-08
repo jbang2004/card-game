@@ -2051,3 +2051,347 @@ body .deck-actions {
 body:not(.touch-layout) .deck-editor.has-storage-error .deck-list {
   min-height: 40px;
 }
+
+/* Moon Covenant: ritual gold, quiet silver, deliberately compact battle entry. */
+.contract-open {
+  position: absolute;
+  right: 28px;
+  bottom: 128px;
+  z-index: 22;
+  width: 148px;
+  min-height: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  border: 1px solid #a18a56;
+  border-radius: 8px;
+  background: linear-gradient(145deg, #262a30, #15171d);
+  color: #eadbb0;
+  box-shadow: 0 5px 18px #0007;
+  cursor: pointer;
+  font-family: inherit;
+}
+.contract-open[hidden] {
+  display: none !important;
+}
+.contract-open small {
+  font-size: 11px;
+  color: #bfcbd3;
+}
+.contract-open.ready {
+  border-color: #e4c678;
+  box-shadow: 0 0 18px #d6b96a45;
+}
+.contract-open:focus-visible {
+  outline: 2px solid #f0dfa7;
+  outline-offset: 3px;
+}
+.covenant-box {
+  width: min(1050px, 94vw) !important;
+  max-height: 88vh;
+  overflow: auto;
+  padding: 28px !important;
+}
+.covenant-heading {
+  border-bottom: 1px solid #8f79454f;
+  padding-bottom: 16px;
+}
+.covenant-heading small,
+.covenant-copy small {
+  color: #d1b675;
+  letter-spacing: 2px;
+  font-size: 10px;
+}
+.covenant-heading h2 {
+  margin: 8px 0;
+  font-size: 30px;
+  letter-spacing: 5px;
+}
+.covenant-heading p,
+.soul-ledger {
+  color: #c3c0b7;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.covenant-side h3 {
+  font-size: 15px;
+  margin: 22px 0 6px;
+}
+.covenant-side h3 span {
+  font-size: 12px;
+  font-weight: 400;
+  color: #c7bc9e;
+  margin-left: 12px;
+}
+.covenant-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.covenant-card {
+  overflow: hidden;
+  border: 1px solid #806a414f;
+  border-radius: 10px;
+  background: #14171c;
+}
+.covenant-card.divine {
+  border-color: #bca062;
+  background: linear-gradient(160deg, #29271e, #13161b);
+}
+.covenant-card.spent {
+  opacity: 0.55;
+}
+.covenant-card > img {
+  display: block;
+  width: 100%;
+  height: 175px;
+  object-fit: cover;
+  object-position: center 27%;
+}
+.covenant-copy {
+  padding: 14px;
+}
+.covenant-copy h4 {
+  font-size: 18px;
+  margin: 8px 0;
+  color: #efe0b8;
+}
+.covenant-copy p {
+  font-size: 12px;
+  line-height: 1.75;
+  color: #d0ccbf;
+  margin: 8px 0;
+}
+.covenant-progress {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 11px;
+  color: #c6d5df;
+  padding: 10px 0;
+}
+.covenant-copy button {
+  width: 100%;
+  font-size: 12px;
+  padding: 9px 5px;
+  min-height: 40px;
+}
+.covenant-copy button:disabled {
+  opacity: 0.58;
+}
+.contract-setup {
+  font-size: 12px;
+  color: #d5c9ab;
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid #8f79454f;
+  border-radius: 6px;
+}
+.contract-setup summary {
+  cursor: pointer;
+}
+.contract-setup label {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 5px;
+  margin: 12px 0;
+}
+.contract-setup label span {
+  grid-column: 2;
+  color: #bbb8ae;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.contract-setup input {
+  accent-color: #cdb678;
+}
+.divine-arrival {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 40%, #283744e8, #070b12f5 75%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  overflow: hidden;
+  animation: divine-veil 1.7s both;
+}
+.divine-arrival > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.7;
+  mask-image: linear-gradient(#000, #000 60%, transparent);
+  animation: divine-rise 1.7s ease-out both;
+}
+.divine-arrival > small,
+.divine-arrival > strong,
+.divine-arrival > span {
+  z-index: 2;
+  text-shadow: 0 3px 14px #000;
+}
+.divine-arrival > small {
+  margin-top: 38%;
+  font-size: 12px;
+  color: #c6b382;
+  letter-spacing: 5px;
+}
+.divine-arrival > strong {
+  font-size: 38px;
+  letter-spacing: 8px;
+  color: #fff0c7;
+  margin: 12px;
+}
+.divine-arrival > span {
+  font-size: 16px;
+  letter-spacing: 12px;
+  color: #ccc8b8;
+}
+.divine-halo {
+  position: absolute;
+  width: 480px;
+  height: 480px;
+  border: 2px solid #d7bd7280;
+  border-radius: 50%;
+  box-shadow:
+    0 0 80px #b2d6f12c,
+    inset 0 0 60px #d0bb6533;
+  animation: divine-ring 1.7s ease-out both;
+}
+@keyframes divine-veil {
+  0% {
+    opacity: 0;
+  }
+  15%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes divine-rise {
+  from {
+    transform: translateY(30px) scale(1.06);
+  }
+  to {
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes divine-ring {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  55% {
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+body.touch-layout .contract-open {
+  left: 10px;
+  right: auto;
+  top: 58px;
+  bottom: auto;
+  width: 112px;
+  min-height: 44px;
+  font-size: 12px;
+}
+body.touch-layout .contract-open small {
+  font-size: 10px;
+}
+body.touch-layout .covenant-box {
+  width: 94vw !important;
+  padding: 18px !important;
+  max-height: 86dvh;
+}
+body.touch-layout .covenant-grid {
+  grid-template-columns: 1fr;
+}
+body.touch-layout .covenant-card {
+  display: grid;
+  grid-template-columns: 95px 1fr;
+}
+body.touch-layout .covenant-card > img {
+  height: 100%;
+  min-height: 190px;
+}
+body.touch-layout .covenant-copy h4 {
+  font-size: 16px;
+}
+body.touch-layout .covenant-copy {
+  padding: 12px;
+}
+body.touch-layout .divine-arrival > strong {
+  font-size: 24px;
+  letter-spacing: 3px;
+}
+body.touch-layout .divine-arrival > small {
+  margin-top: 55%;
+  font-size: 9px;
+  letter-spacing: 2px;
+}
+body.mobile-landscape .covenant-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+body.mobile-landscape .covenant-card {
+  display: block;
+}
+body.mobile-landscape .covenant-card > img {
+  height: 120px;
+  min-height: 0;
+}
+body.mobile-landscape .divine-arrival > small {
+  margin-top: 15%;
+}
+body:not(.touch-layout) .deck-editor {
+  overflow-y: auto;
+}
+body:not(.touch-layout) .deck-editor .deck-list {
+  min-height: 40px;
+}
+.deck-editor .contract-setup[hidden] {
+  display: none;
+}
+.covenant-card {
+  display: flex;
+  flex-direction: column;
+}
+.covenant-card > img {
+  height: 220px;
+  object-position: center top;
+}
+.covenant-copy {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.covenant-copy .covenant-progress {
+  margin-top: auto;
+}
+.covenant-copy > small {
+  letter-spacing: 1px;
+  line-height: 1.7;
+}
+.divine-arrival {
+  justify-content: flex-end;
+  padding-bottom: 10%;
+  box-sizing: border-box;
+}
+.divine-arrival > small {
+  margin-top: 0 !important;
+}
+body.mobile-portrait .contract-open {
+  top: 168px;
+  left: 12px;
+  width: 112px;
+  min-height: 40px;
+}

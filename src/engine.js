@@ -19,6 +19,10 @@ const EmberEngine = (() => {
     typeof EmberDeckRules !== "undefined"
       ? EmberDeckRules
       : require("./rules/decks.js");
+  const Contracts =
+    typeof EmberContracts !== "undefined"
+      ? EmberContracts
+      : require("./rules/contracts.js");
   class Game {
     constructor(opts = {}) {
       this.data = opts.data || D;
@@ -82,6 +86,10 @@ const EmberEngine = (() => {
             hand: side === "p" ? p.hand : p.hand.map((c) => ({ uid: c.uid })),
             deck: Array(p.deck.length).fill(null),
             secrets: Array(p.secrets.length).fill(null),
+            souls: p.souls,
+            fallen: p.fallen,
+            contracts: p.contracts,
+            usedContracts: p.usedContracts,
           });
         }
         Object.assign(view, {
@@ -120,13 +128,19 @@ const EmberEngine = (() => {
       if (!this.s) return this.reject("尚未开始对局");
       if (
         !action ||
-        !["play", "attack", "power", "end", "choose", "mulligan"].includes(
-          action.type,
-        )
+        ![
+          "play",
+          "attack",
+          "power",
+          "end",
+          "choose",
+          "mulligan",
+          "contract",
+        ].includes(action.type)
       )
         return this.reject("未知操作");
       if (
-        ["play", "attack", "power", "end"].includes(action.type) &&
+        ["play", "attack", "power", "end", "contract"].includes(action.type) &&
         !["p", "e"].includes(action.side)
       )
         return this.reject("无效玩家");
@@ -137,6 +151,8 @@ const EmberEngine = (() => {
       try {
         result = this.withBlock("action", { action: action.type }, () => {
           switch (action.type) {
+            case "contract":
+              return Contracts.summon(this, action.side, action.cid);
             case "play":
               return this.play(action.side, action.uid, action.target);
             case "attack":
@@ -181,6 +197,7 @@ const EmberEngine = (() => {
         getTarget: (t) => R.freeze(structuredClone(g.getTarget(t))),
         spellBonus: (s) => g.spellBonus(s),
         preview: (...a) => g.preview(...a),
+        legalContract: (...a) => g.legalContract(...a),
       });
     }
     relicValue(key) {
@@ -235,6 +252,9 @@ const EmberEngine = (() => {
         ? this.data.archetypes.find((a) => a.id === options.opponent)
         : null;
       if (options.opponent && !opponent) return this.reject("未知练习对手");
+      const contracts = options.contracts ?? hero.defaultContracts ?? [];
+      if (!Contracts.check(this.data, contracts, hero.classId))
+        return this.reject("无效契约：最多三张、同职业且至多一位神祇");
       if (opponent) relics = [];
       this.s = {
         version: State.VERSION,
@@ -281,9 +301,20 @@ const EmberEngine = (() => {
         frozen: false,
         weapon: null,
         secrets: [],
+        souls: [],
+        fallen: 0,
+        contracts: [],
+        usedContracts: [],
       });
       this.s.p = unit(30 + this.relicValue("maxHealth"));
       this.s.e = unit(opponent ? 30 : boss.hp);
+      this.s.p.contracts = [...contracts];
+      this.s.e.contracts = opponent
+        ? [
+            ...(this.data.heroes.find((h) => h.id === opponent.hero)
+              .defaultContracts || []),
+          ]
+        : [];
       const valid = this.validateDeck(deck);
       this.s.p.deck = this.shuffle(
         (valid ? deck : hero.deck).map((x) => this.card(x)),
@@ -315,6 +346,9 @@ const EmberEngine = (() => {
       );
       this.log("选择需要替换的起始卡牌。");
       return this.emit();
+    }
+    legalContract(side, id) {
+      return Contracts.legal(this, side, id);
     }
     validateDeck(deck, heroId = null) {
       return Decks.check(this.data, deck, heroId).ok;
@@ -442,6 +476,7 @@ const EmberEngine = (() => {
         c = p.hand.find((x) => x.uid === uid);
       if (!c) return "找不到这张牌";
       const d = this.data.byId[c.cid];
+      if (d.contract) return "契约牌只能从契约栏召唤";
       if (this.cost(c) > p.mana) return "法力不足";
       if (d.type === "minion" && p.board.length >= 7)
         return "战场已满（最多 7 个随从）";
@@ -614,7 +649,10 @@ const EmberEngine = (() => {
         taunts = visible.filter((x) => x.tags.includes("taunt"));
       if (taunts.length) return taunts.map((x) => ({ side: opp, uid: x.uid }));
       const list = visible.map((x) => ({ side: opp, uid: x.uid }));
-      if (uid === "hero" || !m.sick || m.tags.includes("charge"))
+      if (
+        (uid === "hero" || !m.sick || m.tags.includes("charge")) &&
+        m.divineArrival !== this.s.turn
+      )
         list.push({ side: opp, uid: "hero" });
       return list;
     }
@@ -698,6 +736,8 @@ const EmberEngine = (() => {
         c = this.powerDefinition(side);
       if (p.powerUsed) return "本回合已使用英雄技能";
       if (p.mana < c.powerCost) return "法力不足";
+      if (c.target && !this.targets(c.target, side).length)
+        return "没有合法目标";
       return R.legal(this, c, side, c.powerEffects);
     }
     power(side, target = null) {
@@ -705,7 +745,7 @@ const EmberEngine = (() => {
       if (error) return this.reject(error);
       const c = this.powerDefinition(side);
       if (c.target && !this.hasTarget(c.target, side, target))
-        return this.reject("请选择一个敌人");
+        return this.reject("请选择有效的目标");
       this.s[side].mana -= c.powerCost;
       this.s[side].powerUsed = true;
       this.event("power", { side, target });
@@ -729,6 +769,7 @@ const EmberEngine = (() => {
           (a, b) => Number(a.m.uid.slice(1)) - Number(b.m.uid.slice(1)),
         );
         for (const { side, m } of dead) {
+          Contracts.death(this, side, m);
           this.event("death", {
             side,
             uid: m.uid,
@@ -754,7 +795,10 @@ const EmberEngine = (() => {
             );
           }
           this.trigger("friendlyDeath", side, m);
-          if (m.tags.includes("reborn")) {
+          if (
+            m.tags.includes("reborn") &&
+            !this.data.byId[m.cid].contract?.divine
+          ) {
             const c = this.data.byId[m.cid];
             this.summon(
               side,

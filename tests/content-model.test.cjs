@@ -135,13 +135,13 @@ test("appending a boss preserves old indices; invalid starts leave state untouch
   world.bosses.push({ ...structuredClone(world.bosses[0]), id: "sixth" });
   const data = D.create(cards, world),
     g = new Game({ data });
-  assert.ok(g.start("mage", 5).ok);
+  assert.ok(g.start("mage", world.bosses.length - 1).ok);
   assert.equal(g.powerDefinition("e").id, "sixth");
   assert.ok(new Game({ data }).restore(g.s));
   const before = JSON.stringify(g.s);
   for (const args of [
     ["missing"],
-    ["mage", 6],
+    ["mage", world.bosses.length],
     ["mage", 0, ["missing"]],
     ["mage", 0, ["heart", "heart"]],
   ]) {
@@ -216,7 +216,7 @@ test("obsolete arrays are rejected and can be explicitly replaced with an empty 
   assert.equal(m.writes(), 0);
   assert.ok(m.store.reset().ok);
   assert.deepEqual(m.store.load().collection, {
-    version: 2,
+    version: 3,
     activeId: null,
     decks: [],
   });
@@ -231,7 +231,7 @@ test("failed writes, broken JSON and unknown versions never overwrite collection
   for (const raw of [
     "{broken",
     JSON.stringify({ version: 99, decks: [] }),
-    JSON.stringify({ version: 2, activeId: "ghost", decks: [] }),
+    JSON.stringify({ version: 3, activeId: "ghost", decks: [] }),
   ]) {
     const n = memory();
     n.corrupt(raw);

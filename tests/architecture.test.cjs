@@ -18,6 +18,19 @@ function card(g, id) {
 test("all current cards settle deterministically and serialize valid states", () => {
   for (const definition of D.cards) {
     const run = () => {
+      if (definition.contract) {
+        const g = new Game();
+        g.start("morla", 0, [], null, 91);
+        g.mulligan();
+        g.s.p.mana = g.s.p.maxMana = 10;
+        g.s.p.fallen = 8;
+        g.s.p.souls = ["wolf", "moonfox", "duskstag", "soulguide"];
+        assert.ok(
+          g.dispatch({ type: "contract", side: "p", cid: definition.id }).ok,
+        );
+        assert.ok(new Game().restore(g.snapshot()), definition.id);
+        return g.snapshot();
+      }
       const g = setup(),
         c = card(g, definition.id);
       const target = definition.target
@@ -265,7 +278,7 @@ test("serialized temporary attack has a single source and expires exactly once a
   g.buff(m, 3, 0, { source: "turn-a", duration: "turn" });
   g.buff(m, 1, 0, { source: "turn-b", duration: "turn" });
   const saved = g.snapshot();
-  assert.equal(saved.version, 2);
+  assert.equal(saved.version, 3);
   assert.equal("ruleset" in saved, false);
   assert.equal("tempAtk" in saved.p.board[0], false);
   const h = new Game();

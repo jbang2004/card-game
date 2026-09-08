@@ -1120,6 +1120,23 @@ const EmberFX = (() => {
             fallback(beat.frame, primary?.side || "p", "hero"),
           );
         }
+        if (event.type === "contract") {
+          const name = EmberData.byId[event.cid].name;
+          if (event.divine && !quality.reduced) {
+            const seal = transient("divine-arrival", beat.hold);
+            seal.innerHTML = `<div class="divine-halo"></div><img src="${EmberArt.card(EmberData.byId[event.cid])}" alt=""><small>THE MOON REMEMBERS</small><strong>${name}</strong><span>神祇降临</span>`;
+            sound(
+              "phase",
+              pos(unit(event.side, event.uid)) ||
+                fallback(beat.frame, event.side, "hero"),
+            );
+          } else
+            cue(
+              pos(unit(event.side, event.uid)),
+              name + " · 契约降临",
+              "summon",
+            );
+        }
         if (event.type === "phase") phaseChange(s);
       }, beat.at);
     schedule(() => {
@@ -2131,7 +2148,7 @@ const EmberFX = (() => {
       for (const el of [...nodes])
         if (
           el.matches(
-            ".death-ghost,.cast-card,.summon-seal,.card-flight,.signature-cue",
+            ".death-ghost,.cast-card,.summon-seal,.card-flight,.signature-cue,.divine-arrival",
           )
         ) {
           el.remove();

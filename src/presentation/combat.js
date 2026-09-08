@@ -5,6 +5,7 @@ const EmberCombat = (() => {
       ? EmberFXProfiles
       : require("./fx-profiles.js");
   const visible = new Set([
+    "contract",
     "play",
     "power",
     "attack",
@@ -97,6 +98,8 @@ const EmberCombat = (() => {
           turn: 220,
           over: 700,
         }[group.kind] || 260;
+      if (group.kind === "contract")
+        group.hold = group.events[0].divine ? 1700 : 650;
       if (group.kind === "play")
         group.hold = profiles.get(group.events[0].cid).windup;
       if (group.events.some((e) => e.type === "heal" && e.from))
