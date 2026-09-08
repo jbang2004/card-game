@@ -35,8 +35,17 @@ test("all heroes have one distinct default deity; class pool still shared and at
   assert.deepEqual(gods, [["jingchen"], ["aurion"], ["fenlos"], ["selmyra"]]);
   assert.equal(C.check(D, ["selmyra", "fenlos"], "ranger"), false);
   assert.equal(C.check(D, ["fenlos"], "ranger"), true);
-  for (const h of D.heroes)
-    assert.equal(new Game().start(h.id, 0, [], null, 1).ok, true);
+  const defaults = {
+    mage: ["jingchen"],
+    paladin: ["aurion"],
+    ranger: ["fenlos"],
+    morla: ["eclipsewolf", "moonguard", "selmyra"],
+  };
+  for (const h of D.heroes) {
+    const g = new Game();
+    assert.equal(g.start(h.id, 0, [], null, 1).ok, true);
+    assert.deepEqual(g.s.p.contracts, defaults[h.id]);
+  }
 });
 test("starfire counts successful distinct non-token spells, not duplicates, counters, or power", () => {
   const g = game();
