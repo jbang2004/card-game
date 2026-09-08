@@ -1,3 +1,5 @@
+> 素材清理更新：旧版 moon-sources 已按用户要求删除。当前只保留 moon-anime-v2 原画、分层制作源及其运行 WebP。下文旧路径属于历史制作记录。
+
 > 当前统一角色配置与制作契约见 [CHARACTER_AUTHORING.md](CHARACTER_AUTHORING.md)。下文涉及独立 motion manifest / portrait-profiles 的描述是早期阶段记录，已由 `assets/characters.json` 取代。
 
 # v0.12 素材与加工
