@@ -130,7 +130,7 @@ test("AI decision never mutates live RNG, state or pending events", () => {
   g.aiAction();
   assert.equal(JSON.stringify({ s: g.s, e: g.events }), before);
 });
-test("new discover options respect class and old v1 pools remain unchanged", () => {
+test("discover options always respect the current class pool", () => {
   const g = setup();
   play(g, "discovery");
   assert.ok(
@@ -138,10 +138,6 @@ test("new discover options respect class and old v1 pools remain unchanged", () 
       ["mage", "neutral"].includes(D.byId[id].class),
     ),
   );
-  const h = setup();
-  delete h.s.ruleset;
-  play(h, "discovery");
-  assert.ok(h.s.choice.cards.every((id) => !D.byId[id].set));
 });
 test("practice supports both first players, coin after mulligan, class power and no boss phase", () => {
   for (const first of ["p", "e"]) {
@@ -164,16 +160,17 @@ test("practice supports both first players, coin after mulligan, class power and
     if (first === "e") assert.ok(g.s.p.hand.some((c) => c.cid === "coin"));
   }
 });
-test("starting a cross-class deck is rejected atomically; explicit legacy campaign can continue", () => {
+test("starting a cross-class deck is always rejected atomically", () => {
   const g = setup();
   const before = JSON.stringify(g.s);
   assert.equal(g.start("paladin", 0, [], D.archetypes[0].deck).ok, false);
   assert.equal(JSON.stringify(g.s), before);
-  assert.ok(
+  assert.equal(
     g.start("paladin", 1, [], D.archetypes[0].deck, 44, { legacyDeck: true })
       .ok,
+    false,
   );
-  assert.equal(g.s.legacyDeck, true);
+  assert.equal(JSON.stringify(g.s), before);
 });
 test("AI values tracking and pending discovery without learning draw order", () => {
   const g = setup("ranger");

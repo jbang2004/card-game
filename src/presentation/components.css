@@ -1997,3 +1997,57 @@ body.mobile-landscape .lab-box .modal-close {
   height: 36px;
   margin: 0;
 }
+
+/* Named deck preparation uses the same panel and ink tokens as the collection. */
+body .saved-deck-controls {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+body .saved-deck-controls label {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  gap: 8px;
+  font-size: 14px;
+}
+body .saved-deck-controls .library-search {
+  width: 100%;
+  min-width: 0;
+}
+body #deck-warning {
+  max-height: 64px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+body .deck-actions {
+  flex-wrap: wrap;
+}
+body .deck-actions button {
+  min-width: 90px;
+}
+body .deck-actions #deck-play {
+  flex-basis: 100%;
+}
+body:not(.touch-layout) .deck-editor > :not(.deck-list) {
+  flex-shrink: 0;
+}
+body:not(.touch-layout) .deck-editor .deck-intro {
+  margin: 4px 0 8px;
+}
+body:not(.touch-layout) .deck-editor .deck-plan,
+body:not(.touch-layout) .deck-editor #deck-warning {
+  margin: 6px 0;
+}
+
+body .deck-actions {
+  background: #2e2117;
+}
+@media (orientation: landscape) {
+  body.touch-layout .deck-actions #deck-play {
+    flex-basis: auto;
+  }
+}
+
+body:not(.touch-layout) .deck-editor.has-storage-error .deck-list {
+  min-height: 40px;
+}

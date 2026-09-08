@@ -4,10 +4,10 @@ const D = require("../src/data.js"),
   definitions = require("../src/content/cards.js"),
   campaign = require("../src/content/campaign.js"),
   { Game } = require("../src/engine.js");
-const fixture = require("./fixtures/card-behavior-v1.json");
+const initial = require("./fixtures/save-current.json");
 function setup(data = D) {
   const g = new Game({ data });
-  assert.ok(g.restore(fixture.initial));
+  assert.ok(g.restore(initial));
   return g;
 }
 function card(g, id) {
@@ -15,39 +15,27 @@ function card(g, id) {
   g.s.p.hand = [c];
   return c;
 }
-function stripped(s) {
-  s = structuredClone(s);
-  for (const side of ["p", "e"])
-    for (const m of s[side].board) delete m.modifiers;
-  return {
-    rng: s.rng,
-    seq: s.seq,
-    phase: s.phase,
-    phase2: s.phase2,
-    winner: s.winner,
-    choice: s.choice,
-    stats: s.stats,
-    p: s.p,
-    e: s.e,
-  };
-}
-test("all 56 cards retain their captured pre-migration rule outcomes", () => {
-  for (const f of fixture.cases) {
-    const g = setup(),
-      c = card(g, f.id);
-    const r = g.dispatch({
-      type: "play",
-      side: "p",
-      uid: c.uid,
-      target: f.target,
-    });
-    assert.equal(r.ok, f.ok, f.id);
-    assert.deepEqual(stripped(g.s), f.expected, f.id);
+test("all current cards settle deterministically and serialize valid states", () => {
+  for (const definition of D.cards) {
+    const run = () => {
+      const g = setup(),
+        c = card(g, definition.id);
+      const target = definition.target
+        ? g.targets(definition.target, "p")[0]
+        : null;
+      assert.ok(
+        g.dispatch({ type: "play", side: "p", uid: c.uid, target }).ok,
+        definition.id,
+      );
+      assert.ok(new Game().restore(g.snapshot()), definition.id);
+      return g.snapshot();
+    };
+    assert.deepEqual(run(), run(), definition.id);
   }
 });
-test("v1 input saves restore without a format upgrade or state changes", () => {
+test("current saves restore without state changes", () => {
   const g = setup();
-  assert.deepEqual(g.s, fixture.initial);
+  assert.deepEqual(g.s, initial);
   const h = new Game();
   assert.ok(h.restore(g.snapshot()));
   assert.deepEqual(h.s, g.s);
@@ -210,8 +198,8 @@ test("storage adapter preserves keys, tolerates corruption and reports write fai
   assert.equal(unavailable.write("x", 2), false);
   assert.equal(warnings, 1);
 });
-test("invalid optional v1 modifier metadata is rejected", () => {
-  const s = structuredClone(fixture.initial);
+test("invalid current modifier metadata is rejected", () => {
+  const s = structuredClone(initial);
   s.p.board[0].modifiers = [
     { attack: 2, health: 0, source: "x", duration: "unknown" },
   ];
@@ -245,4 +233,48 @@ test("weapon attack preview accounts for lifesteal after retaliation", () => {
   assert.equal(preview.self.dead, false);
   g.dispatch({ type: "attack", side: "p", uid: "hero", target });
   assert.equal(g.s.p.hp, preview.self.hp);
+});
+
+test("obsolete versions and incomplete modifier state are rejected without replacing the current match", () => {
+  const g = setup(),
+    before = g.snapshot();
+  for (const mutate of [
+    (s) => (s.version = 1),
+    (s) => (s.ruleset = 1),
+    (s) => (s.legacyDeck = true),
+    (s) => delete s.p.board[0].modifiers,
+    (s) => (s.p.board[0].tempAtk = 3),
+    (s) =>
+      s.p.board[0].modifiers.push({
+        attack: 1,
+        health: 1,
+        duration: "turn",
+        source: "bad",
+      }),
+  ]) {
+    const s = structuredClone(before);
+    mutate(s);
+    assert.equal(g.restore(s), false);
+    assert.deepEqual(g.snapshot(), before);
+  }
+});
+test("serialized temporary attack has a single source and expires exactly once after restore", () => {
+  const g = setup(),
+    m = g.s.p.board[0];
+  g.buff(m, 2, 2, { source: "permanent" });
+  g.buff(m, 3, 0, { source: "turn-a", duration: "turn" });
+  g.buff(m, 1, 0, { source: "turn-b", duration: "turn" });
+  const saved = g.snapshot();
+  assert.equal(saved.version, 2);
+  assert.equal("ruleset" in saved, false);
+  assert.equal("tempAtk" in saved.p.board[0], false);
+  const h = new Game();
+  assert.ok(h.restore(saved));
+  h.endTurn("p");
+  assert.equal(h.s.p.board[0].atk, 4);
+  assert.equal(h.s.p.board[0].maxHp, 5);
+  assert.deepEqual(
+    h.s.p.board[0].modifiers.map((x) => x.source),
+    ["permanent"],
+  );
 });

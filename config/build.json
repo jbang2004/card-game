@@ -45,5 +45,8 @@
   "AUDIO_ASSETS": "audio-assets.js",
   "VFX_ASSETS": "vfx-assets.js",
   "VFX_PROFILES": "presentation/fx-profiles.js",
-  "VFX_RENDERER": "presentation/vfx.js"
+  "VFX_RENDERER": "presentation/vfx.js",
+  "DECK_RULES": "rules/decks.js",
+  "CONTENT_SCHEMA": "rules/catalog.js",
+  "DECK_STORE": "application/decks.js"
 }

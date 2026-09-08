@@ -237,7 +237,7 @@
   function syncDeck(n) {
     if (!V.mobile) return;
     const b = $("touch-deck-tab");
-    if (b) b.textContent = `我的牌组 · ${n}/30`;
+    if (b) b.textContent = `我的牌组 · ${n}/${D.deckRules.size}`;
   }
   function closeInline() {
     inlineClose?.();
@@ -284,7 +284,7 @@
       tabs.setAttribute("role", "tablist");
       tabs.setAttribute("aria-label", "卡牌收藏与牌组");
       tabs.innerHTML =
-        '<button id="touch-card-tab" role="tab" aria-selected="true">全部卡牌</button><button id="touch-deck-tab" role="tab" aria-selected="false">我的牌组 · 30/30</button>';
+        `<button id="touch-card-tab" role="tab" aria-selected="true">全部卡牌</button><button id="touch-deck-tab" role="tab" aria-selected="false">我的牌组 · ${D.deckRules.size}/${D.deckRules.size}</button>`;
       box.querySelector(".library-heading").after(tabs);
       for (const [id, deck] of [
         ["touch-card-tab", false],

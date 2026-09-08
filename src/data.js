@@ -12,7 +12,16 @@ const EmberData = (() => {
     typeof EmberCampaign !== "undefined"
       ? EmberCampaign
       : require("./content/campaign.js");
+  const Decks =
+    typeof EmberDeckRules !== "undefined"
+      ? EmberDeckRules
+      : require("./rules/decks.js");
+  const Schema =
+    typeof EmberCatalog !== "undefined"
+      ? EmberCatalog
+      : require("./rules/catalog.js");
   function create(input = definitions, world = campaign) {
+    Schema.validate(world);
     const cards = input.map((c) => ({
       tags: [],
       class: "neutral",
@@ -25,9 +34,12 @@ const EmberData = (() => {
         bosses,
         relics,
         kw,
-        archetypes = [],
+        archetypes,
+        classes,
+        tribes,
+        deckRules,
       } = structuredClone(world),
-      byId = {};
+      byId = Object.create(null);
     const cardFields = new Set([
       "id",
       "class",
@@ -91,11 +103,33 @@ const EmberData = (() => {
         throw Error(c.id + ": Weapon onPlay is not supported");
       byId[c.id] = c;
     }
-    const db = { ...byId, $kw: kw };
+    const classNames = Object.fromEntries(classes.map((c) => [c.id, c.name]));
+    const tribeNames = Object.fromEntries(tribes.map((t) => [t.id, t.name]));
+    const db = { ...byId, $kw: kw, $tribes: tribeNames };
+    const catalog = { byId, heroes, deckRules };
+    function targeted(ops, owner, target, allowTarget = true) {
+      R.validateEffects(ops, db, owner);
+      const selected = ops.filter((e) => e.to === "selected");
+      if (selected.length && (!allowTarget || !target))
+        throw Error(owner + ": Selected effect requires a target");
+      if (target && !selected.length)
+        throw Error(owner + ": Unused target declaration");
+      if (
+        selected.some((e) =>
+          ["buff", "grant", "silence", "transform", "destroy"].includes(e.type),
+        ) &&
+        !["enemyMinion", "friendlyMinion", "minion"].includes(target)
+      )
+        throw Error(owner + ": Effect requires a minion target");
+      if (ops.some((e) => e.to === "self" || e.type === "secret"))
+        throw Error(
+          owner + ": Hero/relic effects cannot use minion self or card secrets",
+        );
+    }
     for (const c of cards) {
-      if (!["neutral", "mage", "paladin", "ranger"].includes(c.class))
+      if (!Object.hasOwn(classNames, c.class))
         throw Error(c.id + ": Invalid class");
-      if (c.tribe && !["beast", "undead", "dragon"].includes(c.tribe))
+      if (c.tribe && !Object.hasOwn(tribeNames, c.tribe))
         throw Error(c.id + ": Invalid tribe");
       R.validateTriggers(c.triggers, db, c.id);
       R.validateEffects(c.onPlay, db, c.id);
@@ -131,17 +165,25 @@ const EmberData = (() => {
     }
     for (const h of [...heroes, ...bosses]) {
       if (!byId[h.portraitId]) throw Error(h.id + ": Invalid portrait ID");
-      if (!Number.isInteger(h.powerCost) || h.powerCost < 0)
-        throw Error(h.id + ": Invalid power cost");
-      if (h.deck.some((id) => !byId[id] || byId[id].token))
-        throw Error(h.id + ": Invalid deck reference");
-      R.validateEffects(h.powerEffects, db, h.id);
-      if (h.phaseEffects) R.validateEffects(h.phaseEffects, db, h.id);
+      targeted(h.powerEffects, h.id, h.target);
     }
-    for (const r of relics) R.validateTriggers(r.triggers, db, r.id);
-    for (const r of relics)
+    for (const b of bosses) {
+      if (
+        !Array.isArray(b.deck) ||
+        !b.deck.length ||
+        b.deck.length * 2 > 100 ||
+        b.deck.some((id) => !byId[id] || byId[id].token)
+      )
+        throw Error(b.id + ": Invalid boss deck reference");
+      targeted(b.phaseEffects, b.id + ".phaseEffects", null, false);
+    }
+    for (const r of relics) {
+      R.validateTriggers(r.triggers, db, r.id);
+      for (const t of r.triggers || []) targeted(t.effects, r.id, null, false);
       for (const key of ["onStart", "onTurn"])
-        if (r[key]) R.validateEffects(r[key], db, r.id);
+        if (r[key] !== undefined)
+          targeted(r[key], r.id + "." + key, null, false);
+    }
     const describe = (ops, c = {}) =>
       R.text(
         { tags: [], type: "spell", onPlay: ops || [], onDeath: [], ...c },
@@ -155,46 +197,35 @@ const EmberData = (() => {
       if (h.phaseEffects) h.phaseText = "半血：" + describe(h.phaseEffects);
     }
     for (const r of relics) {
-      r.text = r.maxHealth
-        ? `每场战斗，英雄最大生命值 +${r.maxHealth}。`
-        : r.spellDamage
-          ? `你的伤害法术额外造成 ${r.spellDamage} 点伤害。`
-          : r.startingMana
-            ? `每场战斗的起始法力水晶上限 +${r.startingMana}。`
-            : r.onTurn
-              ? "你的每个回合开始时，" + describe(r.onTurn)
-              : "每场战斗开始时，" + describe(r.onStart);
+      r.text = [
+        r.maxHealth ? `每场战斗，英雄最大生命值 +${r.maxHealth}。` : "",
+        r.spellDamage ? `你的伤害法术额外造成 ${r.spellDamage} 点伤害。` : "",
+        r.startingMana ? `每场战斗的起始法力水晶上限 +${r.startingMana}。` : "",
+        r.onTurn?.length ? "你的每个回合开始时，" + describe(r.onTurn) : "",
+        r.onStart?.length ? "每场战斗开始时，" + describe(r.onStart) : "",
+        R.triggerText(r.triggers, db),
+      ].join("");
+      if (!r.text) throw Error(r.id + ": Relic requires an effect");
     }
-    for (const r of relics) r.text += R.triggerText(r.triggers, db);
     for (const a of archetypes) {
-      if (
-        !heroes.some((h) => h.id === a.hero) ||
-        !Array.isArray(a.deck) ||
-        a.deck.length !== 30
-      )
-        throw Error(a.id + ": Invalid archetype");
-      const counts = {};
-      for (const id of a.deck) {
-        const c = byId[id];
-        if (
-          !c ||
-          c.token ||
-          !["neutral", a.hero].includes(c.class) ||
-          (counts[id] = (counts[id] || 0) + 1) >
-            (c.rarity === "legendary" ? 1 : 2)
-        )
-          throw Error(a.id + ": Illegal archetype card " + id);
-      }
+      if (Decks.classFor(catalog, a.hero) !== a.classId)
+        throw Error(a.id + ": Invalid archetype hero/class");
+      const result = Decks.check(catalog, a.deck, a.hero);
+      if (!result.ok) throw Error(a.id + ": " + result.errors.join("; "));
     }
-    const classNames = {
-      neutral: "中立",
-      mage: "法师",
-      paladin: "圣卫",
-      ranger: "游侠",
-    };
-    const tribeNames = { beast: "野兽", undead: "亡灵", dragon: "龙" };
+    for (const h of heroes) {
+      const preset = archetypes.find((a) => a.id === h.defaultDeckId);
+      if (!preset || preset.classId !== h.classId)
+        throw Error(h.id + ": Invalid defaultDeckId");
+      h.deck = [...preset.deck];
+      const result = Decks.check(catalog, h.deck, h.id);
+      if (!result.ok) throw Error(h.id + ": " + result.errors.join("; "));
+    }
     return R.freeze({
       cards,
+      classes,
+      tribes,
+      deckRules,
       byId,
       heroes,
       bosses,

@@ -544,11 +544,11 @@ test("portable build starts without retired globals and plays a spell", async ({
   expect(errors).toEqual([]);
 });
 
-test("pre-upgrade v1 fixture resumes through actual browser storage", async ({
+test("current fixture resumes through actual browser storage", async ({
   page,
 }) => {
   const old = JSON.parse(
-    fs.readFileSync(path.resolve("tests/fixtures/save-v1.json"), "utf8"),
+    fs.readFileSync(path.resolve("tests/fixtures/save-current.json"), "utf8"),
   );
   await page.goto("./");
   await ready(page);
@@ -598,7 +598,7 @@ test("campaign rewards and deck editor use the new state boundary", async ({
   await page.locator("#deck-save").click();
   expect(
     await page.evaluate(
-      () => JSON.parse(localStorage.getItem("emberfall.deck.v1")).length,
+      () => JSON.parse(localStorage.getItem("emberfall.deck.v1")).decks[0].cards.length,
     ),
   ).toBe(30);
 });

@@ -1,11 +1,11 @@
-/* v1 save boundary. Optional modifier metadata extends v1 without replacing keys.
- * Old saves retain their authoritative numeric stats and tempAtk unchanged. */
+/* Current match schema only. Old test saves are intentionally rejected. */
 const EmberState = (() => {
+  const VERSION = 2;
   function valid(s, data) {
     try {
       if (
         !s ||
-        s.version !== 1 ||
+        s.version !== VERSION ||
         !data.heroes.some((h) => h.id === s.heroId) ||
         !data.bosses[s.bossIndex]
       )
@@ -38,7 +38,7 @@ const EmberState = (() => {
         )
       )
         return false;
-      if (s.ruleset !== undefined && ![1, 2].includes(s.ruleset)) return false;
+      if ("ruleset" in s || "legacyDeck" in s) return false;
       if (s.mode !== undefined && s.mode !== "practice") return false;
       if (
         s.mode === "practice" &&
@@ -115,9 +115,7 @@ const EmberState = (() => {
         for (const m of p.board)
           if (
             !validUses(m.triggerUses) ||
-            ![m.hp, m.maxHp, m.atk, m.attacks, m.tempAtk].every(
-              Number.isFinite,
-            ) ||
+            ![m.hp, m.maxHp, m.atk, m.attacks].every(Number.isFinite) ||
             m.hp <= 0 ||
             m.hp > m.maxHp ||
             m.atk < 0 ||
@@ -147,16 +145,17 @@ const EmberState = (() => {
       for (const side of ["p", "e"])
         for (const m of s[side].board) {
           if (
-            m.modifiers !== undefined &&
-            (!Array.isArray(m.modifiers) ||
-              m.modifiers.some(
-                (x) =>
-                  !x ||
-                  !Number.isFinite(x.attack) ||
-                  !Number.isFinite(x.health) ||
-                  typeof x.source !== "string" ||
-                  !["permanent", "turn"].includes(x.duration),
-              ))
+            "tempAtk" in m ||
+            !Array.isArray(m.modifiers) ||
+            m.modifiers.some(
+              (x) =>
+                !x ||
+                !Number.isFinite(x.attack) ||
+                !Number.isFinite(x.health) ||
+                typeof x.source !== "string" ||
+                !["permanent", "turn"].includes(x.duration) ||
+                (x.duration === "turn" && x.health !== 0),
+            )
           )
             return false;
         }
@@ -171,6 +170,6 @@ const EmberState = (() => {
       return false;
     }
   }
-  return Object.freeze({ valid });
+  return Object.freeze({ VERSION, valid });
 })();
 if (typeof module !== "undefined") module.exports = EmberState;

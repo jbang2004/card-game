@@ -54,7 +54,7 @@ for (const a of D.archetypes) {
   console.log("Finished practice", a.id);
 }
 for (const a of D.archetypes) {
-  for (let boss = 0; boss < 5; boss++) {
+  for (let boss = 0; boss < D.bosses.length; boss++) {
     const games = [];
     for (let seed = 1; seed <= seeds; seed++)
       games.push(run(a, boss, seed * 65537, false));

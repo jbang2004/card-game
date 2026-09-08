@@ -77,4 +77,16 @@ python3 tools/pack_card_assets.py
 npm run test:release
 ```
 
-迁移行为 fixture 保证现有规则没有无意变化。做有意的平衡调整时，先新增/修改明确的行为测试，再逐项审查相关 fixture 的预期；不要批量更新全部结果或重新加上源码哈希锁。
+使用当前版本的效果、触发顺序、增益到期和存档往返测试防止规则回归；全部卡牌还需通过确定性与可恢复状态检查。旧版本行为 fixture 已退役，不再要求当前规则复刻旧玩法。
+
+## 英雄、职业、预设和卡组规则
+
+在 `content/campaign.js` 中注册职业 `classes: [{id, name}]`；卡牌 `class` 与英雄 `classId` 引用它。种族使用同文件中的 `tribes`，筛选抽牌的文案会读取注册名称。
+
+新增同职业英雄可以复用已有 `classId` 和 `defaultDeckId`，为其设置独立 `id`、名称、技能、`powerIcon` 与 `portraitId`。不要添加 `hero.deck`：默认牌表仅从预设派生。新英雄仍需遵守角色制作和素材映射规范。
+
+预设包含 `{id, name, classId, hero, deck, plan, strategy?}`；`hero` 是练习对手的英雄 ID，其职业必须匹配 `classId`。同职业的其他英雄也可以选用此预设，无需复制牌表。英雄默认预设必须存在且符合职业、牌数与同名限制。
+
+`deckRules: {size: 30, maxCopies: 2, rarityCopies: {legendary: 1}}` 是构筑规则的唯一配置源。修改时同时调整所有预设到新规则；加载器会拒绝不合法内容。改变已发布构筑规则时，还需审查旧战役继续游玩与卡组迁移策略，不代表任何规则变动都能无条件兼容。
+
+首领 `deck` 仍是战役专用牌表种子，开局复制两份，因此无需遵守玩家职业和同名限制；引用必须有效，展开后不超过 当前存档的 100 张牌库容量。首领配置明确 `discoverClass`，`phaseEffects` 在半血时执行。追加首领后，地图、通关和奖励流程自动延长；不要重排现有首领而不迁移存档。

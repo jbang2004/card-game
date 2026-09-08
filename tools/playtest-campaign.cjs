@@ -7,11 +7,11 @@ for (const a of D.archetypes) {
   let cleared = 0,
     wins = 0,
     tries = 0;
-  const stages = [0, 0, 0, 0, 0];
+  const stages = Array(D.bosses.length).fill(0);
   for (let seed = 1; seed <= seeds; seed++) {
     let relics = [];
     let finished = true;
-    for (let boss = 0; boss < 5; boss++) {
+    for (let boss = 0; boss < D.bosses.length; boss++) {
       let won = false;
       for (let retry = 0; retry < 3; retry++) {
         const g = new Game();
@@ -40,15 +40,17 @@ for (const a of D.archetypes) {
           wins++;
           stages[boss]++;
           won = true;
-          if (boss < 4) {
+          if (boss < D.bosses.length - 1) {
             const offers = g.rewardOffers();
             const priority =
-              a.hero === "mage"
+              a.classId === "mage"
                 ? ["lens", "ember", "banner", "feather", "heart", "crown"]
-                : a.hero === "paladin"
+                : a.classId === "paladin"
                   ? ["banner", "ember", "feather", "heart", "crown", "lens"]
                   : ["ember", "banner", "feather", "heart", "crown", "lens"];
-            relics.push(priority.find((id) => offers.includes(id)));
+            const selected =
+              priority.find((id) => offers.includes(id)) || offers[0];
+            if (selected) relics.push(selected);
           }
           break;
         }

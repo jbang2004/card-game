@@ -26,6 +26,8 @@ npm run test:release
 - **卡牌定义：** `src/content/cards.js`。具名字段、参数化 `onPlay` / `onDeath`，规则文字自动生成。
 - **英雄、首领、遗物：** `src/content/campaign.js`。技能、阶段、遗物效果共用效果注册表。
 - **新效果类型：** `src/rules/effects.js`。必须定义字段校验、执行与规则文字；AI 在 `rules/ai.js`，确定性预览在 `rules/preview.js`。
+- **职业与构筑规则：** `src/content/campaign.js` 的 `classes` / `tribes` / `deckRules`；英雄用 `classId` 关联职业，用 `defaultDeckId` 引用预设。统一校验在 `src/rules/decks.js`。
+- **命名卡组：** `src/application/decks.js` 管理多套命名卡组，只接受当前命名卡组格式，开局与战役整备使用独立拷贝。
 - **组牌界面：** `src/application/library.js`。过滤器、草稿牌组和编辑逻辑独立于战斗状态。
 - **单张插画替换：** `tools/pack_card_assets.py --card ID --image /path/image.png --source-note '来源说明'`，然后构建。见 [素材说明](docs/ASSETS.md)。
 
@@ -48,7 +50,7 @@ npm run test:release
 - AI 搜索回合行动顺序，覆盖多牌斩杀、交换、发现和职业技能；模拟不读取隐藏牌或未来抽牌。
 - 练习对战随机先后手、双方三十血、无遗物和首领觉醒，不覆盖战役存档。
 - 战役胜利后可更换一张牌；遗物增加构筑联动；首关重新调整难度。
-- 原 v1 存档原样恢复，旧混合职业牌组保留；新战役使用职业限制。具体规则与边界见 [扩展说明](docs/expansions/TAVERN_OATHS.md)。
+- 测试期只接受当前 version 2 对局与命名卡组。旧测试存档失效，旧数组卡组可在收藏中重建；所有对局使用当前职业规则，不维护旧玩法分支。
 
 自动玩法筛查：`node tools/playtest-balance.cjs` 和 `node tools/playtest-campaign.cjs`。结果为策略程序模拟，不代表真人胜率。最终验收见 [v0.12 验证记录](docs/QA_V12.md)。
 
@@ -56,7 +58,7 @@ npm run test:release
 
 统一效果定义与执行、抽离 AI / 预览 / 存档边界、提供动作分派和因果事件块、记录增益来源与期限、收紧外部状态访问。已删除旧 Three.js 预览、旧程序化插画、旧世界转接和未使用的旧素材缓存，不再保留替代运行路径。
 
-保留原 56 张已确认卡图，新增六张独立法术插画、v1 存档及原四个存储键。现有 CSS 层级仍为 `legacy → layout → theme → components`，其中基础布局规则仍被当前 UI 使用，不因历史命名删除有效样式。
+保留原 56 张已确认卡图，新增六张独立法术插画；存储仍使用原四个键，但键名不代表支持旧存档格式。现有 CSS 层级仍为 `legacy → layout → theme → components`，其中基础布局规则仍被当前 UI 使用，不因历史命名删除有效样式。
 
 详细说明见 [架构](docs/ARCHITECTURE.md)、[卡牌修改指南](docs/CARD_AUTHORING.md) 和 [v0.11 验证记录](docs/QA_V11.md)。`CODEX_HANDOFF.md`、旧 QA、`HANDOFF_*` 是历史输入记录，不再作为当前源码必须保持不变的要求。
 

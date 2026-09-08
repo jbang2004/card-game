@@ -6,7 +6,6 @@
     $ = (id) => document.getElementById(id),
     app = $("app");
   const STORE = "emberfall.v1",
-    DECK = "emberfall.deck.v1",
     SETTINGS = "emberfall.settings.v1";
   const {
     escape,
@@ -16,7 +15,11 @@
     artStyleForHero,
     cardHTML,
   } = EmberCards;
-  const { read: readStore, write: writeStore } = EmberStorage.create(
+  const {
+    read: readStore,
+    write: writeStore,
+    readResult,
+  } = EmberStorage.create(
     () => localStorage,
     () => toast("浏览器未允许本地存档，本次游戏仍可继续。"),
   );
@@ -34,7 +37,7 @@
     isDemo = false,
     modalType = null,
     selection = null,
-    chosenHero = "mage",
+    chosenHero = D.heroes[0].id,
     aiTimer = null,
     turnTimer = null,
     toastTimer = null,
@@ -58,11 +61,14 @@
     spellpower: "使你的伤害法术额外造成 1 点伤害。",
   };
   const game = new EmberEngine.Game({ onChange: changed });
+  const deckStore = EmberDeckStore.create({
+    data: D,
+    read: readResult,
+    write: writeStore,
+  });
   const library = EmberLibrary.create({
     data: D,
-    readStore,
-    writeStore,
-    validateDeck: (d, h) => game.validateDeck(d, h),
+    deckStore,
     showModal,
     toast,
     preview,
@@ -113,14 +119,14 @@
   }
   function validSave() {
     const s = readStore(STORE);
-    return s?.version === 1 &&
-      D.heroes.some((h) => h.id === s.heroId) &&
-      D.bosses[s.bossIndex]
-      ? s
-      : null;
+    return EmberState.valid(s, D) ? s : null;
   }
   function updateStart() {
     const s = validSave();
+    const discarded = readStore(STORE) && !s;
+    document.querySelector(".local-status").textContent = discarded
+      ? "测试存档已失效，请重新开始"
+      : "单人战役";
     $("start-btn").innerHTML =
       (s ? "继续冒险" : "开启冒险") + " " + A.icon("arrow");
     $("quick-btn").textContent = s ? "新的旅程" : "战斗试玩";
@@ -269,14 +275,22 @@
     };
   }
   function showHeroes() {
-    const custom = readStore(DECK);
+    const loaded = deckStore.load();
+    const collection = loaded.ok
+      ? loaded.collection
+      : { decks: [], activeId: null };
+    const customs = collection.decks.filter(
+      (d) => d.heroId === chosenHero && game.validateDeck(d.cards, chosenHero),
+    );
+    const presets = D.archetypes.filter(
+      (a) => a.classId === EmberDeckRules.classFor(D, chosenHero),
+    );
     showModal(
-      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">准备出发</div><h2>选择你的英雄</h2><p>选择英雄、套牌与对战方式。</p></div><div class="hero-options">${D.heroes.map((h) => `<button class="hero-option hero-${h.id} ${h.id === chosenHero ? "selected" : ""}" data-hero="${h.id}"><img src="${A.character(h)}" alt="${h.name}" draggable="false" style="${artStyleForHero(h, "option")}"><div class="hero-option-text"><small>${h.sub}</small><h3>${h.name}</h3><p>${h.desc}</p><em>${h.powerText}</em></div>${h.id === chosenHero ? '<span class="selected-check">' + A.icon("check") + "</span>" : ""}</button>`).join("")}</div><p class="hero-deck-note">${game.validateDeck(custom, chosenHero) ? "可选用已保存的职业牌组。" : "请选择职业套牌；已有旧牌组仍保留，可在组牌中调整。"} · 战役共五场，关卡之间恢复全部生命。</p><label class="archetype-picker">套牌 <select class="library-search" id="hero-archetype">${game.validateDeck(custom, chosenHero) ? '<option value="custom">已保存的自定义牌组</option>' : ""}${D.archetypes
-        .filter((a) => a.hero === chosenHero)
+      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">准备出发</div><h2>选择你的英雄</h2><p>选择英雄、套牌与对战方式。</p></div><div class="hero-options">${D.heroes.map((h) => `<button class="hero-option hero-${h.id} ${h.id === chosenHero ? "selected" : ""}" data-hero="${h.id}"><img src="${A.character(h)}" alt="${h.name}" draggable="false" style="${artStyleForHero(h, "option")}"><div class="hero-option-text"><small>${h.sub}</small><h3>${h.name}</h3><p>${h.desc}</p><em>${h.powerText}</em></div>${h.id === chosenHero ? '<span class="selected-check">' + A.icon("check") + "</span>" : ""}</button>`).join("")}</div><p class="hero-deck-note">${escape(loaded.ok ? (customs.length ? "可选用已保存的英雄牌组。" : "请选择职业套牌，或到收藏中建立命名牌组。") : loaded.error)} · 战役共 ${D.bosses.length} 场，关卡之间恢复全部生命。</p><label class="archetype-picker">套牌 <select class="library-search" id="hero-archetype">${customs.map((d) => `<option value="saved:${d.id}" ${d.id === collection.activeId ? "selected" : ""}>${escape(d.name)}</option>`).join("")}${presets
         .map((a) => `<option value="${a.id}">${a.name}</option>`)
         .join(
           "",
-        )}</select></label><p id="hero-plan" class="deck-plan"></p><label class="archetype-picker">玩法 <select id="game-mode" class="library-search"><option value="campaign">五关战役 · 遗物与整备</option><option value="practice">练习对战 · 不覆盖战役存档</option></select></label><label class="archetype-picker" id="opponent-picker" hidden>对手 <select id="practice-opponent" class="library-search">${D.archetypes.map((a) => `<option value="${a.id}">${D.classNames[a.hero]} · ${a.name}</option>`).join("")}</select></label><div class="modal-footer"><button class="ghost-btn" id="hero-deck-btn">先去组牌</button><button class="gold-btn" id="hero-confirm">踏入余火之门 ${A.icon("arrow")}</button></div></section>`,
+        )}</select></label><p id="hero-plan" class="deck-plan"></p><label class="archetype-picker">玩法 <select id="game-mode" class="library-search"><option value="campaign">${D.bosses.length} 关战役 · 遗物与整备</option><option value="practice">练习对战 · 不覆盖战役存档</option></select></label><label class="archetype-picker" id="opponent-picker" hidden>对手 <select id="practice-opponent" class="library-search">${D.archetypes.map((a) => `<option value="${a.id}">${D.classNames[a.classId]} · ${a.name}</option>`).join("")}</select></label><div class="modal-footer"><button class="ghost-btn" id="hero-deck-btn">先去组牌</button><button class="gold-btn" id="hero-confirm">踏入余火之门 ${A.icon("arrow")}</button></div></section>`,
       "heroes",
     );
     document.querySelectorAll("[data-hero]").forEach(
@@ -290,7 +304,7 @@
     const plan = () => {
       $("hero-plan").textContent =
         D.archetypes.find((a) => a.id === $("hero-archetype").value)?.plan ||
-        "使用已保存的 30 张职业牌组。";
+        `使用已保存的 ${D.deckRules.size} 张英雄牌组。`;
     };
     $("hero-archetype").onchange = plan;
     plan();
@@ -300,10 +314,14 @@
         $("game-mode").value === "practice" ? "开始练习对战" : "踏入余火之门";
     };
     $("hero-confirm").onclick = () => {
-      const d = readStore(DECK);
       const id = $("hero-archetype").value;
-      const selected =
-        id === "custom" ? d : D.archetypes.find((a) => a.id === id).deck;
+      const selected = id.startsWith("saved:")
+        ? customs.find((d) => d.id === id.slice(6))?.cards
+        : presets.find((a) => a.id === id)?.deck;
+      if (!selected) {
+        toast("请选择可用牌组");
+        return;
+      }
       startGame(
         chosenHero,
         0,
@@ -315,7 +333,6 @@
       );
     };
     $("hero-deck-btn").onclick = () => {
-      deckHero = chosenHero;
       library.show(chosenHero);
     };
   }
@@ -397,7 +414,7 @@
     $("chapter-name").textContent = boss.title;
     $("chapter-sub").textContent =
       "CHAPTER " +
-      ["I", "II", "III", "IV", "V"][s.bossIndex] +
+      String(s.bossIndex + 1).padStart(2, "0") +
       " · " +
       (isDemo ? "战斗试玩" : "失落的王国");
     $("path-list").innerHTML = D.bosses
@@ -464,13 +481,7 @@
     $("hero-side-label").innerHTML =
       `<strong>${hero.title}</strong>${isDemo ? "战斗试玩" : "余火的旅人"}`;
     $("power-btn").innerHTML =
-      A.icon(
-        hero.id === "mage"
-          ? "fire"
-          : hero.id === "paladin"
-            ? "shield"
-            : "sword",
-      ) +
+      A.icon(hero.powerIcon) +
       "<b>" +
       hero.powerCost +
       "</b><span>" +
@@ -1044,7 +1055,7 @@
     if (!inBattle || game.s.phase !== "over") return;
     const s = game.s,
       win = s.winner === "p",
-      last = s.bossIndex === 4 || s.mode === "practice";
+      last = s.bossIndex === D.bosses.length - 1 || s.mode === "practice";
     clearSelection();
     showModal(
       `<section class="modal-box result-box"><div class="result-sigil">${A.icon(win ? "fire" : "skull")}</div><div class="result-sub">${win ? (last ? "THE LAST EMBER BURNS" : "ENCOUNTER CLEARED") : s.winner === "draw" ? "A SHARED FATE" : "THE FLAME WILL RISE AGAIN"}</div><h2 class="result-title">${win ? (last ? "余火不灭" : "战役告捷") : s.winner === "draw" ? "同归于尽" : "火种未熄"}</h2><p class="boss-quote">${win ? (last ? "最后一颗星辰，因你重新燃起。" : "「" + D.bosses[s.bossIndex].name + "」已被击败。") : "每一次陨落，都是下一次重燃的序章。"}</p><div class="result-stats"><div><strong>${s.turn}</strong><span>战斗回合</span></div><div><strong>${s.stats.played}</strong><span>打出卡牌</span></div><div><strong>${s.stats.damage}</strong><span>造成伤害</span></div></div><div class="modal-footer"><button class="ghost-btn" id="result-home">返回营地</button><button class="gold-btn" id="result-next">${isDemo ? "开启正式旅程" : win ? (last ? "新的旅程" : "选择遗物") : "重试本关"} ${A.icon("arrow")}</button></div></section>`,
@@ -1073,7 +1084,6 @@
       } else {
         closeModal(false);
         startGame(s.heroId, s.bossIndex, s.relics, s.customDeck, {
-          legacyDeck: !s.ruleset || s.legacyDeck,
           ...(s.mode === "practice" ? { opponent: s.opponent } : {}),
         });
       }
@@ -1085,7 +1095,7 @@
     save();
     let selected = null;
     showModal(
-      `<section class="modal-box rewards-box"><div class="modal-heading"><div class="eyebrow">战役奖励</div><h2>选择你的遗物</h2><p>获得一件永久加持，带着它继续冒险。</p></div><div class="relic-options" role="group" aria-label="可选遗物">${s.rewardOffers
+      `<section class="modal-box rewards-box"><div class="modal-heading"><div class="eyebrow">战役奖励</div><h2>选择你的遗物</h2><p>${s.rewardOffers.length ? "获得一件永久加持，带着它继续冒险。" : "已收集全部遗物，可整备牌组后继续冒险。"}</p></div><div class="relic-options" role="group" aria-label="可选遗物">${s.rewardOffers
         .map((id) => {
           const r = D.relics.find((r) => r.id === id);
           return `<button class="relic-choice" data-relic="${id}" aria-pressed="false"><span class="relic-art"><img src="${A.relic(r.id)}" alt="${r.name}"></span><h3>${r.name}</h3><p>${r.text}</p><span class="relic-pick-label">选择此遗物</span></button>`;
@@ -1093,13 +1103,11 @@
         .join(
           "",
         )}</div><details class="campaign-refit"><summary>酒馆整备 <span>可选 · 更换一张牌</span></summary><div class="refit-fields"><label>移除卡牌<select id="refit-remove" class="library-search"><option value="">保留原牌组</option>${[...new Set(s.customDeck || D.heroes.find((h) => h.id === s.heroId).deck)].map((id) => `<option value="${id}">${D.byId[id].name}</option>`).join("")}</select></label><label>加入卡牌<select id="refit-add" class="library-search" aria-label="补给卡牌">${D.cards
-        .filter(
-          (c) => !c.token && (c.class === "neutral" || c.class === s.heroId),
-        )
+        .filter((c) => EmberDeckRules.canInclude(D, c, s.heroId))
         .map((c) => `<option value="${c.id}">${c.cost}费 · ${c.name}</option>`)
         .join(
           "",
-        )}</select></label></div><p id="refit-status" role="status">保持 30 张牌，同名牌最多两张，传说最多一张。</p></details><div class="reward-footer"><div><span class="reward-next">下一站 · ${D.bosses[s.bossIndex + 1].title}</span><p id="reward-selection" aria-live="polite">先选择一件遗物</p></div><button class="gold-btn" id="reward-confirm" disabled>携带遗物，继续</button></div></section>`,
+        )}</select></label></div><p id="refit-status" role="status">${EmberDeckRules.summary(D)}。</p></details><div class="reward-footer"><div><span class="reward-next">下一站 · ${D.bosses[s.bossIndex + 1].title}</span><p id="reward-selection" aria-live="polite">${s.rewardOffers.length ? "先选择一件遗物" : "遗物已集齐"}</p></div><button class="gold-btn" id="reward-confirm" ${s.rewardOffers.length ? "disabled" : ""}>继续冒险</button></div></section>`,
       "rewards",
       true,
     );
@@ -1116,22 +1124,29 @@
         }),
     );
     $("reward-confirm").onclick = () => {
-      if (!selected) return;
+      if (!selected && s.rewardOffers.length) return;
       const deck = [
         ...(s.customDeck || D.heroes.find((h) => h.id === s.heroId).deck),
       ];
       const remove = $("refit-remove").value,
         add = $("refit-add").value;
       if (remove) deck[deck.indexOf(remove)] = add;
-      if (!game.validateDeck(deck)) {
+      if (!game.validateDeck(deck, s.heroId)) {
         document.querySelector(".campaign-refit").open = true;
-        $("refit-status").textContent = "补给会超过同名牌上限，请换一张。";
+        $("refit-status").textContent = EmberDeckRules.check(
+          D,
+          deck,
+          s.heroId,
+        ).errors.join("；");
         $("refit-add").focus();
         return;
       }
-      startGame(s.heroId, s.bossIndex + 1, [...s.relics, selected], deck, {
-        legacyDeck: !s.ruleset || s.legacyDeck,
-      });
+      startGame(
+        s.heroId,
+        s.bossIndex + 1,
+        selected ? [...s.relics, selected] : [...s.relics],
+        deck,
+      );
     };
   }
   function showSettings() {
@@ -1192,7 +1207,6 @@
             isDemo
               ? demo()
               : startGame(s.heroId, s.bossIndex, s.relics, s.customDeck, {
-                  legacyDeck: !s.ruleset || s.legacyDeck,
                   ...(s.mode === "practice" ? { opponent: s.opponent } : {}),
                 });
           },
@@ -1202,7 +1216,7 @@
   }
   function showHelp() {
     showModal(
-      `<section class="modal-box help-box"><div class="modal-heading"><div class="eyebrow">玩法与规则</div><h2>旅人手册</h2><p>回合流程、构筑规则与关键词速查。</p></div><div class="help-columns"><div><section class="help-section"><h3>01 · 一场战斗如何获胜</h3><p>将敌方英雄生命降至 <b>0</b>。你有 <b>30 点基础生命、30 张牌库</b>，双方最多拥有 <b>7 个随从、10 张手牌</b>。战役中你先手；练习对战随机先后手。先手起始三张、后手四张并在换牌后获得硬币。每个回合增加一枚法力水晶，上限 10，并补满法力、抽一张牌。</p></section><section class="help-section"><h3>02 · 出牌与攻击</h3><p><b>点击手牌</b>即可打出；需要目标时，再点击相应角色。也可以拖动卡牌。<br><b>点击己方随从 → 点击敌人</b>即可攻击。新召唤的随从通常需要等待一回合。双方随从同时对彼此造成攻击力数值的伤害。装备武器后，点击自己的英雄攻击。<br><b>2 法力</b>使用英雄技能，每回合一次。空格结束回合，Esc 取消选择，M 静音。</p></section><section class="help-section"><h3>03 · 构筑与冒险</h3><p>图鉴中 54 张卡全部开放，构筑使用所选职业与中立牌。六套预设分别提供打法说明。自定义牌组恰好 <b>30 张</b>，普通卡同名最多 2 张，传说最多 1 张。五位首领均在半血时进入第二阶段。每次胜利可更换一张牌并选择遗物，下一关生命完全恢复。练习对战可挑战六套牌，随机先后手、双方三十血，不覆盖战役进度。进度自动保存在当前浏览器。<br>牌库耗尽后，每次抽牌依次受到 <b>1、2、3…</b> 点疲劳伤害。第 51 个玩家回合开始时判为平局。</p></section></div><div><section class="help-section"><h3>04 · 关键词速查</h3><div class="key-table">${Object.entries(
+      `<section class="modal-box help-box"><div class="modal-heading"><div class="eyebrow">玩法与规则</div><h2>旅人手册</h2><p>回合流程、构筑规则与关键词速查。</p></div><div class="help-columns"><div><section class="help-section"><h3>01 · 一场战斗如何获胜</h3><p>将敌方英雄生命降至 <b>0</b>。你有 <b>30 点基础生命、${D.deckRules.size} 张牌库</b>，双方最多拥有 <b>7 个随从、10 张手牌</b>。战役中你先手；练习对战随机先后手。先手起始三张、后手四张并在换牌后获得硬币。每个回合增加一枚法力水晶，上限 10，并补满法力、抽一张牌。</p></section><section class="help-section"><h3>02 · 出牌与攻击</h3><p><b>点击手牌</b>即可打出；需要目标时，再点击相应角色。也可以拖动卡牌。<br><b>点击己方随从 → 点击敌人</b>即可攻击。新召唤的随从通常需要等待一回合。双方随从同时对彼此造成攻击力数值的伤害。装备武器后，点击自己的英雄攻击。<br>按按钮标示的法力费用使用英雄技能，每回合一次。空格结束回合，Esc 取消选择，M 静音。</p></section><section class="help-section"><h3>03 · 构筑与冒险</h3><p>图鉴中 ${D.cards.filter((c) => !c.token).length} 张卡全部开放，构筑使用所选职业与中立牌。${D.archetypes.length} 套预设分别提供打法说明。<b>${EmberDeckRules.summary(D)}</b>。${D.bosses.length} 位首领均在半血时进入第二阶段。每次胜利可更换一张牌并选择遗物，下一关生命完全恢复。练习对战可挑战 ${D.archetypes.length} 套牌，随机先后手、双方三十血，不覆盖战役进度。进度自动保存在当前浏览器。<br>牌库耗尽后，每次抽牌依次受到 <b>1、2、3…</b> 点疲劳伤害。第 51 个玩家回合开始时判为平局。</p></section></div><div><section class="help-section"><h3>04 · 关键词速查</h3><div class="key-table">${Object.entries(
         keywords,
       )
         .map(([k, v]) => `<div><b>${D.kw[k]}</b>${v}</div>`)

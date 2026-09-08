@@ -65,7 +65,7 @@ test("practice preserves an existing campaign save, survives both hero powers an
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("./?debug=1");
   await ready(page);
-  const old = require("../fixtures/save-v1.json");
+  const old = require("../fixtures/save-current.json");
   await page.evaluate(
     (s) => localStorage.setItem("emberfall.v1", JSON.stringify(s)),
     old,
@@ -235,7 +235,11 @@ test("campaign refit rejects a third copy and carries a legal replacement forwar
   await page.locator("#refit-add").selectOption(choices.twice);
   await page.locator(".relic-choice").first().click();
   await page.locator("#reward-confirm").click();
-  await expect(page.locator("#refit-status")).toContainText("超过同名牌上限");
+  await expect(page.locator("#refit-status")).toContainText("最多 2 张");
+  expect(await page.evaluate(() => Emberfall.game.s.bossIndex)).toBe(0);
+  expect(await page.evaluate(() => Emberfall.game.s.customDeck)).toEqual(
+    choices.deck,
+  );
   await page.locator("#refit-add").selectOption(choices.add);
   await page.locator(".relic-choice").first().click();
   await page.locator("#reward-confirm").click();

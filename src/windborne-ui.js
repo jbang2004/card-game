@@ -16,7 +16,7 @@
   $(".lobby-copy>.eyebrow").textContent = "鎏金酒馆";
   $(".lobby-chinese").textContent = "风起之境";
   $(".lobby-tagline").textContent = "";
-  $(".lobby-desc").textContent = "三位旅人 · 五十四张卡牌 · 五段首领冒险";
+  $(".lobby-desc").textContent = `${EmberData.heroes.length} 位旅人 · ${EmberData.cards.filter(c => !c.token).length} 张卡牌 · ${EmberData.bosses.length} 段首领冒险`;
   $(".lobby-world-label").innerHTML =
     "<span>THE WAYFARER’S TAVERN</span><i></i><span>旅人的酒馆 · 炉火正暖</span>";
   $(".lobby-bottom small").textContent = "VOL. X / THE GILDED TAVERN";
@@ -122,4 +122,14 @@
     new3DMeshes: false,
   });
   E.toggleWorldTime = toggle;
+})();
+
+(() => {
+  const collection = document.getElementById("lobby-library-btn");
+  if (collection) collection.firstChild.textContent = `我的收藏 · ${EmberData.cards.filter(c => !c.token).length} 张卡牌 `;
+  const footer = document.querySelector(".lobby-bottom > div");
+  if (footer) {
+    footer.querySelector("b").textContent = `01—${String(EmberData.bosses.length).padStart(2, "0")}`;
+    footer.querySelector("span").textContent = `${EmberData.bosses.length} 位首领，等你出牌`;
+  }
 })();

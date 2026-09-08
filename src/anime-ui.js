@@ -28,6 +28,5 @@
  window.addEventListener('ember:viewport',close);
  E.showFullArt=open;
  window.AnimeDiagnostics=Object.freeze({version:'0.6.0',cardImages:62,collectible:54,tokens:8,sourceAtlases:8,
-  legacyCardFallbacks:0,
   source:'original anime atlases plus six individual Tavern Oaths illustrations',nativePanelOutput:'336×448',publicDeployment:'not configured'});
 })();
