@@ -264,7 +264,9 @@ const EmberLibrary = (() => {
       window.EmberMobile?.syncDeck(editDeck.length);
       const validation = rules.check(D, editDeck, deckHero);
       $("deck-warning").textContent =
-        storageError || validation.errors.join("；") || "牌组可用";
+        storageError ||
+        [...new Set(validation.errors)].join("；") ||
+        "牌组可用";
       $("deck-plan").textContent = D.archetypes.find(
         (a) => a.id === presetId,
       ).plan;

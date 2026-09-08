@@ -345,7 +345,7 @@
   const menu = document.createElement("button");
   menu.className = "icon-btn touch-only";
   menu.id = "touch-menu";
-  menu.setAttribute("aria-label", "打开菜单菜单");
+  menu.setAttribute("aria-label", "打开菜单");
   menu.innerHTML =
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 6h14M5 12h14M5 18h14"/><circle cx="8" cy="6" r="1" fill="currentColor"/></svg>';
   menu.onclick = showMenu;
