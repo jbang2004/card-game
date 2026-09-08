@@ -88,6 +88,7 @@ const EmberEngine = (() => {
             secrets: Array(p.secrets.length).fill(null),
             souls: p.souls,
             fallen: p.fallen,
+            devotion: p.devotion,
             contracts: p.contracts,
             usedContracts: p.usedContracts,
           });
@@ -303,6 +304,13 @@ const EmberEngine = (() => {
         secrets: [],
         souls: [],
         fallen: 0,
+        devotion: {
+          spells: [],
+          shields: 0,
+          hunts: 0,
+          huntTurn: 0,
+          huntCount: 0,
+        },
         contracts: [],
         usedContracts: [],
       });
@@ -527,6 +535,7 @@ const EmberEngine = (() => {
       } else this.resolve(c.onPlay, { side, card: c, target });
       this.cleanup();
       if (c.type === "spell" && this.s.phase === "battle") {
+        Contracts.spell(this, side, c);
         this.trigger("spellCast", side);
         this.cleanup();
       }
@@ -607,6 +616,7 @@ const EmberEngine = (() => {
       const result = this.damageResult(side, uid, n);
       if (result.blocked) {
         target.tags = target.tags.filter((x) => x !== "shield");
+        Contracts.shield(this, side, from);
         this.event("shield", { side, uid, from });
         this.trigger("shieldLost", side, target);
         return 0;
@@ -696,6 +706,7 @@ const EmberEngine = (() => {
         dtags = t.uid === "hero" ? [] : [...d.tags];
       m.attacks++;
       if (uid !== "hero") m.tags = m.tags.filter((x) => x !== "stealth");
+      Contracts.hunt(this, side, uid === "hero" ? null : m, t);
       this.event("attack", { from: { side, uid }, to: t });
       const dealt = this.damage(t.side, t.uid, atk, { side, uid }),
         back = this.damage(side, uid, retaliate, t);

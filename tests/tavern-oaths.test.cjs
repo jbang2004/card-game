@@ -21,7 +21,7 @@ function play(g, id, target, side = "p") {
 const hero = (side) => ({ side, uid: "hero" });
 test("eight distinct class-legal archetypes and strict duplicate limits", () => {
   const g = new Game();
-  assert.equal(D.archetypes.length, 8);
+  assert.equal(D.archetypes.length, 11);
   for (const a of D.archetypes) {
     assert.ok(g.validateDeck(a.deck, a.hero), a.id);
     assert.ok(D.heroes.some(h=>h.id===a.hero));

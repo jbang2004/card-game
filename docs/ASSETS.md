@@ -159,3 +159,11 @@
 六个随从对应分层改为 `assets/motion/moon-anime-v2/`，仍为背景/主体两层。新版 `green-edge` 去溢色仅处理透明轮廓附近的过量绿色，保留内部青色灯光、衣料和肤色；各卡实际 split 与处理参数见 `*-processing.json`。神祇 split 771、背景宽 767，其余 split 768，均按各自图集观察确认。
 
 清单、静态与动态缓存已重新构建。验证见 [月影画风统一记录](QA_MOON_ART_RESTYLE.md)。
+
+## 诸神同辉（v0.14）
+
+新增 jingchen、aurion、fenlos 三位神祇与 starweave、dawnvow、huntinghorn 三张法术，总计 79 张独立卡图。原画、完整提示和风格参考哈希在 `assets/anime/pantheon-sources/`，统一 overrides / manifest / packer 接入，神祇仍使用 768×1024、普通法术 336×448 的运行 WebP。
+
+三位神分别使用自己的原画生成背景/主体图集，输入、提示、alpha 处理参数保存在 `assets/motion/pantheon-sources/`。星焰和曙日用绿色键色与 green-edge，荒猎用洋红键色避免影响翠绿眼睛，并用新增 magenta-edge 去除轮廓粉边。处理只限制于透明轮廓附近，不改主体内部颜色。星焰背景残留冠冕经过定点重绘修复，修订前输入留档。
+
+全游戏 44 个上场随从都有真实 alpha 分层待机，35 张法术/武器静态。运行脚本使用现有角色渲染器；没有增加 Three.js、视频播放器或新动画时钟。检查记录见 [诸神验收](QA_PANTHEON.md)。

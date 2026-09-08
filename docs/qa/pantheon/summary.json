@@ -1,0 +1,124 @@
+{
+  "tuning": [
+    {
+      "deck": "pantheon_stars",
+      "wins": 23,
+      "games": 48,
+      "arrivals": 34,
+      "earliest": 10,
+      "latest": 14,
+      "mean": 11.882352941176471
+    },
+    {
+      "deck": "pantheon_dawn",
+      "wins": 21,
+      "games": 48,
+      "arrivals": 34,
+      "earliest": 9,
+      "latest": 13,
+      "mean": 9.852941176470589
+    },
+    {
+      "deck": "pantheon_hunt",
+      "wins": 23,
+      "games": 48,
+      "arrivals": 36,
+      "earliest": 9,
+      "latest": 13,
+      "mean": 9.694444444444445
+    }
+  ],
+  "without-gods": [
+    {
+      "deck": "pantheon_stars",
+      "wins": 7,
+      "games": 48,
+      "arrivals": 0,
+      "earliest": null,
+      "latest": null,
+      "mean": null
+    },
+    {
+      "deck": "pantheon_dawn",
+      "wins": 12,
+      "games": 48,
+      "arrivals": 0,
+      "earliest": null,
+      "latest": null,
+      "mean": null
+    },
+    {
+      "deck": "pantheon_hunt",
+      "wins": 11,
+      "games": 48,
+      "arrivals": 0,
+      "earliest": null,
+      "latest": null,
+      "mean": null
+    }
+  ],
+  "holdout": [
+    {
+      "deck": "pantheon_stars",
+      "wins": 51,
+      "games": 96,
+      "arrivals": 80,
+      "earliest": 9,
+      "latest": 15,
+      "mean": 11.75
+    },
+    {
+      "deck": "pantheon_dawn",
+      "wins": 44,
+      "games": 96,
+      "arrivals": 71,
+      "earliest": 9,
+      "latest": 14,
+      "mean": 10.014084507042254
+    },
+    {
+      "deck": "pantheon_hunt",
+      "wins": 46,
+      "games": 96,
+      "arrivals": 69,
+      "earliest": 9,
+      "latest": 13,
+      "mean": 9.710144927536232
+    }
+  ],
+  "crossplay": [
+    {
+      "deck": "pantheon_stars",
+      "wins": 7,
+      "games": 24,
+      "arrivals": 22,
+      "earliest": 9,
+      "latest": 14,
+      "mean": 11.272727272727273
+    },
+    {
+      "deck": "pantheon_dawn",
+      "wins": 11,
+      "games": 24,
+      "arrivals": 18,
+      "earliest": 9,
+      "latest": 12,
+      "mean": 10.166666666666666
+    },
+    {
+      "deck": "pantheon_hunt",
+      "wins": 12,
+      "games": 24,
+      "arrivals": 16,
+      "earliest": 9,
+      "latest": 13,
+      "mean": 10.25
+    }
+  ],
+  "metadata": {
+    "version": "0.14.0",
+    "date": "2026-09-08",
+    "contentSHA256": "58718187dc505f4bee7489347b6d6f7dd4bc68aa291e548ebf5852138fb5ac02",
+    "finalPracticeGames": 648
+  }
+}

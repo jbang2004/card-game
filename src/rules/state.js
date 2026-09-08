@@ -114,6 +114,7 @@ const EmberState = (() => {
             : require("./contracts.js");
         if (
           !contracts.check(data, p.contracts, cls) ||
+          !contracts.validDevotion(p.devotion, data, s.turn) ||
           !Array.isArray(p.usedContracts) ||
           new Set(p.usedContracts).size !== p.usedContracts.length ||
           p.usedContracts.some((id) => !p.contracts.includes(id)) ||

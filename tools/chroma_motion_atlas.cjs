@@ -47,8 +47,12 @@ function parseArgs(argv) {
       colorNumber & 255,
     ];
   const despill = args["--despill"] || "none";
-  if (!["none", "green", "blue", "green-edge"].includes(despill))
-    throw Error("--despill must be none, green, blue or green-edge");
+  if (
+    !["none", "green", "blue", "green-edge", "magenta-edge"].includes(despill)
+  )
+    throw Error(
+      "--despill must be none, green, blue, green-edge or magenta-edge",
+    );
   const similarity = Number(args["--similarity"] ?? 0.18),
     blend = Number(args["--blend"] ?? 0.06);
   if (!Number.isFinite(similarity) || similarity < 0.00001 || similarity > 1)
@@ -129,7 +133,7 @@ function parseArgs(argv) {
     const filter =
       `[0:v]crop=${metrics.split}:${metrics.height}:0:0,format=rgba[left];` +
       `[0:v]crop=${right}:${metrics.height}:${metrics.split}:0,format=rgba,` +
-      `colorkey=${colorText}:${similarity}:${blend}${["none", "green-edge"].includes(despill) ? "" : ",despill=type=" + despill + ":mix=1"}[right];` +
+      `colorkey=${colorText}:${similarity}:${blend}${["none", "green-edge", "magenta-edge"].includes(despill) ? "" : ",despill=type=" + despill + ":mix=1"}[right];` +
       `[left][right]hstack=inputs=2,format=rgba`;
     execFileSync(
       "ffmpeg",
@@ -162,17 +166,17 @@ function parseArgs(argv) {
         const frame = ctx.getImageData(0, 0, image.width, image.height);
         const pixels = frame.data;
         let edgePixels = 0;
-        if (despill === "green-edge") {
-          // Only remove excess green near the keyed silhouette. Preserve cyan
-          // lights and original opaque skin/fabric colors inside the subject.
+        if (["green-edge", "magenta-edge"].includes(despill)) {
+          // Neutralize only excess key color at the silhouette. Keep opaque
+          // interior colors (including green eyes and ivory fur) untouched.
           for (let y = 0; y < image.height; y++)
             for (let x = split; x < image.width; x++) {
               const i = (y * image.width + x) * 4;
-              if (
-                !pixels[i + 3] ||
-                pixels[i + 1] <= Math.max(pixels[i], pixels[i + 2])
-              )
-                continue;
+              const excess =
+                despill === "magenta-edge"
+                  ? Math.min(pixels[i], pixels[i + 2]) - pixels[i + 1]
+                  : pixels[i + 1] - Math.max(pixels[i], pixels[i + 2]);
+              if (!pixels[i + 3] || excess <= 0) continue;
               let edge = pixels[i + 3] < 250;
               for (let dy = -3; !edge && dy <= 3; dy++)
                 for (let dx = -3; !edge && dx <= 3; dx++) {
@@ -188,7 +192,10 @@ function parseArgs(argv) {
                     edge = true;
                 }
               if (edge) {
-                pixels[i + 1] = Math.max(pixels[i], pixels[i + 2]);
+                if (despill === "magenta-edge") {
+                  pixels[i] -= excess;
+                  pixels[i + 2] -= excess;
+                } else pixels[i + 1] = Math.max(pixels[i], pixels[i + 2]);
                 edgePixels++;
               }
             }
@@ -238,10 +245,9 @@ function parseArgs(argv) {
           rightVisible,
           residualKey,
           edgePixels,
-          png:
-            despill === "green-edge"
-              ? canvas.toDataURL("image/png").split(",")[1]
-              : null,
+          png: ["green-edge", "magenta-edge"].includes(despill)
+            ? canvas.toDataURL("image/png").split(",")[1]
+            : null,
         };
       },
       { src: converted, split: metrics.split, keyColor, despill },

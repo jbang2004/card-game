@@ -1,0 +1,33 @@
+{
+  "date": "2026-09-08",
+  "version": "0.14.0",
+  "command": "npm run test:release",
+  "unitTests": {
+    "passed": 115,
+    "failed": 0,
+    "skipped": 0
+  },
+  "artToolTests": {
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0
+  },
+  "browserTests": {
+    "startTime": "2026-09-08T10:35:22.736Z",
+    "duration": 316902.039,
+    "expected": 102,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "characters": {
+    "registered": 79,
+    "animated": 44,
+    "static": 35
+  },
+  "priorStaticAndMotionAssetsChanged": [],
+  "portableSHA256": "8df4a0d86313addcc029f954a4eff18bbf040a4f9f21bd92721a011a7bfc7375",
+  "webIndexSHA256": "332fdec21439bc4f9a0e98df07d669fde2d6f12675f4bdf4a0801a7bdd24e604",
+  "releaseLogSHA256": "fa055749a41a527f9c09a562118e703d5d59bd4b8348d9281ea1d41c9e4c1e20",
+  "deployed": false
+}

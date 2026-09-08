@@ -96,3 +96,7 @@ npm run test:release
 契约使用 `contract: { souls: 4, deaths: 8, divine: true }`，同时声明 `type: "minion"`、`token: true`、传说稀有度和所属职业。法力仍来自 `cost`；需求文字由 `EmberContracts.describe` 自动生成。契约不是三十张主牌组中的可收集牌。英雄的 `defaultContracts` 经过同职业、最多三张、最多一位神祇和无重复校验。新神祇必须补齐动作、AI 和保存恢复测试。
 
 `sacrifice` 使用 `target: "selected"`，卡牌或英雄技能必须声明 `target: "friendlyMinion"`。牺牲设置生命为零，再走正常死亡清理，因此亡语正常触发；消耗契约印记没有亡语。
+
+## 诸神仪式（v0.14）
+
+非月影神祇使用 `contract: {divine: true, ritual: {kind: "spells" | "shields" | "hunts", amount: N}}`，不与 souls/deaths 混写。字段和门槛在内容加载时校验；规则文案和公开进度由 `EmberContracts.describe/progress` 统一派生。`devotion` 是当前 v3 对局必需字段，不能用表现事件重建。新神必须注册独立 combat profile 和 deity 主题，并覆盖首次召唤、次数限制、反制、AI 与存档。详见 [设计记录](design/PANTHEON.md)。

@@ -20,9 +20,31 @@ test("all current cards settle deterministically and serialize valid states", ()
     const run = () => {
       if (definition.contract) {
         const g = new Game();
-        g.start("morla", 0, [], null, 91);
+        g.start(
+          D.heroes.find((h) => h.classId === definition.class).id,
+          0,
+          [],
+          null,
+          91,
+          { contracts: [definition.id] },
+        );
         g.mulligan();
         g.s.p.mana = g.s.p.maxMana = 10;
+        g.s.turn = 9;
+        if (definition.contract.ritual) {
+          const { kind, amount } = definition.contract.ritual;
+          g.s.p.devotion[kind] =
+            kind === "spells"
+              ? [
+                  "bolt",
+                  "frostbolt",
+                  "nova",
+                  "storm",
+                  "wisdom",
+                  "starweave",
+                ].slice(0, amount)
+              : amount;
+        }
         g.s.p.fallen = 8;
         g.s.p.souls = ["wolf", "moonfox", "duskstag", "soulguide"];
         assert.ok(

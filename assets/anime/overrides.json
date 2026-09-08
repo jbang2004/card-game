@@ -42,5 +42,29 @@
   "selmyra": {
     "source": "moon-anime-v2/selmyra.png",
     "note": "Original built-in image_gen anime style-transfer, using this card identity and established Emberfall style references. Exact prompts and art direction retained in moon-anime-v2."
+  },
+  "jingchen": {
+    "source": "pantheon-sources/jingchen.png",
+    "note": "Original anime pantheon expansion, built-in image_gen; prompts and style references in pantheon-sources/provenance.json"
+  },
+  "aurion": {
+    "source": "pantheon-sources/aurion.png",
+    "note": "Original anime pantheon expansion, built-in image_gen; prompts and style references in pantheon-sources/provenance.json"
+  },
+  "fenlos": {
+    "source": "pantheon-sources/fenlos.png",
+    "note": "Original anime pantheon expansion, built-in image_gen; prompts and style references in pantheon-sources/provenance.json"
+  },
+  "starweave": {
+    "source": "pantheon-sources/starweave.png",
+    "note": "Original anime pantheon expansion, built-in image_gen; prompts and style references in pantheon-sources/provenance.json"
+  },
+  "dawnvow": {
+    "source": "pantheon-sources/dawnvow.png",
+    "note": "Original anime pantheon expansion, built-in image_gen; prompts and style references in pantheon-sources/provenance.json"
+  },
+  "huntinghorn": {
+    "source": "pantheon-sources/huntinghorn.png",
+    "note": "Original anime pantheon expansion, built-in image_gen; prompts and style references in pantheon-sources/provenance.json"
   }
 }

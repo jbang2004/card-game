@@ -1,0 +1,68 @@
+{
+  "tool": "built-in image_gen",
+  "date": "2026-09-08",
+  "cards": {
+    "jingchen": {
+      "identityReference": "assets/anime/pantheon-sources/jingchen.png",
+      "processing": "assets/motion/pantheon-sources/jingchen-processing.json",
+      "files": [
+        {
+          "path": "assets/motion/pantheon-sources/jingchen-atlas-key.png",
+          "sha256": "2fe05f5372b68bfb85f091e1da1f8706f7d9bc137b96d446edd1bc5d06835560"
+        },
+        {
+          "path": "assets/motion/pantheon-sources/jingchen-atlas.png",
+          "sha256": "7af18fdce3c2d4083b9dac0e6bbcd1c228048c951bedc724c5471bb229d5b958"
+        },
+        {
+          "path": "assets/motion/pantheon-sources/jingchen.prompt.txt",
+          "sha256": "84dc2b10f89f8c627864e76e7c39c612de4748d5e18fe29fc5873b746c4611e7"
+        },
+        {
+          "path": "assets/motion/pantheon-sources/jingchen-atlas-initial.png",
+          "sha256": "20fc296727bd032d84c967b5292aaff84b02940b961006835f930c03fcf5104c"
+        },
+        {
+          "path": "assets/motion/pantheon-sources/jingchen-atlas-key.prompt.txt",
+          "sha256": "d0466e50becf162448046acb7cf291a01cb867d795ee9f52f9500e2b66461aa2"
+        }
+      ]
+    },
+    "aurion": {
+      "identityReference": "assets/anime/pantheon-sources/aurion.png",
+      "processing": "assets/motion/pantheon-sources/aurion-processing.json",
+      "files": [
+        {
+          "path": "assets/motion/pantheon-sources/aurion-atlas-key.png",
+          "sha256": "a4e4b58fd1f6a5e178f27d332940bb021e092f400b74ab8e1a4702fbdb481775"
+        },
+        {
+          "path": "assets/motion/pantheon-sources/aurion-atlas.png",
+          "sha256": "1149f996274b9ef70cc318bd6509b9e33a1b87680acb3cc0167f70558b084bae"
+        },
+        {
+          "path": "assets/motion/pantheon-sources/aurion.prompt.txt",
+          "sha256": "c822fd1249f6442c6c347f9391f873df957f5b003a8b6bf4154f065496ca5499"
+        }
+      ]
+    },
+    "fenlos": {
+      "identityReference": "assets/anime/pantheon-sources/fenlos.png",
+      "processing": "assets/motion/pantheon-sources/fenlos-processing.json",
+      "files": [
+        {
+          "path": "assets/motion/pantheon-sources/fenlos-atlas-key.png",
+          "sha256": "866ae374dbf30dc95f7865693646105473981d70657b093dc1574ae2088f2e09"
+        },
+        {
+          "path": "assets/motion/pantheon-sources/fenlos-atlas.png",
+          "sha256": "7f3c8d1b7669fcc2fdecc044da862d16032e8573d5f5be78672b23e2e6a4701b"
+        },
+        {
+          "path": "assets/motion/pantheon-sources/fenlos.prompt.txt",
+          "sha256": "05314b0e6f2c67a4b3c40963fa0bc78d4ebfcaf878b7d2ee66b202a4ecfec875"
+        }
+      ]
+    }
+  }
+}

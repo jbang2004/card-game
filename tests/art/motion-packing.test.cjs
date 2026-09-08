@@ -277,3 +277,91 @@ test(
     }
   },
 );
+
+test(
+  "magenta edge despill preserves ivory, cyan and opaque green while removing pink fringes",
+  { skip: !hasPlaywright },
+  async () => {
+    const { chromium } = require("@playwright/test");
+    const browser = await chromium.launch({
+      executablePath:
+        process.env.CHROMIUM_PATH ||
+        (process.platform === "darwin"
+          ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+          : undefined),
+    });
+    const input = path.join(os.tmpdir(), `edge-input-${process.pid}.png`),
+      output = path.join(os.tmpdir(), `edge-output-${process.pid}.png`);
+    try {
+      const page = await browser.newPage();
+      const png = await page.evaluate(() => {
+        const c = document.createElement("canvas");
+        c.width = 128;
+        c.height = 64;
+        const x = c.getContext("2d");
+        x.fillStyle = "#203050";
+        x.fillRect(0, 0, 64, 64);
+        x.fillStyle = "#ff00ff";
+        x.fillRect(64, 0, 64, 64);
+        x.fillStyle = "#e6dac7";
+        x.fillRect(80, 12, 32, 40);
+        x.fillStyle = "#906090";
+        x.fillRect(80, 12, 1, 40);
+        x.fillStyle = "#32c8dc";
+        x.fillRect(84, 24, 8, 8);
+        x.fillStyle = "#46a064";
+        x.fillRect(88, 40, 8, 8);
+        return c.toDataURL().split(",")[1];
+      });
+      fs.writeFileSync(input, Buffer.from(png, "base64"));
+      const result = run(chroma, [
+        "--input",
+        input,
+        "--output",
+        output,
+        "--split",
+        "64",
+        "--color",
+        "0xff00ff",
+        "--similarity",
+        "0.1",
+        "--blend",
+        "0.02",
+        "--despill",
+        "magenta-edge",
+      ]);
+      assert.equal(result.status, 0, result.stderr);
+      const pixels = await page.evaluate(
+        async (src) => {
+          const im = new Image();
+          im.src = src;
+          await im.decode();
+          const c = document.createElement("canvas");
+          c.width = 128;
+          c.height = 64;
+          const x = c.getContext("2d");
+          x.drawImage(im, 0, 0);
+          return [
+            [80, 28],
+            [86, 28],
+            [103, 30],
+            [91, 43],
+            [70, 4],
+            [10, 10],
+          ].map(([a, b]) => Array.from(x.getImageData(a, b, 1, 1).data));
+        },
+        "data:image/png;base64," + fs.readFileSync(output).toString("base64"),
+      );
+      assert.deepEqual(pixels[0], [96, 96, 96, 255]);
+      assert.deepEqual(pixels[1], [50, 200, 220, 255]);
+      assert.deepEqual(pixels[2], [230, 218, 199, 255]);
+      assert.deepEqual(pixels[3], [70, 160, 100, 255]);
+      assert.equal(pixels[4][3], 0);
+      assert.deepEqual(pixels[5], [32, 48, 80, 255]);
+    } finally {
+      await browser.close();
+      fs.rmSync(input, { force: true });
+      fs.rmSync(output, { force: true });
+    }
+  },
+);

@@ -192,7 +192,14 @@
     "souls": [],
     "fallen": 0,
     "contracts": [],
-    "usedContracts": []
+    "usedContracts": [],
+    "devotion": {
+      "spells": [],
+      "shields": 0,
+      "hunts": 0,
+      "huntTurn": 0,
+      "huntCount": 0
+    }
   },
   "e": {
     "hp": 30,
@@ -382,6 +389,13 @@
     "souls": [],
     "fallen": 0,
     "contracts": [],
-    "usedContracts": []
+    "usedContracts": [],
+    "devotion": {
+      "spells": [],
+      "shields": 0,
+      "hunts": 0,
+      "huntTurn": 0,
+      "huntCount": 0
+    }
   }
 }

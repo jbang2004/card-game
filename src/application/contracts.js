@@ -7,19 +7,42 @@ const EmberContractUI = (() => {
       if (!game.s || EmberFX.busy) return;
       const s = game.s;
       showModal(
-        `<section class="modal-box covenant-box"><div class="covenant-heading"><small>THE MOON REMEMBERS</small><h2>月影契约</h2><p>每次非衍生随从死亡留下印记；同名只保留一枚。消耗最早取得的印记，不触发亡语。每张契约每局一次。</p></div>${[
+        `<section class="modal-box covenant-box"><div class="covenant-heading"><small>COVENANTS OF THE DIVINE</small><h2>诸神契约</h2><p>星火、誓光、狩猎与灵魂，各有唤醒之路。双方进度公开，每张契约每局一次；神祇降临当回合不能攻击英雄。</p></div>${[
           "p",
           "e",
         ]
           .map((side) => {
             const p = s[side];
-            return `<section class="covenant-side"><h3>${side === "p" ? "你的契约" : "敌方公开契约"} <span>灵魂 ${p.souls.length} · 阵亡 ${p.fallen}</span></h3><p class="soul-ledger">${p.souls.map((id) => D.byId[id].name).join(" · ") || "尚无灵魂印记"}</p><div class="covenant-grid">${
+            const moon = p.contracts.some((id) => !D.byId[id].contract.ritual);
+            return `<section class="covenant-side"><h3>${side === "p" ? "你的契约" : "敌方公开契约"} <span>${moon ? `灵魂 ${p.souls.length} · 阵亡 ${p.fallen}` : "公开唤醒进度"}</span></h3>${moon ? `<p class="soul-ledger">${p.souls.map((id) => D.byId[id].name).join(" · ") || "尚无灵魂印记"} · 同名仅一枚，按获得顺序消耗。</p>` : ""}<div class="covenant-grid">${
               p.contracts
                 .map((id) => {
                   const c = D.byId[id],
                     used = p.usedContracts.includes(id),
-                    reason = game.legalContract(side, id);
-                  return `<article class="covenant-card ${c.contract.divine ? "divine" : ""} ${used ? "spent" : ""}"><img src="${A.card(c)}" alt="${c.name}"><div class="covenant-copy"><small>${c.contract.divine ? "神祇契约" : "契兽契约"} · ${c.cost} 法力 · ${c.atk} 攻击 / ${c.hp} 生命</small><h4>${c.name}</h4><p>${c.text}</p><div class="covenant-progress"><span>印记 ${Math.min(p.souls.length, c.contract.souls)}/${c.contract.souls}</span><span>阵亡 ${Math.min(p.fallen, c.contract.deaths)}/${c.contract.deaths}</span></div>${side === "p" ? `<button class="gold-btn" data-invoke="${id}" ${reason ? "disabled" : ""}>${used ? "契约已兑现" : reason || "唤醒契约"}</button>` : `<p class="enemy-covenant-status">${used ? "已使用" : reason || "已可召唤"}</p>`}</div></article>`;
+                    reason = game.legalContract(side, id),
+                    unmet = EmberContracts.progress(p, c).find(
+                      (gate) => gate.current < gate.required,
+                    ),
+                    enemyStatus = used
+                      ? "已使用"
+                      : unmet
+                        ? `${unmet.label}尚差 ${unmet.required - unmet.current}`
+                        : p.mana < c.cost
+                          ? "仪式已达成 · 等待法力"
+                          : p.board.length >= 7
+                            ? "仪式已达成 · 等待空位"
+                            : "条件已满足 · 敌方回合可唤醒";
+                  return `<article data-deity="${id}" class="covenant-card ${c.contract.divine ? "divine" : ""} ${used ? "spent" : ""}"><img src="${A.card(c)}" alt="${c.name}"><div class="covenant-copy"><small>${c.contract.divine ? "神祇契约" : "契兽契约"} · ${c.cost} 法力 · ${c.atk} 攻击 / ${c.hp} 生命</small><h4>${c.name}</h4><p>${c.text}</p>${c.contract.ritual?.kind === "spells" && p.devotion.spells.length ? `<details class="ritual-ledger"><summary>已施放 ${p.devotion.spells.length} 种法术</summary><p>${p.devotion.spells.map((id) => D.byId[id].name).join(" · ")}</p></details>` : ""}<div class="covenant-progress">${EmberContracts.progress(
+                    p,
+                    c,
+                  )
+                    .map(
+                      (gate) =>
+                        `<span>${gate.label} ${Math.min(gate.current, gate.required)}/${gate.required}<meter min="0" max="${gate.required}" value="${Math.min(gate.current, gate.required)}" aria-label="${gate.label}唤醒进度"></meter></span>`,
+                    )
+                    .join(
+                      "",
+                    )}</div>${side === "p" ? `<button class="gold-btn" data-invoke="${id}" ${reason ? "disabled" : ""}>${used ? "契约已兑现" : reason || "唤醒契约"}</button>` : `<p class="enemy-covenant-status">${enemyStatus}</p>`}</div></article>`;
                 })
                 .join("") || '<p class="deck-plan">未携带契约。</p>'
             }</div></section>`;
@@ -43,7 +66,11 @@ const EmberContractUI = (() => {
         (id) => !game.legalContract("p", id),
       ).length;
       b.classList.toggle("ready", !!ready);
-      b.innerHTML = `<span>☾ 月影契约</span><small>${ready ? ready + " 项可唤醒" : "灵魂 " + s.p.souls.length + " · 阵亡 " + s.p.fallen}</small>`;
+      const god = s.p.contracts
+        .map((id) => D.byId[id])
+        .find((c) => c.contract.divine);
+      const gates = god ? EmberContracts.progress(s.p, god) : [];
+      b.innerHTML = `<span>✦ 诸神契约</span><small>${ready ? ready + " 项可唤醒" : god && s.p.usedContracts.includes(god.id) ? "神祇已降临" : gates.map((gate) => gate.label + " " + Math.min(gate.current, gate.required) + "/" + gate.required).join(" · ") || "查看公开契约"}</small>`;
       b.onclick = show;
     }
     return Object.freeze({ show, render });

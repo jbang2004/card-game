@@ -1968,6 +1968,144 @@
         ],
         "backgroundWidth": 767
       }
+    },
+    "jingchen": {
+      "staticKey": "jingchen",
+      "focus": 22,
+      "motion": {
+        "source": "assets/anime/jingchen.webp",
+        "atlas": "pantheon-sources/jingchen-atlas.png",
+        "nativeAlpha": true,
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "backgroundWidth": 768,
+        "accent": "unused",
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 0.63,
+          "lift": 0.012,
+          "sway": 0.004,
+          "turn": 0.005
+        },
+        "files": [
+          {
+            "file": "jingchen-background.webp",
+            "role": "background",
+            "bytes": 102016,
+            "sha256": "76e64cd0ea96140201996a080bbb508ff19a2b36970e94e81acffee06ed9edca"
+          },
+          {
+            "file": "jingchen-subject.webp",
+            "role": "subject",
+            "bytes": 78016,
+            "sha256": "9dfe668a258c534798cf17949cf7f9911ed6cfd6e24a013cfe72c6632614e133"
+          }
+        ]
+      }
+    },
+    "aurion": {
+      "staticKey": "aurion",
+      "focus": 19,
+      "motion": {
+        "source": "assets/anime/aurion.webp",
+        "atlas": "pantheon-sources/aurion-atlas.png",
+        "nativeAlpha": true,
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "backgroundWidth": 768,
+        "accent": "unused",
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 0.48,
+          "lift": 0.007,
+          "sway": 0.002,
+          "turn": 0.002
+        },
+        "files": [
+          {
+            "file": "aurion-background.webp",
+            "role": "background",
+            "bytes": 81148,
+            "sha256": "c89c2a1ec93359684a4baad704c305029770298be6a573fb6646bf1eeeebf191"
+          },
+          {
+            "file": "aurion-subject.webp",
+            "role": "subject",
+            "bytes": 72278,
+            "sha256": "bce8354d04d60fb6761e71adad7a255972a328d9f87cd9068707e6418fcc142f"
+          }
+        ]
+      }
+    },
+    "fenlos": {
+      "staticKey": "fenlos",
+      "focus": 23,
+      "motion": {
+        "source": "assets/anime/fenlos.webp",
+        "atlas": "pantheon-sources/fenlos-atlas.png",
+        "nativeAlpha": true,
+        "cuts": [
+          0,
+          768,
+          1536
+        ],
+        "backgroundWidth": 768,
+        "accent": "unused",
+        "size": [
+          384,
+          512
+        ],
+        "rig": {
+          "template": "whole-subject",
+          "speed": 0.72,
+          "lift": 0.011,
+          "sway": 0.004,
+          "turn": 0.004
+        },
+        "files": [
+          {
+            "file": "fenlos-background.webp",
+            "role": "background",
+            "bytes": 101210,
+            "sha256": "aec43536e64c2047dc0de8f0958e1ccf717b99e2e0f5dc867213de8a6a5fb2ce"
+          },
+          {
+            "file": "fenlos-subject.webp",
+            "role": "subject",
+            "bytes": 66176,
+            "sha256": "ac6a2cd7661a6a96a6d050cbab8188aaa37d683a440fe837de7a5f291e3e478e"
+          }
+        ]
+      }
+    },
+    "starweave": {
+      "staticKey": "starweave",
+      "focus": 40,
+      "motion": null
+    },
+    "dawnvow": {
+      "staticKey": "dawnvow",
+      "focus": 40,
+      "motion": null
+    },
+    "huntinghorn": {
+      "staticKey": "huntinghorn",
+      "focus": 40,
+      "motion": null
     }
   }
 }

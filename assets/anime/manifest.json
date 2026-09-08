@@ -1,8 +1,8 @@
 {
   "version": "0.6.0",
-  "cards": 73,
-  "collectible": 62,
-  "tokens": 11,
+  "cards": 79,
+  "collectible": 65,
+  "tokens": 14,
   "sourceAtlases": 8,
   "description": "Every card has a separate panel from the user-approved anime atlas set. Hero/Boss portraits deliberately reuse matching panels, listed separately in runtime routing. Frames and scenery are retained from v0.5.",
   "items": {
@@ -1761,6 +1761,132 @@
       "outputSize": [
         768,
         1024
+      ]
+    },
+    "jingchen": {
+      "file": "jingchen.webp",
+      "source": "pantheon-sources/jingchen.png",
+      "sourceSHA256": "e97fe0517dfec5ec0d34dcf549f03ad293bbc02cfa197568edfb3a69f88efc88",
+      "sourceNote": "Original anime pantheon expansion, built-in image_gen; prompts and style references in pantheon-sources/provenance.json",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "cropBox": null,
+      "method": "Approved individual source; proportional crop and WebP",
+      "name": "星焰神·烬辰",
+      "type": "minion",
+      "token": true,
+      "bytes": 339258,
+      "sha256": "e2488e47e5e9d0e0b6a32a66fd2d810e5876ad257e5a128646600b1325991028",
+      "outputSize": [
+        768,
+        1024
+      ]
+    },
+    "aurion": {
+      "file": "aurion.webp",
+      "source": "pantheon-sources/aurion.png",
+      "sourceSHA256": "d5f5abca90e30484f71ed9566106c263c3ce8480f52a59dcc3a6e2c952edf217",
+      "sourceNote": "Original anime pantheon expansion, built-in image_gen; prompts and style references in pantheon-sources/provenance.json",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "cropBox": null,
+      "method": "Approved individual source; proportional crop and WebP",
+      "name": "曙日神·奥瑞恩",
+      "type": "minion",
+      "token": true,
+      "bytes": 311910,
+      "sha256": "e6e94fc62e221aedad7d29af0823b94240af1c2e79fd0d90f9553aa8c039c87f",
+      "outputSize": [
+        768,
+        1024
+      ]
+    },
+    "fenlos": {
+      "file": "fenlos.webp",
+      "source": "pantheon-sources/fenlos.png",
+      "sourceSHA256": "afb385da56e7fd32f40279bad82950c3f0478d2fd011a09b6e1e2e40cfa5782d",
+      "sourceNote": "Original anime pantheon expansion, built-in image_gen; prompts and style references in pantheon-sources/provenance.json",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "cropBox": null,
+      "method": "Approved individual source; proportional crop and WebP",
+      "name": "荒猎神·芬洛斯",
+      "type": "minion",
+      "token": true,
+      "bytes": 326102,
+      "sha256": "94da2cf2badfe26c903d7d36fa61762397ca277e373fe3bf6e524d247293088b",
+      "outputSize": [
+        768,
+        1024
+      ]
+    },
+    "starweave": {
+      "file": "starweave.webp",
+      "source": "pantheon-sources/starweave.png",
+      "sourceSHA256": "92536832c20ca4a17747197e3a5bedf3241cb922c9316fc65f63f5b40771cf83",
+      "sourceNote": "Original anime pantheon expansion, built-in image_gen; prompts and style references in pantheon-sources/provenance.json",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "cropBox": null,
+      "method": "Approved individual source; proportional crop and WebP",
+      "name": "星轨织火",
+      "type": "spell",
+      "token": false,
+      "bytes": 74270,
+      "sha256": "0a437e0602d5bf819dcfaee95cee07e0cc0ec004fcc3fc4514baba9a15eb2b23",
+      "outputSize": [
+        336,
+        448
+      ]
+    },
+    "dawnvow": {
+      "file": "dawnvow.webp",
+      "source": "pantheon-sources/dawnvow.png",
+      "sourceSHA256": "7feefbd453647a29ec16ad486301034a106c3bed41652c2ed5faefe814192266",
+      "sourceNote": "Original anime pantheon expansion, built-in image_gen; prompts and style references in pantheon-sources/provenance.json",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "cropBox": null,
+      "method": "Approved individual source; proportional crop and WebP",
+      "name": "晨光守誓",
+      "type": "spell",
+      "token": false,
+      "bytes": 68324,
+      "sha256": "d88e9b9b6dd53a02151a5b32be51cbf6421dd7abe91d9fb2c9df65afb4d9215b",
+      "outputSize": [
+        336,
+        448
+      ]
+    },
+    "huntinghorn": {
+      "file": "huntinghorn.webp",
+      "source": "pantheon-sources/huntinghorn.png",
+      "sourceSHA256": "103da0e80f3764ed660f3b9499c8a46118246be951930631c57476a683efbd17",
+      "sourceNote": "Original anime pantheon expansion, built-in image_gen; prompts and style references in pantheon-sources/provenance.json",
+      "cropNativeSize": [
+        1086,
+        1448
+      ],
+      "cropBox": null,
+      "method": "Approved individual source; proportional crop and WebP",
+      "name": "古林猎号",
+      "type": "spell",
+      "token": false,
+      "bytes": 76340,
+      "sha256": "5e053c3d5f32c8279362b9bdb7d152dc23c35215d8cb2d526910917da81987ca",
+      "outputSize": [
+        336,
+        448
       ]
     }
   }

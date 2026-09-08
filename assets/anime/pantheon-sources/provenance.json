@@ -1,0 +1,59 @@
+{
+  "tool": "built-in image_gen",
+  "date": "2026-09-08",
+  "cards": {
+    "jingchen": {
+      "source": "assets/anime/pantheon-sources/jingchen.png",
+      "prompt": "assets/anime/pantheon-sources/jingchen.prompt.txt",
+      "styleReferences": [
+        "assets/anime/oracle.webp",
+        "assets/anime/selmyra.webp"
+      ],
+      "sha256": "e97fe0517dfec5ec0d34dcf549f03ad293bbc02cfa197568edfb3a69f88efc88"
+    },
+    "aurion": {
+      "source": "assets/anime/pantheon-sources/aurion.png",
+      "prompt": "assets/anime/pantheon-sources/aurion.prompt.txt",
+      "styleReferences": [
+        "assets/anime/solaris.webp",
+        "assets/anime/selmyra.webp"
+      ],
+      "sha256": "d5f5abca90e30484f71ed9566106c263c3ce8480f52a59dcc3a6e2c952edf217"
+    },
+    "fenlos": {
+      "source": "assets/anime/pantheon-sources/fenlos.png",
+      "prompt": "assets/anime/pantheon-sources/fenlos.prompt.txt",
+      "styleReferences": [
+        "assets/anime/wolf.webp",
+        "assets/anime/selmyra.webp"
+      ],
+      "sha256": "afb385da56e7fd32f40279bad82950c3f0478d2fd011a09b6e1e2e40cfa5782d"
+    },
+    "starweave": {
+      "source": "assets/anime/pantheon-sources/starweave.png",
+      "prompt": "assets/anime/pantheon-sources/starweave.prompt.txt",
+      "styleReferences": [
+        "assets/anime/oracle.webp"
+      ],
+      "sha256": "92536832c20ca4a17747197e3a5bedf3241cb922c9316fc65f63f5b40771cf83"
+    },
+    "dawnvow": {
+      "source": "assets/anime/pantheon-sources/dawnvow.png",
+      "prompt": "assets/anime/pantheon-sources/dawnvow.prompt.txt",
+      "styleReferences": [
+        "assets/anime/blessing.webp",
+        "assets/anime/solaris.webp"
+      ],
+      "sha256": "7feefbd453647a29ec16ad486301034a106c3bed41652c2ed5faefe814192266"
+    },
+    "huntinghorn": {
+      "source": "assets/anime/pantheon-sources/huntinghorn.png",
+      "prompt": "assets/anime/pantheon-sources/huntinghorn.prompt.txt",
+      "styleReferences": [
+        "assets/anime/wolves.webp",
+        "assets/anime/wolf.webp"
+      ],
+      "sha256": "103da0e80f3764ed660f3b9499c8a46118246be951930631c57476a683efbd17"
+    }
+  }
+}

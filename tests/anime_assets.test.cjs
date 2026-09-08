@@ -25,10 +25,10 @@ for (const name of [
   vm.runInContext(fs.readFileSync(path.join(root, "src", name), "utf8"), ctx);
 const evalJS = (code) => vm.runInContext(code, ctx);
 const sha = (b) => crypto.createHash("sha256").update(b).digest("hex");
-test("73 manifest entries match collectible, token and contract IDs", () => {
-  assert.equal(manifest.cards, 73);
-  assert.equal(D.cards.filter((c) => !c.token).length, 62);
-  assert.equal(D.cards.filter((c) => c.token).length, 11);
+test("79 manifest entries match collectible, token and contract IDs", () => {
+  assert.equal(manifest.cards, 79);
+  assert.equal(D.cards.filter((c) => !c.token).length, 65);
+  assert.equal(D.cards.filter((c) => c.token).length, 14);
   assert.deepEqual(
     Object.keys(manifest.items).sort(),
     D.cards.map((c) => c.id).sort(),
@@ -45,7 +45,7 @@ test("Every output is distinct and matches its recorded file hash", () => {
       D.byId[id].contract?.divine ? [768, 1024] : [336, 448],
     );
   }
-  assert.equal(hashes.size, 73);
+  assert.equal(hashes.size, 79);
 });
 test("Every image retains verifiable source provenance", () => {
   const atlases = new Set();
@@ -60,14 +60,14 @@ test("Every image retains verifiable source provenance", () => {
     manifest.sourceAtlases,
   );
 });
-test("All 73 card routes resolve directly to their own embedded anime image", () => {
+test("All 79 card routes resolve directly to their own embedded anime image", () => {
   fallbackCalls = 0;
   assert.ok(
     evalJS("EmberData.cards.every(c=>EmberArt.card(c)===AnimeAssets[c.id])"),
   );
   assert.equal(
     evalJS("new Set(EmberData.cards.map(c=>EmberArt.card(c))).size"),
-    73,
+    79,
   );
   assert.equal(fallbackCalls, 0);
 });

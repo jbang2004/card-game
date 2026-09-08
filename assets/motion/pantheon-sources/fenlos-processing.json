@@ -1,0 +1,20 @@
+{
+  "input": "assets/motion/pantheon-sources/fenlos-atlas-key.png",
+  "output": "assets/motion/pantheon-sources/fenlos-atlas.png",
+  "color": "0xff00ff",
+  "similarity": 0.3,
+  "blend": 0.08,
+  "despill": "magenta-edge",
+  "cuts": [
+    0,
+    768,
+    1536
+  ],
+  "alpha": {
+    "leftTransparent": 0,
+    "rightTransparent": 379478,
+    "rightVisible": 406744,
+    "residualKey": 0,
+    "edgePixels": 11990
+  }
+}
