@@ -111,6 +111,8 @@ test("ranger may choose moon or hunt but cannot equip both gods; named loadout k
   await page.locator("#deck-reset").click();
   await page.locator("#deck-contracts summary").click();
   await expect(page.locator('[data-deck-contract="fenlos"]')).toBeChecked();
+  await expect(page.locator('[data-deck-contract="eclipsewolf"]')).not.toBeChecked();
+  await expect(page.locator('[data-deck-contract="moonguard"]')).not.toBeChecked();
   await page.locator('[data-deck-contract="fenlos"]').uncheck();
   await page.locator('[data-deck-contract="selmyra"]').check();
   await page.locator("#deck-name").fill("游侠的冥月之誓");
@@ -120,8 +122,6 @@ test("ranger may choose moon or hunt but cannot equip both gods; named loadout k
   await expect(page.locator('[data-contract="fenlos"]')).not.toBeChecked();
   await page.locator("#hero-confirm").click();
   expect(await page.evaluate(() => Emberfall.game.s.p.contracts)).toEqual([
-    "eclipsewolf",
-    "moonguard",
     "selmyra",
   ]);
 });

@@ -111,7 +111,7 @@ const EmberCampaign = {
         },
       ],
       portraitId: "archer",
-      defaultContracts: ["eclipsewolf", "moonguard", "fenlos"],
+      defaultContracts: ["fenlos"],
     },
     {
       id: "morla",
