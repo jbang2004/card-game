@@ -1863,3 +1863,140 @@ body.touch-layout #modal.folio-host[data-type="heroes"] .folio-flow {
 body.touch-layout #modal.folio-host[data-type="heroes"] .folio-pager {
   display: none;
 }
+
+/* Content-led sheets: choices and inspections should end after their last
+   meaningful control instead of stretching a short body to a workspace-sized
+   frame.  The max-height keeps the same sheet usable in short landscape
+   viewports; the viewport becomes the scroll owner only when content needs it.
+   Long reading views remain on the measured pager policy above. */
+body #modal.folio-host
+  > .folio-dialog[data-page-policy="compact"] {
+  height: fit-content !important;
+  max-height: min(
+    850px,
+    calc(
+      100dvh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+    )
+  ) !important;
+}
+body #modal.folio-host
+  > .folio-dialog[data-page-policy="compact"]
+  > .folio-pane {
+  flex: 0 1 auto;
+  overflow: hidden;
+}
+body #modal.folio-host
+  > .folio-dialog[data-page-policy="compact"]
+  .folio-viewport {
+  flex: 0 1 auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  touch-action: pan-y;
+}
+body #modal.folio-host
+  > .folio-dialog[data-page-policy="compact"]
+  .folio-flow {
+  height: auto !important;
+  min-height: 0;
+  column-count: 1 !important;
+  column-width: auto !important;
+  column-gap: 0;
+  column-fill: initial !important;
+}
+body #modal.folio-host
+  > .folio-dialog[data-page-policy="compact"]
+  .folio-pager {
+  display: none;
+}
+body #modal.folio-host
+  > .folio-dialog[data-page-policy="compact"]
+  .folio-flow
+  > * {
+  margin-block: 0 12px;
+}
+
+/* The legacy short-host rule turns a very short viewport into a side action
+   rail.  Compact sheets already have an intrinsic height, so keep their
+   reading order vertical and let the action row follow the content. */
+body #modal.folio-host
+  > .folio-dialog[data-page-policy="compact"][data-compact="true"] {
+  display: flex;
+  flex-direction: column;
+  grid-template-columns: none;
+  grid-template-rows: none;
+}
+body #modal.folio-host
+  > .folio-dialog[data-page-policy="compact"][data-compact="true"]
+  > :is(.modal-footer, .reward-footer, .lab-footer, .atelier-foot) {
+  grid-column: auto;
+  grid-row: auto;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* Keep finite card sets as authored grids after the generic flow wrapper has
+   been added.  This is what keeps three opening cards on one row when there
+   is room, while allowing two/one columns on narrower phones. */
+body #modal.folio-host
+  > .folio-dialog[data-page-policy="compact"]
+  .folio-flow
+  :is(.mulligan-cards, .discover-options) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  justify-content: center;
+  align-items: start;
+  gap: 14px 15px;
+  margin: 0 0 12px;
+}
+body #modal.folio-host
+  > .folio-dialog[data-page-policy="compact"]
+  .folio-flow
+  :is(.mulligan-card, .discover-card) {
+  width: 100%;
+  max-width: 204px;
+  margin: 0;
+  justify-self: center;
+}
+body #modal.folio-host
+  > .folio-dialog[data-page-policy="compact"]
+  .folio-flow
+  .relic-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0 0 12px;
+}
+body.touch-layout #modal.folio-host
+  > .folio-dialog[data-page-policy="compact"]
+  .folio-flow
+  .relic-options {
+  display: flex;
+  flex-direction: column;
+}
+body #modal.folio-host
+  > .folio-dialog[data-page-policy="compact"]
+  .folio-flow
+  .covenant-side {
+  display: block;
+}
+body #modal.folio-host
+  > .folio-dialog[data-page-policy="compact"]
+  .folio-flow
+  .covenant-grid {
+  display: grid;
+}
+body.touch-layout #modal.folio-host
+  > .folio-dialog[data-page-policy="compact"]
+  .folio-flow
+  .covenant-grid {
+  grid-template-columns: 1fr;
+}
+body #modal.folio-host
+  > .folio-dialog[data-page-policy="compact"]
+  .folio-flow
+  .touch-hand-grid {
+  display: grid;
+}

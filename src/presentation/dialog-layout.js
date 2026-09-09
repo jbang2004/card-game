@@ -25,6 +25,19 @@ const EmberDialogs = (() => {
   const dialogPagePolicy = Object.freeze({
     settings: "fit",
     "touch-menu": "fit",
+    // These views are decisions or inspections, not reading workspaces. Let
+    // their frame follow the authored content and only keep a scroll rail
+    // when a narrow viewport genuinely needs one.
+    contracts: "compact",
+    mulligan: "compact",
+    discover: "compact",
+    result: "compact",
+    rewards: "compact",
+    "touch-hand": "compact",
+    "touch-log": "compact",
+    "touch-card": "compact",
+    "touch-hero": "compact",
+    "library-card": "compact",
   });
   const pagerIcon = (direction) =>
     `<svg class="folio-page-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="${direction === "previous" ? "M15 6 9 12l6 6" : "M9 6l6 6-6 6"}"/></svg>`;

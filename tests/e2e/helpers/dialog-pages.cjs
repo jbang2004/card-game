@@ -54,8 +54,6 @@ async function assertDialogFit(page) {
               .filter((e) => e.clientHeight)
               .filter(
                 (e) =>
-                  (!e.closest('#modal[data-type="contracts"]') &&
-                    !e.closest('#modal[data-type="heroes"]')) ||
                   getComputedStyle(e).overflowY !== "auto",
               )
               .map((e) => e.scrollHeight - e.clientHeight),
@@ -77,9 +75,7 @@ async function assertDialogFit(page) {
       if (
         e.clientHeight &&
         e.scrollHeight > e.clientHeight + 2 &&
-        ((!e.closest('#modal[data-type="contracts"]') &&
-          !e.closest('#modal[data-type="heroes"]')) ||
-          getComputedStyle(e).overflowY !== "auto")
+        getComputedStyle(e).overflowY !== "auto"
       )
         errors.push(`vertical overflow ${e.scrollHeight - e.clientHeight}`);
     for (const e of box.querySelectorAll(
