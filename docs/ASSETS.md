@@ -167,3 +167,9 @@
 三位神分别使用自己的原画生成背景/主体图集，输入、提示、alpha 处理参数保存在 `assets/motion/pantheon-sources/`。星焰和曙日用绿色键色与 green-edge，荒猎用洋红键色避免影响翠绿眼睛，并用新增 magenta-edge 去除轮廓粉边。处理只限制于透明轮廓附近，不改主体内部颜色。星焰背景残留冠冕经过定点重绘修复，修订前输入留档。
 
 全游戏 44 个上场随从都有真实 alpha 分层待机，35 张法术/武器静态。运行脚本使用现有角色渲染器；没有增加 Three.js、视频播放器或新动画时钟。检查记录见 [诸神验收](QA_PANTHEON.md)。
+
+## 2026-09-09 界面器物素材
+
+`assets/ui/manifest.json` 管理原创星火徽章与胡桃木古金透明边框，制作简报见 `assets/ui/PROMPTS.md`。源图保存在 `assets/ui/sources/`；WebP 用于界面，所有文字和数值仍由 DOM 绘制。`tools/ui_assets.py` 使用标准库校验 SHA-256 并生成 `src/ui-assets.js`，由构建注册表装入离线版与 HTTP 版。此次没有替换任何角色原画。
+
+本轮后续新增专用英雄冠饰、收藏书脊、契约祭坛环。书脊首版因实际显示像短把手被拒收，v2重新生成14:1细长装订条；原图和返工记录均保留。完整来源、提示词、处理参数以 `assets/ui/manifest.json` 为准，评审见 `docs/UI_CRAFT_REVIEW_20260909.md`。

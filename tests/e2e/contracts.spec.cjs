@@ -1,3 +1,4 @@
+const { openDeckTools } = require("./helpers/deck-tools.cjs");
 const { test, expect } = require("@playwright/test");
 async function open(page) {
   await page.goto("./?debug=1");
@@ -88,8 +89,11 @@ test("named deck saves an independent contract loadout and selection launches it
 }) => {
   await open(page);
   await page.locator("#collection-nav").click();
+  await openDeckTools(page);
   await page.locator("#deck-class").selectOption("morla");
+  await openDeckTools(page);
   await page.locator("#deck-reset").click();
+  await openDeckTools(page);
   await page.locator("#deck-contracts summary").click();
   await page.locator('[data-deck-contract="eclipsewolf"]').uncheck();
   await page.locator('[data-deck-contract="moonguard"]').uncheck();

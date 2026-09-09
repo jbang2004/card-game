@@ -3,6 +3,10 @@ const EmberContractUI = (() => {
   function create({ game, showModal, closeModal, act }) {
     const D = EmberData,
       A = EmberArt;
+    const ritualFor = (c) =>
+      ({ jingchen: "stars", aurion: "dawn", fenlos: "hunt" })[c?.id] || "moon";
+    const symbolFor = (kind) =>
+      ({ stars: "star", dawn: "sun", hunt: "hunt", moon: "moon" })[kind];
     function show() {
       if (!game.s || EmberFX.busy) return;
       const s = game.s;
@@ -32,13 +36,13 @@ const EmberContractUI = (() => {
                           : p.board.length >= 7
                             ? "仪式已达成 · 等待空位"
                             : "条件已满足 · 敌方回合可唤醒";
-                  return `<article data-deity="${id}" class="covenant-card ${c.contract.divine ? "divine" : ""} ${used ? "spent" : ""}"><img src="${A.card(c)}" alt="${c.name}"><div class="covenant-copy"><small>${c.contract.divine ? "神祇契约" : "契兽契约"} · ${c.cost} 法力 · ${c.atk} 攻击 / ${c.hp} 生命</small><h4>${c.name}</h4><p>${c.text}</p>${c.contract.ritual?.kind === "spells" && p.devotion.spells.length ? `<details class="ritual-ledger"><summary>已施放 ${p.devotion.spells.length} 种法术</summary><p>${p.devotion.spells.map((id) => D.byId[id].name).join(" · ")}</p></details>` : ""}<div class="covenant-progress">${EmberContracts.progress(
+                  return `<article data-deity="${id}" data-ritual="${ritualFor(c)}" class="covenant-card ${!reason ? "invokable" : ""} ${c.contract.divine ? "divine" : ""} ${used ? "spent" : ""}"><img src="${A.card(c)}" alt="${c.name}"><div class="covenant-copy"><div class="ritual-mark" aria-hidden="true">${A.icon(symbolFor(ritualFor(c)))}</div><small>${c.contract.divine ? "神祇契约" : "契兽契约"} · ${c.cost} 法力 · ${c.atk} 攻击 / ${c.hp} 生命</small><h4>${c.name}</h4><p>${c.text}</p>${c.contract.ritual?.kind === "spells" && p.devotion.spells.length ? `<details class="ritual-ledger"><summary>已施放 ${p.devotion.spells.length} 种法术</summary><p>${p.devotion.spells.map((id) => D.byId[id].name).join(" · ")}</p></details>` : ""}<div class="covenant-progress">${EmberContracts.progress(
                     p,
                     c,
                   )
                     .map(
                       (gate) =>
-                        `<span>${gate.label} ${Math.min(gate.current, gate.required)}/${gate.required}<meter min="0" max="${gate.required}" value="${Math.min(gate.current, gate.required)}" aria-label="${gate.label}唤醒进度"></meter></span>`,
+                        `<span class="ritual-gate"><span class="ritual-count">${gate.label} <b>${Math.min(gate.current, gate.required)}<small> / ${gate.required}</small></b></span><span class="ritual-stones" aria-hidden="true">${Array.from({ length: gate.required }, (_, i) => `<i class="${i < gate.current ? "lit" : ""}"></i>`).join("")}</span><meter min="0" max="${gate.required}" value="${Math.min(gate.current, gate.required)}" aria-label="${gate.label}唤醒进度"></meter></span>`,
                     )
                     .join(
                       "",
@@ -70,7 +74,14 @@ const EmberContractUI = (() => {
         .map((id) => D.byId[id])
         .find((c) => c.contract.divine);
       const gates = god ? EmberContracts.progress(s.p, god) : [];
-      b.innerHTML = `<span>✦ 诸神契约</span><small>${ready ? ready + " 项可唤醒" : god && s.p.usedContracts.includes(god.id) ? "神祇已降临" : gates.map((gate) => gate.label + " " + Math.min(gate.current, gate.required) + "/" + gate.required).join(" · ") || "查看公开契约"}</small>`;
+      const kind = ritualFor(god);
+      b.dataset.ritual = kind;
+      b.classList.toggle("spent", !!god && s.p.usedContracts.includes(god.id));
+      const fraction = gates.length
+        ? Math.min(...gates.map((g) => Math.min(1, g.current / g.required)))
+        : 0;
+      b.style.setProperty("--ritual-progress", fraction * 360 + "deg");
+      b.innerHTML = `<i class="contract-sigil" aria-hidden="true">${A.icon(symbolFor(kind))}</i><span class="contract-label">诸神契约</span><small>${ready ? ready + " 项可唤醒" : god && s.p.usedContracts.includes(god.id) ? "神祇已降临" : gates.map((gate) => gate.label + " " + Math.min(gate.current, gate.required) + "/" + gate.required).join(" · ") || "查看公开契约"}</small>`;
       b.onclick = show;
     }
     return Object.freeze({ show, render });

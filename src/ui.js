@@ -251,9 +251,47 @@
       close.onclick = () => closeModal();
       box.prepend(close);
     }
+    if (
+      [
+        "heroes",
+        "settings",
+        "map",
+        "help",
+        "rewards",
+        "mulligan",
+        "contracts",
+        "result",
+        "touch-card",
+        "touch-hand",
+        "inspect",
+      ].includes(type)
+    ) {
+      const box = $("modal").firstElementChild;
+      const head = box.querySelector(
+        ":scope > .modal-heading, :scope > .covenant-heading",
+      );
+      const foot = box.querySelector(
+        ":scope > .modal-footer, :scope > .reward-footer",
+      );
+      const scroll = document.createElement("div");
+      scroll.className = "modal-scroll";
+      for (const child of [...box.children])
+        if (
+          child !== head &&
+          child !== foot &&
+          !child.classList.contains("modal-close")
+        )
+          scroll.append(child);
+      box.classList.add("framed-dialog");
+      if (foot) box.insertBefore(scroll, foot);
+      else box.append(scroll);
+    }
     window.EmberMobile?.afterModal(type);
+    const openedBox = $("modal").firstElementChild;
     requestAnimationFrame(() => {
-      $("modal")
+      if (!openedBox?.isConnected || openedBox.contains(document.activeElement))
+        return;
+      openedBox
         .querySelector("button:not(:disabled),input,select")
         ?.focus({ preventScroll: true });
     });
@@ -292,7 +330,7 @@
       (a) => a.classId === EmberDeckRules.classFor(D, chosenHero),
     );
     showModal(
-      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">准备出发</div><h2>选择你的英雄</h2><p>选择英雄、套牌与对战方式。</p></div><div class="hero-options">${D.heroes.map((h) => `<button class="hero-option hero-${h.id} ${h.id === chosenHero ? "selected" : ""}" data-hero="${h.id}"><img src="${A.character(h)}" alt="${h.name}" draggable="false" style="${artStyleForHero(h, "option")}"><div class="hero-option-text"><small>${h.sub}</small><h3>${h.name}</h3><p>${h.desc}</p><em>${h.powerText}</em></div>${h.id === chosenHero ? '<span class="selected-check">' + A.icon("check") + "</span>" : ""}</button>`).join("")}</div><p class="hero-deck-note">${escape(loaded.ok ? (customs.length ? "可选用已保存的英雄牌组。" : "请选择职业套牌，或到收藏中建立命名牌组。") : loaded.error)} · 战役共 ${D.bosses.length} 场，关卡之间恢复全部生命。</p><label class="archetype-picker">套牌 <select class="library-search" id="hero-archetype">${customs.map((d) => `<option value="saved:${d.id}" ${d.id === collection.activeId ? "selected" : ""}>${escape(d.name)}</option>`).join("")}${presets
+      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">准备出发</div><h2>选择你的英雄</h2><p>选择英雄、套牌与对战方式。</p></div><div class="hero-options">${D.heroes.map((h) => `<button class="hero-option hero-${h.id} ${h.id === chosenHero ? "selected" : ""}" data-hero="${h.id}" aria-pressed="${h.id === chosenHero}"><img src="${A.character(h)}" alt="${h.name}" draggable="false" style="${artStyleForHero(h, "option")}"><div class="hero-option-text"><small>${h.sub}</small><h3>${h.name}</h3><p>${h.desc}</p><em>${h.powerText}</em></div>${h.id === chosenHero ? '<span class="selected-check" aria-hidden="true">' + A.icon("check") + "</span>" : ""}</button>`).join("")}</div><p class="hero-deck-note">${escape(loaded.ok ? (customs.length ? "可选用已保存的英雄牌组。" : "请选择职业套牌，或到收藏中建立命名牌组。") : loaded.error)} · 战役共 ${D.bosses.length} 场，关卡之间恢复全部生命。</p><label class="archetype-picker">套牌 <select class="library-search" id="hero-archetype">${customs.map((d) => `<option value="saved:${d.id}" ${d.id === collection.activeId ? "selected" : ""}>${escape(d.name)}</option>`).join("")}${presets
         .map(
           (a) =>
             `<option value="${a.id}" ${!customs.length && a.id === D.heroes.find((h) => h.id === chosenHero).defaultDeckId ? "selected" : ""}>${a.name}</option>`,
@@ -316,9 +354,18 @@
     document.querySelectorAll("[data-hero]").forEach(
       (b) =>
         (b.onclick = () => {
+          const scrollTop =
+            document.querySelector("#modal .modal-scroll")?.scrollTop || 0;
+          const restoreFocus = document.activeElement === b;
           chosenHero = b.dataset.hero;
           EmberAudio.fx("ui");
           showHeroes();
+          const scroll = document.querySelector("#modal .modal-scroll");
+          if (scroll) scroll.scrollTop = scrollTop;
+          if (restoreFocus)
+            document
+              .querySelector(`#modal [data-hero="${chosenHero}"]`)
+              ?.focus({ preventScroll: true });
         }),
     );
     const plan = () => {
@@ -497,6 +544,7 @@
         data = side === "p" ? hero : boss,
         el = $(side === "p" ? "player-hero" : "enemy-hero");
       el.innerHTML = `<div class="hero-carving" aria-hidden="true"></div><div class="portrait-frame"><img src="${A.character(data)}" data-art-key="${data.portraitId}" data-portrait-mode="hero" data-portrait-instance="${side}:hero" data-portrait-state="${p.frozen ? "frozen" : "idle"}" alt="${data.name}" draggable="false" style="${artStyleForHero(data, "hero")}"></div><div class="hero-name">${data.name}</div><div class="hero-health ${p.hp < p.maxHp ? "damaged" : ""}">${Math.max(0, p.hp)}</div>${p.armor ? `<div class="hero-armor" title="护甲 ${p.armor}">${p.armor}</div>` : ""}${p.secrets.length ? '<div class="secret-indicator" title="奥秘已布置">?</div>' : ""}${side === "e" && s.mode !== "practice" ? `<div class="hero-phase">${s.phase2 ? "阶段 II" : "阶段 I"}</div>` : ""}`;
+      el.dataset.heroClass = data.classId || "boss";
       el.classList.toggle("frozen", p.frozen);
       el.classList.toggle("ready", game.canAttack(side, "hero"));
       el.setAttribute(
@@ -525,6 +573,7 @@
       "</b><span>" +
       hero.power +
       "</span>";
+    $("power-btn").dataset.heroClass = hero.classId;
     $("power-btn").title = hero.powerText;
     $("power-btn").disabled = !!game.legalPower("p");
     $("enemy-mana").innerHTML =
@@ -1096,7 +1145,7 @@
       last = s.bossIndex === D.bosses.length - 1 || s.mode === "practice";
     clearSelection();
     showModal(
-      `<section class="modal-box result-box"><div class="result-sigil">${A.icon(win ? "fire" : "skull")}</div><div class="result-sub">${win ? (last ? "THE LAST EMBER BURNS" : "ENCOUNTER CLEARED") : s.winner === "draw" ? "A SHARED FATE" : "THE FLAME WILL RISE AGAIN"}</div><h2 class="result-title">${win ? (last ? "余火不灭" : "战役告捷") : s.winner === "draw" ? "同归于尽" : "火种未熄"}</h2><p class="boss-quote">${win ? (last ? "最后一颗星辰，因你重新燃起。" : "「" + D.bosses[s.bossIndex].name + "」已被击败。") : "每一次陨落，都是下一次重燃的序章。"}</p><div class="result-stats"><div><strong>${s.turn}</strong><span>战斗回合</span></div><div><strong>${s.stats.played}</strong><span>打出卡牌</span></div><div><strong>${s.stats.damage}</strong><span>造成伤害</span></div></div><div class="modal-footer"><button class="ghost-btn" id="result-home">返回营地</button><button class="gold-btn" id="result-next">${isDemo ? "开启正式旅程" : win ? (last ? "新的旅程" : "选择遗物") : "重试本关"} ${A.icon("arrow")}</button></div></section>`,
+      `<section class="modal-box result-box" data-outcome="${win ? "win" : "loss"}"><div class="result-sigil">${A.icon(win ? "fire" : "skull")}</div><div class="result-sub">${win ? (last ? "THE LAST EMBER BURNS" : "ENCOUNTER CLEARED") : s.winner === "draw" ? "A SHARED FATE" : "THE FLAME WILL RISE AGAIN"}</div><h2 class="result-title">${win ? (last ? "余火不灭" : "战役告捷") : s.winner === "draw" ? "同归于尽" : "火种未熄"}</h2><p class="boss-quote">${win ? (last ? "最后一颗星辰，因你重新燃起。" : "「" + D.bosses[s.bossIndex].name + "」已被击败。") : "每一次陨落，都是下一次重燃的序章。"}</p><div class="result-stats"><div><strong>${s.turn}</strong><span>战斗回合</span></div><div><strong>${s.stats.played}</strong><span>打出卡牌</span></div><div><strong>${s.stats.damage}</strong><span>造成伤害</span></div></div><div class="modal-footer"><button class="ghost-btn" id="result-home">返回营地</button><button class="gold-btn" id="result-next">${isDemo ? "开启正式旅程" : win ? (last ? "新的旅程" : "选择遗物") : "重试本关"} ${A.icon("arrow")}</button></div></section>`,
       "result",
       true,
     );

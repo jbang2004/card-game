@@ -1,3 +1,4 @@
+const { openDeckTools } = require("./helpers/deck-tools.cjs");
 const { test, expect } = require("@playwright/test");
 for (const [width, height] of [
   [320, 568],
@@ -46,8 +47,11 @@ for (const [width, height] of [
     await page.locator("#touch-collection").click();
     await page.locator("#touch-deck-tab").click();
     await expect(page.locator("#library-search")).toBeHidden();
+    await openDeckTools(page);
     await page.locator("#deck-class").selectOption("morla");
+    await openDeckTools(page);
     await page.locator("#deck-reset").click();
+    await openDeckTools(page);
     await page.locator("#deck-contracts summary").click();
     expect(
       await page.locator("#deck-contracts label").evaluateAll((es) =>

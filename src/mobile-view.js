@@ -151,6 +151,29 @@ const EmberViewport = (() => {
         l.chip = { x: l.arena.x, y: l.header + 2, w: l.arena.w, h: 20 };
         l.notice = { ...l.chip };
       }
+      if (portrait) {
+        l.chip.h = Math.max(28, l.enemy.h - 56);
+        l.contract = {
+          x: padL,
+          y: l.enemy.y + l.enemy.h - 44,
+          w: l.chip.w,
+          h: 44,
+        };
+      } else {
+        // The right rail is partitioned into skill, covenant, turn and mana.
+        l.power.y = l.header + 8;
+        l.power.w = l.power.h = H < 370 ? 44 : 48;
+        l.contract = {
+          x: l.turn.x,
+          y: l.power.y + l.power.h + 6,
+          w: l.turn.w,
+          h: 44,
+        };
+        if (l.contract.y + l.contract.h + 6 > l.turn.y) {
+          l.power.x = l.turn.x;
+          l.contract = { x: l.turn.x + 60, y: l.power.y, w: 44, h: 44 };
+        }
+      }
       l.handLabel = { x: padL, y: l.hand.y - 28, w: 100, h: 25 };
       l.cardW = portrait ? (W < 350 ? 94 : 106) : 88;
       l.cardH = portrait ? handH - 12 : handH - 10;
@@ -174,6 +197,7 @@ const EmberViewport = (() => {
         "enemy-hero": l.enemy,
         "player-hero": l.player,
         "power-btn": l.power,
+        "contract-open": l.contract,
         "enemy-mana": l.enemyMana,
         hand: l.hand,
         "touch-target-bar": l.target,
@@ -208,6 +232,7 @@ const EmberViewport = (() => {
         "enemy-hero",
         "player-hero",
         "power-btn",
+        "contract-open",
         "enemy-mana",
         "hand",
         "board-empty",

@@ -14,6 +14,7 @@ import re
 from tools.characters import generate as generate_characters
 from tools.audio_assets import generate as generate_audio
 from tools.vfx_assets import generate as generate_vfx
+from tools.ui_assets import generate as generate_ui
 
 ROOT = Path(__file__).resolve().parent
 SRC = ROOT / 'src'
@@ -25,6 +26,7 @@ def build():
     generate_characters()
     generate_audio()
     generate_vfx()
+    generate_ui()
     registry = json.loads((ROOT / 'config/build.json').read_text())
     template = (SRC / 'template.html').read_text()
     tokens = TOKEN.findall(template)

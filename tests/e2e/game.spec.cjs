@@ -1,3 +1,4 @@
+const { openDeckTools } = require("./helpers/deck-tools.cjs");
 const { test, expect } = require("@playwright/test");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -594,11 +595,14 @@ test("campaign rewards and deck editor use the new state boundary", async ({
   await idle(page);
   await page.locator("#home-btn").click();
   await page.locator("#collection-nav").click();
+  await openDeckTools(page);
   await page.locator("#deck-reset").click();
   await page.locator("#deck-save").click();
   expect(
     await page.evaluate(
-      () => JSON.parse(localStorage.getItem("emberfall.deck.v1")).decks[0].cards.length,
+      () =>
+        JSON.parse(localStorage.getItem("emberfall.deck.v1")).decks[0].cards
+          .length,
     ),
   ).toBe(30);
 });
