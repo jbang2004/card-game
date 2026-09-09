@@ -3,10 +3,8 @@ const { test, expect } = require("@playwright/test");
 async function expectSingleScreenControls(page, selector) {
   const box = page.locator("#modal .folio-dialog");
   const viewport = box.locator(".folio-viewport");
-  const pager = box.locator(".folio-pager");
-  await expect(box).toHaveAttribute("data-page-policy", "fit");
-  await expect(pager).toHaveAttribute("data-single", "true");
-  await expect(pager).toBeHidden();
+  await expect(box).toHaveAttribute("data-layout-mode", "fit");
+  await expect(box.locator(".folio-pager")).toHaveCount(0);
   const result = await box.evaluate((dialog, controlSelector) => {
     const view = dialog.querySelector(".folio-viewport"),
       flow = dialog.querySelector(".folio-flow"),
@@ -74,7 +72,7 @@ for (const [width, height] of [
   });
 }
 
-test("long mobile views retain readable pagination", async ({ browser }) => {
+test("long mobile views scroll vertically without a pager", async ({ browser }) => {
   const context = await browser.newContext({
     viewport: { width: 320, height: 568 },
     hasTouch: true,
@@ -86,10 +84,11 @@ test("long mobile views retain readable pagination", async ({ browser }) => {
   for (const show of ["showMap", "showHelp"]) {
     await page.evaluate((name) => Emberfall[name](), show);
     const box = page.locator("#modal .folio-dialog");
-    await expect(box).toHaveAttribute("data-page-policy", "paginate");
-    await expect(box.locator(".folio-pager")).toHaveAttribute(
-      "data-single",
-      "false",
+    await expect(box).toHaveAttribute("data-layout-mode", "scroll");
+    await expect(box.locator(".folio-pager")).toHaveCount(0);
+    await expect(box.locator(".folio-viewport")).toHaveCSS(
+      "overflow-y",
+      "auto",
     );
     await page.evaluate(() => Emberfall.closeModal(false));
   }

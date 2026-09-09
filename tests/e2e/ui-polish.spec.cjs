@@ -26,7 +26,7 @@ for (const [width, height] of [
       expect(r.y + r.height).toBeLessThanOrEqual(height + 1);
       expect(r.x + r.width).toBeLessThanOrEqual(width + 1);
     };
-    for (const selector of ["#start-btn", "#quick-btn", "#fx-showcase-btn"])
+    for (const selector of ["#start-btn", "#quick-btn"])
       await visibleInViewport(selector);
     await page.locator("#settings-btn").click();
     await visibleInViewport("#settings-done");

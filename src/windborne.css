@@ -1078,34 +1078,6 @@ body:not(.touch-layout) .lobby-collection {
 .atelier-foot p {
   color: #90a07c;
 }
-.lab-stage {
-  background: radial-gradient(#a8b897, #678374);
-  border-color: #9aaf8e;
-}
-.lab-stage .lab-mark {
-  color: #d9e3c6;
-}
-.lab-effect {
-  background: #dfe8cc;
-  color: #647f59;
-}
-.lab-effect.active {
-  background: #c4d8b7;
-  color: #3e653f;
-}
-.lab-effect small {
-  color: #96a488;
-}
-.lab-details {
-  color: #7b926f;
-}
-.lab-details strong {
-  color: #557850;
-}
-.lab-footer {
-  color: #90a77e;
-  border-color: #b6c7a052;
-}
 /* Pocket layouts retain their sizes and target positions. All chrome gets the same material language. */
 body.touch-layout {
   --touch-ink: #425c44;

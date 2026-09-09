@@ -1,34 +1,39 @@
-/* Dialogs use viewport CSS pixels. One measured page model owns overflow;
+/* Dialogs use viewport CSS pixels. One vertical scroll model owns overflow;
  * resizing and content changes preserve nodes, handlers, selections and focus. */
 const EmberDialogs = (() => {
   let cleanup = () => {};
-  let previousType = null,
-    previousPanes = [];
-  const positionsByType = new Map();
   const dialogSize = Object.freeze({
     confirm: "confirm",
     inspect: "detail",
     "library-card": "detail",
     "touch-card": "detail",
     "touch-hero": "detail",
-    settings: "standard",
-    result: "standard",
-    "touch-menu": "standard",
-    "touch-log": "standard",
+    "touch-hand": "hand",
+    contracts: "covenant",
+    settings: "settings",
+    result: "result",
+    "touch-menu": "menu",
+    "touch-log": "journal",
+    library: "library",
+    heroes: "heroes",
     map: "route",
-    discover: "choice",
-    mulligan: "choice",
+    discover: "discover",
+    mulligan: "mulligan",
     rewards: "choice",
+    help: "help",
+    atelier: "atelier",
   });
-  // These dialogs contain a fixed, small set of controls. On touch screens
-  // they reflow instead of producing an orphan page for the final action.
-  // Long-form and variable content keeps the measured pager.
-  const dialogPagePolicy = Object.freeze({
+  // These are the only two authored exceptions to the default flow layout.
+  // Every dialog still owns one vertical scrolling surface on desktop and
+  // touch layouts alike.
+  const dialogLayoutMode = Object.freeze({
     settings: "fit",
     "touch-menu": "fit",
-    // These views are decisions or inspections, not reading workspaces. Let
-    // their frame follow the authored content and only keep a scroll rail
-    // when a narrow viewport genuinely needs one.
+    // Hero selection is one complete decision surface. Keep the four choices
+    // and every preparation control on the same scrollable sheet.
+    heroes: "fit",
+    // These views are decisions or inspections. Let their frame follow the
+    // authored content and add a scroll rail only when content needs one.
     contracts: "compact",
     mulligan: "compact",
     discover: "compact",
@@ -40,31 +45,24 @@ const EmberDialogs = (() => {
     "touch-hero": "compact",
     "library-card": "compact",
   });
-  const pagerIcon = (direction) =>
-    `<svg class="folio-page-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="${direction === "previous" ? "M15 6 9 12l6 6" : "M9 6l6 6-6 6"}"/></svg>`;
   function mount(box, type) {
-    if (previousType)
-      positionsByType.set(
-        previousType,
-        previousPanes.map((p) => p.page),
-      );
-    const positions = positionsByType.get(type) || [];
     cleanup();
     const modal = document.getElementById("modal");
     document.body.append(modal);
     modal.classList.add("folio-host");
     box.classList.add("folio-dialog", "framed-dialog");
     box.dataset.dialogSize = dialogSize[type] || "workspace";
-    box.dataset.pagePolicy = dialogPagePolicy[type] || "paginate";
-    // Set the first-frame density before ResizeObserver/requestAnimationFrame
+    const layoutMode = dialogLayoutMode[type];
+    if (layoutMode) box.dataset.layoutMode = layoutMode;
+    else delete box.dataset.layoutMode;
+    // Set the first-frame compact state before ResizeObserver/requestAnimationFrame
     // can run. Otherwise short touch dialogs briefly render their workspace
     // geometry and then switch to the compact layout while controls are
     // already being measured or focused.
     box.dataset.compact = String(modal.clientHeight < 520);
-    // A commit action must never travel with paged reading content. A screen
-    // may author an action beside its semantic context and opt it into the
-    // fixed rail; the same live node is moved before pagination and keeps all
-    // listeners, state and accessibility metadata.
+    // Keep commit actions outside the scroll surface so they remain reachable
+    // while the content above them scrolls. Moving the same live node keeps
+    // listeners, state and accessibility metadata intact.
     const anchoredActions = [...box.querySelectorAll("[data-dialog-action]")];
     if (anchoredActions.length) {
       const footer = document.createElement("div");
@@ -89,70 +87,47 @@ const EmberDialogs = (() => {
       content.before(shell);
       const viewport = document.createElement("div");
       viewport.className = "folio-viewport";
-      const nav = document.createElement("nav");
-      nav.className = "folio-pager";
-      nav.setAttribute("aria-label", label + "分页");
-      nav.innerHTML =
-        `<button type="button" aria-label="上一页" disabled>${pagerIcon("previous")}</button><span aria-live="polite"></span><button type="button" aria-label="下一页" disabled>${pagerIcon("next")}</button>`;
-      shell.append(viewport, nav);
+      const hint = document.createElement("div");
+      hint.className = "folio-scroll-hint";
+      hint.setAttribute("aria-hidden", "true");
+      hint.innerHTML = `<span>${label} · 继续下滑</span><b>⌄</b>`;
+      shell.append(viewport, hint);
       viewport.append(content);
       content.classList.add(mode === "grid" ? "folio-grid" : "folio-flow");
-      const tail = document.createElement("i");
-      tail.className = "folio-tail";
-      tail.setAttribute("aria-hidden", "true");
-      viewport.append(tail);
       const p = {
         shell,
         viewport,
         content,
-        nav,
-        tail,
-        mode,
-        page: positions[panes.length] || 0,
-        pages: 1,
-        step: 0,
       };
       panes.push(p);
-      const buttons = nav.querySelectorAll("button");
-      buttons[0].onclick = () => go(p, p.page - 1);
-      buttons[1].onclick = () => go(p, p.page + 1);
+      const refreshHint = () => {
+        const maxScroll = Math.max(
+          0,
+          viewport.scrollHeight - viewport.clientHeight,
+        );
+        shell.classList.toggle("has-scroll", maxScroll > 6);
+        shell.classList.toggle(
+          "at-scroll-end",
+          maxScroll <= 6 || viewport.scrollTop >= maxScroll - 8,
+        );
+      };
+      p.refreshHint = refreshHint;
       viewport.addEventListener("focusin", (e) => {
         const r = e.target.getBoundingClientRect(),
           v = viewport.getBoundingClientRect();
-        if (r.left < v.left - 1 || r.right > v.right + 1) {
-          go(p, Math.floor((r.left - v.left + viewport.scrollLeft) / p.step));
+        if (r.top < v.top + 8 || r.bottom > v.bottom - 8) {
+          viewport.scrollBy({
+            top:
+              r.top < v.top + 8
+                ? r.top - v.top - 12
+                : r.bottom - v.bottom + 12,
+            behavior: "smooth",
+          });
         }
       });
-      viewport.addEventListener(
-        "scroll",
-        () => {
-          const next = Math.max(
-            0,
-            Math.min(p.pages - 1, Math.round(viewport.scrollLeft / p.step)),
-          );
-          if (next !== p.page) {
-            p.page = next;
-            update(p);
-          }
-          if (Math.abs(viewport.scrollLeft - p.page * p.step) > 1)
-            viewport.scrollLeft = p.page * p.step;
-        },
-        { passive: true },
-      );
+      viewport.addEventListener("scroll", refreshHint, { passive: true });
+      refreshHint();
       return p;
-    }
-    function update(p) {
-      p.page = Math.max(0, Math.min(p.pages - 1, p.page));
-      p.nav.querySelector("span").textContent = `${p.page + 1} / ${p.pages}`;
-      const bs = p.nav.querySelectorAll("button");
-      bs[0].disabled = p.page === 0;
-      bs[1].disabled = p.page >= p.pages - 1;
-      p.nav.dataset.single = String(p.pages === 1);
-    }
-    function go(p, page) {
-      p.page = Math.max(0, Math.min(p.pages - 1, page));
-      p.viewport.scrollLeft = p.page * p.step;
-      update(p);
     }
     function layout() {
       frame = 0;
@@ -173,57 +148,8 @@ const EmberDialogs = (() => {
           box.classList.toggle("folio-name-in-header", inHeader);
       }
       for (const p of panes) {
-        const w = p.viewport.clientWidth,
-          h = p.viewport.clientHeight;
-        if (!w || !h) continue;
-        p.step = w + 24;
-        p.content.style.columnFill = "auto";
-        p.content.style.setProperty("--page-width", w + "px");
-        p.content.style.setProperty(
-          "--flow-columns",
-          Math.max(1, Math.min(2, Math.floor(w / 380))),
-        );
-        p.content.style.setProperty("--page-height", h + "px");
-        if (p.mode === "grid") {
-          const deck = p.content.id === "deck-list";
-          const columns = deck ? 1 : Math.max(1, Math.floor((w + 16) / 160));
-          const rows = deck
-            ? Math.max(1, Math.floor((h + 16) / 60))
-            : Math.max(1, Math.floor((h + 16) / 240));
-          p.content.style.setProperty("--page-columns", columns);
-          p.content.style.setProperty("--page-rows", rows);
-          p.content.style.setProperty(
-            "--tile-width",
-            (w - (columns - 1) * 16) / columns + "px",
-          );
-          p.content.style.setProperty(
-            "--tile-height",
-            (h - (rows - 1) * 16) / rows + "px",
-          );
-          p.content.dataset.density =
-            (h - (rows - 1) * 16) / rows < 290 ? "compact" : "full";
-          // Pad each page with its own 24px gap; grid columns use a uniform gap.
-          p.step = w + 16;
-        }
-        p.pages = Math.max(
-          1,
-          Math.ceil((p.content.scrollWidth + 22) / (w + 24)),
-        );
-        if (type !== "heroes" && p.mode === "flow" && p.pages === 1)
-          p.content.style.columnFill = "balance";
-        if (p.mode === "grid") {
-          const cols = Number(
-            p.content.style.getPropertyValue("--page-columns"),
-          );
-          const rows = Number(p.content.style.getPropertyValue("--page-rows"));
-          p.pages = Math.max(
-            1,
-            Math.ceil(p.content.children.length / (cols * rows)),
-          );
-        }
-        p.tail.style.left =
-          p.pages * p.step - (p.mode === "grid" ? 16 : 24) - 1 + "px";
-        go(p, p.page);
+        if (!p.viewport.clientWidth || !p.viewport.clientHeight) continue;
+        p.refreshHint();
       }
     }
     if (type === "library") {
@@ -274,8 +200,12 @@ const EmberDialogs = (() => {
         selects.append(wrap);
       }
       bar.after(selects);
-      pane(box.querySelector("#library-grid"), "grid", "卡牌");
-      pane(box.querySelector("#deck-list"), "grid", "牌组");
+      const libraryPane = pane(box.querySelector("#library-grid"), "grid", "卡牌");
+      // The collection is a vertical browsing surface at every size. Keep
+      // the same shell for resize handling and give each pane its own hint.
+      libraryPane.shell.classList.add("folio-scroll-pane");
+      const deckPane = pane(box.querySelector("#deck-list"), "grid", "牌组");
+      deckPane.shell.classList.add("folio-scroll-pane");
       pane(box.querySelector(".deck-tools-body"), "flow", "套牌配置");
     } else {
       let content = box.querySelector(":scope > .modal-scroll");
@@ -283,37 +213,21 @@ const EmberDialogs = (() => {
         content = document.createElement("div");
         content.className = "modal-scroll";
         const foot = box.querySelector(
-          ":scope > .modal-footer,:scope > .reward-footer,:scope > .lab-footer,:scope > .atelier-foot",
+          ":scope > .modal-footer,:scope > .reward-footer,:scope > .atelier-foot",
         );
         for (const el of [...box.children])
           if (
             !el.matches(
-              ".modal-close,.modal-heading,.covenant-heading,.modal-footer,.reward-footer,.lab-footer,.atelier-foot",
+              ".modal-close,.modal-heading,.covenant-heading,.modal-footer,.reward-footer,.atelier-foot",
             )
           )
             content.append(el);
         if (foot) box.insertBefore(content, foot);
         else box.append(content);
       }
-      const bodyPane = pane(content, "flow");
-      if (type === "lab") {
-        bodyPane.nav.hidden = true;
-        const schools = box.querySelector(".lab-controls");
-        const select = document.createElement("select");
-        select.className = "folio-lab-school";
-        select.setAttribute("aria-label", "元素学派");
-        for (const b of schools.querySelectorAll("[data-school]"))
-          select.add(
-            new Option(
-              b.childNodes[1]?.textContent || b.textContent,
-              b.dataset.school,
-              false,
-              b.classList.contains("active"),
-            ),
-          );
-        select.onchange = () =>
-          schools.querySelector(`[data-school="${select.value}"]`).click();
-        schools.before(select);
+      pane(content, "flow");
+      if (type === "heroes") {
+        content.classList.add("hero-single-sheet");
       }
     }
     const resize = new ResizeObserver(schedule);
@@ -323,9 +237,8 @@ const EmberDialogs = (() => {
       if (
         records.some(
           (r) =>
-            !r.target.closest?.(".folio-pager") &&
-            (r.type === "childList" ||
-              ["open", "hidden", "class"].includes(r.attributeName)),
+            r.type === "childList" ||
+            ["open", "hidden", "class"].includes(r.attributeName),
         )
       )
         schedule();
@@ -338,8 +251,6 @@ const EmberDialogs = (() => {
     });
     box.addEventListener("load", schedule, true);
     box.addEventListener("toggle", schedule, true);
-    previousType = type;
-    previousPanes = panes;
     schedule();
     cleanup = () => {
       resize.disconnect();
@@ -353,9 +264,6 @@ const EmberDialogs = (() => {
     mount,
     close: () => {
       cleanup();
-      previousType = null;
-      previousPanes = [];
-      positionsByType.clear();
     },
   });
 })();

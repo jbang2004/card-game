@@ -38,32 +38,32 @@ test("desktop dialogs use semantic dimensions instead of one full-screen frame",
   );
   expect(await dialogMetrics(page)).toMatchObject({
     size: "confirm",
-    width: 620,
-    height: 360,
+    width: 560,
+    height: 340,
     centered: true,
   });
 
   await page.evaluate(() => Emberfall.showSettings());
   expect(await dialogMetrics(page)).toMatchObject({
-    size: "standard",
-    width: 900,
-    height: 640,
+    size: "settings",
+    width: 680,
+    height: 560,
     centered: true,
   });
 
   await page.evaluate(() => Emberfall.showHelp());
   expect(await dialogMetrics(page)).toMatchObject({
-    size: "workspace",
-    width: 1180,
-    height: 850,
+    size: "help",
+    width: 980,
+    height: 700,
     centered: true,
   });
 
   await page.evaluate(() => Emberfall.showLibrary());
   expect(await dialogMetrics(page)).toMatchObject({
-    size: "workspace",
-    width: 1400,
-    height: 850,
+    size: "library",
+    width: 1200,
+    height: 800,
     centered: true,
   });
 });
@@ -103,37 +103,17 @@ test("desktop toolbar SVGs share the exact button center", async ({ page }) => {
   }
 });
 
-test("folio pager uses symmetric coded SVGs centered in full touch targets", async ({
-  page,
-}) => {
+test("long-form dialog exposes one vertical scroll surface", async ({ page }) => {
   await page.goto("./?debug=1");
   await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
   await page.evaluate(() => Emberfall.showHelp());
-  const metrics = await page
-    .locator(".folio-pager > button")
-    .evaluateAll((buttons) =>
-      buttons.map((button) => {
-        const svg = button.querySelector("svg"),
-          path = svg.querySelector("path"),
-          b = button.getBoundingClientRect(),
-          s = svg.getBoundingClientRect(),
-          p = path.getBBox();
-        return {
-          button: [b.width, b.height],
-          svg: [s.width, s.height],
-          offset: [
-            s.left + s.width / 2 - (b.left + b.width / 2),
-            s.top + s.height / 2 - (b.top + b.height / 2),
-          ],
-          pathCenter: [p.x + p.width / 2, p.y + p.height / 2],
-        };
-      }),
-    );
-  expect(metrics).toHaveLength(2);
-  for (const icon of metrics) {
-    expect(icon.button).toEqual([44, 44]);
-    expect(icon.svg).toEqual([18, 18]);
-    expect(icon.offset).toEqual([0, 0]);
-    expect(icon.pathCenter).toEqual([12, 12]);
-  }
+  await expect(page.locator("#modal .folio-dialog")).toHaveAttribute(
+    "data-layout-mode",
+    "scroll",
+  );
+  await expect(page.locator("#modal .folio-pager")).toHaveCount(0);
+  await expect(page.locator("#modal .folio-viewport")).toHaveCSS(
+    "overflow-y",
+    "auto",
+  );
 });

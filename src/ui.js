@@ -232,7 +232,6 @@
   function showModal(html, type, locked = false) {
     clearTimeout(toastTimer);
     $("toast").classList.remove("visible");
-    if (modalType === "lab") EmberFX.setLab(false);
     clearTimeout(aiTimer);
     hidePreview();
     clearSelection();
@@ -264,7 +263,6 @@
   }
   function closeModal(resume = true) {
     EmberDialogs.close();
-    if (modalType === "lab") EmberFX.setLab(false);
     $("modal").style.display = "none";
     $("modal").innerHTML = "";
     modalType = null;
@@ -296,16 +294,15 @@
     const presets = D.archetypes.filter(
       (a) => a.classId === EmberDeckRules.classFor(D, chosenHero),
     );
-    const hero = D.heroes.find((h) => h.id === chosenHero);
     showModal(
-      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">准备出发</div><h2>选择你的英雄</h2><p>选择英雄、套牌与对战方式。</p></div><div class="hero-options">${D.heroes.map((h) => `<button class="hero-option hero-${h.id} ${h.id === chosenHero ? "selected" : ""}" data-hero="${h.id}" aria-pressed="${h.id === chosenHero}"><img src="${A.character(h)}" alt="${h.name}" draggable="false" style="${artStyleForHero(h, "option")}"><div class="hero-option-text"><small>${h.sub}</small><h3>${h.name}</h3><p>${h.desc}</p><em>${h.powerText}</em></div>${h.id === chosenHero ? '<span class="selected-check" aria-hidden="true">' + A.icon("check") + "</span>" : ""}</button>`).join("")}</div><div class="hero-configuration"><section class="hero-dossier"><small>${hero.sub}</small><h3>${hero.name}<span>${hero.title}</span></h3><p>${hero.desc}</p><div class="hero-power-line"><span class="hero-power-sigil">${A.icon(hero.powerIcon)}</span><b>${hero.power}</b><em>${hero.powerCost} 法力</em><span>${hero.powerText.replace(/^\s*\d+\s*法力[：:]\s*/, "")}</span></div></section><p class="hero-deck-note">${escape(loaded.ok ? (customs.length ? "可选用已保存的英雄牌组。" : "请选择职业套牌，或到收藏中建立命名牌组。") : loaded.error)} · 战役共 ${D.bosses.length} 场，关卡之间恢复全部生命。</p><label class="archetype-picker">套牌 <select class="library-search" id="hero-archetype">${customs.map((d) => `<option value="saved:${d.id}" ${d.id === collection.activeId ? "selected" : ""}>${escape(d.name)}</option>`).join("")}${presets
+      `<section class="modal-box hero-chooser"><div class="modal-heading"><div class="eyebrow">准备出发</div><h2>选择你的英雄</h2><p>选择英雄、套牌与对战方式。</p></div><div class="hero-roster"><div class="hero-roster-heading"><span>英雄名册</span><small>四位英雄，同一页完成出发前准备</small></div><div class="hero-options">${D.heroes.map((h) => `<button class="hero-option hero-${h.id} ${h.id === chosenHero ? "selected" : ""}" data-hero="${h.id}" aria-pressed="${h.id === chosenHero}"><img src="${A.character(h)}" alt="${h.name}" draggable="false" style="${artStyleForHero(h, "option")}"><div class="hero-option-text"><small>${h.sub}</small><h3>${h.name}</h3><p>${h.desc}</p><em>${h.powerText}</em></div>${h.id === chosenHero ? '<span class="selected-check" aria-hidden="true">' + A.icon("check") + "</span>" : ""}</button>`).join("")}</div></div><div class="hero-configuration"><div class="hero-config-intro"><span class="config-kicker">出发准备</span><p class="hero-deck-note">${escape(loaded.ok ? (customs.length ? "可选用已保存的英雄牌组。" : "请选择职业套牌，或到收藏中建立命名牌组。") : loaded.error)} · 战役共 ${D.bosses.length} 场，关卡之间恢复全部生命。</p></div><label class="archetype-picker hero-config-deck">套牌 <select class="library-search" id="hero-archetype">${customs.map((d) => `<option value="saved:${d.id}" ${d.id === collection.activeId ? "selected" : ""}>${escape(d.name)}</option>`).join("")}${presets
         .map(
           (a) =>
             `<option value="${a.id}" ${!customs.length && a.id === D.heroes.find((h) => h.id === chosenHero).defaultDeckId ? "selected" : ""}>${a.name}</option>`,
         )
         .join(
           "",
-        )}</select></label><p id="hero-plan" class="deck-plan"></p><section class="hero-composition" id="hero-composition" aria-label="牌组构成"></section><details class="contract-setup"><summary>契约栏 · 最多三张，一位神祇</summary><p>契约不占主卡组，无需抽取；战斗中可查看召唤进度。</p>${
+        )}</select></label><label class="archetype-picker hero-config-mode">玩法 <select id="game-mode" class="library-search"><option value="campaign">${D.bosses.length} 关战役 · 遗物与整备</option><option value="practice">练习对战 · 不覆盖战役存档</option></select></label><section class="hero-composition hero-config-composition" id="hero-composition" aria-label="牌组构成"></section><details class="contract-setup hero-config-contract"><summary>契约栏 · 最多三张，一位神祇</summary><p>契约不占主卡组，无需抽取；战斗中可查看召唤进度。</p>${
         D.cards
           .filter(
             (c) =>
@@ -316,19 +313,19 @@
               `<label><input type="checkbox" data-contract="${c.id}" checked><strong>${c.name}</strong><span>${EmberContracts.describe(c)}</span></label>`,
           )
           .join("") || "该职业尚无契约。"
-      }</details><label class="archetype-picker">玩法 <select id="game-mode" class="library-search"><option value="campaign">${D.bosses.length} 关战役 · 遗物与整备</option><option value="practice">练习对战 · 不覆盖战役存档</option></select></label><label class="archetype-picker" id="opponent-picker" hidden>对手 <select id="practice-opponent" class="library-search">${D.archetypes.map((a) => `<option value="${a.id}">${D.classNames[a.classId]} · ${a.name}</option>`).join("")}</select></label></div><div class="modal-footer"><button class="ghost-btn" id="hero-deck-btn">先去组牌</button><button class="gold-btn" id="hero-confirm">踏入余火之门 ${A.icon("arrow")}</button></div></section>`,
+      }</details><div class="hero-config-plan"><p id="hero-plan" class="deck-plan"></p><label class="archetype-picker" id="opponent-picker" hidden>对手 <select id="practice-opponent" class="library-search">${D.archetypes.map((a) => `<option value="${a.id}">${D.classNames[a.classId]} · ${a.name}</option>`).join("")}</select></label></div></div><div class="modal-footer"><button class="ghost-btn" id="hero-deck-btn">先去组牌</button><button class="gold-btn" id="hero-confirm">踏入余火之门 ${A.icon("arrow")}</button></div></section>`,
       "heroes",
     );
     document.querySelectorAll("[data-hero]").forEach(
       (b) =>
         (b.onclick = () => {
           const scrollTop =
-            document.querySelector("#modal .modal-scroll")?.scrollTop || 0;
+            document.querySelector("#modal .folio-viewport")?.scrollTop || 0;
           const restoreFocus = document.activeElement === b;
           chosenHero = b.dataset.hero;
           EmberAudio.fx("ui");
           showHeroes();
-          const scroll = document.querySelector("#modal .modal-scroll");
+          const scroll = document.querySelector("#modal .folio-viewport");
           if (scroll) scroll.scrollTop = scrollTop;
           if (restoreFocus)
             document
@@ -1115,7 +1112,7 @@
     const choice = game.s.choice;
     if (!choice || choice.side !== "p") return;
     showModal(
-      `<section class="modal-box" style="width:875px"><div class="modal-heading"><div class="eyebrow">A GLIMPSE BEYOND</div><h2>虚空中的启示</h2><p>选择一张法术牌加入你的手牌。</p></div><div class="discover-options">${choice.cards.map((id) => `<button class="discover-card" data-discover="${id}" aria-label="发现 ${D.byId[id].name}">${cardHTML(D.byId[id])}</button>`).join("")}</div></section>`,
+      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">A GLIMPSE BEYOND</div><h2>虚空中的启示</h2><p>选择一张法术牌加入你的手牌。</p></div><div class="discover-options">${choice.cards.map((id) => `<button class="discover-card" data-discover="${id}" aria-label="发现 ${D.byId[id].name}">${cardHTML(D.byId[id])}</button>`).join("")}</div></section>`,
       "discover",
       true,
     );

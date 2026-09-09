@@ -31,20 +31,19 @@ for (const [width, height] of [
       const heroSheet = await page.locator("#modal .folio-pane").first().evaluate(
         (pane) => {
           const viewport = pane.querySelector(".folio-viewport"),
-            flow = pane.querySelector(".folio-flow"),
-            pager = pane.querySelector(".folio-pager");
+            flow = pane.querySelector(".folio-flow");
           return {
             heroCount: flow.querySelectorAll(".hero-option").length,
             overflowY: getComputedStyle(viewport).overflowY,
             horizontalOverflow: flow.scrollWidth - viewport.clientWidth,
-            pagerHidden: getComputedStyle(pager).display === "none",
+            pagerCount: pane.querySelectorAll(".folio-pager").length,
           };
         },
       );
       expect(heroSheet.heroCount).toBe(4);
       expect(heroSheet.overflowY).toBe("auto");
       expect(heroSheet.horizontalOverflow).toBeLessThanOrEqual(1);
-      expect(heroSheet.pagerHidden).toBe(true);
+      expect(heroSheet.pagerCount).toBe(0);
       await page.locator("#game-mode").scrollIntoViewIfNeeded();
       await expect(page.locator("#game-mode")).toBeInViewport();
     }
@@ -56,7 +55,8 @@ for (const [width, height] of [
       expect(Math.max(...cards) - Math.min(...cards)).toBeLessThanOrEqual(1);
       const choices = await page.locator(".hero-option").first().boundingBox();
       const config = await page.locator(".hero-configuration").boundingBox();
-      expect(config.x).toBeGreaterThan(choices.x + choices.width);
+      expect(config.y).toBeGreaterThan(choices.y + choices.height);
+      await expect(page.locator(".hero-dossier")).toHaveCount(0);
     }
 
     await turnTo(page, "#game-mode");
@@ -68,16 +68,6 @@ for (const [width, height] of [
     for (const sel of ["#settings-btn", "#adventure-nav", "#guide-nav"]) {
       await page.locator(sel).evaluate((e) => e.click());
       await assertDialogFit(page);
-      const panes = page.locator(".folio-pane");
-      for (const p of await panes.all()) {
-        if (!(await p.isVisible())) continue;
-        const next = p.locator(".folio-pager > button").last();
-        let n = 0;
-        while ((await next.isEnabled()) && n++ < 50) {
-          await next.click();
-          await assertDialogFit(page);
-        }
-      }
       await page.locator(".modal-close").click();
     }
     await page
@@ -89,7 +79,7 @@ for (const [width, height] of [
     await page.locator("#library-detail-back").click();
     if (await page.locator("#touch-deck-tab").isVisible())
       await page.locator("#touch-deck-tab").click();
-    await page.locator("#deck-name").fill("分页验证牌组");
+    await page.locator("#deck-name").fill("滚动验证牌组");
     await page.locator("#deck-tools > summary").click();
     await turnTo(page, "#deck-class");
     await page.locator("#deck-class").selectOption("morla");

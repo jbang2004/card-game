@@ -1,4 +1,3 @@
-const { assertDialogFit } = require("./helpers/dialog-pages.cjs");
 const { test, expect } = require("@playwright/test");
 const path = require("node:path");
 async function demo(page) {
@@ -203,67 +202,6 @@ test("countered major spell has no target meteor or damage, and resize drops eve
     state,
   );
 });
-test("VFX lab previews real signatures without changing the game, supports keyboard replay and exits cleanly", async ({
-  page,
-}) => {
-  await demo(page);
-  const state = await page.evaluate(() => JSON.stringify(EmberDebug.game.s));
-  await page.evaluate(() => Emberfall.showFXLab());
-  await assertDialogFit(page);
-  await page.locator(".folio-lab-school").selectOption("frost");
-  await page.locator("#lab-replay").click();
-  await page.waitForTimeout(400);
-  await page.waitForFunction(() => !EmberFX.busy);
-  await page.locator("#lab-variant").selectOption("ashdragon");
-  await page.waitForFunction(
-    () => (EmberVFX.diagnostics.spawned["dragon-wake"] || 0) > 0,
-  );
-  await page.waitForFunction(() => !EmberFX.busy);
-  await page.locator("#lab-variant").selectOption("frostking");
-  await page.waitForFunction(
-    () => (EmberVFX.diagnostics.spawned["frost-throne"] || 0) > 0,
-  );
-  await page.waitForTimeout(90);
-  const ink = await page.evaluate(() => {
-    const canvas = document.getElementById("fx-canvas"),
-      bounds = EmberFX.pos(document.querySelector(".lab-stage"));
-    const pixels = canvas
-      .getContext("2d")
-      .getImageData(0, 0, canvas.width, canvas.height).data;
-    const scale = canvas.width / EmberViewport.width;
-    let total = 0,
-      outside = 0;
-    for (let y = 0; y < canvas.height; y += 2)
-      for (let x = 0; x < canvas.width; x += 2) {
-        if (pixels[(y * canvas.width + x) * 4 + 3] < 8) continue;
-        total++;
-        if (
-          x < bounds.left * scale - 2 ||
-          x > (bounds.left + bounds.w) * scale + 2 ||
-          y < bounds.top * scale - 2 ||
-          y > (bounds.top + bounds.h) * scale + 2
-        )
-          outside++;
-      }
-    return { total, outside };
-  });
-  expect(ink.total).toBeGreaterThan(0);
-  expect(ink.outside).toBe(0);
-  await expect(page.locator("#lab-replay")).toBeEnabled();
-  await page.locator("#lab-replay").focus();
-  await page.keyboard.press("Enter");
-  await page.waitForFunction(
-    () => (EmberVFX.diagnostics.spawned["frost-throne"] || 0) > 1,
-  );
-  await page.keyboard.press("Escape");
-  await page.waitForFunction(() => Emberfall.modal !== "lab");
-  expect(await page.evaluate(() => JSON.stringify(EmberDebug.game.s))).toBe(
-    state,
-  );
-  expect(
-    await page.evaluate(() => [EmberVFX.active, EmberFX.pendingTimers]),
-  ).toEqual([0, 0]);
-});
 test("failed atlas keeps the fallback playable, while reduced motion skips all VFX decoding", async ({
   browser,
 }) => {
@@ -321,50 +259,4 @@ test("failed atlas keeps the fallback playable, while reduced motion skips all V
     ]),
   ).toEqual([0, 0]);
   await reduced.close();
-});
-
-test("the lab stage and playback controls fit both phone orientations", async ({
-  browser,
-}) => {
-  for (const viewport of [
-    { width: 390, height: 844 },
-    { width: 844, height: 390 },
-  ]) {
-    const context = await browser.newContext({
-      viewport,
-      isMobile: true,
-      hasTouch: true,
-    });
-    const page = await context.newPage();
-    await demo(page);
-    await page.evaluate(() => Emberfall.showFXLab());
-    await assertDialogFit(page);
-    await page.locator(".folio-lab-school").selectOption("frost");
-    await page.locator("#lab-replay").click();
-    for (const selector of [
-      "#lab-variant",
-      "#lab-replay",
-      ".lab-stage",
-      ".lab-box .modal-close",
-    ]) {
-      const box = await page.locator(selector).boundingBox();
-      expect(box.x).toBeGreaterThanOrEqual(0);
-      expect(box.y).toBeGreaterThanOrEqual(0);
-      expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
-      expect(box.y + box.height).toBeLessThanOrEqual(viewport.height);
-    }
-    const stage = await page.locator(".lab-stage").boundingBox(),
-      footer = await page.locator(".lab-footer").boundingBox();
-    expect(
-      stage.y + stage.height <= footer.y + 1 ||
-        stage.x + stage.width <= footer.x + 1 ||
-        footer.x + footer.width <= stage.x + 1,
-    ).toBe(true);
-    await page.screenshot({
-      path: path.resolve(
-        `artifacts/qa/vfx-signatures/lab-controls-${viewport.width}.png`,
-      ),
-    });
-    await context.close();
-  }
 });

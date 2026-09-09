@@ -11,17 +11,9 @@ async function turnTo(page, selector) {
     'xpath=ancestor::*[contains(concat(" ",normalize-space(@class)," ")," folio-pane ")][1]',
   );
   if (!(await pane.count())) return;
-  await expect(pane.locator(".folio-pager")).toHaveAttribute(
-    "data-single",
-    /true|false/,
-  );
-  const prev = pane.locator(".folio-pager > button").first();
-  while (await prev.isEnabled()) await prev.click();
-  const vertical = await pane.locator(".folio-viewport").evaluate(
-    (viewport) => getComputedStyle(viewport).overflowY === "auto",
-  );
-  if (vertical) await target.scrollIntoViewIfNeeded();
-  for (let i = 0; i < 100; i++) {
+  const viewport = pane.locator(".folio-viewport");
+  await target.scrollIntoViewIfNeeded();
+  for (let i = 0; i < 4; i++) {
     const inside = await target.evaluate((el) => {
       const v = el.closest(".folio-viewport").getBoundingClientRect();
       return [...el.getClientRects()].some(
@@ -35,11 +27,11 @@ async function turnTo(page, selector) {
       );
     });
     if (inside) return;
-    const next = pane.locator(".folio-pager > button").last();
-    if (!(await next.isEnabled())) break;
-    await next.click();
+    await viewport.evaluate((v) =>
+      v.scrollBy({ top: Math.max(1, v.clientHeight * 0.8), behavior: "instant" }),
+    );
   }
-  throw new Error(`No complete page contains ${selector}`);
+  throw new Error(`No complete scroll position contains ${selector}`);
 }
 async function assertDialogFit(page) {
   await expect(page.locator("#modal .folio-dialog")).toBeVisible();

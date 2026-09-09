@@ -1762,7 +1762,7 @@ body.touch-layout .touch-inline-detail > button {
   background: #bd995d;
   color: #3f2b19;
 }
-/* Adventure, gallery and lab use the same comfortable phone-scale panels. */
+/* Adventure and gallery use the same comfortable phone-scale panels. */
 body.touch-layout .map-route {
   display: grid;
   grid-template-columns: 1fr;
@@ -1858,95 +1858,6 @@ body.touch-layout .atelier-foot {
 .touch-layout .atelier-foot p {
   font-size: 12px;
   line-height: 1.7;
-}
-body.touch-layout .lab-box .modal-heading {
-  padding: 0 0 13px;
-  clear: none;
-}
-body.touch-layout .lab-grid {
-  display: flex;
-  flex-direction: column;
-  height: auto;
-  gap: 12px;
-  margin-top: 10px;
-  clear: both;
-}
-body.touch-layout .lab-controls {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-body.touch-layout .lab-effect {
-  flex: 1 0 82px;
-  padding: 8px;
-  min-height: 42px;
-  font-size: 12px;
-  gap: 6px;
-  border: 1px solid #b1915e55;
-}
-body.touch-layout .lab-effect small {
-  display: none;
-}
-body.touch-layout .lab-stage {
-  height: 195px;
-  flex-shrink: 0;
-  background: radial-gradient(#6e5131, #29211e);
-}
-body.touch-layout .lab-token {
-  width: 63px;
-  height: 84px;
-  top: 50px;
-  transform: none;
-  border-radius: 35% 35% 8px 8px;
-}
-body.touch-layout .lab-token.source {
-  left: 25px;
-}
-.touch-layout .lab-token.target {
-  right: 25px;
-}
-body.touch-layout .lab-stage:before {
-  width: 124px;
-  height: 124px;
-  left: calc(50% - 62px);
-  top: 27px;
-}
-body.touch-layout .lab-stage:after {
-  width: 147px;
-  height: 147px;
-  left: calc(50% - 74px);
-  top: 16px;
-}
-body.touch-layout .lab-stage .lab-mark {
-  font-size: 8px;
-  letter-spacing: 0.4px;
-  bottom: 15px;
-}
-body.touch-layout .lab-details {
-  position: static;
-  font-size: 13px;
-  line-height: 1.65;
-  margin: 15px 0;
-}
-body.touch-layout .lab-footer {
-  position: static;
-  gap: 12px;
-  display: flex;
-  flex-wrap: wrap;
-  padding-top: 12px;
-  font-size: 11px;
-  line-height: 1.6;
-}
-body.touch-layout .lab-footer .gold-btn {
-  font-size: 14px;
-  min-height: 46px;
-}
-body.touch-layout .lab-open #fx-canvas {
-  z-index: 92;
-}
-body.touch-layout .lab-open .damage-number {
-  z-index: 95;
 }
 body.touch-layout #app.fx-busy .hand-card {
   cursor: wait;
@@ -2164,16 +2075,6 @@ body.mobile-landscape .touch-inspect-detail .touch-rule {
 }
 body.mobile-landscape .touch-hand-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-body.mobile-landscape .lab-grid {
-  flex-direction: row;
-}
-.mobile-landscape .lab-controls {
-  width: 190px;
-  flex: 0 0 190px;
-}
-.mobile-landscape .lab-stage {
-  flex: 1;
 }
 @media (min-width: 600px) and (orientation: portrait) {
   body.touch-layout .library-grid {

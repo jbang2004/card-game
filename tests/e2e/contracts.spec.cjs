@@ -125,7 +125,7 @@ for (const [width, height] of [
   [320, 568],
   [568, 320],
 ]) {
-  test(`all covenant actions remain visible outside pagination ${width}x${height}`, async ({
+  test(`all covenant actions remain visible outside the scroll surface ${width}x${height}`, async ({
     browser,
   }) => {
     const ctx = await browser.newContext({
