@@ -27,6 +27,27 @@ for (const [width, height] of [
     await assertDialogFit(page);
     await turnTo(page, '[data-hero="morla"]');
     await page.locator('[data-hero="morla"]').click();
+    if (width < 1000) {
+      const heroSheet = await page.locator("#modal .folio-pane").first().evaluate(
+        (pane) => {
+          const viewport = pane.querySelector(".folio-viewport"),
+            flow = pane.querySelector(".folio-flow"),
+            pager = pane.querySelector(".folio-pager");
+          return {
+            heroCount: flow.querySelectorAll(".hero-option").length,
+            overflowY: getComputedStyle(viewport).overflowY,
+            horizontalOverflow: flow.scrollWidth - viewport.clientWidth,
+            pagerHidden: getComputedStyle(pager).display === "none",
+          };
+        },
+      );
+      expect(heroSheet.heroCount).toBe(4);
+      expect(heroSheet.overflowY).toBe("auto");
+      expect(heroSheet.horizontalOverflow).toBeLessThanOrEqual(1);
+      expect(heroSheet.pagerHidden).toBe(true);
+      await page.locator("#game-mode").scrollIntoViewIfNeeded();
+      await expect(page.locator("#game-mode")).toBeInViewport();
+    }
     if (width === 1600) {
       await turnTo(page, ".hero-option");
       const cards = await page

@@ -1842,3 +1842,24 @@ body.touch-layout #modal.folio-host[data-type="contracts"] .folio-flow {
 body.touch-layout #modal.folio-host[data-type="contracts"] .folio-pager {
   display: none;
 }
+
+/* Hero choice is one decision, not a reading sequence.  On touch screens
+   keep all four heroes in one vertical sheet so the final option never lands
+   alone on a second page; the footer remains outside the scroll viewport. */
+body.touch-layout #modal.folio-host[data-type="heroes"] .folio-viewport {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  touch-action: pan-y;
+}
+body.touch-layout #modal.folio-host[data-type="heroes"] .folio-flow {
+  height: auto !important;
+  min-height: 100%;
+  column-count: 1 !important;
+  column-width: auto !important;
+  column-fill: initial !important;
+}
+body.touch-layout #modal.folio-host[data-type="heroes"] .folio-pager {
+  display: none;
+}
