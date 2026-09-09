@@ -193,7 +193,6 @@
       ["cards", "book", "卡牌收藏"],
       ["guide", "book", "玩法手册"],
       ["gallery", "gem", "工匠画廊"],
-      ["lab", "fire", "演武场"],
       ["settings", "settings", "设置"],
     ];
     if (E.inBattle)
@@ -214,7 +213,6 @@
       cards: () => E.showLibrary(),
       guide: () => E.showHelp(),
       gallery: () => E.showAtelier(),
-      lab: () => E.showFXLab(),
       settings: () => E.showSettings(),
       journal: showLog,
       boss: () => inspectHero("e"),

@@ -1869,134 +1869,6 @@ body.touch-layout .signature-cue small {
   letter-spacing: 4px;
 }
 
-.lab-variant {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #d3bb8d;
-  font-size: 12px;
-}
-.lab-variant select {
-  min-height: 42px;
-  max-width: 210px;
-  padding: 8px 10px;
-  border: 1px solid #ad8b4f;
-  border-radius: 5px;
-  color: #f2dfad;
-  background: #322419;
-  font: inherit;
-}
-.lab-variant select:focus-visible {
-  outline: 2px solid #f2cf78;
-  outline-offset: 3px;
-}
-.lab-variant select:disabled {
-  opacity: 0.6;
-}
-
-/* The effects lab uses the same leather, walnut and old-gold palette on both layouts. */
-.lab-open .lab-box .lab-stage {
-  background: radial-gradient(ellipse at 50% 45%, #785936, #32251c);
-  border-color: #b49361;
-  box-shadow: inset 0 0 36px #160e0966;
-}
-.lab-open .lab-box .lab-effect {
-  color: #ead6ad;
-  background: linear-gradient(130deg, #493623, #32251c);
-  border-color: #a8844944;
-}
-.lab-open .lab-box .lab-effect small {
-  color: #bea57a;
-}
-.lab-open .lab-box .lab-effect.active {
-  background: linear-gradient(130deg, #74532c, #49331e);
-  border-color: var(--school);
-  color: #fff0c7;
-}
-.lab-open .lab-box .lab-details,
-.lab-open .lab-box .lab-footer {
-  color: #d9c5a1;
-}
-.lab-open .lab-box .lab-details strong {
-  color: #f2d18a;
-}
-.lab-open .lab-box .lab-details {
-  font-size: 12px;
-}
-
-/* Landscape previews keep both controls and stage within the short viewport. */
-body.mobile-landscape #modal .lab-box {
-  display: grid;
-  grid-template-rows: auto minmax(120px, 1fr) auto;
-  gap: 10px;
-  height: calc(100dvh - 16px);
-  max-height: calc(100dvh - 16px);
-  padding: 12px 18px;
-  overflow: hidden;
-}
-body.mobile-landscape .lab-box .modal-heading {
-  padding: 0;
-}
-body.mobile-landscape .lab-box .modal-heading h2 {
-  font-size: 23px;
-  margin: 0;
-  padding-right: 52px;
-}
-body.mobile-landscape .lab-box .modal-heading p,
-body.mobile-landscape .lab-box .eyebrow,
-body.mobile-landscape .lab-box .lab-details,
-body.mobile-landscape .lab-box .lab-footer > span {
-  display: none;
-}
-body.mobile-landscape .lab-box .lab-grid {
-  display: grid;
-  grid-template-columns: 180px minmax(0, 1fr);
-  height: 100%;
-  margin: 0;
-  gap: 12px;
-  min-height: 0;
-}
-body.mobile-landscape .lab-box .lab-controls {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  width: auto;
-  gap: 6px;
-}
-body.mobile-landscape .lab-box .lab-effect {
-  min-height: 30px;
-  font-size: 11px;
-  padding: 6px;
-}
-body.mobile-landscape .lab-box .lab-stage {
-  height: 100%;
-  min-height: 120px;
-}
-body.mobile-landscape .lab-box .lab-footer {
-  padding: 6px 0 0;
-  gap: 12px;
-  flex-wrap: nowrap;
-}
-body.mobile-landscape .lab-box .lab-variant {
-  flex: 1;
-}
-body.mobile-landscape .lab-box .lab-variant select {
-  max-width: 260px;
-  width: 100%;
-  min-height: 38px;
-}
-body.mobile-landscape .lab-box .lab-footer .gold-btn {
-  min-height: 38px;
-  font-size: 12px;
-}
-body.mobile-landscape .lab-box .modal-close {
-  position: absolute;
-  top: 9px;
-  right: 14px;
-  float: none;
-  width: 36px;
-  height: 36px;
-  margin: 0;
-}
 
 /* Named deck preparation uses the same panel and ink tokens as the collection. */
 body .saved-deck-controls {
@@ -2970,12 +2842,8 @@ body .framed-dialog > .reward-footer {
 }
 body .modal-scroll {
   min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
   padding: 4px 8px 8px;
   margin: 0 -8px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--brass) var(--walnut-deep);
 }
 body .framed-dialog > .modal-footer,
 body .framed-dialog > .reward-footer {
@@ -5109,38 +4977,26 @@ body.touch-layout .touch-show-deck .deck-tools-body {
 body.touch-layout .touch-show-deck .deck-actions {
   flex: 0 0 auto;
 }
-body.mobile-landscape .result-box .modal-scroll {
-  display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
-  gap: 4px 16px;
-  align-content: start;
-}
 body.mobile-landscape .result-box .result-sigil {
-  grid-column: 1;
-  grid-row: 1/4;
   width: 66px;
   height: 66px;
   margin: 12px 0 0;
 }
 body.mobile-landscape .result-box .result-sub {
-  grid-column: 2;
   font-size: 8px;
   letter-spacing: 1px;
   margin: 3px 0;
 }
 body.mobile-landscape .result-box .result-title {
-  grid-column: 2;
   font-size: 28px;
   line-height: 1.2;
   margin: 0;
 }
 body.mobile-landscape .result-box .boss-quote {
-  grid-column: 2;
   font-size: 12px;
   margin: 4px 0;
 }
 body.mobile-landscape .result-box .result-stats {
-  grid-column: 1/-1;
   margin: 4px 0;
   padding: 6px 0;
 }

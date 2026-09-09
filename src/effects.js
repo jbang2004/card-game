@@ -47,10 +47,8 @@ const EmberFX = (() => {
     phase = false,
     quality = { reduced: false, low: false },
     worldDirty = true,
-    lab = false,
-    labBounds = null,
     readableStats = [];
-  let counts = { actions: 0, previews: 0, school: {}, maxParticles: 0 };
+  let counts = { actions: 0, school: {}, maxParticles: 0 };
   const rnd = (a, b) => a + Math.random() * (b - a),
     clamp = (n, a = 0, b = 1) => Math.max(a, Math.min(b, n)),
     lerp = (a, b, t) => a + (b - a) * t;
@@ -1422,66 +1420,6 @@ const EmberFX = (() => {
       }
     });
   }
-  function preview(school, from, to, variant = "element") {
-    if (busy) return false;
-    labBounds = pos(document.querySelector(".lab-stage"));
-    counts.previews++;
-    counts.school[school] = (counts.school[school] || 0) + 1;
-    const card = EmberData.byId[variant];
-    const profile = card ? EmberFXProfiles.get(card) : null;
-    const attack = variant.startsWith("attack:")
-      ? variant.slice(7)
-      : school === "steel" && !card
-        ? "blade"
-        : null;
-    const cast =
-      profile?.cast ||
-      {
-        fire: "meteor",
-        frost: "ice-lance",
-        arcane: "starwell",
-        nature: "bloom",
-        holy: "benediction",
-        shadow: "void-collapse",
-      }[school] ||
-      "ember";
-    const contact = quality.reduced
-      ? 100
-      : attack
-        ? 280
-        : profile?.windup || 580;
-    setBusy(true);
-    EmberVFX.prepare();
-    if (attack) EmberVFX.attack(attack, from, to, school, contact);
-    else if (!profile?.arrival)
-      EmberVFX.spell(cast, from, to, [to], school, contact);
-    else rune(from.x, from.y, school, 65, contact);
-    EmberAudio.fx(attack ? "swing" : "cast-" + school);
-    schedule(() => {
-      if (profile?.arrival) {
-        EmberVFX.arrival(profile.arrival, from, school);
-        cue(from, "传说降临", "summon");
-        EmberAudio.fx("legendary");
-      } else if (variant === "nova") {
-        EmberVFX.hit(to, "frost", 1.4);
-        cue(to, "冻结", "freeze");
-        EmberAudio.fx("freeze");
-      } else {
-        impact(to.x, to.y, school, 1.4, attack || "element", from);
-        if (variant === "execute") cue(to, "消灭", "death");
-        else
-          number(
-            to,
-            6,
-            !attack && ["holy", "nature"].includes(school) ? "heal" : "damage",
-          );
-        EmberAudio.fx("impact-" + school);
-        hitReaction(document.querySelector(".lab-token.target"), true);
-      }
-    }, contact);
-    schedule(() => setBusy(false), contact + (quality.reduced ? 350 : 900));
-    return true;
-  }
   // ---- Vector compositing primitives --------------------------------------------------
   function radial(g, x, y, r, alpha = 1) {
     const p = ctx.createRadialGradient(x, y, 0, x, y, Math.max(0.1, r));
@@ -2073,11 +2011,6 @@ const EmberFX = (() => {
     }
     ctx.clearRect(0, 0, W, H);
     ctx.save();
-    if (lab && labBounds) {
-      ctx.beginPath();
-      ctx.rect(labBounds.left, labBounds.top, labBounds.w, labBounds.h);
-      ctx.clip();
-    }
     let keep = [];
     for (const e of items) {
       let progress = (t - e.start) / e.d;
@@ -2094,7 +2027,7 @@ const EmberFX = (() => {
     ctx.restore();
     // Live DOM numbers always win over decorative light and smoke. Cache the
     // nodes per event; read their current position so hit reactions also track.
-    if (!lab && (items.length || EmberVFX.active)) {
+    if (items.length || EmberVFX.active) {
       for (const el of readableStats) {
         if (
           !el.isConnected ||
@@ -2169,12 +2102,6 @@ const EmberFX = (() => {
         el?.getAnimations().forEach((a) => a.cancel());
     }
   }
-  function setLab(v) {
-    cancel();
-    lab = !!v;
-    app.classList.toggle("lab-open", lab);
-    labBounds = lab ? pos(document.querySelector(".lab-stage")) : null;
-  }
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) worldDirty = true;
   });
@@ -2183,12 +2110,10 @@ const EmberFX = (() => {
   return {
     reflow,
     present,
-    preview,
     cancel,
     setView,
     setTheme,
     configure,
-    setLab,
     pos,
     capture,
     impact,

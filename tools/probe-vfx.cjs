@@ -78,14 +78,6 @@ const pct = (a, n) => {
       samples: measured.cpu.length,
       metrics: measured.metrics,
     });
-    await page.evaluate(() => Emberfall.showFXLab());
-    await page.waitForTimeout(1900);
-    await page.locator("#lab-variant").selectOption("storm");
-    await page.waitForTimeout(540);
-    await page.screenshot({
-      path: `artifacts/qa/vfx-signatures/lab-${name}.png`,
-    });
-    await page.evaluate(() => Emberfall.closeModal());
     // Trigger a real boss phase transition through a real damaging play.
     await page.evaluate(() => {
       const g = EmberDebug.game;
