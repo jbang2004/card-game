@@ -3091,7 +3091,28 @@ body .card .card-title {
 }
 body .card .card-text {
   top: 69%;
+  bottom: 9%;
   line-height: 1.4;
+  /* Rules are a bounded reading area: the block never reaches the type line
+     or the stat orbs, and a long card ends with an ellipsis instead of
+     silently losing a line. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--rule-lines, 5);
+  overflow: hidden;
+}
+body .card.type-minion .card-text,
+body .card.weapon .card-text {
+  bottom: 17%;
+}
+/* Collection tiles already grow with their own rules and keep the stat orbs
+   anchored to the card bottom, so they keep the unbounded flow layout; the
+   bounded reading box above is for hand, preview and inspect cards. */
+body .library-item .card .card-text {
+  display: block;
+  -webkit-line-clamp: none;
+  top: auto;
+  bottom: auto;
 }
 body .card .card-type {
   font-size: 8px;
@@ -3209,14 +3230,16 @@ body:not(.touch-layout) .hand-card:hover {
   transform: translateX(calc(-50% + var(--x))) translateY(-10px);
 }
 body:not(.touch-layout) .hand-card .card .card-text {
-  font-size: 11px;
+  font-size: 10px;
   line-height: 1.3;
+  --rule-lines: 2;
 }
 body:not(.touch-layout) .hand-card .card .card-title {
   font-size: 12px;
 }
 body:not(.touch-layout) .compact-hand .card .card-text {
-  font-size: 10px;
+  font-size: 9px;
+  --rule-lines: 2;
 }
 body .card-preview .card .card-text {
   font-size: 15px;
@@ -4282,12 +4305,67 @@ body.touch-layout .card .card-title {
   padding-left: 4%;
   padding-right: 8%;
 }
-body.touch-layout .hand-card .card .card-text {
+/* Touch hand cards: art 50% / name band 11% / rules 19% / stat orbs 19%.
+   The rules block is bounded above the orbs and clamps to two lines with an
+   ellipsis, so a long card never overlaps attack/health or silently loses a
+   line. Long-press still opens the full detail sheet. */
+body.touch-layout .hand-card .card-art {
+  height: 48%;
+}
+body.touch-layout .hand-card .card-title {
+  top: 48%;
+  height: 10.5%;
+  min-height: 0;
+  padding-left: 4%;
+  padding-right: 8%;
+}
+body.touch-layout .hand-card .card-rarity {
+  top: 58%;
+}
+body.touch-layout .hand-card .card .card-text,
+body.touch-layout .hand-card .card.dense .card-text {
+  top: 59.5%;
+  bottom: 20%;
+  left: 6%;
+  right: 6%;
+  max-height: none;
   font-size: 10px;
-  line-height: 1.3;
+  line-height: 1.28;
+  --rule-lines: 2;
+}
+body.touch-layout .hand-card .card .stat {
+  width: 25%;
+  height: 19%;
+  font-size: clamp(13px, 15cqw, 24px);
 }
 body.touch-layout .hand-card .card-class-seal {
   display: none;
+}
+/* Very short landscape screens cannot give a card two lines of 10px rules
+   without crushing the arena; drop to a compact 8.5px face so both lines and
+   the ellipsis still fit. */
+@media (max-height: 379px) {
+  body.touch-layout .hand-card .card .card-text,
+  body.touch-layout .hand-card .card.dense .card-text {
+    font-size: 8px;
+    line-height: 1.15;
+  }
+}
+/* Short portrait phones keep the same two readable lines by scaling the face
+   with the available card height instead of shrinking the card further. */
+@media (orientation: portrait) and (max-height: 719px) {
+  body.touch-layout .hand-card .card .card-text,
+  body.touch-layout .hand-card .card.dense .card-text {
+    font-size: 9px;
+    line-height: 1.3;
+  }
+}
+@media (orientation: portrait) and (max-height: 599px) {
+  body.touch-layout .hand-card .card .card-text,
+  body.touch-layout .hand-card .card.dense .card-text {
+    font-size: 8.5px;
+    line-height: 1.2;
+  }
 }
 body.touch-layout .contract-open {
   grid-template-columns: 25px 1fr;
@@ -5211,4 +5289,205 @@ body #modal.folio-host .covenant-card .covenant-copy > small {
 }
 body #modal.folio-host .covenant-card .covenant-progress {
   text-shadow: 0 1px 3px #050607cc;
+}
+
+/* ---------------------------------------------------------------------------
+   Hero dossier + deck composition
+   The hero chooser's right column used to end after four short controls,
+   leaving ~70% of the dialog empty. This panel makes the column carry the
+   information a player actually needs before committing: who the hero is,
+   what the power does, and the shape of the selected deck.
+--------------------------------------------------------------------------- */
+body #modal .hero-dossier {
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  border: 1px solid #6b5233;
+  border-left: 3px solid var(--class-metal, #c8a35f);
+  border-radius: 8px;
+  background:
+    radial-gradient(ellipse at 0% 0%, #3a2c1e66, transparent 62%),
+    linear-gradient(180deg, #2b2118, #1b1410);
+  box-shadow: inset 0 0 18px #0000004d;
+}
+body #modal .hero-dossier > small {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: #c8a35f;
+}
+body #modal .hero-dossier h3 {
+  margin: 3px 0 6px;
+  font-size: 20px;
+  line-height: 1.2;
+  color: #f3e2bb;
+}
+body #modal .hero-dossier h3 span {
+  margin-left: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #b99f78;
+}
+body #modal .hero-dossier > p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #d8c9a8;
+}
+body #modal .hero-power-line {
+  display: grid;
+  grid-template-columns: 26px auto 1fr;
+  align-items: center;
+  gap: 2px 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #ffffff14;
+}
+body #modal .hero-power-sigil {
+  grid-row: span 2;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid #a9844a;
+  background: #2a1f16;
+  color: #ffd98a;
+}
+body #modal .hero-power-sigil svg {
+  width: 16px;
+  height: 16px;
+}
+body #modal .hero-power-line b {
+  font-size: 14px;
+  color: #ffe4ad;
+}
+body #modal .hero-power-line em {
+  font-size: 11px;
+  font-style: normal;
+  color: #b99f78;
+}
+body #modal .hero-power-line > span:last-child {
+  grid-column: 2 / -1;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #cbbc9b;
+}
+body #modal .hero-composition {
+  margin-bottom: 14px;
+}
+body #modal .comp-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+body #modal .comp-head h4 {
+  font-size: 13px;
+  color: #e8d5ad;
+}
+body #modal .comp-head span {
+  font-size: 11px;
+  color: #a98f6a;
+}
+body #modal .comp-counts {
+  display: flex;
+  gap: 14px;
+  margin: 6px 0 14px;
+  font-size: 12px;
+  color: #c4b391;
+}
+body #modal .comp-counts b {
+  color: #ffe4ad;
+  font-size: 14px;
+}
+body #modal .comp-curve {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 48px;
+  margin-bottom: 18px;
+}
+body #modal .comp-curve i {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border-radius: 3px;
+  background: #ffffff0d;
+}
+body #modal .comp-curve i::before {
+  content: "";
+  width: 100%;
+  height: var(--fill, 0%);
+  min-height: 2px;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, #e8c27a, #8a6330);
+}
+body #modal .comp-curve b {
+  position: absolute;
+  bottom: -15px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 500;
+  color: #9c8562;
+}
+body #modal .comp-curve s {
+  position: absolute;
+  top: -13px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 10px;
+  text-decoration: none;
+  color: #e8d5ad;
+}
+
+/* ---------------------------------------------------------------------------
+   Letterbox and HUD legibility floor
+   The desktop stage is a fixed 1600×940 canvas scaled to fit, so on 16:10 or
+   4:3 windows the letterbox showed as flat near-black bars and 7–8px HUD
+   labels rendered at ~5px. Warm the letterbox and lift every micro-label to a
+   legible size/contrast without changing the battle layout.
+--------------------------------------------------------------------------- */
+#viewport {
+  background: radial-gradient(
+    ellipse at 50% 34%,
+    #3b2b1d 0%,
+    #201712 44%,
+    #0c0908 84%
+  );
+}
+body:not(.touch-layout) .lane-label {
+  color: #4f3619;
+  opacity: 1;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+}
+body:not(.touch-layout) .board-empty {
+  color: #5b3f1f;
+  opacity: 0.95;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  text-shadow: 0 1px 0 #fff6dc73;
+}
+body:not(.touch-layout) .deck-caption {
+  color: #9a8871;
+  font-size: 9px;
+}
+body:not(.touch-layout) .mana-desc {
+  color: #93a6ac;
+  font-size: 10px;
+}
+body:not(.touch-layout) .hero-caption {
+  color: #d3c1a1;
+  font-size: 9px;
+}
+body:not(.touch-layout) .turn-shortcut {
+  font-size: 10px;
+}
+body:not(.touch-layout) #hero-side-label {
+  color: #b6c9c0;
+  font-size: 10px;
 }
