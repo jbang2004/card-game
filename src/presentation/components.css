@@ -5168,3 +5168,47 @@ body.touch-layout .hero .portrait-frame {
   border-width: 2px;
   padding: 2px;
 }
+
+/* Covenant posters keep the authored deity art visible behind the live
+   rules.  The copy remains a readable, translucent glass layer rather than
+   shrinking the artwork into a thumbnail. */
+body #modal.folio-host .covenant-card {
+  isolation: isolate;
+  background: #111316;
+}
+body #modal.folio-host .covenant-card > img {
+  filter: saturate(1.04) contrast(1.03) brightness(0.92);
+}
+body #modal.folio-host .covenant-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    #0b0d0f05 22%,
+    #0b0d0f32 42%,
+    #0b0d0fc7 72%,
+    #0b0d0fee 100%
+  );
+}
+body #modal.folio-host .covenant-card .covenant-copy {
+  background: linear-gradient(
+    180deg,
+    #12151973 0%,
+    #121519c7 24%,
+    #121519ed 100%
+  );
+  border-top: 1px solid #e5cf9366;
+  box-shadow: 0 -12px 28px #090b0d3d;
+  backdrop-filter: blur(5px) saturate(0.9);
+}
+body #modal.folio-host .covenant-card .covenant-copy h4,
+body #modal.folio-host .covenant-card .covenant-copy > p,
+body #modal.folio-host .covenant-card .covenant-copy > small {
+  text-shadow: 0 2px 5px #050607cc;
+}
+body #modal.folio-host .covenant-card .covenant-progress {
+  text-shadow: 0 1px 3px #050607cc;
+}
