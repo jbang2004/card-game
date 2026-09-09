@@ -5347,163 +5347,282 @@ body:not(.touch-layout) #hero-side-label {
   color: #b6c9c0;
   font-size: 10px;
 }
-/* Adventure atlas: immutable illustrated scenery, live route, labels and actions.
-   Desktop coordinates use the approved artboard; narrow windows use a real
-   vertical itinerary with the same location artwork and readable controls. */
-body #modal.folio-host[data-type="map"] > .adventure-atlas.folio-dialog {
-  --atlas-art: url("asset:maps/adventure-atlas.png");
-  width: min(1536px, 100%, calc((100dvh - 24px) * 1.5)) !important;
-  height: auto !important;
-  aspect-ratio: 3 / 2;
+/* Layered adventure atlas. Text and anchors are live DOM; the paper terrain,
+   wood surface and six landmark illustrations are independent cached assets. */
+body #modal.folio-host[data-type="map"] > section.adventure-atlas.folio-dialog {
+  --map-wood: url("asset:maps/walnut.webp");
+  --map-terrain: url("asset:maps/terrain.webp");
+  --map-gold: #c2a26a;
+  --map-cream: #f4e4bb;
+  --map-muted: #c0ac88;
+  --map-paper: #dac493;
+  --map-dark: #211912;
+  --map-line: #795b34;
+  width: min(1280px, 100%) !important;
+  height: min(910px, 100%) !important;
   max-height: calc(100dvh - 24px) !important;
-  padding: 0 !important;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  background: var(--atlas-art) center / 100% 100% no-repeat;
+  min-height: 0 !important;
+  padding: 26px !important;
+  display: flex !important;
+  flex-direction: column;
+  gap: 18px;
+  aspect-ratio: auto;
+  border: 1px solid var(--map-gold);
+  border-radius: 7px;
+  background: linear-gradient(#19140ea8, #160f0a9c), var(--map-wood) center / 540px;
+  box-shadow: inset 0 0 0 4px #18100b, inset 0 0 0 5px #8e6d3b,
+    0 25px 100px #000b;
   isolation: isolate;
   container-type: inline-size;
   overflow: hidden;
-  display: flex !important;
-  min-height: 0 !important;
 }
 body #modal.folio-host .adventure-atlas::before,
 body #modal.folio-host .adventure-atlas::after { display: none !important; }
+#modal.folio-host .adventure-atlas .atlas-corners {
+  position: absolute; inset: 9px; pointer-events: none; z-index: 8;
+}
+.atlas-corners i { position: absolute; width: 22px; height: 22px; border-top: 2px solid var(--map-gold); border-left: 2px solid var(--map-gold); }
+.atlas-corners i::after { content: '◆'; position: absolute; top: 2px; left: 2px; color: var(--map-gold); font-size: 9px; }
+.atlas-corners i:nth-child(1) { top: 0; left: 0; }
+.atlas-corners i:nth-child(2) { top: 0; right: 0; transform: rotate(90deg); }
+.atlas-corners i:nth-child(3) { bottom: 0; right: 0; transform: rotate(180deg); }
+.atlas-corners i:nth-child(4) { bottom: 0; left: 0; transform: rotate(270deg); }
 body #modal.folio-host .adventure-atlas > .atlas-heading {
-  position: absolute;
-  z-index: 3;
-  left: 14.3%; top: 12.2%; width: 37%;
-  margin: 0; padding: 0; border: 0;
+  position: relative; display: flex; align-items: center; gap: 16px;
+  flex: 0 0 auto; width: 100%; min-height: 65px; margin: 0;
+  padding: 0 66px 15px 0; border-bottom: 1px solid #ba96533d;
 }
-body #modal.folio-host .adventure-atlas .atlas-heading h2 {
-  font-size: clamp(21px, 2.5cqw, 38px); letter-spacing: .14em;
-  line-height: 1.25; color: #f0d49a; margin: 0;
-  text-shadow: 0 2px 4px #100906;
-}
-body #modal.folio-host .adventure-atlas .atlas-heading p {
-  display: block;
-  margin: .5em 0 0; font-size: clamp(11px, 1cqw, 15px);
-  color: #c7ad7f; letter-spacing: .12em;
-}
+#modal.folio-host .adventure-atlas .atlas-emblem { width: 57px; height: 57px; flex: 0 0 auto; color: var(--map-gold); }
+#modal.folio-host .adventure-atlas .atlas-emblem svg,
+#modal.folio-host .adventure-atlas .atlas-cartography svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1; }
+#modal.folio-host .adventure-atlas .atlas-kicker { display: block; color: var(--map-muted); font-size: 11px; letter-spacing: .22em; margin-bottom: 4px; }
+body #modal.folio-host .adventure-atlas .atlas-heading h2 { font-family: "Songti SC", "Noto Serif CJK SC", serif; color: var(--map-cream); font-size: 30px; font-weight: 700; letter-spacing: .16em; line-height: 1.3; margin: 0; text-shadow: 0 2px 5px #000; }
+#modal.folio-host .adventure-atlas .atlas-chapter { margin-left: auto; display: flex; align-items: center; gap: 14px; color: var(--map-muted); }
+#modal.folio-host .adventure-atlas .atlas-chapter > span { font-size: 12px; letter-spacing: .1em; }
+#modal.folio-host .adventure-atlas .atlas-chapter strong { font: 28px Georgia, serif; color: var(--map-cream); font-variant-numeric: tabular-nums; }
+#modal.folio-host .adventure-atlas .atlas-chapter small { display: inline !important; font-size: 14px; color: var(--map-muted); }
 body #modal.folio-host .adventure-atlas > .modal-close {
-  top: 9.3% !important; right: 6.7% !important;
-  width: 4.1% !important; height: 6.1% !important;
-  min-width: 36px; min-height: 36px; padding: 0 !important;
-  background: transparent !important; border: 0 !important;
-  box-shadow: none !important; z-index: 6;
+  top: 30px !important; right: 27px !important; width: 44px !important; height: 44px !important;
+  min-width: 44px; min-height: 44px; padding: 10px !important;
+  border: 1px solid var(--map-gold) !important; border-radius: 50%;
+  background: var(--map-dark) !important; color: var(--map-cream);
+  box-shadow: inset 0 0 0 3px #3c2c1d, 0 3px 8px #0006 !important; z-index: 10;
 }
-body #modal.folio-host .adventure-atlas > .modal-close svg { opacity: 0; }
 body #modal.folio-host .adventure-atlas > .folio-pane {
-  position: absolute; inset: 0; margin: 0; padding: 0;
-  width: 100%; height: 100%; max-height: none; min-height: 0;
+  position: relative; flex: 1 1 0 !important; min-height: 0; max-height: none;
+  width: 100%; margin: 0; padding: 0; border-radius: 3px; overflow: hidden;
 }
-body #modal.folio-host .adventure-atlas .folio-viewport,
+body #modal.folio-host .adventure-atlas .folio-viewport {
+  flex: 1 1 auto; height: 100%; min-height: 0; overflow-y: auto;
+  overscroll-behavior: contain; touch-action: pan-y; padding: 0 !important;
+  scrollbar-width: thin; scrollbar-color: var(--map-line) var(--map-paper);
+}
 body #modal.folio-host .adventure-atlas .modal-scroll {
-  width: 100%; height: 100%; max-height: none; padding: 0 !important;
-  margin: 0; overflow: visible; display: block;
+  display: block; width: 100%; min-height: 100%; height: auto;
+  padding: 0 !important; margin: 0; overflow: visible;
 }
-body #modal.folio-host .adventure-atlas .folio-scroll-hint { display: none; }
-.adventure-atlas .atlas-stage { position: relative; width: 100%; height: 100%; }
-.adventure-atlas .atlas-paths { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.atlas-paths path { fill: none; stroke: #f1dbb1; stroke-width: 4; stroke-dasharray: 11 8; stroke-linecap: round; opacity: .8; }
-.atlas-paths .traversed { stroke: #ffdf7e; filter: drop-shadow(0 0 5px #ffac22); opacity: 1; }
-.adventure-atlas .atlas-location {
-  position: absolute; left: var(--x); top: var(--y); width: var(--w);
-  aspect-ratio: 1; transform: translate(-50%, -50%); z-index: 2;
+#modal.folio-host .adventure-atlas .atlas-stage {
+  position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, auto); align-content: space-around;
+  column-gap: 48px; row-gap: 34px; min-height: 650px;
+  padding: 32px 65px 38px; isolation: isolate;
+  border: 1px solid #9b7b4d; border-radius: 3px;
+  background: var(--map-paper);
+  box-shadow: inset 0 0 35px #3b27176b;
 }
-.adventure-atlas .atlas-node {
-  position: absolute; inset: 0; width: 100%; height: 100%;
-  padding: 0; border: 0; border-radius: 50%; background: none;
-  box-shadow: none; overflow: visible; color: #f3d398;
+#modal.folio-host .adventure-atlas .atlas-stage::before {
+  content: ''; position: absolute; inset: 0; z-index: -2;
+  background: linear-gradient(#eed49b26, #35291818), var(--map-terrain) center / cover;
+  opacity: .87; pointer-events: none;
 }
-.adventure-atlas .atlas-node-art {
-  position: absolute; inset: 0; border-radius: 50%;
-  border: 1px solid transparent; pointer-events: none;
+#modal.folio-host .adventure-atlas .atlas-stage::after {
+  content: ''; position: absolute; inset: 7px; z-index: -1;
+  border: 1px solid #66482d45; outline: 1px solid #f9e2ae40;
+  outline-offset: 3px; pointer-events: none;
 }
-.adventure-atlas .current .atlas-node-art {
-  border: 2px solid #ffdb81;
-  box-shadow: 0 0 8px #ffce5b, 0 0 25px #ed9e32, inset 0 0 14px #ffcb5666;
+#modal.folio-host .adventure-atlas .atlas-stage:not(.atlas-ready) > :not(.atlas-loading) { visibility: hidden; }
+#modal.folio-host .adventure-atlas .atlas-loading { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 12px; padding-top: 64px; background: var(--map-paper); color: var(--map-line); }
+#modal.folio-host .adventure-atlas .atlas-loading[hidden] { display: none; }
+#modal.folio-host .adventure-atlas .atlas-loading > span { width: 64px; height: 64px; }
+#modal.folio-host .adventure-atlas .atlas-loading svg { width: 100%; height: 100%; fill: none; stroke: currentColor; }
+#modal.folio-host .adventure-atlas .atlas-loading p { font-size: 14px; margin: 0; }
+#modal.folio-host .adventure-atlas .atlas-loading button { min-height: 44px; padding: 8px 18px; border: 1px solid var(--map-line); color: var(--map-cream); background: var(--map-dark); }
+#modal.folio-host .adventure-atlas .atlas-cartography {
+  position: absolute; width: 100px; height: 100px; left: 18px; bottom: 18px;
+  color: #57391f; opacity: .22; pointer-events: none; z-index: -1;
 }
-.adventure-atlas .done .atlas-node-art { border-color: #c7d4a4; box-shadow: 0 0 10px #8ea16b; }
-.adventure-atlas .atlas-node:hover,
-.adventure-atlas .atlas-node:focus-visible { transform: none; background: none; filter: brightness(1.12); }
-.adventure-atlas .atlas-node:focus-visible { outline: 2px solid #ffe4a5; outline-offset: 4px; }
-body #modal.folio-host .adventure-atlas .atlas-node h3 {
-  position: absolute; top: var(--label); left: -4%; width: 108%;
-  transform: translateY(-50%); margin: 0; padding: 0;
-  color: #382616; font-size: clamp(12px, 1.38cqw, 21px);
-  font-family: inherit; font-weight: 700; line-height: 1.25;
-  text-shadow: 0 1px #fff2cb; white-space: nowrap;
+#modal.folio-host .adventure-atlas .atlas-paths {
+  position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;
+  overflow: visible; z-index: 0;
 }
-.adventure-atlas .atlas-badge {
-  position: absolute; top: var(--badge-y); left: var(--badge-x);
-  transform: translate(-50%,-50%); width: 27%; height: 27%;
-  display: grid; place-items: center; font-size: clamp(12px, 1.6cqw, 24px);
-  line-height: 1; font-weight: 700; text-shadow: 0 1px 3px #000;
+.atlas-paths path { fill: none; stroke: #f3e2ba; stroke-width: 2.5; stroke-dasharray: 7 6; stroke-linecap: round; }
+.atlas-paths .atlas-route-shadow { stroke: #5e472d; stroke-width: 5; stroke-dasharray: none; opacity: .55; }
+.atlas-paths .traversed { stroke: #ffeb9a; stroke-width: 3; filter: drop-shadow(0 0 4px #b77713); }
+.atlas-paths circle { fill: #f4dfac; stroke: #8f6631; stroke-width: 1.5; }
+#modal.folio-host .adventure-atlas .atlas-location { position: relative; z-index: 1; min-width: 0; margin: 0; }
+#modal.folio-host .adventure-atlas .atlas-location:nth-of-type(1) { grid-area: 1 / 1; }
+#modal.folio-host .adventure-atlas .atlas-location:nth-of-type(2) { grid-area: 1 / 2; }
+#modal.folio-host .adventure-atlas .atlas-location:nth-of-type(3) { grid-area: 1 / 3; }
+#modal.folio-host .adventure-atlas .atlas-location:nth-of-type(4) { grid-area: 2 / 3; }
+#modal.folio-host .adventure-atlas .atlas-location:nth-of-type(5) { grid-area: 2 / 2; }
+#modal.folio-host .adventure-atlas .atlas-location:nth-of-type(6) { grid-area: 2 / 1; }
+#modal.folio-host .adventure-atlas .atlas-node {
+  display: flex; flex-direction: column; align-items: center; justify-content: start;
+  width: 100%; height: auto; min-width: 0; min-height: 44px;
+  padding: 0; margin: 0; border: 0; border-radius: 6px; background: none;
+  box-shadow: none; color: var(--map-dark); text-align: center; overflow: visible;
+  transition: filter .18s ease;
 }
-.adventure-atlas .atlas-badge svg { width: 48%; height: 48%; color: #cfc6b1; }
-.adventure-atlas .atlas-location-info {
-  display: none; position: absolute; top: calc(var(--label) + 18%);
-  left: 50%; transform: translateX(-50%); width: max-content; max-width: 220px;
-  padding: 9px 14px; background: #201710f5; border: 1px solid #b79960;
-  border-radius: 5px; box-shadow: 0 8px 20px #0008; text-align: center;
-  color: #eee0bc; font-size: 13px; pointer-events: none;
+#modal.folio-host .adventure-atlas .atlas-landmark {
+  display: block; width: clamp(132px, 14cqw, 174px); aspect-ratio: 1 / 1.02;
+  position: relative; flex: 0 0 auto; margin: 0 auto 0;
 }
-.adventure-atlas .atlas-location-info span { display: block; color: #d6b77b; margin-top: 4px; }
-.adventure-atlas .atlas-location:has([aria-expanded="true"]) { z-index: 5; }
-.adventure-atlas .atlas-location:has([aria-expanded="true"]) .atlas-location-info,
-.adventure-atlas .atlas-location:focus-within .atlas-location-info { display: block; }
-@media (hover: hover) { .adventure-atlas .atlas-location:hover .atlas-location-info { display: block; } }
+#modal.folio-host .adventure-atlas .atlas-portrait {
+  position: absolute; inset: 0; padding: 4px;
+  border: 1px solid #5c4529; border-radius: 48% 48% 5px 5px;
+  background: linear-gradient(115deg, #f3dea2, #7c5b2c 30%, #c9a366 65%, #f1d79b);
+  box-shadow: 0 5px 12px #281e1980, inset 0 0 0 2px #b7934c;
+}
+#modal.folio-host .adventure-atlas .atlas-portrait img {
+  display: block; width: 100%; height: 100%; object-fit: cover; object-position: center;
+  border-radius: 48% 48% 2px 2px; filter: saturate(.78) brightness(.91);
+}
+#modal.folio-host .adventure-atlas .current .atlas-portrait {
+  box-shadow: 0 0 0 2px #e4c77e, 0 0 22px #e8ad3590, 0 5px 10px #37231380;
+}
+#modal.folio-host .adventure-atlas .current .atlas-portrait img,
+#modal.folio-host .adventure-atlas .atlas-node[aria-pressed="true"] .atlas-portrait img { filter: none; }
+#modal.folio-host .adventure-atlas .atlas-node[aria-pressed="true"] .atlas-portrait { outline: 1px solid #f9e4ab; outline-offset: 3px; }
+#modal.folio-host .adventure-atlas .atlas-node:hover { transform: none; background: none; filter: brightness(1.06); }
+#modal.folio-host .adventure-atlas .atlas-node:focus-visible { outline: 2px solid #442c12; outline-offset: 8px; }
+#modal.folio-host .adventure-atlas .atlas-pennant {
+  position: absolute; left: -16px; top: 25px; width: 28px; height: 46px;
+  display: grid; place-items: center; color: #d0b27a; padding: 5px;
+  background: linear-gradient(90deg,#181c1d,#303739); border: 1px solid #a58a55;
+  clip-path: polygon(0 0,100% 0,100% 80%,50% 100%,0 80%);
+  filter: drop-shadow(0 3px 3px #0007);
+}
+#modal.folio-host .adventure-atlas .atlas-pennant svg { width: 18px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+#modal.folio-host .adventure-atlas .current .atlas-pennant { background: #70411f; color: #ffe29c; }
+#modal.folio-host .adventure-atlas .atlas-number {
+  position: absolute; left: -13px; bottom: -8px; z-index: 3;
+  width: 33px; height: 33px; display: grid; place-items: center;
+  border-radius: 50%; border: 1px solid #c9a566;
+  background: #211a12; box-shadow: 0 2px 4px #0008, inset 0 0 0 2px #4d3924;
+  color: #eed5a0; font: 18px Georgia, serif; font-variant-numeric: tabular-nums;
+}
+#modal.folio-host .adventure-atlas .current .atlas-number { background: #73501f; border-color: #f8d883; color: #fff2c5; }
+#modal.folio-host .adventure-atlas .atlas-location-copy { display: flex; flex-direction: column; align-items: center; min-width: 0; width: 100%; }
+#modal.folio-host .adventure-atlas .atlas-name {
+  position: relative; z-index: 2; display: block; min-width: 174px; max-width: 100%;
+  margin: -1px 0 8px; padding: 8px 16px; border: 1px solid #9f7944;
+  border-radius: 3px 3px 7px 7px; color: #372513;
+  background: linear-gradient(110deg,#d1b982,#f3e4bb 35%,#e3c995);
+  box-shadow: 0 3px 6px #3b281950, inset 0 0 0 2px #f5e6bd65;
+  font-family: "Songti SC", "Noto Serif CJK SC", serif; font-size: 20px;
+  line-height: 1.35; font-weight: 700; letter-spacing: .08em;
+}
+#modal.folio-host .adventure-atlas .atlas-boss {
+  display: block; color: #352a1d; font-size: 12px; line-height: 1.6;
+  text-shadow: 0 1px 2px #fae9c2; font-weight: 600;
+  background: #ead6aaae; border-radius: 2px; padding: 0 5px;
+}
+#modal.folio-host .adventure-atlas .atlas-boss > span { white-space: nowrap; }
+#modal.folio-host .adventure-atlas .atlas-status {
+  display: block; font-size: 12px; line-height: 1.5; letter-spacing: .12em;
+  color: #554128; margin-top: 5px; padding: 2px 10px;
+  background: #e9d5a7b8; border-radius: 12px;
+}
+#modal.folio-host .adventure-atlas .current .atlas-status { color: #fff0bd; background: #714a21; box-shadow: 0 1px 4px #63462250; }
+#modal.folio-host .adventure-atlas .done .atlas-status { color: #edf3cf; background: #485437; }
 body #modal.folio-host .adventure-atlas > .atlas-footer {
-  position: absolute; z-index: 4; left: 17%; right: 9%; bottom: 10%; height: 6.7%;
-  display: flex; align-items: center; justify-content: space-between; gap: 6%;
-  border: 0; padding: 0; margin: 0; background: none;
+  position: static; display: grid; grid-template-columns: minmax(0,1fr) auto auto;
+  align-items: center; gap: 18px; flex: 0 0 auto; min-height: 65px;
+  width: 100%; margin: 0; padding: 0; border: 0;
 }
-.atlas-journey { width: 69%; min-width: 0; }
-.atlas-progress { display: flex; align-items: center; justify-content: space-between; position: relative; max-width: 95%; }
-.atlas-progress::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: #837052; }
-.atlas-progress span { position: relative; display: grid; place-items: center; width: 22px; height: 22px; border: 2px solid #ab8960; border-radius: 50%; color: #bda883; background: #211a16; font-size: 11px; }
-.atlas-progress .current, .atlas-progress .done { background: #f4d78c; color: #3e2b14; border-color: #ffe5a5; box-shadow: 0 0 10px #d8a33e; }
-.atlas-relics { display: flex; gap: 10px; margin-top: 7px; font-size: clamp(10px, .9cqw, 13px); color: #c5ad80; white-space: nowrap; overflow-x: auto; }
+#modal.folio-host .adventure-atlas .atlas-focus { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+#modal.folio-host .adventure-atlas .atlas-focus strong { color: var(--map-cream); font-size: 15px; font-weight: 600; letter-spacing: .05em; }
+#modal.folio-host .adventure-atlas .atlas-focus > span { color: var(--map-muted); font-size: 12px; line-height: 1.6; }
+#modal.folio-host .adventure-atlas .atlas-relics { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; max-width: 220px; padding-right: 18px; border-right: 1px solid #b3945e50; }
+#modal.folio-host .adventure-atlas .atlas-relic-label { width: 100%; color: var(--map-muted); font-size: 11px; margin-bottom: 3px; letter-spacing: .13em; }
+#modal.folio-host .adventure-atlas .atlas-relic-empty { color: var(--map-muted); font-size: 12px; }
+#modal.folio-host .adventure-atlas .atlas-relic { border: 1px solid #8d723f; border-radius: 50%; background: #221a11; width: 30px; height: 30px; overflow: hidden; }
+#modal.folio-host .adventure-atlas .atlas-relic img { display: block; width: 100%; height: 100%; object-fit: cover; }
 body #modal.folio-host .adventure-atlas #map-continue {
-  width: 25%; height: 100%; padding: 0; margin: 0; min-height: 36px;
-  border: 0; background: transparent; box-shadow: none;
-  color: #422b12; font-size: clamp(13px, 1.6cqw, 24px); font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 20px;
+  min-width: 158px; min-height: 48px; padding: 11px 18px; font-size: 16px;
+  border-radius: 4px; border: 1px solid #e5c47b;
+  background: linear-gradient(#f4e1aa,#c29a53); color: #3d2a15;
+  box-shadow: inset 0 0 0 3px #99713b, inset 0 0 0 4px #f7e5b2, 0 4px 0 #47301b;
 }
-.adventure-atlas #map-continue svg { display: none; }
-/* Switch by available viewport, including narrow PC windows and phones.
-   No scaling of live text, no pagination, and only one vertical scroll owner. */
-@media (max-width: 760px), (max-height: 540px) {
-  body #modal.folio-host[data-type="map"] > .adventure-atlas.folio-dialog {
-    width: min(620px, 100%) !important; height: calc(100dvh - 24px) !important;
-    max-height: calc(100dvh - 24px) !important; aspect-ratio: auto;
-    padding: 18px !important; gap: 14px; border: 2px solid #a78347;
-    border-radius: 9px; background: linear-gradient(#1d1712e8,#231911ee), var(--atlas-art) center / cover;
-    box-shadow: inset 0 0 0 3px #372719, 0 20px 60px #0009;
+#modal.folio-host .adventure-atlas #map-continue svg { width: 20px; height: 20px; }
+#modal.folio-host .adventure-atlas .folio-scroll-hint { color: var(--map-cream); background: linear-gradient(transparent,#2e231deb); }
+/* Mid-size windows get a two-column snake; portrait gets a vertical itinerary.
+   These are container breakpoints, independent of touch/device classification. */
+@container (max-width: 930px) {
+  #modal.folio-host .adventure-atlas .atlas-stage {
+    grid-template-columns: repeat(2,minmax(0,1fr)); grid-template-rows: repeat(3,auto);
+    min-height: 980px; padding: 34px 48px; column-gap: 44px; row-gap: 40px;
   }
-  body #modal.folio-host .adventure-atlas > .atlas-heading { position: static; width: auto; padding-right: 42px; flex: 0 0 auto; }
-  body #modal.folio-host .adventure-atlas .atlas-heading h2 { font-size: 25px; }
-  body #modal.folio-host .adventure-atlas .atlas-heading p { font-size: 12px; }
-  body #modal.folio-host .adventure-atlas > .modal-close { top: 16px !important; right: 16px !important; width: 38px !important; height: 38px !important; background: #2c2016 !important; border: 1px solid #ad8c56 !important; }
-  body #modal.folio-host .adventure-atlas > .modal-close svg { opacity: 1; }
-  body #modal.folio-host .adventure-atlas > .folio-pane { position: relative; inset: auto; height: auto; min-height: 0; flex: 1 1 0; overflow: hidden; }
-  body #modal.folio-host .adventure-atlas .folio-viewport { height: 100%; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; scrollbar-width: thin; scrollbar-color: #987442 transparent; }
-  body #modal.folio-host .adventure-atlas .modal-scroll { height: auto; }
-  body #modal.folio-host .adventure-atlas .folio-scroll-hint { display: flex; }
-  .adventure-atlas .atlas-stage { height: auto; display: grid; gap: 28px; padding: 16px 8px 34px 12px; }
-  .adventure-atlas .atlas-paths { display: none; }
-  .adventure-atlas .atlas-location { position: relative; inset: auto; width: 100%; aspect-ratio: auto; transform: none; display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 15px; align-items: center; min-height: 140px; }
-  .adventure-atlas .atlas-location:not(:last-child)::after { content: ''; position: absolute; left: 56px; top: 116px; height: 46px; border-left: 2px dashed #b69c68; }
-  .adventure-atlas .atlas-node { position: relative; width: 112px; height: 112px; align-self: start; }
-  .adventure-atlas .atlas-node-art { background-image: var(--atlas-art); background-size: var(--crop-w) var(--crop-h); background-position: var(--crop-x) var(--crop-y); border-color: #9a8256; }
-  body #modal.folio-host .adventure-atlas .atlas-node h3 { top: 96px; left: -4px; width: 120px; transform: none; padding: 6px 2px; font-size: 15px; border-radius: 3px; background: linear-gradient(#efdeb6,#ccaf79); box-shadow: 0 3px 7px #0008; }
-  .adventure-atlas .atlas-badge { top: 82px; left: 9px; width: 30px; height: 30px; background: #211913; border: 1px solid #c4a167; border-radius: 50%; font-size: 15px; }
-  .adventure-atlas .atlas-location-info { display: block; position: static; transform: none; width: auto; max-width: none; padding: 0; border: 0; box-shadow: none; background: none; text-align: left; font-size: 13px; line-height: 1.6; pointer-events: auto; }
-  .adventure-atlas .atlas-location-info strong { font-weight: 500; }
-  .adventure-atlas .current .atlas-location-info span { color: #ffdb81; }
-  body #modal.folio-host .adventure-atlas > .atlas-footer { position: static; height: auto; flex: 0 0 auto; display: grid; gap: 12px; border-top: 1px solid #806039; padding-top: 12px; }
-  .atlas-journey { width: 100%; }
-  .atlas-progress { max-width: 100%; }
-  .atlas-relics { font-size: 11px; }
-  body #modal.folio-host .adventure-atlas #map-continue { width: 100%; min-height: 44px; background: linear-gradient(#f3dca1,#b88b48); border: 1px solid #ffe4ac; border-radius: 5px; font-size: 16px; }
+  #modal.folio-host .adventure-atlas .atlas-location:nth-of-type(1) { grid-area: 1 / 1; }
+  #modal.folio-host .adventure-atlas .atlas-location:nth-of-type(2) { grid-area: 1 / 2; }
+  #modal.folio-host .adventure-atlas .atlas-location:nth-of-type(3) { grid-area: 2 / 2; }
+  #modal.folio-host .adventure-atlas .atlas-location:nth-of-type(4) { grid-area: 2 / 1; }
+  #modal.folio-host .adventure-atlas .atlas-location:nth-of-type(5) { grid-area: 3 / 1; }
+  #modal.folio-host .adventure-atlas .atlas-location:nth-of-type(6) { grid-area: 3 / 2; }
+  #modal.folio-host .adventure-atlas .atlas-landmark { width: 166px; }
+  #modal.folio-host .adventure-atlas .atlas-chapter > span { display: none; }
+  #modal.folio-host .adventure-atlas .atlas-relics { max-width: 150px; }
+}
+@container (max-width: 570px) {
+  #modal.folio-host .adventure-atlas .atlas-stage {
+    grid-template-columns: minmax(0,1fr); grid-template-rows: none;
+    min-height: 0; gap: 38px; padding: 30px 22px 44px 32px;
+  }
+  #modal.folio-host .adventure-atlas .atlas-stage::before { background-size: auto 100%; }
+  #modal.folio-host .adventure-atlas .atlas-location:nth-of-type(n) { grid-area: auto; }
+  #modal.folio-host .adventure-atlas .atlas-node { display: grid; grid-template-columns: 116px minmax(0,1fr); align-items: center; gap: 20px; text-align: left; }
+  #modal.folio-host .adventure-atlas .atlas-landmark { width: 116px; margin: 0; }
+  #modal.folio-host .adventure-atlas .atlas-location-copy { align-items: flex-start; }
+  #modal.folio-host .adventure-atlas .atlas-name { min-width: 0; width: auto; margin: 0 0 9px; padding: 6px 9px; font-size: 18px; letter-spacing: .03em; }
+  #modal.folio-host .adventure-atlas .atlas-boss { font-size: 12px; }
+  #modal.folio-host .adventure-atlas .atlas-boss > span { display: block; }
+  #modal.folio-host .adventure-atlas .atlas-status { font-size: 11px; padding: 2px 7px; }
+  #modal.folio-host .adventure-atlas .atlas-pennant { width: 22px; height: 35px; left: -11px; top: 18px; }
+  #modal.folio-host .adventure-atlas .atlas-pennant svg { width: 14px; height: 17px; }
+  #modal.folio-host .adventure-atlas .atlas-number { width: 28px; height: 28px; font-size: 16px; left: -8px; }
+  #modal.folio-host .adventure-atlas .atlas-heading { gap: 10px; min-height: 55px; padding-right: 48px; }
+  #modal.folio-host .adventure-atlas .atlas-heading h2 { font-size: 24px; letter-spacing: .08em; }
+  #modal.folio-host .adventure-atlas .atlas-emblem { width: 39px; height: 39px; }
+  #modal.folio-host .adventure-atlas .atlas-kicker { font-size: 10px; letter-spacing: .1em; }
+  #modal.folio-host .adventure-atlas .atlas-chapter { gap: 0; }
+  #modal.folio-host .adventure-atlas .atlas-chapter strong { font-size: 22px; }
+  #modal.folio-host .adventure-atlas .atlas-chapter small { font-size: 12px; }
+  body #modal.folio-host .adventure-atlas > .atlas-footer { grid-template-columns: minmax(0,1fr) auto; gap: 12px; }
+  #modal.folio-host .adventure-atlas .atlas-focus { grid-column: 1 / -1; gap: 3px; }
+  #modal.folio-host .adventure-atlas .atlas-focus strong { font-size: 14px; }
+  #modal.folio-host .adventure-atlas .atlas-focus > span { font-size: 12px; }
+  #modal.folio-host .adventure-atlas .atlas-relics { max-width: none; padding-right: 0; border: 0; }
+  body #modal.folio-host .adventure-atlas #map-continue { min-width: 132px; gap: 10px; padding-inline: 12px; font-size: 15px; }
+}
+@media (max-width: 620px) {
+  body #modal.folio-host[data-type="map"] > section.adventure-atlas.folio-dialog { padding: 18px !important; gap: 12px; }
+  body #modal.folio-host .adventure-atlas > .modal-close { top: 24px !important; right: 19px !important; }
+}
+@media (max-width: 370px) {
+  body #modal.folio-host[data-type="map"] > section.adventure-atlas.folio-dialog { padding: 14px !important; }
+  #modal.folio-host .adventure-atlas .atlas-chapter { display: none; }
+  #modal.folio-host .adventure-atlas .atlas-node { grid-template-columns: 92px minmax(0,1fr); gap: 13px; }
+  #modal.folio-host .adventure-atlas .atlas-landmark { width: 92px; }
+  #modal.folio-host .adventure-atlas .atlas-stage { padding-left: 22px; padding-right: 12px; }
+}
+@media (max-height: 560px) and (min-width: 621px) {
+  body #modal.folio-host[data-type="map"] > section.adventure-atlas.folio-dialog { padding: 16px !important; gap: 10px; }
+  body #modal.folio-host .adventure-atlas > .atlas-heading { min-height: 44px; padding-bottom: 8px; }
+  body #modal.folio-host .adventure-atlas > .modal-close { top: 18px !important; right: 20px !important; }
+  body #modal.folio-host .adventure-atlas > .atlas-footer { grid-template-columns: minmax(0,1fr) auto; min-height: 48px; gap: 10px; }
+  #modal.folio-host .adventure-atlas .atlas-relics { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #modal.folio-host .adventure-atlas .atlas-node { transition: none; }
 }

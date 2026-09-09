@@ -218,7 +218,7 @@ const EmberDialogs = (() => {
         for (const el of [...box.children])
           if (
             !el.matches(
-              ".modal-close,.modal-heading,.covenant-heading,.modal-footer,.reward-footer,.atelier-foot",
+              ".modal-close,.modal-heading,.covenant-heading,.modal-footer,.reward-footer,.atelier-foot,.atlas-corners",
             )
           )
             content.append(el);
@@ -262,6 +262,12 @@ const EmberDialogs = (() => {
   }
   return Object.freeze({
     mount,
+    // A dialog-specific presentation may own observers or animation frames.
+    // Dispose them on close AND when another dialog replaces this one.
+    onClose(dispose) {
+      const previous = cleanup;
+      cleanup = () => { previous(); dispose(); };
+    },
     close: () => {
       cleanup();
     },

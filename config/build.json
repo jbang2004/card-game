@@ -19,6 +19,7 @@
   "UI": "ui.js",
   "TAVERN_STYLE": "tavern.css",
   "TAVERN_UI": "tavern-ui.js",
+  "ADVENTURE_MAP": "presentation/adventure-map.js",
   "REFINEMENT": "refinement.css",
   "EFFECTS": "effects.js",
   "COMBAT_PLAN": "presentation/combat.js",

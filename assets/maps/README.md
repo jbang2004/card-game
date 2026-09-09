@@ -1,11 +1,43 @@
-# Adventure atlas
+# Layered adventure map
 
-`adventure-atlas.png` is the 1536×1024 production scenery plate derived from the user's approved map reference with the built-in imagegen tool on 2026-09-10. Geography, decorative frame, location illustrations and blank parchment plaques are static art. All names, numbers, locks, progress, route segments and actions are live SVG/DOM in `src/tavern-ui.js`.
+The active map is assembled from independent artwork and live UI. No screen-sized UI bitmap is used.
 
-The desktop uses the reference artboard coordinates. Viewports narrower than 760px or shorter than 540px use a vertically scrolling itinerary; the same illustration is cropped with CSS for each landmark, with normal-size labels and fixed footer actions. This does not scale the desktop UI into a phone screen. Landscape art is deliberately retained as a single shared texture rather than loading six duplicate location images.
+## Runtime layers
 
-The `asset:maps/adventure-atlas.png` reference is embedded by `build.py` for the portable build and extracted to a content-addressed image in the HTTP build. Missing sources fail the build.
+- `walnut.webp`: repeating low-contrast walnut surface, under DOM borders and corner ornaments.
+- `terrain.webp`: continuous unlabelled parchment geography, fitted without distorting its aspect ratio.
+- `regions/*.webp`: six independently generated location illustrations, keyed by the campaign boss ID.
+- CSS: arched frames, paper nameplates, pennants, chapter medallions, selection/current/completed states.
+- SVG: route curves and waypoints measured from the current DOM landmark positions.
+- DOM: names, boss health, campaign progress, inspection details, relics and action controls.
 
-Generation prompt (built-in tool, reference-image edit):
+`src/presentation/adventure-map.js` owns presentation only. It reads the current campaign and never alters combat state. Its resize observer is disposed through `EmberDialogs.onClose`. The DOM order always remains 01–06 even where a serpentine desktop layout reverses a visual row.
 
-> Edit this exact image into a production game UI background. Preserve the exact 1536x1024 composition, all frame positions, tavern surround, parchment geography, six circular location illustrations and banners, nameplate shapes and all ornament. Only remove UI placeholder text/bars: erase gold rectangles and underline from top-left title plaque leaving plain dark wood; erase dark bars inside all six cream nameplates leaving blank parchment; remove numbers 01 02 03 and padlock symbols inside circular badges leaving blank dark medallions; remove text bars from gold bottom-right button leaving blank gold button and its arrow. Remove the bottom progress dots/line leaving dark wood; remove the dashed glowing route and its small waypoint dots across the map, restoring underlying terrain; remove special glowing outline around first location so all six locations have uniform thin antique gold rims. Keep the X close button. Absolutely preserve location centers, shape, size, surrounding illustration, frame, colors and visual fidelity; no redesign, no new text, no additional objects. These removed elements will be rendered dynamically in HTML. Output exact landscape reference aspect ratio.
+Desktop uses three columns, intermediate containers two, and portrait containers a single vertical itinerary. The normal font sizes and image proportions are retained. One vertical scroll surface owns overflow; the header and footer remain outside it. A scroll cue appears only when content actually overflows. Opening the map waits for all artwork to decode before revealing the landmarks, with a retry control on failure.
+
+## Artwork provenance and processing
+
+Generated with the built-in imagegen tool by three authorized asset subagents; reviewed and integrated by the main agent. Sources are in `sources/`; runtime images are WebP quality 88. Terrain retains 1536×1024, wood is 768×768, and each location is 640×640. Conversion uses the available `cwebp` tool; it does not crop or repaint the generated artwork.
+
+Common brief: premium Japanese fantasy RPG environments, fine etched detail and mineral-pigment painting, warm antique gold, ordered visual richness; no text, numbers, UI, frames, map badges or character portraits. Each asset is generated independently.
+
+| Source | Specific generation brief |
+| --- | --- |
+| terrain.png | Full-bleed subdued parchment world geography: volcanic northwest coast, northern ancient forest, violet northeastern mountains, southeastern glacier, southern ashlands, southwestern cold coast, a central river valley. Continuous terrain, no routes, compass or location markers. |
+| walnut.png | Full-bleed deep chocolate walnut, fine straight grain, subtle wear, uniform diffuse light, no plank seams, objects, edge lighting or decorations. |
+| warden.png | Obsidian Gothic gateway above a lava canyon; orange-gold molten rivers, charcoal mountain depth. Central architecture designed for an arch crop. |
+| queen.png | Mossy giant-tree arch and root sanctuary, elven carved ruins, emerald foliage, honey-gold forest light. |
+| oracle.png | Black-stone monastery tower under a violet moon, silver-purple stars, mist valleys and small antique-gold window lights. |
+| frost-v2.png | Silver-blue ice castle and glacier stairs; full tallest spire visible with generous sky above, central architecture with sky and mountains at corners. |
+| dragon.png | Dragon-shaped black-iron ridge supporting a volcanic fortress, gold-red lava and deep charcoal cliffs. |
+| moonkeeper.png | Silver-stone sea altar under an eclipse, ring arch, carved ancient oaths, midnight teal and cool gold. |
+
+The first frost illustration cropped the spire at the source edge. It was rejected and regenerated with a wider camera. `sources/frost.png` is retained as the rejected first version; only `frost-v2.png` feeds the active frost asset.
+
+`archive/adventure-atlas-v1.png` is the former whole-screen illustration, preserved as a design record. It is no longer referenced or packaged.
+
+## Review scope
+
+Main-agent review covered all eight generated assets and the revised frost artwork, plus the rendered local two-column map. Build and JavaScript syntax checks were run. No gameplay test suite or physical-device tests were run for this visual-only iteration.
+
+UI reference ledger: game-ui-designer's ui-patterns, game-ui-quality, hud-readability, responsive-ui-fit and mobile-input references were read. They informed fixed readable controls, container-driven layout, persistent footer actions and observer cleanup.
