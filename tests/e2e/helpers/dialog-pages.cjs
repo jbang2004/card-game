@@ -17,6 +17,10 @@ async function turnTo(page, selector) {
   );
   const prev = pane.locator(".folio-pager > button").first();
   while (await prev.isEnabled()) await prev.click();
+  const vertical = await pane.locator(".folio-viewport").evaluate(
+    (viewport) => getComputedStyle(viewport).overflowY === "auto",
+  );
+  if (vertical) await target.scrollIntoViewIfNeeded();
   for (let i = 0; i < 100; i++) {
     const inside = await target.evaluate((el) => {
       const v = el.closest(".folio-viewport").getBoundingClientRect();
@@ -50,7 +54,8 @@ async function assertDialogFit(page) {
               .filter((e) => e.clientHeight)
               .filter(
                 (e) =>
-                  !e.closest('#modal[data-type="contracts"]') ||
+                  (!e.closest('#modal[data-type="contracts"]') &&
+                    !e.closest('#modal[data-type="heroes"]')) ||
                   getComputedStyle(e).overflowY !== "auto",
               )
               .map((e) => e.scrollHeight - e.clientHeight),
@@ -72,7 +77,8 @@ async function assertDialogFit(page) {
       if (
         e.clientHeight &&
         e.scrollHeight > e.clientHeight + 2 &&
-        (!e.closest('#modal[data-type="contracts"]') ||
+        ((!e.closest('#modal[data-type="contracts"]') &&
+          !e.closest('#modal[data-type="heroes"]')) ||
           getComputedStyle(e).overflowY !== "auto")
       )
         errors.push(`vertical overflow ${e.scrollHeight - e.clientHeight}`);
