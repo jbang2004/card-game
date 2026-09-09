@@ -1,0 +1,11 @@
+# Adventure atlas
+
+`adventure-atlas.png` is the 1536×1024 production scenery plate derived from the user's approved map reference with the built-in imagegen tool on 2026-09-10. Geography, decorative frame, location illustrations and blank parchment plaques are static art. All names, numbers, locks, progress, route segments and actions are live SVG/DOM in `src/tavern-ui.js`.
+
+The desktop uses the reference artboard coordinates. Viewports narrower than 760px or shorter than 540px use a vertically scrolling itinerary; the same illustration is cropped with CSS for each landmark, with normal-size labels and fixed footer actions. This does not scale the desktop UI into a phone screen. Landscape art is deliberately retained as a single shared texture rather than loading six duplicate location images.
+
+The `asset:maps/adventure-atlas.png` reference is embedded by `build.py` for the portable build and extracted to a content-addressed image in the HTTP build. Missing sources fail the build.
+
+Generation prompt (built-in tool, reference-image edit):
+
+> Edit this exact image into a production game UI background. Preserve the exact 1536x1024 composition, all frame positions, tavern surround, parchment geography, six circular location illustrations and banners, nameplate shapes and all ornament. Only remove UI placeholder text/bars: erase gold rectangles and underline from top-left title plaque leaving plain dark wood; erase dark bars inside all six cream nameplates leaving blank parchment; remove numbers 01 02 03 and padlock symbols inside circular badges leaving blank dark medallions; remove text bars from gold bottom-right button leaving blank gold button and its arrow. Remove the bottom progress dots/line leaving dark wood; remove the dashed glowing route and its small waypoint dots across the map, restoring underlying terrain; remove special glowing outline around first location so all six locations have uniform thin antique gold rims. Keep the X close button. Absolutely preserve location centers, shape, size, surrounding illustration, frame, colors and visual fidelity; no redesign, no new text, no additional objects. These removed elements will be rendered dynamically in HTML. Output exact landscape reference aspect ratio.
