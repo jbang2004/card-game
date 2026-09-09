@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "provider": "built-in image_gen",
+  "assets": {
+    "starfire-seal": {
+      "source": "assets/ui/sources/starfire-seal.png",
+      "runtime": "assets/ui/starfire-seal.webp",
+      "sourceSha256": "0a66134e261076115e7a2e990adc66ece2f6064f9c173c0b938b9eb8398fe83b",
+      "runtimeSha256": "2c4e8ecec58d2c63348d70f105a6dbde6e1288c011d110a507a78aad02923d5f",
+      "purpose": "Main menu, brand and result emblem; original walnut and antique brass starfire seal.",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "runtimeDimensions": [
+        384,
+        384
+      ]
+    },
+    "cabinet-rim": {
+      "source": "assets/ui/sources/cabinet-rim.png",
+      "runtime": "assets/ui/cabinet-rim.webp",
+      "sourceSha256": "b75ce0099e70d228967b4b2e44e0e8e511e819c43cb1e5ac79421bde76c256f5",
+      "runtimeSha256": "132c8bf7c7f026b4203f7262077889fe95e2467d8a6722e2978fc4d7610a7aea",
+      "sourceDimensions": [
+        1536,
+        1024
+      ],
+      "runtimeDimensions": [
+        1024,
+        683
+      ],
+      "purpose": "Nine-slice brass and walnut frame, transparent center; menus and major dialogs."
+    },
+    "hero-laurel": {
+      "source": "assets/ui/sources/hero-laurel.png",
+      "runtime": "assets/ui/hero-laurel.webp",
+      "sourceSha256": "1d84cfe782409a07169e5f8de87488a1dc08968024cc301d7ec43de1f9e04ca9",
+      "runtimeSha256": "c51a1aed97f846df91f18cef268cde6a994b3890a2e61339432d16abc3a82465",
+      "sourceDimensions": [
+        2172,
+        724
+      ],
+      "runtimeDimensions": [
+        750,
+        250
+      ],
+      "purpose": "Open laurel crown for the hero selection portrait, warm bronze and amber; transparent central aperture.",
+      "sourcePrompt": "Use case: stylized-concept. Asset type: production transparent game UI crown ornament, ONE isolated object, landscape canvas.\nCreate an original beautifully hand-painted bronze laurel arch crown for the top of a hero portrait in a premium fantasy tabletop card game. A low wide inverted-U arch approximately 3:1 overall proportion, the curve rises gently in the middle; warm antique bronze laurel leaves sweep up from left and right toward one prominent SMALL amber starfire crystal at the top center. Small deep teal enamel insets only near the two tips. Strong simple silhouette that reads clearly at 250px wide and 75px high, carved chunky bevels, warm upper-left highlights and restrained dark recesses. Compatible with detailed walnut and antique-gold tavern UI and anime character paintings. The lower central opening MUST be completely empty transparent so a hero portrait shows through. No complete circle, no bottom bar, no rectangular frame, no portrait, no face, no letters, no words, no numbers, no logos, no watermark, no background scene. Real transparent alpha throughout outside the ornament and through its open middle, not checkerboard drawing. Entire ornament visible, generous transparent padding, straight-on orthographic view, crisp edges, polished authored game art.",
+      "processing": {
+        "crop": [
+          0,
+          0,
+          2172,
+          724
+        ],
+        "resize": "Lanczos",
+        "format": "WebP",
+        "quality": 92,
+        "alpha": "preserved",
+        "sourceAlphaRange": [
+          0,
+          255
+        ],
+        "runtimeAlphaRange": [
+          0,
+          255
+        ]
+      }
+    },
+    "collection-spine": {
+      "source": "assets/ui/sources/collection-spine-v2.png",
+      "runtime": "assets/ui/collection-spine.webp",
+      "sourceSha256": "aea513073be4b12d76efc80f3039e616a0cd6f60bfc0bfe009a7b1d1f5dffd3b",
+      "runtimeSha256": "36e1e0de2ce1492ee5cf5680198a2b5d0ac95c1f55128de9a51f3e6467806653",
+      "sourceDimensions": [
+        1060,
+        1484
+      ],
+      "runtimeDimensions": [
+        106,
+        1464
+      ],
+      "purpose": "Full-height narrow 13.81:1 collection book binding with five leather sections; dedicated sidebar/page divider.",
+      "sourcePrompt": "Use case: stylized-concept. Asset type: production transparent UI book binding strip for a premium fantasy card game.\nCreate ONE very tall very slender continuous leather binding strip for the left edge of an open collection book. Crucial physical proportions: the visible object is FOURTEEN TIMES taller than it is wide, around 100px wide and 1400px tall, on a portrait canvas. Straight-on orthographic, no perspective. The physical strip has almost constant narrow width from top to bottom; it is a thin entire page-edge binding, NOT a chunky book spine or handle. Five long burgundy-brown leather sections stacked vertically, separated by four narrow antique-brass horizontal binding bands with tiny round rivets. Top and bottom are thin flat copper-gold end caps. Restrained star-tooling only, no large medallions, no central buckle, no protruding handles, no big gems. Hand-painted warm dark leather, worn bronze edges, crisp upper-left edge lighting consistent with crafted walnut and old gold tavern interface. All five leather segments together fill the entire 14:1 strip, no gaps. Strong clear silhouette, no micro-detail noise. Center the full very slender vertical object with margin around it; actual exported object must be entirely visible with both end caps. Real transparent background outside the object, no halo, no cast shadow, no scene, no floor, no letters, no numbers, no text, no watermark. This will display 42px wide and about 600px tall, so the 14:1 physical ratio is essential.",
+      "processing": {
+        "crop": [
+          478,
+          6,
+          584,
+          1470
+        ],
+        "resize": "none",
+        "format": "WebP",
+        "quality": 92,
+        "alpha": "preserved",
+        "sourceAlphaRange": [
+          0,
+          255
+        ],
+        "runtimeAlphaRange": [
+          0,
+          255
+        ],
+        "revisionReason": "First 5.6:1 spine became a short floating handle in the narrow column gap. Regenerated as a continuous near 14:1 book binding; no anisotropic scaling of the old image."
+      },
+      "previousSource": "assets/ui/sources/collection-spine.png"
+    },
+    "covenant-ring": {
+      "source": "assets/ui/sources/covenant-ring.png",
+      "runtime": "assets/ui/covenant-ring.webp",
+      "sourceSha256": "f50acfaf5bc55e0bccdd925068ab4056f4b7e8050673456233c8d488361cd3d0",
+      "runtimeSha256": "0ecfd26dd0dda5150c4e00016e9cfe0e9b27056c503e320cfbe25dc5905d02a4",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "runtimeDimensions": [
+        384,
+        384
+      ],
+      "purpose": "Four-stone covenant altar ring with transparent center; header and ritual visual identity.",
+      "sourcePrompt": "Use case: stylized-concept. Asset type: production transparent game UI ritual altar ring badge, ONE isolated object, square canvas.\nCreate an original premium hand-painted fantasy card-game covenant ritual ring, front-facing orthographic circular physical metal ring. Oxidized silver-bronze with warm bronze bevels and small dark teal enamel channels, four substantial faceted rune stones at cardinal directions: top amber, right pale icy teal, bottom restrained emerald teal, left moon-silver. Each stone has ONE simple carved abstract geometric rune, NOT letters or numerals. Strong clear circular silhouette and broad bevels, authored forms must read at 96px diameter. Interior hole is completely empty transparent and at least 62 percent of outer diameter, ready for dynamic UI content. Warm upper-left studio-like painted light, rich darker recesses, no halo outside object, no swirling particles. Fits walnut antique gold tabletop tavern aesthetic alongside anime artwork. Entire ring visible with generous transparent padding. Real transparent alpha outside and inside, NOT black background or checkerboard. No text, no logo, no watermark, no scene, no portrait. Avoid copying any existing game emblems.",
+      "processing": {
+        "crop": [
+          0,
+          0,
+          1254,
+          1254
+        ],
+        "resize": "Lanczos",
+        "format": "WebP",
+        "quality": 92,
+        "alpha": "preserved",
+        "sourceAlphaRange": [
+          0,
+          255
+        ],
+        "runtimeAlphaRange": [
+          0,
+          255
+        ]
+      }
+    }
+  }
+}

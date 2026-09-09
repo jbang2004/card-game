@@ -10,6 +10,7 @@ tests/*-run.log
 /dist/
 /src/audio-assets.js
 /src/vfx-assets.js
+/src/ui-assets.js
 /.venv/
 /venv/
 /.pytest_cache/

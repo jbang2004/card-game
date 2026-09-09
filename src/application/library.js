@@ -15,7 +15,8 @@ const EmberLibrary = (() => {
     let collection = { decks: [], activeId: null },
       currentId = null,
       deckName = "",
-      storageError = "";
+      storageError = "",
+      toolsOpen = false;
     const presets = () =>
       D.archetypes.filter((a) => a.classId === rules.classFor(D, deckHero));
     function loadRecord(record) {
@@ -80,11 +81,13 @@ const EmberLibrary = (() => {
       renderLibrary();
     }
     function renderLibrary() {
+      const oldTools = document.getElementById("deck-tools");
+      if (oldTools) toolsOpen = oldTools.open;
       const showingDeck = !!document.querySelector(
         ".library-box.touch-show-deck",
       );
       showModal(
-        `<section class="modal-box library-box"><div class="library-heading"><div><h2>万象秘典</h2><p>${D.cards.filter((c) => !c.token).length} 张卡牌 · 诸神同辉</p></div><input id="library-search" class="library-search" placeholder="搜索名称、关键词或效果…" aria-label="搜索卡牌" value="${escape(filterSearch)}"></div><div class="library-layout"><div class="library-main"><div class="filter-bar" id="filter-bar"><button class="filter-btn active" data-type="all">全部</button><button class="filter-btn" data-type="minion">随从</button><button class="filter-btn" data-type="spell">法术</button><button class="filter-btn" data-type="weapon">武器</button><span class="spacer"></span><button class="filter-btn mana active" data-mana="all">费用</button>${[0, 1, 2, 3, 4, 5, 6, 7].map((i) => `<button class="filter-btn mana" data-mana="${i}">${i === 7 ? "7+" : i}</button>`).join("")}</div><div class="library-grid" id="library-grid"></div><div class="library-foot" id="library-foot">点击卡牌加入牌组 · 右侧点击移除 · ${rules.summary(D)}</div></div><aside class="deck-editor${storageError ? " has-storage-error" : ""}"><h3>你的牌组 <span class="deck-total" id="deck-total"></span></h3><p class="deck-intro">职业与中立牌 · ${D.deckRules.size} 张构筑</p><div class="saved-deck-controls"><label>已保存牌组<select id="deck-saved" class="library-search"><option value="">新牌组草稿</option>${collection.decks.map((d) => `<option value="${d.id}" ${d.id === currentId ? "selected" : ""}>${escape(d.name)} · ${escape(D.heroes.find((h) => h.id === d.heroId)?.name || "待调整")}</option>`).join("")}</select></label><label>牌组名称<input id="deck-name" class="library-search" maxlength="40" value="${escape(deckName)}"></label></div><label>英雄 <select id="deck-class" class="library-search">${D.heroes.map((h) => `<option value="${h.id}" ${h.id === deckHero ? "selected" : ""}>${h.name} · ${D.classNames[h.classId]}</option>`).join("")}</select></label><div class="deck-presets"><select class="library-search" id="deck-preset" aria-label="预设职业" style="width:160px;padding:7px">${presets()
+        `<section class="modal-box library-box"><div class="library-heading"><div><h2>万象秘典</h2><p>${D.cards.filter((c) => !c.token).length} 张卡牌 · 诸神同辉</p></div><input id="library-search" class="library-search" placeholder="搜索名称、关键词或效果…" aria-label="搜索卡牌" value="${escape(filterSearch)}"></div><div class="library-layout"><div class="library-main"><div class="filter-bar" id="filter-bar"><button class="filter-btn active" data-type="all">全部</button><button class="filter-btn" data-type="minion">随从</button><button class="filter-btn" data-type="spell">法术</button><button class="filter-btn" data-type="weapon">武器</button><span class="spacer"></span><button class="filter-btn mana active" data-mana="all">费用</button>${[0, 1, 2, 3, 4, 5, 6, 7].map((i) => `<button class="filter-btn mana" data-mana="${i}">${i === 7 ? "7+" : i}</button>`).join("")}</div><div class="library-grid" id="library-grid"></div><div class="library-foot" id="library-foot">点击卡牌加入牌组 · 右侧点击移除 · ${rules.summary(D)}</div></div><aside class="deck-editor${storageError ? " has-storage-error" : ""}"><div class="deck-identity"><img src="${EmberArt.character(D.heroes.find((h) => h.id === deckHero))}" alt=""><div><small>${D.classNames[rules.classFor(D, deckHero)]} · 你的牌组</small><input id="deck-name" class="deck-title-input" aria-label="牌组名称" maxlength="40" value="${escape(deckName)}"></div><span class="deck-total" id="deck-total"></span></div><details id="deck-tools" class="deck-tools" ${toolsOpen ? "open" : ""}><summary><b class="deck-tools-title">${toolsOpen ? "完成调整，返回牌组" : "调整套牌"}</b><span>英雄 · 预设 · 契约</span></summary><div class="deck-tools-body"><div class="saved-deck-controls"><label>已保存牌组<select id="deck-saved" class="library-search"><option value="">新牌组草稿</option>${collection.decks.map((d) => `<option value="${d.id}" ${d.id === currentId ? "selected" : ""}>${escape(d.name)} · ${escape(D.heroes.find((h) => h.id === d.heroId)?.name || "待调整")}</option>`).join("")}</select></label></div><label>英雄 <select id="deck-class" class="library-search">${D.heroes.map((h) => `<option value="${h.id}" ${h.id === deckHero ? "selected" : ""}>${h.name} · ${D.classNames[h.classId]}</option>`).join("")}</select></label><div class="deck-presets"><select class="library-search" id="deck-preset" aria-label="预设职业" style="width:160px;padding:7px">${presets()
           .map(
             (a) =>
               `<option value="${a.id}" ${a.id === presetId ? "selected" : ""}>${a.name}</option>`,
@@ -101,10 +104,19 @@ const EmberLibrary = (() => {
                 `<label><input type="checkbox" data-deck-contract="${c.id}" ${editContracts.includes(c.id) ? "checked" : ""}><strong>${c.name}</strong><span>${EmberContracts.describe(c)}</span></label>`,
             )
             .join("") || "该职业尚无契约。"
-        }</details><p class="deck-plan" id="deck-plan"></p><p role="status" id="deck-warning"></p>${storageError ? '<button class="ghost-btn" id="deck-rebuild">重建测试卡组收藏</button>' : ""}<div class="deck-list" id="deck-list"></div><div class="deck-curve" id="deck-curve"></div><div class="deck-actions"><button class="gold-btn small-btn" id="deck-save">保存牌组</button><button class="ghost-btn small-btn" id="deck-copy">另存为新牌组</button><button class="ghost-btn small-btn" id="deck-play">选择英雄</button></div></aside></div></section>`,
+        }</details><p class="deck-plan" id="deck-plan"></p></div></details><div role="status" id="deck-warning"></div>${storageError ? '<button class="ghost-btn" id="deck-rebuild">重建测试卡组收藏</button>' : ""}<div class="deck-list" id="deck-list"></div><div class="deck-curve" id="deck-curve"></div><div class="deck-actions"><button class="gold-btn small-btn" id="deck-save">保存牌组</button><button class="ghost-btn small-btn" id="deck-copy">另存为新牌组</button><button class="ghost-btn small-btn" id="deck-play">选择英雄</button></div></aside></div></section>`,
         "library",
       );
       if (showingDeck) $("touch-deck-tab")?.click();
+      const toolsPanel = $("deck-tools");
+      toolsPanel.ontoggle = () => {
+        if (toolsPanel.isConnected) {
+          toolsOpen = toolsPanel.open;
+          toolsPanel.querySelector(".deck-tools-title").textContent = toolsOpen
+            ? "完成调整，返回牌组"
+            : "调整套牌";
+        }
+      };
       if ($("deck-rebuild"))
         $("deck-rebuild").onclick = () => {
           const result = deckStore.reset();
@@ -232,7 +244,7 @@ const EmberLibrary = (() => {
                 `<button class="library-item" data-add="${c.id}" title="${c.name}：${c.text}">${cardHTML(c)}<span class="add-label">+ 加入牌组</span><span class="owned-count">${editDeck.filter((id) => id === c.id).length} / ${rules.copyLimit(D, c)}</span></button>`,
             )
             .join("")
-        : '<p style="color:#879990;font-size:12px;padding:25px;grid-column:1/-1">没有符合筛选条件的卡牌。</p>';
+        : '<p class="library-empty">没有符合筛选条件的卡牌。<br>试试其他关键词或费用。</p>';
       $("library-foot").textContent =
         "显示 " + list.length + ` 张可用职业与中立牌 · ${rules.summary(D)}`;
       document.querySelectorAll("[data-add]").forEach((b) => {
@@ -263,10 +275,12 @@ const EmberLibrary = (() => {
     function renderDeck() {
       window.EmberMobile?.syncDeck(editDeck.length);
       const validation = rules.check(D, editDeck, deckHero);
-      $("deck-warning").textContent =
-        storageError ||
-        [...new Set(validation.errors)].join("；") ||
-        "牌组可用";
+      const issues = [...new Set(validation.errors)];
+      $("deck-warning").innerHTML = storageError
+        ? escape(storageError)
+        : issues.length
+          ? `<details class="deck-issues"><summary>牌组待调整 · ${issues.length} 项问题</summary><p>${issues.map(escape).join("；")}</p></details>`
+          : "";
       $("deck-plan").textContent = D.archetypes.find(
         (a) => a.id === presetId,
       ).plan;
@@ -283,7 +297,7 @@ const EmberLibrary = (() => {
         .sort((a, b) => (D.byId[a]?.cost ?? 0) - (D.byId[b]?.cost ?? 0))
         .map((id) => {
           const c = D.byId[id] || { cost: "?", name: `未知卡牌 ${id}` };
-          return `<button class="deck-row" data-remove="${escape(id)}" title="点击移除一张 ${escape(c.name)}"><span class="cost">${c.cost}</span><span>${escape(c.name)}</span><span class="count">${counts[id] > 1 ? "×" + counts[id] : c.rarity === "legendary" ? "✦" : "1"}</span></button>`;
+          return `<button class="deck-row" data-remove="${escape(id)}" title="点击移除一张 ${escape(c.name)}"><span class="cost">${c.cost}</span>${D.byId[id] ? `<img class="deck-row-art" src="${EmberArt.card(c)}" alt="">` : ""}<span class="deck-row-name">${escape(c.name)}</span><span class="count">${counts[id] > 1 ? "×" + counts[id] : c.rarity === "legendary" ? "✦" : "1"}</span></button>`;
         })
         .join("");
       const curve = Array(8).fill(0);

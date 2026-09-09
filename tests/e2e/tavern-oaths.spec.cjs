@@ -1,3 +1,4 @@
+const { openDeckTools } = require("./helpers/deck-tools.cjs");
 const { test, expect } = require("@playwright/test");
 async function ready(page) {
   await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
@@ -30,6 +31,7 @@ test("collection: all presets, class filters, rule text and expansion artwork", 
     ),
   );
   for (const hero of ["mage", "paladin", "ranger"]) {
+    await openDeckTools(page);
     await page.locator("#deck-class").selectOption(hero);
     await expect(page.locator("#deck-preset option")).toHaveCount(
       await page.evaluate(
@@ -41,7 +43,9 @@ test("collection: all presets, class filters, rule text and expansion artwork", 
       .locator("#deck-preset option")
       .evaluateAll((xs) => xs.map((x) => x.value));
     for (const id of ids) {
+      await openDeckTools(page);
       await page.locator("#deck-preset").selectOption(id);
+      await openDeckTools(page);
       await page.locator("#deck-reset").click();
       await expect(page.locator("#deck-total")).toHaveText("30/30");
       await expect(page.locator("#deck-save")).toBeEnabled();

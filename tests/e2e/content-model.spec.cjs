@@ -1,3 +1,4 @@
+const { openDeckTools } = require("./helpers/deck-tools.cjs");
 const { test, expect } = require("@playwright/test");
 const D = require("../../src/data.js");
 async function ready(page) {
@@ -35,7 +36,9 @@ test("obsolete deck can be reset; two current named decks persist and launch ind
   await page.locator("#deck-rebuild").click();
   await page.locator("#deck-name").fill("我的星火");
   await page.locator("#deck-save").click();
+  await openDeckTools(page);
   await page.locator("#deck-preset").selectOption("mage_frost");
+  await openDeckTools(page);
   await page.locator("#deck-reset").click();
   await page.locator("#deck-name").fill("我的永冬");
   await page.locator("#deck-copy").click();
@@ -50,6 +53,7 @@ test("obsolete deck can be reset; two current named decks persist and launch ind
   await ready(page);
   await page.locator("#collection-nav").click();
   await expect(page.locator("#deck-name")).toHaveValue("我的永冬");
+  await openDeckTools(page);
   await page.locator("#deck-saved").selectOption("deck_1");
   await expect(page.locator("#deck-name")).toHaveValue("我的星火");
   await page.locator("#deck-name").fill("星火改名");

@@ -1,3 +1,4 @@
+const { openDeckTools } = require("./helpers/deck-tools.cjs");
 const { test, expect } = require("@playwright/test");
 const gods = [
   ["mage", "jingchen", "stars"],
@@ -107,12 +108,19 @@ test("ranger may choose moon or hunt but cannot equip both gods; named loadout k
   await page.goto("./?debug=1");
   await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
   await page.locator("#collection-nav").click();
+  await openDeckTools(page);
   await page.locator("#deck-class").selectOption("ranger");
+  await openDeckTools(page);
   await page.locator("#deck-reset").click();
+  await openDeckTools(page);
   await page.locator("#deck-contracts summary").click();
   await expect(page.locator('[data-deck-contract="fenlos"]')).toBeChecked();
-  await expect(page.locator('[data-deck-contract="eclipsewolf"]')).not.toBeChecked();
-  await expect(page.locator('[data-deck-contract="moonguard"]')).not.toBeChecked();
+  await expect(
+    page.locator('[data-deck-contract="eclipsewolf"]'),
+  ).not.toBeChecked();
+  await expect(
+    page.locator('[data-deck-contract="moonguard"]'),
+  ).not.toBeChecked();
   await page.locator('[data-deck-contract="fenlos"]').uncheck();
   await page.locator('[data-deck-contract="selmyra"]').check();
   await page.locator("#deck-name").fill("游侠的冥月之誓");

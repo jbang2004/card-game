@@ -2854,3 +2854,2275 @@ body.mobile-portrait .covenant-card.divine > img {
   min-height: 0;
   object-position: 50% 20%;
 }
+
+/* v0.15 · The Starfire cabinet. Shared material, semantic state, then geometry.
+   Art apertures remain rectangular; live numbers and rules never enter assets. */
+:root {
+  --ui-display: "Songti SC", "STSong", "SimSun", Georgia, serif;
+  --walnut-deep: #1a100c;
+  --walnut-face: #38251a;
+  --brass: #b18a4f;
+  --brass-light: #f0d598;
+  --paper: #eeddb5;
+  --paper-ink: #32271c;
+  --ink: #f5e5c5;
+  --ink-secondary: #d1bc95;
+  --focus-light: #a9e5d2;
+  --available-light: #80cdb3;
+  --danger-ink: #a23930;
+  --panel-wood:
+    linear-gradient(100deg, #150e09c9, #4a3022b8 45%, #25190ed9),
+    var(--wood-texture);
+  --panel-shadow:
+    inset 0 1px #ffe8b27a, inset 0 0 0 5px #160c08, inset 0 0 0 6px #ad845455,
+    0 5px 0 #120a06, 0 7px 0 #6c492b, 0 25px 60px #0009;
+}
+[data-class="mage"],
+[data-hero-class="mage"] {
+  --class-metal: #8ca6c2;
+  --class-deep: #273751;
+}
+[data-class="paladin"],
+[data-hero-class="paladin"] {
+  --class-metal: #ddbe7b;
+  --class-deep: #705029;
+}
+[data-class="ranger"],
+[data-hero-class="ranger"] {
+  --class-metal: #92b69b;
+  --class-deep: #2b493b;
+}
+[data-class="neutral"],
+[data-hero-class="boss"] {
+  --class-metal: #b7a78c;
+  --class-deep: #51463a;
+}
+[data-ritual="stars"] {
+  --ritual-color: #e8b976;
+  --ritual-well: #22273a;
+}
+[data-ritual="dawn"] {
+  --ritual-color: #f0d78c;
+  --ritual-well: #42341c;
+}
+[data-ritual="hunt"] {
+  --ritual-color: #9dd1b0;
+  --ritual-well: #1a342b;
+}
+[data-ritual="moon"] {
+  --ritual-color: #b9b4e3;
+  --ritual-well: #28243b;
+}
+body .modal-box,
+body.touch-layout #modal .modal-box {
+  border-radius: 12px 28px 12px 28px;
+  border: 2px solid var(--brass);
+  background: var(--panel-wood);
+  background-size: auto, 440px;
+  box-shadow: var(--panel-shadow);
+}
+body .modal-box::before,
+body .modal-box::after {
+  pointer-events: none;
+}
+body .modal-heading h2,
+body .library-heading h2,
+body .covenant-heading h2,
+body .hero-option h3,
+body .result-title,
+body .relic-choice h3 {
+  font-family: var(--ui-display);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+body .modal-heading {
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+}
+body .modal-heading .eyebrow {
+  letter-spacing: 0.18em;
+  font-size: 11px;
+}
+body .modal-heading h2 {
+  font-size: 30px;
+}
+body .modal-heading p {
+  margin-top: 8px;
+}
+body .modal-close {
+  border-radius: 50%;
+  right: 18px;
+  top: 18px;
+  z-index: 12;
+}
+body .modal-box.framed-dialog,
+body.touch-layout #modal .modal-box.framed-dialog {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: min(850px, 92vh);
+}
+body .framed-dialog > .modal-heading,
+body .framed-dialog > .covenant-heading,
+body .framed-dialog > .modal-footer,
+body .framed-dialog > .reward-footer {
+  flex: 0 0 auto;
+}
+body .modal-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 8px 8px;
+  margin: 0 -8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--brass) var(--walnut-deep);
+}
+body .framed-dialog > .modal-footer,
+body .framed-dialog > .reward-footer {
+  position: relative;
+  margin-top: 14px;
+  padding-top: 14px;
+  padding-bottom: 2px;
+  border-top: 1px solid #b18a4f66;
+}
+body .gold-btn,
+body.touch-layout .gold-btn {
+  border-radius: 6px 12px 6px 12px;
+  background: linear-gradient(
+    180deg,
+    #ffe7ad 0%,
+    #dbb76c 14%,
+    #ba8740 80%,
+    #e8c989 100%
+  );
+  transition:
+    filter 130ms,
+    transform 130ms,
+    box-shadow 130ms;
+}
+body .gold-btn:hover:not(:disabled) {
+  filter: brightness(1.12);
+  box-shadow:
+    inset 0 0 0 1px #fff0cb,
+    inset 0 3px #fff0bd88,
+    0 4px #392318,
+    0 6px #977341,
+    0 8px 22px #e3b25338;
+}
+body .ghost-btn,
+body .filter-btn,
+body .text-btn {
+  transition:
+    filter 130ms,
+    transform 130ms;
+}
+body button:focus-visible,
+body input:focus-visible,
+body select:focus-visible,
+body summary:focus-visible {
+  outline: 3px solid var(--focus-light);
+  outline-offset: 3px;
+}
+body .filter-btn.active {
+  background: var(--primary-fill);
+  color: var(--paper-ink);
+  box-shadow:
+    inset 0 1px #fff1c6,
+    0 2px 0 #452917;
+}
+body .library-search,
+body .deck-title-input {
+  color: var(--ink);
+  background: #1b120dcc;
+  border-color: #ae855062;
+}
+
+/* Forged card rims: material and type identity around one untouched art window. */
+body .card,
+body .card.common,
+body .card.rare,
+body .card.epic,
+body .card.legendary {
+  --rarity-metal: #a99a7c;
+  border: 2px solid #3c2a1b;
+  border-radius: 9px;
+  background: linear-gradient(
+    130deg,
+    #f1ddaa 0%,
+    #aa8451 12%,
+    #513a27 36%,
+    #c7a371 72%,
+    #6e4b2e
+  );
+  box-shadow:
+    inset 0 0 0 1px #f4dbab,
+    inset 0 0 0 3px #704c2e,
+    0 3px 0 #28180f,
+    0 5px 8px #0008;
+}
+body .card.rare {
+  --rarity-metal: #7cb9dd;
+}
+body .card.epic {
+  --rarity-metal: #ba9bda;
+}
+body .card.legendary {
+  --rarity-metal: #efc267;
+  border-color: #93652f;
+}
+body .card .card-inner {
+  inset: 5px;
+  border: 1px solid #795839;
+  background: radial-gradient(ellipse at 50% 30%, #fbefd0, var(--paper));
+  box-shadow: inset 0 0 12px #76512d27;
+}
+body .card .card-art {
+  height: 54%;
+}
+body .card .card-title {
+  top: 54%;
+  height: 13%;
+  background: linear-gradient(#51402c, #271b13);
+  border-top: 2px solid var(--class-metal, #b6a17b);
+  border-bottom: 1px solid #b39360;
+  padding: 0 10%;
+  color: #fff0d0;
+  font-weight: 750;
+}
+body .card .card-text {
+  top: 69%;
+  line-height: 1.4;
+}
+body .card .card-type {
+  font-size: 8px;
+  bottom: 5%;
+}
+body .card-class-seal {
+  position: absolute;
+  z-index: 5;
+  right: 4%;
+  top: 48%;
+  width: 15%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--class-metal, #b8a281);
+  border-radius: 50%;
+  color: var(--class-metal, #d6c7a5);
+  background: var(--class-deep, #3e3329);
+  box-shadow:
+    0 2px 3px #0008,
+    inset 0 1px #fff3;
+  pointer-events: none;
+}
+.card-class-seal svg {
+  width: 70%;
+  height: 70%;
+}
+body .card-rarity {
+  display: block;
+  top: auto;
+  bottom: 2.5%;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  border: 1px solid #59432b;
+  background: var(--rarity-metal);
+  box-shadow: inset 1px 1px #fff7;
+  transform: translateX(-50%) rotate(45deg);
+}
+body .card .card-cost {
+  border-radius: 30% 30% 40% 40%;
+  border: 2px solid #c8e2df;
+  background: radial-gradient(
+    ellipse at 30% 15%,
+    #93d4e4,
+    #34738c 44%,
+    #133348 85%
+  );
+  color: #fff;
+  box-shadow:
+    inset 0 0 0 1px #102f45,
+    0 2px 0 #172b32,
+    1px 3px 4px #000a;
+}
+body .card .stat.atk,
+body .minion .stat.atk {
+  border-radius: 22% 45% 25% 42%;
+  background: linear-gradient(145deg, #f8df8e, #a3833e 48%, #624523);
+  border: 2px solid #f2db9d;
+}
+body .card .stat.hp,
+body .minion .stat.hp,
+body .hero-health {
+  border-radius: 45% 45% 48% 48%;
+  background: radial-gradient(
+    ellipse at 35% 20%,
+    #d67858,
+    #93432f 50%,
+    #51271e
+  );
+  border: 2px solid #f0c6a0;
+}
+body .card.weapon {
+  border-radius: 3px;
+}
+body .card.weapon .card-title {
+  border-top-width: 3px;
+}
+body .card.spell {
+  border-radius: 13px 13px 6px 6px;
+}
+body .card.legendary .card-decoration {
+  display: block;
+  position: absolute;
+  z-index: 4;
+  top: -3px;
+  left: 35%;
+  width: 30%;
+  height: 12px;
+  background: linear-gradient(#ffedb7, #aa6d29);
+  clip-path: polygon(
+    0 10%,
+    25% 40%,
+    50% 0,
+    75% 40%,
+    100% 10%,
+    88% 85%,
+    50% 100%,
+    12% 85%
+  );
+  pointer-events: none;
+}
+body .hand-card.playable .card {
+  box-shadow:
+    inset 0 0 0 1px #d9eeb9,
+    0 3px 0 #1c251d,
+    0 0 0 2px #80cdb37a,
+    0 6px 10px #0009;
+}
+body .hand-card.selected .card {
+  outline: 2px solid var(--focus-light);
+  outline-offset: 3px;
+}
+body:not(.touch-layout) .hand-card:hover {
+  transform: translateX(calc(-50% + var(--x))) translateY(-10px);
+}
+body:not(.touch-layout) .hand-card .card .card-text {
+  font-size: 11px;
+  line-height: 1.3;
+}
+body:not(.touch-layout) .hand-card .card .card-title {
+  font-size: 12px;
+}
+body:not(.touch-layout) .compact-hand .card .card-text {
+  font-size: 10px;
+}
+body .card-preview .card .card-text {
+  font-size: 15px;
+  line-height: 1.5;
+}
+body .card-preview .card .card-title {
+  font-size: 19px;
+}
+body .card-preview .card .card-type {
+  font-size: 10px;
+}
+body .card-preview {
+  filter: drop-shadow(0 12px 18px #0009);
+}
+
+/* The collection is a folio; its right-hand inventory remains the main task. */
+body:not(.touch-layout) .library-box {
+  width: 1400px;
+  height: 850px;
+  padding: 24px 30px;
+}
+body .library-heading {
+  margin-bottom: 14px;
+  padding-right: 42px;
+}
+body .library-heading h2 {
+  color: var(--ink);
+  font-size: 30px;
+}
+body .library-layout {
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 24px;
+}
+body .library-main {
+  min-width: 0;
+}
+body .filter-bar {
+  gap: 6px;
+  padding: 0 0 12px;
+}
+body .filter-btn {
+  min-width: 32px;
+  min-height: 36px;
+}
+body .library-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px 16px;
+  align-content: start;
+}
+body .library-item {
+  min-width: 0;
+  padding: 0 2px 18px;
+  position: relative;
+}
+body .library-item .card {
+  width: 100%;
+  height: auto;
+  min-height: 280px;
+  aspect-ratio: auto;
+  padding: 5px;
+}
+body .library-item .card-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  inset: auto;
+  width: 100%;
+  height: auto;
+}
+body .library-item .card .card-art {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: 136px;
+  min-height: 0;
+  aspect-ratio: auto;
+}
+body .library-item .card .card-title {
+  position: relative;
+  inset: auto;
+  height: auto;
+  min-height: 32px;
+  padding: 5px 8%;
+  font-size: 15px;
+}
+body .library-item .card .card-text {
+  position: relative;
+  inset: auto;
+  min-height: 78px;
+  margin: 0;
+  padding: 8px 6px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+body .library-item .card .card-type {
+  position: relative;
+  inset: auto;
+  margin: 0;
+  padding: 6px 28px 10px;
+  font-size: 8px;
+  min-height: 38px;
+  border: 0;
+}
+body .library-item .card-class-seal {
+  top: 127px;
+  width: 23px;
+}
+body .library-item .card .stat {
+  bottom: 2%;
+  width: 34px;
+  height: 34px;
+  font-size: 24px;
+}
+body .library-item .card-cost {
+  width: 37px;
+  height: 41px;
+  font-size: 27px;
+}
+body .library-item .card-rarity {
+  display: block;
+}
+body .library-item .add-label {
+  bottom: 0;
+  font-size: 11px;
+}
+body .library-item .owned-count {
+  bottom: 0;
+  font-size: 11px;
+}
+body .library-item:hover .card {
+  filter: brightness(1.05);
+}
+body .library-empty {
+  grid-column: 1/-1;
+  padding: 36px;
+  color: var(--ink-secondary);
+  font-size: 16px;
+  line-height: 1.8;
+}
+body:not(.touch-layout) .deck-editor {
+  padding: 14px;
+  overflow: hidden;
+  border-radius: 6px 18px 6px 18px;
+}
+body .deck-identity {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+  min-width: 0;
+}
+.deck-identity > img {
+  width: 42px;
+  height: 52px;
+  object-fit: cover;
+  object-position: 50% 22%;
+  border: 1px solid var(--brass);
+  border-radius: 45% 45% 6px 6px;
+}
+.deck-identity > div {
+  flex: 1;
+  min-width: 0;
+}
+.deck-identity small {
+  font-size: 11px;
+  color: var(--ink-secondary);
+}
+body .deck-title-input {
+  width: 100%;
+  min-width: 0;
+  padding: 5px 0;
+  border: 0;
+  border-bottom: 1px solid #b18a4f44;
+  background: transparent;
+  font: 700 18px/1.3 var(--ui-display);
+}
+body .deck-total {
+  font:
+    700 19px/1 Arial,
+    sans-serif;
+}
+body .deck-tools {
+  flex: 0 0 auto;
+  border-top: 1px solid #b18a4f66;
+  border-bottom: 1px solid #b18a4f66;
+  margin-bottom: 8px;
+}
+body .deck-tools > summary {
+  padding: 10px 0;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--ink);
+}
+.deck-tools > summary > span {
+  float: right;
+  font-size: 11px;
+  color: var(--ink-secondary);
+  margin-top: 2px;
+}
+body .deck-tools-body {
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 4px 3px 10px;
+  scrollbar-width: thin;
+}
+body .deck-tools-body .library-search {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  margin: 4px 0 8px;
+  padding: 7px 9px;
+  font-size: 13px;
+}
+body .deck-tools-body label {
+  font-size: 13px;
+}
+body .deck-tools-body .saved-deck-controls {
+  display: block;
+  margin: 0;
+}
+body .deck-tools-body .saved-deck-controls label {
+  display: block;
+}
+body .deck-presets {
+  gap: 5px;
+}
+body .deck-presets .library-search {
+  width: auto !important;
+}
+body .deck-plan {
+  font-size: 13px;
+  line-height: 1.6;
+}
+body #deck-warning {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 4px 0 8px;
+  color: #f6c78b;
+}
+body #deck-warning:empty {
+  display: none;
+}
+body:not(.touch-layout) .deck-editor .deck-list {
+  flex: 1 1 auto;
+  min-height: 160px;
+  margin: 0;
+  padding: 3px 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+body .deck-row {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 34px;
+  height: 34px;
+  border: 1px solid #94714770;
+  margin-bottom: 3px;
+  border-radius: 3px;
+  text-align: left;
+  background: #342619;
+}
+body .deck-row::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #2d2016 8%, #30231ba8 55%, #30231b55);
+  z-index: -1;
+}
+.deck-row-art {
+  position: absolute;
+  z-index: -2;
+  width: 65%;
+  height: 100%;
+  right: 0;
+  top: 0;
+  object-fit: cover;
+  object-position: center 28%;
+  opacity: 0.8;
+}
+body .deck-row .cost {
+  flex: 0 0 25px;
+  width: 25px;
+  height: 25px;
+  margin-right: 8px;
+  display: grid;
+  place-items: center;
+  background: #286176;
+  border: 1px solid #b3d8da;
+  border-radius: 30% 30% 45% 45%;
+  color: #fff;
+  font-size: 17px;
+}
+.deck-row-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: #fff0d0;
+}
+body .deck-row .count {
+  margin-left: auto;
+  color: #f2d89b;
+  font-size: 13px;
+  padding: 0 6px;
+}
+body .deck-row:hover {
+  border-color: var(--focus-light);
+  filter: brightness(1.15);
+}
+body .deck-curve {
+  margin: 10px 0 14px;
+}
+body .curve-bar {
+  background: linear-gradient(#e3c480, #8f693a);
+}
+body .deck-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding-top: 10px;
+}
+body .deck-actions button {
+  min-height: 40px;
+  font-size: 13px;
+  padding: 7px;
+}
+body #deck-play {
+  grid-column: 1/-1;
+}
+
+/* Portrait choice, map, rewards and manual have their own composition. */
+body #modal[data-type="heroes"] .modal-box {
+  width: 1120px;
+}
+body #modal[data-type="heroes"] .hero-options {
+  gap: 18px;
+  margin: 0 0 14px;
+}
+body #modal[data-type="heroes"] .hero-option {
+  height: 335px;
+  min-height: 0;
+  border-radius: 44% 44% 8px 8px / 20% 20% 8px 8px;
+  border-width: 2px;
+}
+body .hero-option.selected {
+  border-color: #edd49a;
+  box-shadow:
+    inset 0 0 0 2px #a77739,
+    0 0 0 2px #edd49a44,
+    0 8px 14px #0008;
+}
+body .hero-option .hero-option-text {
+  padding: 13px;
+}
+body .hero-option h3 {
+  font-size: 23px;
+  margin: 4px 0 10px;
+}
+body .hero-option .hero-option-text small {
+  font-size: 9px;
+}
+body .hero-option em {
+  font-size: 14px;
+}
+body .hero-option .hero-option-text p {
+  display: none;
+}
+body .hero-deck-note {
+  margin: 8px 0;
+  font-size: 13px;
+}
+body #modal[data-type="heroes"] .archetype-picker {
+  margin: 10px 0 4px;
+  font-size: 14px;
+}
+body #modal[data-type="heroes"] .archetype-picker .library-search {
+  min-height: 42px;
+}
+body #modal[data-type="heroes"] #hero-plan {
+  margin: 8px 0;
+}
+body .settings-box {
+  width: 700px;
+}
+body .setting-row {
+  padding: 12px 0;
+  gap: 18px;
+}
+body .setting-row h3 {
+  font-size: 16px;
+}
+body .setting-row p {
+  font-size: 13px;
+  margin-top: 4px;
+}
+body .audio-sliders {
+  padding: 8px 0;
+}
+body .audio-level {
+  min-height: 40px;
+}
+body .settings-box .hero-deck-note {
+  display: none;
+}
+body .map-route {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px 32px;
+  padding: 18px 8px;
+}
+body .map-stop {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  grid-template-rows: auto auto 1fr;
+  position: relative;
+  min-height: 148px;
+  border-radius: 50px 8px 8px 50px;
+  overflow: visible;
+}
+body .map-stop::after {
+  content: "";
+  position: absolute;
+  right: -28px;
+  top: 50%;
+  width: 22px;
+  border-top: 3px dotted var(--brass);
+}
+body .map-stop:nth-child(3n)::after {
+  display: none;
+}
+body .map-stop img {
+  position: static;
+  grid-column: 1;
+  grid-row: 1 / 4;
+  width: 88px;
+  height: 144px;
+  object-fit: cover;
+  border-radius: 50px 0 0 50px;
+}
+body .map-stop .map-index {
+  left: 2px;
+  top: auto;
+  bottom: 8px;
+  font-size: 18px;
+}
+body .map-stop h3 {
+  font-family: var(--ui-display);
+  font-size: 19px;
+  margin: 18px 10px 4px;
+}
+body .map-stop p {
+  font-size: 12px;
+  margin: 3px 10px;
+}
+body .map-stop p:last-child {
+  margin-bottom: 12px;
+}
+body .map-stop.done::before {
+  content: "✓";
+  position: absolute;
+  right: 8px;
+  top: -10px;
+  color: #fff5d5;
+  background: #476652;
+  border: 2px solid #dbc58d;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+}
+body .map-stop.locked img {
+  filter: saturate(0.48);
+}
+body .map-stop.current {
+  box-shadow:
+    0 0 0 2px #d4a653,
+    0 6px 0 #3e2617,
+    0 8px 24px #e2bc6830;
+}
+body .relic-choice {
+  border-radius: 48px 48px 10px 10px;
+  background: radial-gradient(ellipse at 50% 10%, #fff2ce, var(--paper) 60%)
+    var(--paper);
+}
+body .relic-art {
+  width: 120px;
+  height: 120px;
+  box-shadow:
+    0 6px 0 #846138,
+    0 9px 15px #61451a55;
+}
+body .relic-choice.selected {
+  transform: translateY(-5px);
+}
+body .relic-choice p {
+  font-weight: 500;
+}
+body .help-section {
+  border-radius: 4px 14px 4px 4px;
+  box-shadow: inset 4px 0 #b5915c;
+}
+body .help-section h3 {
+  font-family: var(--ui-display);
+  font-size: 20px;
+}
+body .key-table b {
+  font-family: var(--ui-font);
+  font-weight: 700;
+}
+body .result-box {
+  border-radius: 20px 20px 45% 45% / 20px 20px 8% 8%;
+}
+body .result-sigil {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 10px;
+  color: #efd398;
+}
+body .result-title {
+  font-size: 48px;
+}
+
+/* Rituals: finite illuminated marks express real, public rule progress. */
+body .covenant-heading {
+  padding: 0 45px 14px 0;
+}
+body .covenant-heading h2 {
+  margin: 6px 0;
+  font-size: 30px;
+  letter-spacing: 0.08em;
+}
+body .covenant-heading p {
+  font-size: 14px;
+}
+body .covenant-side h3 {
+  margin: 16px 0 12px;
+}
+body .covenant-card {
+  border-radius: 10px 28px 10px 10px;
+  border-color: var(--ritual-color);
+  background: linear-gradient(130deg, var(--ritual-well), #171310);
+  box-shadow:
+    inset 0 0 0 4px #09080666,
+    0 5px 10px #0006;
+}
+body .covenant-card > img {
+  object-position: 50% 25%;
+}
+body .covenant-copy {
+  position: relative;
+  padding: 22px;
+}
+body .covenant-copy > small {
+  display: block;
+  padding-right: 50px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ritual-color);
+}
+body .covenant-copy h4 {
+  font: 800 27px/1.4 var(--ui-display);
+  margin: 10px 0 16px;
+}
+body .covenant-copy > p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #e8ddc8;
+}
+.ritual-mark {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  width: 44px;
+  height: 44px;
+  color: var(--ritual-color);
+}
+.ritual-mark svg {
+  width: 100%;
+  height: 100%;
+}
+body .covenant-progress {
+  margin-top: auto;
+  padding: 20px 0 12px;
+  gap: 16px;
+}
+body .ritual-gate {
+  display: block;
+  min-width: 0;
+  color: var(--ritual-color);
+}
+.ritual-count {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+}
+.ritual-count b {
+  font:
+    700 25px/1.2 Arial,
+    sans-serif;
+}
+.ritual-count b small {
+  font-size: 13px;
+  color: var(--ink-secondary);
+}
+.ritual-stones {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.ritual-stones i {
+  flex: 1;
+  height: 10px;
+  border: 1px solid #b6aa8266;
+  border-radius: 2px;
+  transform: skew(-18deg);
+  background: #090b0d88;
+}
+.ritual-stones i.lit {
+  background: var(--ritual-color);
+  box-shadow:
+    inset 0 2px #fff5,
+    0 0 9px color-mix(in srgb, var(--ritual-color), transparent 75%);
+}
+body .covenant-progress meter {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+body .covenant-copy button {
+  min-height: 48px;
+  font-size: 15px;
+  margin-top: 8px;
+}
+body .covenant-card.invokable {
+  box-shadow:
+    inset 0 0 0 3px #e0c28133,
+    0 0 20px #efbf5d22;
+}
+body .covenant-card.spent .ritual-stones i {
+  opacity: 0.5;
+}
+body .contract-open {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 0 8px;
+  padding: 8px;
+  text-align: left;
+  color: var(--ink);
+  background: linear-gradient(125deg, var(--ritual-well), #171310);
+  border: 1px solid var(--ritual-color);
+  border-radius: 8px 16px 8px 16px;
+  box-shadow:
+    inset 0 1px #fff2,
+    0 4px 0 #160f0c,
+    0 7px 14px #0007;
+}
+.contract-sigil {
+  grid-row: 1/3;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: var(--ritual-color);
+  background: conic-gradient(
+    var(--ritual-color) var(--ritual-progress, 0deg),
+    #6b625944 0
+  );
+  padding: 3px;
+}
+.contract-sigil::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--ritual-well);
+}
+.contract-sigil svg {
+  position: relative;
+  width: 25px;
+  height: 25px;
+}
+.contract-label {
+  align-self: end;
+  font-family: var(--ui-display);
+  font-weight: 800;
+  font-size: 16px;
+}
+body .contract-open small {
+  color: var(--ink-secondary);
+  font-size: 11px;
+  align-self: start;
+  padding-top: 4px;
+  white-space: normal;
+}
+body .contract-open.ready {
+  outline: 2px solid var(--ritual-color);
+  outline-offset: 3px;
+}
+body .contract-open.ready .contract-sigil {
+  filter: drop-shadow(0 0 5px var(--ritual-color));
+}
+body:not(.touch-layout) .contract-open {
+  right: 24px;
+  bottom: 143px;
+  width: 184px;
+  min-height: 64px;
+}
+
+/* Scene objects share a common bevel, yet keep distinct playable silhouettes. */
+body .hero {
+  filter: drop-shadow(0 5px 5px #0008);
+}
+body .hero .portrait-frame {
+  border: 4px solid #c3a273;
+  box-shadow:
+    inset 0 0 0 2px #3c2818,
+    0 0 0 2px #493321,
+    0 0 0 3px #dfc390;
+  border-radius: 48% 48% 15% 15% / 32% 32% 13% 13%;
+}
+body .hero .portrait-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 14px #130b0699;
+  pointer-events: none;
+}
+body .hero .hero-name {
+  background: linear-gradient(#61472a, #241a12);
+  border-top: 1px solid #d4b477;
+  border-bottom: 1px solid #866139;
+  border-radius: 3px;
+}
+body .hero-carving {
+  display: block;
+  position: absolute;
+  left: 15%;
+  right: 15%;
+  top: -7px;
+  height: 16px;
+  background: linear-gradient(#efd398, #8a6132);
+  clip-path: polygon(
+    0 30%,
+    30% 40%,
+    50% 0,
+    70% 40%,
+    100% 30%,
+    85% 90%,
+    15% 90%
+  );
+  z-index: 4;
+  pointer-events: none;
+}
+body .power-button {
+  color: #edd7a2;
+  background: radial-gradient(
+    circle at 40% 30%,
+    var(--class-deep, #4d3823),
+    #15110b
+  );
+  border: 3px solid #c29b5e;
+  box-shadow:
+    inset 0 0 0 3px #352619,
+    inset 0 0 12px #0008,
+    0 3px 0 #553b23,
+    0 6px 8px #0007;
+}
+body .power-button:not(:disabled):hover {
+  border-color: var(--focus-light);
+}
+body .power-button:disabled {
+  opacity: 0.65;
+  filter: saturate(0.3);
+}
+body .minion {
+  filter: drop-shadow(0 4px 3px #0006);
+}
+
+body .end-turn,
+body.touch-layout .end-turn {
+  border-radius: 14px 32px 14px 32px;
+  border: 3px solid #71502c;
+  background: linear-gradient(#fff0bd, #d5b16a 18%, #b68641 80%, #f4d595);
+  box-shadow:
+    inset 0 0 0 1px #ffedbd,
+    inset 0 -5px #85572266,
+    0 4px 0 #332015,
+    0 6px 0 #947045,
+    0 8px 10px #0007;
+  font-family: var(--ui-display);
+  font-weight: 800;
+  color: #302012;
+}
+body .end-turn:disabled {
+  filter: saturate(0.3);
+  opacity: 0.65;
+}
+body .end-turn:active:not(:disabled) {
+  transform: translateY(2px);
+}
+body .mana-panel {
+  border-radius: 6px 18px 6px 18px;
+  background: linear-gradient(130deg, #28404b, #101e29);
+  border-color: #7d9a9c;
+}
+body .topbar {
+  background: linear-gradient(#36281c, #17100de8);
+}
+body .nav-link.active {
+  background: transparent;
+}
+body .nav-link.active::after {
+  height: 2px;
+  width: 40%;
+  left: 30%;
+}
+body .icon-btn {
+  border-radius: 50%;
+}
+body .lobby-copy {
+  text-align: center;
+}
+body:not(.touch-layout) .lobby-copy {
+  top: 160px;
+  left: 505px;
+  width: 590px;
+  padding: 34px 52px 30px;
+  border-radius: 80px 80px 20px 20px / 35px 35px 20px 20px;
+}
+body .lobby-title span {
+  font-family: var(--ui-display);
+  font-weight: 800;
+}
+body .lobby-actions {
+  flex-direction: column;
+}
+body .lobby-actions button {
+  width: 100%;
+}
+body .lobby-desc {
+  margin-bottom: 22px;
+}
+body .lobby-chinese {
+  letter-spacing: 0.22em;
+}
+body .showcase-link {
+  width: 100%;
+}
+
+/* Touch changes geometry only. The above material and semantic tokens are shared. */
+body.touch-layout #modal .modal-box.framed-dialog {
+  max-height: calc(
+    100dvh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+  );
+  padding: 18px 16px 14px;
+}
+body.touch-layout .framed-dialog > .modal-heading {
+  padding-right: 40px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+}
+body.touch-layout .framed-dialog > .modal-heading h2 {
+  font-size: 24px;
+}
+body.touch-layout .framed-dialog > .modal-heading .eyebrow {
+  display: none;
+}
+body.touch-layout .framed-dialog > .modal-heading p {
+  font-size: 13px;
+  margin-top: 5px;
+}
+body.touch-layout .framed-dialog > .modal-footer,
+body.touch-layout .framed-dialog > .reward-footer {
+  margin-top: 10px;
+  padding-top: 10px;
+}
+body.touch-layout #modal[data-type="heroes"] .hero-option {
+  height: auto;
+  min-height: 100px;
+  border-radius: 12px;
+}
+body.touch-layout #modal[data-type="heroes"] .hero-option h3 {
+  font-size: 19px;
+}
+body.touch-layout #modal[data-type="heroes"] .hero-option em {
+  font-size: 14px;
+}
+body.touch-layout #modal[data-type="heroes"] .hero-option > img {
+  width: 80px;
+  min-height: 104px;
+}
+body.touch-layout #modal[data-type="heroes"] .hero-option .hero-option-text {
+  padding: 10px;
+}
+body.touch-layout .modal-footer .gold-btn,
+body.touch-layout .modal-footer .ghost-btn {
+  min-height: 44px;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+body.touch-layout #modal .library-box {
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - 16px);
+  max-height: calc(100dvh - 16px);
+  overflow: hidden;
+}
+body.touch-layout .library-heading {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding-right: 40px;
+  align-items: stretch;
+}
+body.touch-layout .library-heading h2 {
+  font-size: 24px;
+}
+body.touch-layout .library-heading p {
+  display: none;
+}
+body.touch-layout .library-heading > input {
+  margin: 0;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+body.touch-layout .touch-library-tabs {
+  flex: 0 0 auto;
+  margin: 0 0 10px;
+  padding: 0;
+  gap: 8px;
+  border: 0;
+}
+body.touch-layout .touch-library-tabs button {
+  min-height: 44px;
+  padding: 8px;
+  font-size: 14px;
+}
+body.touch-layout .library-layout {
+  flex: 1;
+  min-height: 0;
+  display: block;
+  overflow: hidden;
+}
+body.touch-layout .library-main {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+body.touch-layout .touch-show-deck .library-main {
+  display: none;
+}
+body.touch-layout .library-grid {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+  overflow-y: auto;
+  padding: 12px 5px;
+  gap: 20px 12px;
+}
+body.touch-layout .library-item .card {
+  height: auto;
+  min-height: 264px;
+}
+body.touch-layout .library-item .card .card-title {
+  font-size: 13px;
+}
+body.touch-layout .library-item .card .card-text {
+  font-size: 12px;
+  min-height: 78px;
+}
+body.touch-layout .library-item .card .card-type {
+  font-size: 8px;
+}
+body.touch-layout .filter-bar {
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-bottom: 8px;
+}
+body.touch-layout .filter-btn {
+  min-width: 30px;
+  min-height: 34px;
+  font-size: 13px;
+  padding: 6px 8px;
+}
+body.touch-layout .library-foot {
+  display: none;
+}
+body.touch-layout .touch-show-deck .deck-editor {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+  flex-direction: column;
+  padding: 4px 2px;
+}
+body.touch-layout .deck-tools-body {
+  max-height: 190px;
+}
+body.touch-layout .deck-editor .deck-list {
+  flex: 1;
+  min-height: 44px;
+  height: auto;
+  overflow-y: auto;
+}
+body.touch-layout .deck-row {
+  min-height: 44px;
+  height: 44px;
+}
+body.touch-layout .deck-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 6px;
+  padding-top: 8px;
+  padding-bottom: 3px;
+  gap: 6px;
+  position: static;
+}
+body.touch-layout #deck-play {
+  grid-column: auto;
+}
+body.touch-layout .deck-actions button {
+  min-height: 48px;
+  padding: 5px 3px;
+  font-size: 12px;
+}
+body.touch-layout .deck-curve {
+  height: 35px;
+  margin: 8px 0 16px;
+}
+body.touch-layout .deck-identity {
+  margin-bottom: 8px;
+}
+body.touch-layout .deck-tools {
+  margin-bottom: 4px;
+}
+body.touch-layout .card .card-title {
+  padding-left: 4%;
+  padding-right: 8%;
+}
+body.touch-layout .hand-card .card .card-text {
+  font-size: 10px;
+  line-height: 1.3;
+}
+body.touch-layout .hand-card .card-class-seal {
+  display: none;
+}
+body.touch-layout .contract-open {
+  grid-template-columns: 25px 1fr;
+  padding: 4px;
+  gap: 0 4px;
+  min-height: 0;
+}
+body.touch-layout .contract-sigil {
+  width: 24px;
+  height: 24px;
+  padding: 2px;
+  align-self: center;
+}
+body.touch-layout .contract-sigil svg {
+  width: 17px;
+  height: 17px;
+}
+body.touch-layout .contract-label {
+  font-size: 12px;
+}
+body.touch-layout .contract-open small {
+  font-size: 10px;
+  padding-top: 2px;
+  line-height: 1.2;
+}
+body.touch-layout .covenant-copy {
+  padding: 16px;
+}
+body.touch-layout .covenant-copy h4 {
+  font-size: 23px;
+}
+body.touch-layout .covenant-copy > p {
+  font-size: 14px;
+}
+body.touch-layout .covenant-copy > small {
+  padding-right: 30px;
+}
+body.touch-layout .ritual-mark {
+  width: 28px;
+  height: 28px;
+  right: 12px;
+  top: 16px;
+}
+body.touch-layout .covenant-progress {
+  padding: 12px 0;
+}
+body.touch-layout .covenant-card > img {
+  height: 210px;
+}
+body.touch-layout .covenant-heading h2 {
+  font-size: 25px;
+}
+body.touch-layout .covenant-heading > small {
+  display: none;
+}
+body.touch-layout .covenant-heading > p {
+  font-size: 13px;
+}
+body.touch-layout .map-route {
+  grid-template-columns: 1fr;
+  gap: 18px;
+  padding: 6px 5px;
+}
+body.touch-layout .map-stop {
+  min-height: 116px;
+  grid-template-columns: 80px 1fr;
+}
+body.touch-layout .map-stop img {
+  width: 78px;
+  height: 114px;
+}
+body.touch-layout .map-stop::after {
+  display: block;
+  top: auto;
+  bottom: -15px;
+  left: 42px;
+  width: 0;
+  height: 12px;
+  border: 0;
+  border-left: 3px dotted var(--brass);
+}
+body.touch-layout .map-stop:last-child::after {
+  display: none;
+}
+body.touch-layout .map-stop h3 {
+  margin-top: 12px;
+}
+body.touch-layout .relic-choice {
+  border-radius: 12px;
+}
+body.touch-layout .relic-art {
+  width: 68px;
+  height: 68px;
+}
+body.touch-layout .relic-choice.selected {
+  transform: none;
+}
+body.touch-layout .reward-footer {
+  flex-direction: row;
+  gap: 12px;
+  align-items: center;
+}
+body.touch-layout #reward-confirm {
+  min-width: 0;
+  width: auto;
+  flex: 1;
+  font-size: 15px;
+}
+body.touch-layout .reward-next {
+  font-size: 12px;
+}
+body.touch-layout #reward-selection {
+  font-size: 13px;
+}
+body.touch-layout .setting-row {
+  padding: 12px 0;
+}
+body.touch-layout .lobby-copy {
+  padding: 20px 24px;
+}
+body.mobile-portrait #touch-match-chip {
+  overflow: hidden;
+}
+body.mobile-portrait #touch-match-chip > span {
+  display: none;
+}
+body.mobile-portrait .library-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+body.mobile-landscape #modal .library-box {
+  padding: 10px 14px;
+}
+body.mobile-landscape .library-heading {
+  flex-direction: row;
+  gap: 18px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+body.mobile-landscape .library-heading h2 {
+  font-size: 22px;
+  white-space: nowrap;
+}
+body.mobile-landscape .library-heading > input {
+  flex: 1;
+  min-height: 36px;
+}
+body.mobile-landscape .touch-library-tabs {
+  position: absolute;
+  top: 56px;
+  left: 18px;
+  width: 208px;
+  gap: 6px;
+  margin: 0;
+}
+body.mobile-landscape .touch-library-tabs button {
+  min-height: 38px;
+  font-size: 12px;
+  padding: 5px;
+}
+body.mobile-landscape .filter-bar {
+  margin-left: 222px;
+  height: 44px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  align-items: center;
+  padding-bottom: 2px;
+}
+body.mobile-landscape .filter-bar .spacer {
+  display: none;
+}
+body.mobile-landscape .filter-btn {
+  flex: 0 0 auto;
+  min-width: 30px;
+  min-height: 34px;
+}
+body.mobile-landscape .library-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding-top: 10px;
+}
+body.mobile-landscape .library-item .card {
+  height: auto;
+}
+body.mobile-landscape .touch-show-deck .library-layout {
+  margin-top: 46px;
+}
+body.mobile-landscape .touch-show-deck .deck-editor {
+  display: grid;
+  grid-template-columns: 230px 1fr;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 6px 16px;
+}
+body.mobile-landscape .deck-identity {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+}
+body.mobile-landscape .deck-tools {
+  grid-column: 1;
+  grid-row: 2;
+  overflow-y: auto;
+  min-height: 0;
+}
+body.mobile-landscape .deck-tools-body {
+  max-height: none;
+}
+body.mobile-landscape .deck-editor .deck-list {
+  grid-column: 2;
+  grid-row: 1/3;
+  min-height: 0;
+}
+body.mobile-landscape .deck-curve {
+  display: none;
+}
+body.mobile-landscape .deck-actions {
+  grid-column: 1/3;
+  grid-row: 3;
+}
+body.mobile-landscape #deck-warning:not(:empty) {
+  grid-column: 2;
+  grid-row: 1;
+  z-index: 2;
+  background: var(--walnut-deep);
+}
+body.mobile-landscape .framed-dialog > .modal-heading p {
+  display: none;
+}
+body.mobile-landscape .framed-dialog > .modal-heading h2 {
+  font-size: 22px;
+}
+body.mobile-landscape #modal[data-type="heroes"] .hero-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+body.mobile-landscape .covenant-heading p {
+  display: none;
+}
+body.mobile-landscape .covenant-grid {
+  grid-template-columns: 1fr;
+}
+body.mobile-landscape .covenant-card {
+  display: flex;
+  flex-direction: row;
+}
+body.mobile-landscape .covenant-card > img {
+  width: 32%;
+  height: auto;
+  min-height: 200px;
+}
+body.mobile-landscape .covenant-copy {
+  flex: 1;
+  min-width: 0;
+}
+body.mobile-landscape .covenant-copy h4 {
+  font-size: 22px;
+}
+body.mobile-landscape .map-route {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (prefers-reduced-motion: reduce) {
+  body .gold-btn,
+  body .ghost-btn,
+  body .filter-btn,
+  body .relic-choice,
+  body .hand-card {
+    transition: none;
+  }
+}
+body.reduced-motion .gold-btn,
+body.reduced-motion .ghost-btn {
+  transition: none;
+}
+.starfire-seal {
+  width: 132px;
+  height: 132px;
+  margin: -3px auto 8px;
+  background: var(--ui-starfire-seal) center/contain no-repeat;
+  filter: drop-shadow(0 5px 6px #0008);
+}
+body .brand-mark {
+  background: var(--ui-starfire-seal) center/contain no-repeat;
+  border: 0;
+  width: 32px;
+  height: 34px;
+  box-shadow: none;
+}
+body .brand-mark svg {
+  visibility: hidden;
+}
+body:not(.touch-layout) .lobby-copy {
+  top: 128px;
+  padding-top: 24px;
+}
+body:not(.touch-layout) .lobby-title span {
+  font-size: 64px;
+  letter-spacing: 10px;
+}
+body [data-outcome="win"] .result-sigil {
+  background: var(--ui-starfire-seal) center/contain no-repeat;
+}
+body [data-outcome="win"] .result-sigil svg {
+  opacity: 0;
+}
+body.touch-layout .starfire-seal {
+  width: 86px;
+  height: 86px;
+  margin: 0 auto 6px;
+}
+body.mobile-landscape .starfire-seal {
+  width: 64px;
+  height: 64px;
+  position: absolute;
+  top: 18px;
+  left: 20px;
+}
+body.touch-layout #modal .modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  left: auto;
+  margin: 0;
+  flex: none;
+}
+body .deck-row::after {
+  background: linear-gradient(
+    90deg,
+    #2d2016 12%,
+    #30231bf2 48%,
+    #30231b88 80%,
+    #30231b88
+  );
+}
+body:not(.touch-layout) .library-item {
+  width: 100%;
+}
+body:not(.touch-layout) .library-item .card {
+  width: 100%;
+}
+/* Authored nine-slice fittings: center stays transparent and all content stays live. */
+body .modal-box::before,
+body .lobby-copy::before {
+  content: "";
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  border: 30px solid transparent;
+  border-image-source: var(--ui-cabinet-rim);
+  border-image-slice: 17% 12%;
+  border-image-width: 30px;
+  border-image-repeat: stretch;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  transform: none;
+  opacity: 1;
+  pointer-events: none;
+  z-index: 10;
+}
+body .modal-box::after {
+  display: none;
+}
+body .modal-box,
+body.touch-layout #modal .modal-box,
+body:not(.touch-layout) .lobby-copy {
+  border-radius: 5px;
+}
+body.touch-layout #modal .modal-box::before,
+body.touch-layout .lobby-copy::before {
+  border-width: 18px;
+  border-image-width: 18px;
+}
+body .lobby-copy::before {
+  border-image-width: 38px;
+}
+body:not(.touch-layout) .lobby-copy {
+  padding-top: 25px;
+}
+body:not(.touch-layout) .lobby-copy .starfire-seal {
+  width: 116px;
+  height: 116px;
+}
+body:not(.touch-layout) .lobby-chinese {
+  margin: 4px 0 16px;
+}
+body:not(.touch-layout) .lobby-copy .showcase-link {
+  margin-top: 14px;
+}
+body .result-box .result-sigil {
+  background-size: contain;
+}
+
+/* Short landscape windows retain the complete entry flow in two columns. */
+body.mobile-landscape .lobby-copy {
+  width: min(700px, 94%);
+  max-width: 700px;
+  margin: 6px auto;
+  padding: 18px 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 30px;
+  align-items: center;
+}
+body.mobile-landscape .lobby-copy .starfire-seal {
+  position: static;
+  grid-column: 1;
+  grid-row: 1/3;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 6px;
+}
+body.mobile-landscape .lobby-copy .eyebrow {
+  display: none;
+}
+body.mobile-landscape .lobby-title {
+  grid-column: 1;
+  grid-row: 3;
+  margin: 0;
+  font-size: 38px;
+}
+body.mobile-landscape .lobby-title span {
+  font-size: 38px;
+}
+body.mobile-landscape .lobby-chinese {
+  grid-column: 1;
+  grid-row: 4;
+  margin: 4px 0;
+  font-size: 16px;
+}
+body.mobile-landscape .lobby-tagline {
+  grid-column: 1;
+  grid-row: 5;
+  margin: 4px 0;
+  font-size: 12px;
+}
+body.mobile-landscape .lobby-desc {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0 0 8px;
+  font-size: 12px;
+}
+body.mobile-landscape .lobby-actions {
+  grid-column: 2;
+  grid-row: 2/5;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+}
+body.mobile-landscape .lobby-actions button {
+  min-height: 44px;
+}
+body.mobile-landscape .showcase-link {
+  grid-column: 2;
+  grid-row: 5;
+  min-height: 44px;
+  margin: 8px 0 0;
+  font-size: 12px;
+}
+body.mobile-landscape .showcase-link > span:last-child {
+  display: none;
+}
+
+@media (max-height: 369px) and (orientation: landscape) {
+  body.mobile-landscape .contract-open {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  body.mobile-landscape .contract-label,
+  body.mobile-landscape .contract-open small {
+    display: none;
+  }
+  body.mobile-landscape .contract-sigil {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* Keep comparison labels aligned and the fine print clear of the inset fitting. */
+body:not(.touch-layout) .hero-option em {
+  min-height: 90px;
+}
+body:not(.touch-layout) .library-foot {
+  padding-bottom: 8px;
+}
+
+/* Selected seals sit inside the portrait's curved clipping path. */
+body #modal[data-type="heroes"] .hero-option .selected-check {
+  top: 48px;
+  right: 24px;
+  left: auto;
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--gold-light, #efd49c);
+  background: linear-gradient(#546d52, #2b4234);
+  color: #fff4d5;
+  box-shadow:
+    0 2px 5px #0009,
+    inset 0 0 0 1px #18291b;
+  pointer-events: none;
+}
+body #modal[data-type="heroes"] .selected-check svg {
+  width: 18px;
+  height: 18px;
+}
+body:not(.touch-layout)
+  #modal[data-type="heroes"]
+  .hero-option
+  .hero-option-text {
+  top: 138px;
+  bottom: 12px;
+  left: 20px;
+  right: 20px;
+  padding: 10px 12px;
+}
+body:not(.touch-layout) #modal[data-type="heroes"] .hero-option h3 {
+  line-height: 1.25;
+  margin: 5px 0 12px;
+}
+body #modal[data-type="heroes"] .hero-option:focus-visible {
+  outline: 3px solid #fff0b9;
+  outline-offset: 3px;
+  box-shadow:
+    0 0 0 6px #352416,
+    0 0 20px #d8b96766;
+}
+/* Reserve a distinct close-control well inside the ornamental fitting. */
+body #modal .modal-close {
+  top: 26px;
+  right: 26px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  flex-shrink: 0;
+}
+body #modal .modal-heading,
+body #modal .covenant-heading {
+  padding-right: 62px;
+}
+body.touch-layout #modal .modal-close {
+  top: 20px;
+  right: 20px;
+}
+body.touch-layout #modal[data-type="heroes"] .hero-option .selected-check {
+  top: 9px;
+  left: 9px;
+  right: auto;
+  width: 26px;
+  height: 26px;
+}
+body.touch-layout #modal[data-type="heroes"] .selected-check svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Map nodes own their geometry: retired fixed-width portrait rules must not
+   constrain the current image-and-copy route layout. */
+body .map-stop {
+  width: auto;
+  min-width: 0;
+  padding: 0 0 12px;
+  grid-template-columns: 90px minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr;
+}
+body .map-stop img {
+  position: static;
+  margin: 0;
+  align-self: start;
+}
+body .map-stop h3,
+body .map-stop p {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: #402b18;
+}
+body .map-stop .map-index {
+  right: auto;
+  width: auto;
+  min-width: 32px;
+  min-height: 0;
+}
+body.touch-layout .map-stop {
+  width: auto;
+  min-width: 0;
+  padding: 0 0 10px;
+  grid-template-columns: 80px minmax(0, 1fr);
+  min-height: 132px;
+}
+body.touch-layout .map-stop img {
+  position: static;
+  width: 78px;
+  height: 114px;
+  border-radius: 50px 0 0 50px;
+}
+body.touch-layout .map-stop h3 {
+  margin: 12px 10px 4px;
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+body.touch-layout .map-stop p {
+  margin: 3px 10px;
+  line-height: 1.5;
+}
+@media (max-height: 440px) and (max-width: 650px) {
+  body.touch-layout .map-route {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Authored objects, each used in the interface it was made for. */
+body #modal[data-type="heroes"] .hero-option::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 0;
+  width: 100%;
+  height: 84px;
+  background: var(--ui-hero-laurel) center top / 100% auto no-repeat;
+  pointer-events: none;
+  z-index: 3;
+}
+body.touch-layout #modal[data-type="heroes"] .hero-option::before {
+  display: none;
+}
+body:not(.touch-layout) .deck-editor {
+  position: relative;
+}
+body .covenant-heading {
+  position: relative;
+  padding-left: 98px;
+  min-height: 94px;
+}
+body .covenant-heading::before {
+  content: "";
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  left: 0;
+  top: 0;
+  background: var(--ui-covenant-ring) center / contain no-repeat;
+  pointer-events: none;
+}
+body .ritual-mark {
+  background: var(--ui-covenant-ring) center / contain no-repeat;
+  width: 48px;
+  height: 48px;
+  padding: 13px;
+  box-sizing: border-box;
+}
+body .ritual-mark svg {
+  width: 100%;
+  height: 100%;
+}
+body.touch-layout .covenant-heading {
+  padding-left: 54px;
+  min-height: 52px;
+}
+body.touch-layout .covenant-heading::before {
+  width: 44px;
+  height: 44px;
+}
+body.touch-layout .ritual-mark {
+  width: 38px;
+  height: 38px;
+  padding: 10px;
+}
+body .deck-tools-title {
+  font-weight: 600;
+}
+body .deck-issues summary {
+  cursor: pointer;
+  min-height: 32px;
+  padding: 7px 0;
+}
+body .deck-issues p {
+  margin: 4px 0;
+  line-height: 1.5;
+  max-height: 96px;
+  overflow-y: auto;
+}
+body.mobile-landscape .touch-show-deck .deck-editor {
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+}
+body.mobile-landscape .touch-show-deck #deck-warning:not(:empty) {
+  grid-column: 1/-1;
+  grid-row: 3;
+  margin: 0;
+  padding: 0 4px;
+  max-height: 65px;
+  overflow-y: auto;
+}
+body.mobile-landscape .touch-show-deck .deck-actions {
+  grid-row: 4;
+}
+body.touch-layout .touch-show-deck .deck-editor:has(.deck-tools[open]) {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+body.touch-layout
+  .touch-show-deck
+  .deck-editor:has(.deck-tools[open])
+  .deck-identity,
+body.touch-layout
+  .touch-show-deck
+  .deck-editor:has(.deck-tools[open])
+  .deck-list,
+body.touch-layout
+  .touch-show-deck
+  .deck-editor:has(.deck-tools[open])
+  .deck-curve {
+  display: none;
+}
+/* Keep the disclosure header fixed while its positioned body scrolls. */
+body.touch-layout .touch-show-deck .deck-tools[open] {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: block;
+  position: relative;
+  margin: 0;
+}
+body.touch-layout .touch-show-deck .deck-tools[open] > summary {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 10px 3px;
+}
+body.touch-layout .touch-show-deck .deck-tools[open] > summary span {
+  display: none;
+}
+body.touch-layout .touch-show-deck .deck-tools-body {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  padding: 8px 6px;
+}
+body.touch-layout .touch-show-deck .deck-actions {
+  flex: 0 0 auto;
+}
+body.mobile-landscape .result-box .modal-scroll {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 4px 16px;
+  align-content: start;
+}
+body.mobile-landscape .result-box .result-sigil {
+  grid-column: 1;
+  grid-row: 1/4;
+  width: 66px;
+  height: 66px;
+  margin: 12px 0 0;
+}
+body.mobile-landscape .result-box .result-sub {
+  grid-column: 2;
+  font-size: 8px;
+  letter-spacing: 1px;
+  margin: 3px 0;
+}
+body.mobile-landscape .result-box .result-title {
+  grid-column: 2;
+  font-size: 28px;
+  line-height: 1.2;
+  margin: 0;
+}
+body.mobile-landscape .result-box .boss-quote {
+  grid-column: 2;
+  font-size: 12px;
+  margin: 4px 0;
+}
+body.mobile-landscape .result-box .result-stats {
+  grid-column: 1/-1;
+  margin: 4px 0;
+  padding: 6px 0;
+}
+body.mobile-landscape .result-box .result-stats strong {
+  font-size: 20px;
+}
+body.mobile-landscape .touch-card-sheet .touch-inspect-main {
+  margin-top: 0;
+}
+
+/* The folio spine belongs to the column gutter, outside the inventory clip. */
+body:not(.touch-layout) .library-layout::before {
+  content: "";
+  position: absolute;
+  left: calc(100% - 372px);
+  top: 12px;
+  bottom: 12px;
+  width: 40px;
+  background: var(--ui-collection-spine) center / contain no-repeat;
+  pointer-events: none;
+}
+body #modal[data-type="heroes"] .hero-option:not(.selected)::before {
+  filter: saturate(0.35);
+  opacity: 0.85;
+}
+body.touch-layout .touch-show-deck .deck-tools[open] > .deck-tools-body {
+  position: absolute;
+  top: 44px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow-y: auto;
+}
+body.touch-layout
+  .touch-show-deck
+  .deck-editor:has(.deck-tools[open])
+  .deck-actions {
+  padding-top: 2px;
+  margin-top: 0;
+}
+/* Mobile dialog hosts can sit outside #app; hide transient battle cues globally. */
+body:has(#modal[data-type]) #toast,
+body:has(#modal[data-type]) .turn-cue,
+body:has(#modal[data-type]) .summon-seal {
+  visibility: hidden;
+}
+/* On short screens, deck tabs are the header; preserve room to reopen settings. */
+body.mobile-landscape .touch-show-deck .library-heading {
+  display: none;
+}
+body.mobile-landscape .touch-show-deck .touch-library-tabs {
+  position: static;
+  width: 208px;
+  min-height: 44px;
+  margin: 4px 58px 8px 0;
+}
+body.mobile-landscape .touch-show-deck .library-layout {
+  margin-top: 0;
+}
+body.mobile-landscape .touch-show-deck .deck-tools:not([open]) {
+  min-height: 44px;
+}
+body.mobile-landscape .deck-issues summary {
+  min-height: 28px;
+  line-height: 20px;
+  padding: 4px 0;
+}
+body:not(.touch-layout) .library-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  column-gap: 44px;
+  position: relative;
+}
+body:not(.touch-layout) .deck-editor {
+  width: auto;
+  min-width: 0;
+}
