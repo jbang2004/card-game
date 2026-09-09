@@ -1,4 +1,5 @@
-const { openDeckTools } = require("./helpers/deck-tools.cjs");
+const { turnTo, assertDialogFit } = require("./helpers/dialog-pages.cjs");
+const { openDeckTools, finishDeckTools } = require("./helpers/deck-tools.cjs");
 const { test, expect } = require("@playwright/test");
 for (const [width, height] of [
   [320, 568],
@@ -53,18 +54,16 @@ for (const [width, height] of [
     await page.locator("#deck-reset").click();
     await openDeckTools(page);
     await page.locator("#deck-contracts summary").click();
-    expect(
-      await page.locator("#deck-contracts label").evaluateAll((es) =>
-        es.every((e) => {
-          const r = e.getBoundingClientRect(),
-            s = e.querySelector("span").getBoundingClientRect(),
-            t = e.querySelector("strong").getBoundingClientRect();
-          return (
-            s.right <= r.right + 1 && s.left >= r.left && s.top >= t.bottom - 1
-          );
-        }),
-      ),
-    ).toBe(true);
+    for (const id of await page
+      .locator("[data-deck-contract]")
+      .evaluateAll((es) => es.map((e) => e.dataset.deckContract))) {
+      await turnTo(page, `[data-deck-contract="${id}"]`);
+      await expect(
+        page.locator(`[data-deck-contract="${id}"]`),
+      ).toBeInViewport();
+    }
+    await assertDialogFit(page);
+    await finishDeckTools(page);
     const buttons = await page
       .locator(".deck-actions button")
       .evaluateAll((es) =>
@@ -73,16 +72,24 @@ for (const [width, height] of [
           return { top: r.top, left: r.left, right: r.right, height: r.height };
         }),
       );
-    expect(
-      Math.max(...buttons.map((b) => b.top)) -
-        Math.min(...buttons.map((b) => b.top)),
-    ).toBeLessThan(2);
+    // Actions may wrap, but must remain separate and reachable.
+    for (let i = 0; i < buttons.length; i++)
+      for (let j = i + 1; j < buttons.length; j++) {
+        const a = buttons[i],
+          b = buttons[j];
+        expect(
+          a.right <= b.left ||
+            b.right <= a.left ||
+            a.top + a.height <= b.top ||
+            b.top + b.height <= a.top,
+        ).toBe(true);
+      }
     buttons.forEach((b) => {
       expect(b.left).toBeGreaterThanOrEqual(0);
       expect(b.right).toBeLessThanOrEqual(width);
       expect(b.height).toBeGreaterThanOrEqual(44);
     });
-    await page.locator("#deck-contracts").scrollIntoViewIfNeeded();
+    await assertDialogFit(page);
     await page.screenshot({
       path: `artifacts/qa/mobile-fixed-deck-${width}.png`,
     });

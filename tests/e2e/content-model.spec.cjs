@@ -1,4 +1,4 @@
-const { openDeckTools } = require("./helpers/deck-tools.cjs");
+const { openDeckTools, finishDeckTools } = require("./helpers/deck-tools.cjs");
 const { test, expect } = require("@playwright/test");
 const D = require("../../src/data.js");
 async function ready(page) {
@@ -35,12 +35,14 @@ test("obsolete deck can be reset; two current named decks persist and launch ind
   await page.screenshot({ path: "artifacts/qa/current-reset-desktop.png" });
   await page.locator("#deck-rebuild").click();
   await page.locator("#deck-name").fill("我的星火");
+  await finishDeckTools(page);
   await page.locator("#deck-save").click();
   await openDeckTools(page);
   await page.locator("#deck-preset").selectOption("mage_frost");
   await openDeckTools(page);
   await page.locator("#deck-reset").click();
   await page.locator("#deck-name").fill("我的永冬");
+  await finishDeckTools(page);
   await page.locator("#deck-copy").click();
   const saved = await stored(page);
   expect(saved.version).toBe(3);
@@ -57,6 +59,7 @@ test("obsolete deck can be reset; two current named decks persist and launch ind
   await page.locator("#deck-saved").selectOption("deck_1");
   await expect(page.locator("#deck-name")).toHaveValue("我的星火");
   await page.locator("#deck-name").fill("星火改名");
+  await finishDeckTools(page);
   await page.locator("#deck-play").click();
   await expect(page.locator("#hero-archetype")).toHaveValue("saved:deck_1");
   await page.locator("#hero-confirm").click();
@@ -87,11 +90,13 @@ for (const [width, height] of [
       .click();
     await page.locator("#touch-deck-tab").click();
     await page.locator("#deck-name").fill("触屏牌组");
+    await finishDeckTools(page);
     await page.locator("#deck-save").click();
     expect((await stored(page)).decks[0].name).toBe("触屏牌组");
     await page.locator("#touch-deck-tab").click();
     await page.locator("#deck-copy").scrollIntoViewIfNeeded();
     await page.screenshot({ path: `artifacts/qa/model-touch-${width}.png` });
+    await finishDeckTools(page);
     await page.locator("#deck-copy").click();
     expect((await stored(page)).decks).toHaveLength(2);
     await ctx.close();
@@ -144,6 +149,7 @@ test("a second mage and sixth boss work through production screens with only con
   );
   await page.locator("#deck-name").fill("第二法师牌组");
   await page.screenshot({ path: "artifacts/qa/model-desktop.png" });
+  await finishDeckTools(page);
   await page.locator("#deck-play").click();
   await page.locator("#hero-confirm").click();
   expect(await page.evaluate(() => Emberfall.game.s.heroId)).toBe("arcanist");

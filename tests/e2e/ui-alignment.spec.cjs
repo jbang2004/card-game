@@ -1,3 +1,4 @@
+const { assertDialogFit } = require("./helpers/dialog-pages.cjs");
 const { test, expect } = require("@playwright/test");
 for (const [width, height] of [
   [1600, 940],
@@ -98,17 +99,7 @@ for (const [width, height] of [
       .locator(".covenant-card > img")
       .evaluateAll((es) => Promise.all(es.map((e) => e.decode())));
     await page.waitForTimeout(200);
-    if (width > height && width < 1000) {
-      expect(
-        await page.locator(".covenant-card").evaluateAll((es) =>
-          es.every((el) => {
-            const art = el.querySelector("img").getBoundingClientRect(),
-              copy = el.querySelector(".covenant-copy").getBoundingClientRect();
-            return Math.abs(art.right - copy.left) < 2;
-          }),
-        ),
-      ).toBe(true);
-    }
+    await assertDialogFit(page);
     await page.screenshot({
       path: `artifacts/ui-alignment/fixed-${width}-contract.png`,
     });

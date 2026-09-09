@@ -5,3 +5,9 @@ async function openDeckTools(page) {
     await tools.locator(":scope > summary").click();
 }
 module.exports = { openDeckTools };
+async function finishDeckTools(page) {
+  const tools = page.locator("#deck-tools");
+  if ((await tools.count()) && (await tools.evaluate((e) => e.open)))
+    await tools.locator(":scope > summary").click();
+}
+module.exports.finishDeckTools = finishDeckTools;

@@ -87,3 +87,7 @@ npm run test:release
 ## 角色制作
 
 统一清单为 `assets/characters.json`；制作与接入见 [角色制作规范](docs/CHARACTER_AUTHORING.md)。44 个上场随从（含 7 个普通衍生角色及 6 个契约角色）均有分层待机，4 位英雄和 6 位首领按既有 portraitId 复用。其余 35 张法术/武器保持静态。运行 `python3 tools/characters.py --list` 查看完整静态/动态清单；`tools/animation-demo.html?zoom=1` 可分页查看所有角色。其他模型可直接读取项目内 [角色制作 Skill](.agents/skills/character-creation/SKILL.md)。
+
+## 自适应页面布局
+
+英雄选择、收藏、设置等弹窗使用独立视口容器、安全边距和自动分页；矮窗口的操作区改为侧栏，长内容无需向下滚动。窗口变化保留选择与未保存草稿。布局约定与本轮验证见 [页面布局重构](docs/UI_LAYOUT_REFACTOR_20260909.md)。

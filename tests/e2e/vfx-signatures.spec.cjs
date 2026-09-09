@@ -1,3 +1,4 @@
+const { assertDialogFit } = require("./helpers/dialog-pages.cjs");
 const { test, expect } = require("@playwright/test");
 const path = require("node:path");
 async function demo(page) {
@@ -208,6 +209,9 @@ test("VFX lab previews real signatures without changing the game, supports keybo
   await demo(page);
   const state = await page.evaluate(() => JSON.stringify(EmberDebug.game.s));
   await page.evaluate(() => Emberfall.showFXLab());
+  await assertDialogFit(page);
+  await page.locator(".folio-lab-school").selectOption("frost");
+  await page.locator("#lab-replay").click();
   await page.waitForTimeout(400);
   await page.waitForFunction(() => !EmberFX.busy);
   await page.locator("#lab-variant").selectOption("ashdragon");
@@ -334,6 +338,9 @@ test("the lab stage and playback controls fit both phone orientations", async ({
     const page = await context.newPage();
     await demo(page);
     await page.evaluate(() => Emberfall.showFXLab());
+    await assertDialogFit(page);
+    await page.locator(".folio-lab-school").selectOption("frost");
+    await page.locator("#lab-replay").click();
     for (const selector of [
       "#lab-variant",
       "#lab-replay",
@@ -348,7 +355,11 @@ test("the lab stage and playback controls fit both phone orientations", async ({
     }
     const stage = await page.locator(".lab-stage").boundingBox(),
       footer = await page.locator(".lab-footer").boundingBox();
-    expect(stage.y + stage.height).toBeLessThanOrEqual(footer.y + 1);
+    expect(
+      stage.y + stage.height <= footer.y + 1 ||
+        stage.x + stage.width <= footer.x + 1 ||
+        footer.x + footer.width <= stage.x + 1,
+    ).toBe(true);
     await page.screenshot({
       path: path.resolve(
         `artifacts/qa/vfx-signatures/lab-controls-${viewport.width}.png`,

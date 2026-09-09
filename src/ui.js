@@ -251,42 +251,8 @@
       close.onclick = () => closeModal();
       box.prepend(close);
     }
-    if (
-      [
-        "heroes",
-        "settings",
-        "map",
-        "help",
-        "rewards",
-        "mulligan",
-        "contracts",
-        "result",
-        "touch-card",
-        "touch-hand",
-        "inspect",
-      ].includes(type)
-    ) {
-      const box = $("modal").firstElementChild;
-      const head = box.querySelector(
-        ":scope > .modal-heading, :scope > .covenant-heading",
-      );
-      const foot = box.querySelector(
-        ":scope > .modal-footer, :scope > .reward-footer",
-      );
-      const scroll = document.createElement("div");
-      scroll.className = "modal-scroll";
-      for (const child of [...box.children])
-        if (
-          child !== head &&
-          child !== foot &&
-          !child.classList.contains("modal-close")
-        )
-          scroll.append(child);
-      box.classList.add("framed-dialog");
-      if (foot) box.insertBefore(scroll, foot);
-      else box.append(scroll);
-    }
     window.EmberMobile?.afterModal(type);
+    EmberDialogs.mount($("modal").firstElementChild, type);
     const openedBox = $("modal").firstElementChild;
     requestAnimationFrame(() => {
       if (!openedBox?.isConnected || openedBox.contains(document.activeElement))
@@ -297,6 +263,7 @@
     });
   }
   function closeModal(resume = true) {
+    EmberDialogs.close();
     if (modalType === "lab") EmberFX.setLab(false);
     $("modal").style.display = "none";
     $("modal").innerHTML = "";
@@ -330,7 +297,7 @@
       (a) => a.classId === EmberDeckRules.classFor(D, chosenHero),
     );
     showModal(
-      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">准备出发</div><h2>选择你的英雄</h2><p>选择英雄、套牌与对战方式。</p></div><div class="hero-options">${D.heroes.map((h) => `<button class="hero-option hero-${h.id} ${h.id === chosenHero ? "selected" : ""}" data-hero="${h.id}" aria-pressed="${h.id === chosenHero}"><img src="${A.character(h)}" alt="${h.name}" draggable="false" style="${artStyleForHero(h, "option")}"><div class="hero-option-text"><small>${h.sub}</small><h3>${h.name}</h3><p>${h.desc}</p><em>${h.powerText}</em></div>${h.id === chosenHero ? '<span class="selected-check" aria-hidden="true">' + A.icon("check") + "</span>" : ""}</button>`).join("")}</div><p class="hero-deck-note">${escape(loaded.ok ? (customs.length ? "可选用已保存的英雄牌组。" : "请选择职业套牌，或到收藏中建立命名牌组。") : loaded.error)} · 战役共 ${D.bosses.length} 场，关卡之间恢复全部生命。</p><label class="archetype-picker">套牌 <select class="library-search" id="hero-archetype">${customs.map((d) => `<option value="saved:${d.id}" ${d.id === collection.activeId ? "selected" : ""}>${escape(d.name)}</option>`).join("")}${presets
+      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">准备出发</div><h2>选择你的英雄</h2><p>选择英雄、套牌与对战方式。</p></div><div class="hero-options">${D.heroes.map((h) => `<button class="hero-option hero-${h.id} ${h.id === chosenHero ? "selected" : ""}" data-hero="${h.id}" aria-pressed="${h.id === chosenHero}"><img src="${A.character(h)}" alt="${h.name}" draggable="false" style="${artStyleForHero(h, "option")}"><div class="hero-option-text"><small>${h.sub}</small><h3>${h.name}</h3><p>${h.desc}</p><em>${h.powerText}</em></div>${h.id === chosenHero ? '<span class="selected-check" aria-hidden="true">' + A.icon("check") + "</span>" : ""}</button>`).join("")}</div><div class="hero-configuration"><p class="hero-deck-note">${escape(loaded.ok ? (customs.length ? "可选用已保存的英雄牌组。" : "请选择职业套牌，或到收藏中建立命名牌组。") : loaded.error)} · 战役共 ${D.bosses.length} 场，关卡之间恢复全部生命。</p><label class="archetype-picker">套牌 <select class="library-search" id="hero-archetype">${customs.map((d) => `<option value="saved:${d.id}" ${d.id === collection.activeId ? "selected" : ""}>${escape(d.name)}</option>`).join("")}${presets
         .map(
           (a) =>
             `<option value="${a.id}" ${!customs.length && a.id === D.heroes.find((h) => h.id === chosenHero).defaultDeckId ? "selected" : ""}>${a.name}</option>`,
@@ -348,7 +315,7 @@
               `<label><input type="checkbox" data-contract="${c.id}" checked><strong>${c.name}</strong><span>${EmberContracts.describe(c)}</span></label>`,
           )
           .join("") || "该职业尚无契约。"
-      }</details><label class="archetype-picker">玩法 <select id="game-mode" class="library-search"><option value="campaign">${D.bosses.length} 关战役 · 遗物与整备</option><option value="practice">练习对战 · 不覆盖战役存档</option></select></label><label class="archetype-picker" id="opponent-picker" hidden>对手 <select id="practice-opponent" class="library-search">${D.archetypes.map((a) => `<option value="${a.id}">${D.classNames[a.classId]} · ${a.name}</option>`).join("")}</select></label><div class="modal-footer"><button class="ghost-btn" id="hero-deck-btn">先去组牌</button><button class="gold-btn" id="hero-confirm">踏入余火之门 ${A.icon("arrow")}</button></div></section>`,
+      }</details><label class="archetype-picker">玩法 <select id="game-mode" class="library-search"><option value="campaign">${D.bosses.length} 关战役 · 遗物与整备</option><option value="practice">练习对战 · 不覆盖战役存档</option></select></label><label class="archetype-picker" id="opponent-picker" hidden>对手 <select id="practice-opponent" class="library-search">${D.archetypes.map((a) => `<option value="${a.id}">${D.classNames[a.classId]} · ${a.name}</option>`).join("")}</select></label></div><div class="modal-footer"><button class="ghost-btn" id="hero-deck-btn">先去组牌</button><button class="gold-btn" id="hero-confirm">踏入余火之门 ${A.icon("arrow")}</button></div></section>`,
       "heroes",
     );
     document.querySelectorAll("[data-hero]").forEach(
