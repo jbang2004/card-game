@@ -46,7 +46,7 @@ const EmberContractUI = (() => {
                     )
                     .join(
                       "",
-                    )}</div>${side === "p" ? `<button class="gold-btn" data-invoke="${id}" ${reason ? "disabled" : ""}>${used ? "契约已兑现" : reason || "唤醒契约"}</button>` : `<p class="enemy-covenant-status">${enemyStatus}</p>`}</div></article>`;
+                    )}</div>${side === "p" ? `<button class="gold-btn" data-invoke="${id}" data-dialog-action aria-label="${c.name}：${used ? "契约已兑现" : reason || "唤醒契约"}" title="${used ? "契约已兑现" : reason || "条件已满足"}" ${reason ? "disabled" : ""}>${used ? c.name + " · 已兑现" : reason ? c.name + " · 暂不可用" : "唤醒 " + c.name}</button>` : `<p class="enemy-covenant-status">${enemyStatus}</p>`}</div></article>`;
                 })
                 .join("") || '<p class="deck-plan">未携带契约。</p>'
             }</div></section>`;

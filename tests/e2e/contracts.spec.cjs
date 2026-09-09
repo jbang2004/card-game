@@ -49,7 +49,18 @@ for (const [width, height, touch] of [
     });
     await page.locator("#contract-open").click();
     await expect(page.locator('[data-invoke="selmyra"]')).toBeEnabled();
-    await page.locator('[data-invoke="selmyra"]').scrollIntoViewIfNeeded();
+    expect(
+      await page.locator('[data-invoke="selmyra"]').evaluate((button) => {
+        const r = button.getBoundingClientRect();
+        return (
+          !button.closest(".folio-viewport") &&
+          r.left >= 0 &&
+          r.right <= innerWidth &&
+          r.top >= 0 &&
+          r.bottom <= innerHeight
+        );
+      }),
+    ).toBe(true);
     await page.screenshot({ path: `artifacts/qa/contracts-${width}.png` });
     await page.locator('[data-invoke="selmyra"]').click();
     await expect(page.locator(".divine-arrival")).toBeVisible();
@@ -81,6 +92,60 @@ for (const [width, height, touch] of [
     await page.locator("#contract-open").click();
     await expect(page.locator('[data-invoke="selmyra"]')).toBeDisabled();
     expect(errors).toEqual([]);
+    await ctx.close();
+  });
+}
+for (const [width, height] of [
+  [320, 568],
+  [568, 320],
+]) {
+  test(`all covenant actions remain visible outside pagination ${width}x${height}`, async ({
+    browser,
+  }) => {
+    const ctx = await browser.newContext({
+      viewport: { width, height },
+      isMobile: true,
+      hasTouch: true,
+    });
+    const page = await ctx.newPage();
+    await open(page);
+    await begin(page);
+    await page.evaluate(() => {
+      const g = EmberDebug.game;
+      g.s.p.mana = g.s.p.maxMana = 9;
+      g.s.p.fallen = 8;
+      g.s.p.souls = ["wolf", "moonfox", "duskstag", "soulguide"];
+      g.emit();
+    });
+    await page.locator("#contract-open").click();
+    const result = await page.locator(".covenant-actions").evaluate((footer) => {
+      const dialog = footer.closest(".folio-dialog").getBoundingClientRect(),
+        buttons = [...footer.querySelectorAll("[data-invoke]")];
+      return {
+        count: buttons.length,
+        allEnabled: buttons.every((button) => !button.disabled),
+        allOutsidePages: buttons.every(
+          (button) => !button.closest(".folio-viewport"),
+        ),
+        allVisible: buttons.every((button) => {
+          const r = button.getBoundingClientRect();
+          return (
+            r.width >= 44 &&
+            r.height >= 44 &&
+            r.left >= dialog.left &&
+            r.right <= dialog.right &&
+            r.top >= dialog.top &&
+            r.bottom <= dialog.bottom
+          );
+        }),
+      };
+    });
+    expect(result).toEqual({
+      count: 3,
+      allEnabled: true,
+      allOutsidePages: true,
+      allVisible: true,
+    });
     await ctx.close();
   });
 }
