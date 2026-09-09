@@ -296,15 +296,16 @@
     const presets = D.archetypes.filter(
       (a) => a.classId === EmberDeckRules.classFor(D, chosenHero),
     );
+    const hero = D.heroes.find((h) => h.id === chosenHero);
     showModal(
-      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">准备出发</div><h2>选择你的英雄</h2><p>选择英雄、套牌与对战方式。</p></div><div class="hero-options">${D.heroes.map((h) => `<button class="hero-option hero-${h.id} ${h.id === chosenHero ? "selected" : ""}" data-hero="${h.id}" aria-pressed="${h.id === chosenHero}"><img src="${A.character(h)}" alt="${h.name}" draggable="false" style="${artStyleForHero(h, "option")}"><div class="hero-option-text"><small>${h.sub}</small><h3>${h.name}</h3><p>${h.desc}</p><em>${h.powerText}</em></div>${h.id === chosenHero ? '<span class="selected-check" aria-hidden="true">' + A.icon("check") + "</span>" : ""}</button>`).join("")}</div><div class="hero-configuration"><p class="hero-deck-note">${escape(loaded.ok ? (customs.length ? "可选用已保存的英雄牌组。" : "请选择职业套牌，或到收藏中建立命名牌组。") : loaded.error)} · 战役共 ${D.bosses.length} 场，关卡之间恢复全部生命。</p><label class="archetype-picker">套牌 <select class="library-search" id="hero-archetype">${customs.map((d) => `<option value="saved:${d.id}" ${d.id === collection.activeId ? "selected" : ""}>${escape(d.name)}</option>`).join("")}${presets
+      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">准备出发</div><h2>选择你的英雄</h2><p>选择英雄、套牌与对战方式。</p></div><div class="hero-options">${D.heroes.map((h) => `<button class="hero-option hero-${h.id} ${h.id === chosenHero ? "selected" : ""}" data-hero="${h.id}" aria-pressed="${h.id === chosenHero}"><img src="${A.character(h)}" alt="${h.name}" draggable="false" style="${artStyleForHero(h, "option")}"><div class="hero-option-text"><small>${h.sub}</small><h3>${h.name}</h3><p>${h.desc}</p><em>${h.powerText}</em></div>${h.id === chosenHero ? '<span class="selected-check" aria-hidden="true">' + A.icon("check") + "</span>" : ""}</button>`).join("")}</div><div class="hero-configuration"><section class="hero-dossier"><small>${hero.sub}</small><h3>${hero.name}<span>${hero.title}</span></h3><p>${hero.desc}</p><div class="hero-power-line"><span class="hero-power-sigil">${A.icon(hero.powerIcon)}</span><b>${hero.power}</b><em>${hero.powerCost} 法力</em><span>${hero.powerText.replace(/^\s*\d+\s*法力[：:]\s*/, "")}</span></div></section><p class="hero-deck-note">${escape(loaded.ok ? (customs.length ? "可选用已保存的英雄牌组。" : "请选择职业套牌，或到收藏中建立命名牌组。") : loaded.error)} · 战役共 ${D.bosses.length} 场，关卡之间恢复全部生命。</p><label class="archetype-picker">套牌 <select class="library-search" id="hero-archetype">${customs.map((d) => `<option value="saved:${d.id}" ${d.id === collection.activeId ? "selected" : ""}>${escape(d.name)}</option>`).join("")}${presets
         .map(
           (a) =>
             `<option value="${a.id}" ${!customs.length && a.id === D.heroes.find((h) => h.id === chosenHero).defaultDeckId ? "selected" : ""}>${a.name}</option>`,
         )
         .join(
           "",
-        )}</select></label><p id="hero-plan" class="deck-plan"></p><details class="contract-setup"><summary>契约栏 · 最多三张，一位神祇</summary><p>契约不占主卡组，无需抽取；战斗中可查看召唤进度。</p>${
+        )}</select></label><p id="hero-plan" class="deck-plan"></p><section class="hero-composition" id="hero-composition" aria-label="牌组构成"></section><details class="contract-setup"><summary>契约栏 · 最多三张，一位神祇</summary><p>契约不占主卡组，无需抽取；战斗中可查看召唤进度。</p>${
         D.cards
           .filter(
             (c) =>
@@ -335,18 +336,40 @@
               ?.focus({ preventScroll: true });
         }),
     );
+    const compositionHTML = (cards) => {
+      const list = (cards || []).map((id) => D.byId[id]).filter(Boolean);
+      if (!list.length) return "";
+      const counts = { minion: 0, spell: 0, weapon: 0 };
+      const curve = Array(8).fill(0);
+      for (const c of list) {
+        if (counts[c.type] !== undefined) counts[c.type] += 1;
+        curve[Math.min(7, c.cost || 0)] += 1;
+      }
+      const peak = Math.max(1, ...curve);
+      const bars = curve
+        .map(
+          (n, i) =>
+            `<i style="--fill:${Math.round((n / peak) * 100)}%" title="${i === 7 ? "7+" : i} 费 · ${n} 张"><b>${i === 7 ? "7+" : i}</b><s>${n || ""}</s></i>`,
+        )
+        .join("");
+      return `<div class="comp-head"><h4>牌组构成</h4><span>${list.length} / ${D.deckRules.size} 张</span></div><div class="comp-counts"><span>随从 <b>${counts.minion}</b></span><span>法术 <b>${counts.spell}</b></span><span>武器 <b>${counts.weapon}</b></span></div><div class="comp-curve" aria-hidden="true">${bars}</div>`;
+    };
     const plan = () => {
+      const value = $("hero-archetype").value;
       const loadout =
-        customs.find((d) => "saved:" + d.id === $("hero-archetype").value)
-          ?.contracts ??
+        customs.find((d) => "saved:" + d.id === value)?.contracts ??
         D.heroes.find((h) => h.id === chosenHero).defaultContracts ??
         [];
       document
         .querySelectorAll("[data-contract]")
         .forEach((el) => (el.checked = loadout.includes(el.dataset.contract)));
       $("hero-plan").textContent =
-        D.archetypes.find((a) => a.id === $("hero-archetype").value)?.plan ||
+        D.archetypes.find((a) => a.id === value)?.plan ||
         `使用已保存的 ${D.deckRules.size} 张英雄牌组。`;
+      const cards = value.startsWith("saved:")
+        ? customs.find((d) => "saved:" + d.id === value)?.cards
+        : presets.find((a) => a.id === value)?.deck;
+      $("hero-composition").innerHTML = compositionHTML(cards);
     };
     $("hero-archetype").onchange = plan;
     plan();

@@ -71,8 +71,8 @@ const EmberViewport = (() => {
           : H >= 600
             ? 142
             : 126
-        : H >= 420
-          ? 132
+        : H >= 380
+          ? 152
           : 116;
       l.hand = {
         x: padL - 4,
@@ -174,8 +174,12 @@ const EmberViewport = (() => {
           l.contract = { x: l.turn.x + 60, y: l.power.y, w: 44, h: 44 };
         }
       }
-      l.handLabel = { x: padL, y: l.hand.y - 28, w: 100, h: 25 };
-      l.cardW = portrait ? (W < 350 ? 94 : 106) : 88;
+      l.handLabel = { x: padL, y: l.hand.y - 44, w: 100, h: 44 };
+      l.cardW = portrait
+        ? W < 350
+          ? 98
+          : 112
+        : clamp(Math.round((handH - 10) * 0.82), 96, 124);
       l.cardH = portrait ? handH - 12 : handH - 10;
     }
     const before = state;

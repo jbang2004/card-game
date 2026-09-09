@@ -15,6 +15,7 @@ const EmberDialogs = (() => {
     result: "standard",
     "touch-menu": "standard",
     "touch-log": "standard",
+    map: "route",
     discover: "choice",
     mulligan: "choice",
     rewards: "choice",
@@ -55,6 +56,11 @@ const EmberDialogs = (() => {
     box.classList.add("folio-dialog", "framed-dialog");
     box.dataset.dialogSize = dialogSize[type] || "workspace";
     box.dataset.pagePolicy = dialogPagePolicy[type] || "paginate";
+    // Set the first-frame density before ResizeObserver/requestAnimationFrame
+    // can run. Otherwise short touch dialogs briefly render their workspace
+    // geometry and then switch to the compact layout while controls are
+    // already being measured or focused.
+    box.dataset.compact = String(modal.clientHeight < 520);
     // A commit action must never travel with paged reading content. A screen
     // may author an action beside its semantic context and opt it into the
     // fixed rail; the same live node is moved before pagination and keeps all

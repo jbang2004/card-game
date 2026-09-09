@@ -55,6 +55,12 @@ body #modal.folio-host {
   --dialog-width: 1040px;
   --dialog-height: 720px;
 }
+/* The adventure map is six fixed stops; it does not need the full workspace
+   frame, and a tighter box keeps the route from floating above empty wood. */
+#modal.folio-host > .folio-dialog[data-dialog-size="route"] {
+  --dialog-width: 1120px;
+  --dialog-height: 760px;
+}
 #modal.folio-host > .folio-dialog::before {
   border-width: var(--rim);
   border-image-width: var(--rim);
@@ -205,7 +211,7 @@ body #modal.folio-host {
 #modal.folio-host
   .folio-dialog
   .folio-flow
-  :is(.help-section, .key-table, .audio-sliders) {
+  :is(.key-table, .audio-sliders) {
   break-inside: auto;
 }
 #modal.folio-host .folio-dialog .folio-flow :is(p, h3, h4, label, summary) {
@@ -868,19 +874,46 @@ body.touch-layout
 #modal.folio-host
   .folio-dialog[data-compact="true"]
   .folio-flow
+  .hero-option {
+  position: relative;
+  min-height: 0;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px 8px 8px;
+}
+#modal.folio-host
+  .folio-dialog[data-compact="true"]
+  .folio-flow
   .hero-option
   > img {
-  display: none;
-}
-#modal.folio-host .folio-dialog[data-compact="true"] .folio-flow .hero-option {
+  position: static;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
   min-height: 0;
+  max-height: none;
+  border-radius: 9px;
+  object-fit: cover;
+  object-position: 50% 28%;
+  display: block;
+  box-shadow: 0 0 0 1px #b8a281;
 }
 #modal.folio-host
   .folio-dialog[data-compact="true"]
   .folio-flow
   .hero-option
   .hero-option-text {
-  padding: 10px 12px 10px 38px;
+  padding: 0;
+}
+#modal.folio-host
+  .folio-dialog[data-compact="true"]
+  .folio-flow
+  .hero-option
+  .selected-check {
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
 }
 #modal.folio-host
   .folio-dialog[data-compact="true"]
@@ -1713,12 +1746,7 @@ body.touch-layout
     #modal.folio-host
     .folio-dialog[data-compact="true"]
     .folio-flow
-    .ritual-ledger,
-  body.touch-layout
-    #modal.folio-host
-    .folio-dialog[data-compact="true"]
-    .folio-flow
-    .ritual-stones {
+    .ritual-ledger {
     display: none;
   }
   body.touch-layout
