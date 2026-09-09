@@ -1,4 +1,4 @@
-const { openDeckTools } = require("./helpers/deck-tools.cjs");
+const { openDeckTools, finishDeckTools } = require("./helpers/deck-tools.cjs");
 const { test, expect } = require("@playwright/test");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -597,6 +597,7 @@ test("campaign rewards and deck editor use the new state boundary", async ({
   await page.locator("#collection-nav").click();
   await openDeckTools(page);
   await page.locator("#deck-reset").click();
+  await finishDeckTools(page);
   await page.locator("#deck-save").click();
   expect(
     await page.evaluate(

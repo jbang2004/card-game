@@ -1,3 +1,4 @@
+const { turnTo, assertDialogFit } = require("./helpers/dialog-pages.cjs");
 const { test, expect } = require("@playwright/test");
 for (const [width, height] of [
   [568, 320],
@@ -34,9 +35,11 @@ for (const [width, height] of [
     await page.screenshot({
       path: `artifacts/uiux/deck-detail-fixed-${width}-warnings.png`,
     });
+    await turnTo(page, "#deck-contracts > summary");
     await page.locator("#deck-contracts > summary").click();
     const contract = page.locator("[data-deck-contract]").first();
-    await contract.scrollIntoViewIfNeeded();
+    await turnTo(page, "[data-deck-contract]");
+    await assertDialogFit(page);
     await contract.check();
     await expect(contract).toBeChecked();
     await page.screenshot({
@@ -44,7 +47,9 @@ for (const [width, height] of [
     });
     await page.locator("#deck-tools > summary").click();
     await expect(page.locator("#deck-list")).toBeVisible();
-    await expect(page.locator("#deck-tools > summary")).toContainText("调整套牌");
+    await expect(page.locator("#deck-tools > summary")).toContainText(
+      "调整套牌",
+    );
     await page.screenshot({
       path: `artifacts/uiux/deck-detail-fixed-${width}-list.png`,
     });

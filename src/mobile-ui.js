@@ -36,8 +36,7 @@
   };
   let longPress = null,
     suppressUntil = 0,
-    lastGesture = null,
-    inlineClose = null;
+    lastGesture = null;
   const sheetInfo = (c, opts = {}, tags = c.tags || []) => {
     const type =
       c.type === "minion" ? "随从" : c.type === "weapon" ? "武器" : "法术";
@@ -239,36 +238,10 @@
     const b = $("touch-deck-tab");
     if (b) b.textContent = `我的牌组 · ${n}/${D.deckRules.size}`;
   }
-  function closeInline() {
-    inlineClose?.();
-  }
   function inspectLibrary(el) {
-    const c = D.byId[el.dataset.add];
-    if (!c || E.modal !== "library") return;
-    closeInline();
-    const box = $("modal").firstElementChild,
-      scroll = box.scrollTop,
-      children = [...box.children];
-    const layer = document.createElement("section");
-    layer.className = "touch-inline-detail";
-    layer.setAttribute("role", "dialog");
-    layer.setAttribute("aria-label", c.name + " 卡牌详情");
-    layer.innerHTML = `<button id="touch-inline-close">返回收藏</button><div class="modal-heading"><h2>${esc(c.name)}</h2><p>仅查看 · 不会加入或移出牌组</p></div>${sheetInfo(c)}`;
-    children.forEach((c) => (c.inert = true));
-    box.appendChild(layer);
-    box.scrollTop = 0;
-    const oldOverflow = box.style.overflow;
-    box.style.overflow = "hidden";
-    inlineClose = () => {
-      layer.remove();
-      children.forEach((c) => (c.inert = false));
-      box.style.overflow = oldOverflow;
-      box.scrollTop = scroll;
-      el.focus({ preventScroll: true });
-      inlineClose = null;
-    };
-    $("touch-inline-close").onclick = closeInline;
-    $("touch-inline-close").focus({ preventScroll: true });
+    document
+      .querySelector(`[data-library-inspect="${el.dataset.add}"]`)
+      ?.click();
   }
   function afterModal(type) {
     if (!V.mobile || !type || !$("modal").firstElementChild) return;
@@ -283,8 +256,7 @@
       tabs.className = "touch-library-tabs";
       tabs.setAttribute("role", "tablist");
       tabs.setAttribute("aria-label", "卡牌收藏与牌组");
-      tabs.innerHTML =
-        `<button id="touch-card-tab" role="tab" aria-selected="true">全部卡牌</button><button id="touch-deck-tab" role="tab" aria-selected="false">我的牌组 · ${D.deckRules.size}/${D.deckRules.size}</button>`;
+      tabs.innerHTML = `<button id="touch-card-tab" role="tab" aria-selected="true">全部卡牌</button><button id="touch-deck-tab" role="tab" aria-selected="false">我的牌组 · ${D.deckRules.size}/${D.deckRules.size}</button>`;
       box.querySelector(".library-heading").after(tabs);
       for (const [id, deck] of [
         ["touch-card-tab", false],
@@ -451,22 +423,9 @@
     },
     true,
   );
-  document.addEventListener(
-    "keydown",
-    (ev) => {
-      if (ev.key === "Escape" && inlineClose) {
-        ev.preventDefault();
-        ev.stopImmediatePropagation();
-        closeInline();
-      }
-    },
-    true,
-  );
   window.addEventListener("ember:viewport", () => {
     stopLong();
     lastGesture = null;
-    closeInline();
-    if (!V.mobile && E.modal?.startsWith("touch")) E.closeModal();
   });
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {

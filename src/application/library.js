@@ -237,16 +237,48 @@ const EmberLibrary = (() => {
         .forEach((b) =>
           b.classList.toggle("active", b.dataset.mana === filterCost),
         );
+      for (const [key, value] of [
+        ["类型", filterType],
+        ["费用", filterCost],
+      ]) {
+        const select = document.querySelector(
+          `.folio-filters select[aria-label="筛选${key}"]`,
+        );
+        if (select) select.value = value;
+      }
       $("library-grid").innerHTML = list.length
         ? list
             .map(
               (c) =>
-                `<button class="library-item" data-add="${c.id}" title="${c.name}：${c.text}">${cardHTML(c)}<span class="add-label">+ 加入牌组</span><span class="owned-count">${editDeck.filter((id) => id === c.id).length} / ${rules.copyLimit(D, c)}</span></button>`,
+                `<div class="library-entry"><button class="library-item" data-add="${c.id}" title="${c.name}：${c.text}">${cardHTML(c)}<span class="add-label">+ 加入牌组</span><span class="owned-count">${editDeck.filter((id) => id === c.id).length} / ${rules.copyLimit(D, c)}</span></button><button class="library-inspect" data-library-inspect="${c.id}" aria-label="查看${escape(c.name)}详情">详情</button></div>`,
             )
             .join("")
         : '<p class="library-empty">没有符合筛选条件的卡牌。<br>试试其他关键词或费用。</p>';
       $("library-foot").textContent =
         "显示 " + list.length + ` 张可用职业与中立牌 · ${rules.summary(D)}`;
+      document.querySelectorAll("[data-library-inspect]").forEach((b) => {
+        b.onclick = () => {
+          const c = D.byId[b.dataset.libraryInspect];
+          showModal(
+            `<section class="modal-box"><div class="modal-heading"><h2>${escape(c.name)}</h2></div><img class="folio-illustration" src="${EmberArt.card(c)}" alt="${escape(c.name)}"><p>${c.cost} 法力 · ${D.classNames[c.class]}${c.atk !== undefined ? ` · ${c.atk} 攻击 / ${c.type === "weapon" ? c.hp + " 耐久" : c.hp + " 生命"}` : ""}</p><p>${EmberCards.formatText(c.text)}</p><div class="modal-footer"><button class="ghost-btn" id="library-detail-back">返回收藏</button><button class="gold-btn" id="library-detail-add">加入牌组</button></div></section>`,
+            "library-card",
+          );
+          $("library-detail-back").onclick = () => renderLibrary();
+          $("library-detail-add").onclick = () => {
+            if (editDeck.length >= D.deckRules.size) {
+              toast("牌组已满。先移除卡牌再加入。");
+              return;
+            }
+            const max = rules.copyLimit(D, c);
+            if (editDeck.filter((id) => id === c.id).length >= max) {
+              toast(`${c.name}最多携带 ${max} 张。`);
+              return;
+            }
+            editDeck.push(c.id);
+            renderLibrary();
+          };
+        };
+      });
       document.querySelectorAll("[data-add]").forEach((b) => {
         b.onclick = () => {
           hidePreview();

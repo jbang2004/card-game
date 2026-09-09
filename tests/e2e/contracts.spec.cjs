@@ -1,4 +1,4 @@
-const { openDeckTools } = require("./helpers/deck-tools.cjs");
+const { openDeckTools, finishDeckTools } = require("./helpers/deck-tools.cjs");
 const { test, expect } = require("@playwright/test");
 async function open(page) {
   await page.goto("./?debug=1");
@@ -98,6 +98,7 @@ test("named deck saves an independent contract loadout and selection launches it
   await page.locator('[data-deck-contract="eclipsewolf"]').uncheck();
   await page.locator('[data-deck-contract="moonguard"]').uncheck();
   await page.locator("#deck-name").fill("只携冥月神");
+  await finishDeckTools(page);
   await page.locator("#deck-play").click();
   await page.locator(".contract-setup summary").click();
   await expect(page.locator('[data-contract="selmyra"]')).toBeChecked();

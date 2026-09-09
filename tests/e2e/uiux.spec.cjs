@@ -1,3 +1,4 @@
+const { turnTo, assertDialogFit } = require("./helpers/dialog-pages.cjs");
 const { test, expect } = require("@playwright/test");
 async function ready(page) {
   await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
@@ -205,13 +206,28 @@ test("long collection rules stay above stats on desktop and phone", async ({
           s = c.querySelector(".stat");
         return (
           p.scrollHeight <= p.clientHeight + 1 &&
-          p.getBoundingClientRect().bottom <= s.getBoundingClientRect().top
+          (() => {
+            if (!p.checkVisibility()) return true;
+            const range = document.createRange();
+            range.selectNodeContents(p);
+            return (
+              range.getBoundingClientRect().bottom <=
+              s.getBoundingClientRect().top
+            );
+          })()
         );
       }),
     ).toBe(true);
     await page.screenshot({
       path: `artifacts/uiux/verified-long-card-${width}.png`,
     });
+    await page.locator("[data-library-inspect]").click();
+    await assertDialogFit(page);
+    await expect(page.locator(".modal-heading")).toContainText("引火学徒");
+    await turnTo(page, ".folio-flow > p:last-child");
+    await expect(page.locator(".folio-flow > p:last-child")).not.toBeEmpty();
+    await page.locator("#library-detail-back").click();
+    await expect(page.locator("#library-search")).toHaveValue("引火学徒");
     await ctx.close();
   }
 });

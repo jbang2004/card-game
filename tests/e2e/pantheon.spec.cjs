@@ -1,4 +1,4 @@
-const { openDeckTools } = require("./helpers/deck-tools.cjs");
+const { openDeckTools, finishDeckTools } = require("./helpers/deck-tools.cjs");
 const { test, expect } = require("@playwright/test");
 const gods = [
   ["mage", "jingchen", "stars"],
@@ -124,6 +124,7 @@ test("ranger may choose moon or hunt but cannot equip both gods; named loadout k
   await page.locator('[data-deck-contract="fenlos"]').uncheck();
   await page.locator('[data-deck-contract="selmyra"]').check();
   await page.locator("#deck-name").fill("游侠的冥月之誓");
+  await finishDeckTools(page);
   await page.locator("#deck-play").click();
   await page.locator(".contract-setup summary").click();
   await expect(page.locator('[data-contract="selmyra"]')).toBeChecked();

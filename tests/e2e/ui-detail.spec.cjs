@@ -53,12 +53,21 @@ for (const [width, height] of [
         }),
       ).toBe(true);
     }
-    if (width >= 1000) {
-      const titleYs = await page
-        .locator(".hero-option h3")
-        .evaluateAll((els) => els.map((el) => el.getBoundingClientRect().y));
-      expect(Math.max(...titleYs) - Math.min(...titleYs)).toBeLessThan(1);
-    }
+    // Choices now flow down measured columns instead of one fixed desktop row.
+    expect(
+      await page.locator(".hero-option h3").evaluateAll((es) =>
+        es.every((e) => {
+          const r = e.getBoundingClientRect(),
+            p = e.closest(".hero-option").getBoundingClientRect();
+          return (
+            r.left >= p.left &&
+            r.right <= p.right &&
+            r.top >= p.top &&
+            r.bottom <= p.bottom
+          );
+        }),
+      ),
+    ).toBe(true);
     const close = page.locator(".modal-close");
     expect(
       await close.evaluate((el) => {
