@@ -4033,6 +4033,31 @@ body .nav-link.active::after {
 body .icon-btn {
   border-radius: 50%;
 }
+/* The legacy layers leave native horizontal button padding in place, which
+   shifts a nominally centered SVG 1.5px to the right. Own the complete icon
+   box here so every desktop toolbar glyph shares one geometric center. */
+body:not(.touch-layout) .top-actions .icon-btn {
+  box-sizing: border-box;
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  line-height: 0;
+}
+body:not(.touch-layout) .top-actions .icon-btn > .ui-icon {
+  position: static;
+  display: block;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  overflow: visible;
+  vertical-align: initial;
+  transform: none;
+  transform-origin: 50% 50%;
+}
 body .lobby-copy {
   text-align: center;
 }

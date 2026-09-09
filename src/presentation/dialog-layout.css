@@ -18,14 +18,16 @@ body #modal.folio-host {
   --rim: 14px;
   --air: clamp(10px, 1.6vmin, 22px);
   --inset: calc(var(--rim) + var(--air));
+  --dialog-width: 1180px;
+  --dialog-height: 850px;
   box-sizing: border-box;
   container-type: inline-size;
   position: relative;
   display: flex;
   flex-direction: column;
   gap: clamp(8px, 1.4vmin, 18px);
-  width: min(1180px, 100%) !important;
-  height: min(850px, 100%) !important;
+  width: min(var(--dialog-width), 100%) !important;
+  height: min(var(--dialog-height), 100%) !important;
   max-width: 100%;
   max-height: 100%;
   min-height: 0;
@@ -34,6 +36,24 @@ body #modal.folio-host {
   overflow: hidden;
   transform: none;
   border-radius: 6px;
+}
+/* Dialogs keep a stable measured page, but their frame now reflects the task.
+   Lightweight decisions no longer inherit the dimensions of a full library. */
+#modal.folio-host > .folio-dialog[data-dialog-size="confirm"] {
+  --dialog-width: 620px;
+  --dialog-height: 360px;
+}
+#modal.folio-host > .folio-dialog[data-dialog-size="detail"] {
+  --dialog-width: 720px;
+  --dialog-height: 580px;
+}
+#modal.folio-host > .folio-dialog[data-dialog-size="standard"] {
+  --dialog-width: 900px;
+  --dialog-height: 640px;
+}
+#modal.folio-host > .folio-dialog[data-dialog-size="choice"] {
+  --dialog-width: 1040px;
+  --dialog-height: 720px;
 }
 #modal.folio-host > .folio-dialog::before {
   border-width: var(--rim);
@@ -236,6 +256,154 @@ body #modal.folio-host {
 #modal.folio-host .folio-pager[data-single="true"] {
   visibility: hidden;
 }
+/* Fixed control sheets should feel like native menus on touch devices. Their
+   controls reflow and tighten, while long copy and variable collections keep
+   the measured horizontal pager. */
+body.touch-layout
+  #modal.folio-host
+  .folio-dialog[data-page-policy="fit"]
+  .folio-pager {
+  display: none;
+}
+body.touch-layout
+  #modal.folio-host
+  .folio-dialog[data-page-policy="fit"]
+  .folio-flow {
+  column-count: initial;
+  column-width: initial;
+  column-gap: 0;
+}
+body.touch-layout
+  #modal.folio-host
+  .folio-dialog[data-page-policy="fit"]
+  .folio-flow
+  > * {
+  margin-block: 0;
+}
+
+/* Settings: one readable control sheet. Descriptions are already expressed by
+   the labels, so mobile keeps the label and full-size control, not a second
+   page of explanatory copy. */
+body.touch-layout
+  #modal.folio-host
+  .settings-box[data-page-policy="fit"]
+  .folio-flow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-auto-flow: row;
+  align-content: start;
+  gap: 6px 16px;
+}
+body.touch-layout
+  #modal.folio-host
+  .settings-box[data-page-policy="fit"]
+  .setting-row {
+  min-height: 44px;
+  padding: 0;
+  margin: 0;
+}
+body.touch-layout
+  #modal.folio-host
+  .settings-box[data-page-policy="fit"]
+  .setting-row
+  p {
+  display: none;
+}
+body.touch-layout
+  #modal.folio-host
+  .settings-box[data-page-policy="fit"]
+  .audio-sliders {
+  align-self: start;
+  padding: 0;
+  margin: 0;
+  border-top: 0;
+}
+body.touch-layout
+  #modal.folio-host
+  .settings-box[data-page-policy="fit"]
+  .audio-level {
+  grid-template-columns: minmax(54px, auto) minmax(40px, 1fr) 36px;
+  gap: 6px;
+  min-height: 36px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.25;
+}
+body.touch-layout
+  #modal.folio-host
+  .settings-box[data-page-policy="fit"]
+  .audio-level
+  output {
+  font-size: 11px;
+}
+
+/* Menu: icons stack above their labels, allowing 11 full-size actions to
+   occupy a balanced grid instead of placing Fullscreen by itself. */
+body.touch-layout
+  #modal.folio-host
+  .folio-dialog[data-page-policy="fit"]
+  .touch-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+  gap: 6px;
+  margin: 0;
+}
+body.touch-layout
+  #modal.folio-host
+  .folio-dialog[data-page-policy="fit"]
+  .touch-menu-grid
+  button {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  min-height: 56px;
+  gap: 4px;
+  padding: 6px;
+  text-align: center;
+  line-height: 1.2;
+}
+body.touch-layout
+  #modal.folio-host
+  .folio-dialog[data-page-policy="fit"]
+  .touch-menu-note {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+}
+@media (orientation: landscape) {
+  body.touch-layout
+    #modal.folio-host
+    .folio-dialog[data-page-policy="fit"]
+    .touch-menu-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  body.touch-layout
+    #modal.folio-host
+    .folio-dialog[data-page-policy="fit"]
+    .touch-menu-grid
+    button {
+    min-height: 60px;
+  }
+  body.touch-layout
+    #modal.folio-host
+    .folio-dialog[data-page-policy="fit"][data-compact="true"]
+    .touch-menu-note {
+    display: none;
+  }
+  body.touch-layout
+    #modal.folio-host
+    .settings-box[data-page-policy="fit"]
+    .folio-flow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  body.touch-layout
+    #modal.folio-host
+    .settings-box[data-page-policy="fit"][data-compact="true"]
+    .audio-level {
+    min-height: 32px;
+  }
+}
 /* Choice cards remain complete, with image and copy sharing the same row. */
 #modal.folio-host .folio-dialog .folio-flow .hero-option {
   position: relative;
@@ -388,7 +556,7 @@ body #modal.folio-host {
 }
 /* Collection: two measured panes, with the editor becoming a tab on narrow hosts. */
 #modal.folio-host .library-box {
-  width: min(1400px, 100%) !important;
+  --dialog-width: 1400px;
 }
 #modal.folio-host .library-heading {
   display: flex;

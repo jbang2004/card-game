@@ -5,6 +5,27 @@ const EmberDialogs = (() => {
   let previousType = null,
     previousPanes = [];
   const positionsByType = new Map();
+  const dialogSize = Object.freeze({
+    confirm: "confirm",
+    inspect: "detail",
+    "library-card": "detail",
+    "touch-card": "detail",
+    "touch-hero": "detail",
+    settings: "standard",
+    result: "standard",
+    "touch-menu": "standard",
+    "touch-log": "standard",
+    discover: "choice",
+    mulligan: "choice",
+    rewards: "choice",
+  });
+  // These dialogs contain a fixed, small set of controls. On touch screens
+  // they reflow instead of producing an orphan page for the final action.
+  // Long-form and variable content keeps the measured pager.
+  const dialogPagePolicy = Object.freeze({
+    settings: "fit",
+    "touch-menu": "fit",
+  });
   function mount(box, type) {
     if (previousType)
       positionsByType.set(
@@ -17,6 +38,8 @@ const EmberDialogs = (() => {
     document.body.append(modal);
     modal.classList.add("folio-host");
     box.classList.add("folio-dialog", "framed-dialog");
+    box.dataset.dialogSize = dialogSize[type] || "workspace";
+    box.dataset.pagePolicy = dialogPagePolicy[type] || "paginate";
     const panes = [];
     let nameInput, nameHost, nameSlot;
     let frame = 0;
@@ -97,7 +120,9 @@ const EmberDialogs = (() => {
     function layout() {
       frame = 0;
       if (!box.isConnected) return;
-      const compact = box.clientHeight < 520;
+      // Compact mode responds to a genuinely shallow viewport, not to a
+      // deliberately smaller dialog such as a confirmation or card detail.
+      const compact = modal.clientHeight < 520;
       box.dataset.compact = String(compact);
       if (nameInput) {
         const inHeader =
