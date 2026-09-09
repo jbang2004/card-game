@@ -98,7 +98,7 @@ body #modal.folio-host {
    frame, and a tighter box keeps the route from floating above empty wood. */
 #modal.folio-host > .folio-dialog[data-dialog-size="route"] {
   --dialog-width: 1000px;
-  --dialog-height: 680px;
+  --dialog-height: 740px;
 }
 #modal.folio-host > .folio-dialog[data-dialog-size="library"] {
   --dialog-width: 1200px;

@@ -32,7 +32,15 @@ def build():
     tokens = TOKEN.findall(template)
     if len(tokens) != len(set(tokens)) or set(tokens) != set(registry):
         raise ValueError('Template tokens must match build registry exactly')
-    sources = {k: (SRC / v).read_text() for k, v in registry.items()}
+    def embed_asset(match):
+        path = (ROOT / 'assets' / match[1]).resolve()
+        if (ROOT / 'assets').resolve() not in path.parents:
+            raise ValueError('Asset must be inside assets/')
+        mime = {'.png': 'png', '.webp': 'webp', '.jpg': 'jpeg'}[path.suffix]
+        return 'data:image/' + mime + ';base64,' + base64.b64encode(path.read_bytes()).decode()
+
+    sources = {k: re.sub(r'asset:([\w/.-]+)', embed_asset, (SRC / v).read_text())
+               for k, v in registry.items()}
     portable = TOKEN.sub(lambda m: sources[m[1]], template)
     (ROOT / 'index.html').write_text(portable)
 
@@ -69,7 +77,7 @@ def build():
     css = []
 
     def web_style(match):
-        css.append(TOKEN.sub(lambda m: sources[m[1]], match[1]))
+        css.append(MEDIA.sub(extract_media, TOKEN.sub(lambda m: sources[m[1]], match[1])))
         return '<link rel="stylesheet" href="./styles.css">'
 
     web = re.sub(r'<style>(.*?)</style>', web_style, web, flags=re.S)
