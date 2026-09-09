@@ -49,6 +49,32 @@ for (const [width, height, touch] of [
     });
     await page.locator("#contract-open").click();
     await expect(page.locator('[data-invoke="selmyra"]')).toBeEnabled();
+    const poster = await page.locator(".covenant-card").first().evaluate((card) => {
+      const art = card.querySelector(":scope > img"),
+        copy = card.querySelector(":scope > .covenant-copy"),
+        cardRect = card.getBoundingClientRect(),
+        artRect = art.getBoundingClientRect(),
+        copyRect = copy.getBoundingClientRect();
+      return {
+        card: [cardRect.width, cardRect.height],
+        art: [artRect.width, artRect.height],
+        copyPosition: getComputedStyle(copy).position,
+        copyBottom: cardRect.bottom - copyRect.bottom,
+        copyTop: copyRect.top - cardRect.top,
+      };
+    });
+    expect(poster.copyPosition).toBe("absolute");
+    expect(poster.art[0]).toBeGreaterThanOrEqual(poster.card[0] - 3);
+    expect(poster.art[1]).toBeGreaterThanOrEqual(poster.card[1] - 3);
+    expect(poster.copyBottom).toBeLessThanOrEqual(2);
+    expect(poster.copyTop).toBeGreaterThan(0);
+    if (touch) {
+      const scroll = await page.locator("#modal .folio-viewport").first().evaluate((viewport) => ({
+        overflowY: getComputedStyle(viewport).overflowY,
+        scrollable: viewport.scrollHeight > viewport.clientHeight + 2,
+      }));
+      expect(scroll).toEqual({ overflowY: "auto", scrollable: true });
+    }
     expect(
       await page.locator('[data-invoke="selmyra"]').evaluate((button) => {
         const r = button.getBoundingClientRect();

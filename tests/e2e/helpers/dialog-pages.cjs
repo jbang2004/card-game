@@ -48,6 +48,11 @@ async function assertDialogFit(page) {
             0,
             ...es
               .filter((e) => e.clientHeight)
+              .filter(
+                (e) =>
+                  !e.closest('#modal[data-type="contracts"]') ||
+                  getComputedStyle(e).overflowY !== "auto",
+              )
               .map((e) => e.scrollHeight - e.clientHeight),
           ),
         ),
@@ -64,7 +69,12 @@ async function assertDialogFit(page) {
     )
       errors.push("dialog outside viewport");
     for (const e of box.querySelectorAll(".folio-viewport"))
-      if (e.clientHeight && e.scrollHeight > e.clientHeight + 2)
+      if (
+        e.clientHeight &&
+        e.scrollHeight > e.clientHeight + 2 &&
+        (!e.closest('#modal[data-type="contracts"]') ||
+          getComputedStyle(e).overflowY !== "auto")
+      )
         errors.push(`vertical overflow ${e.scrollHeight - e.clientHeight}`);
     for (const e of box.querySelectorAll(
       ":scope > .modal-footer button,:scope > .reward-footer button,.modal-close",
