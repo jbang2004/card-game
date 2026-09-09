@@ -1,0 +1,97 @@
+const { test, expect } = require("@playwright/test");
+
+async function expectSingleScreenControls(page, selector) {
+  const box = page.locator("#modal .folio-dialog");
+  const viewport = box.locator(".folio-viewport");
+  const pager = box.locator(".folio-pager");
+  await expect(box).toHaveAttribute("data-page-policy", "fit");
+  await expect(pager).toHaveAttribute("data-single", "true");
+  await expect(pager).toBeHidden();
+  const result = await box.evaluate((dialog, controlSelector) => {
+    const view = dialog.querySelector(".folio-viewport"),
+      flow = dialog.querySelector(".folio-flow"),
+      vr = view.getBoundingClientRect(),
+      controls = [...dialog.querySelectorAll(controlSelector)];
+    return {
+      horizontalOverflow: flow.scrollWidth - view.clientWidth,
+      verticalOverflow: flow.scrollHeight - view.clientHeight,
+      outside: controls
+        .filter((control) => {
+          const r = control.getBoundingClientRect();
+          return (
+            r.left < vr.left - 1 ||
+            r.right > vr.right + 1 ||
+            r.top < vr.top - 1 ||
+            r.bottom > vr.bottom + 1
+          );
+        })
+        .map((control) => control.textContent.trim()),
+      undersizedButtons: controls
+        .filter((control) => control.matches("button"))
+        .filter((control) => {
+          const r = control.getBoundingClientRect();
+          return r.width < 44 || r.height < 44;
+        }).length,
+    };
+  }, selector);
+  expect(result.horizontalOverflow).toBeLessThanOrEqual(1);
+  expect(result.verticalOverflow).toBeLessThanOrEqual(1);
+  expect(result.outside).toEqual([]);
+  expect(result.undersizedButtons).toBe(0);
+  await expect(viewport).toBeVisible();
+}
+
+for (const [width, height] of [
+  [390, 844],
+  [320, 568],
+  [844, 390],
+  [568, 320],
+]) {
+  test(`fixed touch controls avoid orphan pages ${width}x${height}`, async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      viewport: { width, height },
+      hasTouch: true,
+      isMobile: true,
+    });
+    const page = await context.newPage();
+    await page.goto("./?debug=1");
+    await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
+
+    await page.evaluate(() => Emberfall.showSettings());
+    await expectSingleScreenControls(
+      page,
+      ".setting-row,.audio-level,.toggle,.wind-time-setting",
+    );
+    await page.evaluate(() => Emberfall.closeModal(false));
+
+    await page.evaluate(() => Emberfall.demo());
+    await page.waitForFunction(() => !EmberFX.busy);
+    await page.evaluate(() => EmberMobile.showMenu());
+    await expectSingleScreenControls(page, ".touch-menu-grid > button");
+    await context.close();
+  });
+}
+
+test("long mobile views retain readable pagination", async ({ browser }) => {
+  const context = await browser.newContext({
+    viewport: { width: 320, height: 568 },
+    hasTouch: true,
+    isMobile: true,
+  });
+  const page = await context.newPage();
+  await page.goto("./?debug=1");
+  await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
+  for (const show of ["showMap", "showHelp"]) {
+    await page.evaluate((name) => Emberfall[name](), show);
+    const box = page.locator("#modal .folio-dialog");
+    await expect(box).toHaveAttribute("data-page-policy", "paginate");
+    await expect(box.locator(".folio-pager")).toHaveAttribute(
+      "data-single",
+      "false",
+    );
+    await page.evaluate(() => Emberfall.closeModal(false));
+  }
+  await context.close();
+});
