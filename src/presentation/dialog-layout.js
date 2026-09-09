@@ -26,6 +26,8 @@ const EmberDialogs = (() => {
     settings: "fit",
     "touch-menu": "fit",
   });
+  const pagerIcon = (direction) =>
+    `<svg class="folio-page-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="${direction === "previous" ? "M15 6 9 12l6 6" : "M9 6l6 6-6 6"}"/></svg>`;
   function mount(box, type) {
     if (previousType)
       positionsByType.set(
@@ -40,6 +42,22 @@ const EmberDialogs = (() => {
     box.classList.add("folio-dialog", "framed-dialog");
     box.dataset.dialogSize = dialogSize[type] || "workspace";
     box.dataset.pagePolicy = dialogPagePolicy[type] || "paginate";
+    // A commit action must never travel with paged reading content. A screen
+    // may author an action beside its semantic context and opt it into the
+    // fixed rail; the same live node is moved before pagination and keeps all
+    // listeners, state and accessibility metadata.
+    const anchoredActions = [...box.querySelectorAll("[data-dialog-action]")];
+    if (anchoredActions.length) {
+      const footer = document.createElement("div");
+      footer.className = "folio-actions modal-footer";
+      footer.setAttribute("aria-label", "主要操作");
+      if (type === "contracts") {
+        footer.classList.add("covenant-actions");
+        footer.setAttribute("aria-label", "契约操作");
+      }
+      footer.append(...anchoredActions);
+      box.append(footer);
+    }
     const panes = [];
     let nameInput, nameHost, nameSlot;
     let frame = 0;
@@ -56,7 +74,7 @@ const EmberDialogs = (() => {
       nav.className = "folio-pager";
       nav.setAttribute("aria-label", label + "分页");
       nav.innerHTML =
-        '<button type="button" aria-label="上一页" disabled>‹</button><span aria-live="polite"></span><button type="button" aria-label="下一页" disabled>›</button>';
+        `<button type="button" aria-label="上一页" disabled>${pagerIcon("previous")}</button><span aria-live="polite"></span><button type="button" aria-label="下一页" disabled>${pagerIcon("next")}</button>`;
       shell.append(viewport, nav);
       viewport.append(content);
       content.classList.add(mode === "grid" ? "folio-grid" : "folio-flow");

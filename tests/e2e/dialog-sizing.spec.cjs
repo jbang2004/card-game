@@ -102,3 +102,38 @@ test("desktop toolbar SVGs share the exact button center", async ({ page }) => {
     expect(icon.pathInsideViewBox).toBe(true);
   }
 });
+
+test("folio pager uses symmetric coded SVGs centered in full touch targets", async ({
+  page,
+}) => {
+  await page.goto("./?debug=1");
+  await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
+  await page.evaluate(() => Emberfall.showHelp());
+  const metrics = await page
+    .locator(".folio-pager > button")
+    .evaluateAll((buttons) =>
+      buttons.map((button) => {
+        const svg = button.querySelector("svg"),
+          path = svg.querySelector("path"),
+          b = button.getBoundingClientRect(),
+          s = svg.getBoundingClientRect(),
+          p = path.getBBox();
+        return {
+          button: [b.width, b.height],
+          svg: [s.width, s.height],
+          offset: [
+            s.left + s.width / 2 - (b.left + b.width / 2),
+            s.top + s.height / 2 - (b.top + b.height / 2),
+          ],
+          pathCenter: [p.x + p.width / 2, p.y + p.height / 2],
+        };
+      }),
+    );
+  expect(metrics).toHaveLength(2);
+  for (const icon of metrics) {
+    expect(icon.button).toEqual([44, 44]);
+    expect(icon.svg).toEqual([18, 18]);
+    expect(icon.offset).toEqual([0, 0]);
+    expect(icon.pathCenter).toEqual([12, 12]);
+  }
+});
