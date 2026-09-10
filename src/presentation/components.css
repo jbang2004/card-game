@@ -3327,83 +3327,65 @@ body .stat::before {
 
 body .stat.atk::before {
   border: 2px solid var(--badge-attack-edge) !important;
-  border-radius: 18% 18% 30% 30% !important;
-  clip-path: polygon(
-    50% 0,
-    66% 22%,
-    96% 30%,
-    70% 48%,
-    86% 88%,
-    50% 66%,
-    14% 88%,
-    30% 48%,
-    4% 30%,
-    34% 22%
-  ) !important;
+  border-radius: 50% !important;
+  clip-path: none !important;
   background: radial-gradient(
-    ellipse at 30% 20%,
-    var(--badge-attack-light),
-    #d7a441 40%,
-    #8c5d20 72%,
-    #c5963f
+    circle at 31% 22%,
+    #fff5bd 0 7%,
+    var(--badge-attack-light) 23%,
+    #d7a441 48%,
+    #8c5d20 80%,
+    #5e3b16
   ) !important;
   box-shadow:
     inset 0 0 0 1px #fff1bd,
     inset 0 -3px 4px #553613,
-    0 1px 0 #f0c978 !important;
+    0 1px 0 #f0c978,
+    0 2px 3px #28170ccc !important;
 }
 
 body .stat.atk::after {
   content: "" !important;
   display: block !important;
   position: absolute;
-  top: 10%;
-  left: 43%;
-  width: 14%;
-  height: 77%;
-  clip-path: polygon(50% 0, 100% 18%, 68% 86%, 50% 100%, 32% 86%, 0 18%) !important;
-  background: linear-gradient(135deg, #fff5bd, #b47b22 64%) !important;
-  opacity: 0.48;
-  transform: rotate(27deg);
+  top: 12%;
+  left: 18%;
+  width: 30%;
+  height: 13%;
+  border-radius: 999px;
+  background: #fff8c9cc !important;
+  opacity: 0.7;
+  transform: rotate(-25deg);
   z-index: -1;
 }
 
 body .stat.hp::before {
   border: 2px solid var(--badge-health-edge) !important;
-  border-radius: 0 !important;
-  clip-path: polygon(
-    50% 96%,
-    12% 57%,
-    7% 36%,
-    15% 16%,
-    31% 8%,
-    50% 25%,
-    69% 8%,
-    85% 16%,
-    93% 36%,
-    88% 57%
-  ) !important;
+  border-radius: 50% !important;
+  clip-path: none !important;
   background: radial-gradient(
-    ellipse at 29% 20%,
-    var(--badge-health-light),
-    #d04e40 40%,
-    #87272e 74%,
-    #b83c39
+    circle at 30% 21%,
+    #ffe0cf 0 7%,
+    var(--badge-health-light) 23%,
+    #d04e40 49%,
+    #87272e 80%,
+    #591d25
   ) !important;
   box-shadow:
     inset 0 0 0 1px #ffe0bd,
     inset 0 -3px 4px #5c1e27,
-    0 1px 0 #ed9874 !important;
+    0 1px 0 #ed9874,
+    0 2px 3px #28130ecc !important;
 }
 
 body .stat.hp::after {
   content: "" !important;
   display: block !important;
   position: absolute;
-  top: 14%;
-  left: 22%;
-  width: 24%;
-  height: 14%;
+  top: 12%;
+  left: 19%;
+  width: 29%;
+  height: 13%;
   border-radius: 999px;
   background: #fff2d099 !important;
   transform: rotate(-28deg);
@@ -3467,25 +3449,29 @@ body .stat-value {
 }
 
 body .stat-glyph {
-  inset: 14%;
-  opacity: 0.42;
+  inset: 17%;
+  opacity: 0.84;
 }
 
 body .stat.atk .stat-glyph {
-  color: #4a2d0f;
-  opacity: 0.9;
-  transform: rotate(-8deg);
-  filter: drop-shadow(0 1px 0 #fff0ae);
+  color: #5a3710;
+  opacity: 0.92;
+  transform: rotate(-8deg) scale(1.04);
+  filter: drop-shadow(0 1px 0 #fff0ae) drop-shadow(0 0 1px #ffdf77);
 }
 
 body .stat.atk .stat-glyph .ui-icon {
-  stroke-width: 2.8;
+  stroke-width: 2.5;
 }
 
 body .stat.hp .stat-glyph {
-  color: #ffe2d1;
-  opacity: 0.62;
-  filter: drop-shadow(0 1px 0 #6d2228);
+  color: #fff0e2;
+  opacity: 0.9;
+  filter: drop-shadow(0 1px 0 #6d2228) drop-shadow(0 0 1px #ffae98);
+}
+
+body .stat.hp .stat-glyph .ui-icon {
+  stroke-width: 2.45;
 }
 
 body .card.weapon .stat.hp .stat-glyph {
