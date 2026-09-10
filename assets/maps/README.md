@@ -34,7 +34,7 @@ Common brief: premium Japanese fantasy RPG environments, fine etched detail and 
 
 The first frost illustration cropped the spire at the source edge. It was rejected and regenerated with a wider camera. `sources/frost.png` is retained as the rejected first version; only `frost-v2.png` feeds the active frost asset.
 
-`archive/adventure-atlas-v1.png` is the former whole-screen illustration, preserved as a design record. It is no longer referenced or packaged.
+The former whole-screen illustration was removed at the user's request. Its prior version remains recoverable from Git history; the active map uses only the separate assets described above.
 
 ## Review scope
 

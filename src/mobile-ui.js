@@ -44,7 +44,7 @@
       c.type === "spell"
         ? `${opts.cost ?? c.cost} 法力 · ${c.rarity === "legendary" ? "传说" : c.rarity === "epic" ? "史诗" : c.rarity === "rare" ? "稀有" : "普通"}法术`
         : `${opts.atk ?? c.atk} 攻击 / ${opts.hp ?? c.hp} ${c.type === "weapon" ? "耐久" : "生命"} · ${opts.cost ?? c.cost} 法力`;
-    return `<div class="touch-inspect-main"><div class="touch-inspect-art">${E.cardHTML(c, opts)}</div><div class="touch-inspect-detail"><small>${type} / ${c.rarity.toUpperCase()}</small><div class="touch-live-stat">${stats}</div><p class="touch-rule">${E.formatText(c.text || "一位等待你指挥的随从。")}</p>${opts.note ? `<p class="touch-reason">${esc(opts.note)}</p>` : ""}</div></div>${tags.length ? `<div class="touch-keywords">${tags.map((k) => `<div><strong>${esc(D.kw[k] || k)}</strong> · ${esc(kw[k] || "")}</div>`).join("")}</div>` : ""}`;
+    return `<div class="card-detail-layout"><div class="card-detail-art">${E.cardHTML(c, opts)}</div><div class="card-detail-copy"><small>${type} / ${{ common: "普通", rare: "稀有", epic: "史诗", legendary: "传说" }[c.rarity]}</small><div class="touch-live-stat">${stats}</div>${opts.note ? `<p class="touch-reason">${esc(opts.note)}</p>` : ""}${tags.length ? `<div class="touch-keywords">${tags.map((k) => `<div><strong>${esc(D.kw[k] || k)}</strong> · ${esc(kw[k] || "")}</div>`).join("")}</div>` : ""}</div></div>`;
   };
   function blocked() {
     return !E.inBattle || F.busy;
@@ -59,7 +59,7 @@
       cost = E.game.cost(card);
     const needs = c.target && E.game.targets(c.target, "p").length;
     E.showModal(
-      `<section class="modal-box touch-card-sheet"><div class="modal-heading"><div class="eyebrow">YOUR HAND · 点选确认</div><h2>${esc(c.name)}</h2></div>${sheetInfo(c, { cost, note: err || "查看不会消耗法力。" })}<div class="modal-footer"><button id="touch-card-cancel" class="ghost-btn">${fromGrid ? "返回手牌" : "收起"}</button><button id="touch-card-play" class="gold-btn" ${err ? "disabled" : ""}>${needs ? "选择目标" : "打出卡牌"} · ${cost} 法力</button></div></section>`,
+      `<section class="modal-box touch-card-sheet"><div class="modal-heading"><div class="eyebrow">手牌</div><h2>${esc(c.name)}</h2></div>${sheetInfo(c, { cost, note: err })}<div class="modal-footer"><button id="touch-card-cancel" class="ghost-btn">${fromGrid ? "返回手牌" : "收起"}</button><button id="touch-card-play" class="gold-btn" ${err ? "disabled" : ""}>${needs ? "选择目标" : "打出卡牌"} · ${cost} 法力</button></div></section>`,
       "touch-card",
     );
     $("touch-card-cancel").onclick = () => {
@@ -77,7 +77,7 @@
     if (blocked()) return;
     const s = E.game.s;
     E.showModal(
-      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">YOUR HAND / ${s.p.hand.length}</div><h2>手中有牌，心中有数</h2><p>点选卡牌查看大图，再确认出牌。这里不会自动使用任何卡牌。</p></div><div class="touch-hand-grid">${s.p.hand.map((v) => `<button data-touch-hand="${v.uid}" aria-label="查看 ${D.byId[v.cid].name}">${E.cardHTML(D.byId[v.cid], { cost: E.game.cost(v) })}</button>`).join("") || "<p>手牌暂时为空，下回合会再抽一张。</p>"}</div></section>`,
+      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">${s.p.hand.length} 张手牌</div><h2>手牌总览</h2></div><div class="touch-hand-grid">${s.p.hand.map((v) => `<button data-touch-hand="${v.uid}" aria-label="查看 ${D.byId[v.cid].name}">${E.cardHTML(D.byId[v.cid], { cost: E.game.cost(v) })}</button>`).join("") || "<p>手牌暂时为空，下回合会再抽一张。</p>"}</div></section>`,
       "touch-hand",
     );
     document
@@ -100,7 +100,7 @@
           : "敌方随从";
     const ready = side === "p" && E.game.canAttack("p", uid);
     E.showModal(
-      `<section class="modal-box touch-card-sheet"><div class="modal-heading"><div class="eyebrow">${side === "p" ? "YOUR MINION" : "ENEMY MINION"} · 战场详情</div><h2>${esc(c.name)}</h2></div>${sheetInfo(c, { atk: m.atk, hp: m.hp, note }, m.tags)}<div class="modal-footer"><button id="touch-unit-close" class="ghost-btn">回到战场</button>${ready ? '<button id="touch-unit-attack" class="gold-btn">选择攻击目标</button>' : ""}</div></section>`,
+      `<section class="modal-box touch-card-sheet"><div class="modal-heading"><div class="eyebrow">${side === "p" ? "我方随从" : "敌方随从"} · 战场详情</div><h2>${esc(c.name)}</h2></div>${sheetInfo(c, { atk: m.atk, hp: m.hp, note }, m.tags)}<div class="modal-footer"><button id="touch-unit-close" class="ghost-btn">回到战场</button>${ready ? '<button id="touch-unit-attack" class="gold-btn">选择攻击目标</button>' : ""}</div></section>`,
       "touch-card",
     );
     $("touch-unit-close").onclick = () => E.closeModal();
@@ -121,7 +121,7 @@
     const usable = side === "p" && !$("power-btn").disabled,
       canAttack = side === "p" && E.game.canAttack("p", "hero");
     E.showModal(
-      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">${side === "p" ? "YOUR HERO" : "BOSS ENCOUNTER"}</div><h2>${esc(power ? d.power : d.name)}</h2></div><div class="touch-hero-info"><img src="${A.character(d)}" alt="${esc(d.name)}"><div><div class="touch-live-stat">${p.hp} / ${p.maxHp} 生命${p.armor ? " · " + p.armor + " 护甲" : ""}</div><p><b>${esc(d.power)}</b><br>${esc(d.powerText)}</p>${side === "e" ? `<p>${s.phase2 ? "已进入第二阶段" : "半血时觉醒"}<br>${esc(d.phaseText)}</p>` : p.weapon ? `<p>${D.byId[p.weapon.cid].name} · ${p.weapon.atk} 攻 / ${p.weapon.durability} 耐久</p>` : ""}</div></div><div class="modal-footer"><button id="touch-hero-close" class="ghost-btn">回到战场</button>${usable ? `<button id="touch-hero-power" class="gold-btn">英雄技能 · ${d.powerCost} 法力</button>` : canAttack ? '<button id="touch-hero-attack" class="gold-btn">武器攻击</button>' : ""}</div></section>`,
+      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">${side === "p" ? "我方英雄" : "敌方情报"}</div><h2>${esc(power ? d.power : d.name)}</h2></div><div class="touch-hero-info"><img src="${A.character(d)}" alt="${esc(d.name)}"><div><div class="touch-live-stat">${p.hp} / ${p.maxHp} 生命${p.armor ? " · " + p.armor + " 护甲" : ""}</div><p><b>${esc(d.power)}</b><br>${esc(d.powerText)}</p>${side === "e" ? `<p>${s.phase2 ? "已进入第二阶段" : "半血时觉醒"}<br>${esc(d.phaseText)}</p>` : p.weapon ? `<p>${D.byId[p.weapon.cid].name} · ${p.weapon.atk} 攻 / ${p.weapon.durability} 耐久</p>` : ""}</div></div><div class="modal-footer"><button id="touch-hero-close" class="ghost-btn">回到战场</button>${usable ? `<button id="touch-hero-power" class="gold-btn">英雄技能 · ${d.powerCost} 法力</button>` : canAttack ? '<button id="touch-hero-attack" class="gold-btn">武器攻击</button>' : ""}</div></section>`,
       "touch-hero",
     );
     $("touch-hero-close").onclick = () => E.closeModal();
@@ -178,7 +178,7 @@
   function showLog() {
     if (blocked()) return;
     E.showModal(
-      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">THE BATTLE JOURNAL</div><h2>战斗记录</h2></div><div class="touch-log">${E.game.s.log
+      `<section class="modal-box"><div class="modal-heading"><h2>战斗记录</h2></div><div class="touch-log">${E.game.s.log
         .slice(-24)
         .reverse()
         .map((l) => `<p>${esc(l)}</p>`)
@@ -204,7 +204,7 @@
       );
     opts.push(["full", "full", "全屏"]);
     E.showModal(
-      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">酒馆菜单</div><h2>菜单</h2></div><div class="touch-menu-grid">${opts.map(([id, icon, label]) => `<button data-touch-menu="${id}">${A.icon(icon)}<span>${label}</span></button>`).join("")}</div><p class="touch-menu-note">点手牌查看 → 确认出牌 → 选择高亮目标。<br>手牌可以左右滑动；长按随从或英雄查看详情。横屏、竖屏都能继续当前对局。</p></section>`,
+      `<section class="modal-box"><div class="modal-heading"><h2>菜单</h2></div><div class="touch-menu-grid">${opts.map(([id, icon, label]) => `<button data-touch-menu="${id}">${A.icon(icon)}<span>${label}</span></button>`).join("")}</div></section>`,
       "touch-menu",
     );
     const fn = {
@@ -232,7 +232,6 @@
     );
   }
   function syncDeck(n) {
-    if (!V.mobile) return;
     const b = $("touch-deck-tab");
     if (b) b.textContent = `我的牌组 · ${n}/${D.deckRules.size}`;
   }
@@ -241,44 +240,11 @@
       .querySelector(`[data-library-inspect="${el.dataset.add}"]`)
       ?.click();
   }
-  function afterModal(type) {
-    if (!V.mobile || !type || !$("modal").firstElementChild) return;
-    const box = $("modal").firstElementChild,
-      head = box.querySelector("h2");
-    if (head) {
-      head.id = "touch-dialog-title";
-      $("modal").setAttribute("aria-labelledby", "touch-dialog-title");
-    }
-    if (type === "library" && !$("touch-card-tab")) {
-      const tabs = document.createElement("div");
-      tabs.className = "touch-library-tabs";
-      tabs.setAttribute("role", "tablist");
-      tabs.setAttribute("aria-label", "卡牌收藏与牌组");
-      tabs.innerHTML = `<button id="touch-card-tab" role="tab" aria-selected="true">全部卡牌</button><button id="touch-deck-tab" role="tab" aria-selected="false">我的牌组 · ${D.deckRules.size}/${D.deckRules.size}</button>`;
-      box.querySelector(".library-heading").after(tabs);
-      for (const [id, deck] of [
-        ["touch-card-tab", false],
-        ["touch-deck-tab", true],
-      ])
-        $(id).onclick = () => {
-          box.classList.toggle("touch-show-deck", deck);
-          $("touch-card-tab").setAttribute("aria-selected", String(!deck));
-          $("touch-deck-tab").setAttribute("aria-selected", String(deck));
-          box.scrollTop = 0;
-        };
-      const total = $("deck-total")?.textContent?.split("/")[0];
-      if (total) syncDeck(total);
-      const foot = $("library-foot");
-      if (foot)
-        foot.textContent = "点按加入牌组 · 长按查看大图 · “我的牌组”中移除";
-    }
-    if (type === "inspect") box.classList.add("touch-card-sheet");
-  }
   function afterRender(s) {
     if (!V.mobile || !s) return;
     const b = D.bosses[s.bossIndex];
     $("touch-match-chip").innerHTML =
-      `<small>ENCOUNTER 0${s.bossIndex + 1}</small><strong>${esc(b.name)}</strong><span>${s.phase2 ? "第二阶段 · 已觉醒" : "第一阶段"} · ${s.e.hand.length} 手牌</span>`;
+      `<small>第 ${s.bossIndex + 1} 战</small><strong>${esc(b.name)}</strong><span>${s.phase2 ? "第二阶段 · 已觉醒" : "第一阶段"} · ${s.e.hand.length} 手牌</span>`;
     $("turn-number").textContent =
       (s.active === "p" ? "你的回合" : "敌方回合") + " · " + s.turn;
     $("hand").setAttribute(
@@ -438,16 +404,15 @@
     inspectMinion,
     inspectHero,
     afterRender,
-    afterModal,
     selectionChanged,
     syncDeck,
     showMenu,
   };
-  document.title = "烬域 · 掌中酒馆 — POCKET ATELIER";
+  document.title = "烬域 · 鎏金酒馆";
   document.querySelector(".lobby-copy>.eyebrow").textContent =
-    "EMBERFALL · POCKET ATELIER";
+    "诸神同辉";
   document.querySelector(".lobby-bottom small").textContent =
-    "VOL. V / POCKET ATELIER";
+    "烬域 · 鎏金酒馆";
   const prev = V.mobile;
   V.resize();
   if (prev && E.game.s) afterRender(E.game.s);

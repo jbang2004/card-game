@@ -11,7 +11,7 @@ const EmberContractUI = (() => {
       if (!game.s || EmberFX.busy) return;
       const s = game.s;
       showModal(
-        `<section class="modal-box covenant-box"><div class="covenant-heading"><small>COVENANTS OF THE DIVINE</small><h2>诸神契约</h2><p>星火、誓光、狩猎与灵魂，各有唤醒之路。双方进度公开，每张契约每局一次；神祇降临当回合不能攻击英雄。</p></div>${[
+        `<section class="modal-box covenant-box"><div class="covenant-heading"><h2>诸神契约</h2></div>${[
           "p",
           "e",
         ]
@@ -46,14 +46,15 @@ const EmberContractUI = (() => {
                     )
                     .join(
                       "",
-                    )}</div>${side === "p" ? `<button class="gold-btn" data-invoke="${id}" data-dialog-action aria-label="${c.name}：${used ? "契约已兑现" : reason || "唤醒契约"}" title="${used ? "契约已兑现" : reason || "条件已满足"}" ${reason ? "disabled" : ""}>${used ? c.name + " · 已兑现" : reason ? c.name + " · 暂不可用" : "唤醒 " + c.name}</button>` : `<p class="enemy-covenant-status">${enemyStatus}</p>`}</div></article>`;
+                    )}</div>${side === "p" ? `<p class="covenant-status" id="covenant-status-${side}-${id}">${used ? "契约已兑现" : reason || "条件已满足"}</p><button type="button" class="gold-btn" data-invoke="${id}" aria-describedby="covenant-status-${side}-${id}" ${used || reason ? "disabled" : ""}>${used ? c.name + " · 已兑现" : "唤醒 " + c.name}</button>` : `<p class="enemy-covenant-status">${enemyStatus}</p>`}</div></article>`;
                 })
                 .join("") || '<p class="deck-plan">未携带契约。</p>'
             }</div></section>`;
           })
-          .join("")}</section>`,
+          .join("")}<footer class="modal-footer covenant-actions"><button type="button" class="ghost-btn" id="contract-close">关闭</button></footer></section>`,
         "contracts",
       );
+      document.getElementById("contract-close").onclick = () => closeModal(false);
       document.querySelectorAll("[data-invoke]").forEach(
         (b) =>
           (b.onclick = () => {

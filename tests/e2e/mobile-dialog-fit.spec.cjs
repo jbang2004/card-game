@@ -3,7 +3,7 @@ const { test, expect } = require("@playwright/test");
 async function expectSingleScreenControls(page, selector) {
   const box = page.locator("#modal .folio-dialog");
   const viewport = box.locator(".folio-viewport");
-  await expect(box).toHaveAttribute("data-layout-mode", "fit");
+  await expect(box.locator(":scope > .folio-pane")).toHaveCount(1);
   await expect(box.locator(".folio-pager")).toHaveCount(0);
   const result = await box.evaluate((dialog, controlSelector) => {
     const view = dialog.querySelector(".folio-viewport"),
@@ -84,7 +84,7 @@ test("long mobile views scroll vertically without a pager", async ({ browser }) 
   for (const show of ["showMap", "showHelp"]) {
     await page.evaluate((name) => Emberfall[name](), show);
     const box = page.locator("#modal .folio-dialog");
-    await expect(box).toHaveAttribute("data-layout-mode", "scroll");
+    await expect(box.locator(":scope > .folio-pane")).toHaveCount(1);
     await expect(box.locator(".folio-pager")).toHaveCount(0);
     await expect(box.locator(".folio-viewport")).toHaveCSS(
       "overflow-y",
