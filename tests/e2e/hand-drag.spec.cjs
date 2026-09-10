@@ -53,6 +53,8 @@ async function handState(page) {
       handCount: document.getElementById("hand-count").textContent,
       mana: document.getElementById("mana-value").textContent,
       validTargets: document.querySelectorAll(".valid-target").length,
+      selected: document.querySelectorAll("#hand .hand-card.selected").length,
+      targeting: !document.getElementById("touch-target-bar").hidden,
       aimFocus: document.querySelectorAll(".aim-focus").length,
       dragSource: document.querySelectorAll(".drag-source").length,
       ghost: document.querySelectorAll(".drag-ghost").length,
@@ -90,22 +92,6 @@ async function touchDrag(page, from, to, steps = 14) {
   });
   await cdp.detach();
   await page.waitForTimeout(700);
-}
-
-/* A real press-and-hold: touchEnd has to come after the 440ms long-press gate. */
-async function touchHold(page, point, ms = 660) {
-  const cdp = await page.context().newCDPSession(page);
-  await cdp.send("Input.dispatchTouchEvent", {
-    type: "touchStart",
-    touchPoints: [{ x: point.x, y: point.y }],
-  });
-  await page.waitForTimeout(ms);
-  await cdp.send("Input.dispatchTouchEvent", {
-    type: "touchEnd",
-    touchPoints: [],
-  });
-  await cdp.detach();
-  await page.waitForTimeout(200);
 }
 
 async function boxOf(page, uid) {
@@ -329,7 +315,7 @@ for (const [label, viewport] of VIEWPORTS) {
       expect(after.toast).toContain("已取消");
     });
 
-    test("a tap plays a targetless card and aims a targeted one", async ({
+    test("a tap prepares a targetless card, then the board confirms it", async ({
       page,
     }) => {
       await startTouch(page);
@@ -338,7 +324,30 @@ for (const [label, viewport] of VIEWPORTS) {
       expect(plain).toBeTruthy();
       const before = await handState(page);
       await page.locator(`#hand [data-hand="${plain.uid}"]`).tap();
-      await page.waitForTimeout(600);
+      await page.waitForTimeout(300);
+      const prepared = await handState(page);
+      expect(
+        await page.evaluate(
+          (uid) => !!document.querySelector(`#hand [data-hand="${uid}"]`),
+          plain.uid,
+        ),
+      ).toBe(true);
+      expect(prepared.selected).toBe(1);
+      expect(prepared.targeting).toBe(true);
+      expect(prepared.mana).toBe(before.mana);
+      expect(prepared.detail).toBe(null);
+
+      await page.locator(`#hand [data-hand="${plain.uid}"]`).tap();
+      await page.waitForTimeout(200);
+      const cancelled = await handState(page);
+      expect(cancelled.selected).toBe(0);
+      expect(cancelled.targeting).toBe(false);
+      expect(cancelled.mana).toBe(before.mana);
+
+      await page.locator(`#hand [data-hand="${plain.uid}"]`).tap();
+      const point = await emptyDropPoint(page);
+      await page.mouse.click(point.x, point.y);
+      await page.waitForTimeout(700);
       const afterPlain = await handState(page);
       const plainGone = await page.evaluate(
         (uid) => !document.querySelector(`#hand [data-hand="${uid}"]`),
@@ -347,6 +356,7 @@ for (const [label, viewport] of VIEWPORTS) {
       expect(plainGone).toBe(true);
       expect(Number(afterPlain.handCount)).toBe(Number(before.handCount) - 1);
       expect(afterPlain.detail).toBe(null);
+      expect(afterPlain.targeting).toBe(false);
       if (targeted) {
         await page.locator(`#hand [data-hand="${targeted.uid}"]`).tap();
         await page.waitForTimeout(400);
@@ -359,7 +369,7 @@ for (const [label, viewport] of VIEWPORTS) {
       }
     });
 
-    test("long press magnifies the card and any tap dismisses it", async ({
+    test("long press lifts a playable hand card instead of opening detail", async ({
       page,
     }) => {
       await startTouch(page);
@@ -368,21 +378,47 @@ for (const [label, viewport] of VIEWPORTS) {
       const box = await page
         .locator(`#hand [data-hand="${card.uid}"]`)
         .boundingBox();
-      await touchHold(page, { x: box.x + box.width / 2, y: box.y + 10 });
-      await page.waitForTimeout(300);
-      const shown = await handState(page);
+      const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+      const cdp = await page.context().newCDPSession(page);
+      await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [from],
+      });
+      await page.waitForTimeout(540);
+      const lifted = await handState(page);
       await page.screenshot({
         path: path.join(out, `touch-longpress-${label}.png`),
       });
-      expect(shown.detail).toBe("pinned");
-      expect(shown.handCount).toBe(before.handCount);
-      expect(shown.mana).toBe(before.mana);
-      await page.mouse.click(6, 6);
-      await page.waitForTimeout(300);
-      const closed = await handState(page);
-      expect(closed.detailOpen).toBe(false);
-      expect(closed.handCount).toBe(before.handCount);
-      expect(closed.mana).toBe(before.mana);
+      expect(lifted.detail).toBe(null);
+      expect(lifted.detailOpen).toBe(false);
+      expect(lifted.dragSource).toBe(1);
+      expect(lifted.ghost).toBe(1);
+      const to = await emptyDropPoint(page);
+      for (let i = 1; i <= 12; i++) {
+        const t = i / 12;
+        await cdp.send("Input.dispatchTouchEvent", {
+          type: "touchMove",
+          touchPoints: [
+            {
+              x: from.x + (to.x - from.x) * t,
+              y: from.y + (to.y - from.y) * t,
+            },
+          ],
+        });
+        await page.waitForTimeout(16);
+      }
+      await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+      });
+      await cdp.detach();
+      await page.waitForTimeout(700);
+      const after = await handState(page);
+      expect(after.detailOpen).toBe(false);
+      expect(after.ghost).toBe(0);
+      expect(after.dragSource).toBe(0);
+      expect(Number(after.handCount)).toBe(Number(before.handCount) - 1);
+      expect(after.mana).not.toBe(before.mana);
     });
 
     test("horizontal panning on a card still scrolls a full hand", async ({

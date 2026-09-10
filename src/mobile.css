@@ -543,6 +543,11 @@ body.touch-layout.reduced-motion .hand-card:focus-visible {
   z-index: auto;
   scroll-snap-align: start;
 }
+/* Let the browser own the horizontal rail gesture. Vertical motion still
+ * reaches the pointer controller, which promotes a card into drag-to-play. */
+body.touch-layout .hand-card {
+  touch-action: pan-x;
+}
 body.touch-layout .hand-card .card {
   width: 100%;
   height: 100%;
@@ -610,35 +615,6 @@ body.touch-layout .hand-zone:empty:after {
   font-size: 13px;
   margin: auto;
   color: #c2a783;
-}
-body.touch-layout #touch-target-bar {
-  position: absolute;
-  align-items: center;
-  gap: 4px;
-  padding: 0 0 0 5px;
-  color: #ffe6a9;
-  z-index: 18;
-  background: linear-gradient(90deg, #312116e0, #382416f0);
-  border: 1px solid #b18c53;
-  border-radius: 8px;
-  box-shadow: 0 3px 7px #1a0e1544;
-}
-body.touch-layout #touch-target-text {
-  font-size: 11px;
-  line-height: 1.4;
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-}
-body.touch-layout #touch-cancel {
-  min-width: 49px;
-  min-height: 40px;
-  align-self: center;
-  padding: 0 5px;
-  border-radius: 6px;
-  background: #ab80452b;
-  font-size: 12px;
-  color: #ffe8b7;
 }
 body.touch-layout #target-lines {
   position: absolute;
@@ -1866,19 +1842,6 @@ body.mobile-landscape .power-button span {
 }
 body.mobile-landscape .hand-label {
   display: none !important;
-}
-body.mobile-landscape #touch-target-bar {
-  border-radius: 7px;
-  font-size: 10px;
-}
-body.mobile-landscape #touch-cancel {
-  min-height: 36px;
-  min-width: 54px;
-  margin: 0 -1px 0 0;
-  background: #9c753d;
-}
-body.mobile-landscape #touch-target-text {
-  font-size: 11px;
 }
 body.mobile-landscape .hero-name {
   font-size: 8px;

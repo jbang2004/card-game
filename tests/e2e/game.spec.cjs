@@ -79,7 +79,15 @@ test("web build: all assets decode, no external dependencies, actual spells, mel
   await idle(page);
   await expect(page.locator('.enemy[data-cardid="golem"]')).toHaveCount(0);
   expect(await page.evaluate(() => EmberDebug.game.s.p.board[0].hp)).toBe(1);
-  await page.locator('#hand [data-cardid="phoenix"]').click();
+  const phoenix = page.locator('#hand [data-cardid="phoenix"]');
+  const manaBeforePhoenix = await page.evaluate(() => EmberDebug.game.s.p.mana);
+  await phoenix.click();
+  await expect(phoenix).toHaveClass(/selected/);
+  expect(await page.evaluate(() => EmberDebug.game.s.p.mana)).toBe(
+    manaBeforePhoenix,
+  );
+  const arena = await page.locator("#arena").boundingBox();
+  await page.mouse.click(arena.x + 100, arena.y + 100);
   await idle(page);
   await expect(page.locator('.friendly[data-cardid="phoenix"]')).toHaveCount(1);
   await page.locator("#end-turn").click();
@@ -289,14 +297,18 @@ test("touch: inspect, confirm, rotate during spell, same match and no stuck effe
   await ready(p);
   await p.locator("#quick-btn").tap();
   await idle(p);
-  // Long-press magnifies the real card without touching the match.
-  const bolt = p.locator('#hand [data-cardid="frostbolt"]');
-  const boltBox = await bolt.boundingBox();
+  // Long-pressing an opposing board card opens its full detail without
+  // changing the match. Hand cards reserve long-press for lift-to-drag.
+  const enemyCard = p.locator('.enemy[data-cardid="golem"]');
+  const enemyBox = await enemyCard.boundingBox();
   const cdp = await c.newCDPSession(p);
   await cdp.send("Input.dispatchTouchEvent", {
     type: "touchStart",
     touchPoints: [
-      { x: boltBox.x + boltBox.width / 2, y: boltBox.y + boltBox.height / 2 },
+      {
+        x: enemyBox.x + enemyBox.width / 2,
+        y: enemyBox.y + enemyBox.height / 2,
+      },
     ],
   });
   await p.waitForTimeout(650);
@@ -306,11 +318,12 @@ test("touch: inspect, confirm, rotate during spell, same match and no stuck effe
   });
   await p.waitForTimeout(250);
   await cdp.detach();
-  await expect(p.locator("#card-preview .card-text")).toContainText("冻结");
+  await expect(p.locator("#card-preview")).toBeVisible();
   expect(await p.evaluate(() => EmberDebug.game.s.p.mana)).toBe(6);
   await p.mouse.click(8, 8);
   await expect(p.locator("#card-preview")).toBeHidden();
   // A plain tap aims the spell, and the target confirms it.
+  const bolt = p.locator('#hand [data-cardid="frostbolt"]');
   await bolt.tap();
   await expect(p.locator("#touch-target-bar")).toBeVisible();
   await p.locator('.enemy[data-cardid="golem"]').tap();

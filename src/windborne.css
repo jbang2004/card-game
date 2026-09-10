@@ -1220,18 +1220,6 @@ body.touch-layout .mana-panel {
   background: #799d96;
   border-color: #c6d3b7;
 }
-body.touch-layout #touch-target-bar {
-  background: #e9edcefa;
-  border: 1px solid #a2bd89;
-  color: #627f52;
-}
-.touch-layout #touch-target-text {
-  color: #516f43;
-}
-.touch-layout #touch-cancel {
-  background: #7d9368;
-  color: #f6f3d5;
-}
 body.touch-layout #modal {
   background: #304d427a;
 }

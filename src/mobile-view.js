@@ -108,7 +108,12 @@ const EmberViewport = (() => {
           bottom = Math.max(top + 100, ctrlY - 8);
         l.notice = { x: padL, y: l.enemy.y + l.enemy.h + 9, w: usableW, h: 26 };
         l.arena = { x: padL - 2, y: top, w: usableW + 4, h: bottom - top };
-        l.target = { x: padL + 106, y: ctrlY - 4, w: usableW - 106, h: 40 };
+        l.target = {
+          x: padL + 106,
+          y: ctrlY - 1,
+          w: clamp(Math.round(usableW * 0.32), 138, 188),
+          h: 30,
+        };
         l.enemyMana = {
           x: Math.min(W - padR - 80, l.enemy.x + l.enemy.w + 20),
           y: l.enemy.y + 34,
@@ -141,11 +146,12 @@ const EmberViewport = (() => {
           w: W - padL - padR - 226,
           h: l.hand.y - l.header - 48,
         };
+        const targetW = clamp(Math.round(l.arena.w * 0.32), 138, 188);
         l.target = {
-          x: l.arena.x + 6,
-          y: l.hand.y - 19,
-          w: l.arena.w - 12,
-          h: 22,
+          x: Math.round(l.arena.x + (l.arena.w - targetW) / 2),
+          y: l.hand.y - 32,
+          w: targetW,
+          h: 28,
         };
         l.enemyMana = { x: padL, y: l.hand.y - 19, w: 94, h: 18 };
         l.chip = { x: l.arena.x, y: l.header + 2, w: l.arena.w, h: 20 };

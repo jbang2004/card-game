@@ -644,7 +644,7 @@
         const c = D.byId[card.cid],
           offset = i - (s.p.hand.length - 1) / 2,
           playable = !game.legalCard("p", card.uid);
-        return `<button class="hand-card ${playable ? "playable" : ""} ${game.cost(card) > s.p.mana ? "unaffordable" : ""}" style="--x:${offset * gap}px;--y:${0}px;--r:${0}deg;--i:${i + 1}" data-hand="${card.uid}" data-cardid="${c.id}" aria-label="${c.name}，${game.cost(card)} 法力。${c.text}">${cardHTML(c, { cost: game.cost(card) })}</button>`;
+        return `<button class="hand-card ${playable ? "playable" : ""} ${game.cost(card) > s.p.mana ? "unaffordable" : ""}" style="--x:${offset * gap}px;--y:${0}px;--r:${0}deg;--i:${i + 1}" data-hand="${card.uid}" data-cardid="${c.id}" aria-label="${c.name}，${game.cost(card)} 法力。点按选中，拖动出牌。${c.text}">${cardHTML(c, { cost: game.cost(card) })}</button>`;
       })
       .join("");
     const ours = s.active === "p";
@@ -719,7 +719,7 @@
   function updateHandTip() {
     const tip = document.querySelector(".hand-tip");
     if (tip && !EmberViewport.mobile)
-      tip.textContent = "拖到战场出牌 · 点按出牌/瞄准 · 悬停看大图";
+      tip.textContent = "拖到战场出牌 · 点按选中/瞄准 · 悬停看大图";
   }
   /* One detail layer for every input: hover (mouse), keyboard focus, right
    * click and touch long-press all magnify the same card. Nothing else is
@@ -863,6 +863,13 @@
       }
       const el = e.target.closest?.("#battle [data-cardid]");
       if (!el || modalType || EmberFX.busy) return;
+      /* Hand cards use long-press as a lift-to-drag gesture on touch. Their
+       * secondary action must not reopen the full-screen detail layer. */
+      if (el.matches(".hand-card")) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
       if (!EmberViewport.mobile) {
         e.preventDefault();
         e.stopPropagation();
@@ -997,21 +1004,42 @@
     hidePreview();
     return true;
   }
+  function prepareCard(uid) {
+    const card = game.s.p.hand.find((x) => x.uid === uid);
+    if (!card) return false;
+    selection = { type: "card-play", uid, cid: card.cid };
+    hint("点击战场空位确认 · 再点手牌取消");
+    updateSelection();
+    hidePreview();
+    EmberAudio.fx("select");
+    return true;
+  }
   function selectCard(uid) {
     if (!inBattle || modalType || EmberFX.busy) return;
+    if (selection?.type === "card-play" && selection.uid === uid) {
+      clearSelection();
+      return;
+    }
     const err = game.legalCard("p", uid);
     if (err) {
       EmberAudio.fx("error");
       toast(err);
       return;
     }
-    if (armCard(uid)) EmberAudio.fx("select");
-    else act(() => game.dispatch({ type: "play", side: "p", uid }));
+    const card = game.s.p.hand.find((x) => x.uid === uid),
+      c = card && D.byId[card.cid];
+    if (armCard(uid)) return EmberAudio.fx("select");
+    if (c && !c.target) return prepareCard(uid);
+    return act(() => game.dispatch({ type: "play", side: "p", uid }));
   }
   function clickUnit(side, uid) {
     if (modalType || !inBattle || EmberFX.busy) return;
     if (selection) {
       const sel = selection;
+      if (sel.type === "card-play") {
+        toast("请点击战场空位确认，或点手牌取消");
+        return;
+      }
       if (
         EmberViewport.mobile &&
         side === "e" &&
@@ -1137,11 +1165,15 @@
         document
           .querySelector(`[data-hand="${selection.uid}"]`)
           ?.classList.add("selected");
+      } else if (selection.type === "card-play") {
+        document
+          .querySelector(`[data-hand="${selection.uid}"]`)
+          ?.classList.add("selected");
       } else targets = game.targets(game.powerDefinition("p").target, "p");
     }
     if (selection.type === "attack")
       findUnit("p", selection.uid)?.classList.add("selected");
-    else if (selection.type === "card")
+    else if (selection.type === "card" || selection.type === "card-play")
       document
         .querySelector(`[data-hand="${selection.uid}"]`)
         ?.classList.add("selected");
@@ -1153,10 +1185,14 @@
       $("touch-target-bar").hidden = false;
       window.EmberMobile?.selectionChanged();
     }
-    updateTargetLine();
+    if (selection.type === "card-play") $("target-lines").style.display = "none";
+    else updateTargetLine();
   }
   function updateTargetLine() {
-    if (!selection || modalType) return;
+    if (!selection || modalType || selection.type === "card-play") {
+      $("target-lines").style.display = "none";
+      return;
+    }
     const source =
       selection.type === "attack"
         ? findUnit("p", selection.uid)
@@ -1221,12 +1257,39 @@
     if (!drag) return;
     const d = drag;
     drag = null;
+    if (d.timer) clearTimeout(d.timer);
     d.ghost?.remove();
-    d.el?.classList.remove("drag-source");
-    d.scrollEl = null;
+    d.el?.classList.remove("drag-source", "drag-armed");
     clearSelection();
     if (restore) d.el?.focus({ preventScroll: true });
   }
+
+  function startDrag(d, touch = d?.touch) {
+    if (!d || d.started || d.horizontal) return;
+    if (d.timer) {
+      clearTimeout(d.timer);
+      d.timer = null;
+    }
+    d.started = true;
+    EmberAudio.fx("select");
+    clearSelection();
+    hidePreview();
+    d.el.classList.add("drag-source");
+    const ghost = document.createElement("div");
+    ghost.className = "drag-ghost";
+    ghost.innerHTML = cardHTML(D.byId[d.cid]);
+    app.appendChild(ghost);
+    d.ghost = ghost;
+    if (touch) d.lift = 58;
+    ghost.style.left = d.x + "px";
+    ghost.style.top = d.y - (d.lift || 0) + "px";
+    const c = D.byId[d.cid];
+    if (c.target) {
+      selection = { type: "card", uid: d.uid, cid: d.cid };
+      updateSelection();
+    } else hint("将卡牌拖入战场 · 松回手牌取消");
+  }
+
   /* Ends a drag started by beginDrag. Rejected releases never dispatch: a card
    * only leaves the hand when the drop is legal (unit -> legal target, or
    * anywhere in the play area for a card that needs no target). */
@@ -1297,30 +1360,20 @@
       sy: e.clientY,
       el,
       started: false,
-      scroll: 0,
+      touch: e.pointerType === "touch",
+      horizontal: false,
+      timer: null,
       pointerId: e.pointerId,
     };
+    if (drag.touch)
+      drag.timer = setTimeout(() => {
+        if (drag?.pointerId === e.pointerId && !drag.horizontal)
+          startDrag(drag, true);
+      }, 440);
   }
-  /* Touch owns the gesture on a hand card: cards use touch-action:none so the
-   * browser cannot turn a vertical lift into a page scroll and cancel us, and
-   * the horizontal hand rail is panned here instead. */
-  function scrollRail() {
-    if (!drag) return null;
-    if (drag.scrollEl === undefined) {
-      const hand = $("hand");
-      let node = drag.el.parentElement,
-        found = null;
-      while (node && node !== app) {
-        if (node === hand || node.scrollWidth > node.clientWidth + 1) {
-          found = node;
-          break;
-        }
-        node = node.parentElement;
-      }
-      drag.scrollEl = found || hand || null;
-    }
-    return drag.scrollEl;
-  }
+  /* The browser owns horizontal rail panning. A card only becomes a drag
+   * after vertical intent or a stationary long press, so scroll and play no
+   * longer compete for the same gesture. */
   document.addEventListener(
     "pointermove",
     (e) => {
@@ -1335,42 +1388,26 @@
       if (!drag.started) {
         const dx = e.clientX - drag.sx,
           dy = e.clientY - drag.sy;
-        /* Horizontal intent pans the hand rail; vertical lift dominates it,
-         * whichever is detected first. */
-        if (touch && dy >= -14 && Math.abs(dx) > 10 && Math.abs(dx) > -dy) {
-          const rail = scrollRail();
-          if (rail) {
-            rail.scrollLeft -= dx;
-            drag.sx = e.clientX;
-            drag.sy = e.clientY;
-            drag.x = p.x;
-            drag.y = p.y;
-            drag.scroll = performance.now();
+        if (
+          touch &&
+          Math.abs(dx) > 10 &&
+          Math.abs(dx) > Math.abs(dy) + 4
+        ) {
+          drag.horizontal = true;
+          if (drag.timer) {
+            clearTimeout(drag.timer);
+            drag.timer = null;
           }
           return;
         }
+        if (touch && drag.horizontal) return;
         const intent = touch
           ? dy < -14 &&
             -dy > Math.abs(dx) + 6 &&
-            performance.now() - drag.scroll > 60
+            !drag.horizontal
           : Math.hypot(p.x - drag.x, p.y - drag.y) > 12;
         if (!intent) return;
-        drag.started = true;
-        EmberAudio.fx("select");
-        clearSelection();
-        hidePreview();
-        drag.el.classList.add("drag-source");
-        const ghost = document.createElement("div");
-        ghost.className = "drag-ghost";
-        ghost.innerHTML = cardHTML(D.byId[drag.cid]);
-        app.appendChild(ghost);
-        drag.ghost = ghost;
-        if (touch) drag.lift = 58;
-        const c = D.byId[drag.cid];
-        if (c.target) {
-          selection = { type: "card", uid: drag.uid, cid: drag.cid };
-          updateSelection();
-        } else hint("将卡牌拖入战场 · 松回手牌取消");
+        startDrag(drag, touch);
       }
       if (drag.started) {
         e.preventDefault();
@@ -1389,6 +1426,7 @@
     if (!drag) return;
     const d = drag;
     drag = null;
+    if (d.timer) clearTimeout(d.timer);
     if (!d.started) return;
     const landing = unitAt(e.clientX, e.clientY);
     finishDrag(d, e);
@@ -1702,7 +1740,12 @@
   document.addEventListener("ember:fx-busy", () => syncEndTurn());
   $("end-turn").onclick = () =>
     act(() => game.dispatch({ type: "end", side: "p" }));
-  $("arena").onclick = () => clearSelection();
+  $("arena").onclick = () => {
+    if (selection?.type === "card-play") {
+      const uid = selection.uid;
+      act(() => game.dispatch({ type: "play", side: "p", uid }));
+    } else clearSelection();
+  };
   document.addEventListener("pointerdown", () => EmberAudio.unlock(), {
     passive: true,
   });
