@@ -72,7 +72,10 @@
   document.addEventListener("contextmenu", (e) => {
     if (EmberViewport.mobile) return;
     const el = e.target.closest("[data-cardid]");
-    if (!el || E.modal || F.busy) return;
+    /* Battle cards are owned by ui.js's single-card detail path. Keeping this
+     * guard here also protects against a future listener-order change bringing
+     * the old inspection modal back on top of it. */
+    if (!el || el.closest("#battle") || E.modal || F.busy) return;
     e.preventDefault();
     const c = D.byId[el.dataset.cardid];
     if (!c) return;

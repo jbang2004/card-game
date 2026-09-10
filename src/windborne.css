@@ -1216,10 +1216,6 @@ body.touch-layout .mana-panel {
   color: #e1f0dd;
   text-shadow: 0 1px #31564f;
 }
-.touch-layout .hand-label,
-.touch-layout #touch-hand-all {
-  color: #e7edc8;
-}
 .touch-layout .enemy-mana {
   background: #799d96;
   border-color: #c6d3b7;

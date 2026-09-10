@@ -1114,10 +1114,6 @@
   right: 28px;
   color: #eddcbd;
 }
-.board-center,
-.board-rose {
-  display: none !important;
-}
 .board-empty {
   top: 520px;
   color: #8a6a4380;
@@ -1679,7 +1675,9 @@ body.mobile-ui .top-actions {
 body.mobile-ui .portrait-orientation {
   box-shadow: 0 10px 35px #0006;
 }
-body.mobile-ui #card-preview {
+/* The magnified card is the shared detail layer on every device now; only the
+ * follow-the-pointer hover flavour stays desktop-only. */
+body.mobile-ui #card-preview[data-mode="hover"] {
   display: none !important;
 }
 @media (max-width: 900px) {

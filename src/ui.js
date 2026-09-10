@@ -45,6 +45,7 @@
     previewTimer = null,
     lastFocus = null,
     drag = null,
+    suppressTimer = null,
     suppressClick = false;
   let mulliganSet = new Set(),
     pointer = { x: 800, y: 470 };
@@ -194,6 +195,7 @@
     $("adventure-nav").classList.add("active");
     if (!battle) {
       app.classList.remove("log-open", "intel-open");
+      closeCardDetail();
       $("card-preview").style.display = "none";
       clearSelection();
       updateStart();
@@ -233,6 +235,7 @@
     clearTimeout(toastTimer);
     $("toast").classList.remove("visible");
     clearTimeout(aiTimer);
+    closeCardDetail();
     hidePreview();
     clearSelection();
     lastFocus = document.activeElement;
@@ -623,7 +626,7 @@
                   })[t],
               )
               .join("");
-            return `<button class="minion ${side === "e" ? "enemy" : "friendly"} ${m.tags.join(" ")} ${ready ? "ready" : ""} ${m.frozen ? "frozen" : ""} ${c.rarity}" style="left:${x}px;top:${y}px;width:${geo.w}px;height:${geo.h}px;--unit-w:${geo.w}px" data-compact="${geo.w < 50}" data-side="${side}" data-uid="${m.uid}" data-cardid="${c.id}" aria-label="${c.name}，攻击 ${m.atk}，生命 ${m.hp}，${m.tags.map((t) => D.kw[t]).join("、")}${m.frozen ? "，被冻结" : ""}"><div class="minion-art"><img src="${A.card(c)}" alt="" draggable="false" data-art-key="${artKeyForCard(c)}" data-portrait-mode="board" data-portrait-instance="${side}:${m.uid}" data-portrait-state="${m.frozen ? "frozen" : "idle"}" style="${artStyleForCard(c, "minion")}"></div><span class="unit-aura" aria-hidden="true"></span><div class="minion-name">${c.name}</div><span class="stat atk"><span class="stat-glyph" aria-hidden="true">${A.icon("sword")}</span><span class="stat-value">${m.atk}</span></span><span class="stat hp ${m.hp < m.maxHp ? "hurt" : ""}"><span class="stat-glyph" aria-hidden="true">${A.icon("heart")}</span><span class="stat-value">${Math.max(0, m.hp)}</span></span><span class="minion-status">${m.frozen ? "❄" : specials ? '<span class="special">' + specials + "</span>" : m.sick && !ready ? '<span class="sleep">z z</span>' : ""}</span>${ready ? '<span class="ready-dot"></span>' : ""}</button>`;
+            return `<button class="minion ${side === "e" ? "enemy" : "friendly"} ${m.tags.join(" ")} ${ready ? "ready" : ""} ${m.frozen ? "frozen" : ""} ${c.rarity}" style="left:${x}px;top:${y}px;width:${geo.w}px;height:${geo.h}px;--unit-w:${geo.w}px" data-compact="${geo.w < 50}" data-side="${side}" data-uid="${m.uid}" data-cardid="${c.id}" aria-label="${c.name}，攻击 ${m.atk}，生命 ${m.hp}，${m.tags.map((t) => D.kw[t]).join("、")}${m.frozen ? "，被冻结" : ""}"><div class="minion-art"><img src="${A.card(c)}" alt="" draggable="false" data-art-key="${artKeyForCard(c)}" data-portrait-mode="board" data-portrait-instance="${side}:${m.uid}" data-portrait-state="${m.frozen ? "frozen" : "idle"}" style="${artStyleForCard(c, "minion")}"></div><span class="unit-aura" aria-hidden="true"></span><div class="minion-name">${c.name}</div><span class="stat atk">${A.badgeFrame("blade")}<span class="stat-value">${m.atk}</span></span><span class="stat hp ${m.hp < m.maxHp ? "hurt" : ""}">${A.badgeFrame("heart")}<span class="stat-value">${Math.max(0, m.hp)}</span></span><span class="minion-status">${m.frozen ? "❄" : specials ? '<span class="special">' + specials + "</span>" : m.sick && !ready ? '<span class="sleep">z z</span>' : ""}</span>${ready ? '<span class="ready-dot"></span>' : ""}</button>`;
           })
           .join(""),
       )
@@ -682,71 +685,276 @@
       };
       el.addEventListener("mouseenter", () => preview(el.dataset.cardid, el));
       el.addEventListener("mouseleave", hidePreview);
+      el.addEventListener("focus", () => preview(el.dataset.cardid, el));
+      el.addEventListener("blur", hidePreview);
     });
     document.querySelectorAll(".hand-card").forEach((el) => {
-      el.onclick = (e) => {
+      el.onclick = () => {
         if (suppressClick) {
           suppressClick = false;
+          window.EmberMobile?.consumedClick?.();
           return;
         }
         if (EmberViewport.mobile && window.EmberMobile)
           EmberMobile.handClick(el.dataset.hand);
         else selectCard(el.dataset.hand);
       };
-      el.addEventListener("mouseenter", () => preview(el.dataset.cardid, el));
+      const magnify = () => preview(el.dataset.cardid, el);
+      el.addEventListener("mouseenter", magnify);
       el.addEventListener("mouseleave", hidePreview);
-      el.addEventListener("focus", () => preview(el.dataset.cardid, el));
+      el.addEventListener("focus", magnify);
       el.addEventListener("blur", hidePreview);
       el.addEventListener("pointerdown", beginDrag);
     });
+    document.querySelectorAll("#battle .hero").forEach((el) => {
+      el.addEventListener("mouseenter", () => preview(el.dataset.cardid, el));
+      el.addEventListener("mouseleave", hidePreview);
+    });
+    updateHandTip();
     if (EmberViewport.mobile) $("hand").scrollLeft = handScroll;
     window.EmberMobile?.afterRender(s);
     updateSelection();
     EmberPortraits.sync();
   }
+  function updateHandTip() {
+    const tip = document.querySelector(".hand-tip");
+    if (tip && !EmberViewport.mobile)
+      tip.textContent = "拖到战场出牌 · 点按出牌/瞄准 · 悬停看大图";
+  }
+  /* One detail layer for every input: hover (mouse), keyboard focus, right
+   * click and touch long-press all magnify the same card. Nothing else is
+   * drawn around it, and any click dismisses a pinned card. */
+  const detail = { source: null, pinned: false };
+  let lastHit = null;
+  function pointerPoint(e) {
+    const r = app.getBoundingClientRect();
+    return {
+      x: ((e.clientX - r.left) * EmberViewport.width) / r.width,
+      y: ((e.clientY - r.top) * EmberViewport.height) / r.height,
+    };
+  }
+  function localPoint(e) {
+    return e instanceof Event ? pointerPoint(e) : e;
+  }
+  function showCardDetail(cid, opts = {}) {
+    /* Accepts a card ID or a card record, so every caller can pass what it has. */
+    const c = typeof cid === "string" ? D.byId[cid] : cid;
+    if (!c?.art) return;
+    const el = $("card-preview");
+    const pinned = !!opts.pinned;
+    /* A pinned detail must live above the app's transformed/filtered canvas.
+     * Returning it to #app for hover keeps the old left-side placement intact. */
+    if (pinned && el.parentElement !== document.body) document.body.append(el);
+    if (!pinned && el.parentElement !== app) app.append(el);
+    el.innerHTML = cardHTML(
+      c,
+      opts.atk === undefined && opts.hp === undefined && opts.cost === undefined
+        ? {}
+        : { atk: opts.atk, hp: opts.hp, cost: opts.cost },
+    );
+    detail.source = opts.source || null;
+    detail.pinned = pinned;
+    el.dataset.mode = pinned ? "pinned" : "hover";
+    el.setAttribute("aria-hidden", String(!pinned));
+    el.classList.remove("open");
+    el.style.display = "block";
+    document.body.classList.toggle("has-card-detail", detail.pinned);
+    /* Next frame, so the magnify transition always plays from the small state. */
+    requestAnimationFrame(() => el.classList.add("open"));
+    if (!detail.pinned) placeHoverDetail();
+  }
+  /* Desktop battle hover is deliberately fixed on the left, restoring one
+   * stable reading position instead of duplicating the card over the hand. */
+  function placeHoverDetail() {
+    const el = $("card-preview"),
+      source = detail.source;
+    if (!source || detail.pinned || el.style.display === "none") return;
+    if (modalType !== "library") {
+      el.style.left = "29px";
+      el.style.top = "345px";
+      el.style.zIndex = "45";
+      return;
+    }
+    /* Library hover remains contextual because it has no battle hand to anchor
+     * against; this does not affect the single-card battle detail path. */
+    const pos = centerOf(source),
+      w = el.offsetWidth || 219,
+      h = el.offsetHeight || 318,
+      handTop =
+        modalType === "library"
+          ? EmberViewport.height
+          : ($("hand")?.getBoundingClientRect().top ??
+            app.getBoundingClientRect().top + 753);
+    const top = Math.max(8, handTop - h - 6);
+    el.style.left = Math.min(Math.max(pos.x - w / 2, 8), 1600 - w - 8) + "px";
+    el.style.top = top + "px";
+  }
+  function closeCardDetail() {
+    if (!detail.pinned) return;
+    clearTimeout(previewTimer);
+    detail.pinned = false;
+    detail.source = null;
+    document.body.classList.remove("has-card-detail");
+    const el = $("card-preview");
+    el.classList.remove("open");
+    el.style.display = "none";
+    el.setAttribute("aria-hidden", "true");
+    delete el.dataset.mode;
+    if (el.parentElement !== app) app.append(el);
+  }
   function preview(cid, el) {
     clearTimeout(previewTimer);
-    if (EmberViewport.mobile) return;
+    if (EmberViewport.mobile || detail.pinned) return;
     if (drag?.started) return;
     previewTimer = setTimeout(() => {
-      const c = D.byId[cid];
-      if (!c || !el.isConnected) return;
-      const p = $("card-preview");
+      if (!el.isConnected) return;
       let actual = null;
       if (el.dataset.uid)
         actual = game.s[el.dataset.side]?.board.find(
           (m) => m.uid === el.dataset.uid,
         );
-      p.innerHTML = cardHTML(
-        c,
-        actual ? { atk: actual.atk, hp: actual.hp } : {},
-      );
-      const keys = actual ? actual.tags : c.tags;
-      if (keys?.length)
-        p.innerHTML +=
-          '<div class="keyword-notes">' +
-          keys
-            .map((k) => "<b>" + D.kw[k] + "</b> · " + keywords[k])
-            .join("<br>") +
-          "</div>";
-      const pos = centerOf(el);
-      if (modalType === "library") {
-        p.style.zIndex = "95";
-        p.style.left =
-          (pos.x < 1070 ? Math.min(pos.x + 89, 1100) : pos.x - 320) + "px";
-        p.style.top = Math.min(Math.max(pos.y - 170, 118), 470) + "px";
-      } else {
-        p.style.zIndex = "45";
-        p.style.left = "29px";
-        p.style.top = "345px";
-      }
-      p.style.display = "block";
-    }, 280);
+      showCardDetail(cid, {
+        source: el,
+        atk: actual?.atk,
+        hp: actual?.hp,
+      });
+    }, 180);
   }
   function hidePreview() {
     clearTimeout(previewTimer);
-    $("card-preview").style.display = "none";
+    if (detail.pinned) return;
+    detail.source = null;
+    document.body.classList.remove("has-card-detail");
+    const el = $("card-preview");
+    el.classList.remove("open");
+    el.style.display = "none";
+    el.setAttribute("aria-hidden", "true");
   }
+  function inspectBattleCard(el) {
+    if (!el?.dataset.cardid) return false;
+    const c = D.byId[el.dataset.cardid];
+    if (!c) return false;
+    const side = el.dataset.side,
+      unit = side
+        ? game.s[side]?.board.find((m) => m.uid === el.dataset.uid)
+        : null,
+      hand = el.dataset.hand
+        ? game.s.p.hand.find((v) => v.uid === el.dataset.hand)
+        : null;
+    showCardDetail(c.id, {
+      pinned: true,
+      ...(unit ? { atk: unit.atk, hp: unit.hp } : {}),
+      ...(hand ? { cost: game.cost(hand) } : {}),
+    });
+    return true;
+  }
+  /* Touch devices keep right-click as a compatibility gesture alongside long
+   * press. Desktop already has a persistent left-side hover preview, so a
+   * secondary click only suppresses the browser menu and opens nothing. */
+  document.addEventListener(
+    "contextmenu",
+    (e) => {
+      if (e.target.closest?.("#card-preview")) {
+        if (detail.pinned) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        return;
+      }
+      const el = e.target.closest?.("#battle [data-cardid]");
+      if (!el || modalType || EmberFX.busy) return;
+      if (!EmberViewport.mobile) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      if (!inspectBattleCard(el)) return;
+      e.preventDefault();
+      e.stopPropagation();
+    },
+    true,
+  );
+  /* The unit under a screen point, ignoring overlay chrome such as the pinned
+   * detail veil, which must never swallow a release or a reticle hit test. */
+  function unitAt(x, y) {
+    return (
+      document
+        .elementsFromPoint(x, y)
+        .map((n) => n.closest?.("[data-uid]"))
+        .find((n) => n && n.closest("#battle")) || null
+    );
+  }
+  function hitUnit() {
+    return unitAt(pointer.x, pointer.y);
+  }
+  /* Aim cue: retarget the line to what is actually under the finger, and give
+   * a short tick when the aim crosses onto a valid target. */
+  function targetCue() {
+    if (!selection) return;
+    const hit = hitUnit(),
+      uid = hit?.dataset?.uid || null,
+      side = hit?.dataset?.side || null,
+      unit = hit ? findUnit(side, uid) : null;
+    if (unit) pointer = centerOf(unit) || pointer;
+    const valid = !!unit?.classList.contains("valid-target"),
+      key = uid ? side + ":" + uid : null;
+    if (key !== lastHit) {
+      lastHit = key;
+      if (valid) EmberAudio.fx("select");
+    }
+    document.querySelectorAll(".aim-focus").forEach((el) => {
+      if (el !== unit) el.classList.remove("aim-focus");
+    });
+    unit?.classList.add("aim-focus");
+    updateTargetLine();
+  }
+  document.addEventListener(
+    "mousemove",
+    (e) => {
+      pointer = localPoint(e);
+      if (selection) targetCue();
+    },
+    { passive: true },
+  );
+  document.addEventListener(
+    "touchmove",
+    (e) => {
+      const t = e.touches?.[0];
+      if (!t) return;
+      pointer = pointerPoint(t);
+      if (selection) targetCue();
+    },
+    { passive: true },
+  );
+  /* Click suppression lives here; mobile-ui and the drag paths both arm it. */
+  function suppressNextClick(ms) {
+    suppressClick = true;
+    clearTimeout(suppressTimer);
+    suppressTimer = setTimeout(() => (suppressClick = false), ms);
+  }
+  function clickSuppressed() {
+    return suppressClick;
+  }
+  document.addEventListener(
+    "click",
+    (e) => {
+      if (!detail.pinned) return;
+      /* A long press or a drag already handled this tap: keep the detail open
+       * and let the owner of that gesture swallow the compatibility click. */
+      if (suppressClick) {
+        suppressClick = false;
+        return;
+      }
+      /* The card is the detail itself; only the empty veil dismisses it. */
+      if (e.target.closest?.("#card-preview")) return;
+      closeCardDetail();
+      /* Dismissal must not fall through to the board or a hand card. */
+      e.preventDefault();
+      e.stopPropagation();
+      suppressNextClick(60);
+    },
+    true,
+  );
   function act(fn) {
     if (EmberFX.busy) return { ok: false, error: "战斗动作正在结算" };
     clearTimeout(toastTimer);
@@ -768,6 +976,27 @@
       targets[0];
     return centerOf(findUnit(preferred.side, preferred.uid));
   }
+  function targetLabel(target) {
+    if (target === "friendlyMinion") return "一个友方随从";
+    if (target === "enemyMinion") return "一个敌方随从";
+    if (target === "anyMinion") return "一个随从";
+    return "一个目标";
+  }
+  /* Enter targeting state for a hand card. Shared by tap/click and by every
+   * path that ends a drag, so the reticle and the target rail never diverge. */
+  function armCard(uid) {
+    const card = game.s.p.hand.find((x) => x.uid === uid);
+    if (!card) return false;
+    const c = D.byId[card.cid],
+      targets = c.target ? game.targets(c.target, "p") : [];
+    if (!c.target || !targets.length) return false;
+    selection = { type: "card", uid, cid: card.cid };
+    pointer = targetAnchor(targets) || pointer;
+    hint("选择" + targetLabel(c.target) + " · 右键或 ESC 取消");
+    updateSelection(targets);
+    hidePreview();
+    return true;
+  }
   function selectCard(uid) {
     if (!inBattle || modalType || EmberFX.busy) return;
     const err = game.legalCard("p", uid);
@@ -776,21 +1005,8 @@
       toast(err);
       return;
     }
-    const card = game.s.p.hand.find((x) => x.uid === uid),
-      c = D.byId[card.cid],
-      targets = c.target ? game.targets(c.target, "p") : [];
-    if (c.target && targets.length) {
-      selection = { type: "card", uid, cid: card.cid };
-      pointer = targetAnchor(targets) || pointer;
-      hint(
-        "选择" +
-          (c.target === "friendlyMinion" ? "一个友方随从" : "一个目标") +
-          " · ESC 取消",
-      );
-      updateSelection(targets);
-      hidePreview();
-      EmberAudio.fx("select");
-    } else act(() => game.dispatch({ type: "play", side: "p", uid }));
+    if (armCard(uid)) EmberAudio.fx("select");
+    else act(() => game.dispatch({ type: "play", side: "p", uid }));
   }
   function clickUnit(side, uid) {
     if (modalType || !inBattle || EmberFX.busy) return;
@@ -865,6 +1081,13 @@
       }
     }
   }
+  /* Show one board object as an enlarged card. Touch long-press and the end
+   * of a touch drag both land here; tapping still means "act", not "inspect". */
+  function inspect(side, uid) {
+    if (!side || !uid || !window.EmberMobile) return;
+    if (uid === "hero") window.EmberMobile.inspectHero(side);
+    else window.EmberMobile.inspectMinion(side, uid);
+  }
   function usePower() {
     if ($("power-btn").disabled || EmberFX.busy) return;
     const power = game.powerDefinition("p");
@@ -885,6 +1108,10 @@
   function clearSelection() {
     app.classList.remove("is-targeting");
     selection = null;
+    lastHit = null;
+    document
+      .querySelectorAll(".aim-focus")
+      .forEach((el) => el.classList.remove("aim-focus"));
     $("touch-target-bar").hidden = true;
     $("combat-preview").style.display = "none";
     $("hint").style.display = "none";
@@ -975,12 +1202,88 @@
     $("target-circle").setAttribute("cy", to.y);
     $("target-circle").setAttribute("r", EmberViewport.mobile ? "10" : "12");
   }
-  function localPoint(e) {
-    return EmberViewport.point(e);
+  function dropZone() {
+    if (!EmberViewport.mobile) return { x0: 270, x1: 1330, y1: 730 };
+    const a = EmberViewport.layout?.arena;
+    if (!a) return { x0: 0, x1: EmberViewport.width, y1: 0 };
+    const h = $("hand")?.getBoundingClientRect();
+    const appRect = app.getBoundingClientRect();
+    /* The hand rail overlays the bottom of the arena on short screens; a
+     * release there is a cancel, not a play. */
+    const handTop = h && h.height ? h.top - appRect.top : Infinity;
+    return { x0: a.x, x1: a.x + a.w, y1: Math.min(a.y + a.h, handTop - 4) };
+  }
+  function inPlayArea(p) {
+    const z = dropZone();
+    return p.x >= z.x0 && p.x <= z.x1 && p.y >= 0 && p.y <= z.y1;
+  }
+  function cancelDrag(restore = true) {
+    if (!drag) return;
+    const d = drag;
+    drag = null;
+    d.ghost?.remove();
+    d.el?.classList.remove("drag-source");
+    d.scrollEl = null;
+    clearSelection();
+    if (restore) d.el?.focus({ preventScroll: true });
+  }
+  /* Ends a drag started by beginDrag. Rejected releases never dispatch: a card
+   * only leaves the hand when the drop is legal (unit -> legal target, or
+   * anywhere in the play area for a card that needs no target). */
+  function finishDrag(d, e) {
+    /* The ghost and the source dimming always end with the gesture. */
+    d.ghost?.remove();
+    d.el.classList.remove("drag-source");
+    const el = unitAt(e.clientX, e.clientY),
+      p = localPoint(e),
+      c = D.byId[d.cid],
+      uid = el?.dataset?.uid,
+      side = el?.dataset?.side;
+    const legalTarget =
+      uid && side
+        ? (c.target ? game.targets(c.target, "p") : []).some(
+            (t) => t.side === side && t.uid === uid,
+          )
+        : false;
+    if (el && legalTarget) {
+      act(() =>
+        game.dispatch({
+          type: "play",
+          side: "p",
+          uid: d.uid,
+          target: { side, uid },
+        }),
+      );
+    } else if (el && c.target) {
+      /* Released on a unit that is not in game.targets(): never dispatch. */
+      EmberAudio.fx("error");
+      toast("「" + c.name + "」不能指定这个目标");
+    } else if (el && c.type !== "weapon") {
+      /* A targetless minion or spell dropped on top of a unit is ambiguous
+       * placement, not a play: reject it instead of silently spending mana. */
+      EmberAudio.fx("error");
+      toast("「" + c.name + "」不需要目标 · 请放到空位或战场下方");
+    } else if (inPlayArea(p)) {
+      if (
+        c.target &&
+        !(c.type === "minion" && !game.targets(c.target, "p").length)
+      )
+        armCard(d.uid);
+      else act(() => game.dispatch({ type: "play", side: "p", uid: d.uid }));
+    } else if (EmberViewport.mobile) {
+      EmberAudio.fx("ui");
+      toast("已取消：「" + c.name + "」回到手牌");
+    }
   }
   function beginDrag(e) {
-    if (EmberViewport.mobile) return;
     if (e.button !== 0 || modalType || EmberFX.busy) return;
+    if (
+      !inBattle ||
+      !game.s?.p ||
+      game.s.active !== "p" ||
+      game.s.phase !== "battle"
+    )
+      return;
     const el = e.currentTarget,
       uid = el.dataset.hand;
     if (game.legalCard("p", uid)) return;
@@ -990,23 +1293,68 @@
       cid: el.dataset.cardid,
       x: p.x,
       y: p.y,
+      sx: e.clientX,
+      sy: e.clientY,
       el,
       started: false,
+      scroll: 0,
       pointerId: e.pointerId,
     };
+  }
+  /* Touch owns the gesture on a hand card: cards use touch-action:none so the
+   * browser cannot turn a vertical lift into a page scroll and cancel us, and
+   * the horizontal hand rail is panned here instead. */
+  function scrollRail() {
+    if (!drag) return null;
+    if (drag.scrollEl === undefined) {
+      const hand = $("hand");
+      let node = drag.el.parentElement,
+        found = null;
+      while (node && node !== app) {
+        if (node === hand || node.scrollWidth > node.clientWidth + 1) {
+          found = node;
+          break;
+        }
+        node = node.parentElement;
+      }
+      drag.scrollEl = found || hand || null;
+    }
+    return drag.scrollEl;
   }
   document.addEventListener(
     "pointermove",
     (e) => {
-      if (!EmberViewport.mobile || e.pointerType !== "touch") {
+      const touch = EmberViewport.mobile && e.pointerType === "touch";
+      if (!touch) {
         pointer = localPoint(e);
-        if (selection) updateTargetLine();
+        if (selection && !drag?.started) targetCue();
+        else if (selection) updateTargetLine();
       }
       if (!drag) return;
-      if (
-        !drag.started &&
-        Math.hypot(pointer.x - drag.x, pointer.y - drag.y) > 12
-      ) {
+      const p = localPoint(e);
+      if (!drag.started) {
+        const dx = e.clientX - drag.sx,
+          dy = e.clientY - drag.sy;
+        /* Horizontal intent pans the hand rail; vertical lift dominates it,
+         * whichever is detected first. */
+        if (touch && dy >= -14 && Math.abs(dx) > 10 && Math.abs(dx) > -dy) {
+          const rail = scrollRail();
+          if (rail) {
+            rail.scrollLeft -= dx;
+            drag.sx = e.clientX;
+            drag.sy = e.clientY;
+            drag.x = p.x;
+            drag.y = p.y;
+            drag.scroll = performance.now();
+          }
+          return;
+        }
+        const intent = touch
+          ? dy < -14 &&
+            -dy > Math.abs(dx) + 6 &&
+            performance.now() - drag.scroll > 60
+          : Math.hypot(p.x - drag.x, p.y - drag.y) > 12;
+        if (!intent) return;
         drag.started = true;
         EmberAudio.fx("select");
         clearSelection();
@@ -1017,16 +1365,22 @@
         ghost.innerHTML = cardHTML(D.byId[drag.cid]);
         app.appendChild(ghost);
         drag.ghost = ghost;
+        if (touch) drag.lift = 58;
         const c = D.byId[drag.cid];
         if (c.target) {
           selection = { type: "card", uid: drag.uid, cid: drag.cid };
           updateSelection();
-        } else hint("将卡牌拖入战场");
+        } else hint("将卡牌拖入战场 · 松回手牌取消");
       }
       if (drag.started) {
         e.preventDefault();
-        drag.ghost.style.left = pointer.x + "px";
-        drag.ghost.style.top = pointer.y + "px";
+        pointer = p;
+        drag.ghost.style.left = p.x + "px";
+        drag.ghost.style.top = p.y - (drag.lift || 0) + "px";
+        if (selection) {
+          if (touch) updateTargetLine();
+          else targetCue();
+        }
       }
     },
     { passive: false },
@@ -1036,44 +1390,16 @@
     const d = drag;
     drag = null;
     if (!d.started) return;
-    d.ghost.remove();
-    d.el.classList.remove("drag-source");
-    suppressClick = true;
-    setTimeout(() => (suppressClick = false), 80);
-    const el = document
-        .elementFromPoint(e.clientX, e.clientY)
-        ?.closest("[data-uid]"),
-      p = localPoint(e),
-      c = D.byId[d.cid];
-    clearSelection();
-    if (c.target && el)
-      act(() =>
-        game.dispatch({
-          type: "play",
-          side: "p",
-          uid: d.uid,
-          target: { side: el.dataset.side, uid: el.dataset.uid },
-        }),
-      );
-    else if (c.target) {
-      if (
-        c.type === "minion" &&
-        game.targets(c.target, "p").length === 0 &&
-        p.y < 720
-      )
-        act(() => game.dispatch({ type: "play", side: "p", uid: d.uid }));
-      else if (p.y < 730) selectCard(d.uid);
-    } else if (p.y < 730 && p.x > 270 && p.x < 1330)
-      act(() => game.dispatch({ type: "play", side: "p", uid: d.uid }));
+    const landing = unitAt(e.clientX, e.clientY);
+    finishDrag(d, e);
+    /* A completed touch drag must not be replayed as a tap by the
+     * compatibility click (mobile-ui owns that suppressor). */
+    if (EmberViewport.mobile) window.EmberMobile?.dragEnded?.();
+    suppressNextClick(320);
+    if (landing) inspect(landing.dataset.side, landing.dataset.uid);
+    suppressNextClick(80);
   });
-  document.addEventListener("pointercancel", () => {
-    if (drag) {
-      drag.ghost?.remove();
-      drag.el.classList.remove("drag-source");
-      drag = null;
-      clearSelection();
-    }
-  });
+  document.addEventListener("pointercancel", () => cancelDrag(false));
   function scheduleAI() {
     clearTimeout(aiTimer);
     if (
@@ -1296,7 +1622,7 @@
   }
   function showHelp() {
     showModal(
-      `<section class="modal-box help-box"><div class="modal-heading"><div class="eyebrow">玩法与规则</div><h2>旅人手册</h2><p>回合流程、构筑规则与关键词速查。</p></div><div class="help-columns"><div><section class="help-section"><h3>01 · 一场战斗如何获胜</h3><p>将敌方英雄生命降至 <b>0</b>。你有 <b>30 点基础生命、${D.deckRules.size} 张牌库</b>，双方最多拥有 <b>7 个随从、10 张手牌</b>。战役中你先手；练习对战随机先后手。先手起始三张、后手四张并在换牌后获得硬币。每个回合增加一枚法力水晶，上限 10，并补满法力、抽一张牌。</p></section><section class="help-section"><h3>02 · 出牌与攻击</h3><p><b>点击手牌</b>即可打出；需要目标时，再点击相应角色。也可以拖动卡牌。<br><b>点击己方随从 → 点击敌人</b>即可攻击。新召唤的随从通常需要等待一回合。双方随从同时对彼此造成攻击力数值的伤害。装备武器后，点击自己的英雄攻击。<br>按按钮标示的法力费用使用英雄技能，每回合一次。空格结束回合，Esc 取消选择，M 静音。</p></section><section class="help-section"><h3>03 · 构筑与冒险</h3><p>图鉴中 ${D.cards.filter((c) => !c.token).length} 张卡全部开放，构筑使用所选职业与中立牌。${D.archetypes.length} 套预设分别提供打法说明。<b>${EmberDeckRules.summary(D)}</b>。${D.bosses.length} 位首领均在半血时进入第二阶段。每次胜利可更换一张牌并选择遗物，下一关生命完全恢复。练习对战可挑战 ${D.archetypes.length} 套牌，随机先后手、双方三十血，不覆盖战役进度。进度自动保存在当前浏览器。<br>牌库耗尽后，每次抽牌依次受到 <b>1、2、3…</b> 点疲劳伤害。第 51 个玩家回合开始时判为平局。</p></section></div><div><section class="help-section"><h3>04 · 关键词速查</h3><div class="key-table">${Object.entries(
+      `<section class="modal-box help-box"><div class="modal-heading"><div class="eyebrow">玩法与规则</div><h2>旅人手册</h2><p>回合流程、构筑规则与关键词速查。</p></div><div class="help-columns"><div><section class="help-section"><h3>01 · 一场战斗如何获胜</h3><p>将敌方英雄生命降至 <b>0</b>。你有 <b>30 点基础生命、${D.deckRules.size} 张牌库</b>，双方最多拥有 <b>7 个随从、10 张手牌</b>。战役中你先手；练习对战随机先后手。先手起始三张、后手四张并在换牌后获得硬币。每个回合增加一枚法力水晶，上限 10，并补满法力、抽一张牌。</p></section><section class="help-section"><h3>02 · 出牌与攻击</h3><p><b>把手牌拖到战场</b>松手即可打出；需要目标时，拖向或点击目标确认，<b>右键或 Esc</b> 取消。也可以直接点击手牌：不需要目标的牌立即打出，需要目标的牌进入瞄准。<br><b>桌面悬停</b>在左侧查看卡牌大图；触控设备长按或右键卡牌查看详情，点击空白处收起。<br><b>点击己方随从 → 点击敌人</b>即可攻击。新召唤的随从通常需要等待一回合。双方随从同时对彼此造成攻击力数值的伤害。装备武器后，点击自己的英雄攻击。<br>按按钮标示的法力费用使用英雄技能，每回合一次。空格结束回合，Esc 取消选择，M 静音。</p></section><section class="help-section"><h3>03 · 构筑与冒险</h3><p>图鉴中 ${D.cards.filter((c) => !c.token).length} 张卡全部开放，构筑使用所选职业与中立牌。${D.archetypes.length} 套预设分别提供打法说明。<b>${EmberDeckRules.summary(D)}</b>。${D.bosses.length} 位首领均在半血时进入第二阶段。每次胜利可更换一张牌并选择遗物，下一关生命完全恢复。练习对战可挑战 ${D.archetypes.length} 套牌，随机先后手、双方三十血，不覆盖战役进度。进度自动保存在当前浏览器。<br>牌库耗尽后，每次抽牌依次受到 <b>1、2、3…</b> 点疲劳伤害。第 51 个玩家回合开始时判为平局。</p></section></div><div><section class="help-section"><h3>04 · 关键词速查</h3><div class="key-table">${Object.entries(
         keywords,
       )
         .map(([k, v]) => `<div><b>${D.kw[k]}</b>${v}</div>`)
@@ -1422,11 +1748,7 @@
     }
     if (input && e.key !== "Escape") return;
     if (e.key === "Escape") {
-      if (drag) {
-        drag.ghost?.remove();
-        drag.el.classList.remove("drag-source");
-        drag = null;
-      }
+      if (drag) cancelDrag(false);
       if (selection) clearSelection();
       else if (modalType && $("modal").dataset.locked !== "1") closeModal();
       return;
@@ -1472,6 +1794,10 @@
     toast,
     hidePreview,
     act,
+    showCardDetail,
+    suppressNextClick,
+    clickSuppressed,
+    closeCardDetail,
     formatText,
     game: game.view(),
     startGame,
@@ -1500,11 +1826,7 @@
   )
     window.EmberDebug = Object.freeze({ game });
   window.addEventListener("ember:viewport", () => {
-    if (drag) {
-      drag.ghost?.remove();
-      drag.el?.classList.remove("drag-source");
-      drag = null;
-    }
+    cancelDrag(false);
     clearSelection();
     hidePreview();
     EmberFX.reflow();
@@ -1513,12 +1835,8 @@
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
       save();
+      cancelDrag(false);
       clearSelection();
-      if (drag) {
-        drag.ghost?.remove();
-        drag.el?.classList.remove("drag-source");
-        drag = null;
-      }
     }
   });
 })();

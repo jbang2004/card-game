@@ -16,7 +16,7 @@
   viewer.append(image,caption,note,button);document.body.append(viewer);button.focus();
  }
  function enhance(){
-  const sheet=modal.querySelector('.touch-card-sheet,.touch-inline-detail');
+  const sheet=modal.querySelector('.touch-inline-detail,.card-detail-layout');
   const card=sheet?.querySelector('[data-card-key]');
   const detail=sheet?.querySelector('.touch-inspect-detail');
   if(!card||!detail||detail.querySelector('.anime-art-button'))return;

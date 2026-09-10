@@ -115,7 +115,6 @@ body.touch-layout .enemy-deck,
 body.touch-layout .player-deck,
 body.touch-layout .board-props,
 body.touch-layout .battle-bottom,
-body.touch-layout .lane-label,
 body.touch-layout #log-toggle,
 body.touch-layout #intel-toggle,
 body.touch-layout .log-panel,
@@ -128,9 +127,6 @@ body.touch-layout .mana-desc {
 body.touch-layout .arena {
   pointer-events: auto;
   z-index: 1;
-}
-body.touch-layout .board-fallback {
-  display: none !important;
 }
 body.touch-layout #touch-match-chip {
   position: absolute;
@@ -486,6 +482,12 @@ body.touch-layout .hand-label {
   font-size: 11px;
   color: #e9c797;
   z-index: 16;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+body.touch-layout .hand-label::before {
+  display: none;
 }
 body.touch-layout .hand-label .hand-en,
 body.touch-layout .hand-label .hand-tip {
@@ -496,17 +498,7 @@ body.touch-layout .hand-label b {
   margin: 0;
   writing-mode: horizontal-tb;
 }
-body.touch-layout #touch-hand-all {
-  background: none;
-  min-width: 48px;
-  min-height: 36px;
-  justify-content: center;
-  align-items: center;
-  font-size: 11px;
-  color: #ffe0a6;
-  padding: 0 7px;
-  margin-left: 1px;
-}
+
 body.touch-layout .hand-zone {
   right: auto;
   perspective: none;
@@ -544,7 +536,9 @@ body.touch-layout.reduced-motion .hand-card:focus-visible {
   transform: none;
   transform-origin: center;
   transition: none;
-  touch-action: pan-x;
+  /* Touch handling is owned by the controller (drag to play, manual rail pan);
+     leaving pan-x here lets the browser cancel the pointer on any lift. */
+  touch-action: none;
   filter: drop-shadow(0 4px 2px #130b1480);
   z-index: auto;
   scroll-snap-align: start;
@@ -1544,23 +1538,7 @@ body.touch-layout .deck-curve {
   font-size: 10px;
 }
 /* Tap-to-inspect, explicit play confirmation. Rules are repeated at a readable size. */
-body.touch-layout #modal .touch-card-sheet {
-  max-width: 610px;
-  position: relative;
-  padding: 15px;
-}
-body.touch-layout #modal[data-type="touch-card"] {
-  align-items: flex-end;
-}
-body.touch-layout .touch-card-sheet .modal-heading {
-  border: 0;
-  margin-bottom: 9px;
-  padding-bottom: 6px;
-}
-body.touch-layout .touch-card-sheet .modal-heading h2 {
-  font-size: 22px;
-  letter-spacing: 1px;
-}
+
 body.touch-layout .touch-inspect-main {
   display: grid;
   grid-template-columns: 136px 1fr;
@@ -1641,13 +1619,6 @@ body.touch-layout .touch-reason {
   font-size: 12px;
   line-height: 1.6;
   color: #a15c35;
-}
-body.touch-layout .touch-card-sheet .modal-footer {
-  justify-content: stretch;
-}
-body.touch-layout .touch-card-sheet .modal-footer button {
-  min-height: 50px;
-  font-size: 16px;
 }
 body.touch-layout .touch-hero-info {
   display: grid;
@@ -2055,12 +2026,7 @@ body.mobile-landscape .map-route {
 body.mobile-landscape .atelier-architecture {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
-body.mobile-landscape #modal[data-type="touch-card"] {
-  align-items: center;
-}
-body.mobile-landscape #modal .touch-card-sheet {
-  max-width: 615px;
-}
+
 body.mobile-landscape .touch-inspect-main {
   grid-template-columns: 125px 1fr;
   gap: 24px;
@@ -2175,22 +2141,14 @@ body.touch-layout .icon-btn {
   justify-content: center;
   align-items: center;
 }
-body.touch-layout #touch-hand-all {
-  min-height: 44px;
-}
+
 body.touch-layout .hand-card:first-child {
   margin-left: auto;
 }
 body.touch-layout .hand-card:last-child {
   margin-right: auto;
 }
-body.touch-layout #app.is-targeting .turn-number {
-  visibility: hidden;
-}
-body.touch-layout .touch-inspect-art .card-text {
-  max-height: 25%;
-  overflow: hidden;
-}
+body.touch-layout #app.is-targe
 
 body.touch-layout .minion[data-compact="true"] .stat {
   width: calc(var(--unit-w) * 0.49);

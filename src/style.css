@@ -835,104 +835,6 @@ button {
   width: 60px;
   transform: rotate(-8deg);
 }
-.arena {
-  position: absolute;
-  left: 285px;
-  top: 147px;
-  width: 1030px;
-  height: 425px;
-  pointer-events: auto;
-}
-.board-fallback {
-  position: absolute;
-  inset: 0;
-  clip-path: polygon(6% 0, 94% 0, 100% 90%, 96% 100%, 4% 100%, 0 90%);
-  background:
-    radial-gradient(ellipse at 49% 45%, #65747718, transparent 68%),
-    repeating-linear-gradient(
-      13deg,
-      #0000 0px,
-      #0000 63px,
-      #98a8ae05 64px,
-      #0000 65px
-    ),
-    linear-gradient(125deg, #293238cc, #18242bc9 45%, #263035ba);
-  box-shadow: inset 0 0 70px #0009;
-  border: 1px solid #a38a554a;
-  opacity: 0.97;
-}
-.board-fallback:before {
-  content: "";
-  position: absolute;
-  inset: 13px;
-  border: 1px solid #b0966240;
-  clip-path: polygon(5% 0, 95% 0, 100% 100%, 0 100%);
-  background: repeating-conic-gradient(
-    from 0deg at 50% 48%,
-    transparent 0deg 29.7deg,
-    #c1a46b11 30deg 30.3deg,
-    transparent 30.5deg 60deg
-  );
-  box-shadow: inset 0 0 35px #05080b;
-}
-.board-fallback:after {
-  content: "";
-  position: absolute;
-  width: 258px;
-  height: 258px;
-  border: 1px solid #b3a17327;
-  border-radius: 50%;
-  left: 386px;
-  top: 85px;
-  transform: scaleY(0.68);
-  box-shadow:
-    0 0 0 8px #b3a17307,
-    0 0 0 9px #b3a17324,
-    0 0 0 27px #b3a17304,
-    0 0 0 28px #b3a17319;
-}
-.three-ready .board-fallback {
-  opacity: 0.18;
-}
-.board-center {
-  position: absolute;
-  left: 348px;
-  top: 342px;
-  width: 904px;
-  display: flex;
-  align-items: center;
-  gap: 28px;
-  pointer-events: none;
-  color: #a395721c;
-}
-.board-center:before,
-.board-center:after {
-  content: "";
-  height: 1px;
-  flex: 1;
-  background: linear-gradient(90deg, transparent, #a39b7645, transparent);
-}
-.board-center svg {
-  width: 40px;
-  height: 40px;
-  color: #c0ab6a40;
-}
-.lane-label {
-  position: absolute;
-  left: 0;
-  right: 0;
-  text-align: center;
-  font-size: 8px;
-  letter-spacing: 7px;
-  color: #9ca89426;
-  pointer-events: none;
-}
-.lane-label.enemy {
-  top: 215px;
-}
-.lane-label.friendly {
-  top: 438px;
-}
 .board-empty {
   position: absolute;
   left: 455px;
@@ -2819,13 +2721,6 @@ body.reduced-motion .damage-number {
 .hand-label {
   top: 696px;
 }
-.lane-label.enemy {
-  top: 179px;
-}
-.lane-label.friendly {
-  top: 371px;
-}
-
 /* Keep the opponent hand below navigation and hero health clear of the fan. */
 .enemy-hand {
   left: 942px;
@@ -2914,7 +2809,9 @@ body.mobile-ui .modal-close {
   width: 42px;
   height: 42px;
 }
-body.mobile-ui #card-preview {
+/* The magnified card is now a shared detail layer; only the hover flavour of
+   it stays desktop-only (touch uses long-press instead). */
+body.mobile-ui #card-preview[data-mode="hover"] {
   display: none !important;
 }
 body.mobile-ui .topbar {

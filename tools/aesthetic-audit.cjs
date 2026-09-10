@@ -173,7 +173,6 @@ function inter(a, b) {
           weaponSlot: "#weapon-slot",
           playerDeck: ".player-deck",
           enemyDeck: ".enemy-deck",
-          boardCenter: ".board-center",
         };
         const R = {};
         for (const [k, q] of Object.entries(sel)) {
