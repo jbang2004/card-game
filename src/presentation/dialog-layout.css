@@ -883,6 +883,17 @@ body #modal.folio-host .touch-hero-info > img {
 }
 
 @container dialog (max-width: 799px) {
+  /* The opening hand follows the hero roster on touch screens: two cards per
+   * row, with the complete card frame preserved inside the scroll pane. */
+  body #modal.folio-host[data-type="mulligan"] .mulligan-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 16px 12px;
+    margin: 0;
+  }
+  body #modal.folio-host[data-type="mulligan"] .mulligan-card {
+    max-width: none;
+  }
   body #modal.folio-host[data-type="heroes"] > .folio-dialog > .modal-heading::after {
     display: none;
   }
@@ -1029,6 +1040,9 @@ body #modal.folio-host .touch-hero-info > img {
 }
 @container dialog (max-width: 359px) {
   body #modal.folio-host .library-heading > input { flex-basis: 100%; }
+  body #modal.folio-host[data-type="mulligan"] .mulligan-cards {
+    gap: 14px 8px;
+  }
   body #modal.folio-host[data-type="heroes"] .hero-options {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px 8px;
@@ -1052,6 +1066,12 @@ body #modal.folio-host .touch-hero-info > img {
  * small gallery tile. The portrait remains complete inside the left rail
  * instead of being cropped to fill a shallow landscape card. */
 @media (orientation: landscape) and (max-width: 900px) {
+  body #modal.folio-host[data-type="mulligan"] .mulligan-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 560px;
+    gap: 12px;
+    margin-inline: auto;
+  }
   body #modal.folio-host[data-type="heroes"] .hero-options {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
