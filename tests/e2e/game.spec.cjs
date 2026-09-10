@@ -290,7 +290,7 @@ test("touch: inspect, confirm, rotate during spell, same match and no stuck effe
   await p.locator("#quick-btn").tap();
   await idle(p);
   await p.locator('#hand [data-cardid="frostbolt"]').tap();
-  await expect(p.locator(".touch-rule")).toContainText("冻结");
+  await expect(p.locator(".card-detail-art .card-text")).toContainText("冻结");
   expect(await p.evaluate(() => EmberDebug.game.s.p.mana)).toBe(6);
   await p.locator("#touch-card-play").tap();
   await p.locator('.enemy[data-cardid="golem"]').tap();

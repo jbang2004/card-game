@@ -63,9 +63,9 @@ for (const [width, height, touch] of [
         copyTop: copyRect.top - cardRect.top,
       };
     });
-    expect(poster.copyPosition).toBe("absolute");
+    expect(poster.copyPosition).not.toBe("absolute");
     expect(poster.art[0]).toBeGreaterThanOrEqual(poster.card[0] - 3);
-    expect(poster.art[1]).toBeGreaterThanOrEqual(poster.card[1] - 3);
+    expect(poster.art[0] / poster.art[1]).toBeCloseTo(3 / 4, 1);
     expect(poster.copyBottom).toBeLessThanOrEqual(2);
     expect(poster.copyTop).toBeGreaterThan(0);
     if (touch) {
@@ -75,11 +75,12 @@ for (const [width, height, touch] of [
       }));
       expect(scroll).toEqual({ overflowY: "auto", scrollable: true });
     }
+    await page.locator('[data-invoke="selmyra"]').scrollIntoViewIfNeeded();
     expect(
       await page.locator('[data-invoke="selmyra"]').evaluate((button) => {
         const r = button.getBoundingClientRect();
         return (
-          !button.closest(".folio-viewport") &&
+          !!button.closest(".covenant-card") &&
           r.left >= 0 &&
           r.right <= innerWidth &&
           r.top >= 0 &&
@@ -125,7 +126,7 @@ for (const [width, height] of [
   [320, 568],
   [568, 320],
 ]) {
-  test(`all covenant actions remain visible outside the scroll surface ${width}x${height}`, async ({
+  test(`each covenant action stays with its deity and scrolls into view ${width}x${height}`, async ({
     browser,
   }) => {
     const ctx = await browser.newContext({
@@ -144,34 +145,21 @@ for (const [width, height] of [
       g.emit();
     });
     await page.locator("#contract-open").click();
-    const result = await page.locator(".covenant-actions").evaluate((footer) => {
-      const dialog = footer.closest(".folio-dialog").getBoundingClientRect(),
-        buttons = [...footer.querySelectorAll("[data-invoke]")];
-      return {
-        count: buttons.length,
-        allEnabled: buttons.every((button) => !button.disabled),
-        allOutsidePages: buttons.every(
-          (button) => !button.closest(".folio-viewport"),
-        ),
-        allVisible: buttons.every((button) => {
-          const r = button.getBoundingClientRect();
-          return (
-            r.width >= 44 &&
-            r.height >= 44 &&
-            r.left >= dialog.left &&
-            r.right <= dialog.right &&
-            r.top >= dialog.top &&
-            r.bottom <= dialog.bottom
-          );
-        }),
-      };
-    });
-    expect(result).toEqual({
-      count: 3,
-      allEnabled: true,
-      allOutsidePages: true,
-      allVisible: true,
-    });
+    const buttons = page.locator(".covenant-card [data-invoke]");
+    await expect(buttons).toHaveCount(3);
+    for (const button of await buttons.all()) {
+      await button.scrollIntoViewIfNeeded();
+      await expect(button).toBeEnabled();
+      expect(await button.evaluate((element) => {
+        const r = element.getBoundingClientRect();
+        const card = element.closest(".covenant-card");
+        return card.dataset.deity === element.dataset.invoke &&
+          r.width >= 44 && r.height >= 44 &&
+          r.left >= 0 && r.right <= innerWidth &&
+          r.top >= 0 && r.bottom <= innerHeight;
+      })).toBe(true);
+    }
+    await expect(page.locator(".covenant-actions #contract-close")).toBeVisible();
     await ctx.close();
   });
 }

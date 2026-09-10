@@ -23,28 +23,6 @@ const EmberDialogs = (() => {
     help: "help",
     atelier: "atelier",
   });
-  // These are the only two authored exceptions to the default flow layout.
-  // Every dialog still owns one vertical scrolling surface on desktop and
-  // touch layouts alike.
-  const dialogLayoutMode = Object.freeze({
-    settings: "fit",
-    "touch-menu": "fit",
-    // Hero selection is one complete decision surface. Keep the four choices
-    // and every preparation control on the same scrollable sheet.
-    heroes: "fit",
-    // These views are decisions or inspections. Let their frame follow the
-    // authored content and add a scroll rail only when content needs one.
-    contracts: "compact",
-    mulligan: "compact",
-    discover: "compact",
-    result: "compact",
-    rewards: "compact",
-    "touch-hand": "compact",
-    "touch-log": "compact",
-    "touch-card": "compact",
-    "touch-hero": "compact",
-    "library-card": "compact",
-  });
   function mount(box, type) {
     cleanup();
     const modal = document.getElementById("modal");
@@ -52,31 +30,12 @@ const EmberDialogs = (() => {
     modal.classList.add("folio-host");
     box.classList.add("folio-dialog", "framed-dialog");
     box.dataset.dialogSize = dialogSize[type] || "workspace";
-    const layoutMode = dialogLayoutMode[type];
-    if (layoutMode) box.dataset.layoutMode = layoutMode;
-    else delete box.dataset.layoutMode;
-    // Set the first-frame compact state before ResizeObserver/requestAnimationFrame
-    // can run. Otherwise short touch dialogs briefly render their workspace
-    // geometry and then switch to the compact layout while controls are
-    // already being measured or focused.
-    box.dataset.compact = String(modal.clientHeight < 520);
-    // Keep commit actions outside the scroll surface so they remain reachable
-    // while the content above them scrolls. Moving the same live node keeps
-    // listeners, state and accessibility metadata intact.
-    const anchoredActions = [...box.querySelectorAll("[data-dialog-action]")];
-    if (anchoredActions.length) {
-      const footer = document.createElement("div");
-      footer.className = "folio-actions modal-footer";
-      footer.setAttribute("aria-label", "主要操作");
-      if (type === "contracts") {
-        footer.classList.add("covenant-actions");
-        footer.setAttribute("aria-label", "契约操作");
-      }
-      footer.append(...anchoredActions);
-      box.append(footer);
-    }
+    const title = box.querySelector("h2");
+    if (title) {
+      title.id ||= "dialog-title";
+      modal.setAttribute("aria-labelledby", title.id);
+    } else modal.removeAttribute("aria-labelledby");
     const panes = [];
-    let nameInput, nameHost, nameSlot;
     let frame = 0;
     const schedule = () => {
       if (!frame) frame = requestAnimationFrame(layout);
@@ -132,21 +91,6 @@ const EmberDialogs = (() => {
     function layout() {
       frame = 0;
       if (!box.isConnected) return;
-      // Compact mode responds to a genuinely shallow viewport, not to a
-      // deliberately smaller dialog such as a confirmation or card detail.
-      const compact = modal.clientHeight < 520;
-      box.dataset.compact = String(compact);
-      if (nameInput) {
-        const inHeader =
-          compact &&
-          (!box.querySelector(".touch-library-tabs").offsetHeight ||
-            box.classList.contains("touch-show-deck"));
-        const target = inHeader ? nameSlot : nameHost;
-        if (nameInput.parentElement !== target) target.append(nameInput);
-        if (nameSlot.hidden === inHeader) nameSlot.hidden = !inHeader;
-        if (box.classList.contains("folio-name-in-header") !== inHeader)
-          box.classList.toggle("folio-name-in-header", inHeader);
-      }
       for (const p of panes) {
         if (!p.viewport.clientWidth || !p.viewport.clientHeight) continue;
         p.refreshHint();
@@ -157,6 +101,8 @@ const EmberDialogs = (() => {
       if (!box.querySelector(".touch-library-tabs")) {
         const tabs = document.createElement("div");
         tabs.className = "touch-library-tabs";
+        tabs.setAttribute("role", "tablist");
+        tabs.setAttribute("aria-label", "卡牌收藏与牌组");
         tabs.innerHTML =
           '<button id="touch-card-tab" role="tab" aria-selected="true">全部卡牌</button><button id="touch-deck-tab" role="tab" aria-selected="false">我的牌组</button>';
         box.querySelector(".library-heading").after(tabs);
@@ -173,40 +119,19 @@ const EmberDialogs = (() => {
             }),
         );
       }
-      nameInput = box.querySelector("#deck-name");
-      nameHost = nameInput.parentElement;
-      nameSlot = document.createElement("label");
-      nameSlot.className = "folio-deck-name";
-      nameSlot.textContent = "牌组";
-      box.querySelector(".library-heading").append(nameSlot);
-      const bar = box.querySelector("#filter-bar");
-      const selects = document.createElement("div");
-      selects.className = "folio-filters";
-      for (const [key, label] of [
-        ["type", "类型"],
-        ["mana", "费用"],
-      ]) {
-        const wrap = document.createElement("label");
-        wrap.textContent = label;
-        const select = document.createElement("select");
-        select.setAttribute("aria-label", "筛选" + label);
-        for (const b of bar.querySelectorAll(`[data-${key}]`)) {
-          const opt = new Option(b.textContent, b.dataset[key]);
-          select.add(opt);
-        }
-        select.onchange = () =>
-          bar.querySelector(`[data-${key}="${select.value}"]`).click();
-        wrap.append(select);
-        selects.append(wrap);
-      }
-      bar.after(selects);
       const libraryPane = pane(box.querySelector("#library-grid"), "grid", "卡牌");
       // The collection is a vertical browsing surface at every size. Keep
       // the same shell for resize handling and give each pane its own hint.
       libraryPane.shell.classList.add("folio-scroll-pane");
-      const deckPane = pane(box.querySelector("#deck-list"), "grid", "牌组");
+      const editor = box.querySelector(".deck-editor");
+      const deckContent = document.createElement("div");
+      deckContent.className = "deck-content";
+      for (const child of [...editor.children]) {
+        if (!child.classList.contains("deck-actions")) deckContent.append(child);
+      }
+      editor.prepend(deckContent);
+      const deckPane = pane(deckContent, "flow", "牌组");
       deckPane.shell.classList.add("folio-scroll-pane");
-      pane(box.querySelector(".deck-tools-body"), "flow", "套牌配置");
     } else {
       let content = box.querySelector(":scope > .modal-scroll");
       if (!content) {

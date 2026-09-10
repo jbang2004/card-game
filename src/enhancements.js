@@ -76,8 +76,17 @@
     e.preventDefault();
     const c = D.byId[el.dataset.cardid];
     if (!c) return;
+    const side = el.dataset.side,
+      unit = E.game.s?.[side]?.board.find((m) => m.uid === el.dataset.uid),
+      hand = E.game.s?.p.hand.find((v) => v.uid === el.dataset.uid),
+      opts = unit ? { atk: unit.atk, hp: unit.hp } : hand ? { cost: E.game.cost(hand) } : {},
+      rarity = { common: "普通", rare: "稀有", epic: "史诗", legendary: "传说" }[c.rarity],
+      status = unit
+        ? `${unit.atk} 攻击 / ${unit.hp} 生命${unit.frozen ? " · 冻结" : ""}${unit.silenced ? " · 已沉默" : ""}`
+        : `${opts.cost ?? c.cost} 法力`,
+      tags = unit ? unit.tags : c.tags || [];
     E.showModal(
-      `<section class="modal-box" style="width:650px"><div class="modal-heading"><div class="eyebrow">THE ARCHIVE · ${c.rarity.toUpperCase()}</div><h2>${c.name}</h2><p>${c.type === "spell" ? "法术" : c.type === "weapon" ? "武器" : "随从"} · ${c.cost} 法力</p></div><div style="display:flex;align-items:center;gap:34px"><div class="discover-card">${E.cardHTML(c)}</div><div style="font-size:13px;line-height:2;color:#785936;max-width:260px"><p>${c.text || "一位等待你指挥的随从。"}</p><p style="font-size:10px;color:#a17e50;margin-top:22px">ESC 关闭查看。<br>本操作不会打出卡牌或消耗法力。</p></div></div></section>`,
+      `<section class="modal-box"><div class="modal-heading"><h2>${E.formatText(c.name)}</h2></div><div class="card-detail-layout"><div class="card-detail-art">${E.cardHTML(c, opts)}</div><div class="card-detail-copy"><small>${rarity} · ${c.type === "spell" ? "法术" : c.type === "weapon" ? "武器" : "随从"}</small><p class="touch-live-stat">${status}</p>${tags.length ? `<p>${tags.map((k) => E.formatText(D.kw[k] || k)).join(" · ")}</p>` : ""}</div></div></section>`,
       "inspect",
     );
   });

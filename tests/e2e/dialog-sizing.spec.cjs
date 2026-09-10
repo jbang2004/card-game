@@ -107,10 +107,7 @@ test("long-form dialog exposes one vertical scroll surface", async ({ page }) =>
   await page.goto("./?debug=1");
   await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
   await page.evaluate(() => Emberfall.showHelp());
-  await expect(page.locator("#modal .folio-dialog")).toHaveAttribute(
-    "data-layout-mode",
-    "scroll",
-  );
+  await expect(page.locator("#modal .folio-dialog > .folio-pane")).toHaveCount(1);
   await expect(page.locator("#modal .folio-pager")).toHaveCount(0);
   await expect(page.locator("#modal .folio-viewport")).toHaveCSS(
     "overflow-y",
