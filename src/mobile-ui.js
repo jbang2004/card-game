@@ -22,93 +22,41 @@
           "'": "&#39;",
         })[c],
     );
-  const kw = {
-    taunt: "敌人必须先攻击此随从。",
-    shield: "抵挡下一次伤害。",
-    rush: "召唤当回合可攻击随从。",
-    charge: "召唤当回合即可攻击。",
-    windfury: "每回合最多攻击两次。",
-    lifesteal: "造成伤害时治疗己方英雄。",
-    poison: "伤害随从后将其消灭。",
-    stealth: "攻击前不能成为敌方指定目标。",
-    reborn: "死亡后以 1 生命复活一次。",
-    spellpower: "伤害法术额外造成 1 点伤害。",
-  };
   let longPress = null,
     suppressUntil = 0,
     lastGesture = null;
-  const sheetInfo = (c, opts = {}, tags = c.tags || []) => {
-    const type =
-      c.type === "minion" ? "随从" : c.type === "weapon" ? "武器" : "法术";
-    const stats =
-      c.type === "spell"
-        ? `${opts.cost ?? c.cost} 法力 · ${c.rarity === "legendary" ? "传说" : c.rarity === "epic" ? "史诗" : c.rarity === "rare" ? "稀有" : "普通"}法术`
-        : `${opts.atk ?? c.atk} 攻击 / ${opts.hp ?? c.hp} ${c.type === "weapon" ? "耐久" : "生命"} · ${opts.cost ?? c.cost} 法力`;
-    return `<div class="card-detail-layout"><div class="card-detail-art">${E.cardHTML(c, opts)}</div><div class="card-detail-copy"><small>${type} / ${{ common: "普通", rare: "稀有", epic: "史诗", legendary: "传说" }[c.rarity]}</small><div class="touch-live-stat">${stats}</div>${opts.note ? `<p class="touch-reason">${esc(opts.note)}</p>` : ""}${tags.length ? `<div class="touch-keywords">${tags.map((k) => `<div><strong>${esc(D.kw[k] || k)}</strong> · ${esc(kw[k] || "")}</div>`).join("")}</div>` : ""}</div></div>`;
-  };
   function blocked() {
     return !E.inBattle || F.busy;
   }
-  function handClick(uid, fromGrid = false) {
-    if (blocked() || (E.modal && E.modal !== "touch-hand")) return;
+  /* Tap plays (or arms targeting) exactly like the desktop hand, so the phone
+   * no longer needs a detail sheet between the tap and the decision. */
+  function handClick(uid) {
+    if (blocked() || E.modal) return;
     const card = E.game.s.p.hand.find((x) => x.uid === uid);
     if (!card) return;
-    EmberAudio.fx("select");
-    const c = D.byId[card.cid],
-      err = E.game.legalCard("p", uid),
-      cost = E.game.cost(card);
-    const needs = c.target && E.game.targets(c.target, "p").length;
-    E.showModal(
-      `<section class="modal-box touch-card-sheet"><div class="modal-heading"><div class="eyebrow">手牌</div><h2>${esc(c.name)}</h2></div>${sheetInfo(c, { cost, note: err })}<div class="modal-footer"><button id="touch-card-cancel" class="ghost-btn">${fromGrid ? "返回手牌" : "收起"}</button><button id="touch-card-play" class="gold-btn" ${err ? "disabled" : ""}>${needs ? "选择目标" : "打出卡牌"} · ${cost} 法力</button></div></section>`,
-      "touch-card",
-    );
-    $("touch-card-cancel").onclick = () => {
-      if (fromGrid) {
-        E.closeModal(false);
-        showHand();
-      } else E.closeModal();
-    };
-    $("touch-card-play").onclick = () => {
-      E.closeModal(false);
-      E.selectCard(uid);
-    };
+    E.selectCard(uid);
   }
   function showHand() {
-    if (blocked()) return;
+    if (blocked() || E.modal) return;
     const s = E.game.s;
     E.showModal(
-      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">${s.p.hand.length} 张手牌</div><h2>手牌总览</h2></div><div class="touch-hand-grid">${s.p.hand.map((v) => `<button data-touch-hand="${v.uid}" aria-label="查看 ${D.byId[v.cid].name}">${E.cardHTML(D.byId[v.cid], { cost: E.game.cost(v) })}</button>`).join("") || "<p>手牌暂时为空，下回合会再抽一张。</p>"}</div></section>`,
+      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">${s.p.hand.length} 张手牌 · 长按显示大图</div><h2>手牌总览</h2></div><div class="touch-hand-grid">${s.p.hand.map((v) => `<button data-touch-hand="${v.uid}" aria-label="查看 ${D.byId[v.cid].name}">${E.cardHTML(D.byId[v.cid], { cost: E.game.cost(v) })}</button>`).join("") || "<p>手牌暂时为空，下回合会再抽一张。</p>"}</div></section>`,
       "touch-hand",
     );
     document
       .querySelectorAll("[data-touch-hand]")
-      .forEach((b) => (b.onclick = () => handClick(b.dataset.touchHand, true)));
+      .forEach((b) => (b.onclick = () => showHandDetail(b.dataset.touchHand)));
+  }
+  function showHandDetail(uid) {
+    const card = E.game.s.p.hand.find((x) => x.uid === uid);
+    if (card)
+      E.showCardDetail(card.cid, { pinned: true, cost: E.game.cost(card) });
   }
   function inspectMinion(side, uid) {
     if (blocked()) return;
     const m = E.game.s[side].board.find((x) => x.uid === uid);
     if (!m) return;
-    const c = D.byId[m.cid];
-    let note = m.frozen
-      ? "被冻结，暂时无法攻击。"
-      : m.sick
-        ? "刚被召唤，通常需要等待下一回合。"
-        : side === "p"
-          ? E.game.canAttack("p", uid)
-            ? "已经准备好攻击。"
-            : "本回合无法再次攻击。"
-          : "敌方随从";
-    const ready = side === "p" && E.game.canAttack("p", uid);
-    E.showModal(
-      `<section class="modal-box touch-card-sheet"><div class="modal-heading"><div class="eyebrow">${side === "p" ? "我方随从" : "敌方随从"} · 战场详情</div><h2>${esc(c.name)}</h2></div>${sheetInfo(c, { atk: m.atk, hp: m.hp, note }, m.tags)}<div class="modal-footer"><button id="touch-unit-close" class="ghost-btn">回到战场</button>${ready ? '<button id="touch-unit-attack" class="gold-btn">选择攻击目标</button>' : ""}</div></section>`,
-      "touch-card",
-    );
-    $("touch-unit-close").onclick = () => E.closeModal();
-    if (ready)
-      $("touch-unit-attack").onclick = () => {
-        E.closeModal(false);
-        E.clickUnit(side, uid);
-      };
+    E.showCardDetail(m.cid, { pinned: true, atk: m.atk, hp: m.hp });
   }
   function inspectHero(side = "p", power = false) {
     if (blocked()) return;
@@ -175,6 +123,17 @@
           ? `${D.byId[sel.cid].name} · 选择目标`
           : "英雄技能 · 选择目标";
   }
+  /* Called by the controller after a touch drag settles, so the compatibility
+   * click that follows the pointerup never re-opens the card sheet. */
+  function dragEnded() {
+    suppressUntil = performance.now() + 400;
+  }
+  /* Called by card detail dismissal: a long press or drag already consumed this
+   * tap, so it must not also close the magnified card or replay the action. */
+  function consumedClick() {
+    lastGesture = null;
+    suppressUntil = 0;
+  }
   function showLog() {
     if (blocked()) return;
     E.showModal(
@@ -197,7 +156,6 @@
     ];
     if (E.inBattle)
       opts.push(
-        ["hand", "book", "手牌总览"],
         ["journal", "book", "战斗记录"],
         ["boss", "skull", "首领情报"],
         ["home", "arrow", "返回酒馆"],
@@ -208,7 +166,6 @@
       "touch-menu",
     );
     const fn = {
-      hand: showHand,
       map: () => E.showMap(),
       cards: () => E.showLibrary(),
       guide: () => E.showHelp(),
@@ -235,11 +192,6 @@
     const b = $("touch-deck-tab");
     if (b) b.textContent = `我的牌组 · ${n}/${D.deckRules.size}`;
   }
-  function inspectLibrary(el) {
-    document
-      .querySelector(`[data-library-inspect="${el.dataset.add}"]`)
-      ?.click();
-  }
   function afterRender(s) {
     if (!V.mobile || !s) return;
     const b = D.bosses[s.bossIndex];
@@ -249,12 +201,10 @@
       (s.active === "p" ? "你的回合" : "敌方回合") + " · " + s.turn;
     $("hand").setAttribute(
       "aria-label",
-      `你的 ${s.p.hand.length} 张手牌，左右滑动，点按查看和出牌`,
+      `你的 ${s.p.hand.length} 张手牌，左右滑动，上拖出牌，点按直接出牌，长按显示大图`,
     );
-    $("touch-hand-all").setAttribute(
-      "aria-label",
-      `展开全部 ${s.p.hand.length} 张手牌`,
-    );
+    const tip = document.querySelector(".hand-tip");
+    if (tip) tip.textContent = "拖到战场出牌 · 点按瞄准 · 长按看大图";
     const p = V.layout.player,
       wslot = $("weapon-slot"),
       beside = V.portrait && V.layout.power.x - (p.x + p.w) > 36;
@@ -287,9 +237,8 @@
   menu.onclick = showMenu;
   document.querySelector(".top-actions").append(menu);
   $("touch-cancel").onclick = () => E.clearSelection();
-  $("touch-hand-all").onclick = showHand;
-  // No pointer capture on the hand: pan-x belongs to the browser. Track motion
-  // to suppress a compatibility click even on devices with permissive click slop.
+  // No pointer capture on the hand: the controller owns card drags and pans.
+  // Track motion to suppress a compatibility click even on permissive click slop.
   function stopLong() {
     if (longPress) {
       clearTimeout(longPress.timer);
@@ -310,7 +259,7 @@
       };
       stopLong();
       const el = ev.target.closest?.(
-        "#battle .minion,#battle .hero,#power-btn,.library-item",
+        "#battle .minion,#battle .hero,#power-btn,.library-item,#hand .hand-card",
       );
       if (!el || F.busy || (E.modal && E.modal !== "library")) return;
       longPress = {
@@ -320,9 +269,18 @@
         y: ev.clientY,
         timer: setTimeout(() => {
           longPress = null;
+          /* The long press swallows the tap it grew out of: without this the
+           * compatibility click would immediately close the card it opened. */
+          E.suppressNextClick?.(450);
           suppressUntil = performance.now() + 850;
-          if (el.matches(".library-item")) inspectLibrary(el);
-          else if (el.id === "power-btn") inspectHero("p", true);
+          if (el.matches(".hand-card")) {
+            const card = E.game.s.p.hand.find((x) => x.uid === el.dataset.hand);
+            if (card)
+              E.showCardDetail(card.cid, {
+                pinned: true,
+                cost: E.game.cost(card),
+              });
+          } else if (el.id === "power-btn") inspectHero("p", true);
           else if (el.dataset.uid === "hero") inspectHero(el.dataset.side);
           else inspectMinion(el.dataset.side, el.dataset.uid);
         }, 440),
@@ -381,7 +339,7 @@
     (ev) => {
       if (
         V.mobile &&
-        ev.target.closest?.("#battle,.library-item,.touch-card-sheet")
+        ev.target.closest?.("#battle,.library-item,.touch-hand-grid")
       )
         ev.preventDefault();
     },
@@ -400,7 +358,10 @@
   window.EmberMobile = {
     handClick,
     tapUnit,
+    dragEnded,
+    consumedClick,
     showHand,
+    showHandDetail,
     inspectMinion,
     inspectHero,
     afterRender,
@@ -409,10 +370,8 @@
     showMenu,
   };
   document.title = "烬域 · 鎏金酒馆";
-  document.querySelector(".lobby-copy>.eyebrow").textContent =
-    "诸神同辉";
-  document.querySelector(".lobby-bottom small").textContent =
-    "烬域 · 鎏金酒馆";
+  document.querySelector(".lobby-copy>.eyebrow").textContent = "诸神同辉";
+  document.querySelector(".lobby-bottom small").textContent = "烬域 · 鎏金酒馆";
   const prev = V.mobile;
   V.resize();
   if (prev && E.game.s) afterRender(E.game.s);

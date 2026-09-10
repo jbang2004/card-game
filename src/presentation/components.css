@@ -260,10 +260,10 @@ body .hand-card .card .card-text {
   font-size: clamp(9px, 7cqw, 11px);
 }
 body .card-cost {
-  font-size: clamp(14px, 17cqw, 34px);
+  font-size: clamp(16px, 17.5cqw, 40px);
 }
 body .card .stat {
-  font-size: clamp(14px, 16cqw, 32px);
+  font-size: clamp(16px, 16.5cqw, 38px);
 }
 body .card .card-type {
   font-size: clamp(6px, 3.5cqw, 9px);
@@ -2254,12 +2254,6 @@ body.touch-layout .hero .portrait-frame {
     #0c0908 84%
   );
 }
-body:not(.touch-layout) .lane-label {
-  color: #4f3619;
-  opacity: 1;
-  font-size: 9px;
-  letter-spacing: 0.3em;
-}
 body:not(.touch-layout) .board-empty {
   color: #5b3f1f;
   opacity: 0.95;
@@ -3065,7 +3059,7 @@ body :is(
     transform 130ms ease;
 }
 
-body :is(#touch-cancel, #touch-hand-all, #wind-time) {
+body :is(#touch-cancel, #wind-time) {
   border: 1px solid var(--control-secondary-line);
   border-radius: 5px;
   background: var(--control-secondary-bg);
@@ -3138,7 +3132,7 @@ body :is(
     0 7px 14px #0005;
 }
 
-body :is(#touch-cancel, #touch-hand-all, #wind-time):hover:not(:disabled) {
+body :is(#touch-cancel, #wind-time):hover:not(:disabled) {
   border-color: #d0ad6e;
   filter: brightness(1.08);
   transform: translateY(-1px);
@@ -3172,7 +3166,7 @@ body :is(
     0 1px 0 #21140c;
 }
 
-body :is(#touch-cancel, #touch-hand-all, #wind-time):active:not(:disabled) {
+body :is(#touch-cancel, #wind-time):active:not(:disabled) {
   transform: translateY(1px);
   filter: brightness(.96);
   box-shadow:
@@ -3187,7 +3181,7 @@ body :is(.filter-btn.active, .touch-library-tabs button[aria-selected="true"]) {
   box-shadow: inset 0 -2px var(--control-primary-line), 0 2px 0 #21140c;
 }
 
-body.touch-layout :is(#touch-cancel, #touch-hand-all, #wind-time) {
+body.touch-layout :is(#touch-cancel, #wind-time) {
   border-color: var(--control-secondary-line);
   background: var(--control-secondary-bg);
   color: var(--control-secondary-ink);
@@ -3222,267 +3216,152 @@ body.touch-layout :is(
   text-shadow: none;
 }
 
-/* Semantic card badges. These are original Emberfall silhouettes: mana is a
- * cut sapphire, attack is a small blade crest, and health is a heart core.
- * Keep the data in the DOM and give every card context the same visual grammar.
- */
+/* Semantic card badges. Every badge is one self-contained SVG frame from
+ * EmberArt.badgeFrame — a cut sapphire for mana, an amber blade medallion for
+ * attack, a crimson heart crest for health, a steel ward for weapon
+ * durability — with the number left as live DOM text on top. These rules own
+ * only the frame's depth and the numeral's embossing, so a five-pixel board
+ * token, a fanned hand card and the inspection sheet all stay in step. */
 :root {
-  --badge-mana-edge: #0d2c52;
-  --badge-mana-light: #dffaff;
-  --badge-attack-edge: #60401c;
-  --badge-attack-light: #fff0ae;
-  --badge-health-edge: #60272b;
-  --badge-health-light: #ffc0a2;
+  --badge-mana-ink: #06192f;
+  --badge-blade-ink: #3a2306;
+  --badge-heart-ink: #430e16;
+  --badge-ward-ink: #1b262e;
 }
 
-body .card-cost {
-  isolation: isolate;
-  border: 0 !important;
-  border-radius: 0 !important;
-  clip-path: polygon(
-    50% 0,
-    82% 10%,
-    100% 43%,
-    91% 78%,
-    57% 100%,
-    17% 90%,
-    0 54%,
-    16% 16%
-  ) !important;
-  background: conic-gradient(
-    from 25deg at 42% 40%,
-    #d9faff,
-    #79cbea 13%,
-    #2a70bd 29%,
-    #123d78 43%,
-    #6ec6eb 54%,
-    #e9ffff 64%,
-    #3c8ed0 77%,
-    #173f79 91%,
-    #d9faff
-  ) !important;
-  box-shadow:
-    inset 0 0 0 2px var(--badge-mana-edge),
-    inset 0 -2px 0 #092442,
-    0 2px 0 #11243b,
-    0 3px 5px #151922aa !important;
-  color: #fffbed !important;
-  text-shadow:
-    0 2px 1px #132946,
-    -1px -1px #132946,
-    1px -1px #132946 !important;
-  filter: drop-shadow(0 2px 1px #18202a) !important;
-}
-
-body .card-cost::before {
-  content: "" !important;
-  display: block !important;
-  position: absolute;
-  inset: 8% 12%;
-  border: 1px solid #e6ffffaa !important;
-  clip-path: polygon(50% 0, 100% 35%, 78% 100%, 20% 88%, 0 36%) !important;
-  background: linear-gradient(135deg, #ffffff66, transparent 42%, #0a346655) !important;
-  pointer-events: none;
-  z-index: 0;
-}
-
-body .card-cost::after {
-  content: "" !important;
-  display: block !important;
-  position: absolute;
-  top: 10%;
-  left: 21%;
-  width: 13%;
-  height: 57%;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #ffffffdd, #bdf5ff22) !important;
-  transform: rotate(28deg);
-  opacity: 0.78;
-  pointer-events: none;
-  z-index: 1;
-}
-
+/* Each context keeps the geometry it already declares; only the retired
+ * gradient, clip-path and marble-circle bodies are reset here. */
+body .card-cost,
+body .card .card-cost,
 body .stat,
-body .card .stat {
-  isolation: isolate;
+body .card .stat,
+body .minion .stat {
   background: none !important;
   border: 0 !important;
   border-radius: 0 !important;
   box-shadow: none !important;
-  filter: drop-shadow(0 2px 1px #201e19) !important;
-}
-
-body .stat::before,
-body .stat::after {
-  pointer-events: none;
-}
-
-body .stat::before {
-  content: "" !important;
-  display: block !important;
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-}
-
-body .stat.atk::before {
-  border: 2px solid var(--badge-attack-edge) !important;
-  border-radius: 50% !important;
   clip-path: none !important;
-  background: radial-gradient(
-    circle at 31% 22%,
-    #fff5bd 0 7%,
-    var(--badge-attack-light) 23%,
-    #d7a441 48%,
-    #8c5d20 80%,
-    #5e3b16
-  ) !important;
-  box-shadow:
-    inset 0 0 0 1px #fff1bd,
-    inset 0 -3px 4px #553613,
-    0 1px 0 #f0c978,
-    0 2px 3px #28170ccc !important;
-}
-
-body .stat.atk::after {
-  content: "" !important;
-  display: block !important;
-  position: absolute;
-  top: 12%;
-  left: 18%;
-  width: 30%;
-  height: 13%;
-  border-radius: 999px;
-  background: #fff8c9cc !important;
-  opacity: 0.7;
-  transform: rotate(-25deg);
-  z-index: -1;
-}
-
-body .stat.hp::before {
-  border: 2px solid var(--badge-health-edge) !important;
-  border-radius: 50% !important;
-  clip-path: none !important;
-  background: radial-gradient(
-    circle at 30% 21%,
-    #ffe0cf 0 7%,
-    var(--badge-health-light) 23%,
-    #d04e40 49%,
-    #87272e 80%,
-    #591d25
-  ) !important;
-  box-shadow:
-    inset 0 0 0 1px #ffe0bd,
-    inset 0 -3px 4px #5c1e27,
-    0 1px 0 #ed9874,
-    0 2px 3px #28130ecc !important;
-}
-
-body .stat.hp::after {
-  content: "" !important;
-  display: block !important;
-  position: absolute;
-  top: 12%;
-  left: 19%;
-  width: 29%;
-  height: 13%;
-  border-radius: 999px;
-  background: #fff2d099 !important;
-  transform: rotate(-28deg);
-  z-index: -1;
-}
-
-body .card.weapon .stat.hp::before {
-  border-color: #3d4a52 !important;
-  clip-path: polygon(50% 0, 86% 17%, 96% 72%, 50% 100%, 4% 72%, 14% 17%) !important;
-  background: linear-gradient(145deg, #eef2e8, #879ba1 48%, #3c4b58 82%) !important;
-  box-shadow:
-    inset 0 0 0 1px #ffffffaa,
-    inset 0 -3px 4px #26343e,
-    0 1px 0 #d8e0d4 !important;
-}
-
-body .card.weapon .stat.hp::after {
-  background: #ffffffaa !important;
-}
-
-/* The badge silhouettes carry the depth; these small line marks make the
- * gameplay meaning unambiguous even when a card is scaled down.  They reuse
- * EmberArt's existing icon language instead of baking text into artwork. */
-body .card-cost {
+  isolation: isolate;
   display: grid !important;
   place-items: center !important;
   padding: 0 !important;
   line-height: 1 !important;
+  letter-spacing: 0 !important;
+  font-family: Georgia, "Iowan Old Style", "Palatino Linotype", "Songti SC", serif !important;
+  font-weight: 700 !important;
+  font-variant-numeric: tabular-nums;
 }
 
-body .badge-glyph,
-body .stat-glyph {
+/* The retired circle and polygon bodies were painted with pseudo-elements. */
+body .card-cost::before,
+body .card-cost::after,
+body .stat::before,
+body .stat::after {
+  content: none !important;
+}
+
+body .badge-frame {
   position: absolute;
-  display: grid;
-  place-items: center;
-  pointer-events: none;
-  z-index: 1;
-}
-
-body .badge-glyph .ui-icon,
-body .stat-glyph .ui-icon {
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
-  stroke-width: 2.1;
-}
-
-body .card-cost .badge-glyph {
-  inset: 12% 15%;
-  color: #e9fdff;
-  opacity: 0.5;
-  filter: drop-shadow(0 1px 0 #12345f);
+  z-index: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 0.5px #150f08) drop-shadow(0 2px 3px #120c0599);
 }
 
 body .badge-value,
 body .stat-value {
-  position: relative;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   z-index: 2;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-size: 1em;
   line-height: 1;
+  pointer-events: none;
+  -webkit-font-smoothing: antialiased;
 }
 
-body .stat-glyph {
-  inset: 17%;
-  opacity: 0.84;
+/* Numerals sit inside asymmetric attack/health crests.  A small em-scaled
+ * optical lift keeps their ink centered as the badge grows or shrinks. */
+body .stat-value {
+  transform: translateY(-0.08em);
 }
 
-body .stat.atk .stat-glyph {
-  color: #5a3710;
-  opacity: 0.92;
-  transform: rotate(-8deg) scale(1.04);
-  filter: drop-shadow(0 1px 0 #fff0ae) drop-shadow(0 0 1px #ffdf77);
+/* One embossed numeral per family: ivory on sapphire, warm ivory on amber,
+ * ivory on crimson, pale steel on the ward. A dark contour keeps every digit
+ * legible over the relief and the last soft shadow seats it into the metal. */
+body .card-cost .badge-value {
+  color: #f4fcff;
+  text-shadow:
+    0.055em 0 0 var(--badge-mana-ink),
+    -0.055em 0 0 var(--badge-mana-ink),
+    0 0.055em 0 var(--badge-mana-ink),
+    0 -0.055em 0 var(--badge-mana-ink),
+    0.042em 0.042em 0 var(--badge-mana-ink),
+    -0.042em 0.042em 0 var(--badge-mana-ink),
+    0.042em -0.042em 0 var(--badge-mana-ink),
+    -0.042em -0.042em 0 var(--badge-mana-ink),
+    0 0.08em 0.12em #041526cc;
 }
 
-body .stat.atk .stat-glyph .ui-icon {
-  stroke-width: 2.5;
+body .stat.atk .stat-value {
+  color: #fffaeb;
+  text-shadow:
+    0.055em 0 0 var(--badge-blade-ink),
+    -0.055em 0 0 var(--badge-blade-ink),
+    0 0.055em 0 var(--badge-blade-ink),
+    0 -0.055em 0 var(--badge-blade-ink),
+    0.042em 0.042em 0 var(--badge-blade-ink),
+    -0.042em 0.042em 0 var(--badge-blade-ink),
+    0.042em -0.042em 0 var(--badge-blade-ink),
+    -0.042em -0.042em 0 var(--badge-blade-ink),
+    0 0.08em 0.12em #241503cc;
 }
 
-body .stat.hp .stat-glyph {
-  color: #fff0e2;
-  opacity: 0.9;
-  filter: drop-shadow(0 1px 0 #6d2228) drop-shadow(0 0 1px #ffae98);
+body .stat.hp .stat-value {
+  color: #fff4f1;
+  text-shadow:
+    0.055em 0 0 var(--badge-heart-ink),
+    -0.055em 0 0 var(--badge-heart-ink),
+    0 0.055em 0 var(--badge-heart-ink),
+    0 -0.055em 0 var(--badge-heart-ink),
+    0.042em 0.042em 0 var(--badge-heart-ink),
+    -0.042em 0.042em 0 var(--badge-heart-ink),
+    0.042em -0.042em 0 var(--badge-heart-ink),
+    -0.042em -0.042em 0 var(--badge-heart-ink),
+    0 0.08em 0.12em #2b060ccc;
 }
 
-body .stat.hp .stat-glyph .ui-icon {
-  stroke-width: 2.45;
+/* A damaged unit keeps its crest but loses some blood. */
+body .stat.hp.hurt .badge-frame {
+  filter: saturate(0.58) brightness(0.82) drop-shadow(0 1px 0.5px #150f08)
+    drop-shadow(0 2px 3px #120c0599);
 }
 
-body .card.weapon .stat.hp .stat-glyph {
-  color: #f4faf0;
-  opacity: 0.5;
-  filter: drop-shadow(0 1px 0 #35434c);
+body .stat.hp.hurt .stat-value {
+  color: #ffc9b0;
 }
 
-body.touch-layout :is(.filter-btn.active, .touch-library-tabs button[aria-selected="true"]) {
-  border-color: var(--control-primary-line);
-  background: linear-gradient(180deg, #60482d, #342518);
-  color: #f5e4bf;
-  box-shadow: inset 0 -2px var(--control-primary-line), 0 2px 0 #21140c;
+body .card.weapon .stat.hp .stat-value {
+  color: #f7fcfe;
+  text-shadow:
+    0.055em 0 0 var(--badge-ward-ink),
+    -0.055em 0 0 var(--badge-ward-ink),
+    0 0.055em 0 var(--badge-ward-ink),
+    0 -0.055em 0 var(--badge-ward-ink),
+    0.042em 0.042em 0 var(--badge-ward-ink),
+    -0.042em 0.042em 0 var(--badge-ward-ink),
+    0.042em -0.042em 0 var(--badge-ward-ink),
+    -0.042em -0.042em 0 var(--badge-ward-ink),
+    0 0.08em 0.12em #0d141acc;
 }

@@ -873,12 +873,6 @@ button:not(:disabled) {
   z-index: 5;
   background: none;
 }
-.board-fallback,
-.board-center,
-.lane-label,
-.board-rose {
-  display: none !important;
-}
 .board-empty {
   left: 590px;
   top: 503px;

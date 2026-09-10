@@ -15,9 +15,15 @@ test("short landscape dialogs keep actual play and return actions reachable", as
   await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
   await page.locator("#quick-btn").tap();
   await page.waitForFunction(() => !EmberFX.busy);
+  // Tap aims directly: no detail sheet between the tap and the target.
   await page.locator('#hand [data-cardid="frostbolt"]').tap();
-  await expect(page.locator("#toast")).not.toBeVisible();
-  // Tap screen coordinates so Playwright cannot silently scroll a hidden footer into view.
+  // The only toast allowed here is the demo entry hint; a rejected play would
+  // leave a different message.
+  if (await page.locator("#toast").isVisible())
+    await expect(page.locator("#toast")).toContainText("战斗试玩");
+  await expect(page.locator("#touch-target-bar")).toBeVisible();
+  await expect(page.locator(".valid-target").first()).toBeVisible();
+  await page.screenshot({ path: "artifacts/qa/dialog-short-touch-aim.png" });
   const tapVisibleCenter = async (selector) => {
     const point = await page.locator(selector).evaluate((el) => {
       const r = el.getBoundingClientRect();
@@ -35,9 +41,6 @@ test("short landscape dialogs keep actual play and return actions reachable", as
     expect(point.visible).toBe(true);
     await page.touchscreen.tap(point.x, point.y);
   };
-  await page.screenshot({ path: "artifacts/qa/dialog-short-touch-card.png" });
-  await tapVisibleCenter("#touch-card-play");
-  await expect(page.locator("#touch-card-play")).toHaveCount(0);
   await page.locator('.enemy[data-cardid="golem"]').tap();
   await page.waitForFunction(() => !EmberFX.busy);
   await expect(page.locator('.enemy[data-cardid="golem"]')).toHaveClass(

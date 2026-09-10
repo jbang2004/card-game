@@ -1075,7 +1075,12 @@ const EmberFX = (() => {
               const live = current.querySelector(selector),
                 copy = actor?.querySelector(selector);
               if (live && copy) {
-                copy.textContent = live.textContent;
+                /* Refresh only the number: the badge frame is part of the
+                 * cloned markup and must survive the sync. */
+                const liveValue = live.querySelector(".stat-value"),
+                  copyValue = copy.querySelector(".stat-value");
+                if (liveValue && copyValue) copyValue.textContent = liveValue.textContent;
+                else copy.textContent = live.textContent;
                 copy.className = live.className;
               } else if (!live && copy) copy.remove();
             }

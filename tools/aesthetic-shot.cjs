@@ -127,7 +127,6 @@ const OUT = "artifacts/aesthetic-review";
         enemyMana: q(".enemy-mana"),
         playerDeck: q(".player-deck"),
         enemyDeck: q(".enemy-deck"),
-        boardCenter: q(".board-center"),
         battleBottom: q(".battle-bottom"),
         bossPanel: q(".boss-panel"),
         logPanel: q(".log-panel"),

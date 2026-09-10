@@ -62,28 +62,9 @@ const AtelierWorld = (() => {
             image.width * scale,
             image.height * scale,
           );
-          if (view === "battle") {
-            const a = V.layout.arena;
-            ctx.save();
-            ctx.shadowColor = "#090604";
-            ctx.shadowBlur = 16;
-            ctx.fillStyle = "#533c27";
-            ctx.beginPath();
-            ctx.roundRect(a.x - 5, a.y - 5, a.w + 10, a.h + 10, 22);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-            const g = ctx.createLinearGradient(0, a.y, 0, a.y + a.h);
-            g.addColorStop(0, "#c6a875");
-            g.addColorStop(1, "#e0c696");
-            ctx.fillStyle = g;
-            ctx.strokeStyle = "#a9864c";
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.roundRect(a.x, a.y, a.w, a.h, 18);
-            ctx.fill();
-            ctx.stroke();
-            ctx.restore();
-          }
+          // Keep the mobile battle surface on the same continuous tavern
+          // tabletop as desktop. The transparent arena remains the hit area;
+          // units and the existing frame provide the gameplay structure.
         }
       }
       if (dusk) {

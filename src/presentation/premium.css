@@ -14,10 +14,7 @@ body {
   background: #241910;
 }
 .grain,
-.ambient,
-.board-fallback,
-.board-center,
-.arena-corner {
+.ambient {
   display: none !important;
 }
 #fx-vignette {
@@ -97,9 +94,6 @@ body:not(.touch-layout) .campaign-panel {
   color: #715432;
   opacity: 0.65;
   letter-spacing: 3px;
-}
-.lane-label {
-  color: #765833;
 }
 .mana-panel,
 body:not(.touch-layout) .mana-panel,
