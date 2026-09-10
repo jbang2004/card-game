@@ -3012,3 +3012,212 @@ body #modal.folio-host .adventure-atlas #map-continue {
 @media (prefers-reduced-motion: reduce) {
   #modal.folio-host .adventure-atlas .atlas-node { transition: none; }
 }
+
+/* One control language for ordinary actions. The confirmation dialog is the
+ * reference: a recessed walnut secondary surface, a restrained gold primary
+ * surface, one fine brass rim, and the same quiet press feedback everywhere.
+ * Content controls (cards, heroes, map nodes, close rings and skill medallions)
+ * intentionally remain outside this contract. */
+:root {
+  --control-primary-bg: linear-gradient(180deg, #dfc48d, #b9955c);
+  --control-primary-line: #d0ad6e;
+  --control-primary-ink: #2e2216;
+  --control-primary-shadow:
+    inset 0 1px #fff0c255,
+    0 2px 0 #21140c,
+    0 5px 10px #0005;
+  --control-secondary-bg: linear-gradient(180deg, #36291e, #17130f);
+  --control-secondary-line: #9c784b;
+  --control-secondary-ink: #ead8b5;
+  --control-secondary-shadow:
+    inset 0 1px #ead7aa18,
+    0 2px 0 #17100b,
+    0 4px 8px #0004;
+}
+
+body :is(
+  .gold-btn,
+  .ghost-btn,
+  .text-btn,
+  .filter-btn,
+  .utility-tab,
+  .atelier-open,
+  .anime-art-button,
+  .lobby-collection > button,
+  .wind-time-setting,
+  .touch-menu-grid button,
+  .touch-library-tabs button,
+  .deck-actions > button,
+  .touch-inline-detail > button,
+  .atlas-loading button
+) {
+  border: 1px solid var(--control-secondary-line);
+  border-radius: 5px;
+  background: var(--control-secondary-bg);
+  color: var(--control-secondary-ink);
+  box-shadow: var(--control-secondary-shadow);
+  text-shadow: none;
+  transition:
+    background 130ms ease,
+    border-color 130ms ease,
+    box-shadow 130ms ease,
+    filter 130ms ease,
+    transform 130ms ease;
+}
+
+body :is(#touch-cancel, #touch-hand-all, #wind-time) {
+  border: 1px solid var(--control-secondary-line);
+  border-radius: 5px;
+  background: var(--control-secondary-bg);
+  color: var(--control-secondary-ink);
+  box-shadow: var(--control-secondary-shadow);
+  text-shadow: none;
+  transition:
+    background 130ms ease,
+    border-color 130ms ease,
+    box-shadow 130ms ease,
+    filter 130ms ease,
+    transform 130ms ease;
+}
+
+body :is(.lobby-actions .gold-btn, .gold-btn, .end-turn) {
+  border: 1px solid var(--control-primary-line);
+  border-radius: 5px;
+  background: var(--control-primary-bg);
+  color: var(--control-primary-ink);
+  box-shadow: var(--control-primary-shadow);
+  text-shadow: none;
+}
+
+/* The touch layout has an older, more specific .gold-btn rule. Keep the
+ * primary/secondary contract intact there as well. */
+body.touch-layout :is(.gold-btn, .end-turn) {
+  border: 1px solid var(--control-primary-line);
+  border-radius: 5px;
+  background: var(--control-primary-bg);
+  color: var(--control-primary-ink);
+  box-shadow: var(--control-primary-shadow);
+  text-shadow: none;
+}
+
+body :is(.gold-btn, .ghost-btn)::before,
+body :is(.gold-btn, .ghost-btn)::after {
+  display: none;
+}
+
+body :is(
+  .gold-btn,
+  .ghost-btn,
+  .text-btn,
+  .filter-btn,
+  .utility-tab,
+  .atelier-open,
+  .anime-art-button,
+  .lobby-collection > button,
+  .wind-time-setting,
+  .touch-menu-grid button,
+  .touch-library-tabs button,
+  .deck-actions > button,
+  .touch-inline-detail > button,
+  .atlas-loading button,
+  .end-turn
+):hover:not(:disabled) {
+  border-color: #d0ad6e;
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px #fff0c255,
+    0 3px 0 #21140c,
+    0 7px 14px #0005;
+}
+
+body :is(#touch-cancel, #touch-hand-all, #wind-time):hover:not(:disabled) {
+  border-color: #d0ad6e;
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px #fff0c255,
+    0 3px 0 #21140c,
+    0 7px 14px #0005;
+}
+
+body :is(
+  .gold-btn,
+  .ghost-btn,
+  .text-btn,
+  .filter-btn,
+  .utility-tab,
+  .atelier-open,
+  .anime-art-button,
+  .lobby-collection > button,
+  .wind-time-setting,
+  .touch-menu-grid button,
+  .touch-library-tabs button,
+  .deck-actions > button,
+  .touch-inline-detail > button,
+  .atlas-loading button,
+  .end-turn
+):active:not(:disabled) {
+  transform: translateY(1px);
+  filter: brightness(.96);
+  box-shadow:
+    inset 0 1px #fff0c233,
+    0 1px 0 #21140c;
+}
+
+body :is(#touch-cancel, #touch-hand-all, #wind-time):active:not(:disabled) {
+  transform: translateY(1px);
+  filter: brightness(.96);
+  box-shadow:
+    inset 0 1px #fff0c233,
+    0 1px 0 #21140c;
+}
+
+body :is(.filter-btn.active, .touch-library-tabs button[aria-selected="true"]) {
+  border-color: var(--control-primary-line);
+  background: linear-gradient(180deg, #60482d, #342518);
+  color: #f5e4bf;
+  box-shadow: inset 0 -2px var(--control-primary-line), 0 2px 0 #21140c;
+}
+
+body.touch-layout :is(#touch-cancel, #touch-hand-all, #wind-time) {
+  border-color: var(--control-secondary-line);
+  background: var(--control-secondary-bg);
+  color: var(--control-secondary-ink);
+}
+
+body.touch-layout :is(.touch-menu-grid button, .touch-library-tabs button) {
+  border-color: var(--control-secondary-line);
+  background: var(--control-secondary-bg);
+  color: var(--control-secondary-ink);
+}
+
+body.touch-layout :is(
+  .ghost-btn,
+  .text-btn,
+  .filter-btn,
+  .utility-tab,
+  .atelier-open,
+  .anime-art-button,
+  .lobby-collection > button,
+  .wind-time-setting,
+  .touch-menu-grid button,
+  .touch-library-tabs button,
+  .deck-actions > button,
+  .touch-inline-detail > button,
+  .atlas-loading button
+) {
+  border: 1px solid var(--control-secondary-line);
+  border-radius: 5px;
+  background: var(--control-secondary-bg);
+  color: var(--control-secondary-ink);
+  box-shadow: var(--control-secondary-shadow);
+  text-shadow: none;
+}
+
+body.touch-layout :is(.filter-btn.active, .touch-library-tabs button[aria-selected="true"]) {
+  border-color: var(--control-primary-line);
+  background: linear-gradient(180deg, #60482d, #342518);
+  color: #f5e4bf;
+  box-shadow: inset 0 -2px var(--control-primary-line), 0 2px 0 #21140c;
+}
