@@ -832,6 +832,229 @@ body #modal.folio-host .audio-level {
 body #modal.folio-host .audio-level input {
   width: 100%;
 }
+body #modal.folio-host[data-type="settings"] .settings-section {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+body #modal.folio-host[data-type="settings"] .settings-options {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+body #modal.folio-host[data-type="settings"] .setting-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  min-height: 60px;
+}
+body #modal.folio-host[data-type="settings"] .setting-row > .setting-copy {
+  min-width: 0;
+}
+body #modal.folio-host[data-type="settings"] .audio-sliders {
+  display: grid;
+  gap: 1px;
+  width: 100%;
+  min-width: 0;
+  margin-top: 0;
+}
+body #modal.folio-host[data-type="settings"] .audio-level {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto 20px;
+  align-items: center;
+  gap: 4px 12px;
+}
+body #modal.folio-host[data-type="settings"] .audio-level input {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  width: 100%;
+}
+body #modal.folio-host[data-type="settings"] .audio-level output {
+  grid-column: 2;
+  grid-row: 1;
+}
+@container dialog (max-width: 540px) {
+  body #modal.folio-host[data-type="settings"] .settings-section {
+    gap: 6px;
+  }
+  body #modal.folio-host[data-type="settings"] .settings-options {
+    gap: 4px;
+  }
+  body #modal.folio-host[data-type="settings"] .setting-row {
+    min-height: 44px;
+    padding: 0 10px;
+    gap: 10px;
+  }
+  body #modal.folio-host[data-type="settings"] .audio-level {
+    grid-template-columns: minmax(0, 1fr) minmax(70px, 1fr) auto;
+    grid-template-rows: auto;
+    gap: 2px 8px;
+    padding: 4px 0;
+  }
+  body #modal.folio-host[data-type="settings"] .audio-level input {
+    grid-column: 2;
+    grid-row: 1;
+    min-height: 20px;
+  }
+  body #modal.folio-host[data-type="settings"] .audio-level output {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+@container dialog (max-width: 359px) {
+  body #modal.folio-host[data-type="settings"] .settings-section {
+    gap: 4px;
+  }
+  body #modal.folio-host[data-type="settings"] .settings-options {
+    gap: 2px;
+  }
+  body #modal.folio-host[data-type="settings"] .setting-row {
+    padding: 0 7px;
+  }
+  body #modal.folio-host[data-type="settings"] .setting-row p {
+    display: none;
+  }
+  body #modal.folio-host[data-type="settings"] .setting-row h3 {
+    font-size: 12px;
+    line-height: 1.2;
+  }
+  body #modal.folio-host[data-type="settings"] .toggle {
+    width: 70px;
+    flex-basis: 70px;
+  }
+  body #modal.folio-host[data-type="settings"] .audio-sliders {
+    padding: 2px 8px;
+  }
+  body #modal.folio-host[data-type="settings"] .audio-level {
+    gap: 0 6px;
+    padding: 0;
+  }
+  body #modal.folio-host[data-type="settings"] .audio-level > span,
+  body #modal.folio-host[data-type="settings"] .audio-level output {
+    font-size: 11px;
+    line-height: 1.1;
+  }
+  body #modal.folio-host[data-type="settings"] .audio-level input {
+    min-height: 16px;
+  }
+  body #modal.folio-host[data-type="settings"] .settings-audio-section {
+    margin-top: 0;
+  }
+  body #modal.folio-host[data-type="settings"] .hero-deck-note {
+    display: none;
+  }
+  body #modal.folio-host[data-type="settings"] .folio-flow {
+    padding-bottom: 0;
+  }
+}
+@media (orientation: landscape) and (max-height: 560px) {
+  body #modal.folio-host[data-type="settings"] .settings-section {
+    gap: 4px;
+  }
+  body #modal.folio-host[data-type="settings"] .settings-options {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+  }
+  body #modal.folio-host[data-type="settings"] .setting-row {
+    min-height: 44px;
+    padding: 0 4px;
+    gap: 3px;
+  }
+  body #modal.folio-host[data-type="settings"] .wind-light-row {
+    margin-top: 0;
+  }
+  body #modal.folio-host[data-type="settings"] .wind-time-setting {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    min-width: 44px;
+    max-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 0 !important;
+  }
+  body #modal.folio-host[data-type="settings"] .wind-time-setting::before {
+    content: "☼";
+    color: var(--panel-gold);
+    font-size: 18px;
+    line-height: 1;
+  }
+  body #modal.folio-host[data-type="settings"] .wind-time-setting[aria-pressed="true"]::before {
+    content: "☾";
+  }
+  body #modal.folio-host[data-type="settings"] .setting-row p {
+    display: none;
+  }
+  body #modal.folio-host[data-type="settings"] .setting-row h3 {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 9px;
+    line-height: 1.2;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+  body #modal.folio-host[data-type="settings"] .toggle {
+    width: 44px;
+    flex-basis: 44px;
+    padding: 0;
+    font-size: 0;
+  }
+  body #modal.folio-host[data-type="settings"] .toggle.on {
+    padding: 0;
+  }
+  body #modal.folio-host[data-type="settings"] .toggle .toggle-state {
+    display: none;
+  }
+  body #modal.folio-host[data-type="settings"] .toggle::after {
+    top: 10px;
+    width: 22px;
+    height: 22px;
+  }
+  body #modal.folio-host[data-type="settings"] .toggle.on::after {
+    left: calc(100% - 27px);
+  }
+  body #modal.folio-host[data-type="settings"] .settings-audio-section {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 6px;
+    margin-top: 0;
+  }
+  body #modal.folio-host[data-type="settings"] .settings-audio-section .settings-section-heading {
+    display: grid;
+    gap: 1px;
+  }
+  body #modal.folio-host[data-type="settings"] .audio-sliders {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 2px 8px;
+  }
+  body #modal.folio-host[data-type="settings"] .audio-level {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto 16px;
+    gap: 0 5px;
+    padding: 0 5px;
+  }
+  body #modal.folio-host[data-type="settings"] .audio-level input {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    min-height: 16px;
+  }
+  body #modal.folio-host[data-type="settings"] .audio-level output {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  body #modal.folio-host[data-type="settings"] .hero-deck-note {
+    display: none;
+  }
+  body #modal.folio-host[data-type="settings"] .folio-flow {
+    padding-bottom: 0;
+  }
+}
 body #modal.folio-host .touch-menu-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

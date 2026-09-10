@@ -2413,6 +2413,201 @@ body #modal button:disabled {
   cursor: not-allowed;
   box-shadow: none;
 }
+
+/* Settings are a quiet control surface: hierarchy comes from spacing and
+ * grouped surfaces, not a rule beneath every option. The state label inside
+ * each switch keeps the control legible without relying on colour alone. */
+body #modal.folio-host[data-type="settings"] > .settings-box {
+  background:
+    linear-gradient(135deg, #221810e8, #17100ce8 58%, #21170fe8),
+    var(--folio-wood) center / cover;
+}
+body #modal.folio-host[data-type="settings"] > .settings-box::before {
+  opacity: .34;
+}
+body #modal.folio-host[data-type="settings"] > .settings-box > .modal-heading {
+  padding-bottom: 2px;
+}
+body #modal.folio-host[data-type="settings"] > .settings-box > .modal-heading::after {
+  content: none;
+}
+body #modal.folio-host[data-type="settings"] .modal-heading p {
+  max-width: 42ch;
+  margin: 8px 0 0;
+  color: var(--panel-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+body #modal.folio-host[data-type="settings"] .settings-section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 3px;
+  color: var(--panel-gold);
+}
+body #modal.folio-host[data-type="settings"] .settings-section-heading > span {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .14em;
+}
+body #modal.folio-host[data-type="settings"] .settings-section-heading > small {
+  color: var(--panel-muted);
+  font-size: 11px;
+  letter-spacing: .04em;
+}
+body #modal.folio-host[data-type="settings"] .settings-options {
+  display: grid;
+  gap: 8px;
+}
+body #modal.folio-host[data-type="settings"] .setting-row {
+  min-height: 0;
+  padding: 13px 14px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(110deg, #0e0b08a8, #2c2118a0);
+  box-shadow: inset 0 1px #f4d99a12, 0 5px 14px #00021f;
+  transition: background 140ms ease, transform 140ms ease;
+}
+body #modal.folio-host[data-type="settings"] .setting-row:hover {
+  background: linear-gradient(110deg, #15100cbe, #39291aa8);
+  transform: translateY(-1px);
+}
+body #modal.folio-host[data-type="settings"] .setting-copy {
+  min-width: 0;
+}
+body #modal.folio-host[data-type="settings"] .setting-row h3 {
+  margin: 0;
+  color: var(--panel-cream);
+  font: 600 15px/1.35 var(--panel-body-font);
+  letter-spacing: .03em;
+}
+body #modal.folio-host[data-type="settings"] .setting-row p {
+  margin: 4px 0 0;
+  color: var(--panel-muted);
+  font: 12px/1.5 var(--panel-body-font);
+}
+body #modal.folio-host[data-type="settings"] .toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 78px;
+  width: 78px;
+  height: 34px;
+  min-height: 34px;
+  margin: 0;
+  padding: 0 8px 0 31px;
+  position: relative;
+  border: 1px solid #a9875748;
+  border-radius: 999px;
+  background: #100d0ae8;
+  color: #9f8c73;
+  box-shadow: inset 0 2px 5px #0008, 0 0 0 1px #0003;
+  font: 600 10px/1 var(--panel-body-font);
+  letter-spacing: .08em;
+  text-align: center;
+  transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+body #modal.folio-host[data-type="settings"] .toggle .toggle-state {
+  position: relative;
+  z-index: 1;
+  white-space: nowrap;
+}
+body #modal.folio-host[data-type="settings"] .toggle::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 22px;
+  height: 22px;
+  border: 1px solid #d9c08c;
+  border-radius: 50%;
+  background: #6f6456;
+  box-shadow: 0 2px 4px #0009, inset 0 1px #fff4c755;
+  transition: left 160ms cubic-bezier(.2,.8,.25,1), background 160ms ease;
+}
+body #modal.folio-host[data-type="settings"] .toggle.on {
+  justify-content: flex-start;
+  padding: 0 31px 0 8px;
+  border-color: #c8a567;
+  background: linear-gradient(135deg, #77552d, #b18c50);
+  color: #fff0c6;
+  box-shadow: inset 0 1px #fff0bd40, 0 0 0 3px #c59e5a16;
+}
+body #modal.folio-host[data-type="settings"] .toggle.on::after {
+  left: calc(100% - 27px);
+  background: #f2ddb0;
+}
+body #modal.folio-host[data-type="settings"] .settings-audio-section {
+  margin-top: 3px;
+}
+body #modal.folio-host[data-type="settings"] .audio-sliders {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: #0e0b08a8;
+  box-shadow: inset 0 1px #f4d99a10, 0 5px 14px #00021f;
+}
+body #modal.folio-host[data-type="settings"] .audio-level {
+  padding: 8px 0;
+}
+body #modal.folio-host[data-type="settings"] .audio-level > span {
+  color: var(--panel-cream);
+  font: 13px/1.35 var(--panel-body-font);
+}
+body #modal.folio-host[data-type="settings"] .audio-level output {
+  color: var(--panel-gold);
+  font: 600 12px/1.35 var(--panel-body-font);
+  font-variant-numeric: tabular-nums;
+}
+body #modal.folio-host[data-type="settings"] .audio-level input[type="range"] {
+  min-height: 20px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+body #modal.folio-host[data-type="settings"] .audio-level input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: #6e5942;
+}
+body #modal.folio-host[data-type="settings"] .audio-level input[type="range"]::-webkit-slider-thumb {
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border: 2px solid #f0d49a;
+  border-radius: 50%;
+  background: #bd9556;
+  box-shadow: 0 1px 3px #0009;
+  -webkit-appearance: none;
+}
+body #modal.folio-host[data-type="settings"] .wind-light-row {
+  margin-top: 8px;
+}
+body #modal.folio-host[data-type="settings"] .wind-time-setting {
+  min-height: 34px;
+  padding: 7px 11px;
+  border-color: #a9875748;
+  border-radius: 999px;
+  background: #100d0ae8;
+  color: var(--panel-muted);
+  font-size: 11px;
+}
+body #modal.folio-host[data-type="settings"] > .settings-box > .modal-footer {
+  margin-top: 2px;
+  padding-top: 0;
+  border: 0;
+}
+body #modal.folio-host[data-type="settings"] .hero-deck-note {
+  margin: -4px 0 0;
+  color: var(--panel-muted);
+  font-size: 11px;
+  text-align: right;
+}
 body #modal :is(.filter-btn.active, .touch-library-tabs [aria-selected="true"]) {
   color: var(--panel-cream);
   border-color: var(--panel-gold);
