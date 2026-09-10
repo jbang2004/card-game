@@ -3100,9 +3100,16 @@ body.touch-layout :is(.gold-btn, .end-turn) {
   text-shadow: none;
 }
 
-body :is(.gold-btn, .ghost-btn)::before,
-body :is(.gold-btn, .ghost-btn)::after {
+body :is(.gold-btn, .ghost-btn, .end-turn)::before,
+body :is(.gold-btn, .ghost-btn, .end-turn)::after {
   display: none;
+}
+
+/* Ready-state glow used the old ornamental rings. The unified control keeps
+ * its quiet brass rim instead of animating a second outline around it. */
+body .end-turn.ready-end,
+body.touch-layout .end-turn.ready-end {
+  animation: none;
 }
 
 body :is(
