@@ -3222,6 +3222,278 @@ body.touch-layout :is(
   text-shadow: none;
 }
 
+/* Semantic card badges. These are original Emberfall silhouettes: mana is a
+ * cut sapphire, attack is a small blade crest, and health is a heart core.
+ * Keep the data in the DOM and give every card context the same visual grammar.
+ */
+:root {
+  --badge-mana-edge: #0d2c52;
+  --badge-mana-light: #dffaff;
+  --badge-attack-edge: #60401c;
+  --badge-attack-light: #fff0ae;
+  --badge-health-edge: #60272b;
+  --badge-health-light: #ffc0a2;
+}
+
+body .card-cost {
+  isolation: isolate;
+  border: 0 !important;
+  border-radius: 0 !important;
+  clip-path: polygon(
+    50% 0,
+    82% 10%,
+    100% 43%,
+    91% 78%,
+    57% 100%,
+    17% 90%,
+    0 54%,
+    16% 16%
+  ) !important;
+  background: conic-gradient(
+    from 25deg at 42% 40%,
+    #d9faff,
+    #79cbea 13%,
+    #2a70bd 29%,
+    #123d78 43%,
+    #6ec6eb 54%,
+    #e9ffff 64%,
+    #3c8ed0 77%,
+    #173f79 91%,
+    #d9faff
+  ) !important;
+  box-shadow:
+    inset 0 0 0 2px var(--badge-mana-edge),
+    inset 0 -2px 0 #092442,
+    0 2px 0 #11243b,
+    0 3px 5px #151922aa !important;
+  color: #fffbed !important;
+  text-shadow:
+    0 2px 1px #132946,
+    -1px -1px #132946,
+    1px -1px #132946 !important;
+  filter: drop-shadow(0 2px 1px #18202a) !important;
+}
+
+body .card-cost::before {
+  content: "" !important;
+  display: block !important;
+  position: absolute;
+  inset: 8% 12%;
+  border: 1px solid #e6ffffaa !important;
+  clip-path: polygon(50% 0, 100% 35%, 78% 100%, 20% 88%, 0 36%) !important;
+  background: linear-gradient(135deg, #ffffff66, transparent 42%, #0a346655) !important;
+  pointer-events: none;
+  z-index: 0;
+}
+
+body .card-cost::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute;
+  top: 10%;
+  left: 21%;
+  width: 13%;
+  height: 57%;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffffffdd, #bdf5ff22) !important;
+  transform: rotate(28deg);
+  opacity: 0.78;
+  pointer-events: none;
+  z-index: 1;
+}
+
+body .stat,
+body .card .stat {
+  isolation: isolate;
+  background: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  filter: drop-shadow(0 2px 1px #201e19) !important;
+}
+
+body .stat::before,
+body .stat::after {
+  pointer-events: none;
+}
+
+body .stat::before {
+  content: "" !important;
+  display: block !important;
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+
+body .stat.atk::before {
+  border: 2px solid var(--badge-attack-edge) !important;
+  border-radius: 18% 18% 30% 30% !important;
+  clip-path: polygon(
+    50% 0,
+    66% 22%,
+    96% 30%,
+    70% 48%,
+    86% 88%,
+    50% 66%,
+    14% 88%,
+    30% 48%,
+    4% 30%,
+    34% 22%
+  ) !important;
+  background: radial-gradient(
+    ellipse at 30% 20%,
+    var(--badge-attack-light),
+    #d7a441 40%,
+    #8c5d20 72%,
+    #c5963f
+  ) !important;
+  box-shadow:
+    inset 0 0 0 1px #fff1bd,
+    inset 0 -3px 4px #553613,
+    0 1px 0 #f0c978 !important;
+}
+
+body .stat.atk::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute;
+  top: 10%;
+  left: 43%;
+  width: 14%;
+  height: 77%;
+  clip-path: polygon(50% 0, 100% 18%, 68% 86%, 50% 100%, 32% 86%, 0 18%) !important;
+  background: linear-gradient(135deg, #fff5bd, #b47b22 64%) !important;
+  opacity: 0.48;
+  transform: rotate(27deg);
+  z-index: -1;
+}
+
+body .stat.hp::before {
+  border: 2px solid var(--badge-health-edge) !important;
+  border-radius: 0 !important;
+  clip-path: polygon(
+    50% 96%,
+    12% 57%,
+    7% 36%,
+    15% 16%,
+    31% 8%,
+    50% 25%,
+    69% 8%,
+    85% 16%,
+    93% 36%,
+    88% 57%
+  ) !important;
+  background: radial-gradient(
+    ellipse at 29% 20%,
+    var(--badge-health-light),
+    #d04e40 40%,
+    #87272e 74%,
+    #b83c39
+  ) !important;
+  box-shadow:
+    inset 0 0 0 1px #ffe0bd,
+    inset 0 -3px 4px #5c1e27,
+    0 1px 0 #ed9874 !important;
+}
+
+body .stat.hp::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute;
+  top: 14%;
+  left: 22%;
+  width: 24%;
+  height: 14%;
+  border-radius: 999px;
+  background: #fff2d099 !important;
+  transform: rotate(-28deg);
+  z-index: -1;
+}
+
+body .card.weapon .stat.hp::before {
+  border-color: #3d4a52 !important;
+  clip-path: polygon(50% 0, 86% 17%, 96% 72%, 50% 100%, 4% 72%, 14% 17%) !important;
+  background: linear-gradient(145deg, #eef2e8, #879ba1 48%, #3c4b58 82%) !important;
+  box-shadow:
+    inset 0 0 0 1px #ffffffaa,
+    inset 0 -3px 4px #26343e,
+    0 1px 0 #d8e0d4 !important;
+}
+
+body .card.weapon .stat.hp::after {
+  background: #ffffffaa !important;
+}
+
+/* The badge silhouettes carry the depth; these small line marks make the
+ * gameplay meaning unambiguous even when a card is scaled down.  They reuse
+ * EmberArt's existing icon language instead of baking text into artwork. */
+body .card-cost {
+  display: grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+}
+
+body .badge-glyph,
+body .stat-glyph {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+body .badge-glyph .ui-icon,
+body .stat-glyph .ui-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  stroke-width: 2.1;
+}
+
+body .card-cost .badge-glyph {
+  inset: 12% 15%;
+  color: #e9fdff;
+  opacity: 0.5;
+  filter: drop-shadow(0 1px 0 #12345f);
+}
+
+body .badge-value,
+body .stat-value {
+  position: relative;
+  z-index: 2;
+  display: block;
+  line-height: 1;
+}
+
+body .stat-glyph {
+  inset: 14%;
+  opacity: 0.42;
+}
+
+body .stat.atk .stat-glyph {
+  color: #4a2d0f;
+  opacity: 0.9;
+  transform: rotate(-8deg);
+  filter: drop-shadow(0 1px 0 #fff0ae);
+}
+
+body .stat.atk .stat-glyph .ui-icon {
+  stroke-width: 2.8;
+}
+
+body .stat.hp .stat-glyph {
+  color: #ffe2d1;
+  opacity: 0.62;
+  filter: drop-shadow(0 1px 0 #6d2228);
+}
+
+body .card.weapon .stat.hp .stat-glyph {
+  color: #f4faf0;
+  opacity: 0.5;
+  filter: drop-shadow(0 1px 0 #35434c);
+}
+
 body.touch-layout :is(.filter-btn.active, .touch-library-tabs button[aria-selected="true"]) {
   border-color: var(--control-primary-line);
   background: linear-gradient(180deg, #60482d, #342518);
