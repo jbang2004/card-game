@@ -97,8 +97,10 @@ body #modal.folio-host > [data-dialog-size="heroes"] {
 
 body #modal.folio-host .folio-dialog > .modal-close {
   position: absolute;
-  top: var(--inset);
-  right: var(--inset);
+  /* Keep the hit area clear of the dialog rim; the visible ring is inset
+   * separately in components.css. */
+  top: calc(var(--inset) + 4px);
+  right: calc(var(--inset) + 4px);
   width: 44px;
   height: 44px;
   margin: 0;
@@ -370,6 +372,10 @@ body #modal.folio-host[data-type="heroes"] .hero-options {
   gap: 16px;
   margin: 0;
 }
+body #modal.folio-host[data-type="heroes"] > .folio-dialog > .modal-heading::after,
+body #modal.folio-host[data-type="heroes"] .folio-scroll-hint {
+  display: none;
+}
 body #modal.folio-host[data-type="heroes"] .hero-option {
   position: relative;
   display: flex;
@@ -426,6 +432,18 @@ body
 body #modal.folio-host .archetype-picker {
   display: grid;
   gap: 6px;
+}
+body #modal.folio-host[data-type="heroes"] .hero-configuration select {
+  appearance: none;
+  padding-right: 40px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--panel-gold) 50%),
+    linear-gradient(135deg, var(--panel-gold) 50%, transparent 50%);
+  background-position:
+    calc(100% - 19px) 50%,
+    calc(100% - 13px) 50%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
 }
 
 /* A single portrait column; no aspect ratio is imposed on the text body. */
@@ -865,8 +883,115 @@ body #modal.folio-host .touch-hero-info > img {
 }
 
 @container dialog (max-width: 799px) {
+  body #modal.folio-host[data-type="heroes"] > .folio-dialog > .modal-heading::after {
+    display: none;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-roster-heading {
+    display: block;
+    margin: 0 0 10px;
+    color: var(--panel-muted);
+    font: 600 13px/1.4 var(--panel-body-font);
+    letter-spacing: .08em;
+  }
   body #modal.folio-host[data-type="heroes"] .hero-options {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: max-content;
+    align-items: start;
+    gap: 16px 12px;
+    margin: 0;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option {
+    align-self: start;
+    height: auto;
+    min-height: 0;
+    flex: none;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option > img {
+    position: static;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    object-position: 50% 22%;
+    transform: none;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option .selected-check {
+    top: 12px;
+    right: 12px;
+    left: auto;
+    z-index: 4;
+    pointer-events: none;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option .hero-option-text {
+    flex: none;
+    gap: 6px;
+    padding: 11px 11px 13px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option :is(small, h3, em) {
+    line-height: 1.45;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option small {
+    font-size: 10px;
+    letter-spacing: .08em;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option h3 {
+    font-size: 18px;
+    letter-spacing: .03em;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option em {
+    min-width: 0;
+    padding-top: 0;
+    border-top: 0;
+    font-size: 12px;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-configuration {
+    gap: 16px;
+    margin-top: 28px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-config-intro {
+    margin: 0;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-deck-note {
+    margin: 4px 0 0;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-config-contract {
+    padding: 0 12px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-config-contract > summary {
+    position: relative;
+    min-height: 44px;
+    padding: 10px 34px 10px 0;
+    list-style: none;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-config-contract > summary::-webkit-details-marker {
+    display: none;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-config-contract > summary::after {
+    content: "⌄";
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    color: var(--panel-gold);
+    font-size: 16px;
+    line-height: 1;
+    transform: translateY(-50%);
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-config-contract[open] > summary::after {
+    content: "⌃";
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-config-contract > p {
+    margin: 0 0 10px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-config-contract > label:last-child {
+    margin-bottom: 10px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-composition {
+    margin: 0;
+  }
+  body #modal.folio-host[data-type="heroes"] .folio-scroll-hint {
+    display: none;
   }
   body #modal.folio-host .touch-library-tabs {
     display: flex;
@@ -905,7 +1030,70 @@ body #modal.folio-host .touch-hero-info > img {
 @container dialog (max-width: 359px) {
   body #modal.folio-host .library-heading > input { flex-basis: 100%; }
   body #modal.folio-host[data-type="heroes"] .hero-options {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 8px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option .hero-option-text {
+    gap: 5px;
+    padding: 9px 8px 11px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option .selected-check {
+    top: 9px;
+    right: 9px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option h3 {
+    font-size: 16px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option em {
+    font-size: 11px;
+  }
+}
+/* Landscape phones keep the same two-row roster, but turn each choice into a
+ * small gallery tile. The portrait remains complete inside the left rail
+ * instead of being cropped to fill a shallow landscape card. */
+@media (orientation: landscape) and (max-width: 900px) {
+  body #modal.folio-host[data-type="heroes"] .hero-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option {
+    display: grid;
+    grid-template-columns: minmax(62px, 31%) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    height: clamp(132px, 42dvh, 170px);
+    min-height: 0;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option > img {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    aspect-ratio: auto;
+    object-fit: contain;
+    object-position: center;
+    background: #181410;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option .hero-option-text {
+    align-content: center;
+    gap: 5px;
+    min-width: 0;
+    min-height: 0;
+    padding: 10px 11px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option small {
+    font-size: 9px;
+    line-height: 1.25;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option h3 {
+    font-size: 17px;
+    line-height: 1.3;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option em {
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option .selected-check {
+    top: 10px;
+    right: 10px;
   }
 }
 /* Preserve semantic hidden controls even where a layout rule sets display. */

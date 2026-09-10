@@ -1025,7 +1025,6 @@ body.touch-layout .modal-footer {
   justify-content: flex-end;
   margin: 16px -4px -5px;
   padding: 12px 4px 6px;
-  border-top: 1px solid #b9945c44;
 }
 body.touch-layout .modal-footer .gold-btn {
   flex: 1;

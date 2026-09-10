@@ -20,6 +20,13 @@ for (const [width, height] of [
     await page.goto("./?debug=1");
     await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
     await page.locator("#start-btn").click();
+    const heroColumns = await page.locator(".hero-options").evaluate((grid) => {
+      const firstTop = grid.querySelector(".hero-option").getBoundingClientRect().top;
+      return [...grid.querySelectorAll(".hero-option")].filter(
+        (card) => Math.abs(card.getBoundingClientRect().top - firstTop) <= 1,
+      ).length;
+    });
+    expect(heroColumns).toBe(2);
     await page.locator('[data-hero="morla"]').click();
     // A long skill and larger copy must grow its card, never clip below its frame.
     await page
