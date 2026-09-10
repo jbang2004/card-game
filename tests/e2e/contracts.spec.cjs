@@ -52,12 +52,15 @@ for (const [width, height, touch] of [
     const poster = await page.locator(".covenant-card").first().evaluate((card) => {
       const art = card.querySelector(":scope > img"),
         copy = card.querySelector(":scope > .covenant-copy"),
+        ritualMark = card.querySelector(":scope > .covenant-copy > .ritual-mark"),
         cardRect = card.getBoundingClientRect(),
         artRect = art.getBoundingClientRect(),
+        ritualMarkRect = ritualMark.getBoundingClientRect(),
         copyRect = copy.getBoundingClientRect();
       return {
         card: [cardRect.width, cardRect.height],
         art: [artRect.width, artRect.height],
+        ritualMark: [ritualMarkRect.width, ritualMarkRect.height],
         copyPosition: getComputedStyle(copy).position,
         copyBottom: cardRect.bottom - copyRect.bottom,
         copyTop: copyRect.top - cardRect.top,
@@ -66,6 +69,8 @@ for (const [width, height, touch] of [
     expect(poster.copyPosition).not.toBe("absolute");
     expect(poster.art[0]).toBeGreaterThanOrEqual(poster.card[0] - 3);
     expect(poster.art[0] / poster.art[1]).toBeCloseTo(3 / 4, 1);
+    expect(poster.ritualMark[0]).toBeLessThanOrEqual(36);
+    expect(poster.ritualMark[1]).toBeLessThanOrEqual(36);
     expect(poster.copyBottom).toBeLessThanOrEqual(2);
     expect(poster.copyTop).toBeGreaterThan(0);
     if (touch) {
@@ -159,7 +164,23 @@ for (const [width, height] of [
           r.top >= 0 && r.bottom <= innerHeight;
       })).toBe(true);
     }
-    await expect(page.locator(".covenant-actions #contract-close")).toBeVisible();
+    await expect(page.locator(".covenant-actions")).toHaveCount(0);
+    const close = await page.locator(".covenant-box > .modal-close").boundingBox();
+    const headingLine = await page.locator(".covenant-heading").evaluate((heading) => {
+      const style = getComputedStyle(heading, "::after");
+      return {
+        border: getComputedStyle(heading).borderBottomStyle,
+        content: style.content,
+        position: style.position,
+        right: parseFloat(style.right),
+      };
+    });
+    expect(close.width).toBe(44);
+    expect(close.height).toBe(44);
+    expect(headingLine.border).toBe("none");
+    expect(headingLine.content).not.toBe("none");
+    expect(headingLine.position).toBe("absolute");
+    expect(headingLine.right).toBeGreaterThanOrEqual(48);
     await ctx.close();
   });
 }

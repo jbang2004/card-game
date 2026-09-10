@@ -51,10 +51,9 @@ const EmberContractUI = (() => {
                 .join("") || '<p class="deck-plan">未携带契约。</p>'
             }</div></section>`;
           })
-          .join("")}<footer class="modal-footer covenant-actions"><button type="button" class="ghost-btn" id="contract-close">关闭</button></footer></section>`,
+          .join("")}</section>`,
         "contracts",
       );
-      document.getElementById("contract-close").onclick = () => closeModal(false);
       document.querySelectorAll("[data-invoke]").forEach(
         (b) =>
           (b.onclick = () => {

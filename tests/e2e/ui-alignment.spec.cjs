@@ -24,6 +24,21 @@ for (const [width, height] of [
     await page
       .locator(width < 1000 ? "#touch-collection" : "#collection-nav")
       .click();
+    const collectionHeader = await page.locator(".library-heading").evaluate((heading) => {
+      const close = heading.parentElement.querySelector(":scope > .modal-close");
+      const closeRect = close.getBoundingClientRect();
+      const line = getComputedStyle(heading, "::after");
+      return {
+        close: [closeRect.width, closeRect.height],
+        border: getComputedStyle(heading).borderBottomStyle,
+        content: line.content,
+        right: parseFloat(line.right),
+      };
+    });
+    expect(collectionHeader.close).toEqual([44, 44]);
+    expect(collectionHeader.border).toBe("none");
+    expect(collectionHeader.content).not.toBe("none");
+    expect(collectionHeader.right).toBeGreaterThanOrEqual(48);
     const search = await page.locator("#library-search").boundingBox();
     const close = await page.locator(".modal-close").boundingBox();
     expect(
