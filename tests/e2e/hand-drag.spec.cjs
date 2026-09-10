@@ -58,6 +58,8 @@ async function handState(page) {
       aimFocus: document.querySelectorAll(".aim-focus").length,
       dragSource: document.querySelectorAll(".drag-source").length,
       ghost: document.querySelectorAll(".drag-ghost").length,
+      snapped: document.querySelectorAll(".drag-ghost.is-snapped").length,
+      snapMode: document.querySelector(".drag-ghost")?.dataset.snapMode || null,
       toast: document.getElementById("toast").textContent,
       hint: document.getElementById("hint").textContent,
       detail: detail.dataset.mode || null,
@@ -367,6 +369,69 @@ for (const [label, viewport] of VIEWPORTS) {
         expect(afterAim.validTargets).toBeGreaterThan(0);
         expect(Number(afterAim.handCount)).toBe(Number(afterPlain.handCount));
       }
+    });
+
+    test("a dragged card shrinks into a snapped landing preview", async ({
+      page,
+    }) => {
+      await startTouch(page);
+      const card = await pick(page, "plain");
+      expect(card).toBeTruthy();
+      const from = await boxOf(page, card.uid);
+      const to = await emptyDropPoint(page);
+      const cdp = await page.context().newCDPSession(page);
+      await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [from],
+      });
+      await page.waitForTimeout(480);
+      expect((await handState(page)).ghost).toBe(1);
+      for (let i = 1; i <= 12; i++) {
+        const t = i / 12;
+        await cdp.send("Input.dispatchTouchEvent", {
+          type: "touchMove",
+          touchPoints: [
+            {
+              x: from.x + (to.x - from.x) * t,
+              y: from.y + (to.y - from.y) * t,
+            },
+          ],
+        });
+        await page.waitForTimeout(16);
+      }
+      await page.waitForTimeout(180);
+      const snapped = await handState(page);
+      expect(snapped.snapped).toBe(1);
+      expect(snapped.snapMode).toBe("board");
+      await page.screenshot({
+        path: path.join(out, `touch-drag-snap-${label}.png`),
+      });
+
+      await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [{ x: from.x, y: from.y }],
+      });
+      await page.waitForTimeout(120);
+      expect((await handState(page)).snapped).toBe(0);
+
+      await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [to],
+      });
+      await page.waitForTimeout(120);
+      expect((await handState(page)).snapped).toBe(1);
+      await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+      });
+      await cdp.detach();
+      await page.waitForTimeout(700);
+      expect(
+        await page.evaluate(
+          (uid) => !document.querySelector(`#hand [data-hand="${uid}"]`),
+          card.uid,
+        ),
+      ).toBe(true);
     });
 
     test("long press lifts a playable hand card instead of opening detail", async ({
