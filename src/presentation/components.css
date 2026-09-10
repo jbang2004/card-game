@@ -3187,6 +3187,84 @@ body.touch-layout :is(#touch-cancel, #wind-time) {
   color: var(--control-secondary-ink);
 }
 
+/* Targeting is a transient state, not a second control rail. Keep the
+ * message close to the action area while leaving the battlefield readable;
+ * the cancel affordance remains a compact, accessible icon button. */
+body.touch-layout #touch-target-bar {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  max-width: calc(100% - 16px);
+  padding: 0 4px 0 10px;
+  overflow: hidden;
+  z-index: 18;
+  border: 1px solid #c7a568b8;
+  border-radius: 999px;
+  background: #2d2119f2;
+  color: #f2d9a5;
+  box-shadow:
+    inset 0 1px #fff0c21c,
+    0 4px 12px #160d0980;
+}
+
+body.touch-layout #touch-target-bar::before {
+  content: "";
+  flex: 0 0 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #e2b96f;
+  box-shadow: 0 0 0 3px #e2b96f20;
+}
+
+body.touch-layout #touch-target-text {
+  min-width: 0;
+  overflow: hidden;
+  color: inherit;
+  font: 11px/1 var(--ui-font);
+  letter-spacing: 0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.touch-layout #touch-cancel {
+  display: grid;
+  flex: 0 0 24px;
+  place-items: center;
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  min-height: 24px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #ffffff12;
+  color: #f7dfae;
+  box-shadow: none;
+  font-size: 0;
+  line-height: 1;
+}
+
+body.touch-layout #touch-cancel::before {
+  content: "×";
+  font: 18px/1 var(--ui-font);
+}
+
+body.touch-layout #touch-cancel:hover:not(:disabled),
+body.touch-layout #touch-cancel:active:not(:disabled) {
+  border-color: transparent;
+  background: #ffffff22;
+  box-shadow: none;
+}
+
+body.touch-layout #touch-cancel:focus-visible {
+  outline: 2px solid #ffdf9a;
+  outline-offset: 2px;
+}
+
 body.touch-layout :is(.touch-menu-grid button, .touch-library-tabs button) {
   border-color: var(--control-secondary-line);
   background: var(--control-secondary-bg);

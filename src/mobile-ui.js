@@ -28,8 +28,8 @@
   function blocked() {
     return !E.inBattle || F.busy;
   }
-  /* Tap plays (or arms targeting) exactly like the desktop hand, so the phone
-   * no longer needs a detail sheet between the tap and the decision. */
+  /* Tap selects a card (or arms targeting); only a second board action or a
+   * drag commits a targetless play, so an accidental tap cannot spend mana. */
   function handClick(uid) {
     if (blocked() || E.modal) return;
     const card = E.game.s.p.hand.find((x) => x.uid === uid);
@@ -40,7 +40,7 @@
     if (blocked() || E.modal) return;
     const s = E.game.s;
     E.showModal(
-      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">${s.p.hand.length} 张手牌 · 长按显示大图</div><h2>手牌总览</h2></div><div class="touch-hand-grid">${s.p.hand.map((v) => `<button data-touch-hand="${v.uid}" aria-label="查看 ${D.byId[v.cid].name}">${E.cardHTML(D.byId[v.cid], { cost: E.game.cost(v) })}</button>`).join("") || "<p>手牌暂时为空，下回合会再抽一张。</p>"}</div></section>`,
+      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">${s.p.hand.length} 张手牌 · 长按扶起并拖出</div><h2>手牌总览</h2></div><div class="touch-hand-grid">${s.p.hand.map((v) => `<button data-touch-hand="${v.uid}" aria-label="查看 ${D.byId[v.cid].name}">${E.cardHTML(D.byId[v.cid], { cost: E.game.cost(v) })}</button>`).join("") || "<p>手牌暂时为空，下回合会再抽一张。</p>"}</div></section>`,
       "touch-hand",
     );
     document
@@ -87,6 +87,10 @@
   function tapUnit(side, uid) {
     if (blocked() || E.modal) return;
     if (E.selection) {
+      if (E.selection.type === "card-play") {
+        E.toast("请点击战场空位确认，或点手牌取消");
+        return;
+      }
       if (
         E.selection.type === "attack" &&
         side === "p" &&
@@ -117,11 +121,11 @@
     if (!V.mobile || !E.selection) return;
     const sel = E.selection;
     $("touch-target-text").textContent =
-      sel.type === "attack"
-        ? "点选高亮敌人攻击"
-        : sel.type === "card"
-          ? `${D.byId[sel.cid].name} · 选择目标`
-          : "英雄技能 · 选择目标";
+      sel.type === "card-play"
+        ? "点击战场确认"
+        : sel.type === "attack"
+          ? "选择攻击目标"
+          : "选择目标";
   }
   /* Called by the controller after a touch drag settles, so the compatibility
    * click that follows the pointerup never re-opens the card sheet. */
@@ -201,10 +205,10 @@
       (s.active === "p" ? "你的回合" : "敌方回合") + " · " + s.turn;
     $("hand").setAttribute(
       "aria-label",
-      `你的 ${s.p.hand.length} 张手牌，左右滑动，上拖出牌，点按直接出牌，长按显示大图`,
+      `你的 ${s.p.hand.length} 张手牌，左右滑动，点按选中，拖动出牌，长按扶起拖动`,
     );
     const tip = document.querySelector(".hand-tip");
-    if (tip) tip.textContent = "拖到战场出牌 · 点按瞄准 · 长按看大图";
+    if (tip) tip.textContent = "左右滑动 · 点按选中 · 拖动出牌";
     const p = V.layout.player,
       wslot = $("weapon-slot"),
       beside = V.portrait && V.layout.power.x - (p.x + p.w) > 36;
@@ -259,7 +263,7 @@
       };
       stopLong();
       const el = ev.target.closest?.(
-        "#battle .minion,#battle .hero,#power-btn,.library-item,#hand .hand-card",
+        "#battle .minion,#battle .hero,#power-btn,.library-item",
       );
       if (!el || F.busy || (E.modal && E.modal !== "library")) return;
       longPress = {
@@ -269,6 +273,8 @@
         y: ev.clientY,
         timer: setTimeout(() => {
           longPress = null;
+          /* While aiming, a hold must not steal the target confirmation. */
+          if (E.selection) return;
           /* The long press swallows the tap it grew out of: without this the
            * compatibility click would immediately close the card it opened. */
           E.suppressNextClick?.(450);
