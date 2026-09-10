@@ -98,7 +98,8 @@
     row.className = "setting-row wind-light-row";
     row.innerHTML =
       '<div><h3>酒馆时光</h3><p>晴昼或暮色，仅改变环境氛围</p></div><button type="button" class="wind-time-setting" aria-label="切换环境时光"></button>';
-    const content = box.querySelector(".modal-scroll");
+    const content =
+      box.querySelector(".settings-options") || box.querySelector(".modal-scroll");
     if (content) content.append(row);
     else box.insertBefore(row, box.querySelector(".modal-footer"));
     row.querySelector("button").onclick = toggle;
