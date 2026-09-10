@@ -3443,3 +3443,59 @@ body .card.weapon .stat.hp .stat-value {
     -0.042em -0.042em 0 var(--badge-ward-ink),
     0 0.08em 0.12em #0d141acc;
 }
+
+/* Dragging has two clear visual phases: the card is lifted while it follows
+ * the pointer, then settles into a compact landing state as soon as the drop
+ * would be accepted. The card remains the only moving object; the halo is a
+ * quiet confirmation cue, not another panel or target widget. */
+body .drag-ghost {
+  isolation: isolate;
+  transform-origin: 50% 50%;
+  will-change: transform, filter;
+  transition:
+    transform 180ms cubic-bezier(0.2, 0.78, 0.24, 1.16),
+    filter 160ms ease,
+    opacity 120ms ease;
+}
+
+body .drag-ghost > .card {
+  position: relative;
+  z-index: 1;
+}
+
+body .drag-ghost.is-snapped {
+  transform: translate(-50%, -50%) rotate(0deg) scale(0.78);
+  filter: drop-shadow(0 8px 13px #000b);
+}
+
+body .drag-ghost.is-snapped::before {
+  position: absolute;
+  z-index: 0;
+  content: "";
+  inset: -12px -10px -10px;
+  border: 2px solid #f6d98e;
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 4px #f6d98e26,
+    0 0 18px #f6d98e66;
+  animation: drag-snap-breathe 1.05s ease-out infinite;
+}
+
+body .drag-ghost[data-snap-mode="target"]::before {
+  border-color: #b7e4cf;
+  box-shadow:
+    0 0 0 4px #b7e4cf24,
+    0 0 18px #b7e4cf5c;
+}
+
+@keyframes drag-snap-breathe {
+  0%,
+  100% {
+    opacity: 0.64;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}

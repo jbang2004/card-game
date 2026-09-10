@@ -1253,6 +1253,49 @@
     const z = dropZone();
     return p.x >= z.x0 && p.x <= z.x1 && p.y >= 0 && p.y <= z.y1;
   }
+  /* The drag ghost and the release path share one landing decision. A card
+   * only snaps when releasing there would be meaningful: on a legal target,
+   * or on an unoccupied point in the play area. */
+  function dragLanding(d, e, p) {
+    const c = D.byId[d.cid],
+      el = unitAt(e.clientX, e.clientY),
+      uid = el?.dataset?.uid,
+      side = el?.dataset?.side;
+    const legalTarget =
+      uid && side && c?.target
+        ? game.targets(c.target, "p").some(
+            (t) => t.side === side && t.uid === uid,
+          )
+        : false;
+    if (el && legalTarget)
+      return { kind: "target", point: centerOf(el) || p };
+    if (el && c?.target) return null;
+    if (el && c?.type !== "weapon") return null;
+    if (inPlayArea(p)) return { kind: "board", point: p };
+    return null;
+  }
+  function updateDragVisual(d, p, landing) {
+    if (!d.ghost) return;
+    const kind = landing?.kind || null,
+      changed = kind !== d.snapKind;
+    d.snapKind = kind;
+    d.ghost.classList.toggle("is-snapped", !!kind);
+    if (kind) {
+      d.ghost.dataset.snapMode = kind;
+      d.ghost.style.left = landing.point.x + "px";
+      d.ghost.style.top = landing.point.y + "px";
+      if (changed) {
+        EmberAudio.fx("select");
+        if (!D.byId[d.cid].target) hint("松手落位 · 拖回手牌取消");
+      }
+    } else {
+      delete d.ghost.dataset.snapMode;
+      d.ghost.style.left = p.x + "px";
+      d.ghost.style.top = p.y - (d.lift || 0) + "px";
+      if (changed && !D.byId[d.cid].target)
+        hint("将卡牌拖入战场 · 松回手牌取消");
+    }
+  }
   function cancelDrag(restore = true) {
     if (!drag) return;
     const d = drag;
@@ -1271,6 +1314,7 @@
       d.timer = null;
     }
     d.started = true;
+    d.snapKind = null;
     EmberAudio.fx("select");
     clearSelection();
     hidePreview();
@@ -1297,18 +1341,13 @@
     /* The ghost and the source dimming always end with the gesture. */
     d.ghost?.remove();
     d.el.classList.remove("drag-source");
-    const el = unitAt(e.clientX, e.clientY),
-      p = localPoint(e),
+    const p = localPoint(e),
       c = D.byId[d.cid],
+      el = unitAt(e.clientX, e.clientY),
+      landing = dragLanding(d, e, p),
       uid = el?.dataset?.uid,
       side = el?.dataset?.side;
-    const legalTarget =
-      uid && side
-        ? (c.target ? game.targets(c.target, "p") : []).some(
-            (t) => t.side === side && t.uid === uid,
-          )
-        : false;
-    if (el && legalTarget) {
+    if (landing?.kind === "target") {
       act(() =>
         game.dispatch({
           type: "play",
@@ -1364,6 +1403,7 @@
       horizontal: false,
       timer: null,
       pointerId: e.pointerId,
+      snapKind: null,
     };
     if (drag.touch)
       drag.timer = setTimeout(() => {
@@ -1412,12 +1452,14 @@
       if (drag.started) {
         e.preventDefault();
         pointer = p;
-        drag.ghost.style.left = p.x + "px";
-        drag.ghost.style.top = p.y - (drag.lift || 0) + "px";
         if (selection) {
           if (touch) updateTargetLine();
           else targetCue();
         }
+        const landing = dragLanding(drag, e, p);
+        if (landing?.kind === "target") pointer = landing.point;
+        updateDragVisual(drag, p, landing);
+        if (selection && touch) updateTargetLine();
       }
     },
     { passive: false },
