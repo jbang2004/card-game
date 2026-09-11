@@ -70,8 +70,9 @@ const EmberVFX = (() => {
     tinted.set(id, canvas);
     return canvas;
   }
-  function emit(kind, data, duration = 500, delay = 0) {
+  function emit(kind, data, duration = 500, delay = 0, startAt = null) {
     if (reduced) return;
+    if (!(duration > 0)) return;
     // Keep each affected unit's core cue when a full-board spell hits the cap.
     // Decorative debris yields first, so leftmost targets do not lose their hit.
     if (items.length >= limit()) {
@@ -85,30 +86,42 @@ const EmberVFX = (() => {
       kind,
       ...data,
       duration,
-      start: performance.now() + delay,
+      start:
+        Number.isFinite(startAt) ? startAt + delay : performance.now() + delay,
     });
     stats.peak = Math.max(stats.peak, items.length);
     stats.spawned[kind] = (stats.spawned[kind] || 0) + 1;
   }
   function sprite(asset, p, size, school, options = {}) {
+    const duration = options.duration ?? 500,
+      delay = options.delay ?? 0;
     emit(
       "sprite",
       { asset, x: p.x, y: p.y, size: size * scale(), school, ...options },
-      options.duration || 500,
-      options.delay || 0,
+      duration,
+      delay,
+      options.startAt,
     );
   }
-  function dust(p, school, size = 100) {
+  function dust(p, school, size = 100, options = {}) {
     sprite("smoke-ring", p, size, school, {
-      duration: 520,
+      duration: 520 * (options.durationScale ?? 1),
       expand: 1.45,
       flat: 0.5,
       opacity: 0.42,
       color: palette[school][2],
       blend: "source-over",
+      startAt: options.startAt,
     });
   }
-  function shards(p, school, n = 8, strength = 1, delay = 0) {
+  function shardBurst(
+    p,
+    school,
+    n = 8,
+    strength = 1,
+    durationScale = 1,
+    startAt = null,
+  ) {
     const count = low
       ? Math.ceil(n / 3)
       : EmberViewport.mobile
@@ -128,20 +141,24 @@ const EmberVFX = (() => {
           size: (5 + (i % 3) * 3) * scale(),
           gravity: 25 * scale(),
         },
-        340 + (i % 3) * 50,
-        delay,
+        (340 + (i % 3) * 50) * durationScale,
+        0,
+        startAt,
       );
     }
   }
-  function spell(kind, from, to, targets, school, duration = 500) {
+  function spell(kind, from, to, targets, school, duration = 500, timing = null) {
     if (reduced) return;
+    const startAt = timing?.startAt;
+    const emitSpell = (kind, data, duration, delay = 0) =>
+      emit(kind, data, duration, delay, startAt);
     const points = targets?.length ? targets : [to];
     const color = palette[school] || palette.arcane;
     // Casting form and trajectory carry meaning even in monochrome.
     if (["meteor", "firestorm", "cataclysm"].includes(kind)) {
       const meteorTargets = kind === "meteor" ? [to] : points;
       for (const [i, target] of meteorTargets.entries()) {
-        emit(
+        emitSpell(
           "reticle",
           {
             x: target.x,
@@ -152,7 +169,7 @@ const EmberVFX = (() => {
           duration,
         );
         const start = duration * (0.32 + (i % 3) * 0.065);
-        emit(
+        emitSpell(
           "comet",
           {
             from: { x: target.x - 155 * scale(), y: target.y - 330 * scale() },
@@ -166,13 +183,13 @@ const EmberVFX = (() => {
       }
     } else if (["blizzard", "ice-lance"].includes(kind)) {
       if (kind === "ice-lance")
-        emit("lance", { from, to, school, size: 24 * scale() }, duration);
+        emitSpell("lance", { from, to, school, size: 24 * scale() }, duration);
       else {
         const center = {
           x: points.reduce((n, p) => n + p.x, 0) / points.length,
           y: points.reduce((n, p) => n + p.y, 0) / points.length,
         };
-        emit(
+        emitSpell(
           "frost-field",
           {
             ...center,
@@ -185,7 +202,7 @@ const EmberVFX = (() => {
           duration,
         );
         for (const p of points)
-          emit(
+          emitSpell(
             "reticle",
             { x: p.x, y: p.y, school, radius: 45 * scale() },
             duration,
@@ -195,7 +212,7 @@ const EmberVFX = (() => {
       ["void-collapse", "dispel", "metamorphosis", "mirror"].includes(kind)
     ) {
       const target = ["mirror"].includes(kind) ? from : to;
-      emit(
+      emitSpell(
         "void",
         {
           ...target,
@@ -207,13 +224,14 @@ const EmberVFX = (() => {
       );
       sprite("vortex", target, kind === "void-collapse" ? 230 : 150, school, {
         duration,
+        startAt,
         rotate: 2,
         expand: -0.48,
         color: color[1],
         opacity: 0.8,
       });
     } else if (kind === "siphon") {
-      emit(
+      emitSpell(
         "beam",
         { from, to, school: "blood", size: 22 * scale(), siphon: true },
         duration,
@@ -222,7 +240,7 @@ const EmberVFX = (() => {
       ["sunrise", "benediction", "aegis", "forge", "aether"].includes(kind)
     ) {
       for (const p of points)
-        emit(
+        emitSpell(
           "consecrate",
           {
             ...p,
@@ -232,7 +250,7 @@ const EmberVFX = (() => {
           duration,
         );
     } else if (["starwell", "wildgate", "bloom", "warcry"].includes(kind)) {
-      emit(
+      emitSpell(
         "sigil",
         {
           ...from,
@@ -242,7 +260,7 @@ const EmberVFX = (() => {
         duration,
       );
       for (let i = 0; i < (low ? 3 : 6); i++)
-        emit(
+        emitSpell(
           "orbit",
           {
             ...from,
@@ -254,15 +272,16 @@ const EmberVFX = (() => {
         );
     } else if (["dragon-breath", "breath"].includes(kind)) {
       for (const p of points)
-        emit("beam", { from, to: p, school, size: 72 * scale() }, duration);
+        emitSpell("beam", { from, to: p, school, size: 72 * scale() }, duration);
     } else if (kind === "shatter") {
       sprite("claw", to, 130, "steel", {
         duration,
+        startAt,
         angle: -0.7,
         color: palette.steel[0],
       });
     } else {
-      emit(
+      emitSpell(
         kind === "arrow" || kind === "spear" ? "arrow" : "bolt",
         {
           from,
@@ -274,11 +293,21 @@ const EmberVFX = (() => {
       );
     }
   }
-  function attack(kind, from, to, school, duration) {
+  function attack(kind, from, to, school, timing) {
+    const duration =
+      typeof timing === "number"
+        ? timing
+        : timing?.contact ?? timing?.duration ?? 220;
     if (["arrow", "spear", "bolt", "breath"].includes(kind))
-      spell(kind, from, to, [to], school, duration);
+      spell(kind, from, to, [to], school, duration, timing);
     else
-      emit("anticipation", { ...from, school, radius: 38 * scale() }, duration);
+      emit(
+        "anticipation",
+        { ...from, school, radius: 38 * scale(), attackFamily: kind },
+        duration,
+        0,
+        typeof timing === "object" ? timing?.startAt : null,
+      );
   }
   // Only the assets needed by this contact can trigger its vector fallback.
   // A failed holy column must not disable fire, melee or geometry-only nature.
@@ -297,101 +326,143 @@ const EmberVFX = (() => {
     blood: ["energy-burst"],
     steel: ["glint"],
   });
-  function hit(p, school = "steel", strength = 1, kind = "element", from) {
+  function hit(
+    p,
+    school = "steel",
+    strength = 1,
+    kind = "element",
+    from,
+    timing = null,
+  ) {
     if (reduced) return true;
     const required = hitAssets[kind] || hitAssets[school] || hitAssets.steel;
     if (!required.every((key) => images.has(key))) return false;
     const colors = palette[school] || palette.steel,
-      size = 135 * clamp(strength, 0.7, 1.8);
+      size = 135 * clamp(strength, 0.7, 1.8),
+      durationScale = Number.isFinite(timing?.scale) ? timing.scale : 1,
+      startAt = (phase) => {
+        const value = timing?.[phase + "At"] ?? timing?.contactAt;
+        return Number.isFinite(value) ? value : null;
+      },
+      emitHit = (effect, data, duration, phase = "contact") =>
+        emit(effect, data, duration * durationScale, 0, startAt(phase)),
+      spriteHit = (
+        asset,
+        point,
+        spriteSize,
+        spriteSchool,
+        options = {},
+        phase = "contact",
+      ) =>
+        sprite(asset, point, spriteSize, spriteSchool, {
+          ...options,
+          duration: (options.duration ?? 500) * durationScale,
+          startAt: startAt(phase),
+        }),
+      dustHit = (point, dustSchool, dustSize = 100) =>
+        dust(point, dustSchool, dustSize, {
+          durationScale,
+          startAt: startAt("release"),
+        }),
+      shardsHit = (point, shardSchool, n = 8, shardStrength = 1) => {
+        shardBurst(
+          point,
+          shardSchool,
+          n,
+          shardStrength,
+          durationScale,
+          startAt("release"),
+        );
+      };
     if (kind === "blade") {
-      sprite("slash-blade", p, size * 1.28, school, {
+      spriteHit("slash-blade", p, size * 1.28, school, {
         angle: from ? Math.atan2(p.y - from.y, p.x - from.x) - 0.7 : -0.7,
         duration: 260,
         color: colors[0],
       });
-      sprite("flame-slash", p, size, school, {
+      spriteHit("flame-slash", p, size, school, {
         duration: 350,
         angle: 0.5,
         opacity: school === "fire" ? 0.85 : 0.3,
         color: school === "fire" ? undefined : colors[0],
       });
-      shards(p, school, 6, strength);
+      shardsHit(p, school, 6, strength);
     } else if (kind === "claw") {
-      sprite("claw", p, size, school, {
+      spriteHit("claw", p, size, school, {
         angle: -0.5,
         duration: 290,
         color: colors[0],
       });
-      shards(p, school, 5, strength);
+      shardsHit(p, school, 5, strength);
     } else if (kind === "slam") {
-      dust(p, school, size * 1.6);
-      emit("fracture", { ...p, school, radius: size * 0.65 * scale() }, 480);
-      sprite("debris", p, size * 1.1, school, {
+      dustHit(p, school, size * 1.6);
+      emitHit("fracture", { ...p, school, radius: size * 0.65 * scale() }, 480);
+      spriteHit("debris", p, size * 1.1, school, {
         duration: 400,
         expand: 0.65,
         color: colors[2],
         blend: "source-over",
         opacity: 0.8,
-      });
-      shards(p, school, 9, strength);
+      }, "release");
+      shardsHit(p, school, 9, strength);
     } else if (kind === "arrow" || kind === "spear") {
-      sprite("glint", p, size * 0.65, school, {
+      spriteHit("glint", p, size * 0.65, school, {
         duration: 170,
         color: colors[0],
       });
-      shards(p, school, 4, strength * 0.7);
+      shardsHit(p, school, 4, strength * 0.7);
     } else if (school === "fire") {
-      sprite("fire-burst", p, size * 1.7, school, {
+      spriteHit("fire-burst", p, size * 1.7, school, {
         duration: 500,
         opacity: 0.95,
       });
-      sprite("fire", p, size, school, {
+      spriteHit("fire", p, size, school, {
         duration: 450,
         expand: 0.5,
         color: colors[1],
         opacity: 0.72,
       });
-      dust(p, school, size * 1.65);
-      shards(p, school, 9, strength);
+      dustHit(p, school, size * 1.65);
+      shardsHit(p, school, 9, strength);
     } else if (school === "frost") {
-      sprite("energy-ring", p, size, school, {
+      spriteHit("energy-ring", p, size, school, {
         duration: 230,
         color: colors[1],
         expand: 0.7,
         flat: 0.7,
         opacity: 0.55,
       });
-      shards(p, school, 9, strength);
+      shardsHit(p, school, 9, strength);
     } else if (school === "arcane") {
-      sprite("cross-burst", p, size * 1.6, school, { duration: 440 });
-      sprite("energy-ring", p, size * 1.4, school, {
+      spriteHit("cross-burst", p, size * 1.6, school, { duration: 440 });
+      spriteHit("energy-ring", p, size * 1.4, school, {
         duration: 420,
         expand: 0.4,
         color: colors[1],
         opacity: 0.65,
       });
     } else if (school === "holy") {
-      sprite("storm-column", p, size * 1.65, school, {
+      spriteHit("storm-column", p, size * 1.65, school, {
         duration: 440,
         color: colors[1],
       });
-      emit("consecrate", { ...p, school, radius: size * 0.65 * scale() }, 420);
+      emitHit("consecrate", { ...p, school, radius: size * 0.65 * scale() }, 420);
     } else if (school === "nature") {
-      emit("roots", { ...p, school, radius: size * 0.6 * scale() }, 480);
-      shards(p, school, 7, strength);
+      emitHit("roots", { ...p, school, radius: size * 0.6 * scale() }, 480);
+      shardsHit(p, school, 7, strength);
     } else if (school === "shadow" || school === "blood") {
-      sprite("energy-burst", p, size * 1.5, school, { duration: 420 });
-      emit(
+      spriteHit("energy-burst", p, size * 1.5, school, { duration: 420 });
+      emitHit(
         "void",
         { ...p, school, radius: size * 0.65 * scale(), implode: true },
         410,
       );
     } else {
-      sprite("glint", p, size * 0.8, school, {
+      spriteHit("glint", p, size * 0.8, school, {
         duration: 160,
         color: colors[0],
       });
-      shards(p, school, 7, strength);
+      shardsHit(p, school, 7, strength);
     }
     return true;
   }

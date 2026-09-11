@@ -37,10 +37,14 @@ const EmberFX = (() => {
     timers = new Set(),
     animations = new Set(),
     nodes = new Set(),
+    layoutOwners = new Map(),
+    attackOwners = new Map(),
     generation = 0,
+    presentationVersion = 0,
     busy = false,
     pendingCommit = null,
-    doneCallback = null;
+    doneCallback = null,
+    activeSequence = null;
   let last = 0,
     view = "lobby",
     theme = 0,
@@ -64,12 +68,45 @@ const EmberFX = (() => {
     timers.add(id);
     return id;
   }
-  function animate(el, frames, options) {
+  function createSequence(plan, version = presentationVersion) {
+    const sequence = {
+      generation,
+      version,
+      origin: performance.now(),
+      plan,
+      closed: false,
+      reactions: new Map(),
+    };
+    activeSequence = sequence;
+    return sequence;
+  }
+  function closeSequence(sequence = activeSequence) {
+    if (!sequence) return;
+    sequence.closed = true;
+    if (activeSequence === sequence) activeSequence = null;
+  }
+  function isCurrentSequence(sequence) {
+    return !!sequence &&
+      !sequence.closed &&
+      sequence.generation === generation &&
+      sequence.version === presentationVersion &&
+      activeSequence === sequence;
+  }
+  function scheduleAt(sequence, at, fn) {
+    if (!sequence) return schedule(fn, at);
+    const delay = Math.max(0, sequence.origin + at - performance.now());
+    return schedule(() => {
+      if (!isCurrentSequence(sequence)) return;
+      fn();
+    }, delay);
+  }
+  function animate(el, frames, options, onFinish = null) {
     const animation = el.animate(frames, options);
     animations.add(animation);
     animation.onfinish = () => {
       animation.cancel();
       animations.delete(animation);
+      onFinish?.(animation);
     };
     animation.oncancel = () => animations.delete(animation);
     return animation;
@@ -178,6 +215,177 @@ const EmberFX = (() => {
       ? document.getElementById(side === "p" ? "player-hero" : "enemy-hero")
       : document.querySelector(`#battle .minion[data-uid="${uid}"]`);
   }
+  const refKey = (ref) => (ref ? ref.side + ref.uid : "");
+  function syncAttackOwner(owner) {
+    if (!owner || owner.dead || !owner.el?.isConnected) return;
+    const current = unit(owner.side, owner.uid);
+    if (!current) return;
+    for (const selector of [
+      ".stat.atk",
+      ".stat.hp",
+      ".hero-health",
+      ".hero-armor",
+    ]) {
+      const live = current.querySelector(selector),
+        copy = owner.el.querySelector(selector);
+      if (live && copy) {
+        const liveValue = live.querySelector(".stat-value"),
+          copyValue = copy.querySelector(".stat-value");
+        if (liveValue && copyValue) copyValue.textContent = liveValue.textContent;
+        else copy.textContent = live.textContent;
+        copy.className = live.className;
+      } else if (live && !copy && selector === ".hero-armor") {
+        owner.el.appendChild(live.cloneNode(true));
+      } else if (!live && copy) copy.remove();
+    }
+    const stateClasses = [
+      "shield",
+      "frozen",
+      "stealth",
+      "taunt",
+      "poison",
+      "lifesteal",
+      "reborn",
+      "windfury",
+      "spellpower",
+      "charge",
+      "rush",
+      "sick",
+      "ready",
+    ];
+    for (const className of stateClasses)
+      owner.el.classList.toggle(className, current.classList.contains(className));
+    const liveStatus = current.querySelector(".minion-status"),
+      copyStatus = owner.el.querySelector(".minion-status");
+    if (liveStatus && copyStatus) copyStatus.innerHTML = liveStatus.innerHTML;
+    current.style.visibility = "hidden";
+  }
+  function releaseAttackOwner(key, restore = true, expected = null) {
+    const owner = attackOwners.get(key);
+    if (!owner || (expected && owner !== expected)) return false;
+    attackOwners.delete(key);
+    owner.el?.getAnimations?.().forEach((a) => a.cancel());
+    owner.el?.remove();
+    if (owner.el) nodes.delete(owner.el);
+    if (restore && !owner.dead) {
+      const current = unit(owner.side, owner.uid);
+      if (current) current.style.visibility = "";
+    }
+    return true;
+  }
+  function retireExpiredAttackOwners(
+    now = performance.now(),
+    force = false,
+    sequence = null,
+  ) {
+    for (const [key, owner] of attackOwners)
+      if (
+        (!sequence || owner.sequence === sequence) &&
+        (force || now >= owner.deadline)
+      )
+        releaseAttackOwner(key);
+  }
+  function stopReaction(sequence, key, expected = null) {
+    const record = sequence?.reactions?.get(key);
+    if (!record || (expected && record !== expected)) return false;
+    sequence.reactions.delete(key);
+    record.animation?.cancel();
+    return true;
+  }
+  function retireExpiredReactions(sequence, now = performance.now(), force = false) {
+    if (!sequence?.reactions) return;
+    for (const [key, record] of sequence.reactions)
+      if (force || now >= record.deadline) stopReaction(sequence, key, record);
+  }
+  function reactionTarget(ref) {
+    const owner = attackOwners.get(refKey(ref));
+    return owner?.el?.isConnected ? owner.el : unit(ref.side, ref.uid);
+  }
+  function reactionSource(record) {
+    if (!record.sourceRef) return record.from;
+    const owner = attackOwners.get(refKey(record.sourceRef));
+    if (owner?.el?.isConnected) return owner.impact || pos(owner.el);
+    const live = unit(record.sourceRef.side, record.sourceRef.uid);
+    return (live && pos(live)) || record.from;
+  }
+  function startTimedReaction(sequence, targetRef, el, heavy, from, timing) {
+    if (
+      !isCurrentSequence(sequence) ||
+      !timing ||
+      timing.recoveryEnd <= timing.contact
+    )
+      return null;
+    const key = refKey(targetRef);
+    stopReaction(sequence, key);
+    const record = {
+      sequence,
+      key,
+      targetRef,
+      sourceRef: timing.sourceRef,
+      from,
+      heavy,
+      timing,
+      el: null,
+      animation: null,
+      deadline: sequence.origin + timing.recoveryEnd,
+    };
+    sequence.reactions.set(key, record);
+    const target = el || reactionTarget(targetRef),
+      elapsed = Math.max(
+        0,
+        performance.now() - (sequence.origin + timing.contact),
+      );
+    if (!target || elapsed >= timing.recoveryEnd - timing.contact) {
+      stopReaction(sequence, key, record);
+      return null;
+    }
+    record.el = target;
+    cancelLayoutTranslation(target, key);
+    record.animation = hitReaction(
+      target,
+      heavy,
+      from,
+      { ...timing, elapsed },
+      {
+        onFinish: () => stopReaction(sequence, key, record),
+      },
+    );
+    if (!record.animation) stopReaction(sequence, key, record);
+    return record;
+  }
+  function rebindReactions(sequence) {
+    if (!sequence?.reactions) return;
+    const now = performance.now();
+    for (const [key, record] of [...sequence.reactions]) {
+      if (now >= record.deadline) {
+        stopReaction(sequence, key, record);
+        continue;
+      }
+      const target = reactionTarget(record.targetRef);
+      if (!target) {
+        stopReaction(sequence, key, record);
+        continue;
+      }
+      if (target === record.el && record.el.isConnected) continue;
+      record.animation?.cancel();
+      const elapsed = Math.max(
+          0,
+          now - (sequence.origin + record.timing.contact),
+        ),
+        source = reactionSource(record);
+      record.el = target;
+      record.from = source || record.from;
+      cancelLayoutTranslation(target, key);
+      record.animation = hitReaction(
+        target,
+        record.heavy,
+        record.from,
+        { ...record.timing, elapsed },
+        { onFinish: () => stopReaction(sequence, key, record) },
+      );
+      if (!record.animation) stopReaction(sequence, key, record);
+    }
+  }
   function fallback(s, side, uid) {
     return EmberViewport.fallback(s, side, uid);
   }
@@ -203,7 +411,19 @@ const EmberFX = (() => {
     );
     return m;
   }
-  function settleLayout(old) {
+  function releaseLayoutOwner(key, animation) {
+    if (layoutOwners.get(key)?.animation === animation) layoutOwners.delete(key);
+  }
+  function registerLayoutOwner(key, el, animation) {
+    const previous = layoutOwners.get(key);
+    if (previous && previous.animation !== animation) previous.animation.cancel();
+    layoutOwners.set(key, { el, animation });
+    const release = () => releaseLayoutOwner(key, animation);
+    animation.addEventListener?.("finish", release, { once: true });
+    animation.addEventListener?.("cancel", release, { once: true });
+    return animation;
+  }
+  function settleLayout(old, excludedKeys = new Set()) {
     if (quality.reduced) return;
     document
       .querySelectorAll("#battle .minion[data-uid],#hand .hand-card")
@@ -214,6 +434,7 @@ const EmberFX = (() => {
             : el.dataset.side + el.dataset.uid,
           prev = old[key],
           p = pos(el);
+        if (excludedKeys.has(key)) return;
         if (!p) return;
         let frames;
         if (prev) {
@@ -227,11 +448,23 @@ const EmberFX = (() => {
             { opacity: 1, translate: "0px 0px" },
           ];
         } else return;
-        animate(el, frames, {
-          duration: 420,
-          easing: "cubic-bezier(.18,.72,.24,1)",
-        });
+        registerLayoutOwner(
+          key,
+          el,
+          animate(el, frames, {
+            duration: 420,
+            easing: "cubic-bezier(.18,.72,.24,1)",
+          }),
+        );
       });
+  }
+  function cancelLayoutTranslation(el, key = null) {
+    if (key) {
+      layoutOwners.get(key)?.animation.cancel();
+      return;
+    }
+    for (const owner of layoutOwners.values())
+      if (owner.el === el) owner.animation.cancel();
   }
   function add(kind, data, d = 800, delay = 0) {
     if (quality.reduced) return;
@@ -357,12 +590,13 @@ const EmberFX = (() => {
     strength = 1,
     kind = "element",
     from = null,
+    timing = null,
   ) {
     if (quality.reduced) {
       return;
     }
     const s = clamp(strength, 0.6, 2.2);
-    if (EmberVFX.hit({ x, y }, school, s, kind, from)) {
+    if (EmberVFX.hit({ x, y }, school, s, kind, from, timing)) {
       if (s > 1.25) shake(2.5 * s);
       return;
     }
@@ -582,51 +816,61 @@ const EmberFX = (() => {
       nodes.delete(el);
     }, 660);
   }
-  function lunge(from, to, contact = 220, heavy = false) {
+  function lunge(from, to, motion, startedAt = performance.now()) {
     if (!from?.el || quality.reduced) return;
+    if (!motion) motion = EmberFXProfiles.motionFor("blade");
+    const duration = Math.max(0, motion.duration);
+    if (!duration) return;
     const el = from.el.cloneNode(true);
     copyPortraits(from.el, el);
+    const offset = Math.max(
+      0,
+      Math.min(duration, performance.now() - startedAt),
+    );
+    if (offset >= duration) return;
     el.removeAttribute("id");
-    el.classList.add("death-ghost", "attack-actor");
+    el.classList.add("death-ghost", "attack-actor", "attack-family-" + motion.family);
     el.style.cssText += `;left:${from.left}px;top:${from.top}px;width:${from.w}px;height:${from.h}px;margin:0;visibility:visible`;
     el.tabIndex = -1;
     el.setAttribute("aria-hidden", "true");
+    el.dataset.attackFamily = motion.family;
+    el.dataset.contactMs = String(motion.contact);
+    el.dataset.releaseMs = String(motion.release);
+    el.dataset.recoveryEndMs = String(motion.recoveryEnd);
+    el.dataset.motionEndMs = String(motion.duration);
+    if (motion.heavy) el.dataset.attackHeavy = "true";
     app.appendChild(el);
     nodes.add(el);
     from.el.style.visibility = "hidden";
     const dx = (to.x - from.x) * 0.77,
       dy = (to.y - from.y) * 0.77;
-    const duration = contact + Math.min(250, (contact / 220) * 250),
-      hit = contact / duration;
-    el.dataset.contactMs = contact;
+    const hit = motion.contact / duration,
+      anticipation = motion.anticipation / duration,
+      release = motion.release / duration,
+      recoveryEnd = motion.recoveryEnd / duration;
     animate(
       el,
       [
         { transform: "translate(0,0) scale(1)", offset: 0, easing: "ease-out" },
         {
           transform: `translate(${-dx * 0.065}px,${-dy * 0.065}px) scale(1.055)`,
-          offset: hit * 0.4,
+          offset: anticipation,
           easing: "cubic-bezier(.6,0,.9,.5)",
         },
         { transform: `translate(${dx}px,${dy}px) scale(1.045)`, offset: hit },
-        // A short contact hold, then a single controlled return. The death beat
-        // owns deaths, so a lethal attacker cannot dissolve twice in two places.
+        // A short contact hold, then one controlled return. The death beat owns
+        // deaths, so a lethal attacker cannot dissolve twice in two places.
         {
           transform: `translate(${dx}px,${dy}px) scale(1.045)`,
-          offset: (contact + contact * (heavy ? 0.218 : 0.1)) / duration,
+          offset: release,
           easing: "cubic-bezier(.16,.8,.3,1)",
         },
+        { transform: "translate(0,0) scale(1)", offset: recoveryEnd },
         { transform: "translate(0,0) scale(1)", offset: 1 },
       ],
-      { duration, fill: "forwards" },
+      { duration, delay: -offset, fill: "forwards" },
     );
-    schedule(() => {
-      el.remove();
-      nodes.delete(el);
-      const current = unit(from.el.dataset.side, from.el.dataset.uid);
-      if (current) current.style.visibility = "";
-    }, duration + 2);
-    return el;
+    return { el, duration, motion };
   }
   function cardFlight(c, from, to, duration, cardHTML) {
     if (!from || !cardHTML || quality.reduced) return;
@@ -749,25 +993,78 @@ const EmberFX = (() => {
     }
     return paletteSchool(c.palette);
   }
-  function hitReaction(el, heavy = false, from = null) {
+  function hitReaction(
+    el,
+    heavy = false,
+    from = null,
+    motion = null,
+    lifecycle = null,
+  ) {
     if (!el || quality.reduced) return;
-    const p = pos(el),
-      dx = from ? p.x - from.x : 0,
+    const p = pos(el);
+    if (!p) return;
+    const dx = from ? p.x - from.x : 0,
       dy = from ? p.y - from.y : -1;
     const length = Math.hypot(dx, dy) || 1,
-      amount = heavy ? 8 : 4;
-    animate(
+      amount = motion?.recoil || (heavy ? 8 : 4);
+    const baseFilter =
+      typeof getComputedStyle === "function"
+        ? getComputedStyle(el).filter
+        : "none";
+    const withBrightness = (value) =>
+      baseFilter && baseFilter !== "none"
+        ? `${baseFilter} brightness(${value})`
+        : `brightness(${value})`;
+    if (!motion) {
+      return animate(
+        el,
+        [
+          { filter: withBrightness(1.85), translate: "0 0" },
+          {
+            filter: withBrightness(1.15),
+            translate: `${(dx / length) * amount}px ${(dy / length) * amount}px`,
+            offset: 0.28,
+          },
+          { filter: withBrightness(1), translate: "0 0" },
+        ],
+        { duration: 320, easing: "ease-out" },
+        lifecycle?.onFinish,
+      );
+    }
+    const contact = Math.max(0, motion.contact ?? 0),
+      release = Math.max(contact, motion.release ?? contact),
+      recoveryEnd = Math.max(release, motion.recoveryEnd ?? release),
+      duration = recoveryEnd - contact,
+      elapsed = Math.max(0, Math.min(duration, motion.elapsed ?? 0));
+    if (!(duration > 0) || elapsed >= duration) return;
+    const releaseAt = Math.max(
+        0,
+        Math.min(1, (release - contact) / duration),
+      ),
+      peakAt = releaseAt + (1 - releaseAt) * 0.28,
+      frames = [
+        { filter: withBrightness(1.85), translate: "0 0", offset: 0 },
+      ];
+    if (releaseAt > 0 && releaseAt < 1)
+      frames.push({
+        filter: withBrightness(1.15),
+        translate: "0 0",
+        offset: releaseAt,
+        easing: "linear",
+      });
+    if (releaseAt < 1)
+      frames.push({
+        filter: withBrightness(1.15),
+        translate: `${(dx / length) * amount}px ${(dy / length) * amount}px`,
+        offset: Math.min(1, peakAt),
+        easing: "cubic-bezier(.16,.8,.3,1)",
+      });
+    frames.push({ filter: withBrightness(1), translate: "0 0", offset: 1 });
+    return animate(
       el,
-      [
-        { filter: "brightness(1.85)", translate: "0 0" },
-        {
-          filter: "brightness(1.15)",
-          translate: `${(dx / length) * amount}px ${(dy / length) * amount}px`,
-          offset: 0.28,
-        },
-        { filter: "brightness(1)", translate: "0 0" },
-      ],
-      { duration: 320, easing: "ease-out" },
+      frames,
+      { duration, delay: -elapsed, fill: "forwards" },
+      lifecycle?.onFinish,
     );
   }
   function cacheReadableStats() {
@@ -777,11 +1074,14 @@ const EmberFX = (() => {
       ),
     ];
   }
-  function cleanupVisuals() {
+  function cleanupVisuals(sequence = activeSequence) {
     timers.forEach(clearTimeout);
     timers.clear();
     animations.forEach((a) => a.cancel());
     animations.clear();
+    layoutOwners.clear();
+    retireExpiredReactions(sequence, performance.now(), true);
+    retireExpiredAttackOwners(performance.now(), true, sequence);
     nodes.forEach((el) => el.remove());
     nodes.clear();
     items = [];
@@ -795,16 +1095,26 @@ const EmberFX = (() => {
     setBusy(false);
   }
   function cancel(commit = false) {
+    const sequence = activeSequence,
+      commitFn = commit ? pendingCommit : null,
+      expectedGeneration = generation + 1,
+      expectedPresentationVersion = presentationVersion;
     generation++;
+    closeSequence(sequence);
     EmberAudio.stop();
-    if (commit && pendingCommit) {
-      const fn = pendingCommit;
-      pendingCommit = null;
-      fn();
-    }
     pendingCommit = null;
     doneCallback = null;
-    cleanupVisuals();
+    cleanupVisuals(sequence);
+    // Old visual cleanup is complete before user-owned rendering can re-enter
+    // presentation and create a new active sequence.
+    commitFn?.();
+    return {
+      sequence,
+      reentered:
+        generation !== expectedGeneration ||
+        presentationVersion !== expectedPresentationVersion ||
+        activeSequence !== null,
+    };
   }
   function cue(p, text, kind = "status") {
     if (!p) return;
@@ -846,31 +1156,59 @@ const EmberFX = (() => {
     );
   }
   function present(events, s, render, after, cardHTML, before = null) {
-    if (busy) cancel(true);
+    const version = ++presentationVersion;
+    if (busy) {
+      const result = cancel(true);
+      if (result.reentered || presentationVersion !== version) return;
+    }
     clearTurnCue();
-    const plan = EmberCombat.compile(events, before, s, quality.reduced);
+    const primary = events.find((e) =>
+      ["play", "attack", "power"].includes(e.type),
+    );
+    let c = primary?.cid ? EmberData.byId[primary.cid] : null;
+    const initial = capture();
+    if (primary?.type === "attack") {
+      const source =
+          primary.view?.[primary.from.side] || before?.[primary.from.side],
+        boardSource = source?.board?.find(
+          (m) => m.uid === primary.from.uid,
+        ),
+        sourceCid =
+          (primary.from.uid === "hero"
+            ? source?.weapon?.cid || s[primary.from.side].weapon?.cid
+            : boardSource?.cid ||
+              initial[primary.from.side + primary.from.uid]?.cid) || null;
+      c = sourceCid ? EmberData.byId[sourceCid] : null;
+    }
+    const visualProfile = EmberFXProfiles.get(c),
+      plan = EmberCombat.compile(
+        events,
+        before,
+        s,
+        quality.reduced,
+      );
     if (!plan.beats.length || quality.reduced) {
+      const startGeneration = generation;
       render();
+      if (
+        presentationVersion !== version ||
+        generation !== startGeneration ||
+        activeSequence
+      )
+        return;
       postEvents(events, s, capture(), null, null);
+      if (
+        presentationVersion !== version ||
+        generation !== startGeneration ||
+        activeSequence
+      )
+        return;
       after?.();
       return;
     }
     EmberPortraits.prepareSummons(events);
     EmberVFX.prepare();
-    const primary = events.find((e) =>
-      ["play", "attack", "power"].includes(e.type),
-    );
-    let c = primary?.cid ? EmberData.byId[primary.cid] : null;
-    const initial = capture(),
-      history = { ...initial };
-    if (primary?.type === "attack")
-      c =
-        EmberData.byId[
-          initial[primary.from.side + primary.from.uid]?.cid ||
-            (primary.from.uid === "hero"
-              ? s[primary.from.side].weapon?.cid
-              : null)
-        ];
+    const history = { ...initial };
     let school = classification(c, primary?.type === "attack");
     if (primary?.type === "power")
       school =
@@ -879,7 +1217,6 @@ const EmberFX = (() => {
           : { mage: "fire", paladin: "holy", ranger: "steel" }[
               primary.side === "e" ? s.opponentHero : s.heroId
             ];
-    const visualProfile = EmberFXProfiles.get(c);
     const countered = events.some(
       (e) => e.type === "secret" && e.cid === "counterspell",
     );
@@ -903,16 +1240,36 @@ const EmberFX = (() => {
     counts.actions++;
     counts.school[school] = (counts.school[school] || 0) + 1;
     setBusy(true);
+    const sequence = createSequence(plan, version);
     pendingCommit = () => render();
     doneCallback = after;
     const seenRattles = new Set();
-    let attackFlight = null;
     const locate = (map, t, state) =>
       map[t.side + t.uid] || fallback(state, t.side, t.uid);
+    // Register launch cues with the sequence clock up front. A late beat
+    // callback must not enqueue a missed swing behind its already-due impact.
+    for (const beat of plan.beats) {
+      const event = beat.events[0];
+      if (event?.type !== "attack") continue;
+      const launchAt = beat.markers?.anticipation ?? beat.at,
+        contactAt = beat.markers?.contact;
+      scheduleAt(sequence, launchAt, () => {
+        if (
+          contactAt !== null &&
+          contactAt !== undefined &&
+          performance.now() >= sequence.origin + contactAt
+        )
+          return;
+        const current = capture();
+        sound("swing", locate(current, event.from, beat.frame));
+      });
+    }
     for (const beat of plan.beats)
       for (const e of beat.events) {
         if (e.type === "heal" && e.from)
-          schedule(
+          scheduleAt(
+            sequence,
+            Math.max(0, beat.at - 300),
             () => {
               const positions = { ...initial, ...capture() };
               projectile(
@@ -922,16 +1279,28 @@ const EmberFX = (() => {
                 Math.min(300, beat.at),
               );
             },
-            Math.max(0, beat.at - 300),
           );
       }
     for (const beat of plan.beats)
-      schedule(() => {
+      scheduleAt(sequence, beat.at, () => {
+        const now = performance.now();
+        retireExpiredAttackOwners(now, false, sequence);
+        retireExpiredReactions(sequence, now);
         const old = capture(),
           event = beat.events[0];
         Object.assign(history, old);
         render(beat.frame);
-        settleLayout(old);
+        if (!isCurrentSequence(sequence)) return;
+        rebindReactions(sequence);
+        const reactionTargets = new Set(sequence.reactions.keys());
+        for (const contact of beat.contacts || []) {
+          if (
+            contact.targetRef &&
+            contact.recoveryEndAt > contact.contactAt
+          )
+            reactionTargets.add(refKey(contact.targetRef));
+        }
+        settleLayout(old, reactionTargets);
         if (beat.sourceId && !seenRattles.has(beat.sourceId)) {
           seenRattles.add(beat.sourceId);
           const p = Object.values(history).find(
@@ -1014,14 +1383,19 @@ const EmberFX = (() => {
           const now = capture(),
             from = locate(now, event.from, beat.frame),
             to = locate(now, event.to, beat.frame);
-          const dies = events.some(
-            (e) =>
-              e.type === "death" &&
-              e.side === event.from.side &&
-              e.uid === event.from.uid,
+          const attackCard =
+              (beat.sourceCid && EmberData.byId[beat.sourceCid]) || c,
+            attackProfile = EmberFXProfiles.get(attackCard),
+            ranged = !!beat.motion?.ranged,
+            motion = beat.motion || EmberFXProfiles.motionFor("blade"),
+            attackStart = sequence.origin + beat.at;
+          EmberVFX.attack(
+            attackProfile.attack,
+            from,
+            to,
+            classification(attackCard, true),
+            { ...motion, startAt: attackStart },
           );
-          const ranged = EmberFXProfiles.ranged(c);
-          EmberVFX.attack(visualProfile.attack, from, to, school, beat.hold);
           if (!ranged) {
             // render() has replaced the live DOM; its new canvas is not painted
             // until the observer/frame runs. Copy the last painted source now.
@@ -1033,66 +1407,46 @@ const EmberFX = (() => {
                   : old[event.from.side + event.from.uid]?.el || from.el,
               },
               to,
-              beat.hold,
-              events.some(
-                (e) =>
-                  e.type === "damage" &&
-                  e.from?.uid === event.from.uid &&
-                  e.amount >= 6,
-              ),
+              motion,
+              attackStart,
             );
-            attackFlight = {
-              side: event.from.side,
-              uid: event.from.uid,
-              until:
-                performance.now() +
-                beat.hold +
-                Math.min(250, (beat.hold / 220) * 250) +
-                2,
-              dies,
-              impact: {
-                ...from,
-                el: actor,
-                x: from.x + (to.x - from.x) * 0.77,
-                y: from.y + (to.y - from.y) * 0.77,
-                left: from.left + (to.x - from.x) * 0.77,
-                top: from.top + (to.y - from.y) * 0.77,
-              },
-            };
-          }
-          schedule(() => sound("swing", from), beat.hold * 0.4);
-        }
-        if (attackFlight && performance.now() < attackFlight.until) {
-          const current = unit(attackFlight.side, attackFlight.uid);
-          if (current) {
-            const actor = attackFlight.impact.el;
-            for (const selector of [
-              ".stat.atk",
-              ".stat.hp",
-              ".hero-health",
-              ".hero-armor",
-            ]) {
-              const live = current.querySelector(selector),
-                copy = actor?.querySelector(selector);
-              if (live && copy) {
-                /* Refresh only the number: the badge frame is part of the
-                 * cloned markup and must survive the sync. */
-                const liveValue = live.querySelector(".stat-value"),
-                  copyValue = copy.querySelector(".stat-value");
-                if (liveValue && copyValue) copyValue.textContent = liveValue.textContent;
-                else copy.textContent = live.textContent;
-                copy.className = live.className;
-              } else if (!live && copy) copy.remove();
+            if (actor) {
+              const key = refKey(event.from),
+                owner = {
+                  ...actor,
+                  side: event.from.side,
+                  uid: event.from.uid,
+                  sequence,
+                  dead: false,
+                  deadline: attackStart + actor.duration + 2,
+                  motion,
+                  impact: {
+                    ...from,
+                    el: actor.el,
+                    x: from.x + (to.x - from.x) * 0.77,
+                    y: from.y + (to.y - from.y) * 0.77,
+                    left: from.left + (to.x - from.x) * 0.77,
+                    top: from.top + (to.y - from.y) * 0.77,
+                  },
+                };
+              releaseAttackOwner(key, false);
+              attackOwners.set(key, owner);
+              syncAttackOwner(owner);
+              scheduleAt(
+                sequence,
+                beat.at + actor.duration + 2,
+                () => {
+                  releaseAttackOwner(key, true, owner);
+                },
+              );
             }
-            current.style.visibility = "hidden";
-            schedule(() => {
-              current.style.visibility = "";
-            }, attackFlight.until - performance.now());
           }
         }
+        for (const owner of attackOwners.values()) syncAttackOwner(owner);
         const positions = { ...history, ...old };
-        if (attackFlight && performance.now() < attackFlight.until)
-          positions[attackFlight.side + attackFlight.uid] = attackFlight.impact;
+        for (const owner of attackOwners.values())
+          if (performance.now() < owner.deadline)
+            positions[owner.side + owner.uid] = owner.impact;
         if (
           event.type === "summon" &&
           c?.id === event.cid &&
@@ -1115,7 +1469,36 @@ const EmberFX = (() => {
             beat.hold,
           );
         }
-        postEvents(beat.events, beat.frame, positions, primary, school);
+        postEvents(beat.events, beat.frame, positions, primary, school, {
+          sequence,
+          contacts: beat.contacts || [],
+          ownerFor: (ref) => attackOwners.get(refKey(ref)),
+          retireAttack: (key) => {
+            const owner = attackOwners.get(key);
+            if (!owner) return null;
+            owner.dead = true;
+            const visual = {
+              ...(pos(owner.el) || owner.impact),
+              el: owner.el,
+              html: (() => {
+                const copy = owner.el.cloneNode(true);
+                copy.classList.remove("attack-actor", "death-ghost");
+                return copy.outerHTML;
+              })(),
+            };
+            releaseAttackOwner(key, false, owner);
+            return visual;
+          },
+          startReaction: (targetRef, el, heavy, from, timing) =>
+            startTimedReaction(
+              sequence,
+              targetRef,
+              el,
+              heavy,
+              from,
+              timing,
+            ),
+        });
         cacheReadableStats();
         if (event.type === "secret" && event.cid === "counterspell") {
           EmberVFX.clear();
@@ -1143,18 +1526,29 @@ const EmberFX = (() => {
             );
         }
         if (event.type === "phase") phaseChange(s);
-      }, beat.at);
-    schedule(() => {
+      });
+    scheduleAt(sequence, plan.duration + 80, () => {
+      retireExpiredReactions(sequence, performance.now(), true);
+      retireExpiredAttackOwners(performance.now(), true, sequence);
+      closeSequence(sequence);
       const commit = pendingCommit,
         cb = doneCallback;
       pendingCommit = doneCallback = null;
       commit?.();
-      cacheReadableStats();
-      setBusy(false);
+      if (
+        generation !== sequence.generation ||
+        presentationVersion !== sequence.version ||
+        activeSequence
+      )
+        return;
+      if (!activeSequence) {
+        cacheReadableStats();
+        setBusy(false);
+      }
       cb?.();
-    }, plan.duration + 80);
+    });
   }
-  function postEvents(events, s, old, primary, school) {
+  function postEvents(events, s, old, primary, school, context = {}) {
     const at = (e) =>
       pos(unit(e.side, e.uid)) ||
       old[e.side + e.uid] ||
@@ -1207,9 +1601,35 @@ const EmberFX = (() => {
       }
       if (e.type === "damage") {
         const p = old[e.side + e.uid] || at(e);
+        const loss = e.loss ?? e.amount,
+          linked = context.contacts?.find((contact) => contact.eventId === e.id),
+          timedContact =
+            linked &&
+            context.sequence &&
+            linked.contactAt !== undefined &&
+            linked.recoveryEndAt !== undefined
+              ? {
+                  contact: linked.contactAt,
+                  release: linked.releaseAt,
+                  recoveryEnd: linked.recoveryEndAt,
+                  elapsed: Math.max(
+                    0,
+                    performance.now() -
+                      (context.sequence.origin + linked.contactAt),
+                  ),
+                  contactAt:
+                    context.sequence.origin + linked.contactAt,
+                  releaseAt:
+                    context.sequence.origin + linked.releaseAt,
+                  recoveryEndAt:
+                    context.sequence.origin + linked.recoveryEndAt,
+                  scale: context.sequence.plan.scale ?? 1,
+                  sourceRef: e.from,
+                }
+              : null;
         if (e.absorbed)
           cue({ ...p, y: p.y - 24 }, `护甲吸收 ${e.absorbed}`, "armor");
-        if ((e.loss ?? e.amount) > 0) {
+        if (loss > 0) {
           const melee = primary?.type === "attack";
           const retaliation =
             melee && e.side === primary.from.side && e.uid === primary.from.uid;
@@ -1222,20 +1642,36 @@ const EmberFX = (() => {
             : p;
           number(display, e.loss ?? e.amount);
         }
-        hitReaction(
-          p.el?.isConnected && p.el.matches(".death-ghost")
-            ? p.el
-            : unit(e.side, e.uid),
-          e.amount >= 6,
-          e.from &&
-            (old[e.from.side + e.from.uid] ||
-              fallback(s, e.from.side, e.from.uid)),
-        );
-        if ((e.loss ?? e.amount) > 0) {
+        const directAttack = timedContact && loss > 0;
+        if (loss > 0) {
+          const targetRef = { side: e.side, uid: e.uid },
+            owner = context.ownerFor?.(targetRef),
+            target =
+              owner?.el?.isConnected
+                ? owner.el
+                : p.el?.isConnected && p.el.matches(".death-ghost")
+                  ? p.el
+                  : unit(e.side, e.uid),
+            source =
+              e.from &&
+              (old[e.from.side + e.from.uid] ||
+                fallback(s, e.from.side, e.from.uid));
+          if (directAttack && target)
+            context.startReaction?.(
+              targetRef,
+              target,
+              linked?.heavy ?? (e.amount >= 6),
+              source,
+              timedContact,
+            );
+          else hitReaction(target, linked?.heavy ?? (e.amount >= 6), source);
+        }
+        if (loss > 0) {
           const source = e.from && old[e.from.side + e.from.uid];
           const attacker =
             EmberData.byId[
-              source?.cid ||
+              linked?.sourceCid ||
+                source?.cid ||
                 (e.from?.uid === "hero" ? s[e.from.side].weapon?.cid : null)
             ];
           impact(
@@ -1245,10 +1681,11 @@ const EmberFX = (() => {
               ? classification(attacker, true)
               : school || "steel",
             0.7 + e.amount / 15,
-            primary?.type === "attack"
+            primary?.type === "attack" && attacker
               ? EmberFXProfiles.get(attacker).attack
               : "element",
             source,
+            directAttack ? timedContact : null,
           );
         } else ring(p.x, p.y, "steel", 48, 240);
       }
@@ -1296,8 +1733,13 @@ const EmberFX = (() => {
           sound("legendary", p);
         if (e.rebornFrom) cue(p, "复生 · 1 生命", "reborn");
       }
-      if (e.type === "death")
-        death(old[e.side + e.uid], classification(EmberData.byId[e.cid]));
+      if (e.type === "death") {
+        const visual = context.retireAttack?.(refKey(e));
+        death(
+          visual || old[e.side + e.uid],
+          classification(EmberData.byId[e.cid]),
+        );
+      }
       if (e.type === "draw")
         sound("draw", e.side === "p" ? { x: W * 0.72 } : { x: W * 0.55 });
       if (e.type === "draw" && e.side === "p" && !quality.reduced) {
@@ -1995,9 +2437,17 @@ const EmberFX = (() => {
       after = doneCallback;
     pendingCommit = null;
     doneCallback = null;
+    const version = ++presentationVersion;
     cancel();
     resizeCanvas();
+    const callbackGeneration = generation;
     commit?.();
+    if (
+      presentationVersion !== version ||
+      generation !== callbackGeneration ||
+      activeSequence
+    )
+      return;
     after?.();
   }
   function tick(t) {
@@ -2079,8 +2529,17 @@ const EmberFX = (() => {
     if (quality.reduced) {
       if (busy && pendingCommit) {
         const cb = doneCallback;
-        cancel(true);
+        const callbackVersion = presentationVersion;
+        const result = cancel(true);
+        if (result.reentered || presentationVersion !== callbackVersion) return;
+        const callbackGeneration = generation;
         cb?.();
+        if (
+          generation !== callbackGeneration ||
+          presentationVersion !== callbackVersion ||
+          activeSequence
+        )
+          return;
       }
       items.length = 0;
       for (const a of animations) a.cancel();

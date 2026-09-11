@@ -83,6 +83,7 @@ test("licensed local textures and atlases retain source evidence and bounded RGB
     );
     assert.ok(
       renderer.includes('sprite("' + a.id + '"') ||
+        renderer.includes('spriteHit("' + a.id + '"') ||
         renderer.includes('texture("' + a.id + '"'),
       a.id + " must be rendered, not only preloaded",
     );

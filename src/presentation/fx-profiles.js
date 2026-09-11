@@ -2,9 +2,115 @@
  * inheriting the wrong attack or spell language. No rules or randomness here. */
 const EmberFXProfiles = (() => {
   const records = {};
+  const attackMotions = Object.freeze({
+    blade: Object.freeze({
+      anticipation: 0.32,
+      contactHold: 0.1,
+      heavyContactHold: 0.2,
+      recovery: 1.14,
+      recoil: 4,
+      ranged: false,
+    }),
+    claw: Object.freeze({
+      anticipation: 0.28,
+      contactHold: 0.12,
+      heavyContactHold: 0.2,
+      recovery: 1.08,
+      recoil: 5,
+      ranged: false,
+    }),
+    slam: Object.freeze({
+      anticipation: 0.45,
+      contactHold: 0.14,
+      heavyContactHold: 0.2,
+      recovery: 1.24,
+      recoil: 8,
+      ranged: false,
+    }),
+    arrow: Object.freeze({
+      anticipation: 0.08,
+      contactHold: 0.06,
+      heavyContactHold: 0.06,
+      recovery: 0,
+      recoil: 2,
+      ranged: true,
+    }),
+    spear: Object.freeze({
+      anticipation: 0.12,
+      contactHold: 0.06,
+      heavyContactHold: 0.06,
+      recovery: 0,
+      recoil: 2,
+      ranged: true,
+    }),
+    bolt: Object.freeze({
+      anticipation: 0.18,
+      contactHold: 0.06,
+      heavyContactHold: 0.06,
+      recovery: 0,
+      recoil: 2,
+      ranged: true,
+    }),
+    breath: Object.freeze({
+      anticipation: 0.24,
+      contactHold: 0.08,
+      heavyContactHold: 0.08,
+      recovery: 0,
+      recoil: 3,
+      ranged: true,
+    }),
+  });
+  const defaultMotion = attackMotions.blade;
+
+  function motionFor(attack, leadIn = 220, heavy = false, window = 250) {
+    const profile = attackMotions[attack] || defaultMotion,
+      contact = Math.max(0, Number(leadIn) || 0),
+      available = Math.max(0, Number(window) || 0),
+      holdRatio = heavy ? profile.heavyContactHold : profile.contactHold,
+      recovery = Math.min(250, contact * profile.recovery, available),
+      contactHold = Math.min(
+        heavy ? 50 : 30,
+        recovery * Math.max(0.25, holdRatio),
+      ),
+      release = contact + contactHold,
+      recoveryEnd = contact + recovery;
+    return Object.freeze({
+      family: attackMotions[attack] ? attack : "blade",
+      ranged: profile.ranged,
+      anticipation: contact * profile.anticipation,
+      contact,
+      contactHold,
+      release,
+      recoveryEnd,
+      duration: Math.max(contact, recoveryEnd),
+      recoil: profile.recoil,
+      heavy: !!heavy,
+    });
+  }
+
+  function scaleMotion(motion, factor) {
+    if (!motion) return null;
+    const scale = Number.isFinite(factor) ? factor : 1;
+    return Object.freeze({
+      ...motion,
+      anticipation: motion.anticipation * scale,
+      contact: motion.contact * scale,
+      contactHold: motion.contactHold * scale,
+      release: motion.release * scale,
+      recoveryEnd: motion.recoveryEnd * scale,
+      duration: motion.duration * scale,
+    });
+  }
+
   function register(ids, attack, cast = "summon", windup = 300) {
     for (const id of ids.split(" "))
-      records[id] = { id, attack, cast, windup, signature: false };
+      records[id] = {
+        id,
+        attack,
+        cast,
+        windup,
+        signature: false,
+      };
   }
   register(
     "squire guard assassin leech paladin reaper skeleton recruit frostking solaris",
@@ -135,7 +241,12 @@ const EmberFXProfiles = (() => {
   function get(card) {
     const id = typeof card === "string" ? card : card?.id;
     if (!id)
-      return { attack: "blade", cast: "ember", windup: 420, signature: false };
+      return {
+        attack: "blade",
+        cast: "ember",
+        windup: 420,
+        signature: false,
+      };
     if (!records[id]) throw Error("Missing combat presentation: " + id);
     return records[id];
   }
@@ -144,9 +255,11 @@ const EmberFXProfiles = (() => {
   return Object.freeze({
     get,
     records: Object.freeze(records),
+    motionFor,
+    scaleMotion,
     fromPalette,
     school: (c) => fromPalette(c?.palette, "steel"),
-    ranged: (c) => ["arrow", "spear", "bolt", "breath"].includes(get(c).attack),
+    ranged: (c) => !!attackMotions[get(c).attack]?.ranged,
   });
 })();
 if (typeof module !== "undefined") module.exports = EmberFXProfiles;
