@@ -811,6 +811,26 @@ body.touch-layout .lobby-actions button {
 }
 .attack-actor {
   will-change: transform;
+  pointer-events: none !important;
+  user-select: none;
+  transform-origin: 50% 68%;
+  filter: drop-shadow(0 12px 10px #120a08a0);
+}
+.attack-actor.attack-family-blade {
+  filter: drop-shadow(0 12px 10px #120a08a0) saturate(1.08);
+}
+.attack-actor.attack-family-claw {
+  filter: drop-shadow(0 12px 10px #120a08a0) saturate(1.16);
+}
+.attack-actor.attack-family-slam {
+  filter: drop-shadow(0 16px 12px #120a08b8) saturate(1.12);
+}
+.attack-actor[data-attack-heavy="true"] {
+  filter: drop-shadow(0 16px 13px #100806c4) brightness(1.08) saturate(1.2);
+}
+.fx-reduced .attack-actor,
+body.reduced-motion .attack-actor {
+  filter: none;
 }
 body .damage-number {
   font:

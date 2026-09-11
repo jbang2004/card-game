@@ -2,6 +2,7 @@ const test = require("node:test"),
   assert = require("node:assert/strict");
 const { Game } = require("../src/engine.js");
 const { compile } = require("../src/presentation/combat.js");
+const EmberFXProfiles = require("../src/presentation/fx-profiles.js");
 function setup() {
   const g = new Game();
   g.demo();
@@ -173,4 +174,254 @@ test("simultaneous deaths depart together before either deathrattle, with no ret
   assert.equal(summons.length, 2);
   assert.ok(summons.every((b) => b.at > deaths[0].at));
   assert.equal(deaths[0].frame.e.board.length, 0);
+});
+
+test("attack beats expose one causal contact marker and a single scaled motion descriptor", () => {
+  const g = setup(),
+    attacker = g.summon("p", "guard", { sick: false }),
+    target = g.summon("e", "treant", { sick: false });
+  g.events = [];
+  const before = g.snapshot(),
+    result = g.dispatch({
+      type: "attack",
+      side: "p",
+      uid: attacker.uid,
+      target: { side: "e", uid: target.uid },
+    }),
+    plan = compile(result.events, before, g.snapshot(), false, "blade"),
+    attack = plan.beats.find((beat) => beat.kind === "attack"),
+    hit = plan.beats.find((beat) => beat.kind === "hit");
+  assert.ok(attack?.motion);
+  assert.equal(attack.markers.contact, hit.at);
+  assert.equal(
+    attack.markers.end,
+    attack.markers.start + attack.motion.duration,
+  );
+  assert.equal(
+    attack.motion.duration,
+    attack.motion.recoveryEnd,
+  );
+  assert.equal(
+    attack.markers.recoveryEnd,
+    attack.markers.start + attack.motion.recoveryEnd,
+  );
+  assert.ok(plan.duration <= 6500);
+  assert.ok(Object.isFrozen(attack.motion));
+  assert.equal(EmberFXProfiles.motionFor("slam", 220, true).heavy, true);
+  const reduced = compile(result.events, before, g.snapshot(), true, "blade");
+  assert.equal(reduced.duration, 0);
+  assert.ok(reduced.beats.every((beat) => beat.markers.end === 0));
+});
+
+test("attack contact association is causal, exact and excludes nested or later hits", () => {
+  const a = { side: "p", uid: "attacker" },
+    b = { side: "e", uid: "target" },
+    events = [
+      { id: "action-1", type: "blockStart", parentId: null, kind: "action" },
+      { id: "attack-1", type: "attack", parentId: "action-1", from: a, to: b },
+      {
+        id: "trigger-1",
+        type: "blockStart",
+        parentId: "action-1",
+        kind: "trigger",
+      },
+      {
+        id: "nested-hit",
+        type: "damage",
+        parentId: "trigger-1",
+        from: a,
+        side: b.side,
+        uid: b.uid,
+        amount: 9,
+        loss: 9,
+      },
+      {
+        id: "trigger-end",
+        type: "blockEnd",
+        parentId: "action-1",
+        blockId: "trigger-1",
+      },
+      {
+        id: "direct-hit",
+        type: "damage",
+        parentId: "action-1",
+        from: a,
+        side: b.side,
+        uid: b.uid,
+        amount: 2,
+        loss: 2,
+      },
+      {
+        id: "retaliation",
+        type: "damage",
+        parentId: "action-1",
+        from: b,
+        side: a.side,
+        uid: a.uid,
+        amount: 9,
+        loss: 9,
+      },
+      {
+        id: "action-1-end",
+        type: "blockEnd",
+        parentId: null,
+        blockId: "action-1",
+      },
+      { id: "action-2", type: "blockStart", parentId: null, kind: "action" },
+      { id: "attack-2", type: "attack", parentId: "action-2", from: a, to: b },
+      {
+        id: "later-hit",
+        type: "damage",
+        parentId: "action-2",
+        from: a,
+        side: b.side,
+        uid: b.uid,
+        amount: 6,
+        loss: 6,
+      },
+      {
+        id: "late-action-1-hit",
+        type: "damage",
+        parentId: "action-1",
+        from: a,
+        side: b.side,
+        uid: b.uid,
+        amount: 7,
+        loss: 7,
+      },
+    ],
+    plan = compile(events, { p: {}, e: {} }, { p: {}, e: {} }),
+    firstAttack = plan.beats.find((beat) => beat.events[0]?.id === "attack-1"),
+    firstHit = plan.beats.find((beat) =>
+      beat.events.some((event) => event.id === "direct-hit"),
+    ),
+    secondAttack = plan.beats.find((beat) => beat.events[0]?.id === "attack-2");
+  assert.equal(firstAttack.contacts.length, 1);
+  assert.equal(firstAttack.contacts[0].eventId, "direct-hit");
+  assert.deepEqual(firstAttack.contacts[0].targetRef, b);
+  assert.equal(firstAttack.contacts[0].heavy, false);
+  assert.equal(firstHit.contacts.length, 2);
+  assert.deepEqual(
+    firstHit.contacts.map((contact) => [contact.eventId, contact.direction]),
+    [
+      ["direct-hit", "outgoing"],
+      ["retaliation", "retaliation"],
+    ],
+  );
+  assert.equal(firstHit.contacts[1].heavy, true);
+  assert.deepEqual(firstHit.contacts[1].targetRef, a);
+  assert.ok(firstHit.contacts.every((contact) =>
+    ["contactAt", "releaseAt", "recoveryEndAt"].every((key) =>
+      Number.isFinite(contact[key]),
+    ),
+  ));
+  assert.equal(
+    firstHit.contacts[0].releaseAt,
+    firstHit.contacts[1].releaseAt,
+  );
+  assert.equal(
+    firstHit.contacts[0].recoveryEndAt,
+    firstHit.contacts[1].recoveryEndAt,
+  );
+  assert.equal(secondAttack.contacts[0].eventId, "later-hit");
+  assert.ok(!plan.beats.some((beat) =>
+    beat.contacts?.some((contact) => contact.eventId === "nested-hit"),
+  ));
+  assert.ok(!plan.beats.some((beat) =>
+    beat.contacts?.some((contact) => contact.eventId === "late-action-1-hit"),
+  ));
+});
+
+test("attack source identity comes from the attack observation, including ranged and broken weapons", () => {
+  const g = setup();
+  g.s.p.weapon = {
+    cid: "sunblade",
+    atk: 4,
+    durability: 1,
+    tags: [],
+  };
+  const target = g.summon("e", "treant", { sick: false });
+  g.events = [];
+  const before = g.snapshot(),
+    result = g.dispatch({
+      type: "attack",
+      side: "p",
+      uid: "hero",
+      target: { side: "e", uid: target.uid },
+    }),
+    plan = compile(result.events, null, g.snapshot()),
+    attack = plan.beats.find((beat) => beat.kind === "attack");
+  assert.equal(before.p.weapon.cid, "sunblade");
+  assert.equal(g.s.p.weapon, null);
+  assert.equal(attack.sourceCid, "sunblade");
+  assert.equal(attack.attackFamily, "blade");
+
+  const ranged = setup(),
+    archer = ranged.summon("p", "archer", { sick: false }),
+    rangedTarget = ranged.summon("e", "treant", { sick: false });
+  ranged.events = [];
+  const rangedResult = ranged.dispatch({
+      type: "attack",
+      side: "p",
+      uid: archer.uid,
+      target: { side: "e", uid: rangedTarget.uid },
+    }),
+    rangedPlan = compile(rangedResult.events, null, ranged.snapshot()),
+    rangedAttack = rangedPlan.beats.find((beat) => beat.kind === "attack"),
+    rangedContact = rangedPlan.beats.find((beat) => beat.kind === "hit");
+  assert.equal(rangedAttack.sourceCid, "archer");
+  assert.equal(rangedAttack.motion.family, "arrow");
+  assert.equal(rangedAttack.motion.ranged, true);
+  assert.ok(rangedContact.contacts[0].recoveryEndAt > rangedContact.at);
+});
+
+test("absorbed damage is not heavy and long timelines scale every motion marker once", () => {
+  const a = { side: "p", uid: "attacker" },
+    b = { side: "e", uid: "target" },
+    absorbed = [
+      { id: "action", type: "blockStart", parentId: null, kind: "action" },
+      { id: "attack", type: "attack", parentId: "action", from: a, to: b },
+      {
+        id: "absorbed",
+        type: "damage",
+        parentId: "action",
+        from: a,
+        side: b.side,
+        uid: b.uid,
+        amount: 6,
+        loss: 0,
+        absorbed: 6,
+      },
+    ],
+    absorbedPlan = compile(absorbed, { p: {}, e: {} }, { p: {}, e: {} }),
+    absorbedAttack = absorbedPlan.beats.find((beat) => beat.kind === "attack");
+  assert.equal(absorbedAttack.contacts[0].heavy, false);
+
+  const longEvents = Array.from({ length: 30 }, (_, i) => ({
+    id: "draw-" + i,
+    type: "draw",
+    parentId: null,
+    side: "p",
+    uid: "card-" + i,
+  })).concat(absorbed);
+  const longPlan = compile(longEvents, { p: {}, e: {} }, { p: {}, e: {} }),
+    longAttack = longPlan.beats.find((beat) => beat.kind === "attack");
+  const expectedScale = 6500 / 7720;
+  assert.ok(Math.abs(longPlan.scale - expectedScale) < 1e-12);
+  assert.ok(longPlan.duration <= 6500);
+  assert.ok(Math.abs(longPlan.duration - 7720 * expectedScale) < 1e-9);
+  assert.ok(
+    Math.abs(
+      longAttack.markers.contact -
+        7420 * expectedScale,
+    ) < 1e-9,
+  );
+  assert.ok(
+    Math.abs(
+      longAttack.markers.recoveryEnd -
+        7670 * expectedScale,
+    ) < 1e-9,
+  );
+  assert.ok(Math.abs(longAttack.markers.release - 7450 * expectedScale) < 1e-9);
+  assert.ok(longAttack.markers.end <= longPlan.duration);
 });

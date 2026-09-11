@@ -159,6 +159,91 @@ test("weapons distinguish contact slashes, claws, slam and ranged trajectories",
     await page.waitForFunction(() => !EmberFX.busy && EmberFX.particles === 0);
   }
 });
+
+test("compressed zero-scale contact VFX never spawns a resurrected default tail", async ({
+  page,
+}) => {
+  await demo(page);
+  const result = await page.evaluate(() => {
+    EmberVFX.clear();
+    const before = { ...EmberVFX.diagnostics.spawned },
+      now = performance.now();
+    EmberVFX.hit(
+      { x: 500, y: 400 },
+      "steel",
+      1,
+      "blade",
+      null,
+      {
+        contactAt: now,
+        releaseAt: now,
+        recoveryEndAt: now,
+        scale: 0,
+      },
+    );
+    EmberVFX.attack(
+      "arrow",
+      { x: 100, y: 300 },
+      { x: 500, y: 400 },
+      "steel",
+      { contact: 0, duration: 0, startAt: now },
+    );
+    return {
+      before,
+      after: EmberVFX.diagnostics.spawned,
+      active: EmberVFX.active,
+    };
+  });
+  expect(result.active).toBe(0);
+  expect(result.after).toEqual(result.before);
+});
+
+test("positive compressed contact VFX follows the shared clock and releases debris after contact", async ({
+  page,
+}) => {
+  await demo(page);
+  await page.evaluate(() => EmberVFX.prepare());
+  const result = await page.evaluate(() => {
+    EmberVFX.clear();
+    const canvas = document.createElement("canvas"),
+      ctx = canvas.getContext("2d"),
+      start = performance.now(),
+      timing = {
+        contactAt: start + 90,
+        releaseAt: start + 240,
+        recoveryEndAt: start + 600,
+        scale: 0.5,
+      };
+    const ok = EmberVFX.hit(
+      { x: 500, y: 400 },
+      "steel",
+      1,
+      "blade",
+      { x: 300, y: 400 },
+      timing,
+    );
+    const sample = (time) => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      EmberVFX.draw(ctx, time);
+      return EmberVFX.diagnostics.draws;
+    };
+    return {
+      ok,
+      before: sample(start + 30),
+      contact: sample(timing.contactAt + 20),
+      beforeRelease: sample(timing.releaseAt - 20),
+      afterRelease: sample(timing.releaseAt + 60),
+      expired: sample(timing.recoveryEndAt + 10),
+    };
+  });
+  expect(result.ok).toBe(true);
+  expect(result.before).toBe(0);
+  expect(result.contact).toBeGreaterThan(0);
+  expect(result.beforeRelease).toBeGreaterThan(0);
+  expect(result.afterRelease).toBeGreaterThan(result.beforeRelease);
+  expect(result.expired).toBe(0);
+});
+
 test("countered major spell has no target meteor or damage, and resize drops every queued VFX", async ({
   page,
 }) => {

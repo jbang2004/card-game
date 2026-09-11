@@ -180,6 +180,7 @@ test("AOE uses one weighted impact, and full armor absorption has no flesh hit",
     const previous = {
       armor: EmberAudio.played.armor || 0,
       impact: EmberAudio.played["impact-fire"] || 0,
+      numbers: document.querySelectorAll(".damage-number").length,
     };
     Emberfall.act(() =>
       g.dispatch({
@@ -191,13 +192,82 @@ test("AOE uses one weighted impact, and full armor absorption has no flesh hit",
     );
     return previous;
   });
-  await expect(page.locator(".cue-armor")).toBeVisible();
+  await expect
+    .poll(() => page.evaluate(() => EmberAudio.played.armor || 0))
+    .toBe(state.armor + 1);
+  await expect(page.locator(".cue-armor")).toContainText("护甲吸收");
   await page.waitForFunction(() => !EmberFX.busy);
   expect(await page.evaluate(() => EmberAudio.played.armor)).toBe(
     state.armor + 1,
   );
   expect(await page.evaluate(() => EmberAudio.played["impact-fire"])).toBe(
     state.impact,
+  );
+  await expect(page.locator(".damage-number")).toHaveCount(state.numbers);
+
+  await prepare(page, { friends: ["colossus"] });
+  const absorbedAttack = await page.evaluate(() => {
+    const g = EmberDebug.game;
+    g.s.e.armor = 20;
+    g.emit();
+    const previous = {
+      armor: EmberAudio.played.armor || 0,
+      impact: EmberAudio.played["impact-steel"] || 0,
+      numbers: document.querySelectorAll(".damage-number").length,
+    };
+    Emberfall.act(() =>
+      g.dispatch({
+        type: "attack",
+        side: "p",
+        uid: g.s.p.board[0].uid,
+        target: { side: "e", uid: "hero" },
+      }),
+    );
+    return previous;
+  });
+  await expect
+    .poll(() => page.evaluate(() => EmberAudio.played.armor || 0))
+    .toBe(absorbedAttack.armor + 1);
+  await page.waitForFunction(() => !EmberFX.busy);
+  expect(await page.evaluate(() => EmberAudio.played["impact-steel"] || 0)).toBe(
+    absorbedAttack.impact,
+  );
+  expect(await page.locator(".damage-number")).toHaveCount(
+    absorbedAttack.numbers,
+  );
+});
+
+test("late delivery drops a missed swing instead of replaying it after contact", async ({
+  page,
+}) => {
+  await demo(page);
+  await prepare(page, { friends: ["guard"], enemies: ["treant"] });
+  const start = await page.evaluate(() => {
+    const g = EmberDebug.game,
+      at = performance.now();
+    Emberfall.act(() =>
+      g.dispatch({
+        type: "attack",
+        side: "p",
+        uid: g.s.p.board[0].uid,
+        target: { side: "e", uid: g.s.e.board[0].uid },
+      }),
+    );
+    // Simulate a delayed render/timer delivery beyond the compiled 220 ms
+    // launch-to-contact window without changing the authoritative state.
+    const end = performance.now() + 360;
+    while (performance.now() < end) {}
+    return at;
+  });
+  await page.waitForFunction(() => !EmberFX.busy);
+  const history = await page.evaluate(
+    (start) =>
+      EmberAudio.diagnostics.history.filter((event) => event.at >= start),
+    start,
+  );
+  expect(history.filter((event) => event.type === "swing")).toHaveLength(0);
+  expect(history.filter((event) => event.type.startsWith("impact-")).length).toBe(
+    1,
   );
 });
 

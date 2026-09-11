@@ -230,6 +230,264 @@ test("a lunging layered character retains its painted canvas", async ({
   ).toBeVisible();
 });
 
+test("attack owner keeps one causal clock, live stats and status classes until recovery", async ({
+  page,
+}) => {
+  await demo(page);
+  await prepare(page, { friends: ["solaris"], enemies: ["treant"] });
+  const report = await page.evaluate(async () => {
+    const g = EmberDebug.game;
+    Emberfall.act(() =>
+      g.dispatch({
+        type: "attack",
+        side: "p",
+        uid: g.s.p.board[0].uid,
+        target: { side: "e", uid: g.s.e.board[0].uid },
+      }),
+    );
+    return await new Promise((resolve) => {
+      function sample() {
+        const actor = document.querySelector(".attack-actor"),
+          live = document.querySelector(
+            '#minions .friendly[data-cardid="solaris"]',
+          );
+        if (!actor || !live) return requestAnimationFrame(sample);
+        const liveAttack = live.querySelector(".stat.atk"),
+          actorAttack = actor.querySelector(".stat.atk");
+        resolve({
+          contact: Number(actor.dataset.contactMs),
+          release: Number(actor.dataset.releaseMs),
+          recoveryEnd: Number(actor.dataset.recoveryEndMs),
+          end: Number(actor.dataset.motionEndMs),
+          actorAttack: actorAttack?.textContent,
+          liveAttack: liveAttack?.textContent,
+          actorShield: actor.classList.contains("shield"),
+          liveShield: live.classList.contains("shield"),
+        });
+      }
+      requestAnimationFrame(sample);
+    });
+  });
+  expect(report.contact).toBeLessThan(report.release);
+  expect(report.release).toBeLessThanOrEqual(report.recoveryEnd);
+  expect(report.recoveryEnd).toBe(report.end);
+  expect(report.actorAttack).toBe(report.liveAttack);
+  expect(report.actorShield).toBe(report.liveShield);
+  await page.waitForFunction(() => !EmberFX.busy);
+  await expect(page.locator(".attack-actor")).toHaveCount(0);
+  await page.waitForFunction(
+    () =>
+      EmberFX.pendingTimers === 0 &&
+      EmberFX.activeAnimations === 0 &&
+      EmberFX.transientNodes === 0 &&
+      EmberFX.particles === 0,
+    null,
+    { timeout: 3000 },
+  );
+  expect(
+    await page.evaluate(() => [
+      EmberFX.pendingTimers,
+      EmberFX.activeAnimations,
+      EmberFX.transientNodes,
+    ]),
+  ).toEqual([0, 0, 0]);
+});
+
+test("contact rebind updates the visible proxy after retaliation without FLIP takeover", async ({
+  page,
+}) => {
+  await demo(page);
+  await prepare(page, { friends: ["guard"], enemies: ["treant"] });
+  const report = await page.evaluate(async () => {
+    const g = EmberDebug.game;
+    Emberfall.act(() =>
+      g.dispatch({
+        type: "attack",
+        side: "p",
+        uid: g.s.p.board[0].uid,
+        target: { side: "e", uid: g.s.e.board[0].uid },
+      }),
+    );
+    return await new Promise((resolve) => {
+      function sample() {
+        const actor = document.querySelector(".attack-actor"),
+          live = document.querySelector('#minions .friendly[data-uid]'),
+          number = document.querySelector(".damage-number");
+        if (!actor || !live || !number) return requestAnimationFrame(sample);
+        resolve({
+          actorHp: actor.querySelector(".stat.hp .stat-value")?.textContent,
+          liveHp: live.querySelector(".stat.hp .stat-value")?.textContent,
+          actorBadge: !!actor.querySelector(".stat.hp .badge-frame"),
+          liveBadge: !!live.querySelector(".stat.hp .badge-frame"),
+          hidden: getComputedStyle(live).visibility === "hidden",
+          actorAnimations: actor.getAnimations().length,
+        });
+      }
+      requestAnimationFrame(sample);
+    });
+  });
+  expect(report.actorHp).toBe(report.liveHp);
+  expect(report.actorBadge).toBe(report.liveBadge);
+  expect(report.hidden).toBe(true);
+  expect(report.actorAnimations).toBeGreaterThan(0);
+  await page.waitForFunction(
+    () =>
+      !EmberFX.busy &&
+      EmberFX.pendingTimers === 0 &&
+      EmberFX.activeAnimations === 0,
+  );
+  await expect(page.locator(".attack-actor")).toHaveCount(0);
+});
+
+test("a new contact reaction owns target translation when the contact render moves layout", async ({
+  page,
+}) => {
+  await demo(page);
+  await prepare(page, { friends: ["guard"], enemies: ["treant"] });
+  const targetUid = await page.evaluate(() => {
+    const g = EmberDebug.game,
+      target = g.s.e.board[0],
+      beforeHp = target.hp,
+      original = EmberFX.present;
+    window.contactProbe = false;
+    window.contactAnimations = [];
+    window.independentAnimation = null;
+    const nativeAnimate = Element.prototype.animate;
+    window.__nativeAnimate = nativeAnimate;
+    Element.prototype.animate = function (frames, options) {
+      const animation = nativeAnimate.call(this, frames, options);
+      if (this.dataset.uid === target.uid && this.closest("#minions"))
+        window.contactAnimations.push({ animation, frames, options });
+      return animation;
+    };
+    EmberFX.present = (events, state, render, after, cardHTML, before) => {
+      if (!events.some((event) => event.type === "attack"))
+        return original(events, state, render, after, cardHTML, before);
+      const damageIndex = events.findIndex((event) => event.type === "damage"),
+        attack = events.find((event) => event.type === "attack"),
+        stagedEvents = [
+          ...events.slice(0, damageIndex),
+          {
+            id: "contact-layout-status",
+            type: "status",
+            parentId: attack?.parentId,
+            side: target.side,
+            uid: target.uid,
+            kind: "buff",
+            attack: 0,
+          },
+          ...events.slice(damageIndex),
+        ];
+      let renderCount = 0;
+      return original(
+        stagedEvents,
+        state,
+        (frame) => {
+          render(frame);
+          renderCount++;
+          const el = document.querySelector(
+            `#minions .enemy[data-uid="${target.uid}"]`,
+          );
+          if (renderCount === 1) {
+            el.style.marginLeft = "48px";
+            return;
+          }
+          if (renderCount === 2) {
+            el.style.marginLeft = "";
+            return;
+          }
+          const current = frame?.e?.board?.find(
+            (unit) => unit.uid === target.uid,
+          );
+          if (window.contactProbe || !(current?.hp < beforeHp)) return;
+          window.independentAnimation = el.animate(
+            [
+              { translate: "0 0", scale: "1", opacity: 1 },
+              { translate: "0 12px", scale: "1.12", opacity: 0.82 },
+            ],
+            { duration: 700, fill: "both" },
+          );
+          window.contactProbe = true;
+          EmberFX.present = original;
+        },
+        after,
+        cardHTML,
+        before,
+      );
+    };
+    Emberfall.act(() =>
+      g.dispatch({
+        type: "attack",
+        side: "p",
+        uid: g.s.p.board[0].uid,
+        target: { side: "e", uid: target.uid },
+      }),
+    );
+    return target.uid;
+  });
+  await page.waitForFunction(() => window.contactProbe === true);
+  const during = await page.evaluate((uid) => {
+    const el = document.querySelector(`#minions .enemy[data-uid="${uid}"]`),
+      pureLayout = (frames) =>
+        frames.length > 1 &&
+        frames.every((frame) =>
+          Object.keys(frame).every((key) =>
+            ["translate", "offset", "easing"].includes(key),
+          ),
+        ),
+      layoutRecord = window.contactAnimations.find(({ frames }) =>
+        pureLayout(frames),
+      ),
+      activeTranslations = el
+        .getAnimations()
+        .filter((animation) =>
+          (animation.effect?.getKeyframes?.() || []).some(
+            (frame) => frame.translate != null,
+          ),
+        ),
+      attacker = document.querySelector(".attack-actor");
+    return {
+      layoutState: layoutRecord?.animation.playState,
+      independentActive: window.independentAnimation?.playState === "running",
+      independentStillPresent: el
+        .getAnimations()
+        .includes(window.independentAnimation),
+      activeTranslationCount: activeTranslations.length,
+      reactionDurations: activeTranslations
+        .map((animation) => Number(animation.effect?.getTiming?.().duration))
+        .filter((duration) => duration <= 250),
+      attackerHasMotion: !!attacker?.getAnimations().some((animation) =>
+        (animation.effect?.getKeyframes?.() || []).some(
+          (frame) => frame.transform != null,
+        ),
+      ),
+    };
+  }, targetUid);
+  expect(during.layoutState).toBe("idle");
+  expect(during.independentActive).toBe(true);
+  expect(during.independentStillPresent).toBe(true);
+  expect(during.activeTranslationCount).toBe(2);
+  expect(during.reactionDurations).toHaveLength(1);
+  expect(during.attackerHasMotion).toBe(true);
+  await page.waitForFunction(() => !EmberFX.busy);
+  expect(
+    await page.evaluate(() => {
+      const layoutRecord = window.contactAnimations.find(({ frames }) =>
+        frames.length > 1 &&
+        frames.every((frame) =>
+          Object.keys(frame).every((key) =>
+            ["translate", "offset", "easing"].includes(key),
+          ),
+        ),
+      );
+      window.independentAnimation?.cancel();
+      Element.prototype.animate = window.__nativeAnimate;
+      delete window.__nativeAnimate;
+      return layoutRecord?.animation.playState;
+    }),
+  ).toBe("idle");
+});
+
 test("portrait clock follows display frames and reuses surfaces without size churn", async ({
   page,
 }) => {
