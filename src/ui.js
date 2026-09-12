@@ -1021,10 +1021,66 @@
       if (overflowing) text.title = "上下滑动查看完整规则";
       else text.removeAttribute("title");
       if (overflowing && text.closest(".hand-card")) {
-        text.addEventListener(
-          "pointerdown",
-          (event) => event.stopPropagation(),
-        );
+        if (text.dataset.handRuleScroll !== "1") {
+          text.dataset.handRuleScroll = "1";
+          let gesture = null;
+          const finish = () => {
+            gesture = null;
+          };
+          text.addEventListener(
+            "pointerdown",
+            (event) => {
+              if (!EmberViewport.mobile || event.pointerType !== "touch")
+                return;
+              gesture = {
+                id: event.pointerId,
+                axis: null,
+                x: event.clientX,
+                y: event.clientY,
+                distanceX: 0,
+                distanceY: 0,
+              };
+              /* The hand-card drag listener must not start while the user is
+               * reading and vertically scrolling this rules well. */
+              event.stopPropagation();
+            },
+            { passive: true },
+          );
+          text.addEventListener(
+            "pointermove",
+            (event) => {
+              if (!gesture || event.pointerId !== gesture.id) return;
+              const dx = event.clientX - gesture.x,
+                dy = event.clientY - gesture.y;
+              gesture.distanceX += dx;
+              gesture.distanceY += dy;
+              if (
+                !gesture.axis &&
+                Math.hypot(gesture.distanceX, gesture.distanceY) > 7
+              )
+                gesture.axis =
+                  Math.abs(gesture.distanceY) > Math.abs(gesture.distanceX)
+                    ? "y"
+                    : "x";
+              if (gesture.axis === "y") {
+                const max = Math.max(0, text.scrollHeight - text.clientHeight),
+                  next = Math.max(
+                    0,
+                    Math.min(max, text.scrollTop - dy),
+                  );
+                if (next !== text.scrollTop) {
+                  text.scrollTop = next;
+                  event.preventDefault();
+                }
+              }
+              gesture.x = event.clientX;
+              gesture.y = event.clientY;
+            },
+            { passive: false },
+          );
+          text.addEventListener("pointerup", finish, { passive: true });
+          text.addEventListener("pointercancel", finish, { passive: true });
+        }
       }
     });
   }

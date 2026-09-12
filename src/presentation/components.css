@@ -4261,16 +4261,26 @@ body.touch-layout .hand-card .card .card-text {
   display: block;
   max-height: none;
   overflow: auto;
+  /* Short copy is display-only; letting the hand button receive the touch
+   * makes a swipe over the lettering behave exactly like a swipe over art. */
+  pointer-events: none;
   text-overflow: clip;
   -webkit-line-clamp: unset;
   line-clamp: unset;
   scrollbar-width: none;
-  touch-action: pan-y;
+  /* Horizontal rail movement stays native. Vertical rule scrolling is
+   * handled by the small directional controller in ui.js so the two surfaces
+   * do not compete for the same touch stream. */
+  touch-action: pan-x;
+  overscroll-behavior: contain;
   top: 57%;
   bottom: 17%;
 }
 body.touch-layout .hand-card .card .card-text::-webkit-scrollbar {
   display: none;
+}
+body.touch-layout .hand-card .card.rules-scrollable .card-text {
+  pointer-events: auto;
 }
 body.touch-layout .hand-card .card-rules-scroll {
   right: 6%;
