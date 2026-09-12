@@ -88,7 +88,9 @@
     if (blocked() || E.modal) return;
     if (E.selection) {
       if (E.selection.type === "card-play") {
-        E.toast("请点击战场空位确认，或点手牌取消");
+        E.toast("请点击战场空位确认，或点手牌取消", {
+          sourceUid: E.selection.uid,
+        });
         return;
       }
       if (
@@ -107,7 +109,9 @@
         !(E.selection.type === "attack" && side === "p") &&
         !el?.classList.contains("valid-target")
       ) {
-        E.toast("请点击高亮目标，或按“取消”重新选择");
+        E.toast("请点击高亮目标，或按“取消”重新选择", {
+          sourceUid: E.selection.uid,
+        });
         return;
       }
       E.clickUnit(side, uid);
@@ -119,6 +123,10 @@
   }
   function selectionChanged() {
     if (!V.mobile || !E.selection) return;
+    if (E.actionGuide) {
+      $("touch-target-text").textContent = E.actionGuide;
+      return;
+    }
     const sel = E.selection;
     $("touch-target-text").textContent =
       sel.type === "card-play"

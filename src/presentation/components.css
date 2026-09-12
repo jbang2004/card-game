@@ -794,20 +794,77 @@ body.touch-layout .lobby-actions button {
 /* Collection rules flow naturally; long trigger text cannot run under attack/health. */
 
 /* Material feedback: card flight, readable contact numbers, and a quiet mixer. */
-.card-flight {
+.card-motion-proxy {
   position: absolute;
-  z-index: 48;
+  z-index: 49;
   pointer-events: none !important;
+  isolation: isolate;
   transform-origin: center;
+  will-change: transform, opacity;
   filter: drop-shadow(0 15px 12px #120a08a0);
+  perspective: 900px;
 }
-.card-flight > .card {
+.card-motion-proxy * {
+  pointer-events: none !important;
+}
+.card-motion-content,
+.card-motion-content > .card,
+.card-motion-content > .card-back {
+  width: 100%;
+  height: 100%;
+}
+.card-motion-content {
+  position: relative;
+  transform-style: preserve-3d;
+}
+.card-motion-face {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  /* The child faces own their backface visibility. Hiding the wrapper here
+   * would also hide the revealed face when the wrapper rotates 180 degrees. */
+  backface-visibility: visible;
+}
+.card-motion-face > .card-motion-back,
+.card-motion-face > .card-motion-front {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   margin: 0;
+  box-sizing: border-box;
+  backface-visibility: hidden;
 }
-.card-flight * {
-  pointer-events: none !important;
+.card-motion-face > .card-motion-front {
+  transform: rotateY(180deg);
+}
+.card-motion-face > .card-motion-back {
+  transform: none !important;
+}
+.card-motion-face > .card-motion-front {
+  transform: rotateY(180deg) !important;
+}
+.card-motion-face .card-inner {
+  width: 100%;
+  height: 100%;
+}
+.card-motion-content > .card {
+  margin: 0;
+}
+.card-motion-content > .card-back {
+  position: relative;
+  display: block;
+}
+.fx-reduced .card-motion-proxy,
+.reduced-motion .card-motion-proxy {
+  display: none !important;
+}
+.fx-low .card-motion-proxy {
+  filter: drop-shadow(0 8px 6px #120a0866);
+}
+.fx-low .card-motion-face {
+  transform: none !important;
 }
 .attack-actor {
   will-change: transform;
@@ -3402,56 +3459,203 @@ body.touch-layout :is(#touch-cancel, #wind-time) {
   color: var(--control-secondary-ink);
 }
 
-/* Targeting is a transient state, not a second control rail. Keep the
- * message close to the action area while leaving the battlefield readable;
- * the cancel affordance remains a compact, accessible icon button. */
-body.touch-layout #touch-target-bar {
-  position: absolute;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-width: 0;
-  max-width: calc(100% - 16px);
-  padding: 0 4px 0 10px;
-  overflow: hidden;
-  z-index: 18;
-  border: 1px solid #c7a568b8;
-  border-radius: 999px;
-  background: #2d2119f2;
-  color: #f2d9a5;
-  box-shadow:
-    inset 0 1px #fff0c21c,
-    0 4px 12px #160d0980;
+/* Hearthstone-style three-layer action feedback. The board remains the main
+ * instruction surface: source cards and resources, target affordances, then
+ * only a short local notice when an action is rejected. */
+#touch-target-bar[hidden] {
+  display: none !important;
 }
 
-body.touch-layout #touch-target-bar::before {
+#app.placement-active #board-empty {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The action cue is drawn in the board SVG. Target mode points at a legal
+ * unit; placement mode points at the player's lane and uses the ring as the
+ * empty landing affordance. */
+#target-lines[data-mode="placement"] #target-path {
+  stroke: #f4d995;
+  stroke-width: 3.5;
+  stroke-dasharray: 12 8;
+  animation: placement-flow .9s linear infinite;
+  filter: drop-shadow(0 0 5px #e7ae5f99);
+}
+
+#target-lines[data-mode="placement"] #target-arrow {
+  fill: #f4d995;
+  stroke: #5b3d25;
+  stroke-width: 1;
+  filter: drop-shadow(0 0 4px #e5a451aa);
+}
+
+#target-lines[data-mode="placement"] #target-circle {
+  fill: #f3ca6c1c;
+  stroke: #ffe5a1;
+  stroke-width: 2.5;
+  stroke-dasharray: 3 5;
+  animation: placement-ring 1.2s ease-in-out infinite;
+}
+
+#target-lines[data-mode="target"] #target-arrow {
+  fill: #ffe0a0;
+  stroke: #5d3b2a;
+  stroke-width: .8;
+}
+
+/* Target units get a small crosshair in addition to their existing outline.
+ * It is intentionally placed outside the art, so the portrait remains fully
+ * readable while the legal target stays obvious. */
+.minion.valid-target .unit-aura {
+  inset: -9px;
+  border: 1px solid #ffe5a1;
+  border-radius: 46% 46% 38% 38%;
+  box-shadow: 0 0 0 2px #a66b3b55, 0 0 15px #f2b862aa;
+  animation: target-reticle-breathe 1.15s ease-in-out infinite;
+}
+
+.minion.valid-target .unit-aura::before,
+.minion.valid-target .unit-aura::after,
+.hero.valid-target .portrait-frame::before {
   content: "";
-  flex: 0 0 6px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #e2b96f;
-  box-shadow: 0 0 0 3px #e2b96f20;
-}
-
-body.touch-layout #touch-target-text {
-  min-width: 0;
-  overflow: hidden;
-  color: inherit;
-  font: 11px/1 var(--ui-font);
-  letter-spacing: 0.01em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-body.touch-layout #touch-cancel {
-  display: grid;
-  flex: 0 0 24px;
-  place-items: center;
+  position: absolute;
+  left: 50%;
+  top: 50%;
   width: 24px;
-  min-width: 24px;
   height: 24px;
-  min-height: 24px;
+  border: 1px solid #ffe8ad;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 1px #5e3c2a55, 0 0 9px #f0ae5f99;
+}
+
+.minion.valid-target .unit-aura::after,
+.hero.valid-target .portrait-frame::before {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, transparent 46%, #ffe8ad 47% 53%, transparent 54%),
+    linear-gradient(0deg, transparent 46%, #ffe8ad 47% 53%, transparent 54%);
+  box-shadow: none;
+}
+
+.hero.valid-target .portrait-frame::before {
+  z-index: 8;
+  pointer-events: none;
+}
+
+.hero.valid-target .portrait-frame::after {
+  box-shadow: inset 0 0 0 1px #ffe8ad66, 0 0 14px #f0ae5f99;
+}
+
+@keyframes target-reticle-breathe {
+  0%,
+  100% {
+    opacity: .72;
+    transform: scale(.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes placement-flow {
+  to {
+    stroke-dashoffset: -40;
+  }
+}
+
+@keyframes placement-ring {
+  0%,
+  100% {
+    opacity: .62;
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: scale(.86);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+.reduced-motion .minion.valid-target .unit-aura,
+.fx-low .minion.valid-target .unit-aura,
+.reduced-motion #target-lines[data-mode="placement"] #target-path,
+.fx-low #target-lines[data-mode="placement"] #target-path,
+.reduced-motion #target-lines[data-mode="placement"] #target-circle,
+.fx-low #target-lines[data-mode="placement"] #target-circle {
+  animation: none;
+}
+
+/* The touch control is only a visual mode badge plus an explicit cancel. The
+ * actual instruction remains in the hidden live label for accessibility. */
+#touch-target-bar {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  width: 58px !important;
+  min-width: 58px;
+  max-width: 58px;
+  height: 30px !important;
+  padding: 3px 4px 3px 6px;
+  overflow: hidden;
+  z-index: 45;
+  border: 1px solid #d8b66e;
+  border-radius: 15px;
+  background: #2d2119ef;
+  color: #f7dfae;
+  box-shadow: 0 4px 12px #130b09a8, inset 0 1px #fff0c233;
+  pointer-events: none;
+  animation: action-badge-in 160ms ease-out;
+}
+
+body:not(.touch-layout) #touch-target-bar {
+  display: none !important;
+}
+
+#touch-target-bar::before {
+  content: "◆";
+  display: grid;
+  flex: 0 0 18px;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #e2b96f99;
+  border-radius: 50%;
+  color: #f7d88f;
+  font: 10px/1 Georgia, serif;
+}
+
+#touch-target-bar[data-mode="placement"]::before {
+  content: "＋";
+  font: 700 13px/1 var(--ui-font);
+}
+
+#touch-target-text {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+#touch-target-bar #touch-cancel {
+  display: grid;
+  flex: 0 0 23px;
+  place-items: center;
+  width: 23px;
+  min-width: 23px;
+  height: 23px;
   margin: 0;
   padding: 0;
   border: 0;
@@ -3461,23 +3665,139 @@ body.touch-layout #touch-cancel {
   box-shadow: none;
   font-size: 0;
   line-height: 1;
+  pointer-events: auto;
 }
 
-body.touch-layout #touch-cancel::before {
+#touch-target-bar #touch-cancel::before {
   content: "×";
-  font: 18px/1 var(--ui-font);
+  font: 17px/1 var(--ui-font);
 }
 
-body.touch-layout #touch-cancel:hover:not(:disabled),
-body.touch-layout #touch-cancel:active:not(:disabled) {
-  border-color: transparent;
+#touch-target-bar #touch-cancel:hover:not(:disabled),
+#touch-target-bar #touch-cancel:active:not(:disabled) {
   background: #ffffff22;
-  box-shadow: none;
 }
 
-body.touch-layout #touch-cancel:focus-visible {
+#touch-target-bar #touch-cancel:focus-visible {
   outline: 2px solid #ffdf9a;
   outline-offset: 2px;
+}
+
+/* Layer three: short feedback stays beside the source/resource that failed. */
+#app.battle-view #toast {
+  box-sizing: border-box;
+  min-height: 38px;
+  max-width: 280px;
+  padding: 8px 12px 8px 31px;
+  border: 1px solid #e18a6a;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #5a2b21f5, #321815f5);
+  color: #ffe4d0;
+  box-shadow: 0 5px 14px #160604b0, inset 0 1px #ffe1c044;
+  font: 600 12px/1.35 var(--ui-font);
+  letter-spacing: .01em;
+  text-align: left;
+  text-shadow: none;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(5px) scale(.98);
+  transition: opacity 120ms ease, transform 160ms ease;
+}
+
+#app.battle-view #toast:not(.visible) {
+  display: none;
+}
+
+#app.battle-view #toast::before {
+  content: "!";
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  display: grid;
+  width: 17px;
+  height: 17px;
+  place-items: center;
+  border: 1px solid #f09b7e;
+  border-radius: 50%;
+  color: #ffd0b9;
+  font: 700 12px/1 var(--ui-font);
+  transform: translateY(-50%);
+}
+
+#app.battle-view #toast[data-kind="info"] {
+  border-color: #d4ae6d;
+  background: linear-gradient(180deg, #3c2b1df5, #24170ff5);
+  color: #f8e5bd;
+}
+
+#app.battle-view #toast[data-kind="info"]::before {
+  content: "·";
+  border-color: #e2b96f;
+  color: #f7d88f;
+}
+
+#app.battle-view #toast.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+body .hand-card.feedback-error .card {
+  animation: feedback-card-error 720ms ease-in-out 2;
+}
+
+body .hand-card.feedback-info .card {
+  animation: feedback-card-info 420ms ease-out 1;
+}
+
+body .mana-panel.feedback-error {
+  animation: feedback-mana-error 720ms ease-in-out 2;
+}
+
+@keyframes action-badge-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px) scale(.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes feedback-card-error {
+  0%,
+  100% {
+    filter: none;
+  }
+  35% {
+    filter: brightness(1.28) saturate(1.18) drop-shadow(0 0 12px #e18a6a99);
+  }
+  60% {
+    filter: brightness(.9) saturate(.9) drop-shadow(0 0 5px #e18a6a66);
+  }
+}
+
+@keyframes feedback-card-info {
+  0%,
+  100% {
+    filter: none;
+  }
+  40% {
+    filter: brightness(1.16) drop-shadow(0 0 9px #d4ae6d99);
+  }
+}
+
+@keyframes feedback-mana-error {
+  0%,
+  100% {
+    filter: none;
+  }
+  35% {
+    filter: brightness(1.2) saturate(1.2) drop-shadow(0 0 10px #e18a6a88);
+  }
+  60% {
+    filter: brightness(.9) saturate(.9);
+  }
 }
 
 body.touch-layout :is(.touch-menu-grid button, .touch-library-tabs button) {

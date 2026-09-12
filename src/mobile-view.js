@@ -108,12 +108,6 @@ const EmberViewport = (() => {
           bottom = Math.max(top + 100, ctrlY - 8);
         l.notice = { x: padL, y: l.enemy.y + l.enemy.h + 9, w: usableW, h: 26 };
         l.arena = { x: padL - 2, y: top, w: usableW + 4, h: bottom - top };
-        l.target = {
-          x: padL + 106,
-          y: ctrlY - 1,
-          w: clamp(Math.round(usableW * 0.32), 138, 188),
-          h: 30,
-        };
         l.enemyMana = {
           x: Math.min(W - padR - 80, l.enemy.x + l.enemy.w + 20),
           y: l.enemy.y + 34,
@@ -146,13 +140,6 @@ const EmberViewport = (() => {
           w: W - padL - padR - 226,
           h: l.hand.y - l.header - 48,
         };
-        const targetW = clamp(Math.round(l.arena.w * 0.32), 138, 188);
-        l.target = {
-          x: Math.round(l.arena.x + (l.arena.w - targetW) / 2),
-          y: l.hand.y - 32,
-          w: targetW,
-          h: 28,
-        };
         l.enemyMana = { x: padL, y: l.hand.y - 19, w: 94, h: 18 };
         l.chip = { x: l.arena.x, y: l.header + 2, w: l.arena.w, h: 20 };
         l.notice = { ...l.chip };
@@ -181,6 +168,20 @@ const EmberViewport = (() => {
         }
       }
       l.handLabel = { x: padL, y: l.hand.y - 44, w: 100, h: 44 };
+      const chipW = Math.min(58, usableW - 18);
+      l.actionChip = portrait
+        ? {
+            x: Math.round(W - padR - chipW),
+            y: l.arena.y + l.arena.h - 42,
+            w: chipW,
+            h: 30,
+          }
+        : {
+            x: Math.round(l.arena.x + l.arena.w - chipW - 8),
+            y: l.hand.y - 48,
+            w: chipW,
+            h: 30,
+          };
       l.cardW = portrait
         ? W < 350
           ? 98
@@ -210,7 +211,7 @@ const EmberViewport = (() => {
         "contract-open": l.contract,
         "enemy-mana": l.enemyMana,
         hand: l.hand,
-        "touch-target-bar": l.target,
+        "touch-target-bar": l.actionChip,
         "touch-match-chip": l.chip,
       };
       for (const [id, r] of Object.entries(roots))
@@ -299,6 +300,85 @@ const EmberViewport = (() => {
       top: (r.y - a.y) * sy,
     };
   }
+  function elementPosition(selector, fallback = null) {
+    const el = document.querySelector(selector),
+      measured = pos(el);
+    return measured || fallback;
+  }
+  function deckAnchor(side) {
+    const fallback =
+      side === "p"
+        ? {
+            x: state.mobile ? state.width - 28 : 1137,
+            y: state.mobile ? state.height - 92 : 723,
+          }
+        : {
+            x: state.mobile ? 28 : 1137,
+            y: state.mobile ? 86 : 182,
+          },
+      size = state.mobile ? { w: 78, h: 110 } : { w: 125, h: 178 };
+    return elementPosition(
+      side === "p" ? ".player-deck" : ".enemy-deck",
+      {
+        ...fallback,
+        ...size,
+        left: fallback.x - size.w / 2,
+        top: fallback.y - size.h / 2,
+      },
+    );
+  }
+  function intersectionStatus(el, region) {
+    if (!el?.isConnected) return "absent";
+    const style = getComputedStyle(el);
+    if (style.display === "none" || style.visibility === "hidden") return "absent";
+    const rect = el.getBoundingClientRect();
+    if (!rect.width || !rect.height) return "absent";
+    const viewport = {
+      left: 0,
+      top: 0,
+      right: window.innerWidth,
+      bottom: window.innerHeight,
+    };
+    const clip = region || viewport;
+    const left = Math.max(rect.left, viewport.left, clip.left),
+      right = Math.min(rect.right, viewport.right, clip.right),
+      top = Math.max(rect.top, viewport.top, clip.top),
+      bottom = Math.min(rect.bottom, viewport.bottom, clip.bottom);
+    if (right <= left || bottom <= top) return "clipped";
+    const fullyVisible =
+      rect.left >= clip.left &&
+      rect.right <= clip.right &&
+      rect.top >= clip.top &&
+      rect.bottom <= clip.bottom &&
+      rect.left >= viewport.left &&
+      rect.right <= viewport.right &&
+      rect.top >= viewport.top &&
+      rect.bottom <= viewport.bottom;
+    return fullyVisible ? "visible" : "clipped";
+  }
+  function handCardAnchor(side, uid) {
+    const selector = side === "p" ? "#hand .hand-card" : "#enemy-hand .card-back",
+      el = [...document.querySelectorAll(selector)].find(
+        (node) =>
+          (side === "p" ? node.dataset.hand : node.dataset.enemyHand) === uid,
+      );
+    if (!el) return null;
+    const measured = pos(el);
+    const hand = document.getElementById(side === "p" ? "hand" : "enemy-hand"),
+      handRect = hand?.getBoundingClientRect(),
+      status = intersectionStatus(el, handRect);
+    if (!measured)
+      return { el, visible: false, clipped: status === "clipped", status };
+    return {
+      ...measured,
+      el,
+      visible: status === "visible",
+      clipped: status === "clipped",
+      status,
+      scrollLeft: hand?.scrollLeft || 0,
+      scrollTop: hand?.scrollTop || 0,
+    };
+  }
   function minion(side, i, n) {
     if (!state.mobile)
       return {
@@ -325,6 +405,20 @@ const EmberViewport = (() => {
       y: a.y + a.h * (side === "e" ? 0.25 : 0.75) - h / 2,
       w,
       h,
+    };
+  }
+  function minionLandingBox(frame, side, uid) {
+    const board = frame?.[side]?.board || [],
+      index = board.findIndex((m) => m.uid === uid);
+    if (index < 0) return null;
+    const r = minion(side, index, board.length);
+    return {
+      ...r,
+      x: r.x + r.w / 2,
+      y: r.y + r.h / 2,
+      left: r.x,
+      top: r.y,
+      visible: true,
     };
   }
   function fallback(s, side, uid) {
@@ -368,7 +462,10 @@ const EmberViewport = (() => {
     box,
     point,
     pos,
+    deckAnchor,
+    handCardAnchor,
     minion,
+    minionLandingBox,
     fallback,
     lane,
     get mobile() {

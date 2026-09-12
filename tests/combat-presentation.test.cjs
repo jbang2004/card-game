@@ -425,3 +425,87 @@ test("absorbed damage is not heavy and long timelines scale every motion marker 
   assert.ok(Math.abs(longAttack.markers.release - 7450 * expectedScale) < 1e-9);
   assert.ok(longAttack.markers.end <= longPlan.duration);
 });
+
+test("card tracks preserve UID causality, action boundaries and exclude nested summons", () => {
+  const a1 = [
+      { id: "a1", type: "blockStart", parentId: null, kind: "action" },
+      { id: "play-1", type: "play", parentId: "a1", side: "p", uid: "hand-1", cid: "archer" },
+      { id: "nested", type: "blockStart", parentId: "a1", kind: "trigger" },
+      { id: "nested-summon", type: "summon", parentId: "nested", side: "p", uid: "token-1", cid: "archer" },
+      { id: "nested-end", type: "blockEnd", parentId: "a1", blockId: "nested" },
+      { id: "direct-summon", type: "summon", parentId: "a1", side: "p", uid: "minion-1", cid: "archer" },
+      { id: "a1-end", type: "blockEnd", parentId: null, blockId: "a1" },
+      { id: "a2", type: "blockStart", parentId: null, kind: "action" },
+      { id: "play-2", type: "play", parentId: "a2", side: "p", uid: "hand-2", cid: "archer" },
+      { id: "a2-end", type: "blockEnd", parentId: null, blockId: "a2" },
+    ],
+    plan = compile(a1, { p: {}, e: {} }, { p: {}, e: {} });
+  assert.deepEqual(
+    plan.cardTracks.map((track) => [track.sourceEventId, track.landingEventId]),
+    [["play-1", "direct-summon"]],
+  );
+  const [track] = plan.cardTracks;
+  assert.deepEqual(track.sourceRef, { side: "p", uid: "hand-1", zone: "hand" });
+  assert.deepEqual(track.targetRef, { side: "p", uid: "minion-1", zone: "board" });
+  assert.ok(track.markers.handoffAt > track.markers.startAt);
+  assert.ok(track.markers.blendEndAt - track.markers.handoffAt <= 50);
+  assert.ok(track.markers.endAt - track.markers.handoffAt <= 200);
+  assert.ok(!plan.cardTracks.some((candidate) => candidate.landingEventId === "nested-summon"));
+});
+
+test("draw tracks have independent compressed timing and never appear for burn/fatigue", () => {
+  const events = [
+      { id: "draw-1", type: "draw", parentId: null, side: "p", uid: "card-1", cid: "guard" },
+      { id: "burn-1", type: "burn", parentId: null, side: "p", uid: "card-burn", cid: "guard" },
+      { id: "fatigue-1", type: "damage", parentId: null, side: "p", uid: "hero", amount: 1, loss: 1, fatigue: true },
+      { id: "draw-2", type: "draw", parentId: null, side: "e", uid: "card-2", cid: "guard" },
+    ],
+    plan = compile(events, { p: {}, e: {} }, { p: {}, e: {} }),
+    reduced = compile(events, { p: {}, e: {} }, { p: {}, e: {} }, true);
+  assert.deepEqual(
+    plan.cardTracks.map((track) => [track.kind, track.sourceEventId, track.face.mode]),
+    [
+      ["draw", "draw-1", "player-flip"],
+      ["draw", "draw-2", "back-only"],
+    ],
+  );
+  for (const track of plan.cardTracks) {
+    assert.equal(track.sourceRef.uid, "deck");
+    assert.equal(track.targetRef.uid, track.sourceEventId === "draw-1" ? "card-1" : "card-2");
+    assert.ok(track.markers.handoffAt < track.markers.endAt);
+    assert.ok(track.markers.blendEndAt > track.markers.handoffAt);
+    const reducedTrack = reduced.cardTracks.find(
+      (candidate) => candidate.id === track.id,
+    );
+    assert.ok(reducedTrack);
+    assert.ok(Object.values(reducedTrack.markers).every((value) => value === null || value === 0));
+  }
+});
+
+test("compressed card markers remain tied to their scaled beat window", () => {
+  const events = Array.from({ length: 40 }, (_, i) => ({
+      id: "compressed-draw-" + i,
+      type: "draw",
+      parentId: null,
+      side: i % 2 ? "e" : "p",
+      uid: "compressed-card-" + i,
+      cid: i % 2 ? undefined : "guard",
+    })),
+    plan = compile(events, { p: {}, e: {} }, { p: {}, e: {} });
+  assert.ok(plan.scale < 1);
+  const track = plan.cardTracks[0],
+    beat = plan.beats[track.startBeatIndex];
+  assert.equal(
+    track.markers.liftEndAt,
+    beat.at + beat.hold * 0.15,
+  );
+  assert.equal(
+    track.markers.handoffAt,
+    beat.at + beat.hold * (5 / 6),
+  );
+  assert.equal(
+    track.markers.endAt,
+    beat.at + beat.hold,
+  );
+  assert.ok(track.markers.endAt - track.markers.handoffAt > 0);
+});

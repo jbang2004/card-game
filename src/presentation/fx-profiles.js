@@ -61,6 +61,24 @@ const EmberFXProfiles = (() => {
     }),
   });
   const defaultMotion = attackMotions.blade;
+  const cardMotion = Object.freeze({
+    maxTracks: 3,
+    draw: Object.freeze({
+      liftFraction: 0.15,
+      flipStartFraction: 0.35,
+      flipEndFraction: 0.7,
+      handoffFraction: 5 / 6,
+      blendFraction: 1 / 6,
+      endFraction: 1,
+    }),
+    play: Object.freeze({
+      liftMaxMs: 60,
+      approachMaxMs: 60,
+      blendMaxMs: 50,
+      settleMaxMs: 200,
+    }),
+    easing: "cubic-bezier(.2,.7,.3,1)",
+  });
 
   function motionFor(attack, leadIn = 220, heavy = false, window = 250) {
     const profile = attackMotions[attack] || defaultMotion,
@@ -257,6 +275,7 @@ const EmberFXProfiles = (() => {
     records: Object.freeze(records),
     motionFor,
     scaleMotion,
+    cardMotion,
     fromPalette,
     school: (c) => fromPalette(c?.palette, "steel"),
     ranged: (c) => !!attackMotions[get(c).attack]?.ranged,

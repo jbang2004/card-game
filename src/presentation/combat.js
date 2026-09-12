@@ -214,6 +214,141 @@ const EmberCombat = (() => {
       };
     }
   }
+  function cardTrackId(kind, event) {
+    return `card-${kind}-${event.id || event.uid || "event"}`;
+  }
+  function groupIndexForEvent(groups, eventId) {
+    return groups.findIndex((group) =>
+      group.events.some((event) => event.id === eventId),
+    );
+  }
+  function primaryAction(type) {
+    return ["play", "attack", "power"].includes(type);
+  }
+  function actionBoundaryIndex(events, playIndex, blocks, blockEnds) {
+    const play = events[playIndex];
+    const actionId = owningActionId(play, blocks);
+    const actionEnd = actionId ? blockEnds.get(actionId) : null;
+    let boundary = Number.isInteger(actionEnd) ? actionEnd : events.length;
+    for (let i = playIndex + 1; i < events.length; i++) {
+      if (primaryAction(events[i].type)) {
+        boundary = Math.min(boundary, i);
+        break;
+      }
+    }
+    return boundary;
+  }
+  function findDirectSummon(events, playIndex, blocks, blockEnds) {
+    const play = events[playIndex];
+    const boundary = actionBoundaryIndex(events, playIndex, blocks, blockEnds);
+    for (let i = playIndex + 1; i < boundary; i++) {
+      const candidate = events[i];
+      if (
+        candidate.type === "summon" &&
+        candidate.side === play.side &&
+        candidate.cid === play.cid &&
+        candidate.parentId === play.parentId &&
+        !candidate.rebornFrom
+      )
+        return { event: candidate, index: i };
+    }
+    return null;
+  }
+  function attachCardTracks(groups, events, blocks, blockEnds) {
+    const tracks = [];
+    const drawProfile = profiles.cardMotion.draw;
+    const playProfile = profiles.cardMotion.play;
+    for (let sourceIndex = 0; sourceIndex < events.length; sourceIndex++) {
+      const event = events[sourceIndex];
+      if (!event?.id || !["draw", "play"].includes(event.type)) continue;
+      const startBeatIndex = groupIndexForEvent(groups, event.id);
+      if (startBeatIndex < 0) continue;
+      const startBeat = groups[startBeatIndex];
+      if (event.type === "draw") {
+        const handoffAt =
+          startBeat.at + startBeat.hold * drawProfile.handoffFraction;
+        const blendEndAt =
+          handoffAt + startBeat.hold * drawProfile.blendFraction;
+        const endAt = startBeat.at + startBeat.hold * drawProfile.endFraction;
+        const track = {
+          id: cardTrackId("draw", event),
+          kind: "draw",
+          sourceEventId: event.id,
+          landingEventId: event.id,
+          startBeatIndex,
+          landingBeatIndex: startBeatIndex,
+          sourceRef: { side: event.side, uid: "deck", zone: "deck" },
+          targetRef: { side: event.side, uid: event.uid, zone: "hand" },
+          face: event.side === "p"
+            ? { mode: "player-flip", cid: event.cid || null }
+            : { mode: "back-only" },
+          markers: {
+            startAt: startBeat.at,
+            liftEndAt:
+              startBeat.at + startBeat.hold * drawProfile.liftFraction,
+            flipStartAt:
+              event.side === "p"
+                ? startBeat.at + startBeat.hold * drawProfile.flipStartFraction
+                : null,
+            flipEndAt:
+              event.side === "p"
+                ? startBeat.at + startBeat.hold * drawProfile.flipEndFraction
+                : null,
+            handoffAt,
+            blendEndAt,
+            endAt,
+          },
+        };
+        tracks.push(track);
+        (startBeat.cardStartIds ??= []).push(track.id);
+        (startBeat.cardLandingIds ??= []).push(track.id);
+        continue;
+      }
+      if (event.side !== "p" && event.side !== "e") continue;
+      const landing = findDirectSummon(events, sourceIndex, blocks, blockEnds);
+      if (!landing) continue;
+      const landingBeatIndex = groupIndexForEvent(groups, landing.event.id);
+      if (landingBeatIndex < 0) continue;
+      const landingBeat = groups[landingBeatIndex];
+      const travel = Math.max(0, landingBeat.at - startBeat.at);
+      const liftAt = startBeat.at + Math.min(playProfile.liftMaxMs, travel * 0.18);
+      const approachAt =
+        landingBeat.at - Math.min(playProfile.approachMaxMs, travel * 0.18);
+      const blendEndAt =
+        landingBeat.at + Math.min(playProfile.blendMaxMs, landingBeat.hold);
+      const endAt =
+        landingBeat.at + Math.min(playProfile.settleMaxMs, landingBeat.hold);
+      const track = {
+        id: cardTrackId("play", event),
+        kind: "play",
+        sourceEventId: event.id,
+        landingEventId: landing.event.id,
+        startBeatIndex,
+        landingBeatIndex,
+        sourceRef: { side: event.side, uid: event.uid, zone: "hand" },
+        targetRef: { side: landing.event.side, uid: landing.event.uid, zone: "board" },
+        face: { mode: "revealed-play", cid: event.cid || null },
+        markers: {
+          startAt: startBeat.at,
+          liftEndAt: liftAt,
+          approachAt: Math.max(startBeat.at, approachAt),
+          handoffAt: landingBeat.at,
+          blendEndAt,
+          endAt,
+        },
+      };
+      tracks.push(track);
+      (startBeat.cardStartIds ??= []).push(track.id);
+      (landingBeat.cardLandingIds ??= []).push(track.id);
+    }
+    return tracks;
+  }
+  function scaleCardTracks(tracks, scale) {
+    for (const track of tracks) {
+      for (const key of Object.keys(track.markers))
+        if (track.markers[key] !== null) track.markers[key] *= scale;
+    }
+  }
   function compile(
     events,
     before,
@@ -310,6 +445,7 @@ const EmberCombat = (() => {
       at += group.hold;
     }
     attachMotionMarkers(groups, events, blocks, blockEnds, attackFamily);
+    const cardTracks = attachCardTracks(groups, events, blocks, blockEnds);
     // Pathological chains stay bounded without changing causal order.
     const presentationEnd = Math.max(
       at,
@@ -324,6 +460,7 @@ const EmberCombat = (() => {
         for (const key of Object.keys(g.markers))
           if (g.markers[key] !== null) g.markers[key] *= scale;
     }
+    scaleCardTracks(cardTracks, scale);
     const scaledContacts = new Set();
     for (const group of groups)
       for (const contact of group.contacts || []) {
@@ -340,7 +477,7 @@ const EmberCombat = (() => {
           if (contact[key] !== undefined && contact[key] !== null)
             contact[key] *= scale;
       }
-    return { beats: groups, duration: presentationEnd * scale, scale };
+    return { beats: groups, duration: presentationEnd * scale, scale, cardTracks };
   }
   return Object.freeze({ compile });
 })();

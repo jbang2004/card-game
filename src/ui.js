@@ -106,7 +106,210 @@
       .querySelectorAll("[data-icon]")
       .forEach((el) => (el.innerHTML = A.icon(el.dataset.icon)));
   }
-  function toast(text) {
+  let actionGuide = { text: "", mode: null };
+  function clearFeedbackMarks() {
+    document
+      .querySelectorAll("#hand .hand-card.feedback-error,#hand .hand-card.feedback-info")
+      .forEach((el) => el.classList.remove("feedback-error", "feedback-info"));
+    document.querySelector(".mana-panel")?.classList.remove("feedback-error");
+  }
+  function localRect(el) {
+    const point = EmberViewport.pos(el);
+    return point
+      ? {
+          left: point.left,
+          top: point.top,
+          w: point.w,
+          h: point.h,
+          right: point.left + point.w,
+          bottom: point.top + point.h,
+        }
+      : null;
+  }
+  function setGuide(text, mode = "target") {
+    hideBattleNotice();
+    actionGuide = { text, mode };
+    const hint = $("hint"),
+      bar = $("touch-target-bar"),
+      label = $("touch-target-text");
+    if (hint) hint.textContent = text;
+    if (label) {
+      label.textContent = text;
+      label.setAttribute("aria-label", text);
+    }
+    if (bar) {
+      bar.dataset.mode = mode;
+      bar.setAttribute("aria-label", text);
+      bar.hidden = !EmberViewport.mobile;
+    }
+    app.classList.toggle("placement-active", mode === "placement");
+  }
+  function clearGuide() {
+    actionGuide = { text: "", mode: null };
+    const hint = $("hint"),
+      bar = $("touch-target-bar");
+    if (hint) hint.textContent = "";
+    if (bar) {
+      bar.hidden = true;
+      bar.removeAttribute("data-mode");
+      bar.removeAttribute("aria-label");
+    }
+    app.classList.remove("placement-active");
+    clearActionCue();
+  }
+  function clearActionCue() {
+    const svg = $("target-lines");
+    if (!svg) return;
+    svg.style.display = "none";
+    svg.removeAttribute("data-mode");
+  }
+  function drawActionCue(from, to, mode = "target") {
+    const svg = $("target-lines");
+    if (!svg || !from || !to) {
+      clearActionCue();
+      return;
+    }
+    const dx = to.x - from.x,
+      dy = to.y - from.y,
+      len = Math.hypot(dx, dy);
+    if (len < 12) {
+      clearActionCue();
+      return;
+    }
+    const bend =
+        mode === "placement"
+          ? Math.min(EmberViewport.mobile ? 26 : 58, len * 0.14)
+          : Math.min(EmberViewport.mobile ? 18 : 34, len * 0.07),
+      nx = -dy / len,
+      ny = dx / len,
+      c1 = {
+        x: from.x + dx * 0.33 + nx * bend,
+        y: from.y + dy * 0.33 + ny * bend,
+      },
+      c2 = {
+        x: from.x + dx * 0.66 + nx * bend,
+        y: from.y + dy * 0.66 + ny * bend,
+      };
+    svg.dataset.mode = mode;
+    svg.style.display = "block";
+    $("target-path").setAttribute(
+      "d",
+      `M${from.x},${from.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${to.x},${to.y}`,
+    );
+    const angle = Math.atan2(to.y - c2.y, to.x - c2.x),
+      tip = mode === "placement" ? (EmberViewport.mobile ? 10 : 15) : EmberViewport.mobile ? 9 : 13,
+      wing = tip * 0.55,
+      ux = Math.cos(angle),
+      uy = Math.sin(angle);
+    $("target-arrow").setAttribute(
+      "d",
+      `M${to.x},${to.y} L${to.x - tip * ux - wing * uy},${to.y - tip * uy + wing * ux} L${to.x - tip * ux + wing * uy},${to.y - tip * uy - wing * ux} Z`,
+    );
+    $("target-circle").setAttribute("cx", to.x);
+    $("target-circle").setAttribute("cy", to.y);
+    $("target-circle").setAttribute(
+      "r",
+      mode === "placement"
+        ? EmberViewport.mobile
+          ? "18"
+          : "24"
+        : EmberViewport.mobile
+          ? "10"
+          : "12",
+    );
+  }
+  function placementAnchor(pointerTarget = null) {
+    const arena = localRect($("arena"));
+    if (!arena) return null;
+    const margin = EmberViewport.mobile ? 26 : 72,
+      lane = EmberViewport.lane("p"),
+      hand = localRect($("hand")),
+      minY = arena.top + arena.h * 0.5,
+      maxY = Math.min(
+        arena.bottom - margin,
+        hand ? hand.top - margin : arena.bottom - margin,
+      ),
+      candidate = pointerTarget || lane;
+    return {
+      x: Math.max(arena.left + margin, Math.min(arena.right - margin, candidate.x)),
+      y: Math.max(minY, Math.min(maxY, candidate.y)),
+    };
+  }
+  function updatePlacementCue(pointerTarget = null) {
+    if (!selection || selection.type !== "card-play") return;
+    const from = centerOf(sourceCard(selection.uid)),
+      to = placementAnchor(pointerTarget);
+    drawActionCue(from, to, "placement");
+  }
+  function sourceCard(uid) {
+    return uid
+      ? [...document.querySelectorAll("#hand .hand-card")].find(
+          (el) => el.dataset.hand === uid,
+        )
+      : null;
+  }
+  function positionBattleNotice(text, sourceUid, mana) {
+    const notice = $("toast");
+    if (!notice) return;
+    const anchor = localRect(sourceCard(sourceUid)) ||
+      (mana && localRect(document.querySelector(".mana-panel"))) ||
+      localRect($("player-hero")),
+      width = Math.min(
+        280,
+        Math.max(154, 34 + [...String(text)].length * 13),
+      ),
+      height = 38;
+    let x = (EmberViewport.width - width) / 2,
+      y = 104;
+    if (anchor) {
+      x = anchor.left + (anchor.w - width) / 2;
+      y = anchor.top - height - 10;
+      if (y < 48) y = anchor.bottom + 10;
+    }
+    x = Math.max(14, Math.min(EmberViewport.width - width - 14, x));
+    y = Math.max(44, Math.min(EmberViewport.height - height - 14, y));
+    Object.assign(notice.style, {
+      left: Math.round(x) + "px",
+      top: Math.round(y) + "px",
+      width: width + "px",
+    });
+  }
+  function hideBattleNotice() {
+    clearTimeout(toastTimer);
+    clearFeedbackMarks();
+    const notice = $("toast");
+    notice?.classList.remove("visible");
+    notice?.removeAttribute("data-kind");
+  }
+  function showBattleNotice(
+    text,
+    { kind = "error", sourceUid = null, mana = false, duration = 2200 } = {},
+  ) {
+    const notice = $("toast");
+    if (!notice) return;
+    clearTimeout(toastTimer);
+    clearFeedbackMarks();
+    notice.textContent = text;
+    notice.dataset.kind = kind;
+    notice.classList.add("visible");
+    positionBattleNotice(text, sourceUid, mana);
+    sourceCard(sourceUid)?.classList.add(
+      kind === "info" ? "feedback-info" : "feedback-error",
+    );
+    if (mana && kind !== "info")
+      document.querySelector(".mana-panel")?.classList.add("feedback-error");
+    toastTimer = setTimeout(hideBattleNotice, duration);
+  }
+  function toast(text, options = {}) {
+    if (inBattle) {
+      showBattleNotice(text, {
+        kind: options.kind || "error",
+        sourceUid: options.sourceUid || null,
+        mana: !!options.mana,
+        duration: options.duration ?? 2200,
+      });
+      return;
+    }
     clearTimeout(toastTimer);
     $("toast").textContent = text;
     $("toast").classList.add("visible");
@@ -445,8 +648,84 @@
       ? $(side === "p" ? "player-hero" : "enemy-hero")
       : document.querySelector(`.minion[data-uid="${uid}"]`);
   }
+  function captureCardOrigin(ref) {
+    if (!ref?.side || !ref.uid) return null;
+    const el =
+      ref.el ||
+      (ref.side === "p"
+        ? [...document.querySelectorAll("#hand .hand-card")].find(
+            (node) => node.dataset.hand === ref.uid,
+          )
+        : [...document.querySelectorAll("#enemy-hand .card-back")].find(
+            (node) => node.dataset.enemyHand === ref.uid,
+          ));
+    const point = ref.point || centerOf(el);
+    const computed = el ? getComputedStyle(el) : null;
+    let poseScale = 1,
+      poseTilt = 0;
+    const transform = computed?.transform;
+    if (transform && transform !== "none") {
+      const values = transform.startsWith("matrix3d(")
+        ? transform
+            .slice(9, -1)
+            .split(",")
+            .map(Number)
+        : transform
+            .slice(transform.startsWith("matrix(") ? 7 : 0, -1)
+            .split(",")
+            .map(Number);
+      if (values.length >= 6) {
+        const a = values[0],
+          b = values[1],
+          c = values[2],
+          d = values[3];
+        poseScale = Math.max(0.01, (Math.hypot(a, b) + Math.hypot(c, d)) / 2);
+        poseTilt = (Math.atan2(b, a) * 180) / Math.PI;
+      }
+    }
+    const customTilt = ref.tilt ?? computed?.getPropertyValue("--r");
+    if (customTilt != null && customTilt !== "") {
+      const parsed = Number.parseFloat(customTilt);
+      if (Number.isFinite(parsed)) poseTilt = parsed;
+    }
+    // offsetWidth/offsetHeight are the untransformed border-box dimensions in
+    // #app's local coordinate system. Do not multiply them by the viewport
+    // scale: the motion proxy is also positioned in those local coordinates
+    // and the parent transform applies the desktop scale exactly once.
+    const layoutW = el ? el.offsetWidth || null : null,
+      layoutH = el ? el.offsetHeight || null : null,
+      baseW = layoutW || (point?.w ? point.w / poseScale : null),
+      baseH = layoutH || (point?.h ? point.h / poseScale : null);
+    const snapshot = {
+      side: ref.side,
+      uid: ref.uid,
+      point: point
+        ? {
+            x: point.x,
+            y: point.y,
+            w: point.w,
+            h: point.h,
+            left: point.left,
+            top: point.top,
+            baseW,
+            baseH,
+            poseScale,
+            poseTilt,
+          }
+        : null,
+      size: point ? { w: baseW || point.w, h: baseH || point.h } : null,
+      tilt: ref.tilt ?? poseTilt,
+      scale: ref.scale ?? poseScale,
+      alreadyLifted: !!ref.alreadyLifted,
+      html: ref.html || el?.outerHTML || null,
+    };
+    return snapshot.point ? snapshot : { ...snapshot, point: null };
+  }
+  let pendingCardOrigin = null;
   let displayedState = null;
   function changed(s, events) {
+    const cardOrigin = pendingCardOrigin;
+    pendingCardOrigin = null;
     save();
     if (!inBattle) {
       render(s);
@@ -472,10 +751,15 @@
       },
       cardHTML,
       displayedState,
+      { cardOrigin },
     );
   }
   function render(s) {
     if (!s) return;
+    // Capture animated card surfaces before innerHTML replaces their nodes.
+    // The compositor can then continue a rebind from the painted pose instead
+    // of trying to measure a detached element after this render completes.
+    EmberFX.captureCardTargets?.();
     displayedState = s;
     contractUI.render(s);
     const handScroll = $("hand").scrollLeft;
@@ -574,7 +858,7 @@
     $("enemy-hand").innerHTML = s.e.hand
       .map(
         (c, i) =>
-          `<div class="card-back" style="--r:${(i - (s.e.hand.length - 1) / 2) * 5}deg;--y:${Math.abs(i - (s.e.hand.length - 1) / 2) * 3}px"></div>`,
+          `<div class="card-back" data-enemy-hand="${c.uid}" style="--r:${(i - (s.e.hand.length - 1) / 2) * 5}deg;--y:${Math.abs(i - (s.e.hand.length - 1) / 2) * 3}px"></div>`,
       )
       .join("");
     $("enemy-hand").setAttribute(
@@ -715,6 +999,11 @@
     window.EmberMobile?.afterRender(s);
     updateSelection();
     EmberPortraits.sync();
+    // Rendering can replace card nodes while a presentation sequence is
+    // between beats. Let the compositor rebind its visual track immediately,
+    // so the next frame continues from the painted pose instead of replaying a
+    // template entrance.
+    EmberFX.syncCardTargets?.();
   }
   function updateHandTip() {
     const tip = document.querySelector(".hand-tip");
@@ -898,6 +1187,14 @@
    * a short tick when the aim crosses onto a valid target. */
   function targetCue() {
     if (!selection) return;
+    if (selection.type === "card-play") {
+      document
+        .querySelectorAll(".aim-focus")
+        .forEach((el) => el.classList.remove("aim-focus"));
+      const hit = hitUnit();
+      updatePlacementCue(!hit && inPlayArea(pointer) ? pointer : null);
+      return;
+    }
     const hit = hitUnit(),
       uid = hit?.dataset?.uid || null,
       side = hit?.dataset?.side || null,
@@ -962,16 +1259,35 @@
     },
     true,
   );
-  function act(fn) {
+  function act(fn, origin = null) {
     if (EmberFX.busy) return { ok: false, error: "战斗动作正在结算" };
-    clearTimeout(toastTimer);
-    $("toast").classList.remove("visible");
+    hideBattleNotice();
+    const previousOrigin = pendingCardOrigin;
+    const selectedOrigin =
+      origin ||
+      (selection?.type === "card" || selection?.type === "card-play"
+        ? { side: "p", uid: selection.uid }
+        : null);
+    // A successful drag already carries an immutable geometry/markup snapshot.
+    // Do not reinterpret its ghost through the live hand node a second time.
+    const capturedOrigin =
+      origin?.point && origin.html
+        ? origin
+        : captureCardOrigin(selectedOrigin);
     hidePreview();
     clearSelection();
-    const r = fn();
+    pendingCardOrigin = capturedOrigin;
+    let r;
+    try {
+      r = fn();
+    } finally {
+      pendingCardOrigin = previousOrigin;
+    }
     if (!r?.ok) {
       EmberAudio.fx("error");
-      toast(r?.error || "无法执行此操作");
+      toast(r?.error || "无法执行此操作", {
+        sourceUid: capturedOrigin?.uid || origin?.uid || null,
+      });
     }
     return r;
   }
@@ -999,7 +1315,7 @@
     if (!c.target || !targets.length) return false;
     selection = { type: "card", uid, cid: card.cid };
     pointer = targetAnchor(targets) || pointer;
-    hint("选择" + targetLabel(c.target) + " · 右键或 ESC 取消");
+    setGuide("选择" + targetLabel(c.target) + " · 右键或 ESC 取消", "target");
     updateSelection(targets);
     hidePreview();
     return true;
@@ -1008,7 +1324,7 @@
     const card = game.s.p.hand.find((x) => x.uid === uid);
     if (!card) return false;
     selection = { type: "card-play", uid, cid: card.cid };
-    hint("点击战场空位确认 · 再点手牌取消");
+    setGuide("点击战场空位确认 · 再点手牌取消", "placement");
     updateSelection();
     hidePreview();
     EmberAudio.fx("select");
@@ -1020,24 +1336,34 @@
       clearSelection();
       return;
     }
-    const err = game.legalCard("p", uid);
+    const card = game.s.p.hand.find((x) => x.uid === uid),
+      err = game.legalCard("p", uid);
     if (err) {
       EmberAudio.fx("error");
-      toast(err);
+      const mana = err === "法力不足",
+        message =
+          mana && card
+            ? `法力不足 · 需要 ${game.cost(card)} 点，当前 ${game.s.p.mana} 点`
+            : err;
+      toast(message, { sourceUid: uid, mana });
       return;
     }
-    const card = game.s.p.hand.find((x) => x.uid === uid),
-      c = card && D.byId[card.cid];
+    const c = card && D.byId[card.cid];
     if (armCard(uid)) return EmberAudio.fx("select");
     if (c && !c.target) return prepareCard(uid);
-    return act(() => game.dispatch({ type: "play", side: "p", uid }));
+    return act(
+      () => game.dispatch({ type: "play", side: "p", uid }),
+      { side: "p", uid },
+    );
   }
   function clickUnit(side, uid) {
     if (modalType || !inBattle || EmberFX.busy) return;
     if (selection) {
       const sel = selection;
       if (sel.type === "card-play") {
-        toast("请点击战场空位确认，或点手牌取消");
+        toast("请点击战场空位确认，或点手牌取消", {
+          sourceUid: sel.uid,
+        });
         return;
       }
       if (
@@ -1045,17 +1371,19 @@
         side === "e" &&
         !findUnit(side, uid)?.classList.contains("valid-target")
       ) {
-        toast("请点击高亮的合法目标");
+        toast("请点击高亮的合法目标", { sourceUid: sel.uid });
         return;
       }
       if (sel.type === "card")
-        act(() =>
-          game.dispatch({
-            type: "play",
-            side: "p",
-            uid: sel.uid,
-            target: { side, uid },
-          }),
+        act(
+          () =>
+            game.dispatch({
+              type: "play",
+              side: "p",
+              uid: sel.uid,
+              target: { side, uid },
+            }),
+          { side: "p", uid: sel.uid },
         );
       else if (sel.type === "attack") {
         if (side === "p") {
@@ -1085,7 +1413,7 @@
         selection = { type: "attack", uid };
         const targets = game.attackTargets("p", uid);
         pointer = targetAnchor(targets) || pointer;
-        hint("选择攻击目标 · 嘲讽随从优先 · ESC 取消");
+        setGuide("选择攻击目标 · 嘲讽随从优先 · ESC 取消", "target");
         updateSelection(targets);
         hidePreview();
         EmberAudio.fx("ui");
@@ -1123,15 +1451,9 @@
       selection = { type: "power" };
       const targets = game.targets(power.target, "p");
       pointer = targetAnchor(targets) || pointer;
-      hint(power.power + " · " + power.powerText);
+      setGuide(power.power + " · " + power.powerText, "target");
       updateSelection(targets);
     } else act(() => game.dispatch({ type: "power", side: "p" }));
-  }
-  function hint(t) {
-    clearTimeout(toastTimer);
-    $("toast").classList.remove("visible");
-    $("hint").textContent = t;
-    $("hint").style.display = "block";
   }
   function clearSelection() {
     app.classList.remove("is-targeting");
@@ -1140,10 +1462,9 @@
     document
       .querySelectorAll(".aim-focus")
       .forEach((el) => el.classList.remove("aim-focus"));
-    $("touch-target-bar").hidden = true;
     $("combat-preview").style.display = "none";
-    $("hint").style.display = "none";
-    $("target-lines").style.display = "none";
+    clearGuide();
+    hideBattleNotice();
     document.querySelectorAll(".selected,.valid-target").forEach((el) => {
       if (el.matches(".hero,.minion,.hand-card"))
         el.classList.remove("selected", "valid-target");
@@ -1182,15 +1503,19 @@
     );
     if (EmberViewport.mobile) {
       app.classList.add("is-targeting");
-      $("touch-target-bar").hidden = false;
       window.EmberMobile?.selectionChanged();
     }
-    if (selection.type === "card-play") $("target-lines").style.display = "none";
+    setGuide(
+      actionGuide.text ||
+        (selection.type === "card-play" ? "点击战场空位确认" : "选择目标"),
+      actionGuide.mode || (selection.type === "card-play" ? "placement" : "target"),
+    );
+    if (selection.type === "card-play") updatePlacementCue();
     else updateTargetLine();
   }
   function updateTargetLine() {
     if (!selection || modalType || selection.type === "card-play") {
-      $("target-lines").style.display = "none";
+      clearActionCue();
       return;
     }
     const source =
@@ -1200,43 +1525,11 @@
           ? $("power-btn")
           : document.querySelector(`[data-hand="${selection.uid}"]`);
     const from = centerOf(source);
-    if (!from) return;
-    const to = pointer,
-      dx = to.x - from.x,
-      dy = to.y - from.y,
-      len = Math.hypot(dx, dy);
-    if (len < 12) {
-      $("target-lines").style.display = "none";
+    if (!from) {
+      clearActionCue();
       return;
     }
-    const bend = Math.min(EmberViewport.mobile ? 18 : 34, len * 0.07),
-      nx = -dy / len,
-      ny = dx / len;
-    const c1 = {
-        x: from.x + dx * 0.33 + nx * bend,
-        y: from.y + dy * 0.33 + ny * bend,
-      },
-      c2 = {
-        x: from.x + dx * 0.66 + nx * bend,
-        y: from.y + dy * 0.66 + ny * bend,
-      };
-    $("target-lines").style.display = "block";
-    $("target-path").setAttribute(
-      "d",
-      `M${from.x},${from.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${to.x},${to.y}`,
-    );
-    const angle = Math.atan2(to.y - c2.y, to.x - c2.x),
-      tip = EmberViewport.mobile ? 9 : 13,
-      wing = tip * 0.55;
-    const ux = Math.cos(angle),
-      uy = Math.sin(angle);
-    $("target-arrow").setAttribute(
-      "d",
-      `M${to.x},${to.y} L${to.x - tip * ux - wing * uy},${to.y - tip * uy + wing * ux} L${to.x - tip * ux + wing * uy},${to.y - tip * uy - wing * ux} Z`,
-    );
-    $("target-circle").setAttribute("cx", to.x);
-    $("target-circle").setAttribute("cy", to.y);
-    $("target-circle").setAttribute("r", EmberViewport.mobile ? "10" : "12");
+    drawActionCue(from, pointer, "target");
   }
   function dropZone() {
     if (!EmberViewport.mobile) return { x0: 270, x1: 1330, y1: 730 };
@@ -1286,14 +1579,15 @@
       d.ghost.style.top = landing.point.y + "px";
       if (changed) {
         EmberAudio.fx("select");
-        if (!D.byId[d.cid].target) hint("松手落位 · 拖回手牌取消");
+        if (!D.byId[d.cid].target)
+          setGuide("松手落位 · 拖回手牌取消", "placement");
       }
     } else {
       delete d.ghost.dataset.snapMode;
       d.ghost.style.left = p.x + "px";
       d.ghost.style.top = p.y - (d.lift || 0) + "px";
       if (changed && !D.byId[d.cid].target)
-        hint("将卡牌拖入战场 · 松回手牌取消");
+        setGuide("将卡牌拖入战场 · 松回手牌取消", "placement");
     }
   }
   function cancelDrag(restore = true) {
@@ -1321,7 +1615,11 @@
     d.el.classList.add("drag-source");
     const ghost = document.createElement("div");
     ghost.className = "drag-ghost";
-    ghost.innerHTML = cardHTML(D.byId[d.cid]);
+    // Clone the rendered card surface, not the base definition: temporary
+    // cost/attack/health modifiers must remain visible during the drag and
+    // in the subsequent card-motion proxy.
+    ghost.innerHTML =
+      d.el.querySelector(".card")?.outerHTML || cardHTML(D.byId[d.cid]);
     app.appendChild(ghost);
     d.ghost = ghost;
     if (touch) d.lift = 58;
@@ -1331,13 +1629,21 @@
     if (c.target) {
       selection = { type: "card", uid: d.uid, cid: d.cid };
       updateSelection();
-    } else hint("将卡牌拖入战场 · 松回手牌取消");
+    } else setGuide("将卡牌拖入战场 · 松回手牌取消", "placement");
   }
 
   /* Ends a drag started by beginDrag. Rejected releases never dispatch: a card
    * only leaves the hand when the drop is legal (unit -> legal target, or
    * anywhere in the play area for a card that needs no target). */
   function finishDrag(d, e) {
+    const source = d.ghost || d.el;
+    const origin = captureCardOrigin({
+      side: "p",
+      uid: d.uid,
+      el: source,
+      point: centerOf(source),
+      alreadyLifted: !!d.ghost,
+    });
     /* The ghost and the source dimming always end with the gesture. */
     d.ghost?.remove();
     d.el.classList.remove("drag-source");
@@ -1348,33 +1654,45 @@
       uid = el?.dataset?.uid,
       side = el?.dataset?.side;
     if (landing?.kind === "target") {
-      act(() =>
-        game.dispatch({
-          type: "play",
-          side: "p",
-          uid: d.uid,
-          target: { side, uid },
-        }),
+      act(
+        () =>
+          game.dispatch({
+            type: "play",
+            side: "p",
+            uid: d.uid,
+            target: { side, uid },
+          }),
+        origin,
       );
     } else if (el && c.target) {
       /* Released on a unit that is not in game.targets(): never dispatch. */
       EmberAudio.fx("error");
-      toast("「" + c.name + "」不能指定这个目标");
+      toast("「" + c.name + "」不能指定这个目标", { sourceUid: d.uid });
     } else if (el && c.type !== "weapon") {
       /* A targetless minion or spell dropped on top of a unit is ambiguous
        * placement, not a play: reject it instead of silently spending mana. */
       EmberAudio.fx("error");
-      toast("「" + c.name + "」不需要目标 · 请放到空位或战场下方");
+      toast("「" + c.name + "」不需要目标 · 请放到空位或战场下方", {
+        sourceUid: d.uid,
+      });
     } else if (inPlayArea(p)) {
       if (
         c.target &&
         !(c.type === "minion" && !game.targets(c.target, "p").length)
       )
         armCard(d.uid);
-      else act(() => game.dispatch({ type: "play", side: "p", uid: d.uid }));
+      else
+        act(
+          () => game.dispatch({ type: "play", side: "p", uid: d.uid }),
+          origin,
+        );
     } else if (EmberViewport.mobile) {
       EmberAudio.fx("ui");
-      toast("已取消：「" + c.name + "」回到手牌");
+      toast("已取消：「" + c.name + "」回到手牌", {
+        kind: "info",
+        duration: 1600,
+        sourceUid: d.uid,
+      });
     }
   }
   function beginDrag(e) {
@@ -1794,7 +2112,10 @@
   $("arena").onclick = () => {
     if (selection?.type === "card-play") {
       const uid = selection.uid;
-      act(() => game.dispatch({ type: "play", side: "p", uid }));
+      act(
+        () => game.dispatch({ type: "play", side: "p", uid }),
+        { side: "p", uid },
+      );
     } else clearSelection();
   };
   document.addEventListener("pointerdown", () => EmberAudio.unlock(), {
@@ -1906,6 +2227,9 @@
     settings,
     get selection() {
       return selection;
+    },
+    get actionGuide() {
+      return actionGuide.text;
     },
     get inBattle() {
       return inBattle;
