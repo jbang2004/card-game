@@ -61,10 +61,13 @@ const EmberFX = (() => {
   }
   function schedule(fn, ms) {
     const gen = generation;
-    const id = setTimeout(() => {
+    const callback = () => {
       timers.delete(id);
       if (gen === generation) fn();
-    }, ms);
+    };
+    if (fn?.__emberCardTimerMeta)
+      callback.__emberCardTimerMeta = fn.__emberCardTimerMeta;
+    const id = setTimeout(callback, ms);
     timers.add(id);
     return id;
   }
@@ -76,6 +79,12 @@ const EmberFX = (() => {
       plan,
       closed: false,
       reactions: new Map(),
+      cards: new Map(),
+      cardLandingIds: new Set(
+        (plan.cardTracks || [])
+          .filter((track) => track.kind === "play")
+          .map((track) => track.landingEventId),
+      ),
     };
     activeSequence = sequence;
     return sequence;
@@ -95,10 +104,13 @@ const EmberFX = (() => {
   function scheduleAt(sequence, at, fn) {
     if (!sequence) return schedule(fn, at);
     const delay = Math.max(0, sequence.origin + at - performance.now());
-    return schedule(() => {
+    const callback = () => {
       if (!isCurrentSequence(sequence)) return;
       fn();
-    }, delay);
+    };
+    if (fn?.__emberCardTimerMeta)
+      callback.__emberCardTimerMeta = fn.__emberCardTimerMeta;
+    return schedule(callback, delay);
   }
   function animate(el, frames, options, onFinish = null) {
     const animation = el.animate(frames, options);
@@ -404,6 +416,14 @@ const EmberFX = (() => {
     document.querySelectorAll(".hand-card").forEach(
       (el) =>
         (m["hand" + el.dataset.hand] = {
+          ...pos(el),
+          el,
+          html: el.outerHTML,
+        }),
+    );
+    document.querySelectorAll("#enemy-hand .card-back").forEach(
+      (el) =>
+        (m["hand" + el.dataset.enemyHand] = {
           ...pos(el),
           el,
           html: el.outerHTML,
@@ -872,28 +892,988 @@ const EmberFX = (() => {
     );
     return { el, duration, motion };
   }
-  function cardFlight(c, from, to, duration, cardHTML) {
-    if (!from || !cardHTML || quality.reduced) return;
-    const el = transient("card-flight", duration + 8);
-    el.innerHTML = cardHTML(c);
-    const width = EmberViewport.mobile ? 90 : 125,
-      height = width * 1.44;
-    el.style.cssText = `left:${from.x - width / 2}px;top:${from.y - height / 2}px;width:${width}px;height:${height}px`;
-    animate(
-      el,
+  function cardMarkup(source, fallbackMarkup = "") {
+    if (source?.html) {
+      const template = document.createElement("template");
+      template.innerHTML = source.html;
+      const node = template.content.querySelector(".card,.card-back");
+      if (node) return node.outerHTML;
+    }
+    return fallbackMarkup;
+  }
+  function cardTarget(ref) {
+    if (!ref?.uid) return null;
+    const anchor = EmberViewport.handCardAnchor?.(ref.side, ref.uid);
+    if (anchor?.el) return anchor.el;
+    const selector =
+      ref.side === "p" ? "#hand .hand-card" : "#enemy-hand .card-back";
+    return [...document.querySelectorAll(selector)].find(
+      (el) =>
+        (ref.side === "p" ? el.dataset.hand : el.dataset.enemyHand) ===
+        ref.uid,
+    );
+  }
+  function cardMotionCount(sequence) {
+    return [...(sequence?.cards?.values() || [])].filter(
+      (track) => !track.disposed && track.phase === "flight",
+    ).length;
+  }
+  function cardProxyContent(markup, frontMarkup = null) {
+    const template = document.createElement("template");
+    template.innerHTML = markup;
+    const content = document.createElement("div");
+    content.className = "card-motion-content";
+    const normalize = (node, className) => {
+      if (!node) return null;
+      node.classList.add(className);
+      node.removeAttribute("id");
+      node.setAttribute("aria-hidden", "true");
+      node.querySelectorAll("[id]").forEach((child) =>
+        child.removeAttribute("id"),
+      );
+      node.querySelectorAll("[tabindex]").forEach((child) =>
+        child.setAttribute("tabindex", "-1"),
+      );
+      return node;
+    };
+    if (frontMarkup) {
+      const face = document.createElement("div");
+      face.className = "card-motion-face";
+      const back = template.content.firstElementChild;
+      if (back) face.appendChild(normalize(back, "card-motion-back"));
+      const frontTemplate = document.createElement("template");
+      frontTemplate.innerHTML = frontMarkup;
+      const front = frontTemplate.content.firstElementChild;
+      if (front) face.appendChild(normalize(front, "card-motion-front"));
+      content.appendChild(face);
+    } else if (template.content.firstElementChild) {
+      content.appendChild(
+        normalize(template.content.firstElementChild, "card-motion-back"),
+      );
+    }
+    return content;
+  }
+  function captureInline(el) {
+    return el
+      ? {
+          visibility: el.style.visibility,
+          opacity: el.style.opacity,
+          scale: el.style.scale,
+          translate: el.style.translate,
+          transform: el.style.transform,
+        }
+      : null;
+  }
+  function restoreInline(el, style) {
+    if (!el || !style) return;
+    el.style.visibility = style.visibility;
+    el.style.opacity = style.opacity;
+    el.style.scale = style.scale;
+    el.style.translate = style.translate;
+    el.style.transform = style.transform;
+  }
+  function cardMotionSurface(track, target) {
+    return track.kind === "draw"
+      ? target?.querySelector?.(".card") || target
+      : target;
+  }
+  function bindCardTarget(track, target, hidden = false) {
+    const nextSurface = cardMotionSurface(track, target),
+      sameTarget = track.targetEl === target,
+      sameSurface = track.surfaceEl === nextSurface,
+      previousSurfaceStyle = track.surfaceStyle;
+    if (track.targetEl && !sameTarget)
+      restoreInline(track.targetEl, track.targetStyle);
+    if (track.surfaceEl && !sameSurface)
+      restoreInline(track.surfaceEl, track.surfaceStyle);
+    // A cloned draw surface can carry the compositor's current endpoint
+    // styles. When only the inner surface changed, restore the logical
+    // surface style before measuring it; the cached pose supplies the live
+    // animation state separately.
+    if (
+      !sameSurface &&
+      sameTarget &&
+      nextSurface &&
+      previousSurfaceStyle
+    )
+      restoreInline(nextSurface, previousSurfaceStyle);
+    if (!sameTarget || !track.targetStyle) {
+      track.targetEl = target || null;
+      track.targetStyle = captureInline(target);
+    }
+    if (!sameSurface || !track.surfaceStyle) {
+      track.surfaceEl = nextSurface;
+      track.surfaceStyle =
+        !sameTarget && !sameSurface
+          ? captureInline(track.surfaceEl)
+          : previousSurfaceStyle || captureInline(track.surfaceEl);
+    }
+    if (target && hidden) target.style.visibility = "hidden";
+  }
+  function removeCardProxy(track) {
+    if (!track?.proxy) return;
+    track.proxy.remove();
+    nodes.delete(track.proxy);
+    track.proxy = null;
+  }
+  function ownCardAnimation(track, animation, onFinish = null) {
+    if (!animation) return null;
+    track.animations ??= new Set();
+    track.animations.add(animation);
+    animation.addEventListener?.(
+      "finish",
+      () => {
+        track.animations.delete(animation);
+        onFinish?.();
+      },
+      { once: true },
+    );
+    animation.addEventListener?.(
+      "cancel",
+      () => track.animations.delete(animation),
+      { once: true },
+    );
+    return animation;
+  }
+  function cancelOwnedCardAnimations(track) {
+    for (const animation of track?.animations || []) animation.cancel();
+    track?.animations?.clear();
+    track?.animation?.cancel();
+    track?.settleAnimation?.cancel();
+    if (track) {
+      track.animation = null;
+      track.settleAnimation = null;
+    }
+  }
+  function cardSurfacePose(surface) {
+    if (!surface) return null;
+    const point = pos(surface),
+      opacity = Number(getComputedStyle(surface).opacity);
+    return point && validCardPoint(point)
+      ? {
+          point,
+          opacity: Number.isFinite(opacity) ? clamp(opacity) : 1,
+        }
+      : null;
+  }
+  function captureCardTargets(sequence = activeSequence) {
+    if (!sequence?.cards) return;
+    const capturedAt = performance.now();
+    for (const track of sequence.cards.values()) {
+      if (track.disposed) continue;
+      const proxyStyle = track.proxy && getComputedStyle(track.proxy);
+      track.preRenderCardPose = {
+        capturedAt,
+        surface: cardSurfacePose(track.surfaceEl || track.targetEl),
+        proxy: track.proxy ? pos(track.proxy) : null,
+        proxyOpacity: proxyStyle
+          ? Number(proxyStyle.opacity)
+          : 0,
+      };
+    }
+  }
+  function handoffEndAt(sequence, track) {
+    return (
+      track.handoffGeometry?.endAt ??
+      sequence.origin +
+        (track.markers?.blendEndAt ?? track.markers?.handoffAt ?? 0)
+    );
+  }
+  function cardHandoffLanding(track, target) {
+    return track.clippedEdge ? track.target : pos(target) || track.target;
+  }
+  function setCardSurfacePose(surface, base, point, opacity) {
+    const scaleX = point.w / Math.max(1, base.w),
+      scaleY = point.h / Math.max(1, base.h),
+      dx = point.x - base.x,
+      dy = point.y - base.y;
+    surface.style.opacity = String(clamp(opacity));
+    surface.style.translate = `${dx}px ${dy}px`;
+    surface.style.scale = `${scaleX} ${scaleY}`;
+  }
+  function applyCardHandoffSurface(
+    sequence,
+    track,
+    surface,
+    from,
+    landing,
+    now,
+    startOpacity = 0,
+  ) {
+    if (!surface || !validCardPoint(from) || !validCardPoint(landing))
+      return false;
+    cancelLayoutTranslation(surface, cardLayoutKey(track));
+    const base = pos(surface),
+      endAt = handoffEndAt(sequence, track),
+      remaining = Math.max(0, endAt - now);
+    if (!base || !validCardPoint(base)) return false;
+    const startScaleX = from.w / Math.max(1, base.w),
+      startScaleY = from.h / Math.max(1, base.h),
+      startDx = from.x - base.x,
+      startDy = from.y - base.y,
+      endScaleX = landing.w / Math.max(1, base.w),
+      endScaleY = landing.h / Math.max(1, base.h),
+      endDx = landing.x - base.x,
+      endDy = landing.y - base.y,
+      start = {
+        opacity: clamp(startOpacity),
+        translate: `${startDx}px ${startDy}px`,
+        scale: `${startScaleX} ${startScaleY}`,
+      },
+      end = {
+        opacity: 1,
+        translate: `${endDx}px ${endDy}px`,
+        scale: `${endScaleX} ${endScaleY}`,
+      };
+    setCardSurfacePose(surface, base, from, start.opacity);
+    if (quality.reduced || remaining <= 0) {
+      setCardSurfacePose(surface, base, landing, 1);
+      return true;
+    }
+    const settle = animate(
+      surface,
+      [start, end],
+      {
+        duration: remaining,
+        easing: "linear",
+        fill: "both",
+      },
+      () => {
+        if (track.settleAnimation === settle)
+          setCardSurfacePose(surface, base, landing, 1);
+      },
+    );
+    track.settleAnimation = ownCardAnimation(track, settle);
+    // Keep the real endpoint in inline styles as a cancellation fallback.
+    // Draw's blend deadline and its track disposal deadline are identical, so
+    // the timer can win the race with WAAPI's finish event.
+    setCardSurfacePose(surface, base, landing, 1);
+    return true;
+  }
+  function applyCardHandoffProxy(
+    track,
+    from,
+    landing,
+    now,
+    endAt,
+    startOpacity = 1,
+  ) {
+    const proxy = track.proxy;
+    if (!proxy || !validCardPoint(from) || !validCardPoint(landing)) return true;
+    const remaining = Math.max(0, endAt - now),
+      dx = landing.x - from.x,
+      dy = landing.y - from.y,
+      endScaleX = landing.w / Math.max(1, from.w),
+      endScaleY = landing.h / Math.max(1, from.h),
+      finalTransform = `translate(${dx}px,${dy}px) rotate(0deg) scale(${endScaleX},${endScaleY})`;
+    proxy.style.left = from.x - from.w / 2 + "px";
+    proxy.style.top = from.y - from.h / 2 + "px";
+    proxy.style.width = from.w + "px";
+    proxy.style.height = from.h + "px";
+    proxy.style.transform = "translate(0,0) rotate(0deg) scale(1)";
+    proxy.style.opacity = String(clamp(startOpacity));
+    if (quality.reduced || remaining <= 0) {
+      proxy.style.transform = finalTransform;
+      removeCardProxy(track);
+      return true;
+    }
+    const travel = animate(
+      proxy,
       [
-        { opacity: 0.95, transform: "translate(0,0) rotate(-5deg) scale(1)" },
         {
-          opacity: 1,
-          transform: `translate(${(to.x - from.x) * 0.78}px,${(to.y - from.y) * 0.78 - 18}px) rotate(2deg) scale(.85)`,
-          offset: 0.7,
+          transform: "translate(0,0) rotate(0deg) scale(1)",
+          opacity: clamp(startOpacity),
         },
-        {
-          opacity: 0,
-          transform: `translate(${to.x - from.x}px,${to.y - from.y}px) rotate(0) scale(.63)`,
-        },
+        { transform: finalTransform, opacity: clamp(startOpacity) },
       ],
-      { duration, easing: "cubic-bezier(.2,.7,.3,1)", fill: "forwards" },
+      { duration: remaining, easing: "linear", fill: "both" },
+    );
+    ownCardAnimation(track, travel);
+    proxy.style.opacity = "0";
+    const proxyFade = animate(
+      proxy,
+      [{ opacity: clamp(startOpacity) }, { opacity: 0 }],
+      { duration: remaining, easing: "ease-out", fill: "both" },
+      () => removeCardProxy(track),
+    );
+    ownCardAnimation(track, proxyFade);
+    return true;
+  }
+  function replanCardHandoff(track, now, from, landing) {
+    track.handoffGeometry = {
+      ...(track.handoffGeometry || {}),
+      startAt: now,
+      start: from,
+      end: landing,
+    };
+    track.target = landing;
+  }
+  function scheduleCardAt(sequence, track, at, fn, role = null) {
+    const runner = () => {
+      track.timers?.delete(timer);
+      if (!track.disposed) fn();
+    };
+    if (role)
+      runner.__emberCardTimerMeta = {
+        role,
+        at,
+        dueAt: sequence ? sequence.origin + at : null,
+        endAt:
+          sequence && track.markers?.endAt !== undefined
+            ? sequence.origin + track.markers.endAt
+            : null,
+        uid: track.ref?.uid || track.targetRef?.uid || null,
+        trackId: track.id,
+      };
+    let timer;
+    timer = scheduleAt(sequence, at, runner);
+    track.timers ??= new Set();
+    track.timers.add(timer);
+    return timer;
+  }
+  function trackTarget(sequence, track) {
+    return track.kind === "play"
+      ? unit(track.landingRef?.side, track.landingRef?.uid)
+      : cardTarget(track.targetRef || track.ref);
+  }
+  function cardLayoutKey(track) {
+    const source =
+        track?.kind === "draw"
+          ? track?.targetRef || track?.ref
+          : track?.ref || track?.sourceRef,
+      target = track?.landingRef || track?.targetRef;
+    return track?.kind === "draw"
+      ? "hand" + source?.uid
+      : refKey(target);
+  }
+  function clippedHandTarget(anchor, side) {
+    if (!anchor || anchor.status !== "clipped") return anchor;
+    const hand = document.getElementById(side === "p" ? "hand" : "enemy-hand"),
+      region = EmberViewport.pos(hand);
+    if (!region) return anchor;
+    return {
+      ...anchor,
+      x: clamp(
+        anchor.x,
+        region.left + anchor.w / 2,
+        region.left + region.w - anchor.w / 2,
+      ),
+      y: clamp(
+        anchor.y,
+        region.top + anchor.h / 2,
+        region.top + region.h - anchor.h / 2,
+      ),
+    };
+  }
+  function validCardPoint(point) {
+    return !!point &&
+      point.w > 0 &&
+      point.h > 0 &&
+      [point.x, point.y, point.w, point.h].every(Number.isFinite);
+  }
+  function watchHandCard(sequence, track) {
+    if (track.handScrollCleanup || track.kind !== "draw") return;
+    const hand = document.getElementById(
+      track.ref.side === "p" ? "hand" : "enemy-hand",
+    );
+    if (!hand) return;
+    let lastLeft = hand.scrollLeft,
+      lastTop = hand.scrollTop;
+    const onScroll = () => {
+      if (track.disposed) return;
+      const left = hand.scrollLeft,
+        top = hand.scrollTop;
+      if (left === lastLeft && top === lastTop) return;
+      lastLeft = left;
+      lastTop = top;
+      track.handScrollChanged = true;
+      if (track.phase === "flight") {
+        // A user-owned scroll invalidates the in-flight endpoint. End only
+        // this decoration; never force scrollLeft or finish the rule scene.
+        disposeCardMotion(sequence, track);
+      } else if (track.phase === "settle") {
+        disposeCardMotion(sequence, track);
+      }
+    };
+    hand.addEventListener("scroll", onScroll, { passive: true });
+    track.handScrollCleanup = () =>
+      hand.removeEventListener("scroll", onScroll);
+  }
+  function cardElapsed(sequence, track) {
+    return Math.max(
+      0,
+      performance.now() -
+        (sequence.origin + (track.markers?.startAt ?? 0)),
+    );
+  }
+  function startCardMotion(
+    sequence,
+    track,
+    from,
+    to,
+    markup,
+    duration,
+    options = {},
+  ) {
+    if (
+      !isCurrentSequence(sequence) ||
+      quality.reduced ||
+      !from ||
+      !to ||
+      !markup ||
+      duration <= 0 ||
+      cardMotionCount(sequence) >= EmberFXProfiles.cardMotion.maxTracks
+    )
+      return null;
+    const elapsed = cardElapsed(sequence, track);
+    if (elapsed >= duration) return null;
+    const startScale = clamp(
+        Number(options.startPose?.scale ?? from.poseScale ?? 1) || 1,
+        0.45,
+        1.35,
+      ),
+      startTilt = Number(options.startPose?.tilt ?? from.poseTilt ?? 0) || 0,
+      width = Math.max(
+        1,
+        from.baseW ||
+          from.w / startScale ||
+          to.w ||
+          (EmberViewport.mobile ? 96 : 125),
+      ),
+      height = Math.max(
+        1,
+        from.baseH || from.h / startScale || to.h || width * 1.44,
+      ),
+      dx = to.x - from.x,
+      dy = to.y - from.y,
+      endScaleX =
+        options.endScaleX ??
+        options.endScale ??
+        (track.kind === "play" ? (to.w || width) / width : 1),
+      endScaleY =
+        options.endScaleY ??
+        options.endScale ??
+        (track.kind === "play" ? (to.h || height) / height : 1),
+      el = document.createElement("div"),
+      finalTransform = `translate(${dx}px,${dy}px) rotate(0deg) scale(${endScaleX},${endScaleY})`;
+    el.className = "card-motion-proxy";
+    el.setAttribute("aria-hidden", "true");
+    el.dataset.motionId = track.id;
+    el.dataset.motionKind = track.kind;
+    el.dataset.motionSide = track.ref.side;
+    el.dataset.motionUid = track.ref.uid;
+    if (track.landingRef)
+      el.dataset.motionTargetUid = track.landingRef.uid;
+    // WAAPI is cancelled when it finishes. Keep the endpoint in the inline
+    // style so cancellation cannot snap the proxy back to its origin.
+    el.style.cssText = `left:${from.x - width / 2}px;top:${from.y - height / 2}px;width:${width}px;height:${height}px;transform:${finalTransform};opacity:.98`;
+    el.appendChild(cardProxyContent(markup, options.frontMarkup));
+    app.appendChild(el);
+    nodes.add(el);
+    track.proxy = el;
+    track.phase = "flight";
+    track.from = from;
+    track.to = to;
+    track.target = to;
+    track.duration = duration;
+    track.endScaleX = endScaleX;
+    track.endScaleY = endScaleY;
+    track.endScale = (endScaleX + endScaleY) / 2;
+    track.startPose = {
+      scale: startScale,
+      tilt: startTilt,
+      alreadyLifted: !!options.startPose?.alreadyLifted,
+    };
+    if (track.targetEl) bindCardTarget(track, track.targetEl, true);
+    const markers = track.markers || {},
+      liftAt = clamp(
+        ((markers.liftEndAt ?? markers.startAt ?? 0) -
+          (markers.startAt ?? 0)) /
+          duration,
+      ),
+      approachAt = clamp(
+        Math.max(
+          liftAt,
+          ((markers.approachAt ??
+          (markers.startAt ?? 0) + duration * 0.78) -
+          (markers.startAt ?? 0)) /
+          duration,
+        ),
+      ),
+      startTransform = `translate(0,0) rotate(${startTilt}deg) scale(${startScale})`,
+      liftedTransform = `translate(0,${track.startPose.alreadyLifted ? 0 : -12}px) rotate(0deg) scale(${Math.max(startScale, 0.92)})`,
+      approachTransform = `translate(${dx * 0.78}px,${dy * 0.78 - 18}px) rotate(2deg) scale(.86)`,
+      frames = [{ opacity: 0.98, transform: startTransform, offset: 0 }];
+    if (!track.startPose.alreadyLifted && liftAt > 0 && liftAt < 1)
+      frames.push({ opacity: 1, transform: liftedTransform, offset: liftAt });
+    if (approachAt > 0 && approachAt < 1)
+      frames.push({ opacity: 1, transform: approachTransform, offset: approachAt });
+    frames.push({ opacity: 0.98, transform: finalTransform, offset: 1 });
+    const animation = animate(
+      el,
+      frames,
+      {
+        duration,
+        delay: -elapsed,
+        // Marker offsets are compiled timestamps. A single non-linear easing
+        // would remap every boundary, so use linear clock progression and
+        // express local lift/approach accents in the keyframes themselves.
+        easing: "linear",
+        fill: "both",
+      },
+      () => {
+        if (track.animation === animation) {
+          track.animation = null;
+          track.reached = true;
+        }
+      },
+    );
+    ownCardAnimation(track, animation);
+    track.animation = animation;
+    const face = el.querySelector(".card-motion-face");
+    if (face && options.frontMarkup && !quality.low) {
+      // Make the revealed face the stable post-animation state too.
+      face.style.transform = "rotateY(180deg)";
+      const flipStart = clamp(
+          ((markers.flipStartAt ?? markers.liftEndAt ?? markers.startAt) -
+            markers.startAt) /
+            duration,
+        ),
+        flipEnd = clamp(
+          ((markers.flipEndAt ?? markers.handoffAt ?? markers.startAt + duration) -
+            markers.startAt) /
+            duration,
+        ),
+        flip = animate(
+          face,
+          [
+            { transform: "rotateY(0deg)", offset: 0 },
+            { transform: "rotateY(0deg)", offset: flipStart },
+            { transform: "rotateY(180deg)", offset: flipEnd },
+            { transform: "rotateY(180deg)", offset: 1 },
+          ],
+          { duration, delay: -elapsed, easing: "linear", fill: "both" },
+        );
+      ownCardAnimation(track, flip);
+    }
+    return track;
+  }
+  function handoffCardMotion(sequence, track, target = null, options = {}) {
+    if (!track || track.disposed || track.phase !== "flight") return false;
+    const live = target || trackTarget(sequence, track);
+    if (!live) {
+      disposeCardMotion(sequence, track);
+      return false;
+    }
+    const now = performance.now(),
+      markers = track.markers || {};
+    const endAt = markers.endAt ?? markers.handoffAt ?? 0;
+    if (now >= sequence.origin + endAt) {
+      disposeCardMotion(sequence, track);
+      return false;
+    }
+    const landing = options.landing ||
+      (track.clippedEdge ? track.target : pos(live) || track.target);
+    if (!validCardPoint(landing)) {
+      disposeCardMotion(sequence, track);
+      return false;
+    }
+    // Sample the painted proxy before cancelling WAAPI. The inline endpoint
+    // is intentionally kept on the element, so cancelling first would snap
+    // a late frame to the landing box and make the handoff visibly jump.
+    const currentProxy = track.proxy ? pos(track.proxy) : null,
+      currentSurface = cardSurfacePose(track.surfaceEl || live);
+    cancelOwnedCardAnimations(track);
+    bindCardTarget(track, live, false);
+    if (currentProxy && validCardPoint(currentProxy)) {
+      track.proxy.style.left = currentProxy.x - currentProxy.w / 2 + "px";
+      track.proxy.style.top = currentProxy.y - currentProxy.h / 2 + "px";
+      track.proxy.style.width = currentProxy.w + "px";
+      track.proxy.style.height = currentProxy.h + "px";
+      track.proxy.style.transform = "translate(0,0) rotate(0deg) scale(1)";
+      track.from = {
+        ...currentProxy,
+        baseW: currentProxy.w,
+        baseH: currentProxy.h,
+        poseScale: 1,
+        poseTilt: 0,
+      };
+      track.endScaleX = (landing.w || currentProxy.w) / currentProxy.w;
+      track.endScaleY = (landing.h || currentProxy.h) / currentProxy.h;
+      track.endScale = (track.endScaleX + track.endScaleY) / 2;
+    }
+    const surfaceFrom =
+      currentProxy || currentSurface?.point || landing;
+    if (!validCardPoint(surfaceFrom)) {
+      disposeCardMotion(sequence, track);
+      return false;
+    }
+    track.endScaleX = landing.w / Math.max(1, surfaceFrom.w);
+    track.endScaleY = landing.h / Math.max(1, surfaceFrom.h);
+    track.endScale = (track.endScaleX + track.endScaleY) / 2;
+    track.target = landing;
+    track.phase = "settle";
+    track.handedOff = true;
+    const handoffAt = sequence.origin + (markers.handoffAt ?? 0),
+      blendEnd = sequence.origin + (markers.blendEndAt ?? markers.handoffAt ?? 0);
+    track.handoffTimestamp = handoffAt;
+    track.handoffGeometry = {
+      startAt: now,
+      endAt: blendEnd,
+      start: surfaceFrom,
+      end: landing,
+    };
+    live.style.visibility = "";
+    const surface = track.surfaceEl || live,
+      blend = Math.max(0, blendEnd - now);
+    if (quality.low && track.lowFrontMarkup && track.proxy)
+      track.proxy
+        .querySelector(".card-motion-content")
+        ?.replaceWith(cardProxyContent(track.lowFrontMarkup));
+    try {
+      applyCardHandoffProxy(track, surfaceFrom, landing, now, blendEnd);
+      if (
+        !applyCardHandoffSurface(
+          sequence,
+          track,
+          surface,
+          surfaceFrom,
+          landing,
+          now,
+          // A short physical crossfade must still paint a non-zero live
+          // surface on the first compositor frame; otherwise a 16 ms blend
+          // can collapse to a proxy-only frame on 60 Hz displays.
+          0.08,
+        )
+      )
+        throw new Error("card handoff surface unavailable");
+    } catch {
+      // A browser may reject a late WAAPI creation (for example while a
+      // document is being reflowed). The rule sequence still owns its final
+      // commit; only this decorative track is discarded.
+      disposeCardMotion(sequence, track);
+      return false;
+    }
+    scheduleCardAt(
+      sequence,
+      track,
+      endAt,
+      () => disposeCardMotion(sequence, track),
+      track.kind === "draw" ? "draw-end" : "play-end",
+    );
+    if (
+      track.kind === "draw" &&
+      !track.landSound &&
+      !options.silent &&
+      now < sequence.origin + endAt
+    ) {
+      sound("land", landing, { gain: 0.42 });
+      track.landSound = true;
+    }
+    return true;
+  }
+  function disposeCardMotion(sequence, track) {
+    if (!track || track.disposed) return;
+    track.disposed = true;
+    track.handScrollCleanup?.();
+    track.handScrollCleanup = null;
+    for (const timer of track.timers || []) {
+      clearTimeout(timer);
+      timers.delete(timer);
+    }
+    for (const animation of track.animations || []) animation.cancel();
+    track.animation?.cancel();
+    track.settleAnimation?.cancel();
+    removeCardProxy(track);
+    restoreInline(track.targetEl, track.targetStyle);
+    restoreInline(track.surfaceEl, track.surfaceStyle);
+    const live = trackTarget(sequence, track);
+    if (live && live !== track.targetEl) live.style.visibility = "";
+    sequence.cards.delete(track.id);
+  }
+  function rebindCardSettle(sequence, track, target, now) {
+    if (track.phase !== "settle" || !target) return false;
+    const preRenderPose = track.preRenderCardPose,
+      oldSurface = track.surfaceEl || track.targetEl,
+      oldSurfacePose = preRenderPose?.surface || cardSurfacePose(oldSurface),
+      oldProxy = preRenderPose?.proxy || (track.proxy ? pos(track.proxy) : null),
+      oldProxyOpacity = preRenderPose
+        ? preRenderPose.proxyOpacity
+        : track.proxy
+          ? Number(getComputedStyle(track.proxy).opacity)
+          : 0,
+      landing = cardHandoffLanding(track, target),
+      from = oldSurfacePose?.point || oldProxy || landing;
+    track.preRenderCardPose = null;
+    if (!validCardPoint(landing) || !validCardPoint(from)) return false;
+    cancelOwnedCardAnimations(track);
+    bindCardTarget(track, target, false);
+    target.style.visibility = "";
+    const surface = track.surfaceEl || target;
+    replanCardHandoff(track, now, from, landing);
+    track.endScaleX = landing.w / Math.max(1, from.w);
+    track.endScaleY = landing.h / Math.max(1, from.h);
+    track.endScale = (track.endScaleX + track.endScaleY) / 2;
+    try {
+      applyCardHandoffProxy(
+        track,
+        oldProxy || from,
+        landing,
+        now,
+        handoffEndAt(sequence, track),
+        Number.isFinite(oldProxyOpacity) ? oldProxyOpacity : 0,
+      );
+      if (
+        !applyCardHandoffSurface(
+          sequence,
+          track,
+          surface,
+          from,
+          landing,
+          now,
+          oldSurfacePose?.opacity ?? 0,
+        )
+      )
+        throw new Error("card rebind surface unavailable");
+      return true;
+    } catch {
+      // Rebinding is local to the visual track. Restore the real card and let
+      // the owning presentation sequence commit normally if WAAPI rejects.
+      disposeCardMotion(sequence, track);
+      return false;
+    }
+  }
+  function rebindCardMotions(sequence) {
+    if (!sequence?.cards) return;
+    const now = performance.now();
+    for (const track of sequence.cards.values()) {
+      if (track.disposed) continue;
+      const target = trackTarget(sequence, track),
+        endAt = sequence.origin + (track.markers?.endAt ?? Infinity);
+      if (now >= endAt) {
+        disposeCardMotion(sequence, track);
+        continue;
+      }
+      const nextSurface = cardMotionSurface(track, target);
+      if (target !== track.targetEl || nextSurface !== track.surfaceEl) {
+        if (track.phase === "settle") {
+          if (!target || !rebindCardSettle(sequence, track, target, now))
+            disposeCardMotion(sequence, track);
+        } else {
+          bindCardTarget(track, target, true);
+        }
+      }
+      track.preRenderCardPose = null;
+      if (track.phase === "flight" && target)
+        target.style.visibility = "hidden";
+    }
+  }
+  function syncCardTargets() {
+    rebindCardMotions(activeSequence);
+  }
+  function startPlayCardMotion(
+    sequence,
+    events,
+    beat,
+    old,
+    cardOrigin,
+    card,
+    cardHTML,
+  ) {
+    const play = beat.events[0],
+      descriptor = sequence.plan.cardTracks?.find(
+        (track) => track.sourceEventId === play?.id,
+      );
+    if (!play || !descriptor || (card && card.type !== "minion")) return;
+    const landingBeat = sequence.plan.beats[descriptor.landingBeatIndex];
+    if (!landingBeat) return;
+    const captured =
+      cardOrigin?.side === play.side && cardOrigin.uid === play.uid
+        ? {
+            ...(old["hand" + play.uid] || {}),
+            ...cardOrigin.point,
+            html: cardOrigin.html || old["hand" + play.uid]?.html,
+          }
+        : old["hand" + play.uid];
+    const target = EmberViewport.minionLandingBox(
+      landingBeat.frame,
+      play.side,
+      descriptor.targetRef.uid,
+    );
+    const fallbackMarkup = captured?.html
+      ? ""
+      : typeof cardHTML === "function" && card
+        ? cardHTML(card)
+        : "";
+    const frontMarkup =
+      descriptor.face?.mode === "revealed-play" &&
+      play.side === "e" &&
+      typeof cardHTML === "function" &&
+      card
+        ? cardHTML(card)
+        : null;
+    if (!captured || !validCardPoint(target) || (!captured.html && !fallbackMarkup))
+      return;
+    const track = {
+      ...descriptor,
+      kind: "play",
+      ref: descriptor.sourceRef,
+      landingRef: descriptor.targetRef,
+      phase: "queued",
+      proxy: null,
+      targetEl: null,
+      disposed: false,
+      lowFrontMarkup: frontMarkup,
+    };
+    sequence.cards.set(track.id, track);
+    const flightDuration =
+      descriptor.markers.handoffAt - descriptor.markers.startAt;
+    const sourceWidth = Math.max(1, captured.baseW || captured.w || target.w),
+      sourceHeight = Math.max(1, captured.baseH || captured.h || target.h),
+      endScaleX = target.w / sourceWidth,
+      endScaleY = target.h / sourceHeight;
+    scheduleCardAt(
+      sequence,
+      track,
+      descriptor.markers.endAt,
+      () => disposeCardMotion(sequence, track),
+      "play-end",
+    );
+    if (cardElapsed(sequence, track) >= flightDuration) {
+      track.phase = "flight";
+      track.from = captured;
+      track.to = target;
+      track.target = target;
+      track.duration = flightDuration;
+      track.endScaleX = endScaleX;
+      track.endScaleY = endScaleY;
+      track.endScale = (endScaleX + endScaleY) / 2;
+      return;
+    }
+    let started = false;
+    try {
+      started = !!startCardMotion(
+        sequence,
+        track,
+        captured,
+        target,
+        cardMarkup(captured, fallbackMarkup),
+        flightDuration,
+        {
+          endScaleX,
+          endScaleY,
+          frontMarkup,
+          startPose: {
+            scale: cardOrigin?.scale,
+            tilt: cardOrigin?.tilt,
+            alreadyLifted: cardOrigin?.alreadyLifted,
+          },
+        },
+      );
+    } catch {
+      started = false;
+    }
+    if (!started) {
+      disposeCardMotion(sequence, track);
+      return;
+    }
+  }
+  function startDrawCardMotion(sequence, event, beat) {
+    if (!event?.uid || !["p", "e"].includes(event.side)) return;
+    const descriptor = sequence.plan.cardTracks?.find(
+        (track) => track.sourceEventId === event.id,
+      ),
+      anchor = EmberViewport.handCardAnchor?.(event.side, event.uid),
+      target = anchor?.el || cardTarget({ side: event.side, uid: event.uid }),
+      measuredTarget = anchor || (pos(target) ? { ...pos(target), status: "visible", el: target } : null),
+      targetPos = clippedHandTarget(measuredTarget, event.side),
+      source = EmberViewport.deckAnchor(event.side);
+    if (
+      !descriptor ||
+      !target ||
+      !measuredTarget ||
+      measuredTarget.status === "absent" ||
+      !validCardPoint(targetPos) ||
+      !validCardPoint(source)
+    )
+      return;
+    const frontMarkup =
+        descriptor.face?.mode === "player-flip"
+          ? cardMarkup({ html: target.outerHTML })
+          : null,
+      backMarkup =
+        '<div class="card-back card-motion-back" aria-hidden="true"></div>';
+    if (descriptor.face?.mode === "player-flip" && !frontMarkup) return;
+    const track = {
+      ...descriptor,
+      ref: descriptor.targetRef,
+      landingRef: descriptor.targetRef,
+      phase: "queued",
+      proxy: null,
+      targetEl: target,
+      disposed: false,
+      lowFrontMarkup: frontMarkup,
+      clippedEdge: measuredTarget.status === "clipped",
+      target: targetPos,
+    };
+    sequence.cards.set(track.id, track);
+    watchHandCard(sequence, track);
+    const flightDuration =
+      descriptor.markers.handoffAt - descriptor.markers.startAt;
+    if (cardElapsed(sequence, track) >= flightDuration) {
+      track.phase = "flight";
+      track.from = source;
+      track.to = targetPos;
+      track.target = targetPos;
+      track.duration = flightDuration;
+      track.endScaleX = targetPos.w / Math.max(1, source.w);
+      track.endScaleY = targetPos.h / Math.max(1, source.h);
+      track.endScale = (track.endScaleX + track.endScaleY) / 2;
+      bindCardTarget(track, target, true);
+      handoffCardMotion(sequence, track, target, {
+        landing: targetPos,
+        silent: true,
+      });
+      return;
+    }
+    // Register the track deadline before starting WAAPI. If proxy startup
+    // throws, disposeCardMotion can cancel the same deadline together with
+    // the hand scroll watcher instead of leaving a detached timer behind.
+    scheduleCardAt(
+      sequence,
+      track,
+      descriptor.markers.endAt,
+      () => disposeCardMotion(sequence, track),
+      "draw-end",
+    );
+    let started = false;
+    try {
+      started = !!startCardMotion(
+        sequence,
+        track,
+        source,
+        targetPos,
+        backMarkup,
+        flightDuration,
+        {
+          endScaleX: targetPos.w / Math.max(1, source.w),
+          endScaleY: targetPos.h / Math.max(1, source.h),
+          frontMarkup,
+        },
+      );
+    } catch {
+      started = false;
+    }
+    if (!started) {
+      disposeCardMotion(sequence, track);
+      return;
+    }
+    scheduleCardAt(
+      sequence,
+      track,
+      descriptor.markers.handoffAt,
+      () => handoffCardMotion(sequence, track),
+      "draw-handoff",
     );
   }
   function reveal(c, side, cardHTML) {
@@ -1075,6 +2055,11 @@ const EmberFX = (() => {
     ];
   }
   function cleanupVisuals(sequence = activeSequence) {
+    if (sequence?.cards) {
+      for (const track of [...sequence.cards.values()])
+        disposeCardMotion(sequence, track);
+      sequence.cards.clear();
+    }
     timers.forEach(clearTimeout);
     timers.clear();
     animations.forEach((a) => a.cancel());
@@ -1155,13 +2140,22 @@ const EmberFX = (() => {
       { duration: d },
     );
   }
-  function present(events, s, render, after, cardHTML, before = null) {
+  function present(
+    events,
+    s,
+    render,
+    after,
+    cardHTML,
+    before = null,
+    options = null,
+  ) {
     const version = ++presentationVersion;
     if (busy) {
       const result = cancel(true);
       if (result.reentered || presentationVersion !== version) return;
     }
     clearTurnCue();
+    const cardOrigin = options?.cardOrigin || null;
     const primary = events.find((e) =>
       ["play", "attack", "power"].includes(e.type),
     );
@@ -1281,18 +2275,47 @@ const EmberFX = (() => {
             },
           );
       }
-    for (const beat of plan.beats)
+    for (const [beatIndex, beat] of plan.beats.entries())
       scheduleAt(sequence, beat.at, () => {
         const now = performance.now();
         retireExpiredAttackOwners(now, false, sequence);
         retireExpiredReactions(sequence, now);
+        for (const track of [...sequence.cards.values()])
+          if (now >= sequence.origin + (track.markers?.endAt ?? Infinity))
+            disposeCardMotion(sequence, track);
         const old = capture(),
           event = beat.events[0];
         Object.assign(history, old);
         render(beat.frame);
         if (!isCurrentSequence(sequence)) return;
         rebindReactions(sequence);
+        rebindCardMotions(sequence);
+        if (event.type === "summon") {
+          for (const landed of beat.events) {
+            const track = [...sequence.cards.values()].find(
+              (candidate) => candidate.landingEventId === landed.id,
+            );
+            if (track) handoffCardMotion(sequence, track, unit(landed.side, landed.uid));
+          }
+        }
         const reactionTargets = new Set(sequence.reactions.keys());
+        for (const trackId of [
+          ...(beat.cardStartIds || []),
+          ...(beat.cardLandingIds || []),
+        ]) {
+          const descriptor = plan.cardTracks?.find(
+            (track) => track.id === trackId,
+          );
+          if (descriptor) reactionTargets.add(cardLayoutKey(descriptor));
+        }
+        for (const track of sequence.cards.values()) {
+          if (track.disposed) continue;
+          if (
+            track.startBeatIndex === beatIndex ||
+            track.landingBeatIndex === beatIndex
+          )
+            reactionTargets.add(cardLayoutKey(track));
+        }
         for (const contact of beat.contacts || []) {
           if (
             contact.targetRef &&
@@ -1320,14 +2343,28 @@ const EmberFX = (() => {
             c?.type === "minion" ? "select" : "play",
             old["hand" + event.uid] || from,
           );
+          const cardTrack = plan.cardTracks?.find(
+            (track) => track.sourceEventId === event.id,
+          );
           const target = event.target;
           const profile = EmberRules.profile(c);
-          const summon = events.find((e) => e.type === "summon");
+          const summon = cardTrack
+            ? events.find((e) => e.id === cardTrack.landingEventId)
+            : events.find((e) => e.type === "summon");
           const firstEffect = events.find(
             (e) =>
               ["damage", "heal", "status", "summon"].includes(e.type) && e.side,
           );
-          const to = target
+          const landingPoint = cardTrack
+            ? EmberViewport.minionLandingBox(
+                plan.beats[cardTrack.landingBeatIndex]?.frame,
+                cardTrack.targetRef.side,
+                cardTrack.targetRef.uid,
+              )
+            : null;
+          const to = landingPoint && c?.type === "minion"
+            ? landingPoint
+            : target
             ? locate(old, target, beat.frame)
             : summon
               ? fallback(s, summon.side, summon.uid)
@@ -1341,11 +2378,13 @@ const EmberFX = (() => {
                     profile.self ? event.side : event.side === "p" ? "e" : "p",
                   );
           if (c?.type === "minion") {
-            cardFlight(
+            startPlayCardMotion(
+              sequence,
+              events,
+              beat,
+              old,
+              cardOrigin,
               c,
-              old["hand" + event.uid] || from,
-              to,
-              beat.hold,
               cardHTML,
             );
             rune(to.x, to.y, school, 62, beat.hold);
@@ -1472,6 +2511,13 @@ const EmberFX = (() => {
         postEvents(beat.events, beat.frame, positions, primary, school, {
           sequence,
           contacts: beat.contacts || [],
+          beat,
+          startDraw: (drawEvent) => startDrawCardMotion(sequence, drawEvent, beat),
+          cardLanding: (summonEvent) =>
+            sequence.cardLandingIds.has(summonEvent.id),
+          primaryLandingEventId:
+            plan.cardTracks?.find((track) => track.sourceEventId === primary?.id)
+              ?.landingEventId || null,
           ownerFor: (ref) => attackOwners.get(refKey(ref)),
           retireAttack: (key) => {
             const owner = attackOwners.get(key);
@@ -1530,6 +2576,8 @@ const EmberFX = (() => {
     scheduleAt(sequence, plan.duration + 80, () => {
       retireExpiredReactions(sequence, performance.now(), true);
       retireExpiredAttackOwners(performance.now(), true, sequence);
+      for (const track of [...sequence.cards.values()])
+        disposeCardMotion(sequence, track);
       closeSequence(sequence);
       const commit = pendingCommit,
         cb = doneCallback;
@@ -1711,22 +2759,27 @@ const EmberFX = (() => {
         if (el && !quality.reduced) {
           arrival(p, EmberData.byId[e.cid]);
           EmberVFX.arrival(EmberFXProfiles.get(e.cid).arrival, p, cl);
-          animate(
-            el,
-            [
-              { opacity: 1, translate: "0 3px", scale: "1.09 .93" },
-              {
-                opacity: 1,
-                translate: "0 -2px",
-                scale: ".985 1.025",
-                offset: 0.45,
-              },
-              { opacity: 1, translate: "0 0", scale: "1" },
-            ],
-            { duration: 280, easing: "cubic-bezier(.16,.8,.24,1)" },
-          );
+          if (!context.cardLanding?.(e))
+            animate(
+              el,
+              [
+                { opacity: 1, translate: "0 3px", scale: "1.09 .93" },
+                {
+                  opacity: 1,
+                  translate: "0 -2px",
+                  scale: ".985 1.025",
+                  offset: 0.45,
+                },
+                { opacity: 1, translate: "0 0", scale: "1" },
+              ],
+              { duration: 280, easing: "cubic-bezier(.16,.8,.24,1)" },
+            );
         }
-        if (primary?.type === "play" && primary.cid === e.cid && !e.rebornFrom)
+        if (
+          primary?.type === "play" &&
+          context.primaryLandingEventId === e.id &&
+          !e.rebornFrom
+        )
           sound("play", p, { gain: 0.8 });
         sound("summon", p);
         if (EmberData.byId[e.cid]?.rarity === "legendary")
@@ -1742,29 +2795,8 @@ const EmberFX = (() => {
       }
       if (e.type === "draw")
         sound("draw", e.side === "p" ? { x: W * 0.72 } : { x: W * 0.55 });
-      if (e.type === "draw" && e.side === "p" && !quality.reduced) {
-        const el = document.querySelector(`#hand [data-hand="${e.uid}"]`),
-          end = pos(el);
-        if (!end) return;
-        el.style.visibility = "hidden";
-        schedule(() => {
-          el.style.visibility = "";
-          if (el.isConnected)
-            animate(el, [{ opacity: 0 }, { opacity: 1 }], { duration: 100 });
-          sound("land", end, { gain: 0.42 });
-        }, 200);
-        add(
-          "draw",
-          {
-            from: EmberViewport.mobile
-              ? { x: W - 25, y: EmberViewport.layout.hand.y - 18 }
-              : { x: 1137, y: 723 },
-            to: end,
-            school: "holy",
-          },
-          200,
-        );
-      }
+      if (e.type === "draw" && !quality.reduced)
+        context.startDraw?.(e);
       if (e.type === "burn") {
         const p = fallback(s, e.side, "hero");
         sound("burn", p);
@@ -2379,32 +3411,6 @@ const EmberFX = (() => {
         ctx.stroke();
         break;
       }
-      case "draw": {
-        const p = bezier({ ...e, bend: -90 }, ease(k));
-        ctx.translate(p.x, p.y);
-        ctx.rotate((1 - k) * -0.5);
-        const size = EmberViewport.mobile ? 0.72 : 1;
-        ctx.scale(size, size);
-        ctx.globalCompositeOperation = "source-over";
-        ctx.globalAlpha = Math.min(1, (1 - k) * 10);
-        ctx.shadowColor = "#140b07aa";
-        ctx.shadowBlur = 10;
-        ctx.shadowOffsetY = 6;
-        ctx.fillStyle = "#342019";
-        ctx.strokeStyle = "#c49954";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.roundRect(-24, -34, 48, 68, 5);
-        ctx.fill();
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-        ctx.shadowOffsetY = 0;
-        ctx.strokeRect(-18, -28, 36, 56);
-        ctx.rotate(Math.PI / 4);
-        ctx.fillStyle = "#ddb575";
-        ctx.fillRect(-7, -7, 14, 14);
-        break;
-      }
     }
     ctx.restore();
   }
@@ -2547,7 +3553,7 @@ const EmberFX = (() => {
       for (const el of [...nodes])
         if (
           el.matches(
-            ".death-ghost,.cast-card,.summon-seal,.card-flight,.signature-cue,.divine-arrival",
+            ".death-ghost,.cast-card,.summon-seal,.card-motion-proxy,.signature-cue,.divine-arrival",
           )
         ) {
           el.remove();
@@ -2575,6 +3581,8 @@ const EmberFX = (() => {
     reflow,
     present,
     cancel,
+    captureCardTargets,
+    syncCardTargets,
     setView,
     setTheme,
     configure,
