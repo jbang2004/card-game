@@ -106,6 +106,7 @@ test("hand rail keeps compact rules complete without a nested scroller", async (
         overflow: getComputedStyle(text).overflowY,
         scrollHeight: text.scrollHeight,
         clientHeight: text.clientHeight,
+        fontSize: Number.parseFloat(getComputedStyle(text).fontSize),
         artHeight: card.querySelector(".card-art").getBoundingClientRect().height,
         objectFit: getComputedStyle(card.querySelector(".card-art img")).objectFit,
         ruleSize: card.dataset.ruleSize,
@@ -119,6 +120,8 @@ test("hand rail keeps compact rules complete without a nested scroller", async (
   expect(state.every((x) => x.scrollHeight <= x.clientHeight + 1)).toBe(true);
   expect(state.every((x) => x.objectFit === "cover")).toBe(true);
   expect(state.map((x) => x.ruleSize)).toEqual(["short", "standard", "long"]);
+  expect(state[0].fontSize).toBeGreaterThan(state[1].fontSize);
+  expect(state[1].fontSize).toBeGreaterThanOrEqual(state[2].fontSize);
   expect(Math.max(...state.map((x) => x.artHeight)) - Math.min(...state.map((x) => x.artHeight))).toBeLessThanOrEqual(1);
   expect(state.every((x) => x.verticalFit)).toBe(true);
   await context.close();
@@ -146,6 +149,7 @@ test("desktop hand rail uses the same static card face contract", async ({
         overflow: getComputedStyle(text).overflowY,
         scrollHeight: text.scrollHeight,
         clientHeight: text.clientHeight,
+        fontSize: Number.parseFloat(getComputedStyle(text).fontSize),
         artHeight: hand.querySelector(".card-art").getBoundingClientRect().height,
         objectFit: getComputedStyle(hand.querySelector(".card-art img")).objectFit,
         ruleSize: hand.querySelector(".card").dataset.ruleSize,
@@ -158,6 +162,8 @@ test("desktop hand rail uses the same static card face contract", async ({
   expect(state.every((x) => x.scrollHeight <= x.clientHeight + 1)).toBe(true);
   expect(state.every((x) => x.objectFit === "cover")).toBe(true);
   expect(state.map((x) => x.ruleSize)).toEqual(["short", "standard", "long"]);
+  expect(state[0].fontSize).toBeGreaterThan(state[1].fontSize);
+  expect(state[1].fontSize).toBeGreaterThanOrEqual(state[2].fontSize);
   expect(Math.max(...state.map((x) => x.artHeight)) - Math.min(...state.map((x) => x.artHeight))).toBeLessThanOrEqual(1);
   expect(state.every((x) => x.verticalFit)).toBe(true);
 });
@@ -184,6 +190,19 @@ for (const [name, viewport, touch] of [
       return {
         card: measure(card),
         art: measure(card.querySelector(".card-art")),
+        artPosition: getComputedStyle(card.querySelector(".card-art")).position,
+        imagePosition: getComputedStyle(card.querySelector(".card-art img")).position,
+        imageOffsetParentIsArt:
+          card.querySelector(".card-art img").offsetParent ===
+          card.querySelector(".card-art"),
+        imageFillsArt: (() => {
+          const art = card.querySelector(".card-art"),
+            img = card.querySelector(".card-art img");
+          return (
+            Math.abs(img.offsetWidth - art.clientWidth) <= 1 &&
+            Math.abs(img.offsetHeight - art.clientHeight) <= 1
+          );
+        })(),
       };
     });
     await page.locator("#mulligan-confirm").click();
@@ -196,6 +215,19 @@ for (const [name, viewport, touch] of [
       return {
         card: measure(card),
         art: measure(card.querySelector(".card-art")),
+        artPosition: getComputedStyle(card.querySelector(".card-art")).position,
+        imagePosition: getComputedStyle(card.querySelector(".card-art img")).position,
+        imageOffsetParentIsArt:
+          card.querySelector(".card-art img").offsetParent ===
+          card.querySelector(".card-art"),
+        imageFillsArt: (() => {
+          const art = card.querySelector(".card-art"),
+            img = card.querySelector(".card-art img");
+          return (
+            Math.abs(img.offsetWidth - art.clientWidth) <= 1 &&
+            Math.abs(img.offsetHeight - art.clientHeight) <= 1
+          );
+        })(),
       };
     });
     const ratio = 5 / 7;
@@ -204,6 +236,12 @@ for (const [name, viewport, touch] of [
     expect(cardRatio(opening.card)).toBeCloseTo(ratio, 2);
     expect(cardRatio(hand.card)).toBeCloseTo(ratio, 2);
     expect(artRatio(opening.art)).toBeCloseTo(artRatio(hand.art), 1);
+    for (const view of [opening, hand]) {
+      expect(view.artPosition).toBe("absolute");
+      expect(view.imagePosition).toBe("absolute");
+      expect(view.imageOffsetParentIsArt).toBe(true);
+      expect(view.imageFillsArt).toBe(true);
+    }
     await context.close();
   });
 }
