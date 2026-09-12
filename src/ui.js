@@ -297,8 +297,10 @@
       width = Math.min(
         280,
         Math.max(154, 34 + [...String(text)].length * 13),
-      ),
-      height = 38;
+      );
+    // Measure wrapped copy in the active theme before anchoring above a card.
+    notice.style.width = width + "px";
+    const height = notice.offsetHeight || 38;
     const rail = EmberViewport.mobile ? EmberViewport.layout.notice : {x:25,y:510,w:222};
     let x = rail.x, y = rail.y;
     if (!anchor) {

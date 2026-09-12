@@ -1363,3 +1363,9 @@ body .card[data-rule-size="long"] .card-text {
 body .lobby-copy {
   color: var(--ink);
 }
+/* Small lobby copy needs its own contrast on both dawn and dusk artwork. */
+body .lobby-copy :is(.lobby-desc, .lobby-tagline) {
+  color: var(--ink);
+  opacity: 1;
+  text-shadow: 0 1px 3px var(--surface), 0 0 8px var(--surface);
+}

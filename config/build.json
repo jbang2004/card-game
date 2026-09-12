@@ -61,5 +61,9 @@
   "THEME_RUNTIME": "presentation/theme.js",
   "SCREEN_HEROES": "application/screens/heroes.js",
   "SCREEN_CAMPAIGN": "application/screens/campaign.js",
-  "SCREEN_PREFERENCES": "application/screens/preferences.js"
+  "SCREEN_PREFERENCES": "application/screens/preferences.js",
+  "POLISH_DESKTOP": "presentation/polish-desktop.css",
+  "POLISH_DIALOGS": "presentation/polish-dialogs.css",
+  "POLISH_BATTLE": "presentation/polish-battle.css",
+  "POLISH_MOBILE": "presentation/polish-mobile.css"
 }

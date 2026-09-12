@@ -1,0 +1,291 @@
+/* Desktop workspace rhythm. Presentation only; mobile has its own layout.
+ * These rules share the theme palette and do not alter the battle input plane. */
+body:not(.mobile-ui)
+  #modal.folio-host
+  > :is(.hero-chooser, .library-box, .adventure-atlas) {
+  padding: 28px 40px;
+}
+body:not(.mobile-ui)
+  #modal.folio-host
+  :is(.library-heading, .adventure-atlas > .modal-heading)
+  h2,
+body:not(.mobile-ui) #modal.folio-host[data-type="heroes"] .modal-heading h2 {
+  font-size: 30px;
+  line-height: 1.25;
+  letter-spacing: 3px;
+}
+body:not(.mobile-ui) #modal.folio-host .modal-heading::after {
+  background: var(--line);
+}
+/* Keep the character silhouette clear; give its dossier a regular vertical beat. */
+body:not(.mobile-ui) #modal.folio-host[data-type="heroes"] .hero-single-sheet {
+  padding: 10px 0 18px;
+}
+body:not(.mobile-ui) #modal.folio-host[data-type="heroes"] .hero-configuration {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 14px 16px;
+}
+body:not(.mobile-ui)
+  #modal.folio-host[data-type="heroes"]
+  .hero-configuration
+  > * {
+  grid-column: 1 / -1;
+}
+body:not(.mobile-ui) #modal.folio-host[data-type="heroes"] .hero-config-deck {
+  grid-column: 1;
+}
+body:not(.mobile-ui) #modal.folio-host[data-type="heroes"] .hero-config-mode {
+  grid-column: 2;
+}
+body:not(.mobile-ui)
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading
+  h3 {
+  margin: 5px 0 0;
+  font-size: 36px;
+  line-height: 1.2;
+}
+body:not(.mobile-ui)
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading
+  small {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--ink-secondary);
+}
+body:not(.mobile-ui) #modal.folio-host[data-type="heroes"] .hero-skill {
+  padding: 14px 0;
+}
+body:not(.mobile-ui)
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-intro
+  .hero-deck-note {
+  margin: 0;
+  line-height: 1.65;
+}
+body:not(.mobile-ui) #modal.folio-host[data-type="heroes"] .archetype-picker {
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+body:not(.mobile-ui)
+  #modal.folio-host[data-type="heroes"]
+  .hero-configuration
+  select {
+  font-size: 13px;
+  padding: 8px 10px;
+}
+body:not(.mobile-ui) #modal.folio-host[data-type="heroes"] .hero-composition {
+  padding: 12px 0;
+}
+body:not(.mobile-ui) #modal.folio-host[data-type="heroes"] .comp-curve {
+  height: 54px;
+}
+body:not(.mobile-ui) #modal.folio-host[data-type="heroes"] .modal-footer {
+  display: grid;
+  grid-template-columns: minmax(100px, 0.75fr) minmax(180px, 1.25fr);
+  width: 36%;
+  gap: 12px;
+  padding: 10px 0 0 18px;
+}
+body:not(.mobile-ui)
+  #modal.folio-host[data-type="heroes"]
+  .modal-footer
+  button {
+  min-width: 0;
+  padding: 10px 14px;
+  white-space: nowrap;
+  font-size: 17px;
+}
+body:not(.mobile-ui) #modal.folio-host[data-type="heroes"] .hero-options {
+  gap: 22px;
+}
+/* Card widths follow the reading size, not a fixed count on every monitor. */
+body:not(.mobile-ui) #modal.folio-host #library-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 28px 24px;
+  padding: 14px 14px 28px;
+}
+body:not(.mobile-ui) #modal.folio-host .library-heading {
+  gap: 28px;
+  padding-bottom: 18px;
+}
+body:not(.mobile-ui) #modal.folio-host .library-heading input {
+  max-width: 480px;
+  flex: 1;
+}
+body:not(.mobile-ui) #modal.folio-host .filter-bar {
+  gap: 12px 20px;
+  padding-bottom: 14px;
+}
+body:not(.mobile-ui) #modal.folio-host .library-layout {
+  gap: 28px;
+}
+body:not(.mobile-ui) #modal.folio-host .deck-editor {
+  padding: 16px;
+  border-color: var(--line);
+}
+body:not(.mobile-ui) #modal.folio-host .library-item .library-count {
+  margin-top: 12px;
+  line-height: 1.6;
+}
+/* Match map framing to the other workspaces; the art remains the focal point. */
+body:not(.mobile-ui) #modal.folio-host .adventure-atlas .modal-scroll {
+  gap: 28px;
+}
+body:not(.mobile-ui) #modal.folio-host .atlas-dossier {
+  gap: 18px;
+  padding-left: 0;
+}
+body:not(.mobile-ui) #modal.folio-host .atlas-dossier h3 {
+  font-size: 28px;
+  line-height: 1.4;
+  letter-spacing: 2px;
+}
+body:not(.mobile-ui) #modal.folio-host .atlas-dossier > img {
+  height: clamp(190px, 29vh, 260px);
+}
+body:not(.mobile-ui) #modal.folio-host .atlas-footer {
+  padding-top: 18px;
+  border-color: var(--line);
+}
+body:not(.mobile-ui) .lobby-actions .ghost-btn {
+  font-weight: 400;
+}
+body:not(.mobile-ui) #lobby-library-btn {
+  top: -10px;
+  text-shadow: 0 2px 12px var(--surface);
+}
+body:not(.mobile-ui) .lobby-bottom {
+  font-size: 13px;
+  text-shadow: 0 2px 10px var(--surface);
+}
+@media (max-width: 1440px) {
+  body:not(.mobile-ui) #modal.folio-host #library-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (max-width: 1200px) {
+  body:not(.mobile-ui) #modal.folio-host #library-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  body:not(.mobile-ui) #modal.folio-host .library-layout {
+    gap: 22px;
+    grid-template-columns: minmax(0, 1fr) 280px;
+  }
+  body:not(.mobile-ui) #modal.folio-host[data-type="heroes"] .modal-footer {
+    width: 40%;
+  }
+  body:not(.mobile-ui)
+    #modal.folio-host[data-type="heroes"]
+    .hero-configuration
+    select {
+    font-size: 12px;
+  }
+  body:not(.mobile-ui) #modal.folio-host .atlas-location {
+    width: 140px;
+  }
+  body:not(.mobile-ui) #modal.folio-host .atlas-node {
+    gap: 7px;
+    padding: 8px 6px;
+  }
+  body:not(.mobile-ui) #modal.folio-host .atlas-node .atlas-landmark {
+    width: 36px;
+    height: 36px;
+  }
+  body:not(.mobile-ui) #modal.folio-host .atlas-name {
+    font-size: 14px;
+  }
+}
+@media (min-width: 1900px) {
+  body:not(.mobile-ui) #modal.folio-host #library-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+body:not(.mobile-ui) #modal.folio-host #library-grid {
+  grid-auto-rows: max-content;
+}
+body:not(.mobile-ui) #modal.folio-host .library-item {
+  width: 100%;
+  max-width: 232px;
+  justify-self: center;
+}
+body:not(.mobile-ui) #modal.folio-host .deck-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+body:not(.mobile-ui) #modal.folio-host .deck-actions button {
+  min-width: 0;
+  white-space: nowrap;
+  min-height: 44px;
+}
+body:not(.mobile-ui) #modal.folio-host .deck-actions button:last-child {
+  grid-column: 1 / -1;
+}
+body:not(.mobile-ui) #modal.folio-host[data-type="heroes"] .comp-curve,
+body:not(.mobile-ui) #modal.folio-host[data-type="heroes"] .comp-curve i {
+  height: 64px;
+}
+body:not(.mobile-ui) #modal.folio-host[data-type="heroes"] .comp-curve i {
+  background: transparent;
+  border-bottom: 1px solid var(--line);
+}
+body:not(.mobile-ui)
+  #modal.folio-host[data-type="heroes"]
+  .comp-curve
+  i::before {
+  max-height: 40px;
+}
+body:not(.mobile-ui)
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-plan
+  .deck-plan {
+  padding: 12px 0;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink-secondary);
+  line-height: 1.7;
+}
+body:not(.mobile-ui) #modal.folio-host .adventure-atlas .atlas-heading h2 {
+  font-weight: 400;
+  text-shadow: none;
+}
+body:not(.mobile-ui) #modal.folio-host .adventure-atlas .atlas-heading::after {
+  box-shadow: none;
+  border: 0;
+  background: var(--line);
+}
+/* Separate the card's projecting stat gems from the independent action row. */
+body:not(.mobile-ui) #modal.folio-host .library-entry {
+  max-width: 232px;
+  row-gap: 18px;
+}
+body:not(.mobile-ui)
+  #modal.folio-host
+  .library-item
+  > :is(.add-label, .owned-count) {
+  color: var(--ink-secondary);
+}
+body:not(.mobile-ui) #modal.folio-host .deck-curve .curve-bar {
+  background: var(--accent);
+  border-color: var(--line-bright);
+  box-shadow: none;
+}
+body:not(.mobile-ui) #modal.folio-host .deck-curve .curve-bar small {
+  color: var(--ink-secondary);
+}
+body:not(.mobile-ui) #modal.folio-host .deck-row > .cost {
+  background: var(--surface-raised);
+  border-color: var(--line-bright);
+  color: var(--accent);
+  box-shadow: none;
+}
+body:not(.mobile-ui) #modal.folio-host .atlas-footer .atlas-focus strong {
+  color: var(--ink);
+}
+body:not(.mobile-ui) #modal.folio-host .atlas-footer .atlas-relic-label {
+  color: var(--ink-secondary);
+}

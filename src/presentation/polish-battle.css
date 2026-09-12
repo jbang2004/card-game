@@ -1,0 +1,182 @@
+/* Battle command rails stay outside the board's shared input plane. */
+body:not(.touch-layout) .campaign-panel {
+  height: 372px;
+  max-height: 372px;
+  bottom: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 16px;
+  overflow: hidden;
+}
+body:not(.touch-layout) .campaign-panel .section-label {
+  display: flex;
+  font: 500 10px var(--ui-font);
+  letter-spacing: 2px;
+  color: var(--muted-ink);
+  margin: 0;
+}
+body:not(.touch-layout) .campaign-panel .chapter-name {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.3;
+  letter-spacing: 2px;
+}
+body:not(.touch-layout) .campaign-panel .chapter-sub {
+  line-height: 1.5;
+  font-size: 10px;
+  letter-spacing: 0.6px;
+  color: var(--ink-secondary);
+}
+body:not(.touch-layout) .campaign-panel .path-list {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin: 2px 0 0;
+  padding: 0 4px 0 0;
+}
+body:not(.touch-layout) .campaign-panel .path-list::before {
+  display: none;
+}
+body:not(.touch-layout) .campaign-panel .path-item {
+  display: flex;
+  gap: 12px;
+  min-height: 44px;
+  margin: 0;
+  padding: 6px 0;
+  opacity: 0.7;
+  border-bottom: 1px solid var(--line);
+}
+body:not(.touch-layout) .campaign-panel .path-item:last-child {
+  border: 0;
+}
+body:not(.touch-layout) .campaign-panel .path-item.current {
+  opacity: 1;
+}
+body:not(.touch-layout) .campaign-panel .path-node {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  justify-content: center;
+  align-self: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  font: 400 11px var(--ui-font);
+  color: var(--ink-secondary);
+  background: none;
+  box-shadow: none;
+}
+body:not(.touch-layout) .campaign-panel .path-item.current .path-node {
+  background: var(--surface-raised);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+body:not(.touch-layout) .campaign-panel .path-item strong {
+  font: 500 13px/1.5 var(--ui-font);
+  color: var(--ink);
+  letter-spacing: 0.5px;
+}
+body:not(.touch-layout) .campaign-panel .path-item small {
+  margin-top: 2px;
+  font: 400 10px/1.4 var(--ui-font);
+  color: var(--ink-secondary);
+}
+body:not(.touch-layout) .campaign-panel .relic-slots {
+  flex: none;
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+body:not(.touch-layout) .campaign-panel .relic-slot {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+}
+body:not(.touch-layout) .boss-panel {
+  height: auto;
+  max-height: 376px;
+  bottom: auto;
+  overflow-y: auto;
+  padding: 18px;
+}
+body:not(.touch-layout) .boss-order {
+  color: var(--muted-ink);
+  font: 500 9px/1.5 var(--ui-font);
+  letter-spacing: 1.5px;
+}
+body:not(.touch-layout) .boss-info-name {
+  margin: 14px 0 6px;
+  line-height: 1.4;
+  letter-spacing: 2px;
+}
+body:not(.touch-layout) .boss-info-english {
+  color: var(--ink-secondary);
+  font: 400 9px/1.6 var(--ui-font);
+  letter-spacing: 1.4px;
+  margin: 0 0 18px;
+}
+body:not(.touch-layout) .boss-power-info {
+  border-block: 1px solid var(--line);
+  padding: 16px 0;
+}
+body:not(.touch-layout) .boss-power-info strong {
+  color: var(--accent);
+  font: 500 14px/1.5 var(--ui-font);
+}
+body:not(.touch-layout) .boss-panel :is(.boss-power-info, .phase-info) p {
+  margin: 8px 0 0;
+  color: var(--ink-secondary);
+  font: 400 12px/1.8 var(--ui-font);
+}
+body:not(.touch-layout) .phase-info {
+  margin-top: 0;
+  padding: 16px 0 0;
+}
+body:not(.touch-layout) .phase-info small {
+  color: var(--ink);
+  font: 500 10px/1.6 var(--ui-font);
+  letter-spacing: 1px;
+}
+body:not(.touch-layout) .hand-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 22px;
+  font: 500 11px/1.5 var(--ui-font);
+  letter-spacing: 0.5px;
+}
+body:not(.touch-layout) .hand-label .hand-en {
+  color: var(--muted-ink);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+}
+body:not(.touch-layout) .hand-label .hand-tip {
+  font: 400 10px/1.5 var(--ui-font);
+  margin-left: 10px;
+}
+body:not(.touch-layout) .mana-panel {
+  height: auto;
+  min-height: 82px;
+}
+body:not(.touch-layout) .mana-gems {
+  grid-template-columns: repeat(10, 1fr);
+  gap: 2px;
+  margin-top: 9px;
+}
+body:not(.touch-layout) .mana-gem {
+  width: 17px;
+  height: 19px;
+}
+body:not(.touch-layout) .mana-caption strong {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+body:not(.touch-layout) .turn-number {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
+}
