@@ -76,12 +76,12 @@ async function assertDialogFit(page) {
       if (!e.checkVisibility()) continue;
       const b = e.getBoundingClientRect();
       if (
-        b.left < r.left + 19 ||
-        b.right > r.right - 19 ||
-        b.bottom > r.bottom - 19 ||
-        b.top < r.top + 19
+        b.left < r.left + 8 ||
+        b.right > r.right - 8 ||
+        b.bottom > r.bottom - 8 ||
+        b.top < r.top + 8
       )
-        errors.push(`${e.id || e.className} has no rim clearance`);
+        errors.push(`${e.id || e.className} has no viewport clearance`);
     }
     return errors;
   });

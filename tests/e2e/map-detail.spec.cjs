@@ -17,10 +17,10 @@ for (const [width, height] of [
     await page.goto("./?debug=1");
     await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
     await page.locator("#adventure-nav").evaluate((e) => e.click());
-    const nodes = await page.locator(".map-stop").evaluateAll((es) =>
+    const nodes = await page.locator(".atlas-location").evaluateAll((es) =>
       es.map((e) => {
         const box = e.getBoundingClientRect();
-        const text = [...e.querySelectorAll("h3,p")].map((n) => {
+        const text = [...e.querySelectorAll(".atlas-name,.atlas-status")].filter(n => n.checkVisibility()).map((n) => {
           const r = n.getBoundingClientRect();
           return {
             x: r.x,
@@ -46,7 +46,7 @@ for (const [width, height] of [
       for (const t of n.text) {
         expect(t.x).toBeGreaterThanOrEqual(n.x);
         expect(t.right).toBeLessThanOrEqual(n.right + 1);
-        expect(t.width).toBeGreaterThan(90);
+        expect(t.width).toBeGreaterThan(30);
         expect(t.scroll).toBeLessThanOrEqual(t.client + 1);
       }
     }

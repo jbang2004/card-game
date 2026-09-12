@@ -1,0 +1,81 @@
+/* Theme data only: semantic artwork, lighting and composition. No game state. */
+const EmberThemeDefinition = Object.freeze({
+  id: "silverblue",
+  name: "星海银蓝",
+  title: "烬域 · 风起之境",
+  copy: Object.freeze({
+    eyebrow: "旅人的星海序章",
+    subtitle: "风起之境",
+    tagline: "以卡为契，与星同行",
+    footer: "EMBERFALL / A JOURNEY AMONG STARS",
+  }),
+  art: Object.freeze({
+    home: "asset:themes/silverblue/home.webp",
+    battle: "asset:themes/silverblue/battle.webp",
+    map: "asset:themes/silverblue/map.webp",
+    backdrop: "asset:themes/silverblue/backdrop.webp",
+    mage: "asset:themes/silverblue/mage.webp",
+    paladin: "asset:themes/silverblue/paladin.webp",
+    ranger: "asset:themes/silverblue/ranger.webp",
+    morla: "asset:themes/silverblue/morla.webp",
+    goddess: "asset:themes/silverblue/goddess.webp",
+  }),
+  scenes: Object.freeze({
+    home: Object.freeze({
+      art: "home",
+      focus: [0.52, 0.5],
+      portraitFocus: [0.54, 0.5],
+      shade: 0.04,
+    }),
+    battle: Object.freeze({
+      art: "battle",
+      focus: [0.5, 0.5],
+      portraitFocus: [0.5, 0.48],
+      shade: 0.1,
+    }),
+    backdrop: Object.freeze({
+      art: "backdrop",
+      focus: [0.5, 0.5],
+      portraitFocus: [0.5, 0.5],
+      shade: 0.15,
+    }),
+  }),
+  scenery: Object.freeze([
+    {
+      id: "chimney",
+      name: "观星长廊",
+      hint: "轻触铜灯，点亮桌边的暖光",
+      focus: [145, 160],
+      warm: true,
+      box: { left: "12px", top: "58px", width: "240px", height: "217px" },
+    },
+    {
+      id: "crystals",
+      name: "星辉观测台",
+      hint: "轻拨星环，让星光落在掌心",
+      focus: [1430, 160],
+      box: { left: "1390px", top: "63px", width: "180px", height: "211px" },
+    },
+    {
+      id: "tree",
+      name: "流云星石",
+      hint: "轻触星石，听见清澈的回声",
+      focus: [125, 690],
+      box: { left: "18px", top: "510px", width: "175px", height: "232px" },
+    },
+    {
+      id: "forge",
+      name: "旅人铜灯",
+      hint: "轻触铜灯，唤起温暖的光",
+      focus: [1460, 700],
+      warm: true,
+      box: { left: "1475px", top: "710px", width: "110px", height: "120px" },
+    },
+  ]),
+  light: Object.freeze({
+    ambient: "#101a30",
+    glow: "#b6ddff",
+    warm: "#f1c891",
+    line: "#beddf3",
+  }),
+});

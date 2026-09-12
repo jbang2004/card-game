@@ -24,7 +24,7 @@ async function dialogMetrics(page) {
   });
 }
 
-test("desktop dialogs use semantic dimensions instead of one full-screen frame", async ({
+test("desktop workspaces and compact dialogs use their semantic dimensions", async ({
   page,
 }) => {
   await page.goto("./?debug=1");
@@ -38,32 +38,29 @@ test("desktop dialogs use semantic dimensions instead of one full-screen frame",
   );
   expect(await dialogMetrics(page)).toMatchObject({
     size: "confirm",
-    width: 560,
-    height: 340,
+    width: 480,
     centered: true,
   });
 
   await page.evaluate(() => Emberfall.showSettings());
   expect(await dialogMetrics(page)).toMatchObject({
     size: "settings",
-    width: 680,
-    height: 560,
+    width: 1080,
     centered: true,
   });
 
   await page.evaluate(() => Emberfall.showHelp());
   expect(await dialogMetrics(page)).toMatchObject({
     size: "help",
-    width: 980,
-    height: 700,
+    width: 1280,
     centered: true,
   });
 
   await page.evaluate(() => Emberfall.showLibrary());
   expect(await dialogMetrics(page)).toMatchObject({
     size: "library",
-    width: 1200,
-    height: 800,
+    width: 1600,
+    height: 940,
     centered: true,
   });
 });

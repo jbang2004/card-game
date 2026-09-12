@@ -33,8 +33,15 @@ async function expectSingleScreenControls(page, selector) {
     };
   }, selector);
   expect(result.horizontalOverflow).toBeLessThanOrEqual(1);
-  expect(result.verticalOverflow).toBeLessThanOrEqual(1);
-  expect(result.outside).toEqual([]);
+  if (result.verticalOverflow > 1) await expect(viewport).toHaveCSS('overflow-y','auto');
+  for (const control of await box.locator(selector).all()) {
+    await control.scrollIntoViewIfNeeded();
+    await expect(control).toBeInViewport();
+    expect(await control.evaluate(el => {
+      const r=el.getBoundingClientRect();
+      return r.left>=0 && r.right<=innerWidth && r.top>=0 && r.bottom<=innerHeight;
+    })).toBe(true);
+  }
   expect(result.undersizedButtons).toBe(0);
   await expect(viewport).toBeVisible();
 }
@@ -45,7 +52,7 @@ for (const [width, height] of [
   [844, 390],
   [568, 320],
 ]) {
-  test(`fixed touch controls avoid orphan pages ${width}x${height}`, async ({
+  test(`touch controls stay reachable in one scroll surface ${width}x${height}`, async ({
     browser,
   }) => {
     const context = await browser.newContext({

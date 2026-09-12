@@ -3,18 +3,10 @@
 (() => {
   'use strict';
   const E = window.Emberfall, D = EmberData, A = EmberArt;
-  const regions = Object.freeze({
-    warden: 'asset:maps/regions/warden.webp',
-    queen: 'asset:maps/regions/queen.webp',
-    oracle: 'asset:maps/regions/oracle.webp',
-    frost: 'asset:maps/regions/frost.webp',
-    dragon: 'asset:maps/regions/dragon.webp',
-    moonkeeper: 'asset:maps/regions/moonkeeper.webp',
-  });
-  const textures = ['asset:maps/terrain.webp', 'asset:maps/walnut.webp'];
+  const textures = [EmberTheme.art('map')];
   let assetReadiness;
   function prepareArtwork() {
-    if (!assetReadiness) assetReadiness = Promise.all([...Object.values(regions), ...textures].map(src =>
+    if (!assetReadiness) assetReadiness = Promise.all(textures.map(src =>
       new Promise((resolve, reject) => {
         const image = new Image();
         image.onload = () => image.decode().then(resolve, reject);
@@ -53,16 +45,15 @@
         <div><span class="atlas-kicker">远征图志 · ${String(D.bosses.length).padStart(2, '0')} 境</span><h2 id="atlas-title">冒险地图</h2></div>
         <div class="atlas-chapter"><span>${complete ? '远征完成' : '当前旅程'}</span><strong>${String(chapter + 1).padStart(2, '0')}<small> / ${String(D.bosses.length).padStart(2, '0')}</small></strong></div>
       </div>
-      <div class="atlas-stage" aria-label="战役路线" aria-busy="true">
+      <div data-theme-art="map" class="atlas-stage ${D.bosses.length > 6 ? "atlas-extended" : ""}" aria-label="战役路线" aria-busy="true">
         <div class="atlas-loading" role="status"><span>${compass}</span><p>正在展开远征图…</p><button type="button" hidden>重新加载</button></div>
         <span class="atlas-cartography" aria-hidden="true">${compass}</span>
         <svg class="atlas-paths" aria-hidden="true"><g></g></svg>
         ${D.bosses.map((boss, i) => {
-          if (!regions[boss.id]) throw new Error('Missing map landmark: ' + boss.id);
           return `<article class="atlas-location ${condition(i)}" data-region="${boss.id}">
             <button class="atlas-node" data-map-node="${i}" aria-pressed="${i === chapter}" aria-label="查看${escape(boss.title)}，${status(i)}">
               <span class="atlas-landmark">
-                <span class="atlas-portrait"><img src="${regions[boss.id]}" alt="${escape(boss.title)}的地貌" width="640" height="640" draggable="false"></span>
+
                 <span class="atlas-pennant" aria-hidden="true">${i > chapter && !complete ? lock : compass}</span>
                 <span class="atlas-number">${String(i + 1).padStart(2, '0')}</span>
               </span>
@@ -71,6 +62,7 @@
           </article>`;
         }).join('')}
       </div>
+      <aside class="atlas-dossier" aria-live="polite"><img class="atlas-dossier-art" alt=""><small class="atlas-dossier-status"></small><h3></h3><p class="atlas-dossier-quote"></p><div class="atlas-dossier-rule"></div></aside>
       <div class="modal-footer atlas-footer">
         <div class="atlas-focus" aria-live="polite"><strong></strong><span></span></div>
         <div class="atlas-relics" aria-label="旅途遗物"><span class="atlas-relic-label">旅途遗物</span>${relics.length ? relics.map(r => `<span class="atlas-relic" title="${escape(r.name + '：' + r.text)}"><img src="${A.relic(r.id)}" alt="${escape(r.name)}" width="30" height="30"></span>`).join('') : '<span class="atlas-relic-empty">击败首领后获得</span>'}</div>
@@ -81,6 +73,14 @@
     const buttons = [...box.querySelectorAll('[data-map-node]')];
     const select = i => {
       buttons.forEach((button, n) => button.setAttribute('aria-pressed', String(i === n)));
+      const boss=D.bosses[i], dossier=box.querySelector('.atlas-dossier');
+      dossier.querySelector('img').src=A.character(boss);
+      dossier.querySelector('img').alt=boss.name;
+      dossier.querySelector('h3').textContent=boss.name;
+      dossier.querySelector('small').textContent=boss.title+' · '+status(i);
+      dossier.querySelector('p').textContent=boss.quote;
+      dossier.querySelector('.atlas-dossier-rule').textContent=`${boss.hp} 生命 · ${boss.powerText || boss.rule || ''}`;
+
       box.querySelector('.atlas-focus strong').textContent = `${D.bosses[i].title} · ${status(i)}`;
       box.querySelector('.atlas-focus > span').textContent = i > chapter && !complete
         ? `击败${D.bosses[i - 1].name}后抵达` : D.bosses[i].quote;

@@ -55,7 +55,7 @@ for (const [width, height] of [
       expect(Math.max(...cards) - Math.min(...cards)).toBeLessThanOrEqual(1);
       const choices = await page.locator(".hero-option").first().boundingBox();
       const config = await page.locator(".hero-configuration").boundingBox();
-      expect(config.y).toBeGreaterThan(choices.y + choices.height);
+      expect(config.x).toBeGreaterThan(choices.x + choices.width);
       await expect(page.locator(".hero-dossier")).toHaveCount(0);
     }
 

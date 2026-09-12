@@ -143,7 +143,7 @@ const EmberDialogs = (() => {
         for (const el of [...box.children])
           if (
             !el.matches(
-              ".modal-close,.modal-heading,.covenant-heading,.modal-footer,.reward-footer,.atelier-foot,.atlas-corners",
+              ".scene-showcase,.modal-close,.modal-heading,.covenant-heading,.modal-footer,.reward-footer,.atelier-foot,.atlas-corners",
             )
           )
             content.append(el);

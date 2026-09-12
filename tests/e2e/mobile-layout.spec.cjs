@@ -26,24 +26,13 @@ for (const [width, height] of [
         (card) => Math.abs(card.getBoundingClientRect().top - firstTop) <= 1,
       ).length;
     });
-    expect(heroColumns).toBe(2);
+    expect(heroColumns).toBe(width <= 600 ? 4 : 1);
     await page.locator('[data-hero="morla"]').click();
-    // A long skill and larger copy must grow its card, never clip below its frame.
-    await page
-      .locator(".hero-option em")
-      .evaluateAll((es) => es.forEach((e) => (e.style.fontSize = "17px")));
-    for (const card of await page.locator(".hero-option").all())
-      expect(
-        await card.evaluate((e) => {
-          const r = e.getBoundingClientRect(),
-            t = e.querySelector("em").getBoundingClientRect();
-          return (
-            t.bottom <= r.bottom - 5 &&
-            t.right <= r.right - 5 &&
-            t.left >= r.left
-          );
-        }),
-      ).toBe(true);
+    // Skill copy belongs to the selected hero dossier, not each roster chip.
+    await page.locator('.hero-skill p').evaluate(e => e.style.fontSize='17px');
+    await turnTo(page, '.hero-skill p');
+    expect(await page.locator('.hero-skill p').evaluate(e => e.scrollWidth <= e.clientWidth + 1)).toBe(true);
+    await expect(page.locator('.hero-skill p')).toContainText('献祭');
     await page.locator('[data-hero="morla"]').scrollIntoViewIfNeeded();
     await page.screenshot({
       path: `artifacts/qa/mobile-fixed-hero-${width}.png`,

@@ -1,35 +1,24 @@
-/* One continuous illustrated environment. Responsive composition owns its cache;
- * decorative lighting never participates in gameplay or hit testing. */
+/* Cached scene composition. Theme data owns artwork and light; this renderer
+ * owns only presentation, and shares the existing effects clock. */
 const AtelierWorld = (() => {
-  const image = new Image(),
-    cache = document.createElement("canvas");
-  const ctx = cache.getContext("2d");
-  let ready = false,
-    dirty = true,
+  const cache = document.createElement("canvas"),
+    ctx = cache.getContext("2d");
+  const theme = EmberTheme.definition;
+  let dirty = true,
     key = "",
     dusk = false,
-    hover = null;
+    hover = null,
+    activeImage;
   const hits = [];
-  const layers = [
-    { id: "chimney", key: "brewery", focus: [145, 160], light: "#ffd28a" },
-    {
-      id: "crystals",
-      key: "observatory",
-      focus: [1430, 160],
-      light: "#aa9cff",
-    },
-    { id: "tree", key: "mine", focus: [125, 690], light: "#75d9ff" },
-    { id: "forge", key: "forge", focus: [1460, 700], light: "#ffc180" },
-  ];
-  image.onload = () => {
-    ready = true;
+  const layers = Object.freeze(
+    theme.scenery.map((a) => ({
+      ...a,
+      light: a.warm ? theme.light.warm : theme.light.glow,
+    })),
+  );
+  window.addEventListener("ember:theme-art", () => {
     dirty = true;
-  };
-  image.onerror = () => {
-    ready = true;
-    dirty = true;
-  };
-  image.src = PremiumAssets.board;
+  });
   function glow(c, x, y, r, color, alpha) {
     c.save();
     c.globalAlpha = alpha;
@@ -41,49 +30,53 @@ const AtelierWorld = (() => {
     c.fillRect(x - r, y - r, r * 2, r * 2);
     c.restore();
   }
-  function paint(c, t, view, theme, phase, reduced, low) {
+  function paint(c, t, view, _theme, _phase, reduced, low) {
     const V = EmberViewport,
       W = V.width,
       H = V.height;
-    const next = [W, H, V.mobile, view, dusk].join(":");
+    const role = view === "lobby" ? "home" : "battle",
+      scene = theme.scenes[role];
+    activeImage = EmberTheme.image(scene.art);
+    const next = [W, H, role, dusk].join(":");
     if (dirty || next !== key) {
       cache.width = W;
       cache.height = H;
-      ctx.fillStyle = "#231712";
+      ctx.fillStyle = theme.light.ambient;
       ctx.fillRect(0, 0, W, H);
-      if (image.naturalWidth) {
-        if (!V.mobile) ctx.drawImage(image, 0, 0, W, H);
-        else {
-          const scale = Math.max(W / image.width, H / image.height);
-          ctx.drawImage(
-            image,
-            (W - image.width * scale) / 2,
-            (H - image.height * scale) / 2,
-            image.width * scale,
-            image.height * scale,
-          );
-          // Keep the mobile battle surface on the same continuous tavern
-          // tabletop as desktop. The transparent arena remains the hit area;
-          // units and the existing frame provide the gameplay structure.
-        }
+      if (activeImage.naturalWidth) {
+        const scale = Math.max(
+          W / activeImage.naturalWidth,
+          H / activeImage.naturalHeight,
+        );
+        const w = activeImage.naturalWidth * scale,
+          h = activeImage.naturalHeight * scale;
+        const focus = H > W ? scene.portraitFocus : scene.focus;
+        ctx.drawImage(
+          activeImage,
+          (W - w) * focus[0],
+          (H - h) * focus[1],
+          w,
+          h,
+        );
       }
-      if (dusk) {
-        ctx.fillStyle = "#10153255";
-        ctx.fillRect(0, 0, W, H);
-      }
+      ctx.save();
+      ctx.globalAlpha = scene.shade + (dusk ? 0.22 : 0);
+      ctx.fillStyle = theme.light.ambient;
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
       dirty = false;
       key = next;
     }
     c.drawImage(cache, 0, 0);
-    if (!V.mobile)
+    if (!V.mobile && !low)
       for (const a of layers)
         glow(
           c,
           ...a.focus,
           85,
           a.light,
-          (hover === a.id ? 0.16 : 0.045) +
-            (reduced ? 0 : Math.sin(t * 1.3) * 0.008),
+          (hover === a.id ? 0.12 : 0.018) +
+            (reduced ? 0 : Math.sin(t * 1.3) * 0.006),
         );
     for (let i = hits.length - 1; i >= 0; i--) {
       const h = hits[i],
@@ -95,7 +88,7 @@ const AtelierWorld = (() => {
       glow(c, h.x, h.y, 40 + p * 55, h.color, (1 - p) * 0.25);
     }
   }
-  return {
+  return Object.freeze({
     paint,
     layers,
     ping(id) {
@@ -108,7 +101,9 @@ const AtelierWorld = (() => {
           t: performance.now(),
         });
     },
-    setHover: (id) => (hover = id),
+    setHover(id) {
+      hover = id;
+    },
     setDusk(v) {
       dusk = !!v;
       dirty = true;
@@ -119,7 +114,7 @@ const AtelierWorld = (() => {
       return dusk;
     },
     get loading() {
-      return !ready;
+      return dirty || !activeImage?.complete;
     },
     get cacheSize() {
       return [cache.width, cache.height];
@@ -127,5 +122,5 @@ const AtelierWorld = (() => {
     invalidate() {
       dirty = true;
     },
-  };
+  });
 })();
