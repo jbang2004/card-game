@@ -182,12 +182,12 @@ const EmberViewport = (() => {
             w: chipW,
             h: 30,
           };
-      l.cardW = portrait
-        ? W < 350
-          ? 112
-          : 132
-        : clamp(Math.round((handH - 10) * 0.78), 108, 136);
+      /* The hand is the same physical card as every other card surface. Keep
+       * its 5:7 face ratio and derive width from the available rail height;
+       * independent width/height clamps were making the art aperture change
+       * between the hand and the opening-hand dialog. */
       l.cardH = portrait ? handH - 12 : handH - 10;
+      l.cardW = Math.round((l.cardH * 5) / 7);
     }
     const before = state;
     state = {

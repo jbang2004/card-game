@@ -10,6 +10,7 @@
   --ink-secondary: #dac6a5;
   --paper: #efdfbd;
   --paper-ink: #332519;
+  --card-face-ratio: 5 / 7;
   --primary-fill: linear-gradient(155deg, #f5d68d, #c59440);
   --secondary-fill: linear-gradient(#4d3929, #302219);
 }
@@ -4000,6 +4001,10 @@ body .drag-ghost[data-snap-mode="target"]::before {
  * portrait art, name band, bounded rules, then the type/stat rail. Rules are
  * deliberately display-only; copy is validated in data.js so no card needs a
  * private scroll path or a density-specific layout branch. */
+body .card {
+  box-sizing: border-box;
+  aspect-ratio: var(--card-face-ratio);
+}
 body .card .card-art {
   height: 43%;
   background: #3b2b21;
@@ -4064,8 +4069,8 @@ body .card-preview[data-mode="hover"] .card[data-rule-size="short"] .card-text {
  * viewport, while the internal art/title/rules proportions never change. */
 body .card-preview[data-mode="pinned"],
 body .card-preview[data-mode="hover"] {
-  --detail-w: min(300px, calc(100vw - 28px), calc((100dvh - 84px) / 1.45));
-  aspect-ratio: 1 / 1.45;
+  --detail-w: min(300px, calc(100vw - 28px), calc((100dvh - 84px) / 1.4));
+  aspect-ratio: var(--card-face-ratio);
   width: var(--detail-w);
   height: auto;
   min-width: var(--detail-w);
@@ -4079,7 +4084,7 @@ body .card-preview[data-mode="hover"] .card {
   height: auto !important;
   min-height: 0;
   max-height: none;
-  aspect-ratio: 1 / 1.45;
+  aspect-ratio: var(--card-face-ratio);
 }
 body .card-preview[data-mode="pinned"] .card .card-art,
 body .card-preview[data-mode="hover"] .card .card-art {
@@ -4100,6 +4105,14 @@ body .card-preview[data-mode="hover"] .card .card-text {
 
 /* Hand cards use the same geometry and receive the horizontal gesture on the
  * button itself. There is no nested vertical scroller to steal the pointer. */
+body .hand-card {
+  aspect-ratio: var(--card-face-ratio);
+}
+body .hand-card > .card {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: var(--card-face-ratio);
+}
 body .hand-card .card .card-art {
   height: 43%;
 }
@@ -4127,6 +4140,6 @@ body.touch-layout .hand-card .card[data-rule-size="short"] .card-text {
 @media (orientation: landscape) and (max-width: 900px) {
   body .card-preview[data-mode="pinned"],
   body .card-preview[data-mode="hover"] {
-    --detail-w: min(300px, calc(100vw - 28px), calc((100dvh - 28px) / 1.45));
+    --detail-w: min(300px, calc(100vw - 28px), calc((100dvh - 28px) / 1.4));
   }
 }

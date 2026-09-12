@@ -10,8 +10,9 @@ body:not(.touch-layout) .hand-zone {
   perspective: none;
 }
 body:not(.touch-layout) .hand-card {
-  width: var(--desktop-card-w, 142px);
-  height: var(--desktop-card-h, 184px);
+  width: var(--desktop-card-w, 131px);
+  height: var(--desktop-card-h, 183px);
+  aspect-ratio: var(--card-face-ratio, 5 / 7);
   transform: translateX(calc(-50% + var(--x)));
   transform-origin: center bottom;
 }
