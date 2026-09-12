@@ -230,7 +230,7 @@ for (const [name, viewport, touch] of [
         })(),
       };
     });
-    const ratio = 5 / 7;
+    const ratio = 5 / 7.4;
     const cardRatio = (x) => x.width / x.height;
     const artRatio = (x) => x.width / x.height;
     expect(cardRatio(opening.card)).toBeCloseTo(ratio, 2);

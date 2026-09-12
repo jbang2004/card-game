@@ -1119,7 +1119,7 @@ body.touch-layout .mulligan-card .card,
 body.touch-layout .discover-card .card {
   width: 100%;
   height: auto;
-  aspect-ratio: 5/7;
+  aspect-ratio: var(--card-face-ratio, 5 / 7.4);
 }
 body.touch-layout .mulligan-card:hover,
 body.touch-layout .mulligan-card.replace,
@@ -1367,7 +1367,7 @@ body.touch-layout .library-item {
 body.touch-layout .library-item .card {
   width: 100%;
   height: auto;
-  aspect-ratio: 5/7;
+  aspect-ratio: var(--card-face-ratio, 5 / 7.4);
 }
 body.touch-layout .library-item:hover {
   transform: none;
@@ -1630,7 +1630,7 @@ body.touch-layout .touch-hand-grid button {
 body.touch-layout .touch-hand-grid .card {
   width: 100%;
   height: auto;
-  aspect-ratio: 5/7;
+  aspect-ratio: var(--card-face-ratio, 5 / 7.4);
 }
 body.touch-layout .touch-hand-grid .card-cost {
   font-size: 32px;

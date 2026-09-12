@@ -242,7 +242,7 @@ body #modal.folio-host .card {
   min-width: 0;
   min-height: 0;
   max-width: 280px;
-  aspect-ratio: var(--card-face-ratio, 5 / 7);
+  aspect-ratio: var(--card-face-ratio, 5 / 7.4);
   margin: 0 auto;
   padding: 0;
   transform: none;
@@ -291,7 +291,7 @@ body
   max-width: 240px;
   height: auto;
   min-height: 0;
-  aspect-ratio: var(--card-face-ratio, 5 / 7);
+  aspect-ratio: var(--card-face-ratio, 5 / 7.4);
   margin: 0;
   padding: 0;
 }
@@ -301,7 +301,7 @@ body
   > .card {
   width: 100%;
   height: auto;
-  aspect-ratio: var(--card-face-ratio, 5 / 7);
+  aspect-ratio: var(--card-face-ratio, 5 / 7.4);
 }
 body #modal.folio-host .card-detail-layout {
   display: grid;

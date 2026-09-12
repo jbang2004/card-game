@@ -1,7 +1,7 @@
 /* Desktop hand geometry. Touch retains its native scrolling layout.
  * Reserve space for every card's cost and stats, including a ten-card hand. */
 const EmberHand = (() => {
-  const CARD_RATIO = 5 / 7;
+  const CARD_RATIO = 5 / 7.4;
 
   function metrics(count) {
     const n = Math.max(1, Math.min(10, count));
