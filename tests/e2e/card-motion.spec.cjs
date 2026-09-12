@@ -438,16 +438,34 @@ test.describe("card motion mobile ownership", () => {
         });
       try {
         const beforeControl = EmberAudio.played.land || 0;
-        g.events = [];
-        g.draw("p");
+        const visibleCard = g.s.p.hand[0];
+        g.events = [
+          {
+            id: "visible-draw-control",
+            type: "draw",
+            parentId: null,
+            side: "p",
+            uid: visibleCard.uid,
+            cid: visibleCard.cid,
+          },
+        ];
         g.emit();
         await waitUntil(() => !EmberFX.busy);
         state.controlLandDelta = (EmberAudio.played.land || 0) - beforeControl;
 
         const beforeCanceled = EmberAudio.played.land || 0;
-        g.events = [];
-        g.draw("p");
-        state.canceledUid = g.s.p.hand.at(-1).uid;
+        const canceledCard = g.s.p.hand[1];
+        g.events = [
+          {
+            id: "visible-draw-canceled",
+            type: "draw",
+            parentId: null,
+            side: "p",
+            uid: canceledCard.uid,
+            cid: canceledCard.cid,
+          },
+        ];
+        state.canceledUid = canceledCard.uid;
         g.emit();
         await waitUntil(() =>
           !!document.querySelector(
@@ -500,7 +518,8 @@ test.describe("card motion mobile ownership", () => {
     expect(completion.immediateProxyCount).toBe(0);
     expect(completion.immediateLiveVisible).toBe(true);
     expect(completion.scrollAfter).toBeGreaterThanOrEqual(completion.scrollBefore);
-    await expect(page.locator("#hand .hand-card")).toHaveCount(10);
+    // This probe uses synthetic visible-card draw events; no card is added.
+    await expect(page.locator("#hand .hand-card")).toHaveCount(8);
   });
 });
 
@@ -1094,13 +1113,42 @@ test("rebinds a replaced landing surface from its current painted pose", async (
   await rebindSurfaceScenario(page);
 });
 
-test.describe("rebinds a clipped mobile landing surface", () => {
+test.describe("off-rail mobile draw handoff", () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 
-  test("keeps nonzero hand-edge transforms continuous through surface replacement", async ({
+  test("does not park an off-screen draw proxy on the hand edge", async ({
     page,
   }) => {
-    await rebindSurfaceScenario(page, { clipped: true });
+    await demo(page);
+    await prepare(page, {
+      hand: Array.from({ length: 9 }, () => "guard"),
+    });
+    const uid = await page.evaluate(() => {
+      const g = EmberDebug.game;
+      g.events = [];
+      g.draw("p");
+      const uid = g.s.p.hand.at(-1).uid;
+      g.emit();
+      return uid;
+    });
+    await page.waitForTimeout(80);
+    await expect(
+      page.locator(
+        `.card-motion-proxy[data-motion-kind="draw"][data-motion-uid="${uid}"]`,
+      ),
+    ).toHaveCount(0);
+    const live = await page.locator(`#hand [data-hand="${uid}"]`).evaluate((host) => {
+      const card = host.querySelector(".card");
+      return {
+        hostVisible: getComputedStyle(host).visibility !== "hidden",
+        cardVisible:
+          !!card &&
+          getComputedStyle(card).visibility !== "hidden" &&
+          Number(getComputedStyle(card).opacity) > 0.95,
+      };
+    });
+    expect(live).toEqual({ hostVisible: true, cardVisible: true });
+    await page.waitForFunction(() => !EmberFX.busy);
   });
 });
 

@@ -941,6 +941,25 @@ for (const [label, viewport] of VIEWPORTS) {
       });
       expect(after.scrollLeft).toBeGreaterThan(0);
     });
+
+    test("horizontal panning also starts from the card rules well", async ({
+      page,
+    }) => {
+      await startTouch(page);
+      const filled = await fillHand(page);
+      expect(filled.n).toBeGreaterThan(6);
+      const start = await page.locator("#hand .hand-card .card-text").first().boundingBox();
+      expect(start).toBeTruthy();
+      const before = await handState(page);
+      await touchDrag(
+        page,
+        { x: start.x + start.width / 2, y: start.y + start.height / 2 },
+        { x: start.x - 240, y: start.y + 3 },
+        12,
+      );
+      const after = await handState(page);
+      expect(after.scrollLeft).toBeGreaterThan(before.scrollLeft);
+    });
   });
 }
 

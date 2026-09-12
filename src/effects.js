@@ -1247,7 +1247,12 @@ const EmberFX = (() => {
       : refKey(target);
   }
   function clippedHandTarget(anchor, side) {
-    if (!anchor || anchor.status !== "clipped") return anchor;
+    /* On phones a newly drawn card can be outside the horizontally scrollable
+     * rail. Do not invent a visible landing point at the rail edge: that
+     * makes an off-screen draw flash at the boundary. Desktop still uses the
+     * edge clamp because its hand is a fixed presentation surface. */
+    if (EmberViewport.mobile || !anchor || anchor.status !== "clipped")
+      return anchor;
     const hand = document.getElementById(side === "p" ? "hand" : "enemy-hand"),
       region = EmberViewport.pos(hand);
     if (!region) return anchor;
@@ -1797,6 +1802,11 @@ const EmberFX = (() => {
       !validCardPoint(source)
     )
       return;
+    /* A draw whose destination is outside the mobile hand viewport should
+     * never be represented by a proxy parked on the viewport edge. The live
+     * card is already present in the rail; let it remain there until the
+     * player deliberately scrolls to it. */
+    if (EmberViewport.mobile && measuredTarget.status === "clipped") return;
     const frontMarkup =
         descriptor.face?.mode === "player-flip"
           ? cardMarkup({ html: target.outerHTML })

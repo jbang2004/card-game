@@ -514,7 +514,9 @@ body.touch-layout .hand-zone {
   overscroll-behavior-x: contain;
   scrollbar-width: none;
   padding: 7px 12px 8px;
-  scroll-behavior: smooth;
+  /* A finger rail should follow the finger immediately. Smooth scrolling is
+     reserved for deliberate programmatic navigation, not direct manipulation. */
+  scroll-behavior: auto;
   scroll-padding: 12px;
   -webkit-overflow-scrolling: touch;
 }
