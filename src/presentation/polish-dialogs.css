@@ -1,0 +1,245 @@
+/* Utility surfaces share a quiet, silver-blue editorial system.
+ * Geometry is desktop-only; phone composition belongs to polish-mobile.css. */
+body #modal.folio-host :is(.modal-heading, .covenant-heading)::after {
+  background: linear-gradient(90deg, var(--line), transparent);
+  box-shadow: none;
+  border: 0;
+}
+body #modal.folio-host .card-detail-art {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+body #modal.folio-host .toggle::after {
+  border-color: var(--line);
+}
+body
+  #modal.folio-host
+  .audio-level
+  input[type="range"]::-webkit-slider-runnable-track {
+  background: var(--line);
+  border: 0;
+  height: 3px;
+}
+body #modal.folio-host .audio-level input[type="range"]::-webkit-slider-thumb {
+  border: 2px solid var(--accent);
+  background: var(--accent-strong);
+  box-shadow: none;
+}
+body #modal.folio-host .covenant-grid > p {
+  padding: 18px 20px;
+  color: var(--ink-secondary);
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+}
+body #modal.folio-host .relic-art img {
+  border-color: var(--line);
+}
+body #modal.folio-host .campaign-refit > summary {
+  padding: 14px 16px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+}
+body #modal.folio-host .help-toc button {
+  background: transparent;
+  box-shadow: none;
+  border-color: var(--line);
+}
+body #modal.folio-host .help-toc button:hover,
+body #modal.folio-host .help-toc button:focus-visible {
+  color: var(--accent);
+  background: var(--surface-soft);
+  border-color: var(--accent);
+}
+@media (min-width: 851px) and (min-height: 501px) {
+  body:not(.touch-layout) #modal.folio-host .settings-box .modal-scroll {
+    align-content: start;
+    align-items: start;
+    grid-template-columns: 1.08fr 1fr;
+    gap: 28px;
+  }
+  body:not(.touch-layout) #modal.folio-host .settings-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 0;
+    align-self: start;
+  }
+  body:not(.touch-layout) #modal.folio-host .settings-section-heading {
+    min-height: 38px;
+    margin: 0 0 16px;
+    padding: 0 0 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  body:not(.touch-layout) #modal.folio-host .settings-section-heading > span {
+    font: 500 15px/1.4 var(--ui-font);
+    letter-spacing: 0.06em;
+  }
+  body:not(.touch-layout) #modal.folio-host .settings-section-heading > small {
+    color: var(--muted-ink);
+    font-size: 11px;
+  }
+  body:not(.touch-layout) #modal.folio-host .settings-options {
+    gap: 8px;
+  }
+  body:not(.touch-layout) #modal.folio-host .setting-row {
+    min-height: 78px;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+  }
+  body:not(.touch-layout) #modal.folio-host .audio-sliders {
+    align-content: start;
+    align-items: start;
+    gap: 24px;
+    padding: 24px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+  }
+  body:not(.touch-layout) #modal.folio-host .audio-level {
+    gap: 12px;
+    padding: 0 0 18px;
+    min-height: 72px;
+  }
+  body:not(.touch-layout) #modal.folio-host .audio-level:last-child {
+    padding-bottom: 0;
+  }
+  body:not(.touch-layout) #modal.folio-host .settings-box .hero-deck-note {
+    grid-column: 1 / -1;
+    text-align: left;
+    padding-top: 4px;
+    color: var(--muted-ink);
+  }
+  body:not(.touch-layout) #modal.folio-host .help-box .modal-scroll {
+    grid-template-columns: 224px minmax(0, 1fr);
+    gap: 40px;
+    padding-right: 12px;
+  }
+  body:not(.touch-layout) #modal.folio-host .help-columns {
+    width: 100%;
+    max-width: 790px;
+  }
+  body:not(.touch-layout) #modal.folio-host .help-section {
+    margin-bottom: 32px;
+    padding: 0 0 28px;
+    scroll-margin-top: 8px;
+  }
+  body:not(.touch-layout) #modal.folio-host .help-section p {
+    max-width: none;
+    width: 100%;
+    line-height: 1.95;
+    font-weight: 400;
+    letter-spacing: 0.015em;
+  }
+  body:not(.touch-layout) #modal.folio-host .help-section h3 {
+    font: 400 24px/1.45 var(--ui-display);
+    letter-spacing: 0.06em;
+    margin-bottom: 16px;
+  }
+  body:not(.touch-layout) #modal.folio-host .help-toc {
+    gap: 10px;
+  }
+  body:not(.touch-layout) #modal.folio-host .help-toc button {
+    min-height: 52px;
+    border-radius: 2px;
+    font-weight: 500;
+    letter-spacing: 0.025em;
+  }
+  body:not(.touch-layout) #modal.folio-host .key-table {
+    background: transparent;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+  }
+  body:not(.touch-layout) #modal.folio-host .key-table > div {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  body:not(.touch-layout) #modal.folio-host .card-detail-copy {
+    padding: 20px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  body:not(.touch-layout) #modal.folio-host .card-detail-copy p {
+    margin: 0;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--line);
+    line-height: 1.6;
+  }
+  body:not(.touch-layout) #modal.folio-host .card-detail-copy p:first-child {
+    color: var(--accent);
+    padding-top: 0;
+    font-size: 16px;
+  }
+  body:not(.touch-layout) #modal.folio-host .mulligan-box .modal-scroll > p {
+    text-align: center;
+    color: var(--ink-secondary);
+    margin: 12px 0 20px;
+  }
+  body:not(.touch-layout) #modal.folio-host .mulligan-box .modal-footer button {
+    font-size: 20px;
+    letter-spacing: 0.08em;
+  }
+  body:not(.touch-layout) #modal.folio-host .covenant-copy h4 {
+    margin: 12px 0 16px;
+    letter-spacing: 0.04em;
+  }
+  body:not(.touch-layout) #modal.folio-host .covenant-copy p {
+    line-height: 1.9;
+  }
+  body:not(.touch-layout) #modal.folio-host .covenant-copy small {
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--ink-secondary);
+  }
+  body:not(.touch-layout) #modal.folio-host .covenant-copy .gold-btn {
+    margin-top: 8px;
+    min-height: 48px;
+  }
+  body:not(.touch-layout) #modal.folio-host .relic-choice {
+    padding-top: 20px;
+  }
+  body:not(.touch-layout) #modal.folio-host .relic-choice h3 {
+    margin: 16px 0;
+    line-height: 1.4;
+  }
+  body:not(.touch-layout) #modal.folio-host .relic-choice p {
+    font-size: 16px;
+    line-height: 1.85;
+    text-wrap: pretty;
+  }
+}
+/* Keyword entries inherited the former parchment foreground. */
+body #modal.folio-host .key-table > div {
+  color: var(--ink-secondary);
+  background: transparent;
+  font: 400 14px/1.85 var(--ui-font);
+  padding-inline: 12px;
+}
+body #modal.folio-host .key-table > div > b {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--accent);
+  font: 500 16px/1.5 var(--ui-display);
+}
+body #modal.folio-host .audio-level input[type="range"] {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: 0;
+}
+/* Scroll cues occupy their own row instead of obscuring the last text line. */
+body #modal.folio-host .folio-scroll-hint {
+  position: static;
+  inset: auto;
+  display: none;
+  flex: 0 0 22px;
+  min-height: 22px;
+  height: 22px;
+  background: var(--surface);
+  font: 400 11px/1.5 var(--ui-font);
+}
+body #modal.folio-host .folio-pane.has-scroll > .folio-scroll-hint {
+  display: flex;
+}

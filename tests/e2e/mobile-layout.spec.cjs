@@ -21,18 +21,28 @@ for (const [width, height] of [
     await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
     await page.locator("#start-btn").click();
     const heroColumns = await page.locator(".hero-options").evaluate((grid) => {
-      const firstTop = grid.querySelector(".hero-option").getBoundingClientRect().top;
+      const firstTop = grid
+        .querySelector(".hero-option")
+        .getBoundingClientRect().top;
       return [...grid.querySelectorAll(".hero-option")].filter(
         (card) => Math.abs(card.getBoundingClientRect().top - firstTop) <= 1,
       ).length;
     });
-    expect(heroColumns).toBe(width <= 600 ? 4 : 1);
+    expect(heroColumns).toBe(
+      height < width && width <= 650 ? 2 : width <= 600 ? 4 : 1,
+    );
     await page.locator('[data-hero="morla"]').click();
     // Skill copy belongs to the selected hero dossier, not each roster chip.
-    await page.locator('.hero-skill p').evaluate(e => e.style.fontSize='17px');
-    await turnTo(page, '.hero-skill p');
-    expect(await page.locator('.hero-skill p').evaluate(e => e.scrollWidth <= e.clientWidth + 1)).toBe(true);
-    await expect(page.locator('.hero-skill p')).toContainText('献祭');
+    await page
+      .locator(".hero-skill p")
+      .evaluate((e) => (e.style.fontSize = "17px"));
+    await turnTo(page, ".hero-skill p");
+    expect(
+      await page
+        .locator(".hero-skill p")
+        .evaluate((e) => e.scrollWidth <= e.clientWidth + 1),
+    ).toBe(true);
+    await expect(page.locator(".hero-skill p")).toContainText("献祭");
     await page.locator('[data-hero="morla"]').scrollIntoViewIfNeeded();
     await page.screenshot({
       path: `artifacts/qa/mobile-fixed-hero-${width}.png`,

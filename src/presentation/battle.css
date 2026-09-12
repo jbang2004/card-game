@@ -55,7 +55,7 @@ body:not(.touch-layout) .hand-label {
 }
 body:not(.touch-layout) .hand-label .hand-tip {
   display: inline;
-  color: #eee4ca !important;
+  color: var(--ink-secondary);
 }
 body:not(.touch-layout) .mana-panel {
   left: 1404px;
