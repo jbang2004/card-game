@@ -1895,11 +1895,8 @@
 .card-preview {
   --detail-w: 230px;
   width: var(--detail-w);
-  height: calc(var(--detail-w) * 1.452);
   min-width: var(--detail-w);
   max-width: var(--detail-w);
-  min-height: calc(var(--detail-w) * 1.452);
-  max-height: calc(var(--detail-w) * 1.452);
   display: none;
   box-sizing: border-box;
   filter: drop-shadow(0 14px 26px #000b);
@@ -1947,7 +1944,6 @@
 .card-preview[data-mode="hover"] .card,
 .card-preview[data-mode="pinned"] .card {
   width: var(--detail-w) !important;
-  height: calc(var(--detail-w) * 1.452) !important;
 }
 .card-preview[data-mode="pinned"] .card-title {
   font-size: calc(var(--detail-w) * 0.082);

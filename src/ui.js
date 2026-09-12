@@ -13,6 +13,7 @@
     artKeyForCard,
     artStyleForCard,
     artStyleForHero,
+    ruleDensity,
     cardHTML,
   } = EmberCards;
   const {
@@ -931,6 +932,7 @@
         return `<button class="hand-card ${playable ? "playable" : ""} ${game.cost(card) > s.p.mana ? "unaffordable" : ""}" style="--x:${offset * gap}px;--y:${0}px;--r:${0}deg;--i:${i + 1}" data-hand="${card.uid}" data-cardid="${c.id}" aria-label="${c.name}，${game.cost(card)} 法力。点按选中，拖动出牌。${c.text}">${cardHTML(c, { cost: game.cost(card) })}</button>`;
       })
       .join("");
+    syncCardRuleOverflow($("hand"));
     const ours = s.active === "p";
     $("turn-number").textContent =
       "TURN " +
@@ -1010,6 +1012,22 @@
     if (tip && !EmberViewport.mobile)
       tip.textContent = "拖到战场出牌 · 点按选中/瞄准 · 悬停看大图";
   }
+  function syncCardRuleOverflow(root = document) {
+    root.querySelectorAll?.(".card").forEach((card) => {
+      const text = card.querySelector(".card-text");
+      if (!text) return;
+      const overflowing = text.scrollHeight > text.clientHeight + 1;
+      card.classList.toggle("rules-scrollable", overflowing);
+      if (overflowing) text.title = "上下滑动查看完整规则";
+      else text.removeAttribute("title");
+      if (overflowing && text.closest(".hand-card")) {
+        text.addEventListener(
+          "pointerdown",
+          (event) => event.stopPropagation(),
+        );
+      }
+    });
+  }
   /* One detail layer for every input: hover (mouse), keyboard focus, right
    * click and touch long-press all magnify the same card. Nothing else is
    * drawn around it, and any click dismisses a pinned card. */
@@ -1044,12 +1062,16 @@
     detail.source = opts.source || null;
     detail.pinned = pinned;
     el.dataset.mode = pinned ? "pinned" : "hover";
+    el.dataset.ruleDensity = ruleDensity(c);
     el.setAttribute("aria-hidden", String(!pinned));
     el.classList.remove("open");
     el.style.display = "block";
     document.body.classList.toggle("has-card-detail", detail.pinned);
     /* Next frame, so the magnify transition always plays from the small state. */
-    requestAnimationFrame(() => el.classList.add("open"));
+    requestAnimationFrame(() => {
+      el.classList.add("open");
+      syncCardRuleOverflow(el);
+    });
     if (!detail.pinned) placeHoverDetail();
   }
   /* Desktop battle hover is deliberately fixed on the left, restoring one
@@ -1089,6 +1111,7 @@
     el.style.display = "none";
     el.setAttribute("aria-hidden", "true");
     delete el.dataset.mode;
+    delete el.dataset.ruleDensity;
     if (el.parentElement !== app) app.append(el);
   }
   function preview(cid, el) {
@@ -1118,6 +1141,7 @@
     el.classList.remove("open");
     el.style.display = "none";
     el.setAttribute("aria-hidden", "true");
+    delete el.dataset.ruleDensity;
   }
   function inspectBattleCard(el) {
     if (!el?.dataset.cardid) return false;

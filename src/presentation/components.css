@@ -4034,3 +4034,318 @@ body .drag-ghost[data-snap-mode="target"]::before {
     transform: scale(1.02);
   }
 }
+
+/* Card reading contract ---------------------------------------------------
+ * A card's rules are never reduced to an ellipsis. The compact hand face is
+ * allowed to scroll its own rules well, while the lifted/detail face grows a
+ * taller reading panel before falling back to that same scroll behaviour for
+ * unusually long god/contract text. This keeps art, stats and copy separate
+ * instead of letting one absolute layer cover another. */
+body .card-rules-scroll {
+  position: absolute;
+  z-index: 6;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  right: 7%;
+  bottom: 11%;
+  border: 1px solid #7f6a44aa;
+  border-radius: 50%;
+  background: #f4e4bdcc;
+  color: #66512f;
+  font: 700 10px/1 var(--sans);
+  box-shadow: 0 1px 2px #2a1c0c55;
+  pointer-events: none;
+}
+body .card.rules-scrollable .card-rules-scroll {
+  display: grid;
+}
+
+/* The detail card is a reading surface, not a scaled copy of the hand card.
+ * Its ratio is driven by rule density so a long effect gets paper, not a
+ * smaller font. The max width still leaves a comfortable veil around phones. */
+body .card-preview[data-mode="pinned"],
+body .card-preview[data-mode="hover"] {
+  --detail-w: 260px;
+  aspect-ratio: 1 / 1.45;
+  width: var(--detail-w);
+  height: auto;
+  min-width: var(--detail-w);
+  max-width: var(--detail-w);
+  min-height: 0;
+  max-height: none;
+}
+body .card-preview[data-mode="pinned"] {
+  --detail-w: min(
+    300px,
+    calc(100vw - 28px),
+    calc((100dvh - 84px) / 1.45)
+  );
+}
+body .card-preview[data-mode="pinned"][data-rule-density="medium"],
+body .card-preview[data-mode="hover"][data-rule-density="medium"] {
+  aspect-ratio: 1 / 1.58;
+}
+body .card-preview[data-mode="pinned"][data-rule-density="medium"] {
+  --detail-w: min(
+    300px,
+    calc(100vw - 28px),
+    calc((100dvh - 84px) / 1.58)
+  );
+}
+body .card-preview[data-mode="pinned"][data-rule-density="long"],
+body .card-preview[data-mode="hover"][data-rule-density="long"] {
+  aspect-ratio: 1 / 1.82;
+}
+body .card-preview[data-mode="pinned"][data-rule-density="long"] {
+  --detail-w: min(
+    300px,
+    calc(100vw - 28px),
+    calc((100dvh - 84px) / 1.82)
+  );
+}
+body .card-preview[data-mode="pinned"][data-rule-density="very-long"],
+body .card-preview[data-mode="hover"][data-rule-density="very-long"] {
+  aspect-ratio: 1 / 2.02;
+}
+body .card-preview[data-mode="pinned"][data-rule-density="very-long"] {
+  --detail-w: min(
+    300px,
+    calc(100vw - 28px),
+    calc((100dvh - 84px) / 2.02)
+  );
+}
+body .card-preview[data-mode="pinned"] .card,
+body .card-preview[data-mode="hover"] .card {
+  width: var(--detail-w) !important;
+  height: auto !important;
+  min-height: 0;
+  max-height: none;
+  aspect-ratio: 1 / 1.45;
+}
+body .card-preview[data-mode="pinned"][data-rule-density="medium"] .card,
+body .card-preview[data-mode="hover"][data-rule-density="medium"] .card {
+  aspect-ratio: 1 / 1.58;
+}
+body .card-preview[data-mode="pinned"][data-rule-density="long"] .card,
+body .card-preview[data-mode="hover"][data-rule-density="long"] .card {
+  aspect-ratio: 1 / 1.82;
+}
+body .card-preview[data-mode="pinned"][data-rule-density="very-long"] .card,
+body .card-preview[data-mode="hover"][data-rule-density="very-long"] .card {
+  aspect-ratio: 1 / 2.02;
+}
+body .card-preview[data-mode="pinned"] .card .card-art,
+body .card-preview[data-mode="hover"] .card .card-art {
+  height: 45%;
+}
+body .card-preview[data-mode="pinned"] .card .card-title,
+body .card-preview[data-mode="hover"] .card .card-title {
+  top: 45%;
+  height: 13%;
+  min-height: 0;
+}
+body .card-preview[data-mode="pinned"] .card .card-text,
+body .card-preview[data-mode="hover"] .card .card-text {
+  top: 59%;
+  bottom: 13%;
+  display: block;
+  max-height: none;
+  overflow: auto;
+  text-overflow: clip;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  scrollbar-width: thin;
+  font-size: clamp(11px, calc(var(--detail-w) * 0.043), 15px);
+  line-height: 1.36;
+}
+body .card-preview[data-mode="pinned"] .card.rules-short .card-art,
+body .card-preview[data-mode="hover"] .card.rules-short .card-art {
+  height: 50%;
+}
+body .card-preview[data-mode="pinned"] .card.rules-short .card-title,
+body .card-preview[data-mode="hover"] .card.rules-short .card-title {
+  top: 50%;
+  height: 13%;
+}
+body .card-preview[data-mode="pinned"] .card.rules-short .card-text,
+body .card-preview[data-mode="hover"] .card.rules-short .card-text {
+  top: 64%;
+  bottom: 13%;
+}
+body .card-preview[data-mode="pinned"] .card.rules-medium .card-art,
+body .card-preview[data-mode="hover"] .card.rules-medium .card-art {
+  height: 45%;
+}
+body .card-preview[data-mode="pinned"] .card.rules-medium .card-title,
+body .card-preview[data-mode="hover"] .card.rules-medium .card-title {
+  top: 45%;
+  height: 13%;
+}
+body .card-preview[data-mode="pinned"] .card.rules-medium .card-text,
+body .card-preview[data-mode="hover"] .card.rules-medium .card-text {
+  top: 59%;
+  bottom: 13%;
+}
+body .card-preview[data-mode="pinned"] .card.rules-long .card-art,
+body .card-preview[data-mode="hover"] .card.rules-long .card-art {
+  height: 40%;
+}
+body .card-preview[data-mode="pinned"] .card.rules-long .card-title,
+body .card-preview[data-mode="hover"] .card.rules-long .card-title {
+  top: 40%;
+  height: 13%;
+}
+body .card-preview[data-mode="pinned"] .card.rules-long .card-text,
+body .card-preview[data-mode="hover"] .card.rules-long .card-text {
+  top: 54%;
+  bottom: 11%;
+  font-size: clamp(10.5px, calc(var(--detail-w) * 0.04), 14px);
+}
+body .card-preview[data-mode="pinned"] .card.rules-very-long .card-art,
+body .card-preview[data-mode="hover"] .card.rules-very-long .card-art {
+  height: 36%;
+}
+body .card-preview[data-mode="pinned"] .card.rules-very-long .card-title,
+body .card-preview[data-mode="hover"] .card.rules-very-long .card-title {
+  top: 36%;
+  height: 12%;
+}
+body .card-preview[data-mode="pinned"] .card.rules-very-long .card-text,
+body .card-preview[data-mode="hover"] .card.rules-very-long .card-text {
+  top: 49%;
+  bottom: 9%;
+  font-size: clamp(10px, calc(var(--detail-w) * 0.037), 13px);
+}
+body .card-preview[data-mode="pinned"] .card.rules-scrollable .card-rules-scroll,
+body .card-preview[data-mode="hover"] .card.rules-scrollable .card-rules-scroll {
+  display: none;
+}
+
+/* Desktop hand faces gain a real rules well instead of a two-line clamp. */
+body:not(.touch-layout) .hand-card .card-art {
+  height: 44%;
+}
+body:not(.touch-layout) .hand-card .card-title {
+  top: 44%;
+  height: 13%;
+  min-height: 0;
+}
+body:not(.touch-layout) .hand-card .card .card-text {
+  top: 59%;
+  bottom: 18%;
+  display: block;
+  max-height: none;
+  overflow: auto;
+  text-overflow: clip;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  scrollbar-width: thin;
+  font-size: 8.5px;
+  line-height: 1.28;
+}
+
+/* Touch hand faces preserve the tactile shelf, but the rules well is now
+ * complete and scrollable. The small indicator appears only when the card
+ * actually has more copy than its current shelf allocation. */
+body.touch-layout .hand-card .card-art {
+  height: 44%;
+}
+body.touch-layout .hand-card .card-title {
+  top: 44%;
+  height: 12%;
+}
+body.touch-layout .hand-card .card .card-text {
+  display: block;
+  max-height: none;
+  overflow: auto;
+  text-overflow: clip;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  scrollbar-width: none;
+  touch-action: pan-y;
+  top: 57%;
+  bottom: 17%;
+}
+body.touch-layout .hand-card .card .card-text::-webkit-scrollbar {
+  display: none;
+}
+body.touch-layout .hand-card .card-rules-scroll {
+  right: 6%;
+  bottom: 21%;
+  width: 13px;
+  height: 13px;
+  font-size: 8px;
+  opacity: 0.88;
+}
+body.touch-layout .hand-card .card.rules-short .card-text {
+  --rule-lines: unset;
+  font-size: 9px;
+  line-height: 1.24;
+}
+body.touch-layout .hand-card .card.rules-medium .card-art {
+  height: 37%;
+}
+body.touch-layout .hand-card .card.rules-medium .card-title {
+  top: 37%;
+}
+body.touch-layout .hand-card .card.rules-medium .card-text {
+  font-size: 8.6px;
+  line-height: 1.25;
+  top: 50%;
+}
+body.touch-layout .hand-card .card.rules-long .card-art {
+  height: 32%;
+}
+body.touch-layout .hand-card .card.rules-long .card-title {
+  top: 32%;
+}
+body.touch-layout .hand-card .card.rules-long .card-text {
+  font-size: 8px;
+  line-height: 1.2;
+  top: 45%;
+}
+body.touch-layout .hand-card .card.rules-very-long .card-art {
+  height: 30%;
+}
+body.touch-layout .hand-card .card.rules-very-long .card-title {
+  top: 30%;
+  height: 11%;
+}
+body.touch-layout .hand-card .card.rules-very-long .card-text {
+  font-size: 7.5px;
+  line-height: 1.15;
+  top: 42%;
+}
+@media (orientation: portrait) and (max-height: 719px) {
+  body.touch-layout .hand-card .card.rules-medium .card-text {
+    font-size: 8px;
+  }
+  body.touch-layout .hand-card .card.rules-long .card-text {
+    font-size: 7.5px;
+  }
+  body.touch-layout .hand-card .card.rules-very-long .card-text {
+    font-size: 7px;
+  }
+}
+@media (orientation: landscape) and (max-width: 900px) {
+  body .card-preview[data-mode="pinned"] {
+    --detail-w: min(300px, calc(100vw - 28px), calc((100dvh - 28px) / 1.45));
+    aspect-ratio: 1 / 1.45;
+  }
+  body .card-preview[data-mode="pinned"][data-rule-density="medium"] {
+    --detail-w: min(300px, calc(100vw - 28px), calc((100dvh - 28px) / 1.58));
+    aspect-ratio: 1 / 1.58;
+  }
+  body .card-preview[data-mode="pinned"][data-rule-density="long"],
+  body .card-preview[data-mode="pinned"][data-rule-density="very-long"] {
+    --detail-w: min(300px, calc(100vw - 28px), calc((100dvh - 28px) / 1.65));
+    aspect-ratio: 1 / 1.65;
+  }
+  body .card-preview[data-mode="pinned"][data-rule-density="long"] .card,
+  body .card-preview[data-mode="pinned"][data-rule-density="very-long"] .card {
+    aspect-ratio: 1 / 1.65;
+  }
+}

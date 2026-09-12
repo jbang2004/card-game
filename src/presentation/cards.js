@@ -63,10 +63,18 @@ const EmberCards = (() => {
       "--art-scale": String(meta.scale ?? 1.13),
     });
   }
+  function ruleDensity(c) {
+    const length = String(c?.text || "").length;
+    if (length > 100) return "very-long";
+    if (length > 70) return "long";
+    if (length > 43) return "medium";
+    return "short";
+  }
   function cardHTML(c, opts = {}) {
     const stat = c.type === "minion" || c.type === "weapon",
-      painted = true;
-    return `<div data-card-key="${c.id}" data-class="${c.class}" class="card school-${c.palette} ${painted ? "art-painted" : "art-original"} ${c.text.length > 43 ? "dense" : ""} ${c.rarity} ${c.type === "minion" ? "type-minion" : c.type}"><div class="card-inner"><div class="card-art"><img src="${A.card(c)}" alt="${escape(c.name)}" draggable="false" data-art-key="${artKeyForCard(c)}" data-portrait-mode="static" style="${artStyleForCard(c, "card")}"></div><div class="card-title ${c.name.length > 7 ? "long" : ""}">${c.name}</div><div class="card-text">${formatText(c.text)}</div><div class="card-type">${c.type === "spell" ? "法 术" : c.type === "weapon" ? "武 器" : "随 从"} · ${EmberData.classNames[c.class] || "中立"}${c.tribe ? " · " + EmberData.tribeNames[c.tribe] : ""}${c.rarity === "legendary" ? " · 传说" : ""}</div></div><div class="card-cost">${A.badgeFrame("mana")}<span class="badge-value">${opts.cost ?? c.cost}</span></div><div class="card-rarity"></div><div class="card-decoration" aria-hidden="true"></div><span class="card-class-seal" aria-hidden="true">${A.icon({ mage: "star", paladin: "sun", ranger: "hunt", moon: "moon" }[c.class] || "gem")}</span>${stat ? `<div class="stat atk">${A.badgeFrame("blade")}<span class="stat-value">${opts.atk ?? c.atk}</span></div><div class="stat hp ${(opts.hp ?? c.hp) < c.hp ? "hurt" : ""}">${A.badgeFrame(c.type === "weapon" ? "ward" : "heart")}<span class="stat-value">${opts.hp ?? c.hp}</span></div>` : ""}</div>`;
+      painted = true,
+      density = ruleDensity(c);
+    return `<div data-card-key="${c.id}" data-class="${c.class}" data-rule-density="${density}" class="card school-${c.palette} ${painted ? "art-painted" : "art-original"} ${c.text.length > 43 ? "dense" : ""} rules-${density} ${c.rarity} ${c.type === "minion" ? "type-minion" : c.type}"><div class="card-inner"><div class="card-art"><img src="${A.card(c)}" alt="${escape(c.name)}" draggable="false" data-art-key="${artKeyForCard(c)}" data-portrait-mode="static" style="${artStyleForCard(c, "card")}"></div><div class="card-title ${c.name.length > 7 ? "long" : ""}">${c.name}</div><div class="card-text">${formatText(c.text)}</div><span class="card-rules-scroll" aria-hidden="true">↕</span><div class="card-type">${c.type === "spell" ? "法 术" : c.type === "weapon" ? "武 器" : "随 从"} · ${EmberData.classNames[c.class] || "中立"}${c.tribe ? " · " + EmberData.tribeNames[c.tribe] : ""}${c.rarity === "legendary" ? " · 传说" : ""}</div></div><div class="card-cost">${A.badgeFrame("mana")}<span class="badge-value">${opts.cost ?? c.cost}</span></div><div class="card-rarity"></div><div class="card-decoration" aria-hidden="true"></div><span class="card-class-seal" aria-hidden="true">${A.icon({ mage: "star", paladin: "sun", ranger: "hunt", moon: "moon" }[c.class] || "gem")}</span>${stat ? `<div class="stat atk">${A.badgeFrame("blade")}<span class="stat-value">${opts.atk ?? c.atk}</span></div><div class="stat hp ${(opts.hp ?? c.hp) < c.hp ? "hurt" : ""}">${A.badgeFrame(c.type === "weapon" ? "ward" : "heart")}<span class="stat-value">${opts.hp ?? c.hp}</span></div>` : ""}</div>`;
   }
   return Object.freeze({
     escape,
@@ -74,6 +82,7 @@ const EmberCards = (() => {
     artKeyForCard,
     artStyleForCard,
     artStyleForHero,
+    ruleDensity,
     cardHTML,
   });
 })();
