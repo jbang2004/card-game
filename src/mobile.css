@@ -587,8 +587,7 @@ body.touch-layout .hand-card .card-cost {
   height: 23%;
   top: -1%;
 }
-body.touch-layout .hand-card .card-text,
-body.touch-layout .hand-card .card.dense .card-text {
+body.touch-layout .hand-card .card-text {
   font: 8px/1.35 var(--sans);
   top: 72%;
   left: 6%;
@@ -1384,10 +1383,6 @@ body.touch-layout .library-item .card-title.long {
 body.touch-layout .library-item .card-text {
   font-size: 10px;
   line-height: 1.4;
-}
-body.touch-layout .library-item .card.dense .card-text {
-  font-size: 9px;
-  line-height: 1.3;
 }
 body.touch-layout .library-item .card-cost {
   font-size: 31px;

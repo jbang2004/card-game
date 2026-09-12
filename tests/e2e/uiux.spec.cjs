@@ -224,8 +224,8 @@ test("long collection rules stay above stats on desktop and phone", async ({
     await page.locator("[data-library-inspect]").click();
     await assertDialogFit(page);
     await expect(page.locator(".modal-heading")).toContainText("引火学徒");
-    await turnTo(page, ".folio-flow > p:last-child");
-    await expect(page.locator(".folio-flow > p:last-child")).not.toBeEmpty();
+    await turnTo(page, ".card-detail-copy > p:last-child");
+    await expect(page.locator(".card-detail-copy > p:last-child")).not.toBeEmpty();
     await page.locator("#library-detail-back").click();
     await expect(page.locator("#library-search")).toHaveValue("引火学徒");
     await ctx.close();

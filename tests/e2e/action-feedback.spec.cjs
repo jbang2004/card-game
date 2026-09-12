@@ -88,6 +88,42 @@ test.describe("three-layer action feedback", () => {
     await assertPlacementCue(page);
   });
 
+  test("desktop placement cue resolves to open space beside an occupied board", async ({
+    page,
+  }) => {
+    await startDemo(page);
+    await page.evaluate(() => {
+      const g = EmberDebug.game;
+      g.s.active = "p";
+      g.s.phase = "battle";
+      g.s.p.mana = g.s.p.maxMana = 10;
+      g.s.e.board = [];
+      g.s.p.board = g.s.p.board.slice(0, 2);
+      g.s.p.hand = [g.card("guard")];
+      g.emit();
+    });
+    await page.locator('#hand [data-cardid="guard"]').click();
+    const placement = await page.evaluate(() => {
+      const d = document.getElementById("target-path").getAttribute("d"),
+        match = d?.match(/([0-9.-]+),([0-9.-]+)$/),
+        target = match ? { x: Number(match[1]), y: Number(match[2]) } : null,
+        units = [...document.querySelectorAll(".friendly.minion")].map((el) => {
+          const r = EmberViewport.pos(el);
+          return { x: r.x, y: r.y, w: r.w, h: r.h };
+        });
+      return {
+        target,
+        overlaps: !!target && units.some(
+          (r) =>
+            Math.abs(target.x - r.x) <= r.w / 2 &&
+            Math.abs(target.y - r.y) <= r.h / 2,
+        ),
+      };
+    });
+    expect(placement.target).not.toBeNull();
+    expect(placement.overlaps).toBe(false);
+  });
+
   test("mobile targetless play keeps confirmation beside the hand", async ({
     browser,
   }) => {

@@ -1,5 +1,6 @@
 /* Content composition root. Definitions are immutable; instances live in Game. */
 const EmberData = (() => {
+  const MAX_CARD_RULE_CHARS = 52;
   const R =
     typeof EmberRules !== "undefined"
       ? EmberRules
@@ -222,6 +223,10 @@ const EmberData = (() => {
           throw Error(c.id + ": Invalid contract");
       }
       c.text = R.text(c, db);
+      if (c.text.length > MAX_CARD_RULE_CHARS)
+        throw Error(
+          `${c.id}: Card rules exceed ${MAX_CARD_RULE_CHARS} characters`,
+        );
     }
     for (const h of [...heroes, ...bosses]) {
       if (!byId[h.portraitId]) throw Error(h.id + ": Invalid portrait ID");
