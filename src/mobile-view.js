@@ -67,13 +67,13 @@ const EmberViewport = (() => {
       l.header = safe.top + (portrait ? 52 : 44);
       const handH = portrait
         ? H >= 720
-          ? 154
+          ? 204
           : H >= 600
-            ? 142
-            : 126
+            ? 184
+            : 166
         : H >= 380
-          ? 152
-          : 116;
+          ? 176
+          : 138;
       l.hand = {
         x: padL - 4,
         y: H - safe.bottom - handH - 6,
@@ -184,9 +184,9 @@ const EmberViewport = (() => {
           };
       l.cardW = portrait
         ? W < 350
-          ? 98
-          : 112
-        : clamp(Math.round((handH - 10) * 0.82), 96, 124);
+          ? 112
+          : 132
+        : clamp(Math.round((handH - 10) * 0.78), 108, 136);
       l.cardH = portrait ? handH - 12 : handH - 10;
     }
     const before = state;
