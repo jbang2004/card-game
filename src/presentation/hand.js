@@ -9,7 +9,7 @@ const EmberHand = (() => {
     const heightLimit = n > 7 ? 172 : 184;
     const width = Math.min(
       Math.floor(heightLimit * CARD_RATIO),
-      Math.floor((1160 - (n - 1) * gap) / n),
+      Math.floor((1096 - (n - 1) * gap) / n),
     );
     const height = Math.round(width / CARD_RATIO);
     return { width, height, step: width + gap };

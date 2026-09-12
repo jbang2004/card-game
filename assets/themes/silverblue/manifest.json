@@ -1,0 +1,77 @@
+{
+  "theme": "silverblue",
+  "assets": [
+    {
+      "role": "mage",
+      "file": "mage.webp",
+      "width": 1672,
+      "height": 941,
+      "sha256": "bc7ac0f01cbabf7f79e6ee042014a8db7dc816b1c7b5935ad72242e5d933a4af",
+      "bytes": 298428
+    },
+    {
+      "role": "goddess",
+      "file": "goddess.webp",
+      "width": 1672,
+      "height": 941,
+      "sha256": "e967f864a8f44cdbc29dd2e960b34cbec0a52f9b63ffe583c5f567fb6036dbbd",
+      "bytes": 336956
+    },
+    {
+      "role": "map",
+      "file": "map.webp",
+      "width": 1672,
+      "height": 941,
+      "sha256": "654caba36d27a2f650ba9d7cc56e70f29087f80dbf8c653aec989ca6d2baf7d2",
+      "bytes": 578304
+    },
+    {
+      "role": "ranger",
+      "file": "ranger.webp",
+      "width": 1672,
+      "height": 941,
+      "sha256": "406ccc5e2ee643efc485f30bdf677744f358e07472da324550195c0dab6609d1",
+      "bytes": 249540
+    },
+    {
+      "role": "home",
+      "file": "home.webp",
+      "width": 1672,
+      "height": 941,
+      "sha256": "073e882bd6f28edd2e9b1271fc238b14ce238c9e0def688a889186b1a2c424c4",
+      "bytes": 399424
+    },
+    {
+      "role": "backdrop",
+      "file": "backdrop.webp",
+      "width": 1672,
+      "height": 941,
+      "sha256": "1f6eae0dec30cbaf54db8e57cf630f539ecf2d72692a8da5e43be272321b74dc",
+      "bytes": 223670
+    },
+    {
+      "role": "morla",
+      "file": "morla.webp",
+      "width": 1672,
+      "height": 941,
+      "sha256": "05560e62a52e7ca9ff11599572bc574f69eec3fba4f0654cc3ac364fd96786c0",
+      "bytes": 271544
+    },
+    {
+      "role": "paladin",
+      "file": "paladin.webp",
+      "width": 1672,
+      "height": 941,
+      "sha256": "5554dc0de24166713416573a12ebb8d501ae3c13447d96ecf1a606979e3fd970",
+      "bytes": 304818
+    },
+    {
+      "role": "battle",
+      "file": "battle.webp",
+      "width": 1672,
+      "height": 941,
+      "sha256": "15eb7a8068db55d3f608b9d8fd96c1fdbd826183abce4ee8eb4ff52baad427f4",
+      "bytes": 400470
+    }
+  ]
+}

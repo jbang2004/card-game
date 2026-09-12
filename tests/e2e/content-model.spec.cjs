@@ -191,7 +191,7 @@ test("a second mage and sixth boss work through production screens with only con
   await expect(page.locator("#result-next")).toContainText("新的旅程");
   await page.locator("#result-home").click();
   await page.locator("#adventure-nav").click();
-  await expect(page.locator(".map-stop.done")).toHaveCount(D.bosses.length + 1);
+  await expect(page.locator(".atlas-location.done")).toHaveCount(D.bosses.length + 1);
   expect(errors).toEqual([]);
 });
 

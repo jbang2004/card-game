@@ -1,3 +1,5 @@
+> 2026-09-12 界面与素材更新见 [星海银蓝重构说明](design/SILVERBLUE_REBUILD.md)。下文旧视觉架构和数量属于历史记录，以当前注册表及内容数据为准。
+
 > 素材清理更新：旧版 moon-sources 已按用户要求删除。当前只保留 moon-anime-v2 原画、分层制作源及其运行 WebP。下文旧路径属于历史制作记录。
 
 > 当前统一角色配置与制作契约见 [CHARACTER_AUTHORING.md](CHARACTER_AUTHORING.md)。下文涉及独立 motion manifest / portrait-profiles 的描述是早期阶段记录，已由 `assets/characters.json` 取代。

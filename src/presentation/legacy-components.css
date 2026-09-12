@@ -1,0 +1,4367 @@
+/* Stable component contracts. Legacy CSS lives in a lower cascade layer.
+   Responsive rules change geometry only; colors come from shared tokens. */
+:root {
+  --ui-font:
+    -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei",
+    sans-serif;
+  --surface: #2c2119;
+  --surface-raised: #3c2c20;
+  --ink: #f6e4c3;
+  --ink-secondary: #dac6a5;
+  --paper: #efdfbd;
+  --paper-ink: #332519;
+  /* One face contract for battle, hand, mulligan and detail views. A slightly
+     taller face gives the art aperture more vertical room without changing
+     the card's semantic bands. */
+  --card-face-ratio: 5 / 7.4;
+  --primary-fill: linear-gradient(155deg, #f5d68d, #c59440);
+  --secondary-fill: linear-gradient(#4d3929, #302219);
+}
+body,
+button,
+input,
+select {
+  font-family: var(--ui-font);
+}
+button {
+  font-weight: 600;
+}
+.lobby-copy,
+body.touch-layout .lobby-copy {
+  background: var(--surface);
+  border: 2px solid #b18a50;
+  border-radius: 16px;
+  outline: 0;
+  box-shadow:
+    inset 0 0 0 5px #18100b66,
+    0 12px 35px #0005;
+  color: var(--ink);
+}
+.lobby-copy:before {
+  border: 1px solid #b18a504d;
+  border-radius: 10px;
+}
+.lobby-copy .eyebrow,
+.lobby-chinese,
+.lobby-tagline,
+.lobby-desc,
+body.touch-layout .lobby-chinese,
+body.touch-layout .lobby-tagline,
+body.touch-layout .lobby-desc {
+  color: var(--ink);
+  text-shadow: none;
+  font-family: var(--ui-font);
+  letter-spacing: 0;
+}
+.lobby-copy .eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: var(--ink-secondary);
+}
+.lobby-chinese {
+  font-size: 28px;
+  font-weight: 650;
+}
+.lobby-tagline {
+  font-size: 17px;
+  line-height: 1.6;
+}
+.lobby-desc {
+  font-size: 14px;
+  line-height: 1.6;
+}
+.lobby-title,
+.lobby-title span {
+  color: #ffe1a5;
+  text-shadow: 0 2px 3px #0006;
+}
+.gold-btn,
+body.touch-layout .gold-btn,
+.end-turn,
+body.touch-layout .end-turn {
+  background: var(--primary-fill);
+  color: #352310;
+  text-shadow: none;
+  border: 2px solid #7b562c;
+  box-shadow:
+    inset 0 0 0 1px #ffe7b0,
+    0 3px 0 #51361d,
+    0 5px 10px #0005;
+  font-family: var(--ui-font);
+  letter-spacing: 0;
+}
+.ghost-btn,
+body.touch-layout .ghost-btn,
+#lobby-library-btn,
+.atelier-open,
+body.touch-layout .atelier-open {
+  background: var(--secondary-fill);
+  color: var(--ink);
+  text-shadow: none;
+  border: 1px solid #9c7849;
+  box-shadow:
+    inset 0 1px #e4c59233,
+    0 3px 7px #0004;
+  letter-spacing: 0;
+}
+.gold-btn:hover,
+.ghost-btn:hover {
+  filter: brightness(1.1);
+}
+.showcase-link,
+.showcase-link span,
+.text-btn {
+  color: var(--ink-secondary);
+  text-shadow: none;
+}
+
+.lobby-bottom,
+body.touch-layout .lobby-bottom {
+  background: #21170fe8;
+  color: var(--ink-secondary);
+  text-shadow: none;
+}
+/* One rectangular aperture for EVERY card type and rarity. The art never owns
+   a second competing silhouette, mask, border or transform. */
+body .card,
+body .card.common,
+body .card.rare,
+body .card.epic,
+body .card.legendary {
+  border-radius: 10px;
+  isolation: isolate;
+  background: linear-gradient(135deg, #c5a16a, #795638);
+  border: 2px solid #5d4027;
+}
+body .card:after,
+body .card-inner:before,
+body .card-inner:after {
+  display: none;
+}
+body .card-inner {
+  inset: 4px;
+  overflow: hidden;
+  isolation: isolate;
+  clip-path: inset(0 round 5px);
+  border-radius: 5px;
+  border: 1px solid #8c6b40;
+  background: var(--paper);
+  box-shadow: none;
+}
+body .card .card-art {
+  position: absolute;
+  inset: 0 0 auto;
+  width: 100%;
+  height: 57%;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  clip-path: inset(0);
+  isolation: isolate;
+  background: #3b2b21;
+  box-shadow: none;
+}
+body .card .card-art img {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--art-pos, 50% 40%);
+  transform: none;
+  border: 0;
+  border-radius: 0;
+  clip-path: none;
+  filter: none;
+}
+body .card .card-art:after {
+  display: none;
+}
+body .card .card-title {
+  top: 57%;
+  left: 0;
+  right: 0;
+  height: 12%;
+  min-height: 0;
+  padding: 0 2px;
+  border: 0;
+  border-top: 1px solid #a7824d;
+  border-bottom: 1px solid #a7824d;
+  border-radius: 0;
+  background: #493321;
+  color: #fff0d1;
+  font-family: var(--ui-font);
+  font-weight: 650;
+  letter-spacing: 0;
+  text-shadow: none;
+}
+body .card-title:before,
+body .card-title:after {
+  display: none;
+}
+body .card .card-text {
+  top: 71%;
+  left: 4%;
+  right: 4%;
+  color: var(--paper-ink);
+  font-family: var(--ui-font);
+  font-weight: 500;
+  line-height: 1.4;
+  text-shadow: none;
+}
+body .card .card-text b {
+  color: var(--paper-ink);
+  font-weight: 750;
+}
+body .card .card-type {
+  color: #72583a;
+  font-family: var(--ui-font);
+  letter-spacing: 0;
+  text-shadow: none;
+}
+body .card-rarity {
+  top: 68%;
+  width: 5px;
+  height: 5px;
+  box-shadow: none;
+}
+body .card-cost,
+body .stat,
+body .hero-health,
+body .hero-armor {
+  font-family: Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  text-shadow: 0 1px 1px #0008;
+}
+body .hero-name {
+  font-family: var(--ui-font);
+  text-shadow: none;
+}
+body.touch-layout .lobby-chinese {
+  font-size: 24px;
+}
+body.touch-layout .lobby-tagline {
+  font-size: 15px;
+}
+body.touch-layout .lobby-desc {
+  font-size: 13px;
+}
+/* Readable type follows the rendered card width, including the large touch
+   collection and inspection views; small hand cards retain compact rules. */
+body .card {
+  container-type: inline-size;
+}
+body .card .card-title {
+  font-size: clamp(10px, 7.5cqw, 18px);
+}
+body .card .card-text {
+  font-size: clamp(10px, 6cqw, 15px);
+}
+body .hand-card .card .card-text {
+  font-size: clamp(9px, 7cqw, 11px);
+}
+body .card-cost {
+  font-size: clamp(16px, 17.5cqw, 40px);
+}
+body .card .stat {
+  font-size: clamp(16px, 16.5cqw, 38px);
+}
+body .card .card-type {
+  font-size: clamp(6px, 3.5cqw, 9px);
+}
+/* Live-play inspection panels use the same readable surfaces as the lobby. */
+.anime-art-button {
+  background: var(--secondary-fill);
+  color: var(--ink);
+  border: 1px solid #9c7849;
+}
+.end-turn:disabled {
+  filter: saturate(0.45);
+  opacity: 0.72;
+  cursor: wait;
+}
+
+/* Combat ornament uses existing read-only unit classes; no effect owns rules. */
+:root {
+  --combat-gold: #f5ce7e;
+  --combat-ice: #a5e8ff;
+  --combat-ready: #b9efb6;
+  --combat-enemy: #e5a6b4;
+}
+.turn-cue,
+.summon-seal {
+  position: absolute;
+  z-index: 85;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  color: var(--combat-gold);
+  text-shadow: 0 2px 3px #160e08;
+}
+.turn-cue {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  width: 300px;
+  height: 66px;
+  border-block: 1px solid var(--combat-gold);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #24170bf5 18%,
+    #493020fa 50%,
+    #24170bf5 82%,
+    transparent
+  );
+  box-shadow: 0 10px 22px #140b0633;
+  text-align: center;
+}
+.turn-cue.theirs {
+  color: var(--combat-enemy);
+  border-color: currentColor;
+}
+.turn-cue small {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 3px;
+}
+.turn-cue strong {
+  display: block;
+  font-size: 23px;
+  letter-spacing: 5px;
+}
+.turn-cue-gem {
+  font-size: 26px;
+}
+.summon-seal {
+  padding: 5px 16px;
+  white-space: nowrap;
+  border-block: 1px solid var(--combat-gold);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #2b180eee 20% 80%,
+    transparent
+  );
+  font-size: 12px;
+  letter-spacing: 3px;
+}
+.minion .unit-aura {
+  position: absolute;
+  inset: -5px;
+  border-radius: 46% 46% 38% 38%;
+  pointer-events: none;
+  z-index: 3;
+}
+.minion.ready .unit-aura {
+  border-bottom: 3px solid var(--combat-ready);
+  box-shadow: 0 5px 9px #b9efb640;
+}
+.minion.shield .unit-aura {
+  inset: -8px;
+  border: 2px solid var(--combat-gold);
+  background: linear-gradient(
+    125deg,
+    #fff4ce33,
+    transparent 38% 62%,
+    #f5ce7e22
+  );
+  box-shadow:
+    inset 0 0 12px #f5ce7e55,
+    0 0 9px #f5ce7e55;
+}
+.minion.frozen .unit-aura {
+  border: 2px solid var(--combat-ice);
+  border-radius: 24% 38% 20% 32%;
+  background: repeating-conic-gradient(
+    from 20deg at 30% 15%,
+    #a5e8ff28 0deg 18deg,
+    transparent 18deg 70deg
+  );
+  box-shadow:
+    inset 0 0 14px #a5e8ff66,
+    0 0 8px #a5e8ff66;
+}
+.minion.shield:before,
+.minion.frozen:after {
+  display: none;
+}
+.card-decoration {
+  display: none;
+}
+.card-decoration:before,
+.card-decoration:after {
+  display: none;
+}
+.hand-card.playable .card-decoration {
+  display: block;
+  border-radius: inherit;
+  background: linear-gradient(
+    115deg,
+    transparent 35%,
+    #fff2cb55 48%,
+    transparent 61%
+  );
+  background-size: 260% 100%;
+  animation: card-sheen 4.5s ease-in-out infinite;
+}
+@keyframes card-sheen {
+  0%,
+  65% {
+    background-position: 160% 0;
+  }
+  100% {
+    background-position: -80% 0;
+  }
+}
+body.touch-layout .turn-cue {
+  width: 230px;
+  height: 44px;
+  gap: 16px;
+}
+body.touch-layout .turn-cue strong {
+  font-size: 17px;
+  letter-spacing: 3px;
+}
+body.touch-layout .turn-cue small {
+  font-size: 8px;
+}
+body.touch-layout .summon-seal {
+  font-size: 9px;
+  padding: 3px 8px;
+  letter-spacing: 1px;
+}
+.reduced-motion .hand-card.playable .card-decoration,
+.fx-low .hand-card.playable .card-decoration {
+  animation: none;
+  background: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hand-card.playable .card-decoration {
+    animation: none;
+    background: none;
+  }
+}
+
+.turn-cue.compact {
+  height: 18px;
+  gap: 18px;
+}
+.turn-cue.compact > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.turn-cue.compact strong {
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+.turn-cue.compact small {
+  font-size: 8px;
+  letter-spacing: 1px;
+}
+.turn-cue.compact .turn-cue-gem {
+  font-size: 12px;
+}
+
+/* Short, local event labels: meaning remains available with motion disabled. */
+.combat-cue {
+  position: absolute;
+  z-index: 88;
+  transform: translate(-50%, -50%);
+  max-width: 240px;
+  padding: 4px 10px;
+  border: 1px solid var(--combat-gold);
+  border-radius: 5px;
+  background: #24170bf2;
+  color: var(--combat-gold);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  pointer-events: none;
+  text-shadow: 0 1px 2px #120a06;
+}
+.cue-freeze,
+.cue-thaw {
+  color: var(--combat-ice);
+  border-color: currentColor;
+}
+.cue-silence,
+.cue-transform,
+.cue-deathrattle {
+  color: #d8bef5;
+  border-color: currentColor;
+}
+.cue-burn,
+.cue-expire,
+.cue-weapon {
+  color: #ffb59d;
+  border-color: currentColor;
+}
+body.touch-layout .combat-cue {
+  font-size: 10px;
+  max-width: 160px;
+  padding: 3px 6px;
+}
+
+/* Layer canvases occupy only the illustration window; all card information stays DOM. */
+.portrait-motion {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  display: none;
+}
+.motion-ready > .portrait-motion {
+  display: block;
+}
+body .motion-ready > img[data-art-key] {
+  opacity: 0;
+}
+.fx-low .portrait-motion,
+.fx-reduced .portrait-motion,
+.reduced-motion .portrait-motion {
+  display: none;
+}
+body .fx-low .motion-ready > img[data-art-key],
+body .fx-reduced .motion-ready > img[data-art-key],
+body.reduced-motion .motion-ready > img[data-art-key] {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .portrait-motion {
+    display: none;
+  }
+  body .motion-ready > img[data-art-key] {
+    opacity: 1;
+  }
+}
+
+/* No perpetual sheen competing with the animated subject. */
+.hand-card.playable .card-decoration {
+  animation: none;
+  background: none;
+}
+/* FLIP / combat owns movement. CSS filter/transform transitions must not trail it. */
+body .minion {
+  transition:
+    box-shadow 120ms ease,
+    border-color 120ms ease;
+}
+.freeze-lock {
+  position: absolute;
+  pointer-events: none;
+  z-index: 84;
+  border: 3px solid var(--combat-ice);
+  border-radius: 35% 35% 28% 28%;
+  background: linear-gradient(
+    130deg,
+    #c5f4ff22,
+    transparent 40% 70%,
+    #c5f4ff22
+  );
+}
+
+/* Only a newly summoned portrait reveals; steady idle frames never crossfade. */
+.motion-entering > img[data-art-key] {
+  transition: opacity 160ms ease-out;
+}
+body .motion-arriving:not(.motion-ready) > img[data-art-key] {
+  transition: none;
+  opacity: 0;
+}
+.motion-entering.motion-ready > .portrait-motion {
+  animation: portrait-arrival 160ms ease-out both;
+}
+@keyframes portrait-arrival {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Tavern Oaths deck planning and campaign refit share desktop/touch materials. */
+
+/* The longer deck/mode form must scroll without a footer covering its fields. */
+
+/* Gilded cabinet UI: structural bronze, recessed walnut, quiet rule paper. */
+:root {
+  --panel-wood:
+    linear-gradient(110deg, #23160ef5, #493021e8 48%, #251910f5),
+    var(--wood-texture);
+  --rim-light: #d6b77b;
+  --rim-dark: #51351e;
+  --paper: #efdfbd;
+  --paper-ink: #332519;
+  --muted-ink: #c9b594;
+  --panel-shadow:
+    inset 0 1px 0 #ffe0a570, inset 0 0 0 5px #1a100acc,
+    inset 0 0 0 7px #946b3955, 0 7px 0 #160d08, 0 9px 0 #74502b,
+    0 24px 65px #000a;
+}
+body .gold-btn,
+body.touch-layout .gold-btn,
+body .end-turn {
+  background: linear-gradient(
+    #fae3a7 0%,
+    #e9c575 12%,
+    #c69747 65%,
+    #ab732e 100%
+  );
+  border: 2px solid #644422;
+  box-shadow:
+    inset 0 0 0 1px #ffedb7,
+    inset 0 3px 0 #fff0be88,
+    inset 0 -4px 0 #70471755,
+    0 4px 0 #392318,
+    0 6px 0 #977341,
+    0 10px 14px #0006;
+  color: #302013;
+  text-shadow: 0 1px #ffe4a677;
+  border-radius: 10px;
+  min-height: 48px;
+}
+body .ghost-btn,
+body.touch-layout .ghost-btn,
+body .text-btn {
+  background: linear-gradient(#624934, #332319);
+  color: var(--ink);
+  border: 1px solid #a47b43;
+  border-radius: 7px;
+  box-shadow:
+    inset 0 1px #eacc9566,
+    inset 0 -2px #1b110a99,
+    0 3px 4px #0006;
+}
+body .ghost-btn::before,
+body .ghost-btn::after {
+  display: none;
+}
+body .gold-btn:active:not(:disabled),
+body .ghost-btn:active:not(:disabled) {
+  transform: translateY(2px);
+  filter: brightness(0.94);
+}
+body button:disabled {
+  cursor: not-allowed;
+}
+body .gold-btn:disabled {
+  filter: saturate(0.25);
+  opacity: 0.6;
+  box-shadow:
+    inset 0 0 0 1px #ffe6b044,
+    0 2px 0 #24150d;
+}
+body button:focus-visible,
+body select:focus-visible,
+body input:focus-visible,
+body summary:focus-visible {
+  outline: 3px solid #f8dc88;
+  outline-offset: 3px;
+}
+
+/* Main menu: one cabinet of actions, with artwork around it. */
+body:not(.touch-layout) .lobby-copy {
+  left: 490px;
+  top: 196px;
+  width: 620px;
+  height: auto;
+  padding: 32px 48px 36px;
+  background: var(--panel-wood);
+  background-size: auto, 460px;
+  border: 2px solid #bb9559;
+  border-radius: 24px;
+  box-shadow: var(--panel-shadow);
+}
+body .lobby-copy:before {
+  inset: 10px;
+  border-color: #b78c4744;
+  pointer-events: none;
+}
+body:not(.touch-layout) .lobby-title {
+  position: static;
+  transform: none;
+  margin: 0 0 4px;
+  padding: 0;
+  width: auto;
+  height: auto;
+  line-height: 1.15;
+}
+body:not(.touch-layout) .lobby-title span {
+  font-size: 76px;
+  letter-spacing: 12px;
+}
+body .lobby-copy > .eyebrow,
+body .lobby-tagline,
+body .lobby-world-label,
+body .lobby-bottom small,
+body .lobby-collection > .section-label {
+  display: none;
+}
+body .lobby-chinese {
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: 5px;
+  margin: 6px 0 20px;
+  color: #d8bc83;
+}
+body .lobby-desc {
+  margin: 0 0 24px;
+  font-size: 14px;
+  color: var(--muted-ink);
+}
+body:not(.touch-layout) .lobby-actions {
+  margin: 0;
+  gap: 16px;
+}
+body .lobby-actions button {
+  font-size: 20px;
+  min-height: 60px;
+}
+body .showcase-link {
+  margin-top: 24px;
+  padding: 12px;
+  font-size: 14px;
+  border: 0;
+}
+body .showcase-link span:last-child {
+  display: none;
+}
+body:not(.touch-layout) .lobby-collection {
+  right: 120px;
+  bottom: 124px;
+  transform: scale(0.86);
+  transform-origin: bottom right;
+}
+body .lobby-bottom {
+  font-size: 12px;
+  letter-spacing: 0;
+  background: #170e08bf;
+}
+body .topbar {
+  background: linear-gradient(#463122f5, #20160ff5);
+  box-shadow:
+    inset 0 -1px #c49a5455,
+    0 4px 10px #0005;
+}
+body .nav-link {
+  font-size: 14px;
+  color: var(--ink-secondary);
+}
+body .nav-link.active {
+  color: #ffe1a0;
+  background: #a57b3822;
+}
+body .nav-link.active:after {
+  background: #d5ae62;
+}
+
+/* Rewards: artwork above, dark ink on quiet parchment, deliberate selection. */
+
+/* Collection and settings use fixed action space and naturally scrolling content. */
+body .log-panel {
+  box-shadow: var(--panel-shadow);
+  background: var(--panel-wood);
+}
+body .battle-log {
+  color: var(--ink);
+}
+@media (prefers-reduced-motion: reduce) {
+body .gold-btn,
+body .ghost-btn {
+    transition: none;
+  }
+}
+/* Geometry-only touch overrides; material and ink remain shared above. */
+body.touch-layout .lobby-copy {
+  padding: 24px;
+  background: var(--panel-wood);
+  box-shadow: var(--panel-shadow);
+}
+body.touch-layout .lobby-desc {
+  font-size: 14px;
+}
+body.touch-layout .lobby-actions button {
+  font-size: 17px;
+  min-height: 50px;
+}
+/* Cancel the legacy full-card absolute image geometry inside the new medallion. */
+/* The map and rulebook also used pale legacy surfaces under pale theme text. */
+
+/* Collection rules flow naturally; long trigger text cannot run under attack/health. */
+
+/* Material feedback: card flight, readable contact numbers, and a quiet mixer. */
+.card-motion-proxy {
+  position: absolute;
+  z-index: 49;
+  pointer-events: none;
+  isolation: isolate;
+  transform-origin: center;
+  will-change: transform, opacity;
+  filter: drop-shadow(0 15px 12px #120a08a0);
+  perspective: 900px;
+}
+.card-motion-proxy * {
+  pointer-events: none;
+}
+.card-motion-content,
+.card-motion-content > .card,
+.card-motion-content > .card-back {
+  width: 100%;
+  height: 100%;
+}
+.card-motion-content {
+  position: relative;
+  transform-style: preserve-3d;
+}
+.card-motion-face {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  /* The child faces own their backface visibility. Hiding the wrapper here
+   * would also hide the revealed face when the wrapper rotates 180 degrees. */
+  backface-visibility: visible;
+}
+.card-motion-face > .card-motion-back,
+.card-motion-face > .card-motion-front {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  box-sizing: border-box;
+  backface-visibility: hidden;
+}
+.card-motion-face > .card-motion-front {
+  transform: rotateY(180deg);
+}
+.card-motion-face > .card-motion-back {
+  transform: none;
+}
+.card-motion-face > .card-motion-front {
+  transform: rotateY(180deg);
+}
+.card-motion-face .card-inner {
+  width: 100%;
+  height: 100%;
+}
+.card-motion-content > .card {
+  margin: 0;
+}
+.card-motion-content > .card-back {
+  position: relative;
+  display: block;
+}
+.fx-reduced .card-motion-proxy,
+.reduced-motion .card-motion-proxy {
+  display: none;
+}
+.fx-low .card-motion-proxy {
+  filter: drop-shadow(0 8px 6px #120a0866);
+}
+.fx-low .card-motion-face {
+  transform: none;
+}
+.attack-actor {
+  will-change: transform;
+  pointer-events: none;
+  user-select: none;
+  transform-origin: 50% 68%;
+  filter: drop-shadow(0 12px 10px #120a08a0);
+}
+.attack-actor.attack-family-blade {
+  filter: drop-shadow(0 12px 10px #120a08a0) saturate(1.08);
+}
+.attack-actor.attack-family-claw {
+  filter: drop-shadow(0 12px 10px #120a08a0) saturate(1.16);
+}
+.attack-actor.attack-family-slam {
+  filter: drop-shadow(0 16px 12px #120a08b8) saturate(1.12);
+}
+.attack-actor[data-attack-heavy="true"] {
+  filter: drop-shadow(0 16px 13px #100806c4) brightness(1.08) saturate(1.2);
+}
+.fx-reduced .attack-actor,
+body.reduced-motion .attack-actor {
+  filter: none;
+}
+body .damage-number {
+  font:
+    800 36px Georgia,
+    serif;
+  color: #ffebca;
+  min-width: 38px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  animation: contact-number 1.05s linear forwards;
+  paint-order: stroke fill;
+  -webkit-text-stroke: 3px #542818;
+  text-shadow:
+    0 3px 1px #1a100dd9,
+    0 0 12px #e6ac4e66;
+}
+body .damage-number.crit {
+  font-size: 46px;
+  color: #ffe29b;
+}
+body .damage-number.heal {
+  color: #c5f2c6;
+  -webkit-text-stroke-color: #204939;
+}
+body .damage-number.block {
+  font: 700 18px var(--serif);
+  -webkit-text-stroke-width: 0;
+}
+body .damage-number small {
+  -webkit-text-stroke-width: 0;
+}
+@keyframes contact-number {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.35);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.96);
+  }
+  24%,
+  66% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 22px)) scale(0.94);
+  }
+}
+body.reduced-motion .damage-number,
+.fx-reduced .damage-number {
+  animation: none;
+}
+body.touch-layout .damage-number {
+  font-size: 29px;
+}
+body.touch-layout .damage-number.crit {
+  font-size: 36px;
+}
+body.touch-layout .damage-number.block {
+  font-size: 15px;
+}
+@media (prefers-reduced-motion: reduce) {
+  body .damage-number {
+    animation: none;
+  }
+}
+
+/* Signature names occupy the preparation beat and leave before damage lands. */
+.signature-cue {
+  position: absolute;
+  z-index: 52;
+  transform: translate(-50%, -50%);
+  width: max-content;
+  max-width: min(440px, 82%);
+  padding: 12px 42px 15px;
+  text-align: center;
+  pointer-events: none;
+  color: #fff1ca;
+  background: linear-gradient(
+    90deg,
+    #22162500,
+    #20131fec 22%,
+    #261822ec 78%,
+    #22162500
+  );
+  border-block: 1px solid
+    color-mix(in srgb, var(--signature-color) 65%, transparent);
+  text-shadow: 0 3px 3px #160c12;
+}
+.signature-cue small {
+  display: block;
+  margin-bottom: 5px;
+  font: 10px var(--sans);
+  letter-spacing: 6px;
+  color: var(--signature-color);
+}
+.signature-cue strong {
+  font: 700 27px var(--serif);
+  letter-spacing: 3px;
+}
+body.touch-layout .signature-cue {
+  padding: 9px 22px 11px;
+}
+body.touch-layout .signature-cue strong {
+  font-size: 21px;
+  letter-spacing: 1px;
+}
+body.touch-layout .signature-cue small {
+  font-size: 9px;
+  letter-spacing: 4px;
+}
+
+/* Named deck preparation uses the same panel and ink tokens as the collection. */
+
+/* Moon Covenant: ritual gold, quiet silver, deliberately compact battle entry. */
+.contract-open {
+  position: absolute;
+  right: 28px;
+  bottom: 128px;
+  z-index: 22;
+  width: 148px;
+  min-height: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  border: 1px solid #a18a56;
+  border-radius: 8px;
+  background: linear-gradient(145deg, #262a30, #15171d);
+  color: #eadbb0;
+  box-shadow: 0 5px 18px #0007;
+  cursor: pointer;
+  font-family: inherit;
+}
+.contract-open[hidden] {
+  display: none;
+}
+.contract-open small {
+  font-size: 11px;
+  color: #bfcbd3;
+}
+.contract-open.ready {
+  border-color: #e4c678;
+  box-shadow: 0 0 18px #d6b96a45;
+}
+.contract-open:focus-visible {
+  outline: 2px solid #f0dfa7;
+  outline-offset: 3px;
+}
+
+.divine-arrival {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 40%, #283744e8, #070b12f5 75%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  overflow: hidden;
+  animation: divine-veil 1.7s both;
+}
+.divine-arrival > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0.7;
+  mask-image: linear-gradient(#000, #000 60%, transparent);
+  animation: divine-rise 1.7s ease-out both;
+}
+.divine-arrival > small,
+.divine-arrival > strong,
+.divine-arrival > span {
+  z-index: 2;
+  text-shadow: 0 3px 14px #000;
+}
+.divine-arrival > small {
+  margin-top: 38%;
+  font-size: 12px;
+  color: #c6b382;
+  letter-spacing: 5px;
+}
+.divine-arrival > strong {
+  font-size: 38px;
+  letter-spacing: 8px;
+  color: #fff0c7;
+  margin: 12px;
+}
+.divine-arrival > span {
+  font-size: 16px;
+  letter-spacing: 12px;
+  color: #ccc8b8;
+}
+.divine-halo {
+  position: absolute;
+  width: 480px;
+  height: 480px;
+  border: 2px solid #d7bd7280;
+  border-radius: 50%;
+  box-shadow:
+    0 0 80px #b2d6f12c,
+    inset 0 0 60px #d0bb6533;
+  animation: divine-ring 1.7s ease-out both;
+}
+@keyframes divine-veil {
+  0% {
+    opacity: 0;
+  }
+  15%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes divine-rise {
+  from {
+    transform: translateY(30px) scale(1.06);
+  }
+  to {
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes divine-ring {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  55% {
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+body.touch-layout .contract-open {
+  left: 10px;
+  right: auto;
+  top: 58px;
+  bottom: auto;
+  width: 112px;
+  min-height: 44px;
+  font-size: 12px;
+}
+body.touch-layout .contract-open small {
+  font-size: 10px;
+}
+body.touch-layout .divine-arrival > strong {
+  font-size: 24px;
+  letter-spacing: 3px;
+}
+body.touch-layout .divine-arrival > small {
+  margin-top: 55%;
+  font-size: 9px;
+  letter-spacing: 2px;
+}
+body.mobile-landscape .divine-arrival > small {
+  margin-top: 15%;
+}
+.divine-arrival {
+  justify-content: flex-end;
+  padding-bottom: 10%;
+  box-sizing: border-box;
+}
+.divine-arrival > small {
+  margin-top: 0;
+}
+body.mobile-portrait .contract-open {
+  top: 168px;
+  left: 12px;
+  width: 112px;
+  min-height: 40px;
+}
+
+/* Hero copy defines the card height, including long targeted abilities. */
+
+/* Keep scarce mobile height available for cards and deck fields. */
+
+/* Pantheon: shared walnut UI, four distinct ceremonial silhouettes. */
+.divine-arrival {
+  --divine-light: #dac48e;
+  --divine-dark: #131a32;
+  isolation: isolate;
+  background: radial-gradient(
+    ellipse at 50% 38%,
+    var(--divine-dark),
+    #060709f5 80%
+  );
+}
+.divine-arrival[data-deity="stars"] {
+  --divine-light: #ffb260;
+  --divine-dark: #1b2149;
+}
+.divine-arrival[data-deity="dawn"] {
+  --divine-light: #ffe7a0;
+  --divine-dark: #463821;
+}
+.divine-arrival[data-deity="hunt"] {
+  --divine-light: #a7efc2;
+  --divine-dark: #132f28;
+}
+.divine-arrival > img {
+  z-index: 1;
+  opacity: 0.96;
+  object-position: center 32%;
+  mask-image: linear-gradient(#000 0%, #000 58%, #0009 82%, transparent 100%);
+}
+.divine-caption {
+  position: absolute;
+  z-index: 4;
+  bottom: 9%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 28px 16px 18px;
+  background: linear-gradient(
+    transparent,
+    #06080bda 35%,
+    #06080ba6 80%,
+    transparent
+  );
+  animation: divine-caption 1.7s both;
+}
+.divine-caption small {
+  font-size: 11px;
+  letter-spacing: 5px;
+  color: var(--divine-light);
+}
+.divine-caption strong {
+  font-size: clamp(26px, 4.2vw, 52px);
+  letter-spacing: 0.18em;
+  margin: 12px 0 8px;
+  color: #fff5da;
+  text-shadow:
+    0 3px 18px #000,
+    0 0 32px var(--divine-dark);
+}
+.divine-caption span {
+  font-size: 15px;
+  letter-spacing: 0.4em;
+  color: #eadfca;
+}
+.divine-caption em {
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.4em;
+  color: var(--divine-light);
+  margin-top: 18px;
+}
+.divine-atmosphere {
+  position: absolute;
+  inset: -20%;
+  background: repeating-conic-gradient(
+    from 15deg at 50% 40%,
+    transparent 0deg 18deg,
+    #fff0bd10 19deg 20deg,
+    transparent 21deg 40deg
+  );
+  animation: divine-atmosphere 1.7s ease-out both;
+}
+.divine-halo {
+  width: min(64vh, 75vw);
+  height: min(64vh, 75vw);
+  top: 10%;
+  border-color: var(--divine-light);
+}
+.divine-orbit {
+  position: absolute;
+  z-index: 2;
+  width: min(110vh, 110vw);
+  height: min(26vh, 32vw);
+  top: 34%;
+  border: 2px solid var(--divine-light);
+  border-radius: 50%;
+  opacity: 0;
+  box-shadow: 0 0 16px var(--divine-light);
+}
+.divine-arrival[data-deity="stars"] .orbit-one {
+  animation: divine-orbit-one 1.7s ease-out both;
+}
+.divine-arrival[data-deity="stars"] .orbit-two {
+  animation: divine-orbit-two 1.7s ease-out both;
+}
+.divine-rays {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+}
+.divine-rays i {
+  position: absolute;
+  width: 2px;
+  height: 120%;
+  top: -10%;
+  left: 50%;
+  background: linear-gradient(transparent, var(--divine-light), transparent);
+  opacity: 0;
+}
+.divine-arrival[data-deity="dawn"] .divine-rays i {
+  box-shadow: 0 0 40px 6px #ffe8a329;
+  animation: divine-pillar 1.7s ease-out both;
+}
+.divine-rays i:nth-child(1) {
+  left: 16%;
+  animation-delay: 30ms;
+}
+.divine-rays i:nth-child(2) {
+  left: 32%;
+  animation-delay: 60ms;
+}
+.divine-rays i:nth-child(4) {
+  left: 68%;
+  animation-delay: 60ms;
+}
+.divine-rays i:nth-child(5) {
+  left: 84%;
+  animation-delay: 30ms;
+}
+.divine-arrival[data-deity="hunt"] .divine-rays i {
+  width: 4px;
+  border-radius: 100%;
+  transform: rotate(32deg);
+  animation: divine-claw 1.7s ease-out both;
+}
+.divine-arrival[data-deity="hunt"] .divine-rays i:nth-child(4),
+.divine-arrival[data-deity="hunt"] .divine-rays i:nth-child(5) {
+  display: none;
+}
+@keyframes divine-caption {
+  0%,
+  15% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  38%,
+  88% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes divine-atmosphere {
+  from {
+    opacity: 0;
+    transform: scale(0.8) rotate(-8deg);
+  }
+  50% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.2) rotate(8deg);
+  }
+}
+@keyframes divine-orbit-one {
+  from {
+    opacity: 0;
+    transform: rotate(-40deg) scale(0.65);
+  }
+  40% {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 0;
+    transform: rotate(-18deg) scale(1.15);
+  }
+}
+@keyframes divine-orbit-two {
+  from {
+    opacity: 0;
+    transform: rotate(42deg) scale(0.65);
+  }
+  45% {
+    opacity: 0.45;
+  }
+  to {
+    opacity: 0;
+    transform: rotate(20deg) scale(1.15);
+  }
+}
+@keyframes divine-pillar {
+  from {
+    opacity: 0;
+    transform: scaleY(0.1);
+  }
+  42% {
+    opacity: 0.65;
+  }
+  to {
+    opacity: 0;
+    transform: scaleY(1);
+  }
+}
+@keyframes divine-claw {
+  from {
+    opacity: 0;
+    transform: translateY(-70%) rotate(32deg);
+  }
+  48% {
+    opacity: 0.6;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(35%) rotate(32deg);
+  }
+}
+body.touch-layout .divine-caption {
+  bottom: 15%;
+  padding: 20px 8px;
+}
+body.touch-layout .divine-caption small {
+  font-size: 8px;
+  letter-spacing: 2px;
+}
+body.touch-layout .divine-caption strong {
+  font-size: 27px;
+  letter-spacing: 0.09em;
+}
+body.touch-layout .divine-caption span {
+  font-size: 12px;
+  letter-spacing: 0.15em;
+}
+body.mobile-landscape .divine-caption {
+  bottom: 5%;
+  padding: 12px 8px;
+}
+body.mobile-landscape .divine-caption strong {
+  margin: 6px 0;
+  font-size: 25px;
+}
+body.mobile-landscape .divine-caption em {
+  margin-top: 7px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .divine-arrival,
+  .divine-arrival * {
+    animation: none;
+  }
+}
+/* Keep actions reachable when a hero's contract setup adds an extra row. */
+/* Give deity faces and antlers the full portrait width on a phone. */
+
+/* v0.15 · The Starfire cabinet. Shared material, semantic state, then geometry.
+   Art apertures remain rectangular; live numbers and rules never enter assets. */
+:root {
+  --ui-display: "Songti SC", "STSong", "SimSun", Georgia, serif;
+  --walnut-deep: #1a100c;
+  --walnut-face: #38251a;
+  --brass: #b18a4f;
+  --brass-light: #f0d598;
+  --paper: #eeddb5;
+  --paper-ink: #32271c;
+  --ink: #f5e5c5;
+  --ink-secondary: #d1bc95;
+  --focus-light: #a9e5d2;
+  --available-light: #80cdb3;
+  --danger-ink: #a23930;
+  --panel-wood:
+    linear-gradient(100deg, #150e09c9, #4a3022b8 45%, #25190ed9),
+    var(--wood-texture);
+  --panel-shadow:
+    inset 0 1px #ffe8b27a, inset 0 0 0 5px #160c08, inset 0 0 0 6px #ad845455,
+    0 5px 0 #120a06, 0 7px 0 #6c492b, 0 25px 60px #0009;
+}
+[data-class="mage"],
+[data-hero-class="mage"] {
+  --class-metal: #8ca6c2;
+  --class-deep: #273751;
+}
+[data-class="paladin"],
+[data-hero-class="paladin"] {
+  --class-metal: #ddbe7b;
+  --class-deep: #705029;
+}
+[data-class="ranger"],
+[data-hero-class="ranger"] {
+  --class-metal: #92b69b;
+  --class-deep: #2b493b;
+}
+[data-class="neutral"],
+[data-hero-class="boss"] {
+  --class-metal: #b7a78c;
+  --class-deep: #51463a;
+}
+[data-ritual="stars"] {
+  --ritual-color: #e8b976;
+  --ritual-well: #22273a;
+}
+[data-ritual="dawn"] {
+  --ritual-color: #f0d78c;
+  --ritual-well: #42341c;
+}
+[data-ritual="hunt"] {
+  --ritual-color: #9dd1b0;
+  --ritual-well: #1a342b;
+}
+[data-ritual="moon"] {
+  --ritual-color: #b9b4e3;
+  --ritual-well: #28243b;
+}
+body .gold-btn,
+body.touch-layout .gold-btn {
+  border-radius: 6px 12px 6px 12px;
+  background: linear-gradient(
+    180deg,
+    #ffe7ad 0%,
+    #dbb76c 14%,
+    #ba8740 80%,
+    #e8c989 100%
+  );
+  transition:
+    filter 130ms,
+    transform 130ms,
+    box-shadow 130ms;
+}
+body .gold-btn:hover:not(:disabled) {
+  filter: brightness(1.12);
+  box-shadow:
+    inset 0 0 0 1px #fff0cb,
+    inset 0 3px #fff0bd88,
+    0 4px #392318,
+    0 6px #977341,
+    0 8px 22px #e3b25338;
+}
+body .ghost-btn,
+body .text-btn {
+  transition:
+    filter 130ms,
+    transform 130ms;
+}
+body button:focus-visible,
+body input:focus-visible,
+body select:focus-visible,
+body summary:focus-visible {
+  outline: 3px solid var(--focus-light);
+  outline-offset: 3px;
+}
+
+/* Forged card rims: material and type identity around one untouched art window. */
+body .card,
+body .card.common,
+body .card.rare,
+body .card.epic,
+body .card.legendary {
+  --rarity-metal: #a99a7c;
+  border: 2px solid #3c2a1b;
+  border-radius: 9px;
+  background: linear-gradient(
+    130deg,
+    #f1ddaa 0%,
+    #aa8451 12%,
+    #513a27 36%,
+    #c7a371 72%,
+    #6e4b2e
+  );
+  box-shadow:
+    inset 0 0 0 1px #f4dbab,
+    inset 0 0 0 3px #704c2e,
+    0 3px 0 #28180f,
+    0 5px 8px #0008;
+}
+body .card.rare {
+  --rarity-metal: #7cb9dd;
+}
+body .card.epic {
+  --rarity-metal: #ba9bda;
+}
+body .card.legendary {
+  --rarity-metal: #efc267;
+  border-color: #93652f;
+}
+body .card .card-inner {
+  inset: 5px;
+  border: 1px solid #795839;
+  background: radial-gradient(ellipse at 50% 30%, #fbefd0, var(--paper));
+  box-shadow: inset 0 0 12px #76512d27;
+}
+body .card .card-art {
+  height: 54%;
+}
+body .card .card-title {
+  top: 54%;
+  height: 13%;
+  background: linear-gradient(#51402c, #271b13);
+  border-top: 2px solid var(--class-metal, #b6a17b);
+  border-bottom: 1px solid #b39360;
+  padding: 0 10%;
+  color: #fff0d0;
+  font-weight: 750;
+}
+body .card .card-text {
+  top: 69%;
+  bottom: 9%;
+  line-height: 1.4;
+  display: block;
+  overflow: hidden;
+}
+body .card.type-minion .card-text,
+body .card.weapon .card-text {
+  bottom: 17%;
+}
+/* Collection tiles already grow with their own rules and keep the stat orbs
+   anchored to the card bottom, so they keep the unbounded flow layout; the
+   bounded reading box above is for hand, preview and inspect cards. */
+body .card .card-type {
+  font-size: 8px;
+  bottom: 5%;
+}
+body .card-class-seal {
+  position: absolute;
+  z-index: 5;
+  right: 4%;
+  top: 48%;
+  width: 15%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--class-metal, #b8a281);
+  border-radius: 50%;
+  color: var(--class-metal, #d6c7a5);
+  background: var(--class-deep, #3e3329);
+  box-shadow:
+    0 2px 3px #0008,
+    inset 0 1px #fff3;
+  pointer-events: none;
+}
+.card-class-seal svg {
+  width: 70%;
+  height: 70%;
+}
+body .card-rarity {
+  display: block;
+  top: auto;
+  bottom: 2.5%;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  border: 1px solid #59432b;
+  background: var(--rarity-metal);
+  box-shadow: inset 1px 1px #fff7;
+  transform: translateX(-50%) rotate(45deg);
+}
+body .card .card-cost {
+  border-radius: 30% 30% 40% 40%;
+  border: 2px solid #c8e2df;
+  background: radial-gradient(
+    ellipse at 30% 15%,
+    #93d4e4,
+    #34738c 44%,
+    #133348 85%
+  );
+  color: #fff;
+  box-shadow:
+    inset 0 0 0 1px #102f45,
+    0 2px 0 #172b32,
+    1px 3px 4px #000a;
+}
+body .card .stat.atk,
+body .minion .stat.atk {
+  border-radius: 22% 45% 25% 42%;
+  background: linear-gradient(145deg, #f8df8e, #a3833e 48%, #624523);
+  border: 2px solid #f2db9d;
+}
+body .card .stat.hp,
+body .minion .stat.hp,
+body .hero-health {
+  border-radius: 45% 45% 48% 48%;
+  background: radial-gradient(
+    ellipse at 35% 20%,
+    #d67858,
+    #93432f 50%,
+    #51271e
+  );
+  border: 2px solid #f0c6a0;
+}
+body .card.weapon {
+  border-radius: 3px;
+}
+body .card.weapon .card-title {
+  border-top-width: 3px;
+}
+body .card.spell {
+  border-radius: 13px 13px 6px 6px;
+}
+body .card.legendary .card-decoration {
+  display: block;
+  position: absolute;
+  z-index: 4;
+  top: -3px;
+  left: 35%;
+  width: 30%;
+  height: 12px;
+  background: linear-gradient(#ffedb7, #aa6d29);
+  clip-path: polygon(
+    0 10%,
+    25% 40%,
+    50% 0,
+    75% 40%,
+    100% 10%,
+    88% 85%,
+    50% 100%,
+    12% 85%
+  );
+  pointer-events: none;
+}
+body .hand-card.playable .card {
+  box-shadow:
+    inset 0 0 0 1px #d9eeb9,
+    0 3px 0 #1c251d,
+    0 0 0 2px #80cdb37a,
+    0 6px 10px #0009;
+}
+body .hand-card.selected .card {
+  outline: 2px solid var(--focus-light);
+  outline-offset: 3px;
+}
+body:not(.touch-layout) .hand-card:hover {
+  transform: translateX(calc(-50% + var(--x))) translateY(-10px);
+}
+body:not(.touch-layout) .hand-card .card .card-text {
+  font-size: 10px;
+  line-height: 1.3;
+}
+body:not(.touch-layout) .hand-card .card .card-title {
+  font-size: 12px;
+}
+body .card-preview .card .card-text {
+  font-size: 15px;
+  line-height: 1.5;
+}
+body .card-preview .card .card-title {
+  font-size: 19px;
+}
+body .card-preview .card .card-type {
+  font-size: 10px;
+}
+body .card-preview {
+  filter: drop-shadow(0 12px 18px #0009);
+}
+
+/* The collection is a folio; its right-hand inventory remains the main task. */
+
+/* Portrait choice, map, rewards and manual have their own composition. */
+
+/* Rituals: finite illuminated marks express real, public rule progress. */
+body .contract-open {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 0 8px;
+  padding: 8px;
+  text-align: left;
+  color: var(--ink);
+  background: linear-gradient(125deg, var(--ritual-well), #171310);
+  border: 1px solid var(--ritual-color);
+  border-radius: 8px 16px 8px 16px;
+  box-shadow:
+    inset 0 1px #fff2,
+    0 4px 0 #160f0c,
+    0 7px 14px #0007;
+}
+.contract-sigil {
+  grid-row: 1/3;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: var(--ritual-color);
+  background: conic-gradient(
+    var(--ritual-color) var(--ritual-progress, 0deg),
+    #6b625944 0
+  );
+  padding: 3px;
+}
+.contract-sigil::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--ritual-well);
+}
+.contract-sigil svg {
+  position: relative;
+  width: 25px;
+  height: 25px;
+}
+.contract-label {
+  align-self: end;
+  font-family: var(--ui-display);
+  font-weight: 800;
+  font-size: 16px;
+}
+body .contract-open small {
+  color: var(--ink-secondary);
+  font-size: 11px;
+  align-self: start;
+  padding-top: 4px;
+  white-space: normal;
+}
+body .contract-open.ready {
+  outline: 2px solid var(--ritual-color);
+  outline-offset: 3px;
+}
+body .contract-open.ready .contract-sigil {
+  filter: drop-shadow(0 0 5px var(--ritual-color));
+}
+body:not(.touch-layout) .contract-open {
+  right: 24px;
+  bottom: 143px;
+  width: 184px;
+  min-height: 64px;
+}
+
+/* Scene objects share a common bevel, yet keep distinct playable silhouettes. */
+body .hero {
+  filter: drop-shadow(0 5px 5px #0008);
+}
+body .hero .portrait-frame,
+body .hero.enemy .portrait-frame {
+  border: 3px solid #c3a273;
+  box-shadow:
+    inset 0 0 0 1px #3c2818,
+    0 0 0 1px #493321;
+  border-radius: 48% 48% 15% 15% / 32% 32% 13% 13%;
+}
+body .hero .portrait-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 14px #130b0699;
+  pointer-events: none;
+}
+body .hero .hero-name {
+  /* Paired insets own the width; the legacy 108% ribbon overhangs to the right. */
+  width: auto;
+  background: linear-gradient(#61472a, #241a12);
+  border-top: 1px solid #d4b477;
+  border-bottom: 1px solid #866139;
+  border-radius: 3px;
+}
+body .power-button {
+  color: #edd7a2;
+  background: radial-gradient(
+    circle at 40% 30%,
+    var(--class-deep, #4d3823),
+    #15110b
+  );
+  border: 3px solid #c29b5e;
+  box-shadow:
+    inset 0 0 0 3px #352619,
+    inset 0 0 12px #0008,
+    0 3px 0 #553b23,
+    0 6px 8px #0007;
+}
+body .power-button:not(:disabled):hover {
+  border-color: var(--focus-light);
+}
+body .power-button:disabled {
+  opacity: 0.65;
+  filter: saturate(0.3);
+}
+body .minion {
+  filter: drop-shadow(0 4px 3px #0006);
+}
+
+body .end-turn,
+body.touch-layout .end-turn {
+  border-radius: 14px 32px 14px 32px;
+  border: 3px solid #71502c;
+  background: linear-gradient(#fff0bd, #d5b16a 18%, #b68641 80%, #f4d595);
+  box-shadow:
+    inset 0 0 0 1px #ffedbd,
+    inset 0 -5px #85572266,
+    0 4px 0 #332015,
+    0 6px 0 #947045,
+    0 8px 10px #0007;
+  font-family: var(--ui-display);
+  font-weight: 800;
+  color: #302012;
+}
+body .end-turn:disabled {
+  filter: saturate(0.3);
+  opacity: 0.65;
+}
+body .end-turn::before,
+body.touch-layout .end-turn::before {
+  border-radius: 7px 25px 7px 25px;
+  pointer-events: none;
+}
+body .end-turn:active:not(:disabled) {
+  transform: translateY(2px);
+}
+body .mana-panel {
+  border-radius: 6px 18px 6px 18px;
+  background: linear-gradient(130deg, #28404b, #101e29);
+  border-color: #7d9a9c;
+}
+body .topbar {
+  background: linear-gradient(#36281c, #17100de8);
+}
+body .nav-link.active {
+  background: transparent;
+}
+body .nav-link.active::after {
+  height: 2px;
+  width: 40%;
+  left: 30%;
+}
+body .icon-btn {
+  border-radius: 50%;
+}
+/* The legacy layers leave native horizontal button padding in place, which
+   shifts a nominally centered SVG 1.5px to the right. Own the complete icon
+   box here so every desktop toolbar glyph shares one geometric center. */
+body:not(.touch-layout) .top-actions .icon-btn {
+  box-sizing: border-box;
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  line-height: 0;
+}
+body:not(.touch-layout) .top-actions .icon-btn > .ui-icon {
+  position: static;
+  display: block;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  overflow: visible;
+  vertical-align: initial;
+  transform: none;
+  transform-origin: 50% 50%;
+}
+body .lobby-copy {
+  text-align: center;
+}
+body:not(.touch-layout) .lobby-copy {
+  top: 160px;
+  left: 505px;
+  width: 590px;
+  padding: 34px 52px 30px;
+  border-radius: 80px 80px 20px 20px / 35px 35px 20px 20px;
+}
+body .lobby-title span {
+  font-family: var(--ui-display);
+  font-weight: 800;
+}
+body .lobby-actions {
+  flex-direction: column;
+}
+body .lobby-actions button {
+  width: 100%;
+}
+body .lobby-desc {
+  margin-bottom: 22px;
+}
+body .lobby-chinese {
+  letter-spacing: 0.22em;
+}
+body .showcase-link {
+  width: 100%;
+}
+
+/* Touch changes geometry only. The above material and semantic tokens are shared. */
+body.touch-layout .card .card-title {
+  padding-left: 4%;
+  padding-right: 8%;
+}
+/* Touch hand cards keep the tactile shelf and reserve a separate stat rail;
+   the shared card-face contract below owns the art and rules proportions. */
+body.touch-layout .hand-card .card-art {
+  height: 48%;
+}
+body.touch-layout .hand-card .card-title {
+  top: 48%;
+  height: 10.5%;
+  min-height: 0;
+  padding-left: 4%;
+  padding-right: 8%;
+}
+body.touch-layout .hand-card .card-rarity {
+  top: 58%;
+}
+body.touch-layout .hand-card .card .card-text {
+  top: 59.5%;
+  bottom: 20%;
+  left: 6%;
+  right: 6%;
+  max-height: none;
+  font-size: 10px;
+  line-height: 1.28;
+}
+body.touch-layout .hand-card .card .stat {
+  width: 25%;
+  height: 19%;
+  font-size: clamp(13px, 15cqw, 24px);
+}
+body.touch-layout .hand-card .card-class-seal {
+  display: none;
+}
+body.touch-layout .contract-open {
+  grid-template-columns: 25px 1fr;
+  padding: 4px;
+  gap: 0 4px;
+  min-height: 0;
+}
+body.touch-layout .contract-sigil {
+  width: 24px;
+  height: 24px;
+  padding: 2px;
+  align-self: center;
+}
+body.touch-layout .contract-sigil svg {
+  width: 17px;
+  height: 17px;
+}
+body.touch-layout .contract-label {
+  font-size: 12px;
+}
+body.touch-layout .contract-open small {
+  font-size: 10px;
+  padding-top: 2px;
+  line-height: 1.2;
+}
+body.touch-layout .lobby-copy {
+  padding: 20px 24px;
+}
+body.mobile-portrait #touch-match-chip {
+  overflow: hidden;
+}
+body.mobile-portrait #touch-match-chip > span {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+body .gold-btn,
+body .ghost-btn,
+body .hand-card {
+    transition: none;
+  }
+}
+body.reduced-motion .gold-btn,
+body.reduced-motion .ghost-btn {
+  transition: none;
+}
+.starfire-seal {
+  width: 132px;
+  height: 132px;
+  margin: -3px auto 8px;
+  background: var(--ui-starfire-seal) center/contain no-repeat;
+  filter: drop-shadow(0 5px 6px #0008);
+}
+body .brand-mark {
+  background: var(--ui-starfire-seal) center/contain no-repeat;
+  border: 0;
+  width: 32px;
+  height: 34px;
+  box-shadow: none;
+}
+body .brand-mark svg {
+  visibility: hidden;
+}
+body:not(.touch-layout) .lobby-copy {
+  top: 128px;
+  padding-top: 24px;
+}
+body:not(.touch-layout) .lobby-title span {
+  font-size: 64px;
+  letter-spacing: 10px;
+}
+body.touch-layout .starfire-seal {
+  width: 86px;
+  height: 86px;
+  margin: 0 auto 6px;
+}
+body.mobile-landscape .starfire-seal {
+  width: 64px;
+  height: 64px;
+  position: absolute;
+  top: 18px;
+  left: 20px;
+}
+/* Authored nine-slice fittings: center stays transparent and all content stays live. */
+body .lobby-copy::before {
+  content: "";
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  border: 30px solid transparent;
+  border-image-source: var(--ui-cabinet-rim);
+  border-image-slice: 17% 12%;
+  border-image-width: 30px;
+  border-image-repeat: stretch;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  transform: none;
+  opacity: 1;
+  pointer-events: none;
+  z-index: 10;
+}
+body:not(.touch-layout) .lobby-copy {
+  border-radius: 5px;
+}
+
+body.touch-layout .lobby-copy::before {
+  border-width: 18px;
+  border-image-width: 18px;
+}
+
+body .lobby-copy::before {
+  border-image-width: 38px;
+}
+body:not(.touch-layout) .lobby-copy {
+  padding-top: 25px;
+}
+body:not(.touch-layout) .lobby-copy .starfire-seal {
+  width: 116px;
+  height: 116px;
+}
+body:not(.touch-layout) .lobby-chinese {
+  margin: 4px 0 16px;
+}
+body:not(.touch-layout) .lobby-copy .showcase-link {
+  margin-top: 14px;
+}
+
+/* Short landscape windows retain the complete entry flow in two columns. */
+body.mobile-landscape .lobby-copy {
+  width: min(700px, 94%);
+  max-width: 700px;
+  margin: 6px auto;
+  padding: 18px 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 30px;
+  align-items: center;
+}
+body.mobile-landscape .lobby-copy .starfire-seal {
+  position: static;
+  grid-column: 1;
+  grid-row: 1/3;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 6px;
+}
+body.mobile-landscape .lobby-copy .eyebrow {
+  display: none;
+}
+body.mobile-landscape .lobby-title {
+  grid-column: 1;
+  grid-row: 3;
+  margin: 0;
+  font-size: 38px;
+}
+body.mobile-landscape .lobby-title span {
+  font-size: 38px;
+}
+body.mobile-landscape .lobby-chinese {
+  grid-column: 1;
+  grid-row: 4;
+  margin: 4px 0;
+  font-size: 16px;
+}
+body.mobile-landscape .lobby-tagline {
+  grid-column: 1;
+  grid-row: 5;
+  margin: 4px 0;
+  font-size: 12px;
+}
+body.mobile-landscape .lobby-desc {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0 0 8px;
+  font-size: 12px;
+}
+body.mobile-landscape .lobby-actions {
+  grid-column: 2;
+  grid-row: 2/5;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+}
+body.mobile-landscape .lobby-actions button {
+  min-height: 44px;
+}
+body.mobile-landscape .showcase-link {
+  grid-column: 2;
+  grid-row: 5;
+  min-height: 44px;
+  margin: 8px 0 0;
+  font-size: 12px;
+}
+body.mobile-landscape .showcase-link > span:last-child {
+  display: none;
+}
+
+@media (max-height: 369px) and (orientation: landscape) {
+  body.mobile-landscape .contract-open {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  body.mobile-landscape .contract-label,
+  body.mobile-landscape .contract-open small {
+    display: none;
+  }
+  body.mobile-landscape .contract-sigil {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* Keep comparison labels aligned and the fine print clear of the inset fitting. */
+
+/* Selected seals sit inside the portrait's curved clipping path. */
+/* Reserve a distinct close-control well inside the ornamental fitting. */
+
+/* Map nodes own their geometry: retired fixed-width portrait rules must not
+   constrain the current image-and-copy route layout. */
+
+/* Authored objects, each used in the interface it was made for. */
+/* Keep the disclosure header fixed while its positioned body scrolls. */
+
+/* The folio spine belongs to the column gutter, outside the inventory clip. */
+/* Mobile dialog hosts can sit outside #app; hide transient battle cues globally. */
+body:has(#modal[data-type]) #toast,
+body:has(#modal[data-type]) .turn-cue,
+body:has(#modal[data-type]) .summon-seal {
+  visibility: hidden;
+}
+/* On short screens, deck tabs are the header; preserve room to reopen settings. */
+
+/* Keep the collection search clear of the inset 44px close control. */
+
+/* Portrait HUD is one compact row, independent of desktop gem-strip sizing. */
+body.mobile-portrait .mana-panel {
+  gap: 6px;
+  align-items: center;
+}
+body.mobile-portrait .mana-caption {
+  width: auto;
+  flex: 0 0 auto;
+}
+body.mobile-portrait .mana-gems {
+  display: flex;
+  width: auto;
+  height: 12px;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+/* Small portraits retain a fine brass edge without stacked exterior rings. */
+body.touch-layout .hero .portrait-frame {
+  border-width: 2px;
+  padding: 2px;
+}
+
+/* Covenant posters keep the authored deity art visible behind the live
+   rules.  The copy remains a readable, translucent glass layer rather than
+   shrinking the artwork into a thumbnail. */
+
+/* ---------------------------------------------------------------------------
+   Hero dossier + deck composition
+   The hero chooser's right column used to end after four short controls,
+   leaving ~70% of the dialog empty. This panel makes the column carry the
+   information a player actually needs before committing: who the hero is,
+   what the power does, and the shape of the selected deck.
+--------------------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------------------
+   Letterbox and HUD legibility floor
+   The desktop stage is a fixed 1600×940 canvas scaled to fit, so on 16:10 or
+   4:3 windows the letterbox showed as flat near-black bars and 7–8px HUD
+   labels rendered at ~5px. Warm the letterbox and lift every micro-label to a
+   legible size/contrast without changing the battle layout.
+--------------------------------------------------------------------------- */
+#viewport {
+  background: radial-gradient(
+    ellipse at 50% 34%,
+    #3b2b1d 0%,
+    #201712 44%,
+    #0c0908 84%
+  );
+}
+body:not(.touch-layout) .board-empty {
+  color: #5b3f1f;
+  opacity: 0.95;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  text-shadow: 0 1px 0 #fff6dc73;
+}
+body:not(.touch-layout) .mana-desc {
+  color: #93a6ac;
+  font-size: 10px;
+}
+body:not(.touch-layout) .hero-caption {
+  color: #d3c1a1;
+  font-size: 9px;
+}
+body:not(.touch-layout) .turn-shortcut {
+  font-size: 10px;
+}
+body:not(.touch-layout) #hero-side-label {
+  color: #b6c9c0;
+  font-size: 10px;
+}
+/* Shared panel materials. Geometry and scrolling belong to dialog-layout.css.
+ * Scoped to dialogs so card faces, the battle HUD and lobby keep their artwork. */
+#modal {
+  --folio-wood: url("asset:maps/walnut.webp");
+  --panel-gold: #c2a26a;
+  --panel-cream: #f4ead5;
+  --panel-muted: #c0ac88;
+  --panel-paper: #dac493;
+  --panel-dark: #211912;
+  --panel-line: #795b34;
+  --panel-ink: #32261c;
+  --panel-well: #181410;
+  --panel-title-font: "Songti SC", "Noto Serif CJK SC", serif;
+  --panel-body-font: "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: #090704bd;
+  backdrop-filter: blur(5px);
+}
+body #modal.folio-host > .modal-box {
+  color: var(--panel-cream);
+  font: 14px/1.65 var(--panel-body-font);
+  background: linear-gradient(#19140ea8, #160f0a9c), var(--folio-wood) center / 540px;
+  border: 1px solid var(--panel-gold);
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 4px #160f0a80, 0 18px 54px #0009;
+}
+body #modal.folio-host > .modal-box::before {
+  content: "";
+  display: block;
+  position: absolute;
+  inset: 7px;
+  width: auto;
+  height: auto;
+  border: 0;
+  border-image: none;
+  border-radius: 0;
+  background:
+    linear-gradient(var(--panel-gold), var(--panel-gold)) left top / 15px 1px,
+    linear-gradient(var(--panel-gold), var(--panel-gold)) left top / 1px 15px,
+    linear-gradient(var(--panel-gold), var(--panel-gold)) right top / 15px 1px,
+    linear-gradient(var(--panel-gold), var(--panel-gold)) right top / 1px 15px,
+    linear-gradient(var(--panel-gold), var(--panel-gold)) left bottom / 15px 1px,
+    linear-gradient(var(--panel-gold), var(--panel-gold)) left bottom / 1px 15px,
+    linear-gradient(var(--panel-gold), var(--panel-gold)) right bottom / 15px 1px,
+    linear-gradient(var(--panel-gold), var(--panel-gold)) right bottom / 1px 15px;
+  background-repeat: no-repeat;
+  box-shadow: none;
+  transform: none;
+  opacity: .8;
+  pointer-events: none;
+}
+body #modal.folio-host > .modal-box::after { content: none; }
+body #modal :is(.modal-heading, .library-heading, .covenant-heading) {
+  position: relative;
+  border-bottom: 0;
+}
+/* All standard dialog headers reserve the close-control slot. The line is
+   deliberately shortened instead of passing underneath the control. */
+body #modal.folio-host > .folio-dialog
+  > :is(.modal-heading, .library-heading, .covenant-heading)::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 56px;
+  bottom: 0;
+  border-bottom: 1px solid var(--panel-line);
+}
+body #modal :is(.modal-heading, .library-heading, .covenant-heading) h2,
+body #modal .result-title {
+  color: var(--panel-cream);
+  font: 700 28px/1.35 var(--panel-title-font);
+  letter-spacing: .06em;
+  text-shadow: 0 2px 4px #0008;
+}
+body #modal :is(.hero-option h3, .hero-dossier h3, .relic-choice h3, .covenant-copy h4) {
+  color: var(--panel-cream);
+  font: 700 20px/1.4 var(--panel-title-font);
+  letter-spacing: .03em;
+}
+body #modal :is(.modal-heading p, .hero-option p, .hero-option em, .hero-dossier p,
+  .deck-plan, .covenant-copy p, .covenant-heading p, .relic-choice p,
+  .setting-row p, .help-section p, .result-sub, .boss-quote,
+  .card-detail-copy, .touch-log p, .touch-hero-info p) {
+  color: var(--panel-cream);
+  font: 14px/1.7 var(--panel-body-font);
+  text-shadow: none;
+}
+body #modal :is(.eyebrow, .covenant-heading > small, .covenant-copy > small,
+  .library-foot, .hero-deck-note, .relic-pick-label, .result-stats span,
+  .card-detail-copy small, .hero-dossier > small, .deck-identity small) {
+  color: var(--panel-muted);
+  font: 13px/1.6 var(--panel-body-font);
+  letter-spacing: .04em;
+}
+body #modal :is(.modal-footer, .reward-footer, .deck-actions, .setting-row) {
+  border-color: var(--panel-line);
+}
+body #modal :is(.modal-footer, .reward-footer, .atelier-foot, .folio-actions, .deck-actions) {
+  background: transparent;
+  box-shadow: none;
+}
+body #modal :is(button, input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, summary) {
+  min-height: 44px;
+  font-family: var(--panel-body-font);
+  font-size: 14px;
+}
+body #modal :where(.gold-btn, .ghost-btn, .text-btn, .filter-btn,
+  .touch-menu-grid button, .touch-library-tabs button, .covenant-copy button, .modal-close) {
+  color: var(--panel-cream);
+  background: linear-gradient(#36291e, var(--panel-dark));
+  border: 1px solid var(--panel-line);
+  border-radius: 4px;
+  box-shadow: inset 0 1px #ead7aa18;
+  text-shadow: none;
+}
+body #modal .gold-btn {
+  color: var(--panel-ink);
+  background: linear-gradient(#dfc48d, #b9955c);
+  border-color: var(--panel-gold);
+  font-weight: 700;
+}
+body #modal .modal-close {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  border-color: var(--panel-gold);
+  font-size: 24px;
+}
+body #modal :is(button, input, select, summary):focus-visible {
+  outline: 2px solid var(--panel-cream);
+  outline-offset: 3px;
+}
+body #modal button:disabled {
+  opacity: .5;
+  filter: saturate(.35);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Settings are a quiet control surface: hierarchy comes from spacing and
+ * grouped surfaces, not a rule beneath every option. The state label inside
+ * each switch keeps the control legible without relying on colour alone. */
+body #modal.folio-host[data-type="settings"] > .settings-box {
+  background:
+    linear-gradient(135deg, #221810e8, #17100ce8 58%, #21170fe8),
+    var(--folio-wood) center / cover;
+}
+body #modal.folio-host[data-type="settings"] > .settings-box::before {
+  opacity: .34;
+}
+body #modal.folio-host[data-type="settings"] > .settings-box > .modal-heading {
+  padding-bottom: 2px;
+}
+body #modal.folio-host[data-type="settings"] > .settings-box > .modal-heading::after {
+  content: none;
+}
+body #modal.folio-host[data-type="settings"] .modal-heading p {
+  max-width: 42ch;
+  margin: 8px 0 0;
+  color: var(--panel-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+body #modal.folio-host[data-type="settings"] .settings-section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 3px;
+  color: var(--panel-gold);
+}
+body #modal.folio-host[data-type="settings"] .settings-section-heading > span {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .14em;
+}
+body #modal.folio-host[data-type="settings"] .settings-section-heading > small {
+  color: var(--panel-muted);
+  font-size: 11px;
+  letter-spacing: .04em;
+}
+body #modal.folio-host[data-type="settings"] .settings-options {
+  display: grid;
+  gap: 8px;
+}
+body #modal.folio-host[data-type="settings"] .setting-row {
+  min-height: 0;
+  padding: 13px 14px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(110deg, #0e0b08a8, #2c2118a0);
+  box-shadow: inset 0 1px #f4d99a12, 0 5px 14px #00021f;
+  transition: background 140ms ease, transform 140ms ease;
+}
+body #modal.folio-host[data-type="settings"] .setting-row:hover {
+  background: linear-gradient(110deg, #15100cbe, #39291aa8);
+  transform: translateY(-1px);
+}
+body #modal.folio-host[data-type="settings"] .setting-copy {
+  min-width: 0;
+}
+body #modal.folio-host[data-type="settings"] .setting-row h3 {
+  margin: 0;
+  color: var(--panel-cream);
+  font: 600 15px/1.35 var(--panel-body-font);
+  letter-spacing: .03em;
+}
+body #modal.folio-host[data-type="settings"] .setting-row p {
+  margin: 4px 0 0;
+  color: var(--panel-muted);
+  font: 12px/1.5 var(--panel-body-font);
+}
+body #modal.folio-host[data-type="settings"] .toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 78px;
+  width: 78px;
+  height: 34px;
+  min-height: 34px;
+  margin: 0;
+  padding: 0 8px 0 31px;
+  position: relative;
+  border: 1px solid #a9875748;
+  border-radius: 999px;
+  background: #100d0ae8;
+  color: #9f8c73;
+  box-shadow: inset 0 2px 5px #0008, 0 0 0 1px #0003;
+  font: 600 10px/1 var(--panel-body-font);
+  letter-spacing: .08em;
+  text-align: center;
+  transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+body #modal.folio-host[data-type="settings"] .toggle .toggle-state {
+  position: relative;
+  z-index: 1;
+  white-space: nowrap;
+}
+body #modal.folio-host[data-type="settings"] .toggle::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 22px;
+  height: 22px;
+  border: 1px solid #d9c08c;
+  border-radius: 50%;
+  background: #6f6456;
+  box-shadow: 0 2px 4px #0009, inset 0 1px #fff4c755;
+  transition: left 160ms cubic-bezier(.2,.8,.25,1), background 160ms ease;
+}
+body #modal.folio-host[data-type="settings"] .toggle.on {
+  justify-content: flex-start;
+  padding: 0 31px 0 8px;
+  border-color: #c8a567;
+  background: linear-gradient(135deg, #77552d, #b18c50);
+  color: #fff0c6;
+  box-shadow: inset 0 1px #fff0bd40, 0 0 0 3px #c59e5a16;
+}
+body #modal.folio-host[data-type="settings"] .toggle.on::after {
+  left: calc(100% - 27px);
+  background: #f2ddb0;
+}
+body #modal.folio-host[data-type="settings"] .settings-audio-section {
+  margin-top: 3px;
+}
+body #modal.folio-host[data-type="settings"] .audio-sliders {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: #0e0b08a8;
+  box-shadow: inset 0 1px #f4d99a10, 0 5px 14px #00021f;
+}
+body #modal.folio-host[data-type="settings"] .audio-level {
+  padding: 8px 0;
+}
+body #modal.folio-host[data-type="settings"] .audio-level > span {
+  color: var(--panel-cream);
+  font: 13px/1.35 var(--panel-body-font);
+}
+body #modal.folio-host[data-type="settings"] .audio-level output {
+  color: var(--panel-gold);
+  font: 600 12px/1.35 var(--panel-body-font);
+  font-variant-numeric: tabular-nums;
+}
+body #modal.folio-host[data-type="settings"] .audio-level input[type="range"] {
+  min-height: 20px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+body #modal.folio-host[data-type="settings"] .audio-level input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: #6e5942;
+}
+body #modal.folio-host[data-type="settings"] .audio-level input[type="range"]::-webkit-slider-thumb {
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border: 2px solid #f0d49a;
+  border-radius: 50%;
+  background: #bd9556;
+  box-shadow: 0 1px 3px #0009;
+  -webkit-appearance: none;
+}
+body #modal.folio-host[data-type="settings"] .wind-light-row {
+  margin-top: 8px;
+}
+body #modal.folio-host[data-type="settings"] .wind-time-setting {
+  min-height: 34px;
+  padding: 7px 11px;
+  border-color: #a9875748;
+  border-radius: 999px;
+  background: #100d0ae8;
+  color: var(--panel-muted);
+  font-size: 11px;
+}
+body #modal.folio-host[data-type="settings"] > .settings-box > .modal-footer {
+  margin-top: 2px;
+  padding-top: 0;
+  border: 0;
+}
+body #modal.folio-host[data-type="settings"] .hero-deck-note {
+  margin: -4px 0 0;
+  color: var(--panel-muted);
+  font-size: 11px;
+  text-align: right;
+}
+body #modal :is(.filter-btn.active, .touch-library-tabs [aria-selected="true"]) {
+  color: var(--panel-cream);
+  border-color: var(--panel-gold);
+  background: #59432a;
+  box-shadow: inset 0 -2px var(--panel-gold);
+  font-weight: 700;
+}
+body #modal :is(.library-search, .deck-title-input, select) {
+  color: var(--panel-cream);
+  background: var(--panel-well);
+  border: 1px solid var(--panel-line);
+  border-radius: 4px;
+  box-shadow: inset 0 1px 4px #0005;
+}
+body #modal :is(input::placeholder, textarea::placeholder) { color: var(--panel-muted); }
+body #modal option { color: var(--panel-cream); background: var(--panel-dark); }
+body #modal :is(input[type="range"], input[type="checkbox"], input[type="radio"]) {
+  accent-color: var(--panel-gold);
+}
+body #modal :is(.hero-option, .hero-dossier, .deck-editor, .deck-tools,
+  .contract-setup, .covenant-card, .relic-choice, .touch-hero-info) {
+  color: var(--panel-cream);
+  background: linear-gradient(135deg, #30251c, var(--panel-dark));
+  border: 1px solid var(--panel-line);
+  border-radius: 5px;
+  box-shadow: inset 0 1px #ead7aa12;
+}
+body #modal :is(.hero-option.selected, .relic-choice.selected,
+  .relic-choice[aria-pressed="true"], .covenant-card.invokable) {
+  border-color: var(--panel-gold);
+  box-shadow: inset 0 0 0 1px var(--panel-gold), 0 2px 8px #0005;
+}
+body #modal .hero-option .selected-check {
+  color: var(--panel-dark);
+  background: var(--panel-gold);
+  border-color: var(--panel-cream);
+}
+body #modal.folio-host[data-type="heroes"] .hero-roster-heading {
+  color: var(--panel-muted);
+  font: 600 13px/1.4 var(--panel-body-font);
+  letter-spacing: .08em;
+}
+body #modal.folio-host[data-type="heroes"] .hero-composition {
+  display: grid;
+  gap: 10px;
+  box-sizing: border-box;
+  padding: 12px 13px;
+  color: var(--panel-cream);
+  background: #181410b8;
+  border: 1px solid var(--panel-line);
+  border-radius: 5px;
+}
+body #modal.folio-host[data-type="heroes"] .comp-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+body #modal.folio-host[data-type="heroes"] .comp-head h4,
+body #modal.folio-host[data-type="heroes"] .comp-head span {
+  margin: 0;
+}
+body #modal.folio-host[data-type="heroes"] .comp-head h4 {
+  color: var(--panel-cream);
+  font: 600 14px/1.4 var(--panel-body-font);
+  letter-spacing: .04em;
+}
+body #modal.folio-host[data-type="heroes"] .comp-head span,
+body #modal.folio-host[data-type="heroes"] .comp-curve-title {
+  color: var(--panel-muted);
+  font: 12px/1.4 var(--panel-body-font);
+}
+body #modal.folio-host[data-type="heroes"] .comp-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 0;
+  background: none;
+  border: 0;
+}
+body #modal.folio-host[data-type="heroes"] .comp-counts span {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+  padding: 7px 8px;
+  color: var(--panel-muted);
+  background: #211912d9;
+  border: 1px solid #795b3466;
+  border-radius: 3px;
+  font: 12px/1.35 var(--panel-body-font);
+}
+body #modal.folio-host[data-type="heroes"] .comp-counts b {
+  color: var(--panel-gold);
+  font-size: 13px;
+}
+body #modal.folio-host[data-type="heroes"] .comp-curve-title {
+  margin-top: 1px;
+}
+body #modal.folio-host[data-type="heroes"] .comp-curve {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 4px;
+  height: 72px;
+  min-width: 0;
+}
+body #modal.folio-host[data-type="heroes"] .comp-curve i {
+  position: relative;
+  display: block;
+  min-width: 0;
+  height: 72px;
+  color: var(--panel-muted);
+  font-style: normal;
+  text-align: center;
+}
+body #modal.folio-host[data-type="heroes"] .comp-curve i::before {
+  content: "";
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  bottom: 18px;
+  height: var(--fill);
+  min-height: 3px;
+  max-height: 48px;
+  background: linear-gradient(#c8aa70, #866538);
+  border-radius: 2px 2px 0 0;
+  opacity: .9;
+}
+body #modal.folio-host[data-type="heroes"] .comp-curve b,
+body #modal.folio-host[data-type="heroes"] .comp-curve s {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  display: block;
+  margin: 0;
+  text-decoration: none;
+  font-weight: 600;
+}
+body #modal.folio-host[data-type="heroes"] .comp-curve s {
+  bottom: 20px;
+  color: var(--panel-cream);
+  font-size: 10px;
+  line-height: 1;
+}
+body #modal.folio-host[data-type="heroes"] .comp-curve b {
+  bottom: 0;
+  color: var(--panel-muted);
+  font-size: 10px;
+  line-height: 1;
+}
+body #modal :is(.deck-row, .deck-identity, .hero-power-line, .comp-counts) {
+  color: var(--panel-cream);
+  background: #211912d9;
+  border-color: var(--panel-line);
+  box-shadow: none;
+}
+body #modal .deck-row::after {
+  display: block;
+  background: linear-gradient(90deg, var(--panel-dark), #211912e8 55%, #21191266);
+}
+body #modal .deck-row .cost {
+  color: #f4ead5;
+  background: #26596a;
+  border: 1px solid #aac3c5;
+  border-radius: 7px;
+  font-size: 14px;
+  line-height: 26px;
+}
+body #modal .deck-row .count {
+  color: #f4ead5;
+  text-shadow: 0 1px 3px #000;
+}
+body #modal .deck-tools > summary::after { content: "⌄"; color: var(--panel-gold); }
+body #modal .deck-tools[open] > summary::after { content: "⌃"; }
+body #modal :is(.deck-total, .deck-row .cost, .deck-row .count, .result-stats strong,
+  .touch-live-stat, .comp-counts b) {
+  color: var(--panel-gold);
+  font-variant-numeric: tabular-nums;
+  text-shadow: none;
+}
+body #modal :is(.deck-plan, .deck-issues, .touch-reason) {
+  border-color: var(--panel-line);
+  background: #18141080;
+}
+body #modal :is(#deck-warning, .touch-reason) { color: #efd19d; }
+body #modal .covenant-card.divine { border-top-color: var(--covenant-accent); }
+body #modal .covenant-card { --covenant-accent: var(--panel-gold); }
+body #modal .covenant-card[data-deity="jingchen"] { --covenant-accent: #eda760; }
+body #modal .covenant-card[data-deity="aurion"] { --covenant-accent: #f1d68a; }
+body #modal .covenant-card[data-deity="fenlos"] { --covenant-accent: #92c8a7; }
+/* All dialog close controls use one 44px hit area. The visible ring is inset
+   from that area, while the extra rim keeps it clear of the frame on touch
+   viewports and gives the header rule a stable slot to stop before. */
+body #modal.folio-host > .folio-dialog > .modal-close {
+  top: calc(var(--inset) + 4px);
+  right: calc(var(--inset) + 4px);
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 0;
+  display: grid;
+  place-items: center;
+}
+body #modal.folio-host > .folio-dialog > .modal-close::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid var(--panel-gold);
+  border-radius: 50%;
+  background: linear-gradient(#36291e, var(--panel-dark));
+  box-shadow: inset 0 1px #ead7aa18;
+  pointer-events: none;
+}
+body #modal.folio-host
+  > .folio-dialog
+  > .modal-close:hover::before {
+  background: #59432a;
+}
+body #modal.folio-host > .folio-dialog > .modal-close .ui-icon {
+  position: relative;
+  z-index: 1;
+  width: 18px;
+  height: 18px;
+}
+/* Ritual symbols belong to the copy panel, not the poster-sized art area. */
+body #modal .covenant-copy > .ritual-mark {
+  display: inline-grid;
+  place-items: center;
+  align-self: start;
+  width: 32px;
+  height: 32px;
+  min-height: 0;
+  color: var(--covenant-accent);
+  background: var(--panel-well);
+  border: 1px solid var(--covenant-accent);
+  border-radius: 50%;
+  line-height: 0;
+}
+body #modal .covenant-copy > .ritual-mark .ui-icon {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+body #modal .covenant-progress meter { accent-color: var(--covenant-accent); }
+body #modal .covenant-progress meter::-webkit-meter-bar { background: var(--panel-well); }
+body #modal .covenant-progress meter::-webkit-meter-optimum-value { background: var(--covenant-accent); }
+body #modal .ritual-stones i { background: var(--panel-well); border-color: var(--panel-line); }
+body #modal .ritual-stones i.lit { background: var(--covenant-accent); }
+body #modal .result-sigil { color: var(--panel-gold); }
+body #modal [data-outcome="win"] .result-sigil { background: var(--ui-starfire-seal) center / contain no-repeat; }
+body #modal [data-outcome="win"] .result-sigil svg { opacity: 0; }
+body #modal .covenant-copy > small { color: var(--covenant-accent, var(--panel-muted)); }
+body #modal .covenant-card.spent { opacity: .7; }
+body #modal .relic-art {
+  background: radial-gradient(ellipse, #443421, var(--panel-well) 72%);
+  border: 1px solid var(--panel-line);
+  box-shadow: inset 0 0 12px #0005;
+}
+body #modal :is(.help-section, .help-toc) {
+  color: var(--panel-ink);
+  background: var(--panel-paper);
+  border: 1px solid var(--panel-line);
+  border-radius: 4px;
+  box-shadow: none;
+}
+body #modal .help-section :is(h3, p, p b, li, a, .key-table, .key-table b, .key-table > div),
+body #modal .help-toc a { color: var(--panel-ink); }
+body #modal .help-section h3 { font: 700 19px/1.5 var(--panel-title-font); }
+body #modal :is(.card-detail-art, .touch-hand-grid > button, .atelier-vignette, .atelier-specimens > div) {
+  background: var(--panel-well);
+  border: 1px solid var(--panel-line);
+  border-radius: 4px;
+  box-shadow: inset 0 0 16px #0005;
+}
+body #modal .atelier-vignette h3 {
+  color: var(--panel-cream);
+  font: 700 20px/1.4 var(--panel-title-font);
+}
+body #modal :is(.atelier-vignette p, .atelier-foot p) {
+  color: var(--panel-muted);
+  font: 14px/1.7 var(--panel-body-font);
+}
+body #modal .touch-keywords {
+  color: var(--panel-muted);
+  font: 14px/1.7 var(--panel-body-font);
+  border-color: var(--panel-line);
+}
+body #modal .touch-keywords strong { color: var(--panel-cream); }
+body #modal .touch-log p {
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--panel-line);
+  border-radius: 0;
+  box-shadow: none;
+}
+body #modal .folio-viewport {
+  scrollbar-color: var(--panel-line) var(--panel-dark);
+}
+body #modal .folio-scroll-hint {
+  color: var(--panel-cream);
+  background: linear-gradient(transparent, #211912f2);
+  font: 13px/1.6 var(--panel-body-font);
+}
+
+/* Layered adventure atlas. Text and anchors are live DOM; the paper terrain,
+   wood surface and six landmark illustrations are independent cached assets. */
+body #modal.folio-host[data-type="map"] > section.adventure-atlas.folio-dialog {
+  --map-wood: var(--folio-wood);
+  --map-terrain: url("asset:maps/terrain.webp");
+  --map-gold: var(--panel-gold);
+  --map-cream: var(--panel-cream);
+  --map-muted: var(--panel-muted);
+  --map-paper: var(--panel-paper);
+  --map-dark: var(--panel-dark);
+  --map-line: var(--panel-line);
+  width: min(1280px, 100%);
+  height: min(910px, 100%);
+  max-height: calc(100dvh - 24px);
+  min-height: 0;
+  padding: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  aspect-ratio: auto;
+  border: 1px solid var(--map-gold);
+  border-radius: 7px;
+  background: linear-gradient(#19140ea8, #160f0a9c), var(--map-wood) center / 540px;
+  box-shadow: inset 0 0 0 4px #18100b, inset 0 0 0 5px #8e6d3b,
+    0 25px 100px #000b;
+  isolation: isolate;
+  container-type: inline-size;
+  overflow: hidden;
+}
+body #modal.folio-host .adventure-atlas::before,
+body #modal.folio-host .adventure-atlas::after { display: none; }
+#modal.folio-host .adventure-atlas .atlas-corners {
+  position: absolute; inset: 9px; pointer-events: none; z-index: 8;
+}
+.atlas-corners i { position: absolute; width: 22px; height: 22px; border-top: 2px solid var(--map-gold); border-left: 2px solid var(--map-gold); }
+.atlas-corners i::after { content: '◆'; position: absolute; top: 2px; left: 2px; color: var(--map-gold); font-size: 9px; }
+.atlas-corners i:nth-child(1) { top: 0; left: 0; }
+.atlas-corners i:nth-child(2) { top: 0; right: 0; transform: rotate(90deg); }
+.atlas-corners i:nth-child(3) { bottom: 0; right: 0; transform: rotate(180deg); }
+.atlas-corners i:nth-child(4) { bottom: 0; left: 0; transform: rotate(270deg); }
+body #modal.folio-host .adventure-atlas > .atlas-heading {
+  position: relative; display: flex; align-items: center; gap: 16px;
+  flex: 0 0 auto; width: 100%; min-height: 65px; margin: 0;
+  padding: 0 66px 15px 0; border-bottom: 0;
+}
+#modal.folio-host .adventure-atlas .atlas-emblem { width: 57px; height: 57px; flex: 0 0 auto; color: var(--map-gold); }
+#modal.folio-host .adventure-atlas .atlas-emblem svg,
+#modal.folio-host .adventure-atlas .atlas-cartography svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1; }
+#modal.folio-host .adventure-atlas .atlas-kicker { display: block; color: var(--map-muted); font-size: 11px; letter-spacing: .22em; margin-bottom: 4px; }
+body #modal.folio-host .adventure-atlas .atlas-heading h2 { font-family: "Songti SC", "Noto Serif CJK SC", serif; color: var(--map-cream); font-size: 30px; font-weight: 700; letter-spacing: .16em; line-height: 1.3; margin: 0; text-shadow: 0 2px 5px #000; }
+#modal.folio-host .adventure-atlas .atlas-chapter { margin-left: auto; display: flex; align-items: center; gap: 14px; color: var(--map-muted); }
+#modal.folio-host .adventure-atlas .atlas-chapter > span { font-size: 12px; letter-spacing: .1em; }
+#modal.folio-host .adventure-atlas .atlas-chapter strong { font: 28px Georgia, serif; color: var(--map-cream); font-variant-numeric: tabular-nums; }
+#modal.folio-host .adventure-atlas .atlas-chapter small { display: inline; font-size: 14px; color: var(--map-muted); }
+body #modal.folio-host .adventure-atlas > .modal-close {
+  color: var(--map-cream); z-index: 10;
+}
+body #modal.folio-host .adventure-atlas > .modal-close::before {
+  border-color: var(--map-gold);
+  background: var(--map-dark);
+  box-shadow: inset 0 0 0 3px #3c2c1d, 0 3px 8px #0006;
+}
+body #modal.folio-host .adventure-atlas > .modal-close:hover::before {
+  background: #4b3923;
+}
+body #modal.folio-host .adventure-atlas > .folio-pane {
+  position: relative; flex: 1 1 0; min-height: 0; max-height: none;
+  width: 100%; margin: 0; padding: 0; border-radius: 3px; overflow: hidden;
+}
+body #modal.folio-host .adventure-atlas .folio-viewport {
+  flex: 1 1 auto; height: 100%; min-height: 0; overflow-y: auto;
+  overscroll-behavior: contain; touch-action: pan-y; padding: 0;
+  scrollbar-width: thin; scrollbar-color: var(--map-line) var(--map-paper);
+}
+body #modal.folio-host .adventure-atlas .modal-scroll {
+  display: block; width: 100%; min-height: 100%; height: auto;
+  padding: 0; margin: 0; overflow: visible;
+}
+#modal.folio-host .adventure-atlas .atlas-stage {
+  position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, auto); align-content: space-around;
+  column-gap: 48px; row-gap: 34px; min-height: 650px;
+  padding: 32px 65px 38px; isolation: isolate;
+  border: 1px solid #9b7b4d; border-radius: 3px;
+  background: var(--map-paper);
+  box-shadow: inset 0 0 35px #3b27176b;
+}
+#modal.folio-host .adventure-atlas .atlas-stage::before {
+  content: ''; position: absolute; inset: 0; z-index: -2;
+  background: linear-gradient(#eed49b26, #35291818), var(--map-terrain) center / cover;
+  opacity: .87; pointer-events: none;
+}
+#modal.folio-host .adventure-atlas .atlas-stage::after {
+  content: ''; position: absolute; inset: 7px; z-index: -1;
+  border: 1px solid #66482d45; outline: 1px solid #f9e2ae40;
+  outline-offset: 3px; pointer-events: none;
+}
+#modal.folio-host .adventure-atlas .atlas-stage:not(.atlas-ready) > :not(.atlas-loading) { visibility: hidden; }
+#modal.folio-host .adventure-atlas .atlas-loading { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 12px; padding-top: 64px; background: var(--map-paper); color: var(--map-line); }
+#modal.folio-host .adventure-atlas .atlas-loading[hidden] { display: none; }
+#modal.folio-host .adventure-atlas .atlas-loading > span { width: 64px; height: 64px; }
+#modal.folio-host .adventure-atlas .atlas-loading svg { width: 100%; height: 100%; fill: none; stroke: currentColor; }
+#modal.folio-host .adventure-atlas .atlas-loading p { font-size: 14px; margin: 0; }
+#modal.folio-host .adventure-atlas .atlas-loading button { min-height: 44px; padding: 8px 18px; border: 1px solid var(--map-line); color: var(--map-cream); background: var(--map-dark); }
+#modal.folio-host .adventure-atlas .atlas-cartography {
+  position: absolute; width: 100px; height: 100px; left: 18px; bottom: 18px;
+  color: #57391f; opacity: .22; pointer-events: none; z-index: -1;
+}
+#modal.folio-host .adventure-atlas .atlas-paths {
+  position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;
+  overflow: visible; z-index: 0;
+}
+.atlas-paths path { fill: none; stroke: #f3e2ba; stroke-width: 2.5; stroke-dasharray: 7 6; stroke-linecap: round; }
+.atlas-paths .atlas-route-shadow { stroke: #5e472d; stroke-width: 5; stroke-dasharray: none; opacity: .55; }
+.atlas-paths .traversed { stroke: #ffeb9a; stroke-width: 3; filter: drop-shadow(0 0 4px #b77713); }
+.atlas-paths circle { fill: #f4dfac; stroke: #8f6631; stroke-width: 1.5; }
+#modal.folio-host .adventure-atlas .atlas-location { position: relative; z-index: 1; min-width: 0; margin: 0; }
+#modal.folio-host .adventure-atlas .atlas-location:nth-of-type(1) { grid-area: 1 / 1; }
+#modal.folio-host .adventure-atlas .atlas-location:nth-of-type(2) { grid-area: 1 / 2; }
+#modal.folio-host .adventure-atlas .atlas-location:nth-of-type(3) { grid-area: 1 / 3; }
+#modal.folio-host .adventure-atlas .atlas-location:nth-of-type(4) { grid-area: 2 / 3; }
+#modal.folio-host .adventure-atlas .atlas-location:nth-of-type(5) { grid-area: 2 / 2; }
+#modal.folio-host .adventure-atlas .atlas-location:nth-of-type(6) { grid-area: 2 / 1; }
+#modal.folio-host .adventure-atlas .atlas-node {
+  display: flex; flex-direction: column; align-items: center; justify-content: start;
+  width: 100%; height: auto; min-width: 0; min-height: 44px;
+  padding: 0; margin: 0; border: 0; border-radius: 6px; background: none;
+  box-shadow: none; color: var(--map-dark); text-align: center; overflow: visible;
+  transition: filter .18s ease;
+}
+#modal.folio-host .adventure-atlas .atlas-landmark {
+  display: block; width: clamp(132px, 14cqw, 174px); aspect-ratio: 1 / 1.02;
+  position: relative; flex: 0 0 auto; margin: 0 auto 0;
+}
+#modal.folio-host .adventure-atlas .atlas-portrait {
+  position: absolute; inset: 0; padding: 4px;
+  border: 1px solid #5c4529; border-radius: 48% 48% 5px 5px;
+  background: linear-gradient(115deg, #f3dea2, #7c5b2c 30%, #c9a366 65%, #f1d79b);
+  box-shadow: 0 5px 12px #281e1980, inset 0 0 0 2px #b7934c;
+}
+#modal.folio-host .adventure-atlas .atlas-portrait img {
+  display: block; width: 100%; height: 100%; object-fit: cover; object-position: center;
+  border-radius: 48% 48% 2px 2px; filter: saturate(.78) brightness(.91);
+}
+#modal.folio-host .adventure-atlas .current .atlas-portrait {
+  box-shadow: 0 0 0 2px #e4c77e, 0 0 22px #e8ad3590, 0 5px 10px #37231380;
+}
+#modal.folio-host .adventure-atlas .current .atlas-portrait img,
+#modal.folio-host .adventure-atlas .atlas-node[aria-pressed="true"] .atlas-portrait img { filter: none; }
+#modal.folio-host .adventure-atlas .atlas-node[aria-pressed="true"] .atlas-portrait { outline: 1px solid #f9e4ab; outline-offset: 3px; }
+#modal.folio-host .adventure-atlas .atlas-node:hover { transform: none; background: none; filter: brightness(1.06); }
+#modal.folio-host .adventure-atlas .atlas-node:focus-visible { outline: 2px solid #442c12; outline-offset: 8px; }
+#modal.folio-host .adventure-atlas .atlas-pennant {
+  position: absolute; left: -16px; top: 25px; width: 28px; height: 46px;
+  display: grid; place-items: center; color: #d0b27a; padding: 5px;
+  background: linear-gradient(90deg,#181c1d,#303739); border: 1px solid #a58a55;
+  clip-path: polygon(0 0,100% 0,100% 80%,50% 100%,0 80%);
+  filter: drop-shadow(0 3px 3px #0007);
+}
+#modal.folio-host .adventure-atlas .atlas-pennant svg { width: 18px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+#modal.folio-host .adventure-atlas .current .atlas-pennant { background: #70411f; color: #ffe29c; }
+#modal.folio-host .adventure-atlas .atlas-number {
+  position: absolute; left: -13px; bottom: -8px; z-index: 3;
+  width: 33px; height: 33px; display: grid; place-items: center;
+  border-radius: 50%; border: 1px solid #c9a566;
+  background: #211a12; box-shadow: 0 2px 4px #0008, inset 0 0 0 2px #4d3924;
+  color: #eed5a0; font: 18px Georgia, serif; font-variant-numeric: tabular-nums;
+}
+#modal.folio-host .adventure-atlas .current .atlas-number { background: #73501f; border-color: #f8d883; color: #fff2c5; }
+#modal.folio-host .adventure-atlas .atlas-location-copy { display: flex; flex-direction: column; align-items: center; min-width: 0; width: 100%; }
+#modal.folio-host .adventure-atlas .atlas-name {
+  position: relative; z-index: 2; display: block; min-width: 174px; max-width: 100%;
+  margin: -1px 0 8px; padding: 8px 16px; border: 1px solid #9f7944;
+  border-radius: 3px 3px 7px 7px; color: #372513;
+  background: linear-gradient(110deg,#d1b982,#f3e4bb 35%,#e3c995);
+  box-shadow: 0 3px 6px #3b281950, inset 0 0 0 2px #f5e6bd65;
+  font-family: "Songti SC", "Noto Serif CJK SC", serif; font-size: 20px;
+  line-height: 1.35; font-weight: 700; letter-spacing: .08em;
+}
+#modal.folio-host .adventure-atlas .atlas-boss {
+  display: block; color: #352a1d; font-size: 12px; line-height: 1.6;
+  text-shadow: 0 1px 2px #fae9c2; font-weight: 600;
+  background: #ead6aaae; border-radius: 2px; padding: 0 5px;
+}
+#modal.folio-host .adventure-atlas .atlas-boss > span { white-space: nowrap; }
+#modal.folio-host .adventure-atlas .atlas-status {
+  display: block; font-size: 12px; line-height: 1.5; letter-spacing: .12em;
+  color: #554128; margin-top: 5px; padding: 2px 10px;
+  background: #e9d5a7b8; border-radius: 12px;
+}
+#modal.folio-host .adventure-atlas .current .atlas-status { color: #fff0bd; background: #714a21; box-shadow: 0 1px 4px #63462250; }
+#modal.folio-host .adventure-atlas .done .atlas-status { color: #edf3cf; background: #485437; }
+body #modal.folio-host .adventure-atlas > .atlas-footer {
+  position: static; display: grid; grid-template-columns: minmax(0,1fr) auto auto;
+  align-items: center; gap: 18px; flex: 0 0 auto; min-height: 65px;
+  width: 100%; margin: 0; padding: 0; border: 0;
+}
+#modal.folio-host .adventure-atlas .atlas-focus { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+#modal.folio-host .adventure-atlas .atlas-focus strong { color: var(--map-cream); font-size: 15px; font-weight: 600; letter-spacing: .05em; }
+#modal.folio-host .adventure-atlas .atlas-focus > span { color: var(--map-muted); font-size: 12px; line-height: 1.6; }
+#modal.folio-host .adventure-atlas .atlas-relics { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; max-width: 220px; padding-right: 18px; border-right: 1px solid #b3945e50; }
+#modal.folio-host .adventure-atlas .atlas-relic-label { width: 100%; color: var(--map-muted); font-size: 11px; margin-bottom: 3px; letter-spacing: .13em; }
+#modal.folio-host .adventure-atlas .atlas-relic-empty { color: var(--map-muted); font-size: 12px; }
+#modal.folio-host .adventure-atlas .atlas-relic { border: 1px solid #8d723f; border-radius: 50%; background: #221a11; width: 30px; height: 30px; overflow: hidden; }
+#modal.folio-host .adventure-atlas .atlas-relic img { display: block; width: 100%; height: 100%; object-fit: cover; }
+body #modal.folio-host .adventure-atlas #map-continue {
+  display: flex; align-items: center; justify-content: center; gap: 20px;
+  min-width: 158px; min-height: 48px; padding: 11px 18px; font-size: 16px;
+  border-radius: 4px; border: 1px solid #e5c47b;
+  background: linear-gradient(#f4e1aa,#c29a53); color: #3d2a15;
+  box-shadow: inset 0 0 0 3px #99713b, inset 0 0 0 4px #f7e5b2, 0 4px 0 #47301b;
+}
+#modal.folio-host .adventure-atlas #map-continue svg { width: 20px; height: 20px; }
+#modal.folio-host .adventure-atlas .folio-scroll-hint { color: var(--map-cream); background: linear-gradient(transparent,#2e231deb); }
+/* Mid-size windows get a two-column snake; portrait gets a vertical itinerary.
+   These are container breakpoints, independent of touch/device classification. */
+@container (max-width: 930px) {
+  #modal.folio-host .adventure-atlas .atlas-stage {
+    grid-template-columns: repeat(2,minmax(0,1fr)); grid-template-rows: repeat(3,auto);
+    min-height: 980px; padding: 34px 48px; column-gap: 44px; row-gap: 40px;
+  }
+  #modal.folio-host .adventure-atlas .atlas-location:nth-of-type(1) { grid-area: 1 / 1; }
+  #modal.folio-host .adventure-atlas .atlas-location:nth-of-type(2) { grid-area: 1 / 2; }
+  #modal.folio-host .adventure-atlas .atlas-location:nth-of-type(3) { grid-area: 2 / 2; }
+  #modal.folio-host .adventure-atlas .atlas-location:nth-of-type(4) { grid-area: 2 / 1; }
+  #modal.folio-host .adventure-atlas .atlas-location:nth-of-type(5) { grid-area: 3 / 1; }
+  #modal.folio-host .adventure-atlas .atlas-location:nth-of-type(6) { grid-area: 3 / 2; }
+  #modal.folio-host .adventure-atlas .atlas-landmark { width: 166px; }
+  #modal.folio-host .adventure-atlas .atlas-chapter > span { display: none; }
+  #modal.folio-host .adventure-atlas .atlas-relics { max-width: 150px; }
+}
+@container (max-width: 570px) {
+  #modal.folio-host .adventure-atlas .atlas-stage {
+    grid-template-columns: minmax(0,1fr); grid-template-rows: none;
+    min-height: 0; gap: 38px; padding: 30px 22px 44px 32px;
+  }
+  #modal.folio-host .adventure-atlas .atlas-stage::before { background-size: auto 100%; }
+  #modal.folio-host .adventure-atlas .atlas-location:nth-of-type(n) { grid-area: auto; }
+  #modal.folio-host .adventure-atlas .atlas-node { display: grid; grid-template-columns: 116px minmax(0,1fr); align-items: center; gap: 20px; text-align: left; }
+  #modal.folio-host .adventure-atlas .atlas-landmark { width: 116px; margin: 0; }
+  #modal.folio-host .adventure-atlas .atlas-location-copy { align-items: flex-start; }
+  #modal.folio-host .adventure-atlas .atlas-name { min-width: 0; width: auto; margin: 0 0 9px; padding: 6px 9px; font-size: 18px; letter-spacing: .03em; }
+  #modal.folio-host .adventure-atlas .atlas-boss { font-size: 12px; }
+  #modal.folio-host .adventure-atlas .atlas-boss > span { display: block; }
+  #modal.folio-host .adventure-atlas .atlas-status { font-size: 11px; padding: 2px 7px; }
+  #modal.folio-host .adventure-atlas .atlas-pennant { width: 22px; height: 35px; left: -11px; top: 18px; }
+  #modal.folio-host .adventure-atlas .atlas-pennant svg { width: 14px; height: 17px; }
+  #modal.folio-host .adventure-atlas .atlas-number { width: 28px; height: 28px; font-size: 16px; left: -8px; }
+  #modal.folio-host .adventure-atlas .atlas-heading { gap: 10px; min-height: 55px; padding-right: 48px; }
+  #modal.folio-host .adventure-atlas .atlas-heading h2 { font-size: 24px; letter-spacing: .08em; }
+  #modal.folio-host .adventure-atlas .atlas-emblem { width: 39px; height: 39px; }
+  #modal.folio-host .adventure-atlas .atlas-kicker { font-size: 10px; letter-spacing: .1em; }
+  #modal.folio-host .adventure-atlas .atlas-chapter { gap: 0; }
+  #modal.folio-host .adventure-atlas .atlas-chapter strong { font-size: 22px; }
+  #modal.folio-host .adventure-atlas .atlas-chapter small { font-size: 12px; }
+  body #modal.folio-host .adventure-atlas > .atlas-footer { grid-template-columns: minmax(0,1fr) auto; gap: 12px; }
+  #modal.folio-host .adventure-atlas .atlas-focus { grid-column: 1 / -1; gap: 3px; }
+  #modal.folio-host .adventure-atlas .atlas-focus strong { font-size: 14px; }
+  #modal.folio-host .adventure-atlas .atlas-focus > span { font-size: 12px; }
+  #modal.folio-host .adventure-atlas .atlas-relics { max-width: none; padding-right: 0; border: 0; }
+  body #modal.folio-host .adventure-atlas #map-continue { min-width: 132px; gap: 10px; padding-inline: 12px; font-size: 15px; }
+}
+@media (max-width: 620px) {
+  body #modal.folio-host[data-type="map"] > section.adventure-atlas.folio-dialog { padding: 18px; gap: 12px; }
+}
+@media (max-width: 370px) {
+  body #modal.folio-host[data-type="map"] > section.adventure-atlas.folio-dialog { padding: 14px; }
+  #modal.folio-host .adventure-atlas .atlas-chapter { display: none; }
+  #modal.folio-host .adventure-atlas .atlas-node { grid-template-columns: 92px minmax(0,1fr); gap: 13px; }
+  #modal.folio-host .adventure-atlas .atlas-landmark { width: 92px; }
+  #modal.folio-host .adventure-atlas .atlas-stage { padding-left: 22px; padding-right: 12px; }
+}
+@media (max-height: 560px) and (min-width: 621px) {
+  body #modal.folio-host[data-type="map"] > section.adventure-atlas.folio-dialog { padding: 16px; gap: 10px; }
+  body #modal.folio-host .adventure-atlas > .atlas-heading { min-height: 44px; padding-bottom: 8px; }
+  body #modal.folio-host .adventure-atlas > .atlas-footer { grid-template-columns: minmax(0,1fr) auto; min-height: 48px; gap: 10px; }
+  #modal.folio-host .adventure-atlas .atlas-relics { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #modal.folio-host .adventure-atlas .atlas-node { transition: none; }
+}
+
+/* One control language for ordinary actions. The confirmation dialog is the
+ * reference: a recessed walnut secondary surface, a restrained gold primary
+ * surface, one fine brass rim, and the same quiet press feedback everywhere.
+ * Content controls (cards, heroes, map nodes, close rings and skill medallions)
+ * intentionally remain outside this contract. */
+:root {
+  --control-primary-bg: linear-gradient(180deg, #dfc48d, #b9955c);
+  --control-primary-line: #d0ad6e;
+  --control-primary-ink: #2e2216;
+  --control-primary-shadow:
+    inset 0 1px #fff0c255,
+    0 2px 0 #21140c,
+    0 5px 10px #0005;
+  --control-secondary-bg: linear-gradient(180deg, #36291e, #17130f);
+  --control-secondary-line: #9c784b;
+  --control-secondary-ink: #ead8b5;
+  --control-secondary-shadow:
+    inset 0 1px #ead7aa18,
+    0 2px 0 #17100b,
+    0 4px 8px #0004;
+}
+
+body :is(
+  .gold-btn,
+  .ghost-btn,
+  .text-btn,
+  .filter-btn,
+  .utility-tab,
+  .atelier-open,
+  .anime-art-button,
+  .lobby-collection > button,
+  .wind-time-setting,
+  .touch-menu-grid button,
+  .touch-library-tabs button,
+  .deck-actions > button,
+  .touch-inline-detail > button,
+  .atlas-loading button
+) {
+  border: 1px solid var(--control-secondary-line);
+  border-radius: 5px;
+  background: var(--control-secondary-bg);
+  color: var(--control-secondary-ink);
+  box-shadow: var(--control-secondary-shadow);
+  text-shadow: none;
+  transition:
+    background 130ms ease,
+    border-color 130ms ease,
+    box-shadow 130ms ease,
+    filter 130ms ease,
+    transform 130ms ease;
+}
+
+body :is(#touch-cancel, #wind-time) {
+  border: 1px solid var(--control-secondary-line);
+  border-radius: 5px;
+  background: var(--control-secondary-bg);
+  color: var(--control-secondary-ink);
+  box-shadow: var(--control-secondary-shadow);
+  text-shadow: none;
+  transition:
+    background 130ms ease,
+    border-color 130ms ease,
+    box-shadow 130ms ease,
+    filter 130ms ease,
+    transform 130ms ease;
+}
+
+body :is(.lobby-actions .gold-btn, .gold-btn, .end-turn) {
+  border: 1px solid var(--control-primary-line);
+  border-radius: 5px;
+  background: var(--control-primary-bg);
+  color: var(--control-primary-ink);
+  box-shadow: var(--control-primary-shadow);
+  text-shadow: none;
+}
+
+/* The touch layout has an older, more specific .gold-btn rule. Keep the
+ * primary/secondary contract intact there as well. */
+body.touch-layout :is(.gold-btn, .end-turn) {
+  border: 1px solid var(--control-primary-line);
+  border-radius: 5px;
+  background: var(--control-primary-bg);
+  color: var(--control-primary-ink);
+  box-shadow: var(--control-primary-shadow);
+  text-shadow: none;
+}
+
+body :is(.gold-btn, .ghost-btn, .end-turn)::before,
+body :is(.gold-btn, .ghost-btn, .end-turn)::after {
+  display: none;
+}
+
+/* Ready-state glow used the old ornamental rings. The unified control keeps
+ * its quiet brass rim instead of animating a second outline around it. */
+body .end-turn.ready-end,
+body.touch-layout .end-turn.ready-end {
+  animation: none;
+}
+
+body :is(
+  .gold-btn,
+  .ghost-btn,
+  .text-btn,
+  .filter-btn,
+  .utility-tab,
+  .atelier-open,
+  .anime-art-button,
+  .lobby-collection > button,
+  .wind-time-setting,
+  .touch-menu-grid button,
+  .touch-library-tabs button,
+  .deck-actions > button,
+  .touch-inline-detail > button,
+  .atlas-loading button,
+  .end-turn
+):hover:not(:disabled) {
+  border-color: #d0ad6e;
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px #fff0c255,
+    0 3px 0 #21140c,
+    0 7px 14px #0005;
+}
+
+body :is(#touch-cancel, #wind-time):hover:not(:disabled) {
+  border-color: #d0ad6e;
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px #fff0c255,
+    0 3px 0 #21140c,
+    0 7px 14px #0005;
+}
+
+body :is(
+  .gold-btn,
+  .ghost-btn,
+  .text-btn,
+  .filter-btn,
+  .utility-tab,
+  .atelier-open,
+  .anime-art-button,
+  .lobby-collection > button,
+  .wind-time-setting,
+  .touch-menu-grid button,
+  .touch-library-tabs button,
+  .deck-actions > button,
+  .touch-inline-detail > button,
+  .atlas-loading button,
+  .end-turn
+):active:not(:disabled) {
+  transform: translateY(1px);
+  filter: brightness(.96);
+  box-shadow:
+    inset 0 1px #fff0c233,
+    0 1px 0 #21140c;
+}
+
+body :is(#touch-cancel, #wind-time):active:not(:disabled) {
+  transform: translateY(1px);
+  filter: brightness(.96);
+  box-shadow:
+    inset 0 1px #fff0c233,
+    0 1px 0 #21140c;
+}
+
+body :is(.filter-btn.active, .touch-library-tabs button[aria-selected="true"]) {
+  border-color: var(--control-primary-line);
+  background: linear-gradient(180deg, #60482d, #342518);
+  color: #f5e4bf;
+  box-shadow: inset 0 -2px var(--control-primary-line), 0 2px 0 #21140c;
+}
+
+body.touch-layout :is(#touch-cancel, #wind-time) {
+  border-color: var(--control-secondary-line);
+  background: var(--control-secondary-bg);
+  color: var(--control-secondary-ink);
+}
+
+/* Hearthstone-style three-layer action feedback. The board remains the main
+ * instruction surface: source cards and resources, target affordances, then
+ * only a short local notice when an action is rejected. */
+#touch-target-bar[hidden] {
+  display: none;
+}
+
+#app.placement-active #board-empty {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The action cue is drawn in the board SVG. Target mode points at a legal
+ * unit; placement mode points at the player's lane and uses the ring as the
+ * empty landing affordance. */
+#target-lines[data-mode="placement"] #target-path {
+  stroke: #f4d995;
+  stroke-width: 3.5;
+  stroke-dasharray: 12 8;
+  animation: placement-flow .9s linear infinite;
+  filter: drop-shadow(0 0 5px #e7ae5f99);
+}
+
+#target-lines[data-mode="placement"] #target-arrow {
+  fill: #f4d995;
+  stroke: #5b3d25;
+  stroke-width: 1;
+  filter: drop-shadow(0 0 4px #e5a451aa);
+}
+
+#target-lines[data-mode="placement"] #target-circle {
+  fill: #f3ca6c1c;
+  stroke: #ffe5a1;
+  stroke-width: 2.5;
+  stroke-dasharray: 3 5;
+  animation: placement-ring 1.2s ease-in-out infinite;
+}
+
+#target-lines[data-mode="target"] #target-arrow {
+  fill: #ffe0a0;
+  stroke: #5d3b2a;
+  stroke-width: .8;
+}
+
+/* Target units get a small crosshair in addition to their existing outline.
+ * It is intentionally placed outside the art, so the portrait remains fully
+ * readable while the legal target stays obvious. */
+.minion.valid-target .unit-aura {
+  inset: -9px;
+  border: 1px solid #ffe5a1;
+  border-radius: 46% 46% 38% 38%;
+  box-shadow: 0 0 0 2px #a66b3b55, 0 0 15px #f2b862aa;
+  animation: target-reticle-breathe 1.15s ease-in-out infinite;
+}
+
+.minion.valid-target .unit-aura::before,
+.minion.valid-target .unit-aura::after,
+.hero.valid-target .portrait-frame::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #ffe8ad;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 1px #5e3c2a55, 0 0 9px #f0ae5f99;
+}
+
+.minion.valid-target .unit-aura::after,
+.hero.valid-target .portrait-frame::before {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, transparent 46%, #ffe8ad 47% 53%, transparent 54%),
+    linear-gradient(0deg, transparent 46%, #ffe8ad 47% 53%, transparent 54%);
+  box-shadow: none;
+}
+
+.hero.valid-target .portrait-frame::before {
+  z-index: 8;
+  pointer-events: none;
+}
+
+.hero.valid-target .portrait-frame::after {
+  box-shadow: inset 0 0 0 1px #ffe8ad66, 0 0 14px #f0ae5f99;
+}
+
+@keyframes target-reticle-breathe {
+  0%,
+  100% {
+    opacity: .72;
+    transform: scale(.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes placement-flow {
+  to {
+    stroke-dashoffset: -40;
+  }
+}
+
+@keyframes placement-ring {
+  0%,
+  100% {
+    opacity: .62;
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: scale(.86);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+.reduced-motion .minion.valid-target .unit-aura,
+.fx-low .minion.valid-target .unit-aura,
+.reduced-motion #target-lines[data-mode="placement"] #target-path,
+.fx-low #target-lines[data-mode="placement"] #target-path,
+.reduced-motion #target-lines[data-mode="placement"] #target-circle,
+.fx-low #target-lines[data-mode="placement"] #target-circle {
+  animation: none;
+}
+
+/* The touch control is only a visual mode badge plus an explicit cancel. The
+ * actual instruction remains in the hidden live label for accessibility. */
+#touch-target-bar {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  width: 58px;
+  min-width: 58px;
+  max-width: 58px;
+  height: 30px;
+  padding: 3px 4px 3px 6px;
+  overflow: hidden;
+  z-index: 45;
+  border: 1px solid #d8b66e;
+  border-radius: 15px;
+  background: #2d2119ef;
+  color: #f7dfae;
+  box-shadow: 0 4px 12px #130b09a8, inset 0 1px #fff0c233;
+  pointer-events: none;
+  animation: action-badge-in 160ms ease-out;
+}
+
+body:not(.touch-layout) #touch-target-bar {
+  display: none;
+}
+
+#touch-target-bar::before {
+  content: "◆";
+  display: grid;
+  flex: 0 0 18px;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #e2b96f99;
+  border-radius: 50%;
+  color: #f7d88f;
+  font: 10px/1 Georgia, serif;
+}
+
+#touch-target-bar[data-mode="placement"]::before {
+  content: "＋";
+  font: 700 13px/1 var(--ui-font);
+}
+
+#touch-target-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+#touch-target-bar #touch-cancel {
+  display: grid;
+  flex: 0 0 23px;
+  place-items: center;
+  width: 23px;
+  min-width: 23px;
+  height: 23px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #ffffff12;
+  color: #f7dfae;
+  box-shadow: none;
+  font-size: 0;
+  line-height: 1;
+  pointer-events: auto;
+}
+
+#touch-target-bar #touch-cancel::before {
+  content: "×";
+  font: 17px/1 var(--ui-font);
+}
+
+#touch-target-bar #touch-cancel:hover:not(:disabled),
+#touch-target-bar #touch-cancel:active:not(:disabled) {
+  background: #ffffff22;
+}
+
+#touch-target-bar #touch-cancel:focus-visible {
+  outline: 2px solid #ffdf9a;
+  outline-offset: 2px;
+}
+
+/* Layer three: short feedback stays beside the source/resource that failed. */
+#app.battle-view #toast {
+  box-sizing: border-box;
+  min-height: 38px;
+  max-width: 280px;
+  padding: 8px 12px 8px 31px;
+  border: 1px solid #e18a6a;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #5a2b21f5, #321815f5);
+  color: #ffe4d0;
+  box-shadow: 0 5px 14px #160604b0, inset 0 1px #ffe1c044;
+  font: 600 12px/1.35 var(--ui-font);
+  letter-spacing: .01em;
+  text-align: left;
+  text-shadow: none;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(5px) scale(.98);
+  transition: opacity 120ms ease, transform 160ms ease;
+}
+
+#app.battle-view #toast:not(.visible) {
+  display: none;
+}
+
+#app.battle-view #toast::before {
+  content: "!";
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  display: grid;
+  width: 17px;
+  height: 17px;
+  place-items: center;
+  border: 1px solid #f09b7e;
+  border-radius: 50%;
+  color: #ffd0b9;
+  font: 700 12px/1 var(--ui-font);
+  transform: translateY(-50%);
+}
+
+#app.battle-view #toast[data-kind="info"] {
+  border-color: #d4ae6d;
+  background: linear-gradient(180deg, #3c2b1df5, #24170ff5);
+  color: #f8e5bd;
+}
+
+#app.battle-view #toast[data-kind="info"]::before {
+  content: "·";
+  border-color: #e2b96f;
+  color: #f7d88f;
+}
+
+#app.battle-view #toast.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+body .hand-card.feedback-error .card {
+  animation: feedback-card-error 720ms ease-in-out 2;
+}
+
+body .hand-card.feedback-info .card {
+  animation: feedback-card-info 420ms ease-out 1;
+}
+
+body .mana-panel.feedback-error {
+  animation: feedback-mana-error 720ms ease-in-out 2;
+}
+
+@keyframes action-badge-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px) scale(.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes feedback-card-error {
+  0%,
+  100% {
+    filter: none;
+  }
+  35% {
+    filter: brightness(1.28) saturate(1.18) drop-shadow(0 0 12px #e18a6a99);
+  }
+  60% {
+    filter: brightness(.9) saturate(.9) drop-shadow(0 0 5px #e18a6a66);
+  }
+}
+
+@keyframes feedback-card-info {
+  0%,
+  100% {
+    filter: none;
+  }
+  40% {
+    filter: brightness(1.16) drop-shadow(0 0 9px #d4ae6d99);
+  }
+}
+
+@keyframes feedback-mana-error {
+  0%,
+  100% {
+    filter: none;
+  }
+  35% {
+    filter: brightness(1.2) saturate(1.2) drop-shadow(0 0 10px #e18a6a88);
+  }
+  60% {
+    filter: brightness(.9) saturate(.9);
+  }
+}
+
+body.touch-layout :is(.touch-menu-grid button, .touch-library-tabs button) {
+  border-color: var(--control-secondary-line);
+  background: var(--control-secondary-bg);
+  color: var(--control-secondary-ink);
+}
+
+body.touch-layout :is(
+  .ghost-btn,
+  .text-btn,
+  .filter-btn,
+  .utility-tab,
+  .atelier-open,
+  .anime-art-button,
+  .lobby-collection > button,
+  .wind-time-setting,
+  .touch-menu-grid button,
+  .touch-library-tabs button,
+  .deck-actions > button,
+  .touch-inline-detail > button,
+  .atlas-loading button
+) {
+  border: 1px solid var(--control-secondary-line);
+  border-radius: 5px;
+  background: var(--control-secondary-bg);
+  color: var(--control-secondary-ink);
+  box-shadow: var(--control-secondary-shadow);
+  text-shadow: none;
+}
+
+/* Semantic card badges. Every badge is one self-contained SVG frame from
+ * EmberArt.badgeFrame — a cut sapphire for mana, an amber blade medallion for
+ * attack, a crimson heart crest for health, a steel ward for weapon
+ * durability — with the number left as live DOM text on top. These rules own
+ * only the frame's depth and the numeral's embossing, so a five-pixel board
+ * token, a fanned hand card and the inspection sheet all stay in step. */
+:root {
+  --badge-mana-ink: #06192f;
+  --badge-blade-ink: #3a2306;
+  --badge-heart-ink: #430e16;
+  --badge-ward-ink: #1b262e;
+}
+
+/* Each context keeps the geometry it already declares; only the retired
+ * gradient, clip-path and marble-circle bodies are reset here. */
+body .card-cost,
+body .card .card-cost,
+body .stat,
+body .card .stat,
+body .minion .stat {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  clip-path: none;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  line-height: 1;
+  letter-spacing: 0;
+  font-family: Georgia, "Iowan Old Style", "Palatino Linotype", "Songti SC", serif;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The retired circle and polygon bodies were painted with pseudo-elements. */
+body .card-cost::before,
+body .card-cost::after,
+body .stat::before,
+body .stat::after {
+  content: none;
+}
+
+body .badge-frame {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 0.5px #150f08) drop-shadow(0 2px 3px #120c0599);
+}
+
+body .badge-value,
+body .stat-value {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-size: 1em;
+  line-height: 1;
+  pointer-events: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Numerals sit inside asymmetric attack/health crests.  A small em-scaled
+ * optical lift keeps their ink centered as the badge grows or shrinks. */
+body .stat-value {
+  transform: translateY(-0.08em);
+}
+
+/* One embossed numeral per family: ivory on sapphire, warm ivory on amber,
+ * ivory on crimson, pale steel on the ward. A dark contour keeps every digit
+ * legible over the relief and the last soft shadow seats it into the metal. */
+body .card-cost .badge-value {
+  color: #f4fcff;
+  text-shadow:
+    0.055em 0 0 var(--badge-mana-ink),
+    -0.055em 0 0 var(--badge-mana-ink),
+    0 0.055em 0 var(--badge-mana-ink),
+    0 -0.055em 0 var(--badge-mana-ink),
+    0.042em 0.042em 0 var(--badge-mana-ink),
+    -0.042em 0.042em 0 var(--badge-mana-ink),
+    0.042em -0.042em 0 var(--badge-mana-ink),
+    -0.042em -0.042em 0 var(--badge-mana-ink),
+    0 0.08em 0.12em #041526cc;
+}
+
+body .stat.atk .stat-value {
+  color: #fffaeb;
+  text-shadow:
+    0.055em 0 0 var(--badge-blade-ink),
+    -0.055em 0 0 var(--badge-blade-ink),
+    0 0.055em 0 var(--badge-blade-ink),
+    0 -0.055em 0 var(--badge-blade-ink),
+    0.042em 0.042em 0 var(--badge-blade-ink),
+    -0.042em 0.042em 0 var(--badge-blade-ink),
+    0.042em -0.042em 0 var(--badge-blade-ink),
+    -0.042em -0.042em 0 var(--badge-blade-ink),
+    0 0.08em 0.12em #241503cc;
+}
+
+body .stat.hp .stat-value {
+  color: #fff4f1;
+  text-shadow:
+    0.055em 0 0 var(--badge-heart-ink),
+    -0.055em 0 0 var(--badge-heart-ink),
+    0 0.055em 0 var(--badge-heart-ink),
+    0 -0.055em 0 var(--badge-heart-ink),
+    0.042em 0.042em 0 var(--badge-heart-ink),
+    -0.042em 0.042em 0 var(--badge-heart-ink),
+    0.042em -0.042em 0 var(--badge-heart-ink),
+    -0.042em -0.042em 0 var(--badge-heart-ink),
+    0 0.08em 0.12em #2b060ccc;
+}
+
+/* A damaged unit keeps its crest but loses some blood. */
+body .stat.hp.hurt .badge-frame {
+  filter: saturate(0.58) brightness(0.82) drop-shadow(0 1px 0.5px #150f08)
+    drop-shadow(0 2px 3px #120c0599);
+}
+
+body .stat.hp.hurt .stat-value {
+  color: #ffc9b0;
+}
+
+body .card.weapon .stat.hp .stat-value {
+  color: #f7fcfe;
+  text-shadow:
+    0.055em 0 0 var(--badge-ward-ink),
+    -0.055em 0 0 var(--badge-ward-ink),
+    0 0.055em 0 var(--badge-ward-ink),
+    0 -0.055em 0 var(--badge-ward-ink),
+    0.042em 0.042em 0 var(--badge-ward-ink),
+    -0.042em 0.042em 0 var(--badge-ward-ink),
+    0.042em -0.042em 0 var(--badge-ward-ink),
+    -0.042em -0.042em 0 var(--badge-ward-ink),
+    0 0.08em 0.12em #0d141acc;
+}
+
+/* Dragging has two clear visual phases: the card is lifted while it follows
+ * the pointer, then settles into a compact landing state as soon as the drop
+ * would be accepted. The card remains the only moving object; the halo is a
+ * quiet confirmation cue, not another panel or target widget. */
+body .drag-ghost {
+  isolation: isolate;
+  transform-origin: 50% 50%;
+  will-change: transform, filter;
+  transition:
+    transform 180ms cubic-bezier(0.2, 0.78, 0.24, 1.16),
+    filter 160ms ease,
+    opacity 120ms ease;
+}
+
+body .drag-ghost > .card {
+  position: relative;
+  z-index: 1;
+}
+
+body .drag-ghost.is-snapped {
+  transform: translate(-50%, -50%) rotate(0deg) scale(0.78);
+  filter: drop-shadow(0 8px 13px #000b);
+}
+
+body .drag-ghost.is-snapped::before {
+  position: absolute;
+  z-index: 0;
+  content: "";
+  inset: -12px -10px -10px;
+  border: 2px solid #f6d98e;
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 4px #f6d98e26,
+    0 0 18px #f6d98e66;
+  animation: drag-snap-breathe 1.05s ease-out infinite;
+}
+
+body .drag-ghost[data-snap-mode="target"]::before {
+  border-color: #b7e4cf;
+  box-shadow:
+    0 0 0 4px #b7e4cf24,
+    0 0 18px #b7e4cf5c;
+}
+
+@keyframes drag-snap-breathe {
+  0%,
+  100% {
+    opacity: 0.64;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+/* Card face contract -------------------------------------------------------
+ * The battle hand is the canonical card face. Every card context uses the
+ * same absolute bands: art, name ribbon, rules paper, then the type/stat
+ * rail. Contexts may change width, but never change the internal geometry.
+ * This keeps a card readable when it moves from the opening hand to the hand
+ * rail or into a lifted preview. */
+body .card,
+body .card.common,
+body .card.rare,
+body .card.epic,
+body .card.legendary {
+  position: relative;
+  box-sizing: border-box;
+  aspect-ratio: var(--card-face-ratio);
+}
+body .card .card-inner {
+  position: absolute;
+  inset: 5px;
+  display: block;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid #795839;
+  box-shadow: inset 0 0 12px #76512d27;
+}
+body .card .card-art {
+  position: absolute;
+  inset: 0 0 auto;
+  width: 100%;
+  height: 43%;
+  overflow: hidden;
+  isolation: isolate;
+  background: #3b2b21;
+}
+body .card .card-art img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  object-position: var(--art-pos, 50% 34%);
+  transform: none;
+  background: none;
+  pointer-events: none;
+}
+body .card .card-title {
+  position: absolute;
+  inset: 43% 0 auto;
+  width: auto;
+  height: 13%;
+  min-width: 0;
+  min-height: 0;
+  max-height: none;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8%;
+  white-space: normal;
+  overflow: hidden;
+  line-height: 1.15;
+}
+body .card .card-text,
+body .card.type-minion .card-text,
+body .card.weapon .card-text {
+  position: absolute;
+  inset: 57% 6% 16%;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  display: block;
+  padding: 5px 7px;
+  max-height: none;
+  overflow: hidden;
+  white-space: normal;
+  text-overflow: clip;
+  scrollbar-width: none;
+  pointer-events: none;
+  font-size: clamp(8px, 6cqw, 15px);
+  line-height: 1.28;
+}
+body .card .card-text::-webkit-scrollbar {
+  display: none;
+}
+body .card .card-copy {
+  display: block;
+  width: 100%;
+}
+body .card .card-type {
+  position: absolute;
+  inset: auto 0 5%;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 18%;
+  overflow: hidden;
+}
+
+/* Copy length is a content decision, not a second card layout. Short rules
+ * use the otherwise empty rule well as a readable focal point; standard and
+ * long rules keep the normal left-aligned reading rhythm. */
+body .card[data-rule-size="short"] .card-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 7%;
+  text-align: center;
+  font-size: clamp(11px, 7.2cqw, 18px);
+  line-height: 1.3;
+}
+body .card[data-rule-size="short"] .card-copy {
+  display: block;
+}
+body .card[data-rule-size="standard"] .card-text {
+  font-size: clamp(9px, 6cqw, 15px);
+  line-height: 1.28;
+}
+body .card[data-rule-size="long"] .card-text {
+  font-size: clamp(7px, 4.8cqw, 12px);
+  line-height: 1.18;
+}
+body .card-preview[data-mode="pinned"] .card[data-rule-size="short"] .card-text,
+body .card-preview[data-mode="hover"] .card[data-rule-size="short"] .card-text {
+  padding-inline: 8%;
+  font-size: clamp(14px, calc(var(--detail-w) * 0.052), 19px);
+  line-height: 1.35;
+}
+
+/* The detail card has one stable paper ratio. Its width adapts to the safe
+ * viewport, while the internal art/title/rules proportions never change. */
+body .card-preview[data-mode="pinned"],
+body .card-preview[data-mode="hover"] {
+  --detail-w: min(300px, calc(100vw - 28px), calc((100dvh - 84px) / 1.48));
+  aspect-ratio: var(--card-face-ratio);
+  width: var(--detail-w);
+  height: auto;
+  min-width: var(--detail-w);
+  max-width: var(--detail-w);
+  min-height: 0;
+  max-height: none;
+}
+body .card-preview[data-mode="pinned"] .card,
+body .card-preview[data-mode="hover"] .card {
+  width: var(--detail-w);
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  aspect-ratio: var(--card-face-ratio);
+}
+body .card-preview[data-mode="pinned"] .card .card-art,
+body .card-preview[data-mode="hover"] .card .card-art {
+  height: 43%;
+}
+body .card-preview[data-mode="pinned"] .card .card-title,
+body .card-preview[data-mode="hover"] .card .card-title {
+  top: 43%;
+  height: 13%;
+}
+body .card-preview[data-mode="pinned"] .card .card-text,
+body .card-preview[data-mode="hover"] .card .card-text {
+  top: 57%;
+  bottom: 16%;
+  font-size: clamp(11px, calc(var(--detail-w) * 0.043), 15px);
+  line-height: 1.32;
+}
+body .card-preview[data-mode="pinned"] .card[data-rule-size="standard"] .card-text,
+body .card-preview[data-mode="hover"] .card[data-rule-size="standard"] .card-text {
+  font-size: clamp(10px, calc(var(--detail-w) * 0.043), 15px);
+}
+body .card-preview[data-mode="pinned"] .card[data-rule-size="long"] .card-text,
+body .card-preview[data-mode="hover"] .card[data-rule-size="long"] .card-text {
+  font-size: clamp(9px, calc(var(--detail-w) * 0.036), 13px);
+  line-height: 1.2;
+}
+
+/* Hand cards use the same geometry and receive the horizontal gesture on the
+ * button itself. There is no nested vertical scroller to steal the pointer. */
+body .hand-card {
+  aspect-ratio: var(--card-face-ratio);
+}
+body .hand-card > .card {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: var(--card-face-ratio);
+}
+body .hand-card .card .card-art {
+  height: 43%;
+}
+body .hand-card .card .card-title {
+  top: 43%;
+  height: 13%;
+  min-height: 0;
+}
+body:not(.touch-layout) .hand-card .card .card-text,
+body.touch-layout .hand-card .card .card-text {
+  top: 57%;
+  /* The hand's type rail only occupies the last few percent; use the spare
+     paper above it so long rules can grow instead of shrinking to a whisper. */
+  bottom: 9%;
+  left: 6%;
+  right: 6%;
+  padding-inline: 6%;
+  font-size: clamp(7.5px, 6.1cqw, 9.5px);
+  line-height: 1.18;
+}
+body:not(.touch-layout) .hand-card .card[data-rule-size="short"] .card-text,
+body.touch-layout .hand-card .card[data-rule-size="short"] .card-text {
+  padding-inline: 6%;
+  font-size: clamp(9px, 7.4cqw, 11px);
+  line-height: 1.25;
+}
+body:not(.touch-layout) .hand-card .card[data-rule-size="standard"] .card-text,
+body.touch-layout .hand-card .card[data-rule-size="standard"] .card-text {
+  font-size: clamp(8.3px, 6.2cqw, 9.8px);
+  line-height: 1.08;
+}
+body:not(.touch-layout) .hand-card .card[data-rule-size="long"] .card-text,
+body.touch-layout .hand-card .card[data-rule-size="long"] .card-text {
+  font-size: clamp(8.3px, 6cqw, 9.8px);
+  line-height: 1.1;
+}
+
+@media (orientation: landscape) and (max-width: 900px) {
+  body .card-preview[data-mode="pinned"],
+  body .card-preview[data-mode="hover"] {
+    --detail-w: min(300px, calc(100vw - 28px), calc((100dvh - 28px) / 1.48));
+  }
+}
+
+/* Library sheet -----------------------------------------------------------
+ * The collection is a reading surface, not another ornate game board. Keep
+ * the walnut atmosphere, then let spacing, hairlines and a quiet segmented
+ * control carry the hierarchy in the manner of a native mobile sheet. */
+body #modal.folio-host > .library-box {
+  --library-hairline: #f4ead51f;
+  --library-soft: #ffffff0b;
+  background:
+    linear-gradient(180deg, #241b14f5, #13100df5),
+    var(--folio-wood) center / cover;
+  border: 1px solid #e8c98745;
+  border-radius: 20px;
+  box-shadow: 0 24px 60px #000b, inset 0 1px #fff2;
+}
+body #modal.folio-host > .library-box::before {
+  display: none;
+}
+body #modal.folio-host > .library-box > .modal-close {
+  border-color: #ead7aa70;
+  background: #ffffff09;
+  color: var(--panel-cream);
+  box-shadow: none;
+  transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+body #modal.folio-host > .library-box > .modal-close:hover {
+  border-color: #f4ead5b8;
+  background: #ffffff18;
+  box-shadow: none;
+  transform: scale(1.03);
+}
+body #modal.folio-host > .library-box .library-heading::after {
+  border-bottom-color: var(--library-hairline);
+}
+body #modal.folio-host > .library-box .library-heading h2 {
+  letter-spacing: .03em;
+  text-shadow: none;
+}
+body #modal.folio-host > .library-box .library-heading p,
+body #modal.folio-host > .library-box .library-foot {
+  color: #c5b69d;
+  letter-spacing: .02em;
+}
+body #modal.folio-host > .library-box .library-search {
+  border-color: #ffffff24;
+  border-radius: 12px;
+  background: #09080699;
+  box-shadow: inset 0 1px 3px #0005;
+}
+body #modal.folio-host > .library-box .library-search:focus {
+  border-color: #ead7aa99;
+  box-shadow: 0 0 0 3px #ead7aa20, inset 0 1px 3px #0005;
+}
+body #modal.folio-host > .library-box .touch-library-tabs {
+  border: 1px solid var(--library-hairline);
+  border-radius: 12px;
+  padding: 3px;
+  gap: 3px;
+  background: #ffffff08;
+}
+body #modal.folio-host > .library-box .touch-library-tabs button {
+  min-height: 40px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #c8bba7;
+  box-shadow: none;
+  text-shadow: none;
+}
+body #modal.folio-host > .library-box .touch-library-tabs button[aria-selected="true"] {
+  background: #f0e4cf;
+  color: #2a2119;
+  box-shadow: 0 1px 4px #0005;
+}
+body #modal.folio-host > .library-box .filter-bar {
+  border-bottom-color: var(--library-hairline);
+}
+body #modal.folio-host > .library-box .filter-group .filter-label {
+  color: #bcae98;
+  font-size: 12px;
+  font-weight: 600;
+}
+body #modal.folio-host > .library-box .filter-group .filter-btn {
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #c7b9a5;
+  box-shadow: none;
+  text-shadow: none;
+  transform: none;
+}
+body #modal.folio-host > .library-box .filter-group .filter-btn:hover,
+body #modal.folio-host > .library-box .filter-group .filter-btn:active {
+  border: 0;
+  background: #ffffff0d;
+  box-shadow: none;
+  transform: none;
+}
+body #modal.folio-host > .library-box .filter-group .filter-btn.active {
+  border: 0;
+  background: #f0e4cf;
+  color: #2a2119;
+  box-shadow: 0 1px 3px #0004;
+  font-weight: 700;
+}
+body #modal.folio-host > .library-box .library-item .add-label,
+body #modal.folio-host > .library-box .library-item .owned-count {
+  color: #c5b69d;
+  font-size: 11px;
+  letter-spacing: 0;
+}
+body #modal.folio-host > .library-box .library-entry > .library-inspect {
+  border: 1px solid var(--library-hairline);
+  border-radius: 10px;
+  background: var(--library-soft);
+  color: #e8dbc4;
+  box-shadow: none;
+  font-size: 12px;
+  transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+body #modal.folio-host > .library-box .library-entry > .library-inspect:hover {
+  border-color: #ead7aa66;
+  background: #ffffff16;
+  box-shadow: none;
+  transform: translateY(-1px);
+}

@@ -3,54 +3,27 @@
 (() => {
   "use strict";
   const E = Emberfall,
-    $ = (s) => document.querySelector(s),
-    root = document.documentElement.style;
-  document.title = "烬域 · 风起之境 — PANTHEON v0.14.0";
-  root.setProperty("--wind-paper-texture", `url("${WindborneAssets.paper}")`);
-  root.setProperty(
-    "--wind-leaf-seal",
-    `url("${WindborneAssets["leaf-seal"]}")`,
-  );
-  root.setProperty("--parchment-texture", `url("${WindborneAssets.paper}")`);
-  root.setProperty("--wood-texture", `url("${WindborneAssets.wood}")`);
-  $(".lobby-copy>.eyebrow").textContent = "鎏金酒馆";
-  $(".lobby-chinese").textContent = "风起之境";
-  $(".lobby-tagline").textContent = "";
+    $ = (s) => document.querySelector(s);
+  const copy = EmberTheme.definition.copy;
+  $(".lobby-copy>.eyebrow").textContent = copy.eyebrow;
+  $(".lobby-chinese").textContent = copy.subtitle;
+  $(".lobby-tagline").textContent = copy.tagline;
   $(".lobby-desc").textContent =
     `${EmberData.heroes.length} 位旅人 · ${EmberData.cards.filter((c) => !c.token).length} 张卡牌 · ${EmberData.bosses.length} 段首领冒险`;
-  $(".lobby-world-label").innerHTML =
-    "<span>THE WAYFARER’S TAVERN</span><i></i><span>旅人的酒馆 · 炉火正暖</span>";
-  $(".lobby-bottom small").textContent = "VOL. X / THE GILDED TAVERN";
-  $(".lobby-collection>.section-label").textContent = "收集故事，踏上旅途";
-  // The actual existing character assets are unchanged, selected for the lighter hub.
+  $(".lobby-bottom small").textContent = copy.footer;
   $("#lobby-card-one").innerHTML = E.cardHTML(EmberData.byId.huntress);
   $("#lobby-card-two").innerHTML = E.cardHTML(EmberData.byId.phoenix);
   $("#atelier-open").innerHTML = "原画档案<small>THE ART COLLECTION</small>";
   $(".board-empty").textContent = "故事的下一笔，由你来写";
-  const metadata = {
-    chimney: {
-      name: "旅人的酒馆",
-      hint: "轻触铜灯，点亮桌边的暖光",
-      box: { left: "12px", top: "58px", width: "240px", height: "217px" },
-    },
-    crystals: {
-      name: "星辉观测台",
-      hint: "轻拨星环，让远方的星光落在掌心",
-      box: { left: "1390px", top: "63px", width: "180px", height: "211px" },
-    },
-    tree: {
-      name: "蓝晶矿脉",
-      hint: "敲响桌边蓝晶，听见清澈的回声",
-      box: { left: "18px", top: "510px", width: "175px", height: "232px" },
-    },
-    forge: {
-      name: "余烬锻炉",
-      hint: "轻叩桌角的小锤，唤起余烬",
-      box: { left: "1475px", top: "710px", width: "110px", height: "120px" },
-    },
-  };
+  const metadata = Object.fromEntries(
+    EmberTheme.definition.scenery.map((a) => [a.id, a]),
+  );
   for (const b of document.querySelectorAll("[data-prop]")) {
     const a = metadata[b.dataset.prop];
+    if (!a) {
+      b.hidden = true;
+      continue;
+    }
     b.title = a.name;
     b.setAttribute("aria-label", a.hint);
     Object.assign(b.style, a.box);
@@ -99,7 +72,8 @@
     row.innerHTML =
       '<div><h3>酒馆时光</h3><p>晴昼或暮色，仅改变环境氛围</p></div><button type="button" class="wind-time-setting" aria-label="切换环境时光"></button>';
     const content =
-      box.querySelector(".settings-options") || box.querySelector(".modal-scroll");
+      box.querySelector(".settings-options") ||
+      box.querySelector(".modal-scroll");
     if (content) content.append(row);
     else box.insertBefore(row, box.querySelector(".modal-footer"));
     row.querySelector("button").onclick = toggle;
@@ -109,20 +83,12 @@
     document.getElementById("modal"),
     { childList: true },
   );
-  Object.assign(window.AtelierDiagnostics, {
-    version: "0.7.0",
-    worldAssets: 9,
-    paintedBuildings: 4,
-    theme: "hand-painted anime village / matte travel journal",
-  });
-  if (window.PocketDiagnostics) PocketDiagnostics.version = "0.7.0";
   window.WindborneDiagnostics = Object.freeze({
-    version: "0.7.0",
-    worldAssets: 9,
-    buildings: 4,
-    cardAssets: 62,
-    mechanics: "unchanged from v0.6",
-    source: "approved-village concept extraction, authored surface and live UI",
+    version: "0.14.0",
+    theme: EmberTheme.definition.id,
+    worldAssets: Object.keys(EmberTheme.definition.art).length,
+    cardAssets: Object.keys(EmberData.byId).length,
+    renderer: "DOM + Canvas",
     new3DMeshes: false,
   });
   E.toggleWorldTime = toggle;

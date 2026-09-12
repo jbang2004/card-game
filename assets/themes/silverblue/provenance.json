@@ -1,0 +1,130 @@
+{
+  "assets": [
+    {
+      "name": "home",
+      "tool": "built-in image_gen.imagegen",
+      "prompt": "Use case: precise-object-edit. Asset type: production game scene bitmap, NOT a screenshot or mockup. Input image is the edit target. Remove ALL UI, text, logos, buttons, card previews, letters on the chalkboard and ornaments resembling controls. Reconstruct underlying scene wherever removed. Preserve exact warm cloud sea, central giant astronomical observatory, wooden tavern terrace travelers, white dragon right composition and original illustration lighting. Clean full scene plate. Keep reference polish, blue-silver/ice fantasy illustration palette with original warm lighting where present. Output full-bleed landscape 16:9 at high resolution. ZERO baked text, numbers, letters, logos, icons, interface controls, borders or watermarks anywhere.",
+      "source": "/Users/yijun/.codex/generated_images/01a0950d-d96d-7811-98dd-6331b594b26a/exec-63d0cc6f-c77f-415e-b174-d259943fe010.png",
+      "path": "/Users/yijun/.codex/generated_images/emberfall-silverblue-production/home.png",
+      "reference": "01-home.png",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "bytes": 2595916,
+      "visual_validation": "Inspected full output: no baked text, labels, controls, portraits-as-UI, or panel frames."
+    },
+    {
+      "name": "battle",
+      "tool": "built-in image_gen.imagegen",
+      "prompt": "Use case: precise-object-edit. Asset type: production game scene bitmap, NOT a screenshot or mockup. Input image is the edit target. Remove ALL interface elements, playing cards, hero portraits, text, buttons, panels, meters, icons and circular play markings. Restore a clean rectangular blue stone tabletop and midnight mountain tavern environment. Broad open blue stone play surface at x15-85% y18-76%. Preserve perspective, candle corners and night mountain vista. Absolutely no marks resembling UI. Keep reference polish, blue-silver/ice fantasy illustration palette with original warm lighting where present. Output full-bleed landscape 16:9 at high resolution. ZERO baked text, numbers, letters, logos, icons, interface controls, borders or watermarks anywhere.",
+      "source": "/Users/yijun/.codex/generated_images/01a0950d-d96d-7811-98dd-6331b594b26a/exec-392ae95b-c526-4a9c-af03-51f54e301772.png",
+      "path": "/Users/yijun/.codex/generated_images/emberfall-silverblue-production/battle.png",
+      "reference": "04-battle-desktop.png",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "bytes": 2680780,
+      "visual_validation": "Inspected full output: no baked text, labels, controls, portraits-as-UI, or panel frames."
+    },
+    {
+      "name": "map",
+      "tool": "built-in image_gen.imagegen",
+      "prompt": "Use case: precise-object-edit. Asset type: production game scene bitmap, NOT a screenshot or mockup. Input image is the edit target. Remove all text, logos, labels, routes, nodes, lock symbols, glowing selection rings, right character/info panel and portrait. Extend the illustrated six-region world map across the entire canvas. Preserve six geographic regions: burning fortress lower-left, golden giant tree upper-left, dark oracle citadel upper-middle, icy spire upper-right, volcanic dragon mountain mid-right, moon temple lower-middle. Seamless panoramic map artwork without interface. Keep reference polish, blue-silver/ice fantasy illustration palette with original warm lighting where present. Output full-bleed landscape 16:9 at high resolution. ZERO baked text, numbers, letters, logos, icons, interface controls, borders or watermarks anywhere.",
+      "source": "/Users/yijun/.codex/generated_images/01a0950d-d96d-7811-98dd-6331b594b26a/exec-61af60a7-d6d8-4334-8d80-832cdda8a879.png",
+      "path": "/Users/yijun/.codex/generated_images/emberfall-silverblue-production/map.png",
+      "reference": "03-map.png",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "bytes": 3138760,
+      "visual_validation": "Inspected full output: no baked text, labels, controls, portraits-as-UI, or panel frames."
+    },
+    {
+      "name": "backdrop",
+      "tool": "built-in image_gen.imagegen",
+      "prompt": "Use case: precise-object-edit. Asset type: production game scene bitmap, NOT a screenshot or mockup. Input image is the edit target. Remove ALL panels, text, logos, lines, buttons, controls, icons and interface. Reconstruct underlying midnight blue misty mountain scenery, celestial moon, distant illuminated mountain temples and lone traveler bottom-left. Softly defocused, dark quiet full-screen backdrop for functional UI; no sharp bright dominant objects in center. Keep reference polish, blue-silver/ice fantasy illustration palette with original warm lighting where present. Output full-bleed landscape 16:9 at high resolution. ZERO baked text, numbers, letters, logos, icons, interface controls, borders or watermarks anywhere.",
+      "source": "/Users/yijun/.codex/generated_images/01a0950d-d96d-7811-98dd-6331b594b26a/exec-e2cb7710-f186-4d59-916d-3d43fb00e3e6.png",
+      "path": "/Users/yijun/.codex/generated_images/emberfall-silverblue-production/backdrop.png",
+      "reference": "10-settings.png",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "bytes": 2199939,
+      "visual_validation": "Inspected full output: no baked text, labels, controls, portraits-as-UI, or panel frames."
+    },
+    {
+      "name": "mage",
+      "tool": "built-in image_gen.imagegen",
+      "prompt": "Use case: precise-object-edit. Asset type: production game scene bitmap, NOT a screenshot or mockup. Input image is the edit target. Remove ALL UI, text, logos, portrait picker, icons, graphs, cards, controls and right configuration panel. Preserve exact large central-left dark-haired female starfire mage, pose, costume, face, luminous warm star orb and moonlit observatory background. Fill right 40% with clean quiet navy atmospheric observatory scenery, very low contrast, no panel or border. Keep reference polish, blue-silver/ice fantasy illustration palette with original warm lighting where present. Output full-bleed landscape 16:9 at high resolution. ZERO baked text, numbers, letters, logos, icons, interface controls, borders or watermarks anywhere.",
+      "source": "/Users/yijun/.codex/generated_images/01a0950d-d96d-7811-98dd-6331b594b26a/exec-cc4df41b-04dc-4184-86df-a1f2ca04978c.png",
+      "path": "/Users/yijun/.codex/generated_images/emberfall-silverblue-production/mage.png",
+      "reference": "02-heroes.png",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "bytes": 2383204,
+      "visual_validation": "Inspected full output: no baked text, labels, controls, portraits-as-UI, or panel frames."
+    },
+    {
+      "name": "paladin",
+      "tool": "built-in image_gen.imagegen",
+      "prompt": "Use case: stylized-concept. Asset type: production fantasy game character showcase scene illustration. Create original blond male dawn guardian in intricately engraved silver-gold plate armor, dignified beautiful face, holding a sunlit sword upright. Character positioned centered at x40%, knees-up, fills left60% with dramatic flowing costume, face around x40% y23%. Midnight blue moonlit observatory and misty mountain castle background. Right40% must be clean quiet navy low-contrast scenery, no objects competing with future UI. Polished premium anime fantasy realism, delicate believable facial anatomy, finely detailed materials, silver blue ice palette, restrained warm magical accent. Landscape16:9 full bleed. ZERO baked text, letters, numbers, icons, logos, cards, frames, panel outlines, watermarks, UI or controls. This is original character illustration artwork, NOT a screenshot.",
+      "source": "/Users/yijun/.codex/generated_images/01a0950d-d96d-7811-98dd-6331b594b26a/exec-51ec409b-73ba-41d8-ba59-e684288ffdc6.png",
+      "path": "/Users/yijun/.codex/generated_images/emberfall-silverblue-production/paladin.png",
+      "reference": null,
+      "dimensions": [
+        1672,
+        941
+      ],
+      "bytes": 2491516,
+      "visual_validation": "Inspected full output: no baked text, labels, controls, portraits-as-UI, or panel frames."
+    },
+    {
+      "name": "ranger",
+      "tool": "built-in image_gen.imagegen",
+      "prompt": "Use case: stylized-concept. Asset type: production fantasy game character showcase scene illustration. Create original dark-haired elven female archer with elegant bow and flowing indigo cloak, beautiful face and refined leather-silver armor. Character positioned centered at x40%, knees-up, fills left60% with dramatic flowing costume, face around x40% y23%. Midnight blue moonlit observatory and misty mountain castle background. Right40% must be clean quiet navy low-contrast scenery, no objects competing with future UI. Polished premium anime fantasy realism, delicate believable facial anatomy, finely detailed materials, silver blue ice palette, restrained warm magical accent. Landscape16:9 full bleed. ZERO baked text, letters, numbers, icons, logos, cards, frames, panel outlines, watermarks, UI or controls. This is original character illustration artwork, NOT a screenshot.",
+      "source": "/Users/yijun/.codex/generated_images/01a0950d-d96d-7811-98dd-6331b594b26a/exec-5279b934-be57-46de-ab3c-398e493e2593.png",
+      "path": "/Users/yijun/.codex/generated_images/emberfall-silverblue-production/ranger.png",
+      "reference": null,
+      "dimensions": [
+        1672,
+        941
+      ],
+      "bytes": 2324154,
+      "visual_validation": "Inspected full output: no baked text, labels, controls, portraits-as-UI, or panel frames."
+    },
+    {
+      "name": "morla",
+      "tool": "built-in image_gen.imagegen",
+      "prompt": "Use case: stylized-concept. Asset type: production fantasy game character showcase scene illustration. Create original silver-haired female soul guide with a gently glowing lantern and flowing black and white robes, beautiful serene face. Character positioned centered at x40%, knees-up, fills left60% with dramatic flowing costume, face around x40% y23%. Midnight blue moonlit observatory and misty mountain castle background. Right40% must be clean quiet navy low-contrast scenery, no objects competing with future UI. Polished premium anime fantasy realism, delicate believable facial anatomy, finely detailed materials, silver blue ice palette, restrained warm magical accent. Landscape16:9 full bleed. ZERO baked text, letters, numbers, icons, logos, cards, frames, panel outlines, watermarks, UI or controls. This is original character illustration artwork, NOT a screenshot.",
+      "source": "/Users/yijun/.codex/generated_images/01a0950d-d96d-7811-98dd-6331b594b26a/exec-7a29e387-ce8d-44c6-b9b1-00232b180d0f.png",
+      "path": "/Users/yijun/.codex/generated_images/emberfall-silverblue-production/morla.png",
+      "reference": null,
+      "dimensions": [
+        1672,
+        941
+      ],
+      "bytes": 2391141,
+      "visual_validation": "Inspected full output: no baked text, labels, controls, portraits-as-UI, or panel frames."
+    },
+    {
+      "name": "goddess",
+      "tool": "built-in image_gen.imagegen",
+      "prompt": "Use case: precise-object-edit. Asset type: production game scene bitmap, NOT a screenshot or mockup. Input image is the edit target. Remove ALL UI, text, logos, cards, panels, buttons, meters, numbers and icons. Preserve exact moon goddess with flowing silver hair, black gown, celestial crescent crown, dark moon orb and moonlit ruins on left55%. Reconstruct flowing gown lower-left. Right45% quiet navy atmospheric scenery with no panel border and no UI. Keep reference polish, blue-silver/ice fantasy illustration palette with original warm lighting where present. Output full-bleed landscape 16:9 at high resolution. ZERO baked text, numbers, letters, logos, icons, interface controls, borders or watermarks anywhere.",
+      "source": "/Users/yijun/.codex/generated_images/01a0950d-d96d-7811-98dd-6331b594b26a/exec-877f7111-01f6-4ed0-aeaf-19c31fe5d26e.png",
+      "path": "/Users/yijun/.codex/generated_images/emberfall-silverblue-production/goddess.png",
+      "reference": "06-contracts.png",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "bytes": 2656151,
+      "visual_validation": "Inspected full output: no baked text, labels, controls, portraits-as-UI, or panel frames."
+    }
+  ]
+}

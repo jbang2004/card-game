@@ -1,7 +1,7 @@
 {
   "WORLD_ASSETS": "world-assets.js",
   "WINDBORNE_STYLE": "windborne.css",
-  "WINDBORNE_UI": "windborne-ui.js",
+  "WINDBORNE_UI": "application/scenery.js",
   "ANIME_ASSETS": "anime-assets.js",
   "ANIME_STYLE": "anime.css",
   "ANIME_UI": "anime-ui.js",
@@ -54,5 +54,12 @@
   "CONTRACT_UI": "application/contracts.js",
   "UI_ASSETS": "ui-assets.js",
   "DIALOG_LAYOUT": "presentation/dialog-layout.js",
-  "DIALOG_STYLE": "presentation/dialog-layout.css"
+  "DIALOG_STYLE": "presentation/dialog-layout.css",
+  "LEGACY_COMPONENT_STYLE": "presentation/legacy-components.css",
+  "SCREEN_STYLE": "presentation/screens.css",
+  "THEME_DEFINITION": "presentation/themes/silverblue.js",
+  "THEME_RUNTIME": "presentation/theme.js",
+  "SCREEN_HEROES": "application/screens/heroes.js",
+  "SCREEN_CAMPAIGN": "application/screens/campaign.js",
+  "SCREEN_PREFERENCES": "application/screens/preferences.js"
 }

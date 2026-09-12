@@ -10,8 +10,11 @@ const EmberContractUI = (() => {
     function show() {
       if (!game.s || EmberFX.busy) return;
       const s = game.s;
+      const deity = s.p.contracts.map(id => D.byId[id]).find(c => c.contract.divine)
+        || s.e.contracts.map(id => D.byId[id]).find(c => c.contract.divine);
+      const artwork = deity?.id === 'selmyra' ? EmberTheme.art('goddess') : deity ? A.card(deity) : EmberTheme.art('backdrop');
       showModal(
-        `<section class="modal-box covenant-box"><div class="covenant-heading"><h2>诸神契约</h2></div>${[
+        `<section class="modal-box covenant-box ${deity?.id === "selmyra" ? "covenant-panorama" : "covenant-portrait"}"><div class="scene-showcase" style="--scene-art:url('${artwork}')" aria-hidden="true"></div><div class="covenant-heading"><h2>诸神契约</h2></div>${[
           "p",
           "e",
         ]
@@ -19,7 +22,7 @@ const EmberContractUI = (() => {
             const p = s[side];
             const moon = p.contracts.some((id) => !D.byId[id].contract.ritual);
             return `<section class="covenant-side"><h3>${side === "p" ? "你的契约" : "敌方公开契约"} <span>${moon ? `灵魂 ${p.souls.length} · 阵亡 ${p.fallen}` : "公开唤醒进度"}</span></h3>${moon ? `<p class="soul-ledger">${p.souls.map((id) => D.byId[id].name).join(" · ") || "尚无灵魂印记"} · 同名仅一枚，按获得顺序消耗。</p>` : ""}<div class="covenant-grid">${
-              p.contracts
+              [...p.contracts].sort((a,b) => Number(!!D.byId[b].contract.divine)-Number(!!D.byId[a].contract.divine))
                 .map((id) => {
                   const c = D.byId[id],
                     used = p.usedContracts.includes(id),

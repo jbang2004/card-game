@@ -1,0 +1,2394 @@
+/* Layout contracts only. All materials and colors live in components.css.
+ * Desktop battle uses the shared 1600×940 input plane; dialogs use CSS pixels. */
+body .topbar {
+  height: 78px;
+  padding: 0 38px;
+  gap: 36px;
+}
+body .top-nav {
+  gap: 36px;
+  margin-left: 28px;
+}
+body .top-actions {
+  gap: 10px;
+  margin-left: auto;
+}
+body .local-status {
+  font-size: 11px;
+}
+body #lobby {
+  inset: 0;
+}
+body .lobby-art,
+body .lobby-world-label,
+body .lobby-feature,
+body .starfire-seal {
+  display: none;
+}
+body .lobby-copy {
+  position: absolute;
+  left: 68px;
+  top: 190px;
+  width: 445px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  text-align: left;
+}
+body .lobby-copy::before,
+body .lobby-copy::after {
+  display: none;
+}
+body .lobby-copy .eyebrow {
+  font-size: 12px;
+  letter-spacing: 6px;
+  margin-bottom: 26px;
+  color: var(--ink-secondary);
+}
+body .lobby-title {
+  font: 400 146px/1.05 var(--ui-display);
+  letter-spacing: 15px;
+  margin: 0 0 24px;
+  color: var(--ink);
+  text-shadow: 0 5px 40px var(--title-shadow);
+}
+body .lobby-title span {
+  color: inherit;
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  font-size: inherit;
+}
+body .lobby-chinese {
+  font: 400 35px/1.5 var(--ui-display);
+  letter-spacing: 5px;
+  margin: 0;
+  color: var(--ink);
+}
+body .lobby-tagline {
+  display: block;
+  font: 400 19px/1.6 var(--ui-display);
+  letter-spacing: 3px;
+  margin: 8px 0 0;
+  color: var(--ink);
+}
+body .lobby-desc {
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--ink-secondary);
+  margin: 25px 0 0;
+}
+body .lobby-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+  width: 325px;
+  margin-top: 40px;
+}
+body .lobby-actions .gold-btn,
+body .lobby-actions .ghost-btn {
+  height: 70px;
+  min-height: 70px;
+  width: 100%;
+  font-size: 25px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 35px;
+  clip-path: polygon(5% 0, 95% 0, 100% 50%, 95% 100%, 5% 100%, 0 50%);
+}
+body .lobby-collection {
+  position: absolute;
+  left: auto;
+  right: 52px;
+  top: auto;
+  bottom: 116px;
+  width: 330px;
+  height: 242px;
+  transform: none;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+body .lobby-collection .section-label {
+  display: none;
+}
+body .lobby-card {
+  position: absolute;
+  left: 17px;
+  top: 36px;
+  width: 128px;
+  height: 190px;
+  transform: rotate(-6deg);
+  filter: none;
+}
+body .lobby-card.two {
+  left: 172px;
+  top: 25px;
+  transform: rotate(6deg);
+}
+body .lobby-card .card {
+  width: 100%;
+  height: 100%;
+}
+body #lobby-library-btn {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  bottom: auto;
+  height: 38px;
+  text-align: left;
+  background: none;
+  border: 0;
+  font: 400 20px var(--ui-display);
+  color: var(--ink);
+  padding: 0 14px;
+}
+body .lobby-bottom {
+  left: 65px;
+  right: 65px;
+  bottom: 31px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-secondary);
+  font-size: 12px;
+}
+body .lobby-bottom > div {
+  gap: 22px;
+}
+body .lobby-bottom b {
+  color: var(--ink);
+  font-weight: 400;
+}
+body #atelier-open {
+  left: auto;
+  right: 50px;
+  bottom: 73px;
+  top: auto;
+  background: none;
+  border: 0;
+  color: var(--ink-secondary);
+  font-size: 12px;
+  box-shadow: none;
+}
+body #atelier-open small {
+  display: none;
+}
+
+/* Dedicated large workspaces; popovers retain compact geometry. */
+body #modal.folio-host[data-type="heroes"],
+body #modal.folio-host[data-type="library"],
+body #modal.folio-host[data-type="map"],
+body #modal.folio-host[data-type="contracts"] {
+  padding: 0;
+  backdrop-filter: none;
+}
+body
+  #modal.folio-host
+  > :is(.hero-chooser, .library-box, .adventure-atlas, .covenant-box) {
+  --dialog-width: 100vw;
+  max-width: 100vw;
+  width: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  border: 0;
+  border-radius: 0;
+  padding: 30px 42px;
+  gap: 20px;
+  background-image:
+    var(--workspace-veil), var(--scene-backdrop);
+  background-size: cover;
+}
+body
+  #modal.folio-host
+  > :is(.hero-chooser, .library-box, .adventure-atlas, .covenant-box)::before {
+  display: none;
+}
+body #modal.folio-host > .hero-chooser {
+  isolation: isolate;
+  background: var(--surface);
+}
+body #modal.folio-host .hero-chooser > .scene-showcase {
+  position: absolute;
+  inset: 0;
+  background-position: 40% center;
+  z-index: -1;
+}
+body #modal.folio-host[data-type="heroes"] .hero-chooser > .modal-heading {
+  border: 0;
+  flex: none;
+  z-index: 1;
+  padding-bottom: 0;
+}
+body #modal.folio-host[data-type="heroes"] .modal-heading h2 {
+  font-size: 29px;
+}
+body #modal.folio-host[data-type="heroes"] .modal-heading p,
+body #modal.folio-host[data-type="heroes"] .modal-heading .eyebrow {
+  display: none;
+}
+body #modal.folio-host[data-type="heroes"] > .folio-dialog > .folio-pane {
+  flex: 1;
+  position: relative;
+}
+body #modal.folio-host[data-type="heroes"] .folio-viewport {
+  flex: 1;
+}
+body #modal.folio-host[data-type="heroes"] .hero-single-sheet {
+  display: grid;
+  grid-template-columns: 220px minmax(80px, 1fr) minmax(350px, 36%);
+  min-height: 100%;
+  align-items: start;
+  padding: 20px 0;
+}
+body #modal.folio-host[data-type="heroes"] .hero-roster {
+  grid-column: 1;
+  margin: 0;
+  position: sticky;
+  top: 0;
+}
+body #modal.folio-host[data-type="heroes"] .hero-roster-heading {
+  display: none;
+}
+body #modal.folio-host[data-type="heroes"] .hero-options {
+  display: flex;
+  flex-direction: column;
+  gap: 27px;
+  align-items: stretch;
+}
+body #modal.folio-host[data-type="heroes"] .hero-option {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 17px;
+  padding: 6px;
+  min-height: 84px;
+  overflow: visible;
+}
+body #modal.folio-host[data-type="heroes"] .hero-option > img {
+  width: 74px;
+  height: 74px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: none;
+}
+body #modal.folio-host[data-type="heroes"] .hero-option .hero-option-text {
+  padding: 0;
+  display: block;
+  width: auto;
+  flex: 1;
+}
+body #modal.folio-host[data-type="heroes"] .hero-option h3 {
+  font: 400 19px/1.4 var(--ui-display);
+  white-space: normal;
+}
+body #modal.folio-host[data-type="heroes"] .hero-option :is(em, small) {
+  display: none;
+}
+body #modal.folio-host[data-type="heroes"] .hero-option .selected-check {
+  position: absolute;
+  left: 57px;
+  top: 60px;
+  width: 21px;
+  height: 21px;
+  padding: 3px;
+}
+body #modal.folio-host[data-type="heroes"] .hero-configuration {
+  grid-column: 3;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  margin: 0;
+  padding: 0 6px 0 18px;
+  background: transparent;
+  min-width: 0;
+}
+body #modal.folio-host[data-type="heroes"] .hero-configuration > * {
+  grid-column: 1;
+  margin: 0;
+}
+body #modal.folio-host[data-type="heroes"] .hero-config-intro {
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+body #modal.folio-host[data-type="heroes"] .hero-config-intro .hero-deck-note {
+  font-size: 12px;
+}
+body #modal.folio-host[data-type="heroes"] .config-kicker {
+  display: none;
+}
+body #modal.folio-host[data-type="heroes"] .hero-composition {
+  padding: 13px 0;
+  border: 0;
+  border-block: 1px solid var(--line);
+  background: transparent;
+}
+body #modal.folio-host[data-type="heroes"] .comp-head h4 {
+  font: 400 18px var(--ui-display);
+}
+body #modal.folio-host[data-type="heroes"] .comp-curve {
+  height: 72px;
+}
+body #modal.folio-host[data-type="heroes"] .hero-config-plan {
+  font-size: 12px;
+}
+body #modal.folio-host[data-type="heroes"] .hero-config-contract {
+  font-size: 13px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+body #modal.folio-host[data-type="heroes"] .hero-config-contract label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 10px 0;
+  line-height: 1.6;
+  flex-wrap: wrap;
+}
+body #modal.folio-host[data-type="heroes"] .hero-config-contract label span {
+  width: 100%;
+  font-size: 12px;
+}
+body #modal.folio-host[data-type="heroes"] .modal-footer {
+  margin-left: auto;
+  width: 38%;
+  border: 0;
+  flex-wrap: nowrap;
+  z-index: 1;
+}
+body #modal.folio-host[data-type="heroes"] .modal-footer button {
+  flex: 1;
+  min-height: 52px;
+  font-size: 18px;
+}
+
+/* Collection: independently scrolling cards and deck, always-visible actions. */
+body #modal.folio-host .library-box {
+  gap: 15px;
+}
+body #modal.folio-host .library-heading {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+body #modal.folio-host .library-heading h2 {
+  font-size: 32px;
+}
+body #modal.folio-host .library-heading p {
+  font-size: 12px;
+}
+body #modal.folio-host .library-heading input {
+  width: 340px;
+  margin-left: auto;
+  height: 44px;
+}
+body #modal.folio-host .library-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 26px;
+  flex: 1;
+  min-height: 0;
+}
+body #modal.folio-host .library-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  min-width: 0;
+}
+body #modal.folio-host .library-main > .folio-pane {
+  flex: 1;
+}
+body #modal.folio-host .library-main .folio-viewport {
+  flex: 1;
+}
+body #modal.folio-host #library-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 25px 20px;
+  padding: 12px 12px 25px;
+  align-content: start;
+}
+body #modal.folio-host .library-item {
+  padding: 0;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+  overflow: visible;
+}
+body #modal.folio-host .library-item .card {
+  width: 100%;
+  max-width: none;
+}
+body #modal.folio-host .library-item .library-count {
+  position: static;
+  text-align: center;
+  margin-top: 9px;
+  background: none;
+  color: var(--ink-secondary);
+  font-size: 12px;
+}
+body #modal.folio-host .filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  padding: 0 0 12px;
+  margin: 0;
+}
+body #modal.folio-host .filter-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+body #modal.folio-host .filter-btn {
+  font-size: 12px;
+  min-height: 34px;
+  padding: 5px 12px;
+  border-color: transparent;
+}
+body #modal.folio-host .filter-btn.mana {
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0;
+  border-radius: 50%;
+}
+body #modal.folio-host .filter-btn.mana:first-child {
+  width: 45px;
+  border-radius: 4px;
+}
+body #modal.folio-host .deck-editor {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+body #modal.folio-host .deck-editor > .folio-pane {
+  flex: 1;
+}
+body #modal.folio-host .deck-editor .folio-viewport {
+  flex: 1;
+}
+body #modal.folio-host .deck-row {
+  min-height: 35px;
+  margin: 5px 0;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+body #modal.folio-host .deck-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 12px;
+  flex: none;
+  border-top: 1px solid var(--line);
+}
+body #modal.folio-host .deck-actions button {
+  flex: 1;
+  min-width: 85px;
+  padding: 8px;
+  font-size: 13px;
+}
+body #modal.folio-host .touch-library-tabs {
+  display: none;
+}
+
+/* Reward, opening-hand and result screens keep the decision centered. */
+body #modal.folio-host > .mulligan-box {
+  --dialog-width: 1160px;
+  padding: 36px 50px;
+}
+body:not(.mobile-portrait):not(.mobile-landscape) #modal.folio-host > .modal-box:has(.discover-options) {
+  --dialog-width: 1040px;
+}
+body #modal.folio-host .card-detail-art {
+  padding: 12px 20px 22px;
+  box-sizing: border-box;
+}
+body #modal.folio-host > .rewards-box {
+  --dialog-width: 1240px;
+  padding: 36px 45px;
+  background: var(--reward-veil), var(--scene-backdrop);
+  background-size: cover;
+}
+body #modal.folio-host .mulligan-box .modal-heading,
+body #modal.folio-host .rewards-box .modal-heading,
+body #modal.folio-host .result-box .modal-heading {
+  text-align: center;
+}
+body #modal.folio-host .mulligan-cards,
+body #modal.folio-host .discover-options {
+  justify-content: center;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 230px));
+  gap: 40px;
+  margin: 20px 0;
+  padding: 10px 18px 30px;
+}
+body #modal.folio-host .mulligan-box .modal-footer {
+  justify-content: center;
+}
+body #modal.folio-host .mulligan-box .modal-footer button {
+  min-width: 330px;
+  font-size: 23px;
+  min-height: 60px;
+}
+body #modal.folio-host .mulligan-box > .folio-pane + .modal-footer {
+  border: 0;
+}
+body #modal.folio-host .relic-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 26px;
+  margin: 15px 0 25px;
+}
+body #modal.folio-host .relic-choice {
+  padding: 10px 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+body #modal.folio-host .relic-art {
+  width: 100%;
+  height: 190px;
+  display: grid;
+  place-items: center;
+}
+body #modal.folio-host .relic-art img {
+  width: 160px;
+  height: 160px;
+}
+body #modal.folio-host .relic-choice h3 {
+  font: 400 25px var(--ui-display);
+  letter-spacing: 2px;
+  margin: 18px 0;
+}
+body #modal.folio-host .relic-choice p {
+  line-height: 1.8;
+  font-size: 16px;
+  flex: 1;
+  margin: 0 0 18px;
+}
+body #modal.folio-host .relic-pick-label {
+  display: block;
+  width: 100%;
+  padding: 13px 0;
+  font-size: 15px;
+}
+body #modal.folio-host > .result-box {
+  --dialog-width: 980px;
+  text-align: center;
+  background: var(--result-veil);
+  border: 0;
+  box-shadow: none;
+  padding: 40px;
+}
+body #modal.folio-host .result-box::before {
+  display: none;
+}
+body #modal.folio-host .result-sigil {
+  width: 160px;
+  height: 150px;
+  margin: 0 auto 15px;
+  display: grid;
+  place-items: center;
+}
+body #modal.folio-host .result-sigil svg {
+  width: 100px;
+  height: 100px;
+  color: var(--accent);
+}
+body #modal.folio-host .result-title {
+  font-size: 76px;
+  letter-spacing: 12px;
+  margin: 12px 0;
+}
+body #modal.folio-host .result-sub {
+  font-size: 11px;
+  letter-spacing: 5px;
+  color: var(--ink-secondary);
+}
+body #modal.folio-host .boss-quote {
+  font: 400 20px/1.8 var(--ui-display);
+  letter-spacing: 2px;
+}
+body #modal.folio-host .result-stats {
+  display: flex;
+  justify-content: center;
+  gap: 70px;
+  padding: 25px;
+  margin: 25px 0;
+}
+body #modal.folio-host .result-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+body #modal.folio-host .result-stats strong {
+  font-size: 60px;
+  line-height: 1.2;
+}
+body #modal.folio-host .result-box .modal-footer {
+  justify-content: center;
+  gap: 30px;
+  border: 0;
+}
+body #modal.folio-host .result-box .modal-footer button {
+  min-width: 260px;
+  min-height: 60px;
+  font-size: 23px;
+}
+
+/* Map: painterly terrain, live anchors and a readable dossier. */
+body #modal.folio-host > .adventure-atlas {
+  padding: 25px 35px;
+  gap: 12px;
+  background: var(--surface);
+}
+body #modal.folio-host .adventure-atlas > .modal-heading {
+  border: 0;
+}
+body #modal.folio-host .adventure-atlas .folio-pane {
+  flex: 1;
+}
+body #modal.folio-host .adventure-atlas .folio-viewport {
+  flex: 1;
+  overflow: hidden;
+}
+body #modal.folio-host .adventure-atlas .modal-scroll {
+  height: 100%;
+  display: flex;
+  gap: 24px;
+}
+body .atlas-stage {
+  position: relative;
+  flex: 1;
+  min-height: 360px;
+  aspect-ratio: auto;
+  background-image: var(--scene-art);
+  background-size: cover;
+  background-position: center;
+  border: 0;
+  overflow: hidden;
+  border-radius: 0;
+  box-shadow: none;
+}
+body .atlas-stage::before,
+body .atlas-stage::after,
+.atlas-cartography,
+.atlas-corners {
+  display: none;
+}
+body .atlas-location {
+  position: absolute;
+  width: 160px;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  padding: 0;
+}
+body .atlas-location:nth-of-type(1) {
+  left: 16%;
+  top: 63%;
+}
+body .atlas-location:nth-of-type(2) {
+  left: 33%;
+  top: 34%;
+}
+body .atlas-location:nth-of-type(3) {
+  left: 56%;
+  top: 18%;
+}
+body .atlas-location:nth-of-type(4) {
+  left: 82%;
+  top: 30%;
+}
+body .atlas-location:nth-of-type(5) {
+  left: 81%;
+  top: 62%;
+}
+body .atlas-location:nth-of-type(6) {
+  left: 58%;
+  top: 83%;
+}
+body .atlas-node {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 65px;
+  width: 100%;
+  padding: 8px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  box-shadow: none;
+  color: var(--ink);
+  transform: none;
+}
+body .atlas-node[aria-pressed="true"] {
+  background: var(--surface-glass);
+  border-color: var(--accent);
+  box-shadow: 0 0 20px var(--selection-glow);
+}
+body .atlas-node .atlas-landmark {
+  position: relative;
+  width: 45px;
+  height: 45px;
+  flex: none;
+  background: var(--surface);
+  border: 1px solid var(--line-bright);
+  border-radius: 50%;
+  box-shadow: none;
+  clip-path: none;
+}
+body .atlas-node .atlas-portrait {
+  display: none;
+}
+body .atlas-pennant {
+  display: none;
+}
+body .atlas-number {
+  position: static;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font: 400 20px var(--ui-display);
+  color: var(--ink);
+  background: none;
+  border: 0;
+  transform: none;
+  box-shadow: none;
+}
+body .atlas-location-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: left;
+  padding: 0;
+  background: none;
+  border: 0;
+}
+body .atlas-name {
+  font: 400 15px var(--ui-display);
+  color: var(--ink);
+  text-shadow: none;
+}
+body .atlas-boss {
+  display: none;
+}
+body .atlas-status {
+  font-size: 10px;
+  color: var(--ink-secondary);
+}
+body .atlas-paths {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  filter: drop-shadow(0 0 3px var(--accent));
+  z-index: 0;
+}
+body .atlas-paths path {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  fill: none;
+}
+body .atlas-location {
+  z-index: 1;
+}
+.atlas-dossier {
+  width: 280px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: auto;
+  padding: 0 0 10px 10px;
+}
+.atlas-dossier > img {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  object-position: 50% 30%;
+  border: 1px solid var(--line);
+}
+.atlas-dossier h3 {
+  font: 400 30px var(--ui-display);
+  margin: 0;
+}
+.atlas-dossier p {
+  font-size: 14px;
+  line-height: 1.8;
+  margin: 0;
+}
+.atlas-dossier dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 12px;
+  border-block: 1px solid var(--line);
+  padding: 18px 0;
+  font-size: 13px;
+}
+.atlas-dossier dd {
+  margin: 0;
+  color: var(--ink);
+}
+.atlas-dossier dt {
+  color: var(--ink-secondary);
+}
+body .atlas-footer {
+  position: static;
+  background: none;
+  border-color: var(--line);
+  min-height: 60px;
+}
+body .atlas-footer::before {
+  display: none;
+}
+body .atlas-heading {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+body .atlas-emblem {
+  width: 54px;
+  height: 54px;
+  color: var(--accent);
+}
+body .atlas-emblem svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+}
+body .atlas-kicker {
+  color: var(--ink-secondary);
+}
+body .atlas-chapter {
+  margin-left: auto;
+  color: var(--ink);
+}
+body .atlas-chapter strong {
+  color: var(--accent);
+}
+body .atlas-loading {
+  background: var(--surface);
+  color: var(--ink);
+}
+body .atlas-focus {
+  color: var(--ink);
+}
+body .atlas-focus span,
+body .atlas-relic-empty {
+  color: var(--ink-secondary);
+}
+
+/* Utility pages are functional information layouts, not picture backgrounds. */
+body #modal.folio-host > .settings-box {
+  --dialog-width: 1080px;
+  padding: 30px 40px;
+}
+body #modal.folio-host .settings-box .modal-scroll {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+}
+body #modal.folio-host .settings-section {
+  margin: 0;
+}
+body #modal.folio-host .settings-section-heading {
+  margin: 0 0 12px;
+  padding: 0 0 12px;
+  font-size: 18px;
+}
+body #modal.folio-host .setting-row {
+  padding: 16px 12px;
+  gap: 20px;
+  min-height: 85px;
+}
+body #modal.folio-host .setting-copy h3 {
+  font-size: 15px;
+  margin: 0 0 6px;
+}
+body #modal.folio-host .setting-copy p {
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0;
+}
+body #modal.folio-host .audio-sliders {
+  display: grid;
+  gap: 25px;
+  padding: 20px;
+}
+body #modal.folio-host .audio-level {
+  display: grid;
+  grid-template-columns: 1fr 50px;
+  gap: 14px;
+}
+body #modal.folio-host .audio-level input {
+  grid-row: 2;
+  grid-column: 1/-1;
+  width: 100%;
+}
+body #modal.folio-host .audio-level output {
+  grid-column: 2;
+  grid-row: 1;
+}
+body #modal.folio-host > .help-box {
+  --dialog-width: 1280px;
+  padding: 30px 40px;
+}
+body #modal.folio-host .help-box .modal-scroll {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  gap: 30px;
+}
+body #modal.folio-host .help-toc {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  position: sticky;
+  top: 0;
+  align-self: start;
+}
+body #modal.folio-host .help-toc button {
+  text-align: left;
+  padding: 14px;
+  font-size: 14px;
+}
+body #modal.folio-host .help-columns {
+  display: block;
+  columns: auto;
+  margin: 0;
+}
+body #modal.folio-host .help-section {
+  margin: 0 0 30px;
+  padding: 0 0 25px;
+  border-bottom: 1px solid var(--line);
+}
+body #modal.folio-host .help-section h3 {
+  font-size: 24px;
+  margin: 0 0 14px;
+}
+body #modal.folio-host .help-section p {
+  font-size: 15px;
+  line-height: 1.9;
+}
+body #modal.folio-host .key-table {
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+/* Contract presentation: each public contract remains inspectable. */
+body #modal.folio-host .covenant-box .folio-pane {
+  flex: 1;
+}
+body #modal.folio-host .covenant-box .folio-viewport {
+  flex: 1;
+}
+body #modal.folio-host .covenant-box .modal-scroll {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+body #modal.folio-host .covenant-side {
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+body #modal.folio-host .covenant-side > h3 {
+  font: 400 24px var(--ui-display);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 15px;
+}
+body #modal.folio-host .covenant-side > h3 span {
+  display: block;
+  font: 12px var(--ui-font);
+  margin-top: 12px;
+  color: var(--ink-secondary);
+}
+body #modal.folio-host .covenant-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+body #modal.folio-host .covenant-card {
+  display: grid;
+  grid-template-columns: 38% minmax(0, 1fr);
+  padding: 15px;
+  gap: 20px;
+}
+body #modal.folio-host .covenant-card > img {
+  width: 100%;
+  height: 100%;
+  max-height: 430px;
+  min-height: 230px;
+  object-fit: cover;
+  object-position: center;
+}
+body #modal.folio-host .covenant-copy {
+  padding: 0;
+  min-width: 0;
+}
+body #modal.folio-host .covenant-copy h4 {
+  font: 400 25px/1.4 var(--ui-display);
+  margin: 12px 0;
+}
+body #modal.folio-host .covenant-copy p {
+  font-size: 13px;
+  line-height: 1.7;
+}
+body #modal.folio-host .covenant-copy .gold-btn {
+  width: 100%;
+  padding: 12px 8px;
+  font-size: 16px;
+}
+body #modal.folio-host .ritual-mark {
+  display: none;
+}
+body #modal.folio-host .ritual-stones {
+  display: flex;
+  height: 5px;
+  margin: 8px 0 15px;
+}
+body #modal.folio-host .ritual-count {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  gap: 8px;
+}
+
+/* Desktop board and command rails. Hit boxes share viewport coordinates. */
+body:not(.touch-layout) .campaign-panel {
+  display: block;
+  left: 25px;
+  top: 128px;
+  width: 222px;
+  padding: 20px;
+}
+body:not(.touch-layout) .campaign-panel .path-list {
+  display: block;
+  margin-top: 22px;
+}
+body:not(.touch-layout) .campaign-panel .path-node {
+  font-size: 12px;
+  min-height: 43px;
+  display: flex;
+  align-items: center;
+  padding: 8px;
+}
+body:not(.touch-layout) .chapter-name {
+  font: 400 25px var(--ui-display);
+  margin: 12px 0;
+}
+body:not(.touch-layout) .chapter-sub {
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+body:not(.touch-layout) .boss-panel {
+  left: 1350px;
+  right: auto;
+  top: 128px;
+  width: 225px;
+  padding: 20px;
+  display: block;
+}
+body:not(.touch-layout) .boss-info-name {
+  font: 400 24px var(--ui-display);
+}
+body:not(.touch-layout) .boss-power-info,
+body:not(.touch-layout) .phase-info {
+  font-size: 12px;
+  line-height: 1.7;
+}
+body:not(.touch-layout) #intel-toggle {
+  top: 83px;
+  left: 1390px;
+  width: 185px;
+}
+body:not(.touch-layout) #log-toggle {
+  left: 25px;
+  top: 585px;
+  width: 222px;
+}
+body:not(.touch-layout) .log-panel {
+  left: 25px;
+  top: 630px;
+  width: 240px;
+  max-height: 240px;
+  padding: 12px;
+}
+body:not(.touch-layout) .hero.enemy {
+  left: 737px;
+  top: 93px;
+  width: 126px;
+  height: 151px;
+}
+body:not(.touch-layout) .hero.player {
+  left: 737px;
+  top: 566px;
+  width: 126px;
+  height: 154px;
+}
+body:not(.touch-layout) .enemy-mana {
+  left: 915px;
+  top: 160px;
+}
+body:not(.touch-layout) .enemy-hand {
+  left: 520px;
+  top: 55px;
+  width: 550px;
+  height: 70px;
+  opacity: 0.8;
+}
+body:not(.touch-layout) .arena {
+  left: 270px;
+  top: 245px;
+  width: 1060px;
+  height: 316px;
+}
+body:not(.touch-layout) .turn-controls {
+  left: 1390px;
+  top: 626px;
+  width: 152px;
+}
+body:not(.touch-layout) .turn-controls .end-turn {
+  width: 152px;
+  height: 108px;
+  border-radius: 50%;
+  font-size: 23px;
+}
+body:not(.touch-layout) .turn-number {
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+body:not(.touch-layout) .turn-shortcut {
+  font-size: 9px;
+  margin-top: 9px;
+}
+body:not(.touch-layout) .mana-panel {
+  left: 1100px;
+  top: 638px;
+  width: 218px;
+  padding: 10px;
+}
+body:not(.touch-layout) .mana-caption {
+  font-size: 12px;
+}
+body:not(.touch-layout) .power-button {
+  left: 904px;
+  top: 635px;
+  width: 62px;
+  height: 62px;
+}
+body:not(.touch-layout) .contract-open {
+  left: 410px;
+  top: 635px;
+  width: 244px;
+  min-height: 60px;
+}
+body:not(.touch-layout) .hand-zone {
+  left: 240px;
+  top: 749px;
+  width: 1120px;
+  height: 181px;
+  padding: 0 10px;
+}
+body:not(.touch-layout) .hand-label {
+  left: 335px;
+  top: 721px;
+  width: 650px;
+}
+body:not(.touch-layout) .player-deck {
+  left: 1290px;
+  top: 770px;
+}
+body:not(.touch-layout) .enemy-deck {
+  left: 1275px;
+  top: 145px;
+}
+body:not(.touch-layout) .hero-caption,
+body:not(.touch-layout) .hero-side-label {
+  display: none;
+}
+body:not(.touch-layout) .board-empty {
+  left: 400px;
+  top: 467px;
+  width: 800px;
+}
+body:not(.touch-layout) .board-props {
+  opacity: 0.4;
+}
+
+/* Size changes are geometry-only: no alternate mobile color palette. */
+@media (min-width: 1900px) {
+  body #modal.folio-host #library-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+@media (max-width: 1200px) {
+  body #modal.folio-host #library-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  body #modal.folio-host .library-layout {
+    grid-template-columns: minmax(0, 1fr) 285px;
+    gap: 20px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-single-sheet {
+    grid-template-columns: 170px minmax(20px, 1fr) minmax(330px, 40%);
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option > img {
+    width: 57px;
+    height: 57px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option h3 {
+    font-size: 16px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option .selected-check {
+    left: 42px;
+    top: 44px;
+  }
+  body #modal.folio-host[data-type="heroes"] .modal-footer {
+    width: 42%;
+  }
+  body #modal.folio-host .covenant-box .modal-scroll {
+    grid-template-columns: 1fr;
+  }
+  .atlas-dossier {
+    width: 230px;
+  }
+}
+@media (max-width: 850px) {
+  body
+    #modal.folio-host
+    > :is(.hero-chooser, .library-box, .adventure-atlas, .covenant-box) {
+    padding: 18px 20px;
+  }
+  body #modal.folio-host .library-layout {
+    grid-template-columns: 1fr;
+  }
+  body #modal.folio-host .touch-library-tabs {
+    display: flex;
+    gap: 10px;
+  }
+  body #modal.folio-host .touch-library-tabs button {
+    flex: 1;
+    min-height: 42px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+  }
+  body #modal.folio-host .library-box:not(.touch-show-deck) .deck-editor {
+    display: none;
+  }
+  body #modal.folio-host .library-box.touch-show-deck .library-main {
+    display: none;
+  }
+  body #modal.folio-host .library-heading {
+    display: block;
+  }
+  body #modal.folio-host .library-heading input {
+    width: 100%;
+    margin: 12px 0 0;
+  }
+  body #modal.folio-host #library-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  body #modal.folio-host .settings-box .modal-scroll {
+    grid-template-columns: 1fr;
+  }
+  body #modal.folio-host .help-box .modal-scroll {
+    grid-template-columns: 1fr;
+  }
+  body #modal.folio-host .help-toc {
+    position: static;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  body #modal.folio-host .relic-options {
+    gap: 12px;
+  }
+  body #modal.folio-host .relic-choice {
+    padding: 8px 10px 0;
+  }
+  body #modal.folio-host .relic-art {
+    height: 120px;
+  }
+  body #modal.folio-host .relic-art img {
+    width: 100px;
+    height: 100px;
+  }
+  body #modal.folio-host .relic-choice h3 {
+    font-size: 20px;
+  }
+  body #modal.folio-host .adventure-atlas .modal-scroll {
+    flex-direction: column;
+  }
+  .atlas-dossier {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 10px;
+    max-height: 160px;
+    padding: 0;
+  }
+  .atlas-dossier > img {
+    width: 80px;
+    height: 100px;
+    grid-row: 1/4;
+  }
+  .atlas-dossier h3 {
+    font-size: 21px;
+  }
+  .atlas-dossier p {
+    font-size: 12px;
+  }
+  .atlas-dossier dl {
+    display: none;
+  }
+  body .atlas-location {
+    width: 125px;
+  }
+  body .atlas-node {
+    padding: 5px;
+    gap: 5px;
+  }
+  body .atlas-name {
+    font-size: 12px;
+  }
+  body .atlas-node .atlas-landmark {
+    width: 33px;
+    height: 33px;
+  }
+}
+@media (max-width: 600px) {
+  body #modal.folio-host > .folio-dialog {
+    --inset: 18px;
+    padding: 18px;
+    gap: 14px;
+  }
+  body #modal.folio-host h2 {
+    font-size: 26px;
+    letter-spacing: 2px;
+  }
+  body #modal.folio-host .modal-heading p {
+    font-size: 12px;
+  }
+  body #modal.folio-host .modal-footer button {
+    min-height: 46px;
+    padding: 9px 15px;
+  }
+  body #modal.folio-host #library-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 23px 20px;
+    padding: 12px;
+  }
+  body #modal.folio-host .filter-btn {
+    padding: 4px 8px;
+  }
+  body #modal.folio-host .library-heading input {
+    height: 40px;
+  }
+  body #modal.folio-host .library-foot {
+    font-size: 10px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-single-sheet {
+    display: block;
+    padding: 0;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-roster {
+    position: relative;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-options {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option {
+    flex-direction: column;
+    gap: 8px;
+    padding: 5px 0;
+    min-height: 100px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option > img {
+    width: 54px;
+    height: 54px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option h3 {
+    font-size: 13px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option .selected-check {
+    left: calc(50% + 12px);
+    top: 41px;
+    width: 18px;
+    height: 18px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-configuration {
+    display: grid;
+    padding: 22px 15px;
+    margin-top: 165px;
+    background: var(--surface-glass);
+    border: 1px solid var(--line);
+    gap: 15px;
+  }
+  body #modal.folio-host[data-type="heroes"] .modal-footer {
+    width: 100%;
+    margin: 0;
+  }
+  body #modal.folio-host[data-type="heroes"] .modal-footer button {
+    font-size: 16px;
+  }
+  body #modal.folio-host .hero-chooser > .scene-showcase {
+    background-position: 34% top;
+    background-size: auto 680px;
+    background-repeat: no-repeat;
+  }
+  .hero-profile-heading h3 {
+    font-size: 29px;
+  }
+  body #modal.folio-host .mulligan-cards,
+  body #modal.folio-host .discover-options {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 20px 14px;
+    padding: 14px 8px;
+    margin: 0;
+  }
+  body #modal.folio-host .mulligan-box .modal-footer button {
+    min-width: 0;
+    width: 100%;
+    font-size: 18px;
+  }
+  body #modal.folio-host .relic-options {
+    grid-template-columns: 1fr;
+  }
+  body #modal.folio-host .relic-choice {
+    display: grid;
+    grid-template-columns: 95px 1fr;
+    text-align: left;
+    gap: 8px 12px;
+    padding: 14px;
+  }
+  body #modal.folio-host .relic-art {
+    width: 95px;
+    height: 95px;
+    grid-row: 1/4;
+  }
+  body #modal.folio-host .relic-choice h3 {
+    margin: 0;
+    font-size: 21px;
+  }
+  body #modal.folio-host .relic-choice p {
+    margin: 0;
+    font-size: 16px;
+  }
+  body #modal.folio-host .relic-pick-label {
+    padding: 8px 0;
+    font-size: 13px;
+  }
+  body #modal.folio-host .result-title {
+    font-size: 46px;
+    letter-spacing: 5px;
+  }
+  body #modal.folio-host .result-sigil {
+    height: 95px;
+    width: 95px;
+  }
+  body #modal.folio-host .result-sigil svg {
+    width: 70px;
+    height: 70px;
+  }
+  body #modal.folio-host .result-stats {
+    gap: 25px;
+    padding: 20px 0;
+  }
+  body #modal.folio-host .result-stats strong {
+    font-size: 42px;
+  }
+  body #modal.folio-host .result-stats span {
+    font-size: 12px;
+  }
+  body #modal.folio-host .result-box .modal-footer {
+    gap: 12px;
+  }
+  body #modal.folio-host .result-box .modal-footer button {
+    min-width: 0;
+    flex: 1;
+    font-size: 17px;
+  }
+  body #modal.folio-host .covenant-card {
+    grid-template-columns: 105px minmax(0, 1fr);
+    gap: 14px;
+    padding: 12px;
+  }
+  body #modal.folio-host .covenant-card > img {
+    min-height: 190px;
+    height: 100%;
+    max-height: 280px;
+  }
+  body #modal.folio-host .covenant-copy h4 {
+    font-size: 21px;
+  }
+  body #modal.folio-host .covenant-copy small {
+    font-size: 10px;
+  }
+  body #modal.folio-host .covenant-copy p {
+    font-size: 12px;
+  }
+  body .atlas-stage {
+    min-height: 350px;
+  }
+  body .atlas-location {
+    width: 108px;
+  }
+  body .atlas-status {
+    font-size: 9px;
+  }
+  body .atlas-node {
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px;
+    min-height: 75px;
+  }
+  body .atlas-location-copy {
+    text-align: center;
+    gap: 2px;
+  }
+  body .atlas-location:nth-of-type(1) {
+    left: 18%;
+    top: 65%;
+  }
+  body .atlas-location:nth-of-type(2) {
+    left: 22%;
+    top: 30%;
+  }
+  body .atlas-location:nth-of-type(3) {
+    left: 58%;
+    top: 15%;
+  }
+  body .atlas-location:nth-of-type(4) {
+    left: 82%;
+    top: 40%;
+  }
+  body .atlas-location:nth-of-type(5) {
+    left: 80%;
+    top: 72%;
+  }
+  body .atlas-location:nth-of-type(6) {
+    left: 48%;
+    top: 85%;
+  }
+  body .atlas-focus {
+    display: none;
+  }
+  body .atlas-footer .gold-btn {
+    min-height: 44px;
+    font-size: 14px;
+  }
+  body .atlas-emblem {
+    width: 35px;
+    height: 35px;
+  }
+  body .atlas-kicker {
+    font-size: 10px;
+  }
+}
+body.touch-layout .topbar {
+  height: var(--header-h, 52px);
+  padding: 0 14px;
+  gap: 8px;
+}
+body.touch-layout .brand strong {
+  font-size: 23px;
+  letter-spacing: 3px;
+}
+body.touch-layout .brand small {
+  font-size: 7px;
+  letter-spacing: 3px;
+}
+body.touch-layout .top-actions {
+  gap: 4px;
+}
+body.touch-layout .lobby-copy {
+  left: 25px;
+  top: 15%;
+  width: calc(100% - 50px);
+  max-width: 430px;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+body.touch-layout .lobby-title {
+  font-size: 90px;
+  letter-spacing: 8px;
+  margin-bottom: 18px;
+}
+body.touch-layout .lobby-chinese {
+  font-size: 26px;
+  letter-spacing: 3px;
+}
+body.touch-layout .lobby-tagline {
+  font-size: 15px;
+  letter-spacing: 2px;
+}
+body.touch-layout .lobby-desc {
+  font-size: 11px;
+  line-height: 1.8;
+  max-width: 280px;
+}
+body.touch-layout .lobby-actions {
+  width: 250px;
+  margin-top: 30px;
+  gap: 14px;
+}
+body.touch-layout .lobby-actions :is(.gold-btn, .ghost-btn) {
+  height: 55px;
+  min-height: 55px;
+  font-size: 20px;
+}
+body.touch-layout .lobby-copy .eyebrow {
+  font-size: 10px;
+  margin-bottom: 18px;
+  letter-spacing: 4px;
+}
+body.touch-layout .lobby-collection {
+  display: block;
+  right: 20px;
+  bottom: 68px;
+  width: 180px;
+  height: 145px;
+}
+body.touch-layout .lobby-card {
+  width: 72px;
+  height: 107px;
+  left: 10px;
+  top: 30px;
+}
+body.touch-layout .lobby-card.two {
+  left: 95px;
+  top: 25px;
+}
+body.touch-layout #lobby-library-btn {
+  font-size: 14px;
+  height: 28px;
+  padding: 0;
+}
+body.touch-layout .lobby-bottom {
+  left: 23px;
+  right: 23px;
+  bottom: 18px;
+  font-size: 10px;
+}
+body.touch-layout .lobby-bottom > span,
+body.touch-layout .lobby-bottom small,
+body.touch-layout #atelier-open {
+  display: none;
+}
+body.touch-layout .hand-zone {
+  padding: 4px 8px 6px;
+  border-top: 1px solid var(--line);
+}
+body.touch-layout .hero,
+body.touch-layout .minion {
+  border-radius: 6px;
+}
+body.touch-layout .end-turn {
+  width: 100%;
+  height: 100%;
+  font-size: 17px;
+  border-radius: 6px;
+}
+body.touch-layout .hand-label {
+  font-size: 10px;
+}
+body.touch-layout .mana-caption strong {
+  font-size: 16px;
+}
+body.touch-layout .power-button {
+  border-radius: 50%;
+}
+
+body.mobile-landscape .lobby-copy {
+  left: 40px;
+  top: 65px;
+  width: 390px;
+}
+body.mobile-landscape .lobby-title {
+  font-size: 64px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+body.mobile-landscape .lobby-copy .eyebrow {
+  margin-bottom: 10px;
+  font-size: 9px;
+}
+body.mobile-landscape .lobby-chinese {
+  font-size: 21px;
+}
+body.mobile-landscape .lobby-tagline {
+  font-size: 12px;
+  margin: 4px 0;
+}
+body.mobile-landscape .lobby-desc {
+  display: none;
+}
+body.mobile-landscape .lobby-actions {
+  flex-direction: row;
+  width: 370px;
+  gap: 12px;
+  margin-top: 18px;
+}
+body.mobile-landscape .lobby-actions :is(.gold-btn, .ghost-btn) {
+  height: 44px;
+  min-height: 44px;
+  font-size: 17px;
+  width: 179px;
+  gap: 10px;
+}
+body.mobile-landscape .lobby-collection {
+  right: 40px;
+  bottom: 46px;
+  width: 185px;
+  height: 145px;
+}
+@media (max-height: 600px) and (min-width: 601px) {
+  body #modal.folio-host > .folio-dialog {
+    padding: 14px 24px;
+    gap: 9px;
+  }
+  body #modal.folio-host h2 {
+    font-size: 25px;
+  }
+  body #modal.folio-host .modal-heading p,
+  body #modal.folio-host .modal-heading .eyebrow {
+    display: none;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-options {
+    gap: 5px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option {
+    min-height: 57px;
+    padding: 3px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option > img {
+    width: 46px;
+    height: 46px;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-option .selected-check {
+    left: 34px;
+    top: 33px;
+  }
+  body #modal.folio-host[data-type="heroes"] .modal-footer button {
+    min-height: 44px;
+    font-size: 15px;
+  }
+  body #modal.folio-host .result-sigil {
+    height: 70px;
+    width: 70px;
+    margin: 0 auto;
+  }
+  body #modal.folio-host .result-sigil svg {
+    width: 60px;
+    height: 60px;
+  }
+  body #modal.folio-host .result-title {
+    font-size: 44px;
+    margin: 5px 0;
+  }
+  body #modal.folio-host .result-stats {
+    padding: 10px;
+    margin: 10px 0;
+  }
+  body #modal.folio-host .result-stats strong {
+    font-size: 35px;
+  }
+  body #modal.folio-host .result-box .modal-footer button {
+    min-height: 44px;
+    font-size: 17px;
+  }
+  body .atlas-stage {
+    min-height: 250px;
+  }
+  body .atlas-dossier {
+    display: none;
+  }
+}
+
+/* Reset both opposing edges when moving legacy absolute-positioned controls. */
+body:not(.touch-layout) .contract-open {
+  right: auto;
+  bottom: auto;
+  height: 65px;
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  grid-template-rows: 1fr 1fr;
+  align-items: center;
+}
+body:not(.touch-layout) .contract-open .contract-sigil {
+  grid-row: 1/3;
+}
+body:not(.touch-layout) .contract-open .contract-label {
+  grid-column: 2;
+  align-self: end;
+}
+body:not(.touch-layout) .contract-open small {
+  grid-column: 2;
+  align-self: start;
+}
+body .atlas-location {
+  right: auto;
+  bottom: auto;
+  height: auto;
+}
+body .atlas-node {
+  flex-direction: row;
+  height: auto;
+  aspect-ratio: auto;
+}
+body .atlas-location-copy {
+  flex: 1;
+  min-width: 0;
+  align-items: flex-start;
+}
+body .atlas-name {
+  display: block;
+  width: auto;
+  min-width: 0;
+  height: auto;
+  padding: 0;
+  white-space: normal;
+}
+body .atlas-status {
+  padding: 0;
+  margin: 0;
+}
+body .atlas-number {
+  inset: auto;
+}
+body #modal.folio-host .hero-configuration select {
+  width: 100%;
+  max-width: none;
+}
+body #modal.folio-host .hero-option::after {
+  display: none;
+}
+body #modal.folio-host .hero-option.selected {
+  background: var(--surface-soft);
+}
+body #modal.folio-host .covenant-box {
+  isolation: isolate;
+}
+body #modal.folio-host .covenant-box > .scene-showcase {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-position: center;
+}
+body #modal.folio-host .covenant-portrait > .scene-showcase {
+  right: 42%;
+  background-position: 50% 25%;
+  background-size: cover;
+}
+body #modal.folio-host .covenant-box > .folio-pane {
+  margin-left: 56%;
+  flex: 1;
+}
+body #modal.folio-host .covenant-box .modal-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+body #modal.folio-host .covenant-side {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+body #modal.folio-host .covenant-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+body #modal.folio-host .covenant-card {
+  display: grid;
+  grid-template-columns: 85px minmax(0, 1fr);
+  gap: 15px;
+  padding: 15px;
+  min-height: 0;
+}
+body #modal.folio-host .covenant-card > img {
+  width: 85px;
+  height: 120px;
+  min-height: 0;
+  max-height: none;
+  aspect-ratio: auto;
+  object-fit: cover;
+}
+body #modal.folio-host .covenant-card .covenant-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+}
+body #modal.folio-host .covenant-card .covenant-copy h4 {
+  font-size: 28px;
+}
+body #modal.folio-host .covenant-card .ritual-mark {
+  width: 30px;
+  height: 30px;
+}
+body #modal.folio-host .covenant-card .ritual-mark svg {
+  width: 25px;
+  height: 25px;
+}
+body #modal.folio-host .covenant-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+body #modal.folio-host .covenant-card .gold-btn {
+  min-height: 48px;
+}
+@media (max-width: 850px) {
+  body #modal.folio-host .covenant-box > .folio-pane {
+    margin-left: 40%;
+  }
+  body #modal.folio-host .covenant-card {
+    grid-template-columns: 1fr;
+  }
+  body #modal.folio-host .covenant-card > img {
+    display: none;
+  }
+}
+@media (max-width: 600px) and (orientation: portrait) {
+  body #modal.folio-host .covenant-box > .folio-pane {
+    margin-left: 0;
+    margin-top: 170px;
+  }
+  body #modal.folio-host .covenant-box > .scene-showcase {
+    right: 0;
+    background-position: 35% top;
+    background-size: auto 520px;
+    background-repeat: no-repeat;
+  }
+  body #modal.folio-host .covenant-card {
+    background: var(--surface-glass);
+  }
+  body .atlas-node {
+    flex-direction: column;
+  }
+  body .atlas-location-copy {
+    align-items: center;
+  }
+}
+body .atlas-stage {
+  display: block;
+  padding: 0;
+  grid-template-columns: none;
+  grid-template-rows: none;
+}
+body .atlas-location:nth-of-type(n) {
+  grid-area: auto;
+}
+body #modal.folio-host .help-columns > div {
+  width: 100%;
+  max-width: none;
+  float: none;
+}
+body #modal.folio-host .help-section {
+  width: 100%;
+  max-width: none;
+  padding: 0 0 25px;
+  box-sizing: border-box;
+}
+body:not(.touch-layout) #hint {
+  left: 1350px;
+  top: 445px;
+  width: 225px;
+  max-width: 225px;
+}
+body.mobile-landscape .contract-open {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  padding: 3px;
+  overflow: hidden;
+  border-radius: 6px;
+}
+body.mobile-landscape .contract-open .contract-sigil {
+  width: 30px;
+  height: 30px;
+  grid-row: auto;
+}
+body.mobile-landscape .contract-open .contract-label,
+body.mobile-landscape .contract-open small {
+  display: none;
+}
+@media (max-width: 850px) {
+  .atlas-dossier-rule {
+    grid-column: 2;
+    margin: 0;
+    padding: 8px 0;
+    font-size: 12px;
+  }
+  .atlas-dossier {
+    max-height: 200px;
+    overflow: auto;
+    min-height: 160px;
+  }
+  body .atlas-chapter {
+    margin-right: 35px;
+  }
+}
+body .atlas-stage.atlas-extended {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+  padding: 28px;
+  align-content: space-around;
+}
+body .atlas-extended .atlas-location:nth-of-type(n) {
+  position: relative;
+  inset: auto;
+  transform: none;
+  width: 100%;
+  grid-area: auto;
+}
+@media (max-width: 600px) {
+  body .atlas-stage.atlas-extended {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    padding: 18px;
+  }
+}
+@media (orientation: portrait) and (max-height: 680px) {
+  body.touch-layout .lobby-collection {
+    display: none;
+  }
+  body.touch-layout .lobby-copy {
+    top: 90px;
+  }
+  body.touch-layout .lobby-title {
+    font-size: 72px;
+    margin-bottom: 10px;
+  }
+  body.touch-layout .lobby-actions {
+    margin-top: 20px;
+  }
+  body.touch-layout .lobby-desc {
+    margin-top: 16px;
+  }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  body.mobile-landscape .lobby-collection {
+    display: none;
+  }
+  body.mobile-landscape .lobby-copy {
+    top: 60px;
+  }
+  body.mobile-landscape .lobby-title {
+    font-size: 58px;
+  }
+  body.mobile-landscape .lobby-actions {
+    margin-top: 12px;
+  }
+  body #modal.folio-host > .folio-dialog {
+    --inset: 12px;
+    padding: 12px 18px;
+    gap: 8px;
+  }
+  body #modal.folio-host .library-heading {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    min-height: 35px;
+    padding-bottom: 5px;
+  }
+  body #modal.folio-host .library-heading h2 {
+    font-size: 22px;
+  }
+  body #modal.folio-host .library-heading p {
+    display: none;
+  }
+  body #modal.folio-host .library-heading input {
+    width: auto;
+    flex: 1;
+    height: 32px;
+    margin: 0 45px 0 0;
+  }
+  body #modal.folio-host .touch-library-tabs {
+    gap: 8px;
+  }
+  body #modal.folio-host .touch-library-tabs button {
+    height: 34px;
+    min-height: 34px;
+    padding: 4px;
+  }
+  body #modal.folio-host .deck-editor {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  body #modal.folio-host .deck-actions {
+    padding-top: 6px;
+    gap: 8px;
+  }
+  body #modal.folio-host .deck-actions button {
+    height: 44px;
+    min-height: 44px;
+    padding: 4px;
+  }
+  body #modal.folio-host .deck-identity > img {
+    width: 30px;
+    height: 35px;
+  }
+  body #modal.folio-host .deck-identity {
+    grid-template-columns: 30px 1fr auto;
+    gap: 8px;
+  }
+  body #modal.folio-host .deck-title-input {
+    min-height: 30px;
+    height: 30px;
+    padding: 5px;
+  }
+  body #modal.folio-host .deck-content > * {
+    margin-bottom: 8px;
+  }
+  body #modal.folio-host .deck-editor:has(.deck-tools[open]) .deck-identity {
+    display: none;
+  }
+  body #modal.folio-host .deck-editor:has(.deck-tools[open]) .deck-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  }
+  body #modal.folio-host .deck-tools[open] {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    margin: 0;
+  }
+  body #modal.folio-host .deck-tools[open] > summary {
+    min-height: 38px;
+    flex: none;
+    padding: 5px 10px;
+  }
+  body #modal.folio-host .deck-tools[open] .deck-tools-body {
+    display: block;
+    flex: 1;
+    min-height: 80px;
+    overflow: auto;
+    padding: 6px;
+  }
+  body #modal.folio-host .deck-tools-body > * {
+    margin: 0 0 10px;
+  }
+  body #modal.folio-host .deck-editor:has(.deck-tools[open]) #deck-status {
+    display: none;
+  }
+  body #modal.folio-host .adventure-atlas .modal-scroll {
+    flex-direction: row;
+  }
+  body .atlas-stage {
+    min-height: 140px;
+  }
+  body #modal.folio-host .atlas-dossier {
+    display: flex;
+    width: 170px;
+    min-height: 0;
+    max-height: none;
+  }
+  body #modal.folio-host .atlas-dossier > img {
+    display: none;
+  }
+  body .atlas-location {
+    width: 110px;
+  }
+  body .atlas-node {
+    min-height: 40px;
+    padding: 4px;
+    gap: 5px;
+    flex-direction: row;
+  }
+  body .atlas-node .atlas-landmark {
+    width: 25px;
+    height: 25px;
+  }
+  body .atlas-status {
+    display: none;
+  }
+  body .atlas-name {
+    font-size: 11px;
+  }
+  body .atlas-footer {
+    min-height: 44px;
+  }
+  body .atlas-footer .atlas-relics {
+    display: none;
+  }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  body #modal.folio-host .deck-editor {
+    row-gap: 6px;
+  }
+  body #modal.folio-host .deck-editor .deck-actions {
+    margin: 0;
+    min-height: 44px;
+    max-height: 51px;
+  }
+  body #modal.folio-host .deck-editor > .folio-pane {
+    margin: 0;
+  }
+  body
+    #modal.folio-host
+    .deck-content:has(.deck-tools[open])
+    > :not(#deck-tools):not(#deck-warning) {
+    display: none;
+  }
+  body #modal.folio-host .deck-content:has(.deck-tools[open]) #deck-warning {
+    flex: none;
+    max-height: 40px;
+    overflow: auto;
+    font-size: 11px;
+    margin: 4px 0;
+  }
+  body #modal.folio-host .deck-tools[open]::details-content {
+    display: contents;
+  }
+  body #modal.folio-host .deck-tools[open] .deck-tools-body {
+    height: 0;
+    min-height: 80px;
+    flex: 1 1 0%;
+  }
+  body #modal.folio-host .deck-editor:has(.deck-tools[open]) .folio-viewport {
+    overflow: hidden;
+  }
+  body #modal.folio-host .library-heading {
+    flex-wrap: nowrap;
+  }
+  body #modal.folio-host .library-heading > div {
+    flex: none;
+  }
+}
+@media (max-width: 850px) and (orientation: portrait) {
+  body #modal.folio-host .adventure-atlas .folio-viewport {
+    overflow-y: auto;
+  }
+  body #modal.folio-host .adventure-atlas .modal-scroll {
+    height: auto;
+    min-height: 100%;
+  }
+  body .atlas-stage {
+    flex: none;
+    height: clamp(350px, 53dvh, 540px);
+  }
+  body .atlas-dossier {
+    max-height: none;
+    overflow: visible;
+  }
+  body .atlas-chapter {
+    font-size: 11px;
+    margin-right: 45px;
+  }
+  body .atlas-chapter > span {
+    display: none;
+  }
+  body .atlas-chapter strong {
+    font-size: 19px;
+  }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  body .atlas-stage {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    padding: 10px;
+    align-content: center;
+  }
+  body .atlas-location:nth-of-type(n) {
+    position: relative;
+    inset: auto;
+    transform: none;
+    width: 100%;
+    grid-area: auto;
+  }
+  body .atlas-node {
+    width: 100%;
+    min-height: 44px;
+  }
+  body .atlas-node .atlas-landmark {
+    width: 22px;
+    height: 22px;
+  }
+  body .atlas-number {
+    font-size: 13px;
+  }
+  body .atlas-name {
+    font-size: 10px;
+  }
+  body #modal.folio-host .atlas-dossier {
+    width: 145px;
+  }
+  body #modal.folio-host .atlas-dossier h3 {
+    font-size: 19px;
+  }
+  body .atlas-heading h2 {
+    font-size: 25px;
+  }
+}
+body.mobile-landscape #toast[data-kind] {
+  height: 20px;
+  min-height: 20px;
+  padding: 2px 6px;
+  font-size: 10px;
+  line-height: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+@media (orientation: landscape) and (max-width: 650px) {
+  body.mobile-landscape .lobby-actions {
+    width: 340px;
+  }
+  body.mobile-landscape .lobby-actions :is(.gold-btn, .ghost-btn) {
+    width: 164px;
+    min-width: 0;
+    flex: 1;
+  }
+  body.mobile-landscape .lobby-copy {
+    width: 350px;
+  }
+}
+body .hero .hero-name {
+  left: 0;
+  right: 0;
+  width: 100%;
+  margin: 0;
+  transform: none;
+  text-align: center;
+}
+@media (max-width: 850px) {
+  body
+    #modal.folio-host
+    .library-box.touch-show-deck
+    .library-heading
+    > #library-search {
+    display: none;
+  }
+}

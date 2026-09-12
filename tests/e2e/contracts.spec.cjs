@@ -66,13 +66,15 @@ for (const [width, height, touch] of [
         copyTop: copyRect.top - cardRect.top,
       };
     });
+    // The silver-blue edition uses a scene poster plus a compact live dossier.
+    // Its thumbnail is optional on narrow screens; rule copy must stay in flow.
     expect(poster.copyPosition).not.toBe("absolute");
-    expect(poster.art[0]).toBeGreaterThanOrEqual(poster.card[0] - 3);
-    expect(poster.art[0] / poster.art[1]).toBeCloseTo(3 / 4, 1);
+    expect(poster.card[0]).toBeGreaterThan(180);
+    expect(poster.copyBottom).toBeGreaterThanOrEqual(0);
+    expect(poster.copyTop).toBeGreaterThanOrEqual(0);
+    expect(poster.art[0]).toBeLessThanOrEqual(poster.card[0]);
     expect(poster.ritualMark[0]).toBeLessThanOrEqual(36);
     expect(poster.ritualMark[1]).toBeLessThanOrEqual(36);
-    expect(poster.copyBottom).toBeLessThanOrEqual(2);
-    expect(poster.copyTop).toBeGreaterThan(0);
     if (touch) {
       const scroll = await page.locator("#modal .folio-viewport").first().evaluate((viewport) => ({
         overflowY: getComputedStyle(viewport).overflowY,

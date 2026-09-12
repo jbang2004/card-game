@@ -131,7 +131,7 @@ test("map, rulebook and collection actions have readable surfaces and usable lay
   await page.goto("./?debug=1");
   await ready(page);
   await page.locator("#adventure-nav").click();
-  await assertInk(page, ".map-stop p", ".map-stop");
+  await assertInk(page, ".atlas-name", ".atlas-node");
   await page.locator(".modal-close").click();
   await page.locator("#guide-nav").click();
   await assertInk(page, ".help-section p b", ".help-section");

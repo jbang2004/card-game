@@ -1366,7 +1366,7 @@
   box-shadow: inset 0 0 25px #91e9fb58;
 }
 .minion.frozen:after {
-  content: "❄" !important;
+  content: "❄";
   position: absolute;
   top: -15px;
   right: -7px;
@@ -1377,7 +1377,7 @@
   font-size: 24px;
   color: #b7eff5;
   text-shadow: 0 0 11px #97dfea;
-  background: none !important;
+  background: none;
 }
 .minion.stealth {
   opacity: 0.62;
@@ -1615,9 +1615,9 @@
 }
 .hand-tip {
   margin-left: 24px;
-  font-size: 10px !important;
-  letter-spacing: 1px !important;
-  color: #9fb8ac !important;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #9fb8ac;
 }
 .hand-card {
   top: 0;
@@ -1926,8 +1926,8 @@
   /* Phones get a card that fits the short axis; wide screens get a poster. */
   --detail-w: clamp(190px, min(34vw, 52vh), 420px);
   position: fixed;
-  left: 50% !important;
-  top: 50% !important;
+  left: 50%;
+  top: 50%;
   z-index: 220;
   pointer-events: auto;
   cursor: default;
@@ -1943,7 +1943,7 @@
 }
 .card-preview[data-mode="hover"] .card,
 .card-preview[data-mode="pinned"] .card {
-  width: var(--detail-w) !important;
+  width: var(--detail-w);
 }
 .card-preview[data-mode="pinned"] .card-title {
   font-size: calc(var(--detail-w) * 0.082);
@@ -2254,12 +2254,12 @@ body.touch-layout .drag-ghost {
 }
 .death-ghost {
   position: absolute;
-  pointer-events: none !important;
-  z-index: 43 !important;
-  transition: none !important;
+  pointer-events: none;
+  z-index: 43;
+  transition: none;
 }
 .death-ghost * {
-  pointer-events: none !important;
+  pointer-events: none;
 }
 .death-ghost.minion:after,
 .death-ghost.minion:before {
@@ -2894,10 +2894,10 @@ body.touch-layout .drag-ghost {
 body.reduced-motion .lobby-eclipse,
 body.reduced-motion .lobby-art img,
 body.reduced-motion #target-path {
-  animation: none !important;
+  animation: none;
 }
 body.reduced-motion .damage-number {
-  animation: staticDamage 0.9s forwards !important;
+  animation: staticDamage 0.9s forwards;
 }
 .portrait-orientation {
   background: #162422f2;

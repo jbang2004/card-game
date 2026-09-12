@@ -2264,9 +2264,6 @@ button {
   color: #d5be8c;
   border-color: #baa16c66;
 }
-.filter-bar .spacer {
-  flex: 1;
-}
 .filter-btn.mana {
   padding: 6px 9px;
 }
@@ -2668,12 +2665,12 @@ button {
   white-space: nowrap;
 }
 body.reduced-motion * {
-  animation: none !important;
-  transition: none !important;
-  scroll-behavior: auto !important;
+  animation: none;
+  transition: none;
+  scroll-behavior: auto;
 }
 body.reduced-motion .damage-number {
-  animation: damageFloat 0.01s forwards !important;
+  animation: damageFloat 0.01s forwards;
 }
 .visually-hidden {
   position: absolute;
@@ -2763,7 +2760,7 @@ body.reduced-motion .damage-number {
   }
 }
 body.reduced-motion .damage-number {
-  animation: staticDamage 0.9s forwards !important;
+  animation: staticDamage 0.9s forwards;
 }
 
 body.mobile-ui .modal-box {
@@ -2812,7 +2809,7 @@ body.mobile-ui .modal-close {
 /* The magnified card is now a shared detail layer; only the hover flavour of
    it stays desktop-only (touch uses long-press instead). */
 body.mobile-ui #card-preview[data-mode="hover"] {
-  display: none !important;
+  display: none;
 }
 body.mobile-ui .topbar {
   padding: 0 18px;

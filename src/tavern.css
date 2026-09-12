@@ -911,7 +911,7 @@ button:not(:disabled) {
 .hero-caption,
 .hero-side-label,
 .hero.enemy:after {
-  display: none !important;
+  display: none;
 }
 .hero.enemy {
   position: absolute;
@@ -1428,7 +1428,7 @@ button:not(:disabled) {
   filter: brightness(1.13);
 }
 .minion.legendary:not(.frozen):after {
-  display: block !important;
+  display: block;
   content: "✦";
   top: -19px;
   left: 44px;
@@ -2788,11 +2788,11 @@ body.reduced-motion .minion,
 body.reduced-motion .gold-btn,
 body.reduced-motion .ghost-btn,
 body.reduced-motion .hero-option img {
-  transition: none !important;
+  transition: none;
 }
 body.reduced-motion .end-turn.ready-end,
 body.reduced-motion .minion.shield:before {
-  animation: none !important;
+  animation: none;
 }
 /* Layout pass after full-card, seven-unit and oversized-hand visual checks. */
 .lobby-chinese {
@@ -2910,7 +2910,7 @@ body.reduced-motion .minion.shield:before {
   color: #bba98a;
 }
 .lobby-card {
-  background: none !important;
+  background: none;
 }
 .hand-card .card {
   background: linear-gradient(

@@ -29,8 +29,8 @@ body #modal.folio-host > .folio-dialog {
   gap: 14px;
   width: min(100%, var(--dialog-width));
   height: auto;
-  /* Legacy touch width is !important in an earlier cascade layer. Cap the
-   * used width independently; a later-layer !important width cannot beat it. */
+  /* Legacy touch width is in an earlier cascade layer. Cap the
+   * used width independently; a later-layer width cannot beat it. */
   max-width: min(100%, var(--dialog-width));
   max-height: 100%;
   min-width: 0;
@@ -77,7 +77,7 @@ body #modal.folio-host > [data-dialog-size="covenant"] {
 /* Retired covenant padding is important in components.css (the same layer).
  * Reset that property only; keep the atlas's authored padding independent. */
 body #modal.folio-host > .folio-dialog.covenant-box {
-  padding: var(--inset) !important;
+  padding: var(--inset);
 }
 body #modal.folio-host > [data-dialog-size="help"] {
   --dialog-width: 940px;
@@ -521,8 +521,30 @@ body #modal.folio-host #filter-bar {
   gap: 6px;
   margin: 0;
 }
-body #modal.folio-host #filter-bar .spacer {
-  flex: 1 1 8px;
+body #modal.folio-host #filter-bar {
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 10px;
+}
+body #modal.folio-host #filter-bar .filter-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+body #modal.folio-host #filter-bar .filter-type-group {
+  flex: 1 1 auto;
+}
+body #modal.folio-host #filter-bar .filter-mana-group {
+  flex: 0 1 auto;
+  margin-left: auto;
+}
+body #modal.folio-host #filter-bar .filter-label {
+  flex: 0 0 auto;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  padding-inline: 4px 2px;
 }
 body #modal.folio-host #library-grid {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr));
@@ -948,7 +970,7 @@ body #modal.folio-host[data-type="settings"] .audio-level output {
     min-height: 44px;
     padding: 0;
     border-radius: 50%;
-    font-size: 0 !important;
+    font-size: 0;
   }
   body #modal.folio-host[data-type="settings"] .wind-time-setting::before {
     content: "☼";
@@ -1216,6 +1238,9 @@ body #modal.folio-host .touch-hero-info > img {
   body #modal.folio-host .library-box.touch-show-deck .library-main {
     display: none;
   }
+  body #modal.folio-host .library-box.touch-show-deck .library-heading > #library-search {
+    display: none;
+  }
 }
 @container dialog (max-width: 540px) {
   body #modal.folio-host[data-type="library-card"] > .folio-dialog > .modal-footer {
@@ -1324,4 +1349,53 @@ body #modal.folio-host [hidden] {
   body #modal.folio-host .library-heading { flex-wrap: nowrap; }
   body #modal.folio-host .library-heading h2 { font-size: 22px; }
   body #modal.folio-host .library-heading > input { flex: 1 1 120px; }
+}
+
+/* Phone collection: two equal columns are the smallest useful card grid.
+ * This selector lives after the desktop auto-fill rule so the phone layout
+ * cannot regress to one 280px card when a later ID selector wins the cascade. */
+@container dialog (max-width: 599px) {
+  body #modal.folio-host #library-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 10px;
+    padding: 8px 0 16px;
+  }
+  body #modal.folio-host .library-entry {
+    max-width: none;
+    min-width: 0;
+  }
+  body #modal.folio-host .library-entry > .library-item,
+  body #modal.folio-host .library-item > .card {
+    width: 100%;
+    min-width: 0;
+  }
+  body #modal.folio-host #filter-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  body #modal.folio-host #filter-bar .filter-group {
+    width: 100%;
+    min-width: 0;
+  }
+  body #modal.folio-host #filter-bar .filter-type-group .filter-btn {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  body #modal.folio-host #filter-bar .filter-mana-group {
+    margin-left: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  body #modal.folio-host #filter-bar .filter-mana-group::-webkit-scrollbar {
+    display: none;
+  }
+  body #modal.folio-host #filter-bar .filter-mana-group .filter-btn {
+    flex: 0 0 32px;
+    padding-inline: 4px;
+    white-space: nowrap;
+  }
+  body #modal.folio-host #filter-bar .filter-mana-group [data-mana="all"] {
+    flex-basis: 40px;
+  }
 }

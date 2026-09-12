@@ -47,8 +47,7 @@
     drag = null,
     suppressTimer = null,
     suppressClick = false;
-  let mulliganSet = new Set(),
-    pointer = { x: 800, y: 470 };
+  let pointer = { x: 800, y: 470 };
   const keywords = {
     taunt: "敌方必须先攻击具有嘲讽的随从。",
     shield: "抵挡下一次伤害，然后移除圣盾。",
@@ -91,6 +90,20 @@
         );
       else showHeroes();
     },
+  });
+  const screenContext = {
+    game, deckStore, library, showModal, closeModal, toast, save, startGame,
+    home, demo, clearSelection, showConfirm, applySettings, writeStore, settings, defaults,
+    keywords, showHeroes, showHelp,
+    get chosenHero() { return chosenHero; },
+    set chosenHero(value) { chosenHero = value; },
+    get isDemo() { return isDemo; },
+    get inBattle() { return inBattle; },
+  };
+  const screens = Object.freeze({
+    heroes: EmberHeroScreens.create(screenContext),
+    campaign: EmberCampaignScreens.create(screenContext),
+    preferences: EmberPreferenceScreens.create(screenContext),
   });
   function showLibrary() {
     library.show();
@@ -280,14 +293,18 @@
     if (!notice) return;
     const anchor = localRect(sourceCard(sourceUid)) ||
       (mana && localRect(document.querySelector(".mana-panel"))) ||
-      localRect($("player-hero")),
+      null,
       width = Math.min(
         280,
         Math.max(154, 34 + [...String(text)].length * 13),
       ),
       height = 38;
-    let x = (EmberViewport.width - width) / 2,
-      y = 104;
+    const rail = EmberViewport.mobile ? EmberViewport.layout.notice : {x:25,y:510,w:222};
+    let x = rail.x, y = rail.y;
+    if (!anchor) {
+      Object.assign(notice.style, {left:rail.x+'px', top:rail.y+'px',width:rail.w+'px'});
+      return;
+    }
     if (anchor) {
       x = anchor.left + (anchor.w - width) / 2;
       y = anchor.top - height - 10;
@@ -472,6 +489,7 @@
     modalType = type;
     $("modal").dataset.type = type;
     $("modal").innerHTML = html;
+    EmberTheme.bind($("modal"));
     $("modal").style.display = "flex";
     $("modal").dataset.locked = locked ? "1" : "0";
     if (!locked) {
@@ -515,158 +533,8 @@
       fn();
     };
   }
-  function showHeroes() {
-    const loaded = deckStore.load();
-    const collection = loaded.ok
-      ? loaded.collection
-      : { decks: [], activeId: null };
-    const customs = collection.decks.filter(
-      (d) => d.heroId === chosenHero && game.validateDeck(d.cards, chosenHero),
-    );
-    const presets = D.archetypes.filter(
-      (a) => a.classId === EmberDeckRules.classFor(D, chosenHero),
-    );
-    const heroOptionPower = (h) =>
-      h.id === "morla"
-        ? "2 法力：献祭一个友方随从，触发亡语并抽 1 张牌。"
-        : h.powerText;
-    showModal(
-      `<section class="modal-box hero-chooser"><div class="modal-heading"><div class="eyebrow">准备出发</div><h2>选择你的英雄</h2><p>选择英雄、套牌与对战方式。</p></div><div class="hero-roster"><div class="hero-roster-heading"><span>英雄名册</span></div><div class="hero-options">${D.heroes.map((h) => `<button class="hero-option hero-${h.id} ${h.id === chosenHero ? "selected" : ""}" data-hero="${h.id}" aria-pressed="${h.id === chosenHero}"><img src="${A.character(h)}" alt="${h.name}" draggable="false" style="${artStyleForHero(h, "option")}"><div class="hero-option-text"><small>${h.sub}</small><h3>${h.name}</h3><em>${heroOptionPower(h)}</em></div>${h.id === chosenHero ? '<span class="selected-check" aria-hidden="true">' + A.icon("check") + "</span>" : ""}</button>`).join("")}</div></div><div class="hero-configuration"><div class="hero-config-intro"><span class="config-kicker">出发准备</span><p class="hero-deck-note">${escape(loaded.ok ? (customs.length ? "可选用已保存的英雄牌组。" : "请选择职业套牌，或到收藏中建立命名牌组。") : loaded.error)} · 战役共 ${D.bosses.length} 场，关卡之间恢复全部生命。</p></div><label class="archetype-picker hero-config-deck">套牌 <select class="library-search" id="hero-archetype">${customs.map((d) => `<option value="saved:${d.id}" ${d.id === collection.activeId ? "selected" : ""}>${escape(d.name)}</option>`).join("")}${presets
-        .map(
-          (a) =>
-            `<option value="${a.id}" ${!customs.length && a.id === D.heroes.find((h) => h.id === chosenHero).defaultDeckId ? "selected" : ""}>${a.name}</option>`,
-        )
-        .join(
-          "",
-        )}</select></label><label class="archetype-picker hero-config-mode">玩法 <select id="game-mode" class="library-search"><option value="campaign">${D.bosses.length} 关战役 · 遗物与整备</option><option value="practice">练习对战 · 不覆盖战役存档</option></select></label><section class="hero-composition hero-config-composition" id="hero-composition" aria-label="牌组构成"></section><details class="contract-setup hero-config-contract"><summary>契约栏 · 最多三张，一位神祇</summary><p>契约不占主卡组，无需抽取；战斗中可查看召唤进度。</p>${
-        D.cards
-          .filter(
-            (c) =>
-              c.contract && c.class === EmberDeckRules.classFor(D, chosenHero),
-          )
-          .map(
-            (c) =>
-              `<label><input type="checkbox" data-contract="${c.id}" checked><strong>${c.name}</strong><span>${EmberContracts.describe(c)}</span></label>`,
-          )
-          .join("") || "该职业尚无契约。"
-      }</details><div class="hero-config-plan"><p id="hero-plan" class="deck-plan"></p><label class="archetype-picker" id="opponent-picker" hidden>对手 <select id="practice-opponent" class="library-search">${D.archetypes.map((a) => `<option value="${a.id}">${D.classNames[a.classId]} · ${a.name}</option>`).join("")}</select></label></div></div><div class="modal-footer"><button class="ghost-btn" id="hero-deck-btn">先去组牌</button><button class="gold-btn" id="hero-confirm">踏入余火之门 ${A.icon("arrow")}</button></div></section>`,
-      "heroes",
-    );
-    document.querySelectorAll("[data-hero]").forEach(
-      (b) =>
-        (b.onclick = () => {
-          const scrollTop =
-            document.querySelector("#modal .folio-viewport")?.scrollTop || 0;
-          const restoreFocus = document.activeElement === b;
-          chosenHero = b.dataset.hero;
-          EmberAudio.fx("ui");
-          showHeroes();
-          const scroll = document.querySelector("#modal .folio-viewport");
-          if (scroll) scroll.scrollTop = scrollTop;
-          if (restoreFocus)
-            document
-              .querySelector(`#modal [data-hero="${chosenHero}"]`)
-              ?.focus({ preventScroll: true });
-        }),
-    );
-    const compositionHTML = (cards) => {
-      const list = (cards || []).map((id) => D.byId[id]).filter(Boolean);
-      if (!list.length) return "";
-      const counts = { minion: 0, spell: 0, weapon: 0 };
-      const curve = Array(8).fill(0);
-      for (const c of list) {
-        if (counts[c.type] !== undefined) counts[c.type] += 1;
-        curve[Math.min(7, c.cost || 0)] += 1;
-      }
-      const peak = Math.max(1, ...curve);
-      const bars = curve
-        .map(
-          (n, i) =>
-            `<i style="--fill:${Math.round((n / peak) * 100)}%" title="${i === 7 ? "7+" : i} 费 · ${n} 张"><b>${i === 7 ? "7+" : i}</b><s>${n || ""}</s></i>`,
-        )
-        .join("");
-      return `<div class="comp-head"><h4>牌组构成</h4><span>${list.length} / ${D.deckRules.size} 张</span></div><div class="comp-counts"><span>随从 <b>${counts.minion}</b></span><span>法术 <b>${counts.spell}</b></span><span>武器 <b>${counts.weapon}</b></span></div><div class="comp-curve-title">费用分布</div><div class="comp-curve" aria-hidden="true">${bars}</div>`;
-    };
-    const plan = () => {
-      const value = $("hero-archetype").value;
-      const loadout =
-        customs.find((d) => "saved:" + d.id === value)?.contracts ??
-        D.heroes.find((h) => h.id === chosenHero).defaultContracts ??
-        [];
-      document
-        .querySelectorAll("[data-contract]")
-        .forEach((el) => (el.checked = loadout.includes(el.dataset.contract)));
-      $("hero-plan").textContent =
-        D.archetypes.find((a) => a.id === value)?.plan ||
-        `使用已保存的 ${D.deckRules.size} 张英雄牌组。`;
-      const cards = value.startsWith("saved:")
-        ? customs.find((d) => "saved:" + d.id === value)?.cards
-        : presets.find((a) => a.id === value)?.deck;
-      $("hero-composition").innerHTML = compositionHTML(cards);
-    };
-    $("hero-archetype").onchange = plan;
-    plan();
-    $("game-mode").onchange = () => {
-      $("opponent-picker").hidden = $("game-mode").value !== "practice";
-      $("hero-confirm").textContent =
-        $("game-mode").value === "practice" ? "开始练习对战" : "踏入余火之门";
-    };
-    $("hero-confirm").onclick = () => {
-      const id = $("hero-archetype").value;
-      const selected = id.startsWith("saved:")
-        ? customs.find((d) => d.id === id.slice(6))?.cards
-        : presets.find((a) => a.id === id)?.deck;
-      if (!selected) {
-        toast("请选择可用牌组");
-        return;
-      }
-      startGame(
-        chosenHero,
-        0,
-        [],
-        selected,
-        $("game-mode").value === "practice"
-          ? {
-              opponent: $("practice-opponent").value,
-              contracts: [
-                ...document.querySelectorAll("[data-contract]:checked"),
-              ].map((el) => el.dataset.contract),
-            }
-          : {
-              contracts: [
-                ...document.querySelectorAll("[data-contract]:checked"),
-              ].map((el) => el.dataset.contract),
-            },
-      );
-    };
-    $("hero-deck-btn").onclick = () => {
-      library.show(chosenHero);
-    };
-  }
-  function showMulligan() {
-    mulliganSet = new Set();
-    renderMulligan();
-  }
-  function renderMulligan() {
-    showModal(
-      `<section class="modal-box mulligan-box"><div class="modal-heading"><div class="eyebrow">YOUR OPENING HAND</div><h2>命运的第一手</h2><p>点击不想保留的卡牌进行替换。优先留下低费随从，建立你的战场。</p></div><div class="mulligan-cards">${game.s.p.hand.map((c) => `<button class="mulligan-card ${mulliganSet.has(c.uid) ? "replace" : ""}" data-mulligan="${c.uid}" aria-label="${D.byId[c.cid].name}，点击${mulliganSet.has(c.uid) ? "保留" : "替换"}">${cardHTML(D.byId[c.cid])}</button>`).join("")}</div><div class="modal-footer"><button class="gold-btn" id="mulligan-confirm">${mulliganSet.size ? "替换 " + mulliganSet.size + " 张并开始" : "保留手牌，开始战斗"} ${A.icon("arrow")}</button></div><p class="hero-deck-note">${game.s.first === "e" ? "你后手，换牌后获得硬币。" : "你先手。"}每个回合开始时，抽一张牌。</p></section>`,
-      "mulligan",
-      true,
-    );
-    document.querySelectorAll("[data-mulligan]").forEach(
-      (b) =>
-        (b.onclick = () => {
-          const id = b.dataset.mulligan;
-          mulliganSet.has(id) ? mulliganSet.delete(id) : mulliganSet.add(id);
-          renderMulligan();
-        }),
-    );
-    $("mulligan-confirm").onclick = () => {
-      const ids = [...mulliganSet];
-      closeModal(false);
-      game.dispatch({ type: "mulligan", ids });
-    };
-  }
+  function showHeroes(...args) { return screens.heroes.showHeroes(...args); }
+  function showMulligan(...args) { return screens.heroes.showMulligan(...args); }
   function centerOf(el) {
     return EmberViewport.pos(el);
   }
@@ -1863,223 +1731,11 @@
         toast((D.byId[e.cid]?.name || "奥秘") + "触发。");
     }
   }
-  function showDiscover() {
-    const choice = game.s.choice;
-    if (!choice || choice.side !== "p") return;
-    showModal(
-      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">A GLIMPSE BEYOND</div><h2>虚空中的启示</h2><p>选择一张法术牌加入你的手牌。</p></div><div class="discover-options">${choice.cards.map((id) => `<button class="discover-card" data-discover="${id}" aria-label="发现 ${D.byId[id].name}">${cardHTML(D.byId[id])}</button>`).join("")}</div></section>`,
-      "discover",
-      true,
-    );
-    document.querySelectorAll("[data-discover]").forEach(
-      (b) =>
-        (b.onclick = () => {
-          const id = b.dataset.discover;
-          closeModal(false);
-          game.dispatch({ type: "choose", cid: id });
-        }),
-    );
-  }
-  function showResult() {
-    if (!inBattle || game.s.phase !== "over") return;
-    const s = game.s,
-      win = s.winner === "p",
-      last = s.bossIndex === D.bosses.length - 1 || s.mode === "practice";
-    clearSelection();
-    showModal(
-      `<section class="modal-box result-box" data-outcome="${win ? "win" : "loss"}"><div class="result-sigil">${A.icon(win ? "fire" : "skull")}</div><div class="result-sub">${win ? (last ? "THE LAST EMBER BURNS" : "ENCOUNTER CLEARED") : s.winner === "draw" ? "A SHARED FATE" : "THE FLAME WILL RISE AGAIN"}</div><h2 class="result-title">${win ? (last ? "余火不灭" : "战役告捷") : s.winner === "draw" ? "同归于尽" : "火种未熄"}</h2><p class="boss-quote">${win ? (last ? "最后一颗星辰，因你重新燃起。" : "「" + D.bosses[s.bossIndex].name + "」已被击败。") : "每一次陨落，都是下一次重燃的序章。"}</p><div class="result-stats"><div><strong>${s.turn}</strong><span>战斗回合</span></div><div><strong>${s.stats.played}</strong><span>打出卡牌</span></div><div><strong>${s.stats.damage}</strong><span>造成伤害</span></div></div><div class="modal-footer"><button class="ghost-btn" id="result-home">返回营地</button><button class="gold-btn" id="result-next">${isDemo ? "开启正式旅程" : win ? (last ? "新的旅程" : "选择遗物") : "重试本关"} ${A.icon("arrow")}</button></div></section>`,
-      "result",
-      true,
-    );
-    if (s.mode === "practice") {
-      $("modal").querySelector(".result-title").textContent = win
-        ? "对战胜利"
-        : s.winner === "draw"
-          ? "平局"
-          : "对战落败";
-      $("modal").querySelector(".boss-quote").textContent =
-        "调整卡组或更换对手，再试一次。战役存档未被覆盖。";
-      $("result-next").textContent = "再选一局";
-    }
-    $("result-home").onclick = home;
-    $("result-next").onclick = () => {
-      if (isDemo || s.mode === "practice") {
-        closeModal(false);
-        showHeroes();
-      } else if (win && !last) showRewards();
-      else if (win) {
-        home();
-        showHeroes();
-      } else {
-        closeModal(false);
-        startGame(s.heroId, s.bossIndex, s.relics, s.customDeck, {
-          contracts: s.p.contracts,
-          ...(s.mode === "practice" ? { opponent: s.opponent } : {}),
-        });
-      }
-    };
-  }
-  function showRewards() {
-    const s = game.s;
-    game.rewardOffers();
-    save();
-    let selected = null;
-    showModal(
-      `<section class="modal-box rewards-box"><div class="modal-heading"><div class="eyebrow">战役奖励</div><h2>选择你的遗物</h2><p>${s.rewardOffers.length ? "获得一件永久加持，带着它继续冒险。" : "已收集全部遗物，可整备牌组后继续冒险。"}</p></div><div class="relic-options" role="group" aria-label="可选遗物">${s.rewardOffers
-        .map((id) => {
-          const r = D.relics.find((r) => r.id === id);
-          return `<button class="relic-choice" data-relic="${id}" aria-pressed="false"><span class="relic-art"><img src="${A.relic(r.id)}" alt="${r.name}"></span><h3>${r.name}</h3><p>${r.text}</p><span class="relic-pick-label">选择此遗物</span></button>`;
-        })
-        .join(
-          "",
-        )}</div><details class="campaign-refit"><summary>酒馆整备 <span>可选 · 更换一张牌</span></summary><div class="refit-fields"><label>移除卡牌<select id="refit-remove" class="library-search"><option value="">保留原牌组</option>${[...new Set(s.customDeck || D.heroes.find((h) => h.id === s.heroId).deck)].map((id) => `<option value="${id}">${D.byId[id].name}</option>`).join("")}</select></label><label>加入卡牌<select id="refit-add" class="library-search" aria-label="补给卡牌">${D.cards
-        .filter((c) => EmberDeckRules.canInclude(D, c, s.heroId))
-        .map((c) => `<option value="${c.id}">${c.cost}费 · ${c.name}</option>`)
-        .join(
-          "",
-        )}</select></label></div><p id="refit-status" role="status">${EmberDeckRules.summary(D)}。</p></details><div class="reward-footer"><div><span class="reward-next">下一站 · ${D.bosses[s.bossIndex + 1].title}</span><p id="reward-selection" aria-live="polite">${s.rewardOffers.length ? "先选择一件遗物" : "遗物已集齐"}</p></div><button class="gold-btn" id="reward-confirm" ${s.rewardOffers.length ? "disabled" : ""}>继续冒险</button></div></section>`,
-      "rewards",
-      true,
-    );
-    document.querySelectorAll("[data-relic]").forEach(
-      (b) =>
-        (b.onclick = () => {
-          selected = b.dataset.relic;
-          document
-            .querySelectorAll("[data-relic]")
-            .forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-          $("reward-selection").textContent =
-            "已选择 · " + D.relics.find((r) => r.id === selected).name;
-          $("reward-confirm").disabled = false;
-        }),
-    );
-    $("reward-confirm").onclick = () => {
-      if (!selected && s.rewardOffers.length) return;
-      const deck = [
-        ...(s.customDeck || D.heroes.find((h) => h.id === s.heroId).deck),
-      ];
-      const remove = $("refit-remove").value,
-        add = $("refit-add").value;
-      if (remove) deck[deck.indexOf(remove)] = add;
-      if (!game.validateDeck(deck, s.heroId)) {
-        document.querySelector(".campaign-refit").open = true;
-        $("refit-status").textContent = EmberDeckRules.check(
-          D,
-          deck,
-          s.heroId,
-        ).errors.join("；");
-        $("refit-add").focus();
-        return;
-      }
-      startGame(
-        s.heroId,
-        s.bossIndex + 1,
-        selected ? [...s.relics, selected] : [...s.relics],
-        deck,
-        { contracts: s.p.contracts },
-      );
-    };
-  }
-  function showSettings() {
-    const options = [
-      ["sound", "开启声音", "卡牌、战斗音效与酒馆底声"],
-      ["reduced", "减弱动态效果", "减少粒子与镜头震动，保留战斗提示"],
-      ["low", "轻量画质", "降低画面负担，适合节能游玩"],
-      ["fast", "加速敌方行动", "缩短 AI 每次行动之间的间隔"],
-    ];
-    const levels = [
-      ["volume", "总音量"],
-      ["sfxVolume", "战斗与操作"],
-      ["ambienceVolume", "酒馆氛围"],
-    ];
-    const percentage = (key) =>
-      Math.round(
-        (Number.isFinite(settings[key])
-          ? Math.max(0, Math.min(1, settings[key]))
-          : defaults[key]) * 100,
-      );
-    showModal(
-      `<section class="modal-box settings-box"><div class="modal-heading"><div class="eyebrow">游戏设置</div><h2>旅途设置</h2><p>声音、画面与战斗节奏，随时可调。</p></div><section class="settings-section settings-options-section"><div class="settings-section-heading"><span>旅途体验</span><small>即时生效</small></div><div class="settings-options">${options
-        .map(
-          ([k, n, d]) =>
-            `<div class="setting-row"><div class="setting-copy"><h3>${n}</h3><p>${d}</p></div><button class="toggle ${settings[k] ? "on" : ""}" data-setting="${k}" role="switch" aria-checked="${settings[k]}" aria-label="${n}"><span class="toggle-state">${settings[k] ? "开启" : "关闭"}</span></button></div>`,
-        )
-        .join("")}</div></section><section class="settings-section settings-audio-section"><div class="settings-section-heading"><span>声音混音</span><small>分别控制三类声音</small></div><div class="audio-sliders">${levels
-        .map(
-          ([k, label]) =>
-            `<label class="audio-level" for="audio-${k}"><span>${label}</span><input id="audio-${k}" data-audio-level="${k}" type="range" min="0" max="100" step="5" value="${percentage(k)}"><output for="audio-${k}">${percentage(k)}%</output></label>`,
-        )
-        .join("")}</div></section><div class="modal-footer">${inBattle ? '<button class="ghost-btn small-btn" id="settings-home">返回营地</button><button class="ghost-btn small-btn" id="restart-battle">重试本关</button>' : '<button class="ghost-btn small-btn" id="settings-how">游戏玩法</button>'}<button class="gold-btn small-btn" id="settings-done">完成</button></div><p class="hero-deck-note">进度会自动保存在当前浏览器。</p></section>`,
-      "settings",
-    );
-    document.querySelectorAll("[data-setting]").forEach(
-      (b) =>
-        (b.onclick = () => {
-          const k = b.dataset.setting;
-          settings[k] = !settings[k];
-          const enabled = settings[k];
-          b.classList.toggle("on", enabled);
-          b.setAttribute("aria-checked", String(enabled));
-          const state = b.querySelector(".toggle-state");
-          if (state) state.textContent = enabled ? "开启" : "关闭";
-          writeStore(SETTINGS, settings);
-          applySettings();
-        }),
-    );
-    document.querySelectorAll("[data-audio-level]").forEach((input) => {
-      input.oninput = () => {
-        settings[input.dataset.audioLevel] = Number(input.value) / 100;
-        input.nextElementSibling.textContent = input.value + "%";
-        EmberAudio.configure(settings);
-        writeStore(SETTINGS, settings);
-      };
-      input.onchange = () => EmberAudio.fx("ui");
-    });
-    $("settings-done").onclick = () => closeModal();
-    if (inBattle) {
-      $("settings-home").onclick = home;
-      $("restart-battle").onclick = () =>
-        showConfirm(
-          "重新点燃火种",
-          "当前这场战斗将从头开始。已获得的遗物与之前的关卡进度不会丢失。",
-          () => {
-            const s = game.s;
-            isDemo
-              ? demo()
-              : startGame(s.heroId, s.bossIndex, s.relics, s.customDeck, {
-                  contracts: s.p.contracts,
-                  ...(s.mode === "practice" ? { opponent: s.opponent } : {}),
-                });
-          },
-          "重试本关",
-        );
-    } else $("settings-how").onclick = showHelp;
-  }
-  function showHelp() {
-    showModal(
-      `<section class="modal-box help-box"><div class="modal-heading"><div class="eyebrow">玩法与规则</div><h2>旅人手册</h2><p>回合流程、构筑规则与关键词速查。</p></div><div class="help-columns"><div><section class="help-section"><h3>01 · 一场战斗如何获胜</h3><p>将敌方英雄生命降至 <b>0</b>。你有 <b>30 点基础生命、${D.deckRules.size} 张牌库</b>，双方最多拥有 <b>7 个随从、10 张手牌</b>。战役中你先手；练习对战随机先后手。先手起始三张、后手四张并在换牌后获得硬币。每个回合增加一枚法力水晶，上限 10，并补满法力、抽一张牌。</p></section><section class="help-section"><h3>02 · 出牌与攻击</h3><p><b>把手牌拖到战场</b>松手即可打出；需要目标时，拖向或点击目标确认，<b>右键或 Esc</b> 取消。也可以直接点击手牌：不需要目标的牌立即打出，需要目标的牌进入瞄准。<br><b>桌面悬停</b>在左侧查看卡牌大图；触控设备长按或右键卡牌查看详情，点击空白处收起。<br><b>点击己方随从 → 点击敌人</b>即可攻击。新召唤的随从通常需要等待一回合。双方随从同时对彼此造成攻击力数值的伤害。装备武器后，点击自己的英雄攻击。<br>按按钮标示的法力费用使用英雄技能，每回合一次。空格结束回合，Esc 取消选择，M 静音。</p></section><section class="help-section"><h3>03 · 构筑与冒险</h3><p>图鉴中 ${D.cards.filter((c) => !c.token).length} 张卡全部开放，构筑使用所选职业与中立牌。${D.archetypes.length} 套预设分别提供打法说明。<b>${EmberDeckRules.summary(D)}</b>。${D.bosses.length} 位首领均在半血时进入第二阶段。每次胜利可更换一张牌并选择遗物，下一关生命完全恢复。练习对战可挑战 ${D.archetypes.length} 套牌，随机先后手、双方三十血，不覆盖战役进度。进度自动保存在当前浏览器。<br>牌库耗尽后，每次抽牌依次受到 <b>1、2、3…</b> 点疲劳伤害。第 51 个玩家回合开始时判为平局。</p></section></div><div><section class="help-section"><h3>04 · 关键词速查</h3><div class="key-table">${Object.entries(
-        keywords,
-      )
-        .map(([k, v]) => `<div><b>${D.kw[k]}</b>${v}</div>`)
-        .join(
-          "",
-        )}<div><b>战吼 / 亡语</b>分别在从手牌打出或契约召唤随从时、随从死亡后触发。</div><div><b>冻结 / 沉默</b>冻结阻止攻击，直到自己的回合结束。沉默移除关键词、亡语和增益。</div><div><b>奥秘</b>隐藏的触发式法术。镜像伏击会用嘲讽镜卫拦截一次对英雄的攻击。</div><div><b>契约 / 神祇</b>开局可额外携带三张同职业契约、至多一位神祇，不占主牌组。己方非衍生随从死亡积累阵亡数和同名唯一的灵魂印记。星焰神需施放不同名称的非衍生法术（被反制不计）；曙日神需圣盾被敌方伤害击破；荒猎神需野兽主动攻击敌方随从（每回合最多计两次）。打开「诸神契约」查看双方进度，按各自条件支付法力或灵魂印记唤醒，每张每局一次。神祇无法复生，降临当回合不能攻击英雄。</div><div><b>发现</b>从三个随机法术中选一张加入手牌。</div></div></section></div></div><div class="modal-footer"><button class="gold-btn small-btn" id="help-done">让冒险开始 ${A.icon("arrow")}</button></div></section>`,
-      "help",
-    );
-    const chapters = [...$("modal").querySelectorAll(".help-section")];
-    const contents = document.createElement("nav");
-    contents.className = "help-toc";
-    contents.setAttribute("aria-label", "手册章节");
-    for (const chapter of chapters) {
-      const button = document.createElement("button");
-      button.className = "ghost-btn";
-      button.textContent = chapter.querySelector("h3").textContent;
-      button.onclick = () => chapter.scrollIntoView({ block: "start" });
-      contents.append(button);
-    }
-    $("modal").querySelector(".help-columns").before(contents);
-    $("help-done").onclick = () => closeModal();
-  }
+  function showDiscover(...args) { return screens.campaign.showDiscover(...args); }
+  function showResult(...args) { return screens.campaign.showResult(...args); }
+  function showRewards(...args) { return screens.campaign.showRewards(...args); }
+  function showSettings(...args) { return screens.preferences.showSettings(...args); }
+  function showHelp(...args) { return screens.preferences.showHelp(...args); }
   $("start-btn").onclick = () => {
     EmberAudio.unlock();
     validSave() ? continueGame() : showHeroes();

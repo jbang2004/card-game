@@ -204,6 +204,8 @@ test("full practice game through visible card/target controls with no stuck trig
     if (a.type === "play") {
       await page.locator(`#hand [data-hand="${a.uid}"]`).click();
       if (target) await page.locator(target).click();
+      else if (await page.evaluate(() => Emberfall.selection?.type === 'card-play'))
+        await page.locator('#arena').click({position:{x:16,y:16}});
     }
     if (a.type === "attack") {
       await page
