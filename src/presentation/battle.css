@@ -12,7 +12,7 @@ body:not(.touch-layout) .hand-zone {
 body:not(.touch-layout) .hand-card {
   width: var(--desktop-card-w, 131px);
   height: var(--desktop-card-h, 183px);
-  aspect-ratio: var(--card-face-ratio, 5 / 7);
+  aspect-ratio: var(--card-face-ratio, 5 / 7.4);
   transform: translateX(calc(-50% + var(--x)));
   transform-origin: center bottom;
 }
@@ -120,11 +120,13 @@ body:not(.touch-layout) .chapter-name {
 }
 body:not(.touch-layout) .card-preview {
   width: 230px;
-  height: 322px;
+  height: auto;
+  aspect-ratio: var(--card-face-ratio, 5 / 7.4);
 }
 body:not(.touch-layout) .card-preview .card {
   width: 230px;
-  height: 322px;
+  height: auto;
+  aspect-ratio: var(--card-face-ratio, 5 / 7.4);
 }
 body:not(.touch-layout) .card-preview .keyword-notes {
   max-height: 98px;

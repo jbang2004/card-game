@@ -10,7 +10,10 @@
   --ink-secondary: #dac6a5;
   --paper: #efdfbd;
   --paper-ink: #332519;
-  --card-face-ratio: 5 / 7;
+  /* One face contract for battle, hand, mulligan and detail views. A slightly
+     taller face gives the art aperture more vertical room without changing
+     the card's semantic bands. */
+  --card-face-ratio: 5 / 7.4;
   --primary-fill: linear-gradient(155deg, #f5d68d, #c59440);
   --secondary-fill: linear-gradient(#4d3929, #302219);
 }
@@ -4067,7 +4070,7 @@ body .card .card-text,
 body .card.type-minion .card-text,
 body .card.weapon .card-text {
   position: absolute;
-  inset: 57% 6% 19%;
+  inset: 57% 6% 16%;
   width: auto;
   height: auto;
   min-width: 0;
@@ -4140,7 +4143,7 @@ body .card-preview[data-mode="hover"] .card[data-rule-size="short"] .card-text {
  * viewport, while the internal art/title/rules proportions never change. */
 body .card-preview[data-mode="pinned"],
 body .card-preview[data-mode="hover"] {
-  --detail-w: min(300px, calc(100vw - 28px), calc((100dvh - 84px) / 1.4));
+  --detail-w: min(300px, calc(100vw - 28px), calc((100dvh - 84px) / 1.48));
   aspect-ratio: var(--card-face-ratio);
   width: var(--detail-w);
   height: auto;
@@ -4169,7 +4172,7 @@ body .card-preview[data-mode="hover"] .card .card-title {
 body .card-preview[data-mode="pinned"] .card .card-text,
 body .card-preview[data-mode="hover"] .card .card-text {
   top: 57%;
-  bottom: 19%;
+  bottom: 16%;
   font-size: clamp(11px, calc(var(--detail-w) * 0.043), 15px);
   line-height: 1.32;
 }
@@ -4204,7 +4207,9 @@ body .hand-card .card .card-title {
 body:not(.touch-layout) .hand-card .card .card-text,
 body.touch-layout .hand-card .card .card-text {
   top: 57%;
-  bottom: 19%;
+  /* The hand's type rail only occupies the last few percent; use the spare
+     paper above it so long rules can grow instead of shrinking to a whisper. */
+  bottom: 9%;
   left: 6%;
   right: 6%;
   padding-inline: 6%;
@@ -4219,18 +4224,18 @@ body.touch-layout .hand-card .card[data-rule-size="short"] .card-text {
 }
 body:not(.touch-layout) .hand-card .card[data-rule-size="standard"] .card-text,
 body.touch-layout .hand-card .card[data-rule-size="standard"] .card-text {
-  font-size: clamp(7px, 5.2cqw, 8.5px);
+  font-size: clamp(8.3px, 6.2cqw, 9.8px);
   line-height: 1.08;
 }
 body:not(.touch-layout) .hand-card .card[data-rule-size="long"] .card-text,
 body.touch-layout .hand-card .card[data-rule-size="long"] .card-text {
-  font-size: clamp(7px, 5cqw, 8.5px);
-  line-height: 1.12;
+  font-size: clamp(8.3px, 6cqw, 9.8px);
+  line-height: 1.1;
 }
 
 @media (orientation: landscape) and (max-width: 900px) {
   body .card-preview[data-mode="pinned"],
   body .card-preview[data-mode="hover"] {
-    --detail-w: min(300px, calc(100vw - 28px), calc((100dvh - 28px) / 1.4));
+    --detail-w: min(300px, calc(100vw - 28px), calc((100dvh - 28px) / 1.48));
   }
 }
