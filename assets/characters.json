@@ -420,7 +420,7 @@
     },
     "cleric": {
       "staticKey": "cleric",
-      "focus": 21,
+      "focus": 42,
       "motion": {
         "source": "assets/anime/cleric.webp",
         "atlas": "sources/cleric-atlas-alpha.png",

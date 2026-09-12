@@ -53,7 +53,6 @@ const EmberCards = (() => {
     const meta = artVars(artKeyForCard(c), context);
     return styleVars({
       "--art-pos": meta.pos || "50% 42%",
-      "--art-scale": String(meta.scale ?? 1.08),
     });
   }
   function artStyleForHero(h, context = "hero") {

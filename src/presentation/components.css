@@ -3997,35 +3997,84 @@ body .drag-ghost[data-snap-mode="target"]::before {
 }
 
 /* Card face contract -------------------------------------------------------
- * One fixed frame is shared by hand cards, lifted cards and collection cards:
- * portrait art, name band, bounded rules, then the type/stat rail. Rules are
- * deliberately display-only; copy is validated in data.js so no card needs a
- * private scroll path or a density-specific layout branch. */
-body .card {
+ * The battle hand is the canonical card face. Every card context uses the
+ * same absolute bands: art, name ribbon, rules paper, then the type/stat
+ * rail. Contexts may change width, but never change the internal geometry.
+ * This keeps a card readable when it moves from the opening hand to the hand
+ * rail or into a lifted preview. */
+body .card,
+body .card.common,
+body .card.rare,
+body .card.epic,
+body .card.legendary {
+  position: relative;
   box-sizing: border-box;
   aspect-ratio: var(--card-face-ratio);
 }
+body .card .card-inner {
+  position: absolute;
+  inset: 5px;
+  display: block;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid #795839;
+  box-shadow: inset 0 0 12px #76512d27;
+}
 body .card .card-art {
+  position: absolute;
+  inset: 0 0 auto;
+  width: 100%;
   height: 43%;
+  overflow: hidden;
+  isolation: isolate;
   background: #3b2b21;
 }
 body .card .card-art img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
   object-fit: cover;
   object-position: var(--art-pos, 50% 34%);
-  transform: scale(var(--art-scale, 1));
+  transform: none;
   background: none;
+  pointer-events: none;
 }
 body .card .card-title {
-  top: 43%;
+  position: absolute;
+  inset: 43% 0 auto;
+  width: auto;
   height: 13%;
+  min-width: 0;
   min-height: 0;
+  max-height: none;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8%;
+  white-space: normal;
+  overflow: hidden;
+  line-height: 1.15;
 }
 body .card .card-text,
 body .card.type-minion .card-text,
 body .card.weapon .card-text {
-  top: 57%;
-  bottom: 19%;
+  position: absolute;
+  inset: 57% 6% 19%;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
   display: block;
+  padding: 5px 7px;
   max-height: none;
   overflow: hidden;
   white-space: normal;
@@ -4042,6 +4091,20 @@ body .card .card-copy {
   display: block;
   width: 100%;
 }
+body .card .card-type {
+  position: absolute;
+  inset: auto 0 5%;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 18%;
+  overflow: hidden;
+}
 
 /* Copy length is a content decision, not a second card layout. Short rules
  * use the otherwise empty rule well as a readable focal point; standard and
@@ -4057,6 +4120,14 @@ body .card[data-rule-size="short"] .card-text {
 }
 body .card[data-rule-size="short"] .card-copy {
   display: block;
+}
+body .card[data-rule-size="standard"] .card-text {
+  font-size: clamp(9px, 6cqw, 15px);
+  line-height: 1.28;
+}
+body .card[data-rule-size="long"] .card-text {
+  font-size: clamp(7px, 4.8cqw, 12px);
+  line-height: 1.18;
 }
 body .card-preview[data-mode="pinned"] .card[data-rule-size="short"] .card-text,
 body .card-preview[data-mode="hover"] .card[data-rule-size="short"] .card-text {
@@ -4102,6 +4173,15 @@ body .card-preview[data-mode="hover"] .card .card-text {
   font-size: clamp(11px, calc(var(--detail-w) * 0.043), 15px);
   line-height: 1.32;
 }
+body .card-preview[data-mode="pinned"] .card[data-rule-size="standard"] .card-text,
+body .card-preview[data-mode="hover"] .card[data-rule-size="standard"] .card-text {
+  font-size: clamp(10px, calc(var(--detail-w) * 0.043), 15px);
+}
+body .card-preview[data-mode="pinned"] .card[data-rule-size="long"] .card-text,
+body .card-preview[data-mode="hover"] .card[data-rule-size="long"] .card-text {
+  font-size: clamp(9px, calc(var(--detail-w) * 0.036), 13px);
+  line-height: 1.2;
+}
 
 /* Hand cards use the same geometry and receive the horizontal gesture on the
  * button itself. There is no nested vertical scroller to steal the pointer. */
@@ -4127,6 +4207,7 @@ body.touch-layout .hand-card .card .card-text {
   bottom: 19%;
   left: 6%;
   right: 6%;
+  padding-inline: 6%;
   font-size: clamp(7.5px, 6.1cqw, 9.5px);
   line-height: 1.18;
 }
@@ -4135,6 +4216,16 @@ body.touch-layout .hand-card .card[data-rule-size="short"] .card-text {
   padding-inline: 6%;
   font-size: clamp(9px, 7.4cqw, 11px);
   line-height: 1.25;
+}
+body:not(.touch-layout) .hand-card .card[data-rule-size="standard"] .card-text,
+body.touch-layout .hand-card .card[data-rule-size="standard"] .card-text {
+  font-size: clamp(7px, 5.2cqw, 8.5px);
+  line-height: 1.08;
+}
+body:not(.touch-layout) .hand-card .card[data-rule-size="long"] .card-text,
+body.touch-layout .hand-card .card[data-rule-size="long"] .card-text {
+  font-size: clamp(7px, 5cqw, 8.5px);
+  line-height: 1.12;
 }
 
 @media (orientation: landscape) and (max-width: 900px) {
