@@ -11,6 +11,14 @@ async function startTouchBattle(page) {
   await page.waitForFunction(() => !EmberFX.busy);
 }
 
+async function startMulligan(page) {
+  await ready(page);
+  await page.locator("#start-btn").click();
+  await page.waitForSelector("#hero-confirm");
+  await page.locator("#hero-confirm").click();
+  await page.waitForSelector("#mulligan-confirm");
+}
+
 function detailMetrics(page) {
   return page.evaluate(() => {
     const preview = document.querySelector("#card-preview"),
@@ -153,3 +161,49 @@ test("desktop hand rail uses the same static card face contract", async ({
   expect(Math.max(...state.map((x) => x.artHeight)) - Math.min(...state.map((x) => x.artHeight))).toBeLessThanOrEqual(1);
   expect(state.every((x) => x.verticalFit)).toBe(true);
 });
+
+for (const [name, viewport, touch] of [
+  ["opening portrait", { width: 390, height: 844 }, true],
+  ["opening desktop", { width: 1600, height: 940 }, false],
+]) {
+  test(`opening hand and battle hand keep one card aperture in ${name}`, async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      viewport,
+      isMobile: touch,
+      hasTouch: touch,
+    });
+    const page = await context.newPage();
+    await startMulligan(page);
+    const opening = await page.locator(".mulligan-card .card").first().evaluate((card) => {
+      const measure = (node) => {
+        const r = node.getBoundingClientRect();
+        return { width: r.width, height: r.height };
+      };
+      return {
+        card: measure(card),
+        art: measure(card.querySelector(".card-art")),
+      };
+    });
+    await page.locator("#mulligan-confirm").click();
+    await page.waitForFunction(() => !EmberFX.busy);
+    const hand = await page.locator("#hand .hand-card .card").first().evaluate((card) => {
+      const measure = (node) => {
+        const r = node.getBoundingClientRect();
+        return { width: r.width, height: r.height };
+      };
+      return {
+        card: measure(card),
+        art: measure(card.querySelector(".card-art")),
+      };
+    });
+    const ratio = 5 / 7;
+    const cardRatio = (x) => x.width / x.height;
+    const artRatio = (x) => x.width / x.height;
+    expect(cardRatio(opening.card)).toBeCloseTo(ratio, 2);
+    expect(cardRatio(hand.card)).toBeCloseTo(ratio, 2);
+    expect(artRatio(opening.art)).toBeCloseTo(artRatio(hand.art), 1);
+    await context.close();
+  });
+}
