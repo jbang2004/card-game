@@ -52,13 +52,13 @@ const EmberRules = (() => {
   const labels = {
     selected: "目标",
     self: "自身",
-    friendlyLowest: "攻击力最低且没有圣盾的友方随从",
-    friendlyBeasts: "所有友方野兽",
+    friendlyLowest: "最低攻无盾友随从",
+    friendlyBeasts: "友方野兽",
     enemyHero: "敌方英雄",
-    enemyMinions: "所有敌方随从",
-    friendlyMinions: "所有友方随从",
+    enemyMinions: "敌方随从",
+    friendlyMinions: "友方随从",
     friendlyOthers: "其他友方随从",
-    allOthers: "所有其他角色",
+    allOthers: "其他角色",
     enemies: "所有敌人",
   };
   const registry = {
@@ -73,7 +73,7 @@ const EmberRules = (() => {
           g.event("status", { ...t, kind: "sacrifice" });
         }
       },
-      text: () => "献祭一个友方随从（触发亡语，并记录非衍生随从的灵魂印记）",
+      text: () => "献祭一个友方随从（触发亡语并记录灵魂）",
     },
     damage: {
       fields: ["amount", "to", "spell"],
@@ -107,7 +107,7 @@ const EmberRules = (() => {
         }
       },
       text: (e, db) =>
-        `从牌库抽取 ${e.count} 张${e.tribe ? db.$tribes[e.tribe] : "随从"}牌（不足时抽取剩余牌）`,
+        `从牌库抽${e.count}张${e.tribe ? db.$tribes[e.tribe] : "随从"}牌（不足则抽剩余牌）`,
     },
     destroyWeapon: {
       fields: [],
@@ -138,13 +138,13 @@ const EmberRules = (() => {
       fields: ["count"],
       required: ["count"],
       run: (g, e, c) => g.draw(c.side, e.count),
-      text: (e) => `抽 ${e.count} 张牌`,
+      text: (e) => `抽${e.count}张牌`,
     },
     heal: {
       fields: ["amount"],
       required: ["amount"],
       run: (g, e, c) => g.heal(c.side, e.amount, c.damageSource || null),
-      text: (e) => `为你的英雄恢复 ${e.amount} 点生命`,
+      text: (e) => `为英雄恢复 ${e.amount} 点生命`,
     },
     armor: {
       fields: ["amount"],
@@ -182,7 +182,7 @@ const EmberRules = (() => {
       },
       text(e, db) {
         const m = db[e.card];
-        return `召唤 ${e.count} 个 ${m.atk}/${m.hp}${m.tags.length ? "、具有" + m.tags.map((t) => db.$kw[t]).join("、") : ""}的${m.name}`;
+        return `召唤${e.count}个${m.atk}/${m.hp}${m.tags.length ? m.tags.map((t) => db.$kw[t]).join("、") : ""}${m.name}`;
       },
     },
     buff: {
@@ -203,7 +203,7 @@ const EmberRules = (() => {
         }
       },
       text: (e) =>
-        `使${labels[e.to]}${e.duration === "turn" ? "本回合" : ""}获得 +${e.attack}${e.health ? "/+" + e.health : " 攻击力"}`,
+        `${labels[e.to]}${e.duration === "turn" ? "本回合" : ""}获得+${e.attack}${e.health ? "/+" + e.health : "攻"}`,
     },
     destroy: {
       fields: ["to"],
@@ -225,7 +225,7 @@ const EmberRules = (() => {
           g.event("status", { ...t, kind: "silence" });
         }
       },
-      text: (e) => `沉默${labels[e.to]}，移除其关键词和增益`,
+      text: (e) => `沉默${labels[e.to]}并移除关键词/增益`,
     },
     grant: {
       fields: ["to", "tag"],
@@ -251,7 +251,7 @@ const EmberRules = (() => {
         }
       },
       text: (e, db) =>
-        `将${labels[e.to]}变为 ${db[e.card].atk}/${db[e.card].hp} 的${db[e.card].name}`,
+        `将${labels[e.to]}变为${db[e.card].atk}/${db[e.card].hp}${db[e.card].name}`,
     },
     discover: {
       fields: ["count", "cardType"],
@@ -273,7 +273,7 @@ const EmberRules = (() => {
             .slice(0, e.count),
         };
       },
-      text: () => `发现一张法术牌，将其置入手牌`,
+      text: () => "发现法术并置入手牌",
     },
     secret: {
       fields: [],
@@ -282,11 +282,11 @@ const EmberRules = (() => {
         g.s[c.side].secrets.push(c.card.id);
       },
       text: (e, db, c) => {
-        if (c.secret.counter) return "奥秘：敌人施放法术时，反制该法术";
+        if (c.secret.counter) return "奥秘：敌人施法时反制";
         if (c.secret.armor)
-          return `奥秘：敌人攻击你的英雄时，获得 ${c.secret.armor} 点护甲`;
+          return `奥秘：敌人攻击英雄时获得 ${c.secret.armor} 点护甲`;
         const m = db[c.secret.summon];
-        return `奥秘：敌人攻击你的英雄时，召唤一个 ${m.atk}/${m.hp} ${m.tags.map((t) => db.$kw[t]).join("、")}镜卫代为承受攻击`;
+        return `奥秘：敌人攻击英雄时召唤${m.atk}/${m.hp}${m.tags.map((t) => db.$kw[t]).join("、")}镜卫承受攻击`;
       },
     },
     randomDamageFreeze: {
@@ -384,6 +384,29 @@ const EmberRules = (() => {
     if (c.secret && g.s[side].secrets.includes(c.id)) return "相同的奥秘已存在";
     return null;
   }
+  function compactContractText(text) {
+    return text
+      .replaceAll("召唤2个2/2突袭灵狼", "召2只2/2突袭灵狼")
+      .replaceAll("其他友方随从死亡后，自身获得+1攻", "友亡+1攻")
+      .replaceAll(
+        "施放法术后，对敌方随从造成 1 点伤害",
+        "施法后敌随从1伤",
+      )
+      .replaceAll(
+        "攻击后，友方野兽本回合获得+1攻",
+        "攻后友兽+1攻",
+      )
+      .replaceAll("使其他友方随从获得圣盾", "友军获圣盾")
+      .replaceAll("对敌方随从造成 ", "敌随从")
+      .replaceAll(" 点伤害", "伤")
+      .replaceAll("为英雄恢复 ", "英雄回")
+      .replaceAll(" 点生命", "")
+      .replaceAll("敌方随从", "敌随从")
+      .replaceAll("友方野兽", "友兽")
+      .replaceAll("每回合", "回合")
+      .replaceAll("（", "(")
+      .replaceAll("）", ")");
+  }
   function text(c, db) {
     const words = c.tags.map((t) => db.$kw[t]);
     if (c.type === "weapon")
@@ -402,6 +425,7 @@ const EmberRules = (() => {
           ? EmberContracts
           : require("./contracts.js")
         ).describe(c) + result;
+    result = c.contract ? compactContractText(result) : result;
     return result.replaceAll(
       "目标",
       {
@@ -413,11 +437,11 @@ const EmberRules = (() => {
     );
   }
   const triggerLabels = {
-    spellCast: "你施放法术后",
+    spellCast: "施放法术后",
     friendlyDeath: "其他友方随从死亡后",
-    shieldLost: "友方随从失去圣盾后",
-    turnEnd: "你的回合结束时",
-    afterAttack: "该随从攻击后",
+    shieldLost: "友方圣盾被击破后",
+    turnEnd: "回合结束时",
+    afterAttack: "攻击后",
   };
   function validateTriggers(triggers, db, owner) {
     if (triggers === undefined) return;
@@ -447,7 +471,7 @@ const EmberRules = (() => {
     return (ts || [])
       .map(
         (t) =>
-          `${triggerLabels[t.event]}，${t.effects.map((e) => registry[e.type].text(e, db, {})).join("，")}（每回合最多 ${t.maxPerTurn} 次）。`,
+          `${triggerLabels[t.event]}，${t.effects.map((e) => registry[e.type].text(e, db, {})).join("，")}（每回合${t.maxPerTurn}次）。`,
       )
       .join("");
   }

@@ -12,12 +12,9 @@ const EmberContracts = (() => {
     );
   }
   const rituals = Object.freeze({
-    spells: { label: "星火", requirement: "成功施放不同名称的非衍生法术" },
-    shields: { label: "誓光", requirement: "友方随从的圣盾被敌方伤害击破" },
-    hunts: {
-      label: "狩猎",
-      requirement: "野兽主动攻击敌方随从（每回合最多计两次）",
-    },
+    spells: { label: "星火" },
+    shields: { label: "誓光" },
+    hunts: { label: "狩猎" },
   });
   function progress(p, c) {
     const r = c.contract;
@@ -40,9 +37,9 @@ const EmberContracts = (() => {
   function describe(c) {
     const r = c.contract;
     const need = r.ritual
-      ? `${rituals[r.ritual.kind].requirement}，累计 ${r.ritual.amount} 次；支付 ${c.cost} 法力`
-      : `本局非衍生随从死亡 ${r.deaths} 次，消耗最早获得的 ${r.souls} 枚不同名称灵魂印记及 ${c.cost} 法力`;
-    return `${r.divine ? "神祇" : "契约"} · ${need}。每局一次${r.divine ? "；无法复生，降临当回合不能攻击英雄" : ""}。`;
+      ? `${rituals[r.ritual.kind].label}${r.ritual.amount}`
+      : `亡${r.deaths}魂${r.souls}`;
+    return `${r.divine ? "神" : "契"}·${need}·局1次${r.divine ? "；不复生·禁攻1回合" : ""}。`;
   }
   function validDevotion(d, data, turn) {
     if (

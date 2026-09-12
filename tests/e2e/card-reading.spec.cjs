@@ -24,12 +24,16 @@ function detailMetrics(page) {
       r.bottom <= innerHeight + 1;
     const previewRect = preview.getBoundingClientRect();
     const cardRect = card.getBoundingClientRect();
+    const artRect = card.querySelector(".card-art").getBoundingClientRect();
+    const art = card.querySelector(".card-art img");
     return {
-      density: preview.dataset.ruleDensity,
       text: text.textContent,
       textScrollHeight: text.scrollHeight,
       textClientHeight: text.clientHeight,
       lineClamp: getComputedStyle(text).webkitLineClamp,
+      overflow: getComputedStyle(text).overflowY,
+      artHeight: artRect.height,
+      objectFit: getComputedStyle(art).objectFit,
       previewWithin: within(previewRect),
       cardWithin: within(cardRect),
     };
@@ -54,18 +58,19 @@ for (const [name, viewport, touch] of [
     );
     await expect(page.locator("#card-preview")).toHaveClass(/open/);
     const metrics = await detailMetrics(page);
-    expect(metrics.density).toBe("very-long");
-    expect(metrics.text).toContain("具有突袭的灵狼");
+    expect(metrics.text).toContain("突袭灵狼");
     expect(metrics.textScrollHeight).toBeLessThanOrEqual(
       metrics.textClientHeight + 1,
     );
     expect(metrics.lineClamp).toMatch(/none|unset/);
+    expect(metrics.overflow).toBe("hidden");
+    expect(metrics.objectFit).toBe("cover");
     expect(metrics.previewWithin && metrics.cardWithin).toBe(true);
     await context.close();
   });
 }
 
-test("hand rail keeps common rules visible and exposes longer rules without clipping", async ({
+test("hand rail keeps compact rules complete without a nested scroller", async ({
   browser,
 }) => {
   const context = await browser.newContext({
@@ -80,7 +85,7 @@ test("hand rail keeps common rules visible and exposes longer rules without clip
     game.s.active = "p";
     game.s.phase = "battle";
     game.s.p.mana = game.s.p.maxMana = 10;
-    game.s.p.hand = ["dragon", "spark", "fenlos"].map((id) => game.card(id));
+    game.s.p.hand = ["dragon", "spark", "solaris"].map((id) => game.card(id));
     game.emit();
     return [...document.querySelectorAll("#hand .hand-card")].map((hand) => {
       const card = hand.querySelector(".card"),
@@ -93,23 +98,25 @@ test("hand rail keeps common rules visible and exposes longer rules without clip
         overflow: getComputedStyle(text).overflowY,
         scrollHeight: text.scrollHeight,
         clientHeight: text.clientHeight,
-        scrolled: text.scrollTop > 0,
+        artHeight: card.querySelector(".card-art").getBoundingClientRect().height,
+        objectFit: getComputedStyle(card.querySelector(".card-art img")).objectFit,
+        ruleSize: card.dataset.ruleSize,
         verticalFit:
           handRect.y >= 0 && handRect.bottom <= innerHeight + 1,
       };
     });
   });
   expect(state.map((x) => x.lineClamp)).toEqual(["none", "none", "none"]);
-  expect(state.map((x) => x.overflow)).toEqual(["auto", "auto", "auto"]);
-  expect(state[0].scrollHeight).toBeLessThanOrEqual(state[0].clientHeight + 1);
-  expect(state[1].scrollHeight).toBeLessThanOrEqual(state[1].clientHeight + 1);
-  expect(state[2].scrollHeight).toBeGreaterThan(state[2].clientHeight);
-  expect(state[2].scrolled).toBe(true);
+  expect(state.map((x) => x.overflow)).toEqual(["hidden", "hidden", "hidden"]);
+  expect(state.every((x) => x.scrollHeight <= x.clientHeight + 1)).toBe(true);
+  expect(state.every((x) => x.objectFit === "cover")).toBe(true);
+  expect(state.map((x) => x.ruleSize)).toEqual(["short", "standard", "long"]);
+  expect(Math.max(...state.map((x) => x.artHeight)) - Math.min(...state.map((x) => x.artHeight))).toBeLessThanOrEqual(1);
   expect(state.every((x) => x.verticalFit)).toBe(true);
   await context.close();
 });
 
-test("desktop hand rail removes the old clamp and keeps the rules well scrollable", async ({
+test("desktop hand rail uses the same static card face contract", async ({
   page,
 }) => {
   await ready(page);
@@ -120,7 +127,7 @@ test("desktop hand rail removes the old clamp and keeps the rules well scrollabl
     game.s.active = "p";
     game.s.phase = "battle";
     game.s.p.mana = game.s.p.maxMana = 10;
-    game.s.p.hand = ["dragon", "spark", "fenlos"].map((id) => game.card(id));
+    game.s.p.hand = ["dragon", "spark", "solaris"].map((id) => game.card(id));
     game.emit();
     return [...document.querySelectorAll("#hand .hand-card")].map((hand) => {
       const text = hand.querySelector(".card-text"),
@@ -131,12 +138,18 @@ test("desktop hand rail removes the old clamp and keeps the rules well scrollabl
         overflow: getComputedStyle(text).overflowY,
         scrollHeight: text.scrollHeight,
         clientHeight: text.clientHeight,
+        artHeight: hand.querySelector(".card-art").getBoundingClientRect().height,
+        objectFit: getComputedStyle(hand.querySelector(".card-art img")).objectFit,
+        ruleSize: hand.querySelector(".card").dataset.ruleSize,
         verticalFit: rect.y >= 0 && rect.bottom <= innerHeight + 1,
       };
     });
   });
   expect(state.map((x) => x.lineClamp)).toEqual(["none", "none", "none"]);
-  expect(state.map((x) => x.overflow)).toEqual(["auto", "auto", "auto"]);
-  expect(state[2].scrollHeight).toBeGreaterThan(state[2].clientHeight);
+  expect(state.map((x) => x.overflow)).toEqual(["hidden", "hidden", "hidden"]);
+  expect(state.every((x) => x.scrollHeight <= x.clientHeight + 1)).toBe(true);
+  expect(state.every((x) => x.objectFit === "cover")).toBe(true);
+  expect(state.map((x) => x.ruleSize)).toEqual(["short", "standard", "long"]);
+  expect(Math.max(...state.map((x) => x.artHeight)) - Math.min(...state.map((x) => x.artHeight))).toBeLessThanOrEqual(1);
   expect(state.every((x) => x.verticalFit)).toBe(true);
 });

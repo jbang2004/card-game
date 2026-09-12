@@ -1593,12 +1593,7 @@ body .card .card-text {
   top: 69%;
   bottom: 9%;
   line-height: 1.4;
-  /* Rules are a bounded reading area: the block never reaches the type line
-     or the stat orbs, and a long card ends with an ellipsis instead of
-     silently losing a line. */
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: var(--rule-lines, 5);
+  display: block;
   overflow: hidden;
 }
 body .card.type-minion .card-text,
@@ -1726,14 +1721,9 @@ body:not(.touch-layout) .hand-card:hover {
 body:not(.touch-layout) .hand-card .card .card-text {
   font-size: 10px;
   line-height: 1.3;
-  --rule-lines: 2;
 }
 body:not(.touch-layout) .hand-card .card .card-title {
   font-size: 12px;
-}
-body:not(.touch-layout) .compact-hand .card .card-text {
-  font-size: 9px;
-  --rule-lines: 2;
 }
 body .card-preview .card .card-text {
   font-size: 15px;
@@ -1982,10 +1972,8 @@ body.touch-layout .card .card-title {
   padding-left: 4%;
   padding-right: 8%;
 }
-/* Touch hand cards: art 50% / name band 11% / rules 19% / stat orbs 19%.
-   The rules block is bounded above the orbs and clamps to two lines with an
-   ellipsis, so a long card never overlaps attack/health or silently loses a
-   line. Long-press still opens the full detail sheet. */
+/* Touch hand cards keep the tactile shelf and reserve a separate stat rail;
+   the shared card-face contract below owns the art and rules proportions. */
 body.touch-layout .hand-card .card-art {
   height: 48%;
 }
@@ -1999,8 +1987,7 @@ body.touch-layout .hand-card .card-title {
 body.touch-layout .hand-card .card-rarity {
   top: 58%;
 }
-body.touch-layout .hand-card .card .card-text,
-body.touch-layout .hand-card .card.dense .card-text {
+body.touch-layout .hand-card .card .card-text {
   top: 59.5%;
   bottom: 20%;
   left: 6%;
@@ -2008,7 +1995,6 @@ body.touch-layout .hand-card .card.dense .card-text {
   max-height: none;
   font-size: 10px;
   line-height: 1.28;
-  --rule-lines: 2;
 }
 body.touch-layout .hand-card .card .stat {
   width: 25%;
@@ -2017,32 +2003,6 @@ body.touch-layout .hand-card .card .stat {
 }
 body.touch-layout .hand-card .card-class-seal {
   display: none;
-}
-/* Very short landscape screens cannot give a card two lines of 10px rules
-   without crushing the arena; drop to a compact 8.5px face so both lines and
-   the ellipsis still fit. */
-@media (max-height: 379px) {
-  body.touch-layout .hand-card .card .card-text,
-  body.touch-layout .hand-card .card.dense .card-text {
-    font-size: 8px;
-    line-height: 1.15;
-  }
-}
-/* Short portrait phones keep the same two readable lines by scaling the face
-   with the available card height instead of shrinking the card further. */
-@media (orientation: portrait) and (max-height: 719px) {
-  body.touch-layout .hand-card .card .card-text,
-  body.touch-layout .hand-card .card.dense .card-text {
-    font-size: 9px;
-    line-height: 1.3;
-  }
-}
-@media (orientation: portrait) and (max-height: 599px) {
-  body.touch-layout .hand-card .card .card-text,
-  body.touch-layout .hand-card .card.dense .card-text {
-    font-size: 8.5px;
-    line-height: 1.2;
-  }
 }
 body.touch-layout .contract-open {
   grid-template-columns: 25px 1fr;
@@ -4035,40 +3995,76 @@ body .drag-ghost[data-snap-mode="target"]::before {
   }
 }
 
-/* Card reading contract ---------------------------------------------------
- * A card's rules are never reduced to an ellipsis. The compact hand face is
- * allowed to scroll its own rules well, while the lifted/detail face grows a
- * taller reading panel before falling back to that same scroll behaviour for
- * unusually long god/contract text. This keeps art, stats and copy separate
- * instead of letting one absolute layer cover another. */
-body .card-rules-scroll {
-  position: absolute;
-  z-index: 6;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  right: 7%;
-  bottom: 11%;
-  border: 1px solid #7f6a44aa;
-  border-radius: 50%;
-  background: #f4e4bdcc;
-  color: #66512f;
-  font: 700 10px/1 var(--sans);
-  box-shadow: 0 1px 2px #2a1c0c55;
-  pointer-events: none;
+/* Card face contract -------------------------------------------------------
+ * One fixed frame is shared by hand cards, lifted cards and collection cards:
+ * portrait art, name band, bounded rules, then the type/stat rail. Rules are
+ * deliberately display-only; copy is validated in data.js so no card needs a
+ * private scroll path or a density-specific layout branch. */
+body .card .card-art {
+  height: 43%;
+  background: #3b2b21;
 }
-body .card.rules-scrollable .card-rules-scroll {
-  display: grid;
+body .card .card-art img {
+  object-fit: cover;
+  object-position: var(--art-pos, 50% 34%);
+  transform: scale(var(--art-scale, 1));
+  background: none;
+}
+body .card .card-title {
+  top: 43%;
+  height: 13%;
+  min-height: 0;
+}
+body .card .card-text,
+body .card.type-minion .card-text,
+body .card.weapon .card-text {
+  top: 57%;
+  bottom: 19%;
+  display: block;
+  max-height: none;
+  overflow: hidden;
+  white-space: normal;
+  text-overflow: clip;
+  scrollbar-width: none;
+  pointer-events: none;
+  font-size: clamp(8px, 6cqw, 15px);
+  line-height: 1.28;
+}
+body .card .card-text::-webkit-scrollbar {
+  display: none;
+}
+body .card .card-copy {
+  display: block;
+  width: 100%;
 }
 
-/* The detail card is a reading surface, not a scaled copy of the hand card.
- * Its ratio is driven by rule density so a long effect gets paper, not a
- * smaller font. The max width still leaves a comfortable veil around phones. */
+/* Copy length is a content decision, not a second card layout. Short rules
+ * use the otherwise empty rule well as a readable focal point; standard and
+ * long rules keep the normal left-aligned reading rhythm. */
+body .card[data-rule-size="short"] .card-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 7%;
+  text-align: center;
+  font-size: clamp(11px, 7.2cqw, 18px);
+  line-height: 1.3;
+}
+body .card[data-rule-size="short"] .card-copy {
+  display: block;
+}
+body .card-preview[data-mode="pinned"] .card[data-rule-size="short"] .card-text,
+body .card-preview[data-mode="hover"] .card[data-rule-size="short"] .card-text {
+  padding-inline: 8%;
+  font-size: clamp(14px, calc(var(--detail-w) * 0.052), 19px);
+  line-height: 1.35;
+}
+
+/* The detail card has one stable paper ratio. Its width adapts to the safe
+ * viewport, while the internal art/title/rules proportions never change. */
 body .card-preview[data-mode="pinned"],
 body .card-preview[data-mode="hover"] {
-  --detail-w: 260px;
+  --detail-w: min(300px, calc(100vw - 28px), calc((100dvh - 84px) / 1.45));
   aspect-ratio: 1 / 1.45;
   width: var(--detail-w);
   height: auto;
@@ -4076,46 +4072,6 @@ body .card-preview[data-mode="hover"] {
   max-width: var(--detail-w);
   min-height: 0;
   max-height: none;
-}
-body .card-preview[data-mode="pinned"] {
-  --detail-w: min(
-    300px,
-    calc(100vw - 28px),
-    calc((100dvh - 84px) / 1.45)
-  );
-}
-body .card-preview[data-mode="pinned"][data-rule-density="medium"],
-body .card-preview[data-mode="hover"][data-rule-density="medium"] {
-  aspect-ratio: 1 / 1.58;
-}
-body .card-preview[data-mode="pinned"][data-rule-density="medium"] {
-  --detail-w: min(
-    300px,
-    calc(100vw - 28px),
-    calc((100dvh - 84px) / 1.58)
-  );
-}
-body .card-preview[data-mode="pinned"][data-rule-density="long"],
-body .card-preview[data-mode="hover"][data-rule-density="long"] {
-  aspect-ratio: 1 / 1.82;
-}
-body .card-preview[data-mode="pinned"][data-rule-density="long"] {
-  --detail-w: min(
-    300px,
-    calc(100vw - 28px),
-    calc((100dvh - 84px) / 1.82)
-  );
-}
-body .card-preview[data-mode="pinned"][data-rule-density="very-long"],
-body .card-preview[data-mode="hover"][data-rule-density="very-long"] {
-  aspect-ratio: 1 / 2.02;
-}
-body .card-preview[data-mode="pinned"][data-rule-density="very-long"] {
-  --detail-w: min(
-    300px,
-    calc(100vw - 28px),
-    calc((100dvh - 84px) / 2.02)
-  );
 }
 body .card-preview[data-mode="pinned"] .card,
 body .card-preview[data-mode="hover"] .card {
@@ -4125,237 +4081,52 @@ body .card-preview[data-mode="hover"] .card {
   max-height: none;
   aspect-ratio: 1 / 1.45;
 }
-body .card-preview[data-mode="pinned"][data-rule-density="medium"] .card,
-body .card-preview[data-mode="hover"][data-rule-density="medium"] .card {
-  aspect-ratio: 1 / 1.58;
-}
-body .card-preview[data-mode="pinned"][data-rule-density="long"] .card,
-body .card-preview[data-mode="hover"][data-rule-density="long"] .card {
-  aspect-ratio: 1 / 1.82;
-}
-body .card-preview[data-mode="pinned"][data-rule-density="very-long"] .card,
-body .card-preview[data-mode="hover"][data-rule-density="very-long"] .card {
-  aspect-ratio: 1 / 2.02;
-}
 body .card-preview[data-mode="pinned"] .card .card-art,
 body .card-preview[data-mode="hover"] .card .card-art {
-  height: 45%;
+  height: 43%;
 }
 body .card-preview[data-mode="pinned"] .card .card-title,
 body .card-preview[data-mode="hover"] .card .card-title {
-  top: 45%;
+  top: 43%;
   height: 13%;
-  min-height: 0;
 }
 body .card-preview[data-mode="pinned"] .card .card-text,
 body .card-preview[data-mode="hover"] .card .card-text {
-  top: 59%;
-  bottom: 13%;
-  display: block;
-  max-height: none;
-  overflow: auto;
-  text-overflow: clip;
-  -webkit-line-clamp: unset;
-  line-clamp: unset;
-  scrollbar-width: thin;
+  top: 57%;
+  bottom: 19%;
   font-size: clamp(11px, calc(var(--detail-w) * 0.043), 15px);
-  line-height: 1.36;
-}
-body .card-preview[data-mode="pinned"] .card.rules-short .card-art,
-body .card-preview[data-mode="hover"] .card.rules-short .card-art {
-  height: 50%;
-}
-body .card-preview[data-mode="pinned"] .card.rules-short .card-title,
-body .card-preview[data-mode="hover"] .card.rules-short .card-title {
-  top: 50%;
-  height: 13%;
-}
-body .card-preview[data-mode="pinned"] .card.rules-short .card-text,
-body .card-preview[data-mode="hover"] .card.rules-short .card-text {
-  top: 64%;
-  bottom: 13%;
-}
-body .card-preview[data-mode="pinned"] .card.rules-medium .card-art,
-body .card-preview[data-mode="hover"] .card.rules-medium .card-art {
-  height: 45%;
-}
-body .card-preview[data-mode="pinned"] .card.rules-medium .card-title,
-body .card-preview[data-mode="hover"] .card.rules-medium .card-title {
-  top: 45%;
-  height: 13%;
-}
-body .card-preview[data-mode="pinned"] .card.rules-medium .card-text,
-body .card-preview[data-mode="hover"] .card.rules-medium .card-text {
-  top: 59%;
-  bottom: 13%;
-}
-body .card-preview[data-mode="pinned"] .card.rules-long .card-art,
-body .card-preview[data-mode="hover"] .card.rules-long .card-art {
-  height: 40%;
-}
-body .card-preview[data-mode="pinned"] .card.rules-long .card-title,
-body .card-preview[data-mode="hover"] .card.rules-long .card-title {
-  top: 40%;
-  height: 13%;
-}
-body .card-preview[data-mode="pinned"] .card.rules-long .card-text,
-body .card-preview[data-mode="hover"] .card.rules-long .card-text {
-  top: 54%;
-  bottom: 11%;
-  font-size: clamp(10.5px, calc(var(--detail-w) * 0.04), 14px);
-}
-body .card-preview[data-mode="pinned"] .card.rules-very-long .card-art,
-body .card-preview[data-mode="hover"] .card.rules-very-long .card-art {
-  height: 36%;
-}
-body .card-preview[data-mode="pinned"] .card.rules-very-long .card-title,
-body .card-preview[data-mode="hover"] .card.rules-very-long .card-title {
-  top: 36%;
-  height: 12%;
-}
-body .card-preview[data-mode="pinned"] .card.rules-very-long .card-text,
-body .card-preview[data-mode="hover"] .card.rules-very-long .card-text {
-  top: 49%;
-  bottom: 9%;
-  font-size: clamp(10px, calc(var(--detail-w) * 0.037), 13px);
-}
-body .card-preview[data-mode="pinned"] .card.rules-scrollable .card-rules-scroll,
-body .card-preview[data-mode="hover"] .card.rules-scrollable .card-rules-scroll {
-  display: none;
+  line-height: 1.32;
 }
 
-/* Desktop hand faces gain a real rules well instead of a two-line clamp. */
-body:not(.touch-layout) .hand-card .card-art {
-  height: 44%;
+/* Hand cards use the same geometry and receive the horizontal gesture on the
+ * button itself. There is no nested vertical scroller to steal the pointer. */
+body .hand-card .card .card-art {
+  height: 43%;
 }
-body:not(.touch-layout) .hand-card .card-title {
-  top: 44%;
+body .hand-card .card .card-title {
+  top: 43%;
   height: 13%;
   min-height: 0;
 }
-body:not(.touch-layout) .hand-card .card .card-text {
-  top: 59%;
-  bottom: 18%;
-  display: block;
-  max-height: none;
-  overflow: auto;
-  text-overflow: clip;
-  -webkit-line-clamp: unset;
-  line-clamp: unset;
-  scrollbar-width: thin;
-  font-size: 8.5px;
-  line-height: 1.28;
+body:not(.touch-layout) .hand-card .card .card-text,
+body.touch-layout .hand-card .card .card-text {
+  top: 57%;
+  bottom: 19%;
+  left: 6%;
+  right: 6%;
+  font-size: clamp(7.5px, 6.1cqw, 9.5px);
+  line-height: 1.18;
+}
+body:not(.touch-layout) .hand-card .card[data-rule-size="short"] .card-text,
+body.touch-layout .hand-card .card[data-rule-size="short"] .card-text {
+  padding-inline: 6%;
+  font-size: clamp(9px, 7.4cqw, 11px);
+  line-height: 1.25;
 }
 
-/* Touch hand faces preserve the tactile shelf, but the rules well is now
- * complete and scrollable. The small indicator appears only when the card
- * actually has more copy than its current shelf allocation. */
-body.touch-layout .hand-card .card-art {
-  height: 44%;
-}
-body.touch-layout .hand-card .card-title {
-  top: 44%;
-  height: 12%;
-}
-body.touch-layout .hand-card .card .card-text {
-  display: block;
-  max-height: none;
-  overflow: auto;
-  /* Short copy is display-only; letting the hand button receive the touch
-   * makes a swipe over the lettering behave exactly like a swipe over art. */
-  pointer-events: none;
-  text-overflow: clip;
-  -webkit-line-clamp: unset;
-  line-clamp: unset;
-  scrollbar-width: none;
-  /* Horizontal rail movement stays native. Vertical rule scrolling is
-   * handled by the small directional controller in ui.js so the two surfaces
-   * do not compete for the same touch stream. */
-  touch-action: pan-x;
-  overscroll-behavior: contain;
-  top: 57%;
-  bottom: 17%;
-}
-body.touch-layout .hand-card .card .card-text::-webkit-scrollbar {
-  display: none;
-}
-body.touch-layout .hand-card .card.rules-scrollable .card-text {
-  pointer-events: auto;
-}
-body.touch-layout .hand-card .card-rules-scroll {
-  right: 6%;
-  bottom: 21%;
-  width: 13px;
-  height: 13px;
-  font-size: 8px;
-  opacity: 0.88;
-}
-body.touch-layout .hand-card .card.rules-short .card-text {
-  --rule-lines: unset;
-  font-size: 9px;
-  line-height: 1.24;
-}
-body.touch-layout .hand-card .card.rules-medium .card-art {
-  height: 37%;
-}
-body.touch-layout .hand-card .card.rules-medium .card-title {
-  top: 37%;
-}
-body.touch-layout .hand-card .card.rules-medium .card-text {
-  font-size: 8.6px;
-  line-height: 1.25;
-  top: 50%;
-}
-body.touch-layout .hand-card .card.rules-long .card-art {
-  height: 32%;
-}
-body.touch-layout .hand-card .card.rules-long .card-title {
-  top: 32%;
-}
-body.touch-layout .hand-card .card.rules-long .card-text {
-  font-size: 8px;
-  line-height: 1.2;
-  top: 45%;
-}
-body.touch-layout .hand-card .card.rules-very-long .card-art {
-  height: 30%;
-}
-body.touch-layout .hand-card .card.rules-very-long .card-title {
-  top: 30%;
-  height: 11%;
-}
-body.touch-layout .hand-card .card.rules-very-long .card-text {
-  font-size: 7.5px;
-  line-height: 1.15;
-  top: 42%;
-}
-@media (orientation: portrait) and (max-height: 719px) {
-  body.touch-layout .hand-card .card.rules-medium .card-text {
-    font-size: 8px;
-  }
-  body.touch-layout .hand-card .card.rules-long .card-text {
-    font-size: 7.5px;
-  }
-  body.touch-layout .hand-card .card.rules-very-long .card-text {
-    font-size: 7px;
-  }
-}
 @media (orientation: landscape) and (max-width: 900px) {
-  body .card-preview[data-mode="pinned"] {
+  body .card-preview[data-mode="pinned"],
+  body .card-preview[data-mode="hover"] {
     --detail-w: min(300px, calc(100vw - 28px), calc((100dvh - 28px) / 1.45));
-    aspect-ratio: 1 / 1.45;
-  }
-  body .card-preview[data-mode="pinned"][data-rule-density="medium"] {
-    --detail-w: min(300px, calc(100vw - 28px), calc((100dvh - 28px) / 1.58));
-    aspect-ratio: 1 / 1.58;
-  }
-  body .card-preview[data-mode="pinned"][data-rule-density="long"],
-  body .card-preview[data-mode="pinned"][data-rule-density="very-long"] {
-    --detail-w: min(300px, calc(100vw - 28px), calc((100dvh - 28px) / 1.65));
-    aspect-ratio: 1 / 1.65;
-  }
-  body .card-preview[data-mode="pinned"][data-rule-density="long"] .card,
-  body .card-preview[data-mode="pinned"][data-rule-density="very-long"] .card {
-    aspect-ratio: 1 / 1.65;
   }
 }

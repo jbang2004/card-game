@@ -47,15 +47,6 @@ body:not(.touch-layout) .hand-card .card-text {
   font-size: 10px;
   line-height: 1.35;
 }
-body:not(.touch-layout) .compact-hand .card-title {
-  font-size: 10px;
-}
-body:not(.touch-layout) .compact-hand .card-title.long {
-  font-size: 9px;
-}
-body:not(.touch-layout) .compact-hand .card-text {
-  font-size: 9px;
-}
 body:not(.touch-layout) .hand-label {
   left: 227px;
   top: 722px;

@@ -496,10 +496,6 @@ body:not(.touch-layout) .hand-card .card .stat {
   font-size: 21px;
   line-height: 1.2;
 }
-body:not(.touch-layout) .compact-hand .card .stat,
-body:not(.touch-layout) .compact-hand .card-cost {
-  font-size: 17px;
-}
 body.touch-layout .hand-card .card-cost,
 body.touch-layout .hand-card .card .stat {
   font-size: 14px;

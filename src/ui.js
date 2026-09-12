@@ -13,7 +13,6 @@
     artKeyForCard,
     artStyleForCard,
     artStyleForHero,
-    ruleDensity,
     cardHTML,
   } = EmberCards;
   const {
@@ -223,14 +222,41 @@
     const arena = localRect($("arena"));
     if (!arena) return null;
     const margin = EmberViewport.mobile ? 26 : 72,
-      lane = EmberViewport.lane("p"),
       hand = localRect($("hand")),
       minY = arena.top + arena.h * 0.5,
       maxY = Math.min(
         arena.bottom - margin,
         hand ? hand.top - margin : arena.bottom - margin,
       ),
-      candidate = pointerTarget || lane;
+      board = game.s?.p?.board || [],
+      count = board.length,
+      lane = EmberViewport.lane("p");
+    let candidate = pointerTarget || null;
+    if (!candidate) {
+      if (!count) {
+        candidate = lane;
+      } else if (count < 7) {
+        /* Anchor from the live group edge, not from the lane midpoint. The
+         * board recenters after a summon, but the current edge is the only
+         * point we can guarantee is actually empty before the click. */
+        const first = EmberViewport.minion("p", 0, count),
+          last = EmberViewport.minion("p", count - 1, count),
+          nudge = EmberViewport.mobile ? 18 : 28,
+          right = last.x + last.w + nudge,
+          left = first.x - nudge;
+        candidate = {
+          x: right <= arena.right - margin ? right : left,
+          y: last.y + last.h / 2,
+        };
+      } else {
+        /* A full board has no legal minion slot. Keep the cue in the lower
+         * play lane instead of pointing at an occupied center card. */
+        candidate = {
+          x: arena.right - margin,
+          y: lane.y,
+        };
+      }
+    }
     return {
       x: Math.max(arena.left + margin, Math.min(arena.right - margin, candidate.x)),
       y: Math.max(minY, Math.min(maxY, candidate.y)),
@@ -922,7 +948,6 @@
     const metrics = EmberHand.metrics(s.p.hand.length);
     $("hand").style.setProperty("--desktop-card-w", metrics.width + "px");
     $("hand").style.setProperty("--desktop-card-h", metrics.height + "px");
-    $("hand").classList.toggle("compact-hand", s.p.hand.length > 7);
     const gap = metrics.step;
     $("hand").innerHTML = s.p.hand
       .map((card, i) => {
@@ -932,7 +957,6 @@
         return `<button class="hand-card ${playable ? "playable" : ""} ${game.cost(card) > s.p.mana ? "unaffordable" : ""}" style="--x:${offset * gap}px;--y:${0}px;--r:${0}deg;--i:${i + 1}" data-hand="${card.uid}" data-cardid="${c.id}" aria-label="${c.name}，${game.cost(card)} 法力。点按选中，拖动出牌。${c.text}">${cardHTML(c, { cost: game.cost(card) })}</button>`;
       })
       .join("");
-    syncCardRuleOverflow($("hand"));
     const ours = s.active === "p";
     $("turn-number").textContent =
       "TURN " +
@@ -1012,78 +1036,6 @@
     if (tip && !EmberViewport.mobile)
       tip.textContent = "拖到战场出牌 · 点按选中/瞄准 · 悬停看大图";
   }
-  function syncCardRuleOverflow(root = document) {
-    root.querySelectorAll?.(".card").forEach((card) => {
-      const text = card.querySelector(".card-text");
-      if (!text) return;
-      const overflowing = text.scrollHeight > text.clientHeight + 1;
-      card.classList.toggle("rules-scrollable", overflowing);
-      if (overflowing) text.title = "上下滑动查看完整规则";
-      else text.removeAttribute("title");
-      if (overflowing && text.closest(".hand-card")) {
-        if (text.dataset.handRuleScroll !== "1") {
-          text.dataset.handRuleScroll = "1";
-          let gesture = null;
-          const finish = () => {
-            gesture = null;
-          };
-          text.addEventListener(
-            "pointerdown",
-            (event) => {
-              if (!EmberViewport.mobile || event.pointerType !== "touch")
-                return;
-              gesture = {
-                id: event.pointerId,
-                axis: null,
-                x: event.clientX,
-                y: event.clientY,
-                distanceX: 0,
-                distanceY: 0,
-              };
-              /* The hand-card drag listener must not start while the user is
-               * reading and vertically scrolling this rules well. */
-              event.stopPropagation();
-            },
-            { passive: true },
-          );
-          text.addEventListener(
-            "pointermove",
-            (event) => {
-              if (!gesture || event.pointerId !== gesture.id) return;
-              const dx = event.clientX - gesture.x,
-                dy = event.clientY - gesture.y;
-              gesture.distanceX += dx;
-              gesture.distanceY += dy;
-              if (
-                !gesture.axis &&
-                Math.hypot(gesture.distanceX, gesture.distanceY) > 7
-              )
-                gesture.axis =
-                  Math.abs(gesture.distanceY) > Math.abs(gesture.distanceX)
-                    ? "y"
-                    : "x";
-              if (gesture.axis === "y") {
-                const max = Math.max(0, text.scrollHeight - text.clientHeight),
-                  next = Math.max(
-                    0,
-                    Math.min(max, text.scrollTop - dy),
-                  );
-                if (next !== text.scrollTop) {
-                  text.scrollTop = next;
-                  event.preventDefault();
-                }
-              }
-              gesture.x = event.clientX;
-              gesture.y = event.clientY;
-            },
-            { passive: false },
-          );
-          text.addEventListener("pointerup", finish, { passive: true });
-          text.addEventListener("pointercancel", finish, { passive: true });
-        }
-      }
-    });
-  }
   /* One detail layer for every input: hover (mouse), keyboard focus, right
    * click and touch long-press all magnify the same card. Nothing else is
    * drawn around it, and any click dismisses a pinned card. */
@@ -1118,7 +1070,6 @@
     detail.source = opts.source || null;
     detail.pinned = pinned;
     el.dataset.mode = pinned ? "pinned" : "hover";
-    el.dataset.ruleDensity = ruleDensity(c);
     el.setAttribute("aria-hidden", String(!pinned));
     el.classList.remove("open");
     el.style.display = "block";
@@ -1126,7 +1077,6 @@
     /* Next frame, so the magnify transition always plays from the small state. */
     requestAnimationFrame(() => {
       el.classList.add("open");
-      syncCardRuleOverflow(el);
     });
     if (!detail.pinned) placeHoverDetail();
   }
@@ -1167,7 +1117,6 @@
     el.style.display = "none";
     el.setAttribute("aria-hidden", "true");
     delete el.dataset.mode;
-    delete el.dataset.ruleDensity;
     if (el.parentElement !== app) app.append(el);
   }
   function preview(cid, el) {
@@ -1197,7 +1146,6 @@
     el.classList.remove("open");
     el.style.display = "none";
     el.setAttribute("aria-hidden", "true");
-    delete el.dataset.ruleDensity;
   }
   function inspectBattleCard(el) {
     if (!el?.dataset.cardid) return false;
