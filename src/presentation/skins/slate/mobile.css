@@ -1,3 +1,2261 @@
-/* Test skin "slate" — 手机布局 / mobile (body.touch-layout) layouts. Empty placeholder.
- * Owned by the mobile restyle task; tokens and the two dialog shells
- * live in base.css — only add page-specific selectors here. */
+/* Test skin "slate" (磨砂青岩) — 触控布局 / touch layouts (design system §5.7).
+ *
+ * Scope: every rule starts with `html[data-skin="slate"] body.touch-layout`
+ * (plus `.mobile-portrait` / `.mobile-landscape` where the geometry differs).
+ * `body.touch-layout` covers the phone portrait and landscape layouts, the
+ * short landscape, touch tablets AND the `compact-desktop` battle view that
+ * `mobile-view.js` switches on below 1360×700 — one layout family, five sizes.
+ *
+ * This file owns the BATTLE screen and the BATTLE-TIME dialogs. The shared
+ * tokens, the two dialog shells, the pill buttons and the round close button
+ * are already layout-agnostic in `base.css`; `battle.css` and `dialogs.css`
+ * are scoped to `body:not(.touch-layout)` and do nothing here, so every HUD
+ * material they declare is restated below with the SAME literal values. That
+ * repetition is deliberate and machine-checked:
+ * `tests/e2e/responsive-component-style.spec.cjs` compares the computed
+ * background / border / radius / shadow / colour / font-family / font-weight /
+ * text-shadow of `#power-btn`, `#end-turn`, `#contract-open`, `.mana-panel`,
+ * `.hero`, `.menu-action`, `.touch-log`, `.touch-live-stat`,
+ * `.mulligan-choice-state`, `.relic-choice`, `.result-*` and `.discover-card`
+ * between 1600×940 and the touch sizes and fails on any difference. Only
+ * position, size, spacing, order and visibility change here.
+ *
+ * Three structural facts shape this file:
+ *
+ *  1. `mobile-view.js` writes `left/top/width/height` INLINE on `#arena`,
+ *     `#enemy-hero`, `#player-hero`, `#power-btn`, `#contract-open`, `#hand`,
+ *     `#touch-target-bar`, `#touch-match-chip`, `#turn-number`,
+ *     `.turn-controls`, `.mana-panel`, `.hand-label` and `#board-empty`, and
+ *     inline styles outrank cascade layers. The skin therefore never sets the
+ *     position or the box of those elements — it only dresses what is inside
+ *     the box the layout engine hands it. Anything that needed a different box
+ *     would be a `mobile-view.js` change, which is out of scope.
+ *
+ *  2. `tests/e2e/action-feedback.spec.cjs` asserts that `#power-btn`,
+ *     `#contract-open`, `#end-turn` and `#touch-cancel` each compute
+ *     `background-image: none`, stay at least 43×43, stay inside the viewport,
+ *     never overlap and are not covered at their centre. Every glow and
+ *     gradient on those four controls lives on a pseudo-element.
+ *
+ *  3. `dialog-layout.css` already solves the touch dialog grids (portrait
+ *     2-column opening hand, one-row short landscape, single scroll surface).
+ *     The dialog blocks below only restate the slate material on top of it and
+ *     buy back vertical room so the 「保留 / 替换」 pills stop being clipped at
+ *     844×390.
+ *
+ * Token candidates raised for base.css are marked `token candidate` inline.
+ */
+
+/* ---------------------------------------------------------------------------
+ * 1. Topbar, battle view only
+ * Same language as `battle.css` §1: veil + hairline, text wordmark, 36px round
+ * icon pills. Scoped to `#app.battle-view` so the lobby topbar keeps whatever
+ * the home task gives it.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body.touch-layout #app.battle-view .topbar {
+  background: linear-gradient(#0d1420cc, #0d142000);
+  border: 0;
+  border-bottom: 1px solid var(--slate-line);
+  box-shadow: none;
+  color: var(--slate-ink);
+  font-family: var(--slate-font);
+}
+html[data-skin="slate"] body.touch-layout #app.battle-view .brand strong {
+  font: 700 17px/1.1 var(--slate-font);
+  letter-spacing: 3px;
+  color: #fff;
+  text-shadow: 0 2px 8px #0008;
+}
+html[data-skin="slate"] body.touch-layout #app.battle-view .brand small {
+  font: 500 9px/1.6 var(--slate-font);
+  letter-spacing: 2px;
+  color: var(--slate-ink-3);
+}
+/* 36px pill per the brief; the icon buttons sit in a 52px (portrait) / 44px
+ * (landscape) topbar, so the row itself supplies the rest of the touch slop. */
+html[data-skin="slate"]
+  body.touch-layout
+  #app.battle-view
+  .top-actions
+  .icon-btn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 50%;
+  background: var(--slate-pill);
+  box-shadow: none;
+  color: var(--slate-ink-2);
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #app.battle-view
+  .top-actions
+  .icon-btn
+  svg {
+  width: 18px;
+  height: 18px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #app.battle-view
+  .top-actions
+  .icon-btn:hover {
+  background: #1b2434d9;
+  border-color: var(--slate-line-strong);
+  color: #fff;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #app.battle-view
+  .top-actions
+  .icon-btn:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 2px;
+}
+/* `mobile.css` hides the fullscreen button on touch and `battle.css` hides the
+ * collection shortcut inside a battle; both are `.icon-btn`s, so the `display:
+ * grid` above would resurrect them. Restate the hidden state (design system
+ * §6.7). */
+html[data-skin="slate"] body.touch-layout #app.battle-view #fullscreen-btn,
+html[data-skin="slate"] body.touch-layout #app.battle-view #touch-collection {
+  display: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * 2. Turn chip — the centred dark pill from `battle.css` §2, in the box
+ * `mobile-view.js` reserves at the top of the screen (100×34 portrait,
+ * 220×30 landscape).
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body.touch-layout #app.battle-view .turn-number {
+  display: grid;
+  place-items: center;
+  padding: 0 12px;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  box-shadow: none;
+  color: #fff;
+  font: 600 13px/1 var(--slate-font);
+  letter-spacing: 1px;
+  text-shadow: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html[data-skin="slate"] body.mobile-landscape #app.battle-view .turn-number {
+  font-size: 12px;
+}
+
+/* ---------------------------------------------------------------------------
+ * 3. Match chip and contract chip — dark pill bars
+ * `#touch-match-chip` carries 第 N 战 / boss name / phase; portrait shows only
+ * the name (`battle.css` hides `small` and `span`), landscape hides the chip.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body.touch-layout #battle #touch-match-chip {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  box-shadow: none;
+  color: #fff;
+  font-family: var(--slate-font);
+  text-shadow: none;
+  overflow: hidden;
+}
+html[data-skin="slate"] body.touch-layout #battle #touch-match-chip strong {
+  color: #fff;
+  font: 600 13px/1 var(--slate-font);
+  letter-spacing: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  #touch-match-chip
+  :is(small, span) {
+  color: var(--slate-ink-3);
+  font: 400 11px/1 var(--slate-font);
+  letter-spacing: 0.5px;
+}
+/* `battle.css` drops the match chip in landscape, where the command rail and
+ * the boss card already carry the same information; the `display: flex` above
+ * would resurrect it (design system §6.7). */
+html[data-skin="slate"] body.mobile-landscape #battle #touch-match-chip {
+  display: none;
+}
+/* Short portraits give the chip a 20px rail; drop the pill padding with it. */
+@media (max-height: 649px) and (orientation: portrait) {
+  html[data-skin="slate"] body.mobile-portrait #battle #touch-match-chip {
+    padding: 0 10px;
+  }
+  html[data-skin="slate"]
+    body.mobile-portrait
+    #battle
+    #touch-match-chip
+    strong {
+    font-size: 11px;
+  }
+}
+
+/* Same chip material as `battle.css` §6, in the 114×44 (portrait) / 48×44
+ * (landscape) box the layout engine reserves. */
+html[data-skin="slate"] body.touch-layout #battle .contract-open {
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  box-shadow: none;
+  color: #fff;
+  font-family: var(--slate-font);
+  text-shadow: none;
+  overflow: hidden;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+html[data-skin="slate"] body.mobile-portrait #battle .contract-open {
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 0 8px;
+  padding: 0 12px 0 10px;
+}
+html[data-skin="slate"] body.mobile-landscape #battle .contract-open {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  align-content: center;
+  padding: 0 2px;
+}
+html[data-skin="slate"] body.touch-layout #battle .contract-label {
+  color: #fff;
+  font: 600 12px/1.3 var(--slate-font);
+  letter-spacing: 1px;
+}
+/* the landscape chip is 48px wide: the four-character label only fits without
+ * tracking, and it must not spill past the pill rim */
+html[data-skin="slate"] body.mobile-landscape #battle .contract-label {
+  max-width: 100%;
+  font-size: 10px;
+  letter-spacing: 0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html[data-skin="slate"] body.touch-layout #battle .contract-open small {
+  color: var(--slate-ink-3);
+  font: 400 11px/1.3 var(--slate-font);
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html[data-skin="slate"] body.touch-layout #battle .contract-open.ready {
+  border-color: #8cc4ff99;
+  color: #fff;
+}
+html[data-skin="slate"] body.touch-layout #battle .contract-open.ready small {
+  color: var(--slate-blue);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .contract-open:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 3px;
+}
+
+/* ---------------------------------------------------------------------------
+ * 4. Heroes — the same 10px bordered card and dark name pill as `battle.css`
+ * §5. The portrait, the 5:7.4 face ratio and the mana / attack / health /
+ * armour badge SVGs are the game's own and are untouched.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  :is(.hero.enemy, .hero.player) {
+  border: 1.5px solid var(--slate-card-line);
+  border-radius: 10px;
+  background: var(--slate-card-base);
+  box-shadow: 0 8px 20px #0007;
+  color: var(--slate-ink);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  :is(.hero.enemy, .hero.player)
+  .hero-card-inner {
+  inset: 3px;
+  border-radius: 7px;
+  background: var(--slate-card-base);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  :is(.hero.enemy, .hero.player)
+  .hero-card-plaque {
+  display: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  :is(.hero.enemy, .hero.player)
+  .hero-name {
+  padding: 1px 5%;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  box-shadow: 0 3px 10px #0008;
+  clip-path: none;
+  color: #fff;
+  font: 600 clamp(9px, 7cqw, 18px) / 1.15 var(--slate-font);
+  letter-spacing: 1px;
+  text-shadow: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  :is(.hero.enemy, .hero.player)
+  .hero-phase {
+  padding: 2px 8px;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  color: var(--slate-ink-2);
+  font: 500 10px/1.3 var(--slate-font);
+  letter-spacing: 1px;
+}
+/* The weapon slot rides beside the player card on touch; same pill language. */
+html[data-skin="slate"] body.touch-layout #battle .weapon-slot {
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  box-shadow: none;
+  color: var(--slate-ink);
+  font-family: var(--slate-font);
+  text-shadow: none;
+}
+html[data-skin="slate"] body.touch-layout #battle .weapon-slot b {
+  color: #fff;
+  font: 700 11px/1 var(--slate-font);
+}
+
+/* ---------------------------------------------------------------------------
+ * 5. Hero power — the glowing rail node from `battle.css` §6, sized to the
+ * 48px (portrait) / 44px (landscape) box the layout engine reserves.
+ *
+ * The node's colour stops are the desktop ones expressed as percentages of the
+ * gradient radius (12/28, 13/28, 17/28, 18/28, 22/28, 23/28 of a 56px node),
+ * so one declaration renders the identical node at every size instead of a
+ * second set of hand-tuned pixels.
+ *
+ * `.power-button` itself must compute `background-image: none` (see the header
+ * note), so the node is a pseudo-element, exactly as on the desktop HUD.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body.touch-layout #battle .power-button {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+  color: #fff;
+  font-family: var(--slate-font);
+  text-shadow: none;
+}
+html[data-skin="slate"] body.touch-layout #battle .power-button::before {
+  content: "";
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: 1px solid #ffffff3a;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    #4d93ff 0 43%,
+    #1a3d78 46% 61%,
+    #0d1523 64% 79%,
+    #212c3d 82%
+  );
+  box-shadow:
+    0 0 24px #4d93ff55,
+    inset 0 0 8px #0009;
+  transition: box-shadow 0.18s;
+}
+html[data-skin="slate"] body.touch-layout #battle .power-button > svg {
+  grid-area: 1 / 1;
+  z-index: 1;
+  margin: auto;
+}
+/* the cost badge stays the 24px corner badge the touch layout already places */
+html[data-skin="slate"] body.touch-layout #battle .power-button > b {
+  z-index: 1;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 50%;
+  background: var(--slate-pill);
+  box-shadow: none;
+  color: var(--slate-blue);
+  font: 700 13px/1 var(--slate-font);
+  text-shadow: none;
+}
+html[data-skin="slate"] body.touch-layout #battle .power-button > span {
+  color: var(--slate-ink-3);
+  font: 500 11px/1.3 var(--slate-font);
+  letter-spacing: 1px;
+  text-shadow: 0 2px 8px #000a;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .power-button:disabled {
+  opacity: 1;
+  color: var(--slate-ink-3);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .power-button:disabled::before {
+  border-color: #ffffff1a;
+  background: radial-gradient(
+    circle,
+    #3a4557 0 43%,
+    #232c3a 46% 61%,
+    #0d1523 64% 79%,
+    #1a212d 82%
+  );
+  box-shadow: inset 0 0 8px #0009;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .power-button:disabled
+  > svg {
+  filter: grayscale(0.6) drop-shadow(0 1px 2px #00000099);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .power-button:disabled
+  > :is(span, b) {
+  border-color: #ffffff1a;
+  color: var(--slate-ink-3);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .power-button:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 4px;
+}
+
+/* ---------------------------------------------------------------------------
+ * 6. End turn and mana — the primary pill from `battle.css` §7.
+ * The gradient sits on ::before so the control keeps `background-image: none`.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body.touch-layout #battle .end-turn {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  padding: 0 10px;
+  border: 1px solid #8cc4ff99;
+  border-radius: 999px;
+  outline: 0;
+  background: none;
+  box-shadow: none;
+  color: #fff;
+  font: 600 13px/1.25 var(--slate-font);
+  letter-spacing: 1px;
+  text-shadow: none;
+  transition: border-color 0.15s;
+}
+html[data-skin="slate"] body.touch-layout #battle .end-turn::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #4a8be6, #2c66c4);
+  transition: background 0.15s;
+}
+/* Landscape reserves a 104px command rail (128px on compact desktop), so the
+ * pill takes the full rail width instead of the 140px the brief names — the
+ * rail is owned by `mobile-view.js` and widening it is a behaviour change. */
+html[data-skin="slate"] body.mobile-landscape #battle .end-turn {
+  width: 100%;
+  height: 52px;
+}
+@media (max-height: 349px) and (orientation: landscape) {
+  html[data-skin="slate"] body.mobile-landscape #battle .end-turn {
+    height: 44px;
+  }
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .end-turn:hover:not(:disabled)::before {
+  background: linear-gradient(180deg, #5b98ee, #3572cf);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .end-turn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+html[data-skin="slate"] body.touch-layout #battle .end-turn.ready-end {
+  border-color: var(--slate-blue);
+  color: #fff;
+}
+html[data-skin="slate"] body.touch-layout #battle .end-turn:disabled {
+  border-color: #ffffff1a;
+  background: none;
+  color: var(--slate-ink-3);
+  opacity: 1;
+}
+html[data-skin="slate"] body.touch-layout #battle .end-turn:disabled::before {
+  background: var(--slate-pill);
+}
+html[data-skin="slate"] body.touch-layout #battle .end-turn:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 4px;
+}
+html[data-skin="slate"] body.touch-layout #battle .mana-panel {
+  color: var(--slate-ink);
+  text-shadow: none;
+  font-family: var(--slate-font);
+}
+html[data-skin="slate"] body.touch-layout #battle .mana-caption > span {
+  color: var(--slate-ink-3);
+  font: 400 11px/1.4 var(--slate-font);
+  letter-spacing: 1px;
+}
+html[data-skin="slate"] body.touch-layout #battle .mana-caption strong {
+  color: #fff;
+  font: 700 16px/1.2 var(--slate-font);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------------
+ * 7. Hand label, deck counters and the empty-board line
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body.touch-layout #battle .hand-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 12px;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  box-shadow: none;
+  color: var(--slate-ink-2);
+  font: 500 12px/1 var(--slate-font);
+  letter-spacing: 1px;
+  text-shadow: none;
+}
+html[data-skin="slate"] body.touch-layout #battle .hand-label::before {
+  content: none;
+}
+html[data-skin="slate"] body.touch-layout #battle .hand-label b {
+  color: #fff;
+  font: 700 13px/1 var(--slate-font);
+}
+/* Below 380px of landscape height `mobile-view.js` parks both hero cards and
+ * the hand-count box on the same rail, so the chip would cross the enemy
+ * card's attack and health badges. The count is an auxiliary readout and is
+ * repeated in 手牌总览, so it is the decoration that goes first
+ * (视觉规范「空间不足时先减少装饰」). */
+@media (orientation: landscape) and (max-height: 379px) {
+  html[data-skin="slate"] body.mobile-landscape #battle .hand-label {
+    display: none;
+  }
+}
+/* `tavern.css` parks the deck counters on desktop canvas coordinates and the
+ * touch layout hides them; the chip language is declared so the counters read
+ * correctly wherever a layout shows them, and the hidden state is restated
+ * (design system §6.7). */
+html[data-skin="slate"]
+  body.touch-layout
+  #app.battle-view
+  :is(.enemy-deck, .player-deck) {
+  display: none;
+}
+html[data-skin="slate"] body.touch-layout #app.battle-view .board-empty {
+  color: var(--slate-ink-3);
+  font: 400 12px/1.5 var(--slate-font);
+  letter-spacing: 2px;
+  opacity: 1;
+  text-shadow: 0 2px 10px #0009;
+}
+
+/* ---------------------------------------------------------------------------
+ * 8. Message rails — one dark pill language for every transient bar, exactly
+ * as `battle.css` §9. `mobile-view.js` reserves a single notice rail and gives
+ * `#toast` and `#touch-target-bar` the same box, so only one of them is ever
+ * on screen (`.battle-notice-active` hides the target bar).
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"]
+  body.touch-layout
+  #app.battle-view
+  :is(#hint, #toast, #combat-preview, #action-status, #touch-target-bar) {
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  box-shadow: 0 10px 30px #0008;
+  color: var(--slate-ink);
+  font: 500 13px/1.4 var(--slate-font);
+  letter-spacing: 0.5px;
+  text-align: center;
+  text-shadow: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #app.battle-view
+  #toast[data-kind="error"] {
+  border-color: #e3899199;
+  color: #ffd9dc;
+}
+/* the target bar is the only rail with a control inside it */
+html[data-skin="slate"]
+  body.touch-layout
+  #app.battle-view
+  #touch-target-bar {
+  gap: 8px;
+  padding: 0 4px 0 14px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #app.battle-view
+  #touch-target-text {
+  color: var(--slate-ink);
+  font: 500 13px/1.35 var(--slate-font);
+  letter-spacing: 0.5px;
+  text-align: left;
+  text-shadow: none;
+}
+html[data-skin="slate"] body.touch-layout #app.battle-view #touch-cancel {
+  display: grid;
+  place-items: center;
+  /* `battle.css` pins `flex: 0 0 52px`, which clips the two-character label
+   * once the pill has padding; keep the 44px floor and let the chip size to
+   * its text. */
+  flex: 0 0 auto;
+  min-width: 56px;
+  min-height: 44px;
+  padding: 0 12px;
+  white-space: nowrap;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  box-shadow: none;
+  color: var(--slate-ink-2);
+  font: 500 13px/1 var(--slate-font);
+  letter-spacing: 1px;
+  text-shadow: none;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #app.battle-view
+  #touch-cancel:hover {
+  background: #1b2434d9;
+  border-color: var(--slate-line-strong);
+  color: #fff;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #app.battle-view
+  #touch-cancel:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 3px;
+}
+/* Narrow portraits dock the rail in the right-hand gutter at 180px wide; the
+ * label wraps there rather than the cancel pill shrinking below 44px. */
+@media (max-width: 429px) and (orientation: portrait) {
+  html[data-skin="slate"]
+    body.mobile-portrait
+    #app.battle-view
+    #touch-target-bar {
+    padding: 0 4px 0 10px;
+  }
+  html[data-skin="slate"]
+    body.mobile-portrait
+    #app.battle-view
+    #touch-target-text {
+    font-size: 12px;
+  }
+}
+
+/* ===========================================================================
+ * 9. Battle-time dialogs — shared touch chrome
+ * The floating shell itself (matte, 16px rim, round close) comes from
+ * base.css and is identical to the desktop one; these rules give it the 12px
+ * screen margin the brief asks for, trim the desktop padding so a 390px-tall
+ * landscape screen has room for the decision, and dock the battle sheets to
+ * the bottom of the screen where a thumb can reach them.
+ *
+ * The radius stays 16px on all four corners rather than the 16px-top-only of a
+ * classic bottom sheet: radius is a shared material and
+ * `responsive-component-style.spec.cjs` compares it against the desktop shell.
+ * ======================================================================== */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host:not([data-type="library-card"]):has(
+    > .folio-dialog:is(
+        [data-dialog-size="mulligan"],
+        [data-dialog-size="result"],
+        [data-dialog-size="discover"],
+        [data-dialog-size="menu"],
+        [data-dialog-size="journal"],
+        [data-dialog-size="hand"]
+      )
+  ),
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="touch-hero"] {
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host:not([data-type="library-card"])
+  > .folio-dialog:is(
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="choice"],
+    [data-dialog-size="result"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="detail"]
+  ) {
+  padding: 18px 16px 16px;
+}
+/* 遗物奖励 is the one battle-time dialog the design system puts on the PAGE
+ * shell (§5.5). `dialogs.css` promotes it on the desktop; the touch layout has
+ * to promote it too — the shell rim, radius and shadow are shared materials
+ * (`responsive-component-style.spec.cjs` compares `.rewards-box` against the
+ * desktop one), and a full-bleed reward page is also the only way three relic
+ * cards and the 「酒馆整备」 section fit a phone. The block mirrors base.css's
+ * page-shell rules, keyed to `choice`. */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host:has(> .folio-dialog[data-dialog-size="choice"]) {
+  padding: 0;
+  background: #1b2230;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="choice"] {
+  --dialog-width: 100%;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
+  margin: 0;
+  padding: max(16px, env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
+  gap: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--slate-material);
+  background-attachment: scroll;
+  color: var(--slate-ink);
+  font-family: var(--slate-font);
+}
+/* the page shell is full height, so the scroll surface takes the space between
+ * the title row and the footer instead of hugging the title */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="choice"]
+  > .folio-pane {
+  flex: 1 1 auto;
+  margin: 0;
+}
+html[data-skin="slate"]
+  body.mobile-landscape
+  #modal.folio-host:not([data-type="library-card"])
+  > .folio-dialog:is(
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="choice"],
+    [data-dialog-size="result"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="detail"]
+  ) {
+  padding: 12px 16px;
+}
+html[data-skin="slate"]
+  body.mobile-landscape
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="choice"] {
+  padding: max(12px, env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
+}
+/* the close button keeps its 44px hit area inside the trimmed padding */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host:not([data-type="library-card"])
+  .folio-dialog
+  > .modal-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  float: none;
+  margin: 0;
+  box-shadow: none;
+}
+/* dialog title row: the 32px/44px page scale is too tall for a 390px-high
+ * screen; only the size changes, the weight/colour/shadow stay */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host:not([data-type="library-card"])
+  > .folio-dialog:is(
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="choice"],
+    [data-dialog-size="result"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="detail"]
+  )
+  :is(.modal-heading, .library-heading)
+  h2 {
+  font-size: 22px;
+  line-height: 1.3;
+  letter-spacing: 2px;
+}
+html[data-skin="slate"]
+  body.mobile-landscape
+  #modal.folio-host:not([data-type="library-card"])
+  > .folio-dialog:is(
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="choice"],
+    [data-dialog-size="result"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="detail"]
+  )
+  :is(.modal-heading, .library-heading)
+  h2 {
+  font-size: 19px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host:not([data-type="library-card"])
+  > .folio-dialog:is(
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="choice"],
+    [data-dialog-size="result"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="detail"]
+  )
+  > .modal-heading {
+  min-height: 36px;
+  padding: 0 52px 12px 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host:not([data-type="library-card"])
+  > .folio-dialog:is(
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="choice"],
+    [data-dialog-size="result"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="detail"]
+  )
+  > .modal-heading::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 1px;
+  background: var(--slate-line);
+  box-shadow: none;
+  border: 0;
+  opacity: 1;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host:not([data-type="library-card"])
+  > .folio-dialog:is(
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="choice"],
+    [data-dialog-size="result"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="detail"]
+  )
+  > .modal-heading
+  p {
+  margin: 8px 0 0;
+  font: 400 13px/1.6 var(--slate-font);
+  letter-spacing: 0.5px;
+  color: var(--slate-ink-2);
+}
+/* footer: hairline above, full-width pills (the primary action is the widest
+ * reachable target on a phone) */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host:not([data-type="library-card"])
+  > .folio-dialog:is(
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="choice"],
+    [data-dialog-size="result"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="detail"]
+  )
+  > :is(.modal-footer, .reward-footer, .atelier-foot) {
+  position: static;
+  gap: 10px;
+  margin: 0;
+  padding: 14px 0 0;
+  border: 0;
+  border-top: 1px solid var(--slate-line);
+  background: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host:not([data-type="library-card"])
+  > .folio-dialog:is(
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="choice"],
+    [data-dialog-size="result"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="detail"]
+  )
+  > :is(.modal-footer, .reward-footer, .atelier-foot)::before,
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host:not([data-type="library-card"])
+  > .folio-dialog:is(
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="choice"],
+    [data-dialog-size="result"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="detail"]
+  )
+  > :is(.modal-footer, .reward-footer, .atelier-foot)::after {
+  content: none;
+}
+html[data-skin="slate"]
+  body.mobile-portrait
+  #modal.folio-host:not([data-type="library-card"])
+  > .folio-dialog:is(
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="result"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="detail"]
+  )
+  > .modal-footer
+  > button {
+  flex: 1 1 100%;
+  min-width: 0;
+  /* `panels.js` also labels the footer `.panel-actions`, which components.css
+   * caps at `min(240px, 100%)`; a phone footer is one full-width pill. */
+  max-width: 100%;
+  min-height: 50px;
+  padding: 0 16px;
+  font-size: 16px;
+}
+html[data-skin="slate"]
+  body.mobile-landscape
+  #modal.folio-host:not([data-type="library-card"])
+  > .folio-dialog:is(
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="result"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="detail"]
+  )
+  > .modal-footer
+  > button {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 46px;
+  padding: 0 16px;
+  font-size: 15px;
+}
+/* Tablets and the compact-desktop battle view (1024×768, 1280×720) are still
+ * `body.touch-layout`, but they are not phones: give the title row the desktop
+ * scale back and stop the footer pill from stretching across a 1130px shell. */
+@media (min-width: 900px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host:not([data-type="library-card"])
+    > .folio-dialog:is(
+      [data-dialog-size="mulligan"],
+      [data-dialog-size="choice"],
+      [data-dialog-size="result"],
+      [data-dialog-size="discover"],
+      [data-dialog-size="menu"],
+      [data-dialog-size="journal"],
+      [data-dialog-size="hand"],
+      [data-dialog-size="detail"]
+    )
+    :is(.modal-heading, .library-heading)
+    h2 {
+    font-size: 26px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host:not([data-type="library-card"])
+    > .folio-dialog:is(
+      [data-dialog-size="mulligan"],
+      [data-dialog-size="result"],
+      [data-dialog-size="discover"],
+      [data-dialog-size="menu"],
+      [data-dialog-size="journal"],
+      [data-dialog-size="hand"],
+      [data-dialog-size="detail"]
+    )
+    > .modal-footer
+    > button {
+    flex: 0 1 auto;
+    min-width: 220px;
+    max-width: 360px;
+  }
+}
+
+/* the battle sheets read as bottom sheets: same shell, docked to the thumb */
+html[data-skin="slate"]
+  body.mobile-portrait
+  #modal.folio-host:not([data-type="library-card"]):has(
+    > .folio-dialog:is(
+        [data-dialog-size="menu"],
+        [data-dialog-size="journal"],
+        [data-dialog-size="hand"]
+      )
+  ),
+html[data-skin="slate"]
+  body.mobile-portrait
+  #modal.folio-host[data-type="touch-hero"] {
+  align-items: flex-end;
+}
+
+/* ===========================================================================
+ * 10. 起手换牌 / mulligan
+ * `dialog-layout.css` already gives portrait a 2-column grid and short
+ * landscape a single row; the pills only needed the vertical room back.
+ * ======================================================================== */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .mulligan-box
+  .mulligan-cards {
+  padding: 14px 0 4px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .mulligan-choice-state {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: auto;
+  min-height: 38px;
+  margin: 0 auto;
+  padding: 0 18px;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  box-shadow: none;
+  text-shadow: none;
+  clip-path: none;
+  color: var(--slate-ink-2);
+  font: 500 14px/1 var(--slate-font);
+  letter-spacing: 1px;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .mulligan-choice-state::before,
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .mulligan-choice-state::after {
+  content: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .mulligan-choice-state
+  svg {
+  width: 16px;
+  height: 16px;
+  color: currentColor;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .mulligan-card.replace
+  .mulligan-choice-state {
+  border-color: #8cc4ff99;
+  background: linear-gradient(180deg, #4a8be6, #2c66c4);
+  color: #fff;
+  font-weight: 600;
+}
+/* `components.css` paints a second selection ring on the replaced card face */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .mulligan-card.replace::after {
+  display: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .mulligan-box
+  .hero-deck-note {
+  margin: 10px 0 0;
+  font: 400 13px/1.6 var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink-2);
+  text-align: center;
+}
+/* Short landscape: the shell, the title and the footer are already trimmed;
+ * drop the two prose lines so the pills keep their 38px and stay inside the
+ * viewport (they were clipped at 844×390 before this task). */
+@media (orientation: landscape) and (max-height: 430px) {
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .mulligan-box
+    .hero-deck-note,
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    > .folio-dialog[data-dialog-size="mulligan"]
+    > .modal-heading
+    p {
+    display: none;
+  }
+  /* `dialog-layout.css` sizes the one-row opening hand from
+   * `(100dvh - 250px)`, a budget written for the desktop shell's chrome. The
+   * touch shell spends ~136px on padding, title row and footer, so the same
+   * screen can afford a wider card — and a card narrower than ~80px is what
+   * made the 「保留 / 替换」 pill wrap onto two lines at 568×320. */
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .mulligan-box
+    .mulligan-cards {
+    --opening-width: clamp(70px, calc((100dvh - 190px) / 1.48), 160px);
+    padding: 8px 0 2px;
+  }
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .mulligan-choice-state {
+    min-height: 38px;
+    padding: 0 12px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+}
+
+/* ===========================================================================
+ * 11. 遗物奖励 / rewards — the floating shell (the desktop page shell needs a
+ * width the phone does not have); relic cards stack vertically in portrait
+ * and share the row in landscape.
+ * ======================================================================== */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .rewards-box
+  .relic-options {
+  gap: 12px;
+  width: 100%;
+  margin: 14px 0 0;
+}
+html[data-skin="slate"]
+  body.mobile-portrait
+  #modal.folio-host
+  .rewards-box
+  .relic-options {
+  grid-template-columns: minmax(0, 1fr);
+}
+html[data-skin="slate"]
+  body.mobile-landscape
+  #modal.folio-host
+  .rewards-box
+  .relic-options {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .rewards-box
+  .relic-choice {
+  height: auto;
+  border: 1.5px solid var(--slate-card-line);
+  border-radius: 14px;
+  background: var(--slate-card-base);
+  box-shadow: 0 8px 20px #0007;
+  color: var(--slate-ink);
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+html[data-skin="slate"]
+  body.mobile-portrait
+  #modal.folio-host
+  .rewards-box
+  .relic-choice {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  align-items: center;
+  gap: 4px 14px;
+  padding: 14px 16px;
+}
+html[data-skin="slate"]
+  body.mobile-landscape
+  #modal.folio-host
+  .rewards-box
+  .relic-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 12px 10px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .rewards-box
+  .relic-choice::before,
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .rewards-box
+  .relic-choice::after {
+  content: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .rewards-box
+  .relic-choice[aria-pressed="true"] {
+  border-color: var(--slate-blue);
+  background: #16243a;
+  box-shadow:
+    inset 0 0 0 1px var(--slate-blue),
+    0 0 28px #8cc4ff40,
+    0 8px 20px #0007;
+}
+html[data-skin="slate"]
+  body.mobile-portrait
+  #modal.folio-host
+  .rewards-box
+  .relic-choice
+  img {
+  grid-row: span 3;
+  width: 76px;
+  height: 76px;
+  border: 0;
+  border-radius: 0;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 22px #0009);
+}
+html[data-skin="slate"]
+  body.mobile-landscape
+  #modal.folio-host
+  .rewards-box
+  .relic-choice
+  img {
+  width: 64px;
+  height: 64px;
+  border: 0;
+  border-radius: 0;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 22px #0009);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .rewards-box
+  .relic-choice
+  h3 {
+  margin: 0;
+  font: 700 17px/1.35 var(--slate-font);
+  letter-spacing: 1px;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .rewards-box
+  .relic-choice
+  p {
+  flex: 0 0 auto;
+  margin: 0;
+  font: 400 13px/1.65 var(--slate-font);
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body.mobile-portrait
+  #modal.folio-host
+  .rewards-box
+  .relic-choice
+  p {
+  text-align: left;
+}
+html[data-skin="slate"]
+  body.mobile-landscape
+  #modal.folio-host
+  .rewards-box
+  .relic-choice
+  p {
+  text-align: center;
+  font-size: 12px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .rewards-box
+  .relic-pick-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-height: 34px;
+  padding: 0 18px;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  box-shadow: none;
+  color: var(--slate-ink-2);
+  font: 500 13px/1 var(--slate-font);
+  letter-spacing: 1px;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+html[data-skin="slate"]
+  body.mobile-portrait
+  #modal.folio-host
+  .rewards-box
+  .relic-pick-label {
+  margin: 4px auto 0 0;
+}
+html[data-skin="slate"]
+  body.mobile-landscape
+  #modal.folio-host
+  .rewards-box
+  .relic-pick-label {
+  margin: auto auto 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .rewards-box
+  .relic-choice[aria-pressed="true"]
+  .relic-pick-label {
+  border-color: #8cc4ff99;
+  background: linear-gradient(180deg, #4a8be6, #2c66c4);
+  color: #fff;
+  font-weight: 600;
+}
+/* 「酒馆整备」 becomes a hairline section, as on the desktop rewards page */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .rewards-box
+  .campaign-refit {
+  width: 100%;
+  margin: 16px 0 0;
+  padding: 14px 0 0;
+  border: 0;
+  border-top: 1px solid var(--slate-line);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .rewards-box
+  .campaign-refit
+  > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  list-style: none;
+  color: #fff;
+  font: 700 16px/1.4 var(--slate-font);
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .rewards-box
+  .campaign-refit
+  > summary::-webkit-details-marker {
+  display: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .rewards-box
+  .campaign-refit
+  > summary
+  span {
+  font: 400 13px/1.4 var(--slate-font);
+  letter-spacing: 0.5px;
+  color: var(--slate-ink-3);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .rewards-box
+  .refit-fields {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  margin: 12px 0 0;
+}
+html[data-skin="slate"]
+  body.mobile-landscape
+  #modal.folio-host
+  .rewards-box
+  .refit-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 20px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .rewards-box
+  .refit-fields
+  label {
+  gap: 8px;
+  font: 500 13px/1.4 var(--slate-font);
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .rewards-box
+  #refit-status {
+  margin: 12px 0 0;
+  font: 400 13px/1.6 var(--slate-font);
+  color: var(--slate-ink-3);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .rewards-box
+  .reward-next {
+  display: block;
+  font: 600 14px/1.4 var(--slate-font);
+  letter-spacing: 1px;
+  color: var(--slate-ink);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .rewards-box
+  #reward-selection {
+  margin: 4px 0 0;
+  font: 400 12px/1.5 var(--slate-font);
+  color: var(--slate-ink-3);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .rewards-box
+  > .reward-footer
+  > button {
+  flex: 1 1 160px;
+  min-width: 160px;
+  max-width: 100%;
+  min-height: 50px;
+  font-size: 16px;
+}
+
+/* Tablets and the compact-desktop battle view get the desktop reward page's
+ * proportions back: the decision block centres between the title row and the
+ * footer, and the art stops being a phone thumbnail. */
+@media (min-width: 900px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog[data-dialog-size="choice"]
+    .modal-scroll {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100%;
+    padding: 0;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .rewards-box
+    .relic-options {
+    gap: 22px;
+    max-width: 1180px;
+    margin: 22px auto 0;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .rewards-box
+    .relic-choice {
+    gap: 12px;
+    padding: 22px 20px 18px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .rewards-box
+    .relic-choice
+    img {
+    width: 136px;
+    height: 136px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .rewards-box
+    .relic-choice
+    h3 {
+    font-size: 20px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .rewards-box
+    .relic-choice
+    p {
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .rewards-box
+    .relic-pick-label {
+    min-height: 34px;
+    padding: 0 22px;
+    font-size: 14px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .rewards-box
+    .campaign-refit {
+    max-width: 1180px;
+    margin: 24px auto 0;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .rewards-box
+    > .reward-footer
+    > button {
+    flex: 0 1 auto;
+    min-width: 240px;
+    max-width: 360px;
+  }
+}
+
+/* Short landscape has ~250px between the title row and the footer: shrink the
+ * relic art and the copy so the 「选择此遗物」 pill is never cut off. */
+@media (orientation: landscape) and (max-height: 430px) {
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .rewards-box
+    .relic-choice {
+    gap: 6px;
+    padding: 10px 10px 8px;
+  }
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .rewards-box
+    .relic-choice
+    img {
+    width: 52px;
+    height: 52px;
+  }
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .rewards-box
+    .relic-choice
+    h3 {
+    font-size: 15px;
+  }
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .rewards-box
+    .relic-choice
+    p {
+    font-size: 11px;
+    line-height: 1.55;
+  }
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .rewards-box
+    .relic-pick-label {
+    min-height: 30px;
+    padding: 0 14px;
+    font-size: 12px;
+  }
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .rewards-box
+    .relic-options {
+    margin-top: 10px;
+  }
+}
+/* 568×320 has ~185px for the three cards: the relic art gives up the rest of
+ * its size before the rule text or the pick pill do. */
+@media (orientation: landscape) and (max-height: 350px) {
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .rewards-box
+    .relic-choice
+    img {
+    width: 40px;
+    height: 40px;
+  }
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .rewards-box
+    .relic-choice
+    h3 {
+    font-size: 14px;
+  }
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .rewards-box
+    .relic-choice
+    p {
+    font-size: 10px;
+    line-height: 1.45;
+  }
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .rewards-box
+    .relic-pick-label {
+    min-height: 28px;
+    font-size: 11px;
+  }
+}
+
+/* ===========================================================================
+ * 12. 胜利结算 / 失败 — result and defeat
+ * ======================================================================== */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .result-box
+  .result-sigil {
+  display: grid;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+  margin: 2px auto 6px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .result-box
+  .result-sigil
+  svg {
+  width: 66px;
+  height: 66px;
+  filter: drop-shadow(0 0 18px #8cc4ff55);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .result-box[data-outcome="loss"]
+  .result-sigil
+  svg {
+  color: var(--slate-ink-2);
+  filter: drop-shadow(0 0 16px #0008);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .result-box
+  .result-sub {
+  display: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .result-box
+  .result-title {
+  margin: 0;
+  font: 700 30px/1.25 var(--slate-font);
+  letter-spacing: 4px;
+  color: #fff;
+  text-shadow: 0 2px 14px #0007;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .result-box
+  .boss-quote {
+  margin: 10px 0 0;
+  font: 400 13px/1.7 var(--slate-font);
+  letter-spacing: 1px;
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .result-box
+  .result-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  width: 100%;
+  margin: 16px 0 4px;
+  padding: 16px 0 2px;
+  border: 0;
+  border-top: 1px solid var(--slate-line);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .result-box
+  .result-stats
+  > div {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  width: auto;
+  padding: 2px 0;
+  border: 0;
+  border-right: 1px solid var(--slate-line);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .result-box
+  .result-stats
+  > div:last-child {
+  border-right: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .result-box
+  .result-stats
+  strong {
+  font: 700 28px/1.1 var(--slate-font);
+  letter-spacing: 1px;
+  color: #fff;
+  text-shadow: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .result-box
+  .result-stats
+  span {
+  font: 500 12px/1.4 var(--slate-font);
+  letter-spacing: 1px;
+  color: var(--slate-ink-2);
+}
+/* Short landscape: the sigil is the first decoration to go, never the numbers
+ * or the two actions (视觉规范「空间不足时先减少装饰」). */
+@media (orientation: landscape) and (max-height: 430px) {
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .result-box
+    .result-sigil {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 2px;
+  }
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .result-box
+    .result-sigil
+    svg {
+    width: 42px;
+    height: 42px;
+  }
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .result-box
+    .result-title {
+    font-size: 24px;
+  }
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .result-box
+    .result-stats {
+    margin: 10px 0 2px;
+    padding: 10px 0 0;
+  }
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .result-box
+    .result-stats
+    strong {
+    font-size: 22px;
+  }
+}
+
+/* ===========================================================================
+ * 13. 发现 / discover
+ * ======================================================================== */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="discover"]
+  .discover-options {
+  gap: 12px;
+  height: auto;
+  padding: 14px 0 4px;
+  align-items: start;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="discover"]
+  .discover-card {
+  width: 100%;
+  border-radius: 12px;
+  background: none;
+  box-shadow: none;
+  filter: none;
+  transition:
+    filter 0.15s,
+    transform 0.15s;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="discover"]
+  .discover-card::before,
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="discover"]
+  .discover-card::after {
+  content: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="discover"]
+  .discover-card:is(:hover, :focus-visible) {
+  outline: none;
+  box-shadow: none;
+  /* the card face is not a filled rectangle, so the selection glow follows its
+   * alpha via drop-shadow rather than a box-shadow ring */
+  filter: drop-shadow(0 0 4px #8cc4ffcc) drop-shadow(0 0 20px #8cc4ff88);
+}
+
+/* ===========================================================================
+ * 14. 战术底板 / tactical sheets — menu, battle log, hand overview, hero info
+ * ======================================================================== */
+/* --- 菜单 / menu --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .touch-menu-grid {
+  gap: 10px;
+  padding: 14px 0 4px;
+}
+/* `mobile.css` lays the menu out in two columns; a landscape phone is 390px
+ * tall, so nine entries only fit above the fold in three. */
+html[data-skin="slate"]
+  body.mobile-landscape
+  #modal.folio-host
+  .touch-menu-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .touch-menu-grid
+  .menu-action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--slate-pill-line);
+  background: var(--slate-pill);
+  box-shadow: none;
+  color: var(--slate-ink);
+  font: 500 15px/1.25 var(--slate-font);
+  letter-spacing: 1px;
+  text-align: left;
+  text-shadow: none;
+  white-space: nowrap;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .touch-menu-grid
+  .menu-action
+  > svg {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  color: var(--slate-blue);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .touch-menu-grid
+  .menu-action:hover {
+  background: #1b2434d9;
+  border-color: var(--slate-line-strong);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .touch-menu-note {
+  margin: 12px 0 0;
+  font: 400 13px/1.6 var(--slate-font);
+  color: var(--slate-ink-3);
+}
+
+/* --- 战斗记录 / journal --- */
+html[data-skin="slate"] body.touch-layout #modal.folio-host .touch-log {
+  gap: 0;
+  padding: 4px 0 2px;
+  font-family: var(--slate-font);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  :is(.touch-log, .tactical-sheet .touch-log)
+  > p {
+  margin: 0;
+  padding: 11px 0;
+  border: 0;
+  border-bottom: 1px solid var(--slate-line);
+  border-radius: 0;
+  background: none;
+  font: 400 14px/1.65 var(--slate-font);
+  letter-spacing: 0.5px;
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  :is(.touch-log, .tactical-sheet .touch-log)
+  > p:last-child {
+  border-bottom: 0;
+}
+
+/* --- 手牌总览 / hand overview --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .touch-hand-grid {
+  gap: 12px;
+  padding: 14px 0 4px;
+}
+/* `dialog-layout.css` auto-fits 190px columns, which collapses to one giant
+ * card on a 366px-wide sheet. Two columns keep a full hand on one screen; the
+ * card face itself is unchanged. */
+html[data-skin="slate"]
+  body.mobile-portrait
+  #modal.folio-host
+  .touch-hand-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .touch-hand-grid
+  > button {
+  border-radius: 12px;
+  background: none;
+  box-shadow: none;
+  transition: box-shadow 0.15s;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .touch-hand-grid
+  > button:is(:hover, :focus-visible) {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--slate-blue),
+    0 0 26px #8cc4ff4d;
+}
+
+/* --- 英雄信息 / hero info (the sheet `legacy-components.css` paints with the
+ * tavern amber glass; base.css already neutralises the glass, this restates
+ * the slate rows) --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .folio-dialog
+  .touch-hero-info {
+  display: grid;
+  gap: 14px;
+  padding: 14px 0 4px;
+  align-items: start;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--slate-ink);
+}
+html[data-skin="slate"]
+  body.mobile-portrait
+  #modal.folio-host
+  .folio-dialog
+  .touch-hero-info {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+}
+html[data-skin="slate"]
+  body.mobile-landscape
+  #modal.folio-host
+  .folio-dialog
+  .touch-hero-info {
+  grid-template-columns: minmax(0, 132px) minmax(0, 1fr);
+  gap: 18px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .touch-hero-info
+  > img {
+  width: 100%;
+  max-width: 168px;
+  border: 1.5px solid var(--slate-card-line);
+  border-radius: 10px;
+  background: var(--slate-card-base);
+  box-shadow: 0 8px 20px #0007;
+  object-fit: cover;
+  aspect-ratio: 3 / 4;
+}
+html[data-skin="slate"]
+  body.mobile-landscape
+  #modal.folio-host
+  .touch-hero-info
+  > img {
+  max-width: 132px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .touch-hero-info
+  > div {
+  display: grid;
+  gap: 0;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .touch-hero-info
+  .touch-live-stat {
+  display: flex;
+  align-items: center;
+  min-height: 46px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--slate-line);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  font: 600 15px/1.5 var(--slate-font);
+  letter-spacing: 1px;
+  color: var(--slate-ink);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .touch-hero-info
+  > div
+  > p {
+  margin: 0;
+  padding: 12px 0;
+  border: 0;
+  border-bottom: 1px solid var(--slate-line);
+  border-radius: 0;
+  background: none;
+  font: 400 14px/1.7 var(--slate-font);
+  letter-spacing: 0.5px;
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .touch-hero-info
+  > div
+  > p:last-child {
+  border-bottom: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .touch-hero-info
+  > div
+  > p
+  b {
+  display: block;
+  margin-bottom: 4px;
+  font: 700 15px/1.5 var(--slate-font);
+  letter-spacing: 1px;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .tactical-sheet
+  > .modal-footer {
+  justify-content: center;
+}
+
+/* ---------------------------------------------------------------------------
+ * 15. Motion budget — the skin adds transitions only, and drops them under the
+ * platform setting and the in-game 「减少动态效果」 preference.
+ * ------------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #app.battle-view
+    :is(
+      .icon-btn,
+      .contract-open,
+      .power-button::before,
+      .end-turn,
+      .end-turn::before,
+      #touch-cancel
+    ) {
+    transition: none;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    :is(
+      .mulligan-choice-state,
+      .relic-choice,
+      .relic-pick-label,
+      .discover-card,
+      .touch-hand-grid > button,
+      .touch-menu-grid .menu-action
+    ) {
+    transition: none;
+  }
+}
+html[data-skin="slate"]
+  body.reduced-motion.touch-layout
+  #app.battle-view
+  :is(
+    .icon-btn,
+    .contract-open,
+    .power-button::before,
+    .end-turn,
+    .end-turn::before,
+    #touch-cancel
+  ) {
+  transition: none;
+}
+html[data-skin="slate"]
+  body.reduced-motion.touch-layout
+  #modal.folio-host
+  :is(
+    .mulligan-choice-state,
+    .relic-choice,
+    .relic-pick-label,
+    .discover-card,
+    .touch-hand-grid > button,
+    .touch-menu-grid .menu-action
+  ) {
+  transition: none;
+}

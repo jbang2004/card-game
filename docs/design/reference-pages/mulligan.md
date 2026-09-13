@@ -45,3 +45,21 @@
 `?skin=slate` 下改为浮层壳（1060）：标题「命运的第一手」26px/700 + 15px ink-2 副标 + 发丝线；三张牌面与网格完全不动，只把「保留 / 替换」状态标签换成药丸（替换 = 蓝色渐变填充，保留 = 深色药丸），hover 提亮；提示文字 15px ink-2 居中；底部发丝线 + 主药丸 260×52。规则见 [SLATE_DESIGN_SYSTEM.md](../SLATE_DESIGN_SYSTEM.md) §5.5，实现在 `src/presentation/skins/slate/dialogs.css`，截图见 `output/slate-dialogs-20260913/`。
 
 已知差异：1280×720 在战场视图下 `mobile-view.js` 的 `compactDesktop` 判定会加上 `body.touch-layout`，皮肤按规则不生效，该尺寸仍是旧主题；桌面窄尺寸以 1360×768 验收。
+
+## 2026-09-14 触控布局皮肤
+
+`?skin=slate` + `body.touch-layout`：仍是浮层壳，外边距收到 12px（含安全区），壳内边距 18/16（横屏 12/16），
+标题 22px（横屏 19px）+ 13px ink-2 副标 + 发丝线，底部发丝线 + 铺满宽度的主药丸（`panels.js` 会给页脚
+加上 `.panel-actions`，`components.css` 把按钮卡在 `min(240px,100%)`，皮肤改回 `max-width: 100%`）。
+网格沿用 `dialog-layout.css`：竖屏两列、短横屏一行，卡面与 5:7.4 比例不动。
+「保留 / 替换」状态标签与桌面同一份药丸材质（替换 = 蓝色渐变 + `#8cc4ff99` 边 + 600 字重），
+`components.css` 给替换卡额外画的选中环重新隐藏。
+
+短横屏（横向、高 ≤ 430px）另外：隐藏副标与「你先手…」提示，并把 `--opening-width` 从
+`(100dvh - 250px)/1.48` 改成 `(100dvh - 190px)/1.48`——那 250px 是按桌面壳的标题/页脚预算写的，
+触控壳只花约 136px，所以同一块屏幕能给卡片更多宽度。这一条同时修掉了基线里 844×390 与 568×320
+的「保留 / 替换」药丸被裁切 / 折成两行的问题（对照 `output/slate-integration-20260914/mobile-baseline/`）。
+
+截图：`output/slate-mobile-battle-20260914/<尺寸>/mulligan.png` 与 `mulligan-replace.png`
+（390×844、844×390、568×320、1024×768、1280×720）。桌面 1600×940 与四个触控尺寸的
+`.mulligan-box` / `.mulligan-card` / `.mulligan-choice-state` / `#mulligan-confirm` 计算材质实测 0 差异。

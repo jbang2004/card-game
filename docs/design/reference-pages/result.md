@@ -45,3 +45,16 @@
 `?skin=slate` 下胜利与失败共用浮层壳（620）：徽记保留（140px 容器 / 104px 图形），英文小标 `.result-sub` 随 `.eyebrow` 一起隐藏，标题 44px/700，引言 15px ink-2；三项统计并排为等宽三列，列间竖发丝线，数字 40px/700 白字、标签 15px ink-2；上下各一条发丝线；底部次药丸 + 主药丸居中。
 
 失败结算另外撤销了 `components.css` 为旧失败底图准备的 `margin-left: 42%` 偏移与 `.result-sigil { display: none }`，改回居中并显示徽记（皮肤没有底图，偏移会留下空白）。截图见 `output/slate-dialogs-20260913/`；1280×720 在战场视图下进入 `body.touch-layout`，以 1360×768 验收。
+
+## 2026-09-14 触控布局皮肤
+
+`?skin=slate` + `body.touch-layout`：胜利与失败仍共用浮层壳，外边距 12px，壳内边距 18/16（横屏 12/16）。
+徽记容器 84px / 图形 66px（短横屏 52 / 42），`.result-sub` 与桌面一致保持隐藏，标题 30px/700 字距 4px
+（短横屏 24px），引言 13px ink-2；三项统计仍是等宽三列 + 列间竖发丝线，数字 28px/700（短横屏 22px），
+标签 12px ink-2；上方一条发丝线，底部发丝线 + 两颗等宽铺满的药丸（次 + 主）。
+失败结算同样居中并显示徽记（`components.css` 为旧失败底图准备的 `margin-left: 42%` 在皮肤下没有底图可露）。
+
+截图：`output/slate-mobile-battle-20260914/<尺寸>/result.png` 与 `defeat.png`
+（390×844、844×390、568×320、1024×768、1280×720）。桌面 1600×940 与四个触控尺寸的
+`.result-box` / `.result-sigil` / `.result-stats` / `.result-stats > div` / `#result-home` / `#result-next`
+计算材质实测 0 差异；只有尺寸与间距随视口变化。
