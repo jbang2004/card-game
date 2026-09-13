@@ -17,7 +17,11 @@ for (const [width, height] of [
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto("./?debug=1");
     await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
-    await page.locator("#touch-collection").click();
+    // Whichever collection entry the skin puts in the header: slate navigates
+    // from the tab strip, the legacy phone header from the icon button.
+    await page
+      .locator("#touch-collection:visible, #collection-nav:visible")
+      .click();
     await page.locator("#touch-deck-tab").click();
     await page.locator("#deck-tools > summary").click();
     await expect(page.locator("#deck-tools > summary")).toContainText(

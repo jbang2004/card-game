@@ -28,9 +28,10 @@ for (const [width, height] of [
         (card) => Math.abs(card.getBoundingClientRect().top - firstTop) <= 1,
       ).length;
     });
-    expect(heroColumns).toBe(
-      height < width && width <= 650 ? 2 : width <= 600 ? 4 : 1,
-    );
+    // The slate roster is a vertical list at every touch size: one full-width
+    // row per hero (portrait thumbnail + name + power), not the silverblue
+    // four-up chip grid that narrow portrait windows used to get.
+    expect(heroColumns).toBe(1);
     await page.locator('[data-hero="morla"]').click();
     // Skill copy belongs to the selected hero dossier, not each roster chip.
     await page
@@ -51,7 +52,11 @@ for (const [width, height] of [
     await expect(page.locator("#hero-confirm")).toBeInViewport();
     await page.goto("./?debug=1");
     await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
-    await page.locator("#touch-collection").click();
+    // Whichever collection entry the skin puts in the header: slate navigates
+    // from the tab strip, the legacy phone header from the icon button.
+    await page
+      .locator("#touch-collection:visible, #collection-nav:visible")
+      .click();
     await page.locator("#touch-deck-tab").click();
     await expect(page.locator("#library-search")).toBeHidden();
     await openDeckTools(page);

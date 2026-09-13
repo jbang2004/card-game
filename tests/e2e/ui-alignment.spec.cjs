@@ -31,20 +31,31 @@ for (const [width, height] of [
           ":scope > .modal-close",
         );
         const closeRect = close.getBoundingClientRect();
-        const line = getComputedStyle(heading, "::after");
+        const title = heading.querySelector("h2");
+        const range = document.createRange();
+        range.selectNodeContents(title);
+        const titleRect = range.getBoundingClientRect();
+        const gap = Math.max(
+          closeRect.left - titleRect.right,
+          titleRect.left - closeRect.right,
+          closeRect.top - titleRect.bottom,
+          titleRect.top - closeRect.bottom,
+        );
         return {
           close: [closeRect.width, closeRect.height],
           border: getComputedStyle(heading).borderBottomStyle,
-          content: line.content,
-          right: parseFloat(line.right),
+          ornament: getComputedStyle(heading, "::after").content,
+          gap,
         };
       });
     expect(collectionHeader.close).toEqual([44, 44]);
-    expect(collectionHeader.border).toBe(
-      width >= 1100 && height >= 650 ? "solid" : "none",
-    );
-    expect(collectionHeader.content).not.toBe("none");
-    expect(collectionHeader.right).toBeGreaterThanOrEqual(48);
+    // The slate page shell drops silverblue's hairline rule and its `::after`
+    // ornament: the title row is unadorned and its geometry is carried by the
+    // page inset instead. What still has to hold is that the title clears the
+    // back control — the inset the ornament used to encode.
+    expect(collectionHeader.border).toBe("none");
+    expect(collectionHeader.ornament).toBe("none");
+    expect(collectionHeader.gap).toBeGreaterThanOrEqual(12);
     if (!(await page.locator("#library-search").isVisible()))
       await page.locator("#library-filters > summary").click();
     const search = await page.locator("#library-search").boundingBox();

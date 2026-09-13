@@ -12,15 +12,30 @@ for (const width of [1672, 1280, 390])
     await spell.click();
     await expect(spell).toHaveClass(/active/);
     await expect(group.locator(".selection-light")).toHaveCount(1);
+    // Slate replaces silverblue's travelling `.selection-light` band with the
+    // underline bar the text pager owns (`.filter-btn.active::after`, design
+    // system §3 「文字分页」). The geometric intent is unchanged: the indicator
+    // is a thin bar pinned to the bottom of the active tab and centred on it.
     await expect
       .poll(() =>
         group.evaluate((e) => {
-          const a = e.querySelector(".active").getBoundingClientRect(),
-            r = e.querySelector(".selection-light").getBoundingClientRect();
+          const active = e.querySelector(".active");
+          const a = active.getBoundingClientRect();
+          const bar = getComputedStyle(active, "::after");
+          if (bar.content === "none") return Infinity;
+          const left = parseFloat(bar.left),
+            right = parseFloat(bar.right),
+            bottom = parseFloat(bar.bottom),
+            height = parseFloat(bar.height);
           return (
-            Math.abs(r.left - a.left) +
-            Math.abs(r.width - a.width) +
-            Math.abs(r.top - (a.bottom - 1))
+            // symmetric inset keeps the bar centred on its tab
+            Math.abs(left - right) +
+            // a hairline bar, not a filled block
+            Math.max(0, height - 4) +
+            // pinned to the tab's bottom edge
+            Math.max(0, Math.abs(bottom) - 3) +
+            // and it has to actually span the tab
+            Math.max(0, 1 - (a.width - left - right))
           );
         }),
       )
@@ -54,28 +69,42 @@ for (const width of [1672, 1280, 390])
       ),
     ).toBe(true);
   });
-test("guide panel ornaments stay at four corners without covering the heading", async ({
+test("guide panels are rounded matte cards with no corner ornament over the heading", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1672, height: 941 });
   await page.goto("./?debug=1");
   await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
   await page.locator("#guide-nav").click();
-  const trim = page.locator(".help-turn-flow .panel-corner-trim");
-  await expect(trim.locator("svg")).toHaveCount(4);
-  expect(
-    await trim.evaluate((e) => {
-      const p = e.getBoundingClientRect(),
-        r = [...e.children].map((c) => c.getBoundingClientRect());
-      return (
-        Math.abs(r[0].left - p.left - 1) < 1 &&
-        Math.abs(r[1].right - p.right + 1) < 1 &&
-        Math.abs(r[2].bottom - p.bottom + 1) < 1 &&
-        Math.abs(r[3].left - p.left - 1) < 1 &&
-        [...e.children].every(
-          (c) => getComputedStyle(c).position === "absolute",
-        )
-      );
-    }),
-  ).toBe(true);
+  const panel = page.locator(".help-turn-flow");
+  await expect(panel).toBeVisible();
+  // `panels.js` still injects the four-corner trim into every `.crafted-panel`,
+  // so it stays in the DOM; slate replaces the ornament with a rounded matte
+  // card (design system §5.6 「无四角」) and must keep it from rendering.
+  await expect(panel.locator(".panel-corner-trim svg")).toHaveCount(4);
+  const card = await panel.evaluate((e) => {
+    const style = getComputedStyle(e);
+    const heading = e.querySelector("h3");
+    const box = e.getBoundingClientRect();
+    const title = heading.getBoundingClientRect();
+    return {
+      trim: getComputedStyle(e.querySelector(".panel-corner-trim")).display,
+      radius: parseFloat(style.borderRadius),
+      borderWidth: parseFloat(style.borderTopWidth),
+      // the heading sits inside the card's padding, nothing on top of it
+      headingInside:
+        title.left >= box.left && title.right <= box.right &&
+        title.top >= box.top && title.bottom <= box.bottom,
+      headingTopmost: (() => {
+        const x = title.left + Math.min(8, title.width / 2);
+        const hit = document.elementFromPoint(x, title.top + title.height / 2);
+        return !!hit && heading.contains(hit);
+      })(),
+    };
+  });
+  expect(card.trim).toBe("none");
+  expect(card.radius).toBeGreaterThanOrEqual(8);
+  expect(card.borderWidth).toBeGreaterThan(0);
+  expect(card.headingInside).toBe(true);
+  expect(card.headingTopmost).toBe(true);
 });

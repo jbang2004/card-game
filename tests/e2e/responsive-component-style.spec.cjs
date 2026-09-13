@@ -1,6 +1,19 @@
 const { test, expect } = require("@playwright/test");
 const path = require("node:path");
 
+// Dialog sizes that slate renders as a full-bleed page shell; every other
+// size is a floating shell (design system §1). `choice` — the relic reward —
+// is a page shell too (§5.5).
+const PAGE_SHELL_SIZES = [
+  "heroes",
+  "library",
+  "settings",
+  "route",
+  "covenant",
+  "help",
+  "choice",
+];
+
 const MATERIAL_PROPERTIES = [
   "backgroundColor",
   "backgroundImage",
@@ -192,30 +205,47 @@ async function fingerprint(page, selectors) {
       ),
     });
   }
-  const issues = await page.evaluate(() => {
+  // `panels.js` puts `.crafted-panel` on dialog roots and on contained
+  // surfaces. Slate gives those two roles different shells (design system §1
+  // 「一种材质，两种外壳」), so audit each against its own shell rather than
+  // against silverblue's single square 16/26/42 panel.
+  const issues = await page.evaluate((pageShellSizes) => {
     const issues = [];
     for (const panel of document.querySelectorAll(".crafted-panel")) {
       if (!panel.getBoundingClientRect().width || !panel.checkVisibility())
         continue;
       const s = getComputedStyle(panel);
-      const padding = ["Top", "Right", "Bottom", "Left"].map((side) =>
-        parseFloat(s[`padding${side}`]),
-      );
-      if (padding.some((n) => n < 20 || Math.abs(n - padding[0]) > 0.1))
-        issues.push(`${panel.className}: uneven padding ${padding}`);
-      if (s.borderRadius !== "0px")
-        issues.push(`${panel.className}: old radius ${s.borderRadius}`);
-      if (s.backgroundColor !== "rgba(16, 26, 42, 0.9)")
-        issues.push(
-          `${panel.className}: mismatched material ${s.backgroundColor}`,
-        );
-      if (s.backgroundImage !== "none")
-        issues.push(
-          `${panel.className}: old surface image ${s.backgroundImage.slice(0, 100)}`,
-        );
+      const name = panel.className.split(" ").slice(0, 2).join(".");
+      const radius = parseFloat(s.borderRadius);
+      if (panel.classList.contains("folio-dialog")) {
+        const size = panel.dataset.dialogSize;
+        if (pageShellSizes.includes(size)) {
+          // page shell: square and unframed, the material sits on the host
+          if (radius !== 0)
+            issues.push(`${name}[${size}]: page shell radius ${s.borderRadius}`);
+        } else {
+          // floating shell: a 16px card carrying the one slate material
+          if (radius !== 16)
+            issues.push(
+              `${name}[${size}]: floating shell radius ${s.borderRadius}`,
+            );
+          if (s.backgroundImage === "none")
+            issues.push(`${name}[${size}]: floating shell has no material`);
+          if (parseFloat(s.borderTopWidth) <= 0)
+            issues.push(`${name}[${size}]: floating shell has no edge`);
+        }
+      } else {
+        // Contained surfaces take several slate shapes — rounded matte cards
+        // (§5.6), painted material columns (§5.2) and unadorned columns
+        // sectioned by hairlines (T3) — so there is no single geometry to
+        // pin. What none of them may do is wear the retired silverblue panel:
+        // a square framed pane filled with rgba(16, 26, 42, .9).
+        if (s.backgroundColor === "rgba(16, 26, 42, 0.9)")
+          issues.push(`${name}: retired silverblue panel material`);
+      }
     }
     return issues;
-  });
+  }, PAGE_SHELL_SIZES);
   expect(issues).toEqual([]);
   return result;
 }

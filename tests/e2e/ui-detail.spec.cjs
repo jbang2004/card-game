@@ -81,7 +81,12 @@ for (const [width, height] of [
         return (
           r.width >= minTarget - 0.1 &&
           r.height >= minTarget - 0.1 &&
+          // Title and control must not overlap. The page shell puts the back
+          // control at the top LEFT, so the title clears it on the right —
+          // test separation on every side rather than only the three that a
+          // top-right close button could satisfy.
           (title.right <= r.left ||
+            title.left >= r.right ||
             title.bottom <= r.top ||
             title.top >= r.bottom) &&
           el.contains(

@@ -11,6 +11,24 @@ async function ready(page) {
 async function idle(page) {
   await page.waitForFunction(() => !EmberFX.busy);
 }
+// Slate gives the lobby controls 150–220ms colour transitions, which are still
+// running when the scene finishes loading. Reading a computed material before
+// they settle samples an interpolated colour, and the phase differs per
+// viewport, so wait the transitions out before comparing materials.
+async function materialsSettled(page) {
+  await page
+    .waitForFunction(
+      () =>
+        !document
+          .getAnimations()
+          .some(
+            (a) => a instanceof CSSTransition && a.playState === "running",
+          ),
+      null,
+      { timeout: 5000 },
+    )
+    .catch(() => {});
+}
 async function demo(page) {
   await page.goto("./?debug=1");
   await ready(page);
@@ -20,19 +38,19 @@ async function demo(page) {
 
 test("web build: all assets decode, no external dependencies, actual spells, melee and AI", async ({
   page,
+  baseURL,
 }) => {
   const errors = [],
     failed = [],
     external = [];
+  // "External" means off this server, whichever port it was started on.
+  const origin = new URL(baseURL).origin + "/";
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("response", (r) => {
     if (r.status() >= 400) failed.push(r.url());
   });
   page.on("request", (r) => {
-    if (
-      /^https?:/.test(r.url()) &&
-      !r.url().startsWith("http://127.0.0.1:8000/")
-    )
+    if (/^https?:/.test(r.url()) && !r.url().startsWith(origin))
       external.push(r.url());
   });
   await demo(page);
@@ -174,7 +192,7 @@ for (const [width, height, touch] of screens) {
     const page = await context.newPage();
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
-    await page.goto("http://127.0.0.1:8000/dist/?debug=1");
+    await page.goto("./?debug=1");
     await ready(page);
     await page.evaluate(() => {
       Emberfall.settings.reduced = true;
@@ -227,10 +245,11 @@ for (const [width, height, touch] of screens) {
         )
           faults.push("outside:" + e.className);
       }
+      // `#enemy-mana` was removed from the game in 39ac031 — enemy mana now
+      // lives in the `.hero-mana` badge inside the portrait, which is part of
+      // the hero rather than an overlay laid over one.
       const overlays = [
-        ...document.querySelectorAll(
-          "#hint,#toast.visible,.mana-panel,#enemy-mana",
-        ),
+        ...document.querySelectorAll("#hint,#toast.visible,.mana-panel"),
       ].filter((e) => getComputedStyle(e).display !== "none");
       for (const overlay of overlays) {
         const a = overlay.getBoundingClientRect();
@@ -297,7 +316,7 @@ test("touch: inspect, confirm, rotate during spell, same match and no stuck effe
     hasTouch: true,
   });
   const p = await c.newPage();
-  await p.goto("http://127.0.0.1:8000/dist/?debug=1");
+  await p.goto("./?debug=1");
   await ready(p);
   await p.locator("#quick-btn").tap();
   await idle(p);
@@ -354,7 +373,7 @@ for (const [width, height, touch] of [
       hasTouch: touch,
     });
     const page = await context.newPage();
-    await page.goto("http://127.0.0.1:8000/dist/?debug=1");
+    await page.goto("./?debug=1");
     await ready(page);
     await page.evaluate(() => {
       Emberfall.settings.reduced = true;
@@ -418,8 +437,9 @@ test("shared desktop and touch materials, readable lobby, single card aperture",
       hasTouch: touch,
     });
     const page = await context.newPage();
-    await page.goto("http://127.0.0.1:8000/dist/?debug=1");
+    await page.goto("./?debug=1");
     await ready(page);
+    await materialsSettled(page);
     materials.push(
       await page.evaluate(() =>
         Object.fromEntries(
@@ -571,7 +591,7 @@ test("portable build starts without retired globals and plays a spell", async ({
 }) => {
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.goto("http://127.0.0.1:8000/index.html");
+  await page.goto("../index.html");
   await ready(page);
   await page.locator("#quick-btn").click();
   await idle(page);

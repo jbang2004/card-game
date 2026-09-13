@@ -36,24 +36,31 @@ test("desktop workspaces and compact dialogs use their semantic dimensions", asy
       "confirm",
     ),
   );
+  // Slate sizes the confirm float at 480 (design system §5.5).
   expect(await dialogMetrics(page)).toMatchObject({
     size: "confirm",
-    width: 640,
+    width: 480,
     centered: true,
   });
 
+  // Settings is a page shell: it owns the whole viewport instead of a
+  // 1100px float.
   await page.evaluate(() => Emberfall.showSettings());
   expect(await dialogMetrics(page)).toMatchObject({
     size: "settings",
-    width: 1100,
+    width: 1600,
+    height: 940,
     centered: true,
   });
 
+  // The traveller's handbook is a page shell too, so it owns the viewport
+  // rather than the 1552px inset workspace silverblue gave it.
   await page.evaluate(() => Emberfall.showHelp());
   expect(await dialogMetrics(page)).toMatchObject({
     size: "help",
-    width: 1552,
-    centered: false,
+    width: 1600,
+    height: 940,
+    centered: true,
   });
 
   await page.evaluate(() => Emberfall.showLibrary());
@@ -99,8 +106,9 @@ test("desktop toolbar SVGs remain aligned inside visible controls", async ({
     );
   expect(metrics).toHaveLength(2);
   for (const icon of metrics) {
-    expect(icon.button[0]).toBeGreaterThanOrEqual(32);
-    expect(icon.button[1]).toBe(32);
+    // Slate's toolbar icon buttons are 36px round pills (design system §3).
+    expect(icon.button[0]).toBeGreaterThanOrEqual(36);
+    expect(icon.button[1]).toBe(36);
     expect(icon.svg).toEqual([18, 18]);
     if (icon.id === "sound-btn")
       expect(Math.abs(icon.offset[0])).toBeLessThanOrEqual(0.1);

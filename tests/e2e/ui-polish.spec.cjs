@@ -61,15 +61,11 @@ for (const [width, height] of [
         ).toBe(0);
       }
     await page.locator("#contract-open").click();
-    await expect(
-      page
-        .locator(
-          width >= 1100
-            ? ".reference-active-contract .ritual-gate meter"
-            : ".ritual-stones",
-        )
-        .first(),
-    ).toBeVisible();
+    // Awakening progress is readable at every width. Silverblue drew it as a
+    // row of lit stones on compact layouts; slate uses the progress bar
+    // everywhere (design system §5.3), so assert the progress element rather
+    // than either material.
+    await expect(page.locator(".ritual-gate meter").first()).toBeVisible();
     await expect(page.locator("#toast")).not.toBeVisible();
     await page.locator(".modal-close").click();
     if (width === 1210)

@@ -195,7 +195,7 @@ test("long collection rules stay above stats on desktop and phone", async ({
     await page.goto("./?debug=1");
     await ready(page);
     await page
-      .locator(width < 500 ? "#touch-collection" : "#collection-nav")
+      .locator("#touch-collection:visible, #collection-nav:visible")
       .click();
     if (!(await page.locator("#library-search").isVisible()))
       await page.locator("#library-filters > summary").click();

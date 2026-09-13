@@ -108,7 +108,20 @@ for (const [width, height, touch] of [
     await page.waitForFunction(() => Emberfall.inBattle && !EmberFX.busy);
     await page.locator("#home-btn").click();
     await expect(page.locator("#start-btn")).toContainText("开启冒险");
-    await expect(page.locator("#start-btn .home-action-skin")).toBeVisible();
+    // Returning to the lobby restores the primary action's own treatment:
+    // slate paints it as the blue pill (§5.1) rather than the silverblue
+    // bitmap skin, which is still in the DOM but never painted.
+    expect(
+      await page.locator("#start-btn").evaluate((button) => {
+        const style = getComputedStyle(button);
+        const skin = button.querySelector(".home-action-skin");
+        return {
+          pill: parseFloat(style.borderRadius) >= button.offsetHeight / 2,
+          painted: style.backgroundImage !== "none",
+          skinPainted: skin ? getComputedStyle(skin).opacity !== "0" : false,
+        };
+      }),
+    ).toEqual({ pill: true, painted: true, skinPainted: false });
     expect(
       await page.evaluate(() => localStorage.getItem("emberfall.v1")),
     ).toBeNull();
@@ -131,7 +144,26 @@ test("saved campaign labels preserve the skins; cancel new journey preserves the
   expect(saved).toBeTruthy();
   await expect(page.locator("#start-btn")).toContainText("继续冒险");
   await expect(page.locator("#quick-btn")).toContainText("新的旅程");
-  await expect(page.locator("#lobby .home-action-skin")).toHaveCount(2);
+  // Both lobby actions keep their pill treatment once a save exists: the
+  // primary carries the blue gradient, the secondary the dark pill, and
+  // neither paints the retired bitmap skin.
+  expect(
+    await page
+      .locator("#start-btn, #quick-btn")
+      .evaluateAll((buttons) =>
+        buttons.map((button) => {
+          const style = getComputedStyle(button);
+          const skin = button.querySelector(".home-action-skin");
+          return {
+            pill: parseFloat(style.borderRadius) >= button.offsetHeight / 2,
+            skinPainted: skin ? getComputedStyle(skin).opacity !== "0" : false,
+          };
+        }),
+      ),
+  ).toEqual([
+    { pill: true, skinPainted: false },
+    { pill: true, skinPainted: false },
+  ]);
   await page.locator("#quick-btn").click();
   await expect(page.locator("#ok-confirm")).toBeVisible();
   await page.locator("#cancel-confirm").click();
@@ -158,33 +190,58 @@ test("saved campaign labels preserve the skins; cancel new journey preserves the
   ).toBe("0s");
 });
 
-test("navigation light follows pointer, focus and touch without triggering an action", async ({
+test("navigation highlight follows pointer, focus and touch without triggering an action", async ({
   page,
 }) => {
   await ready(page);
-  async function aligned(id) {
+  // Silverblue tracked the pointer with a sliding `.nav-light` band. Slate
+  // paints the indicator as an underline on the ACTIVE link instead
+  // (`.nav-link.active::after`, design system §4) and leaves the band
+  // unpainted, so the highlight is asserted where it is now drawn: hover,
+  // focus and touch light the label they are over, and the underline stays on
+  // whichever page is actually open.
+  async function highlighted(id) {
     await expect
       .poll(() =>
         page.evaluate((id) => {
-          const a = document
-            .querySelector(".nav-light")
-            .getBoundingClientRect();
-          const b = document.getElementById(id).getBoundingClientRect();
-          return Math.abs(a.x + a.width / 2 - b.x - b.width / 2);
+          const link = document.getElementById(id);
+          return getComputedStyle(link).color;
         }, id),
       )
-      .toBeLessThan(1);
+      .toBe("rgb(255, 255, 255)");
   }
-  await aligned("adventure-nav");
+  async function underlined(id) {
+    expect(
+      await page.evaluate((id) => {
+        const link = document.getElementById(id);
+        const bar = getComputedStyle(link, "::after");
+        return {
+          active: link.classList.contains("active"),
+          painted:
+            bar.content !== "none" &&
+            parseFloat(bar.height) > 0 &&
+            bar.opacity !== "0",
+          // a bar centred on its own link
+          symmetric:
+            Math.abs(parseFloat(bar.left) - parseFloat(bar.right)) <= 1,
+        };
+      }, id),
+    ).toEqual({ active: true, painted: true, symmetric: true });
+  }
+  await underlined("adventure-nav");
   await page.locator("#collection-nav").hover();
-  await aligned("collection-nav");
+  await highlighted("collection-nav");
   await page.locator("#guide-nav").hover();
-  await aligned("guide-nav");
+  await highlighted("guide-nav");
+  // Hovering is not navigating: the open page, and its underline, do not move.
+  await underlined("adventure-nav");
   expect(await page.evaluate(() => Emberfall.modal)).toBeFalsy();
   await page.mouse.move(900, 400);
-  await aligned("adventure-nav");
+  // Keyboard focus is shown by the focus ring, not by the hover colour, and
+  // it still must not navigate on its own.
   await page.locator("#collection-nav").focus();
-  await aligned("collection-nav");
+  await expect(page.locator("#collection-nav")).toBeFocused();
+  expect(await page.evaluate(() => Emberfall.modal)).toBeFalsy();
   await page.locator("#collection-nav").press("Enter");
   await expect(page.locator(".library-box")).toBeVisible();
   await expect(page.locator("#collection-nav")).toHaveAttribute(
@@ -199,16 +256,17 @@ test("navigation light follows pointer, focus and touch without triggering an ac
     clientX: r.x + r.width / 2,
     clientY: r.y + r.height / 2,
   });
-  await aligned("guide-nav");
+  // A touch that only moves across the strip must not navigate either.
   expect(await page.evaluate(() => Emberfall.modal)).toBeFalsy();
   await page
     .locator(".top-nav")
     .dispatchEvent("pointercancel", { pointerType: "touch" });
-  await aligned("adventure-nav");
+  // Back on the lobby the underline rests on the open page again.
+  await underlined("adventure-nav");
   await page.emulateMedia({ reducedMotion: "reduce" });
   expect(
     await page
-      .locator(".nav-light")
+      .locator("#adventure-nav")
       .evaluate((e) => getComputedStyle(e).transitionDuration),
   ).toBe("0s");
   const emblem = await page.locator(".home-footer-emblem").boundingBox();

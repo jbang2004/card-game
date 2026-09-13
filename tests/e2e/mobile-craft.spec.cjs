@@ -17,7 +17,11 @@ for (const [width, height] of [
     await page.goto("./?debug=1");
     await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
     await page.locator("#collection-nav").evaluate((e) => e.click());
-    await expect(page.locator("#library-search")).toBeHidden();
+    // Silverblue parked the search field behind the filter disclosure on a
+    // phone. The slate title row carries it as a search pill at every size
+    // (design system §5 T3 「标题行（返回 + 标题 + 搜索药丸）」), so it is
+    // reachable without opening anything.
+    await expect(page.locator("#library-search")).toBeVisible();
     const geometry = await page
       .locator(".library-entry")
       .first()

@@ -116,17 +116,21 @@ for (const [width, height, touch] of [
         );
     }
     await page.locator('[data-invoke="selmyra"]').scrollIntoViewIfNeeded();
+    // The invoke control is a pill. Slate draws that with `border-radius`
+    // alone, so assert the shape (fully rounded ends) rather than the
+    // silverblue `clip-path: inset(... round 999px)` that used to carve it.
     const invokeStyle = await page
       .locator('[data-invoke="selmyra"]')
       .evaluate((button) => {
         const style = getComputedStyle(button);
+        const r = button.getBoundingClientRect();
         return {
           radius: parseFloat(style.borderRadius),
-          clipPath: style.clipPath,
+          height: r.height,
         };
       });
     expect(invokeStyle.radius).toBeGreaterThanOrEqual(20);
-    expect(invokeStyle.clipPath).toContain("round 999px");
+    expect(invokeStyle.radius).toBeGreaterThanOrEqual(invokeStyle.height / 2);
     expect(
       await page.locator('[data-invoke="selmyra"]').evaluate((button) => {
         const r = button.getBoundingClientRect();
