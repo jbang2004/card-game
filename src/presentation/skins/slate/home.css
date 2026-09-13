@@ -39,10 +39,12 @@
  * Two bitmaps are hidden with `opacity: 0` rather than `display: none`:
  * `.home-action-skin` and `.nav-light`. Both are out of flow already
  * (absolutely positioned, `z-index: -1` / `pointer-events: none`), so this
- * hides them without changing geometry AND keeps
- * `tests/e2e/home-reference.spec.cjs` meaningful — it asserts the button skin
- * is visible and that the nav light tracks pointer/focus, both of which a
- * `display: none` would silently turn into dead assertions.
+ * hides them without disturbing any geometry that still depends on them —
+ * `.nav-light` in particular keeps tracking pointer and focus, it simply is
+ * not painted. Note that `opacity: 0` is NOT a substitute for a test
+ * assertion: Playwright still counts both elements as visible, so
+ * `tests/e2e/home-reference.spec.cjs` asserts the pills and the
+ * `.nav-link.active::after` underline that slate actually paints.
  *
  * NOTE on `display`: the touch section deliberately re-opens ONE element that
  * the legacy mobile sheet hides, `.top-nav` (the brief asks for a three-item
