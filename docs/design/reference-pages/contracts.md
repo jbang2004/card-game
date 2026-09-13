@@ -47,3 +47,18 @@
 单神契约在手机端按内容高度收口，不再为不存在的第二张契约预留空白；星焰、曙日与荒猎三位神均在 511×983 复核。752×1056 批注复查又清除了残留的 `min-height: 100%` 与尖角参考铭牌：单神面板实测高度 334px，底部及左右安全间距约 23–24px；唤醒按钮在桌面与手机统一为真实圆角半径与圆角裁切均为 999px 的胶囊，禁用态仍保持清晰文字，只允许尺寸随可视区缩放。
 
 复杂纹理由 image-gen 重建，简单图标与轮廓由原生 SVG/CSS 完成。生成图并非原图无损分层；具体透明通道限制见 [素材记录](../../../assets/ui/detail-polish-v1/provenance.json)。本次截图和检查见 [细节打磨记录](../../../output/detail-polish-20260913/VALIDATION.md)。
+
+## 2026-09-13 磨砂青岩皮肤
+
+`?skin=slate` 下的契约页按 [设计系统](../SLATE_DESIGN_SYSTEM.md) 简报 5.3 重做 UI 层，实现文件只有
+`src/presentation/skins/slate/contracts.css`（全部规则以 `html[data-skin="slate"] body:not(.touch-layout)` 开头，无 `!important`，无新位图）。`src/application/contracts.js` 未改动。
+
+保留：神祇原画满幅铺底、只显示选中契约、单契约隐藏缩略带、我方/敌方切换与唤醒的既有动作接口、真实仪式进度与法力门槛。
+
+替换：标题行改为 base.css 的返回箭头 + 「诸神契约」32px/700（`.covenant-heading` 不是 `.modal-heading`，所以在本文件里对齐到同一条 96px 文字轴），并去掉横穿原画的标题下分隔线。「我方契约 | 敌方契约」由两枚发光胶囊改为文字分页：未选 ink-3 20px，选中白色 700 加 3px 白色下划亮条，项间 1px 竖线，整条与右栏同宽同右沿。右栏面板去框（`.crafted-panel` 由 base.css 中和，银线角饰随之消失），改发丝线分节：名称 26px/700 → 元信息 14px ink-3 → 效果 15px/1.8 ink-2 → 进度行 → 需求说明 → 主药丸。进度行改为 `[标签 104px / 6px 轨 / 数值]` 三列网格：轨道 `#ffffff1f` 圆角 3，进度为 `--slate-blue-deep → --slate-blue` 渐变，数值 20px/700 蓝色（分母 14px ink-3）；菱形 `ritual-stones` 隐藏。底部三张缩略卡改圆角 10、1.5px 描边、投影，选中为蓝色描边 + 内描边 + 外发光。唤醒按钮沿用 base.css 主药丸，不可用时为 ink-3 文字 + `#ffffff1a` 细边的禁用态。敌方分页沿用同一套规则且只读（无唤醒按钮）。
+
+页面局部变量 `--covenant-col`（`clamp(400px, 42vw, 600px)`）不是设计令牌，只是让分页与面板共享同一列宽——两者位于不同子树，必须对齐同一左右沿。
+
+已知差异：契约从战斗中打开，而 `src/mobile-view.js` 对 `battle-view` 窗口在 `rawW < 1360 || rawH < 700` 时切到 `body.touch-layout`，因此 1280×720 的契约页仍是既有紧凑/触控构图，桌面皮肤按规则不介入，归简报 5.7 第二阶段。窄桌面验收改用 1440×900。首关敌方未携带契约，敌方分页只能验证只读文案，未构造携带契约的敌方存档。
+
+验收：1672×941、1440×900 各含我方、敌方分页、切换缩略卡三态，另有星焰法师单契约一张；1280×720 记录触控回退现状。见 [截图与说明](../../../output/slate-map-contracts-20260913/README.md)。不带 `?skin` 的同页截图与改动前 MD5 逐字节一致。`node --test tests/*.test.cjs` 全通过；`?skin=slate` 下 `pantheon.spec.cjs` 全通过，`contracts.spec.cjs` 9 项中 8 项通过，失败项为 1600×940 的 `expect(clipPath).toContain("round 999px")`——base.css 的共用药丸语言把 `.gold-btn` 的 `clip-path` 设为 `none`（同段的 `border-radius >= 20` 仍通过），该断言绑定旧晶体按钮材质，需由协调者统一决定。

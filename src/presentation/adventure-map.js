@@ -79,7 +79,22 @@
       dossier.querySelector('h3').textContent=boss.name;
       dossier.querySelector('small').textContent=boss.title+' · '+status(i);
       dossier.querySelector('p').textContent=boss.quote;
-      dossier.querySelector('.atlas-dossier-rule').textContent=`${boss.hp} 生命 · ${boss.powerText || boss.rule || ''}`;
+      // Same sentence as before, but each statistic is wrapped so a skin can
+      // render them as chips. Concatenated text is unchanged, so themes that do
+      // not style the spans keep the exact "N 生命 · <技能>" line.
+      const rule = dossier.querySelector('.atlas-dossier-rule');
+      const stat = (text, cls) => {
+        const span = document.createElement('span');
+        span.className = cls;
+        span.textContent = text;
+        return span;
+      };
+      rule.textContent = '';
+      rule.append(
+        stat(`${boss.hp} 生命`, 'atlas-dossier-stat'),
+        stat(' · ', 'atlas-dossier-sep'),
+        stat(`${boss.powerText || boss.rule || ''}`, 'atlas-dossier-stat atlas-dossier-skill')
+      );
 
       box.querySelector('.atlas-focus strong').textContent = `${D.bosses[i].title} · ${status(i)}`;
       box.querySelector('.atlas-focus > span').textContent = i > chapter && !complete
