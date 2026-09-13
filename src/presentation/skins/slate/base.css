@@ -1,15 +1,34 @@
-/* Test skin "slate" (磨砂青岩) — shared base. ALL layouts.
- * Activated by `?skin=slate` (html[data-skin="slate"], see presentation/theme.js).
- * The whole skin lives in the `skin` cascade layer, which sits after
- * `components`, so it never has to out-specify existing rules.
+/* Skin "slate" (磨砂青岩) — shared base. ALL layouts.
+ * This is the DEFAULT presentation layer since 2026-09-14: presentation/theme.js
+ * writes `html[data-skin="slate"]` unless the URL carries `?skin=silverblue`
+ * (or `?skin=off`), which leaves `data-skin` unset and renders the earlier
+ * 星海银蓝 theme. The whole skin lives in the `skin` cascade layer, which sits
+ * after `components`, so it never has to out-specify existing rules.
+ *
+ * ---------------------------------------------------------------------------
+ * DIVISION OF LABOUR
+ *
+ *   base.css (this file) owns THREE things, for EVERY layout:
+ *     1. the TOKENS;
+ *     2. BOTH SHELLS — page shell and floating shell — including their touch
+ *        geometry (gutters, safe areas, hit areas, title scale);
+ *     3. the SHARED CONTROLS: pills, form fields, the close button, ornament
+ *        removal and the dialog type scale.
+ *
+ *   PAGE FILES (home/map/contracts/battle/dialogs/guide/mobile/heroes/library/
+ *   settings) own PAGE GEOMETRY PER LAYOUT — position, size, spacing,
+ *   arrangement and visibility inside their own page — with desktop rules
+ *   scoped to `body:not(.touch-layout)` and touch rules to `body.touch-layout`.
+ *   They must not redefine tokens and must not restate a shell; they extend it.
  *
  * SCOPE: this file's selectors start at `html[data-skin="slate"] body` with no
- * layout guard, so the tokens, the two shells and the shared controls apply to
- * the desktop layout AND to `body.touch-layout` (phase 2, mobile). Page files
- * own the per-layout geometry: their desktop rules stay scoped to
- * `body:not(.touch-layout)` and the mobile work adds `body.touch-layout` rules.
- * Dropping the guard lowers every selector here by one class uniformly, so the
- * deliberate specificity ties inside this file are unchanged.
+ * layout guard, so everything here applies to the desktop layout AND to
+ * `body.touch-layout`; the handful of genuinely per-layout shell values below
+ * carry an explicit `body.touch-layout` guard. Dropping the guard lowers every
+ * selector here by one class uniformly, so the deliberate specificity ties
+ * inside this file are unchanged — but it also lowers them relative to LATER
+ * skin files, which is how a page file can still win over a hoisted rule
+ * (design system §6 rule 12).
  *
  * ---------------------------------------------------------------------------
  * TOKENS (defined here, on html[data-skin="slate"] — page files must NOT
@@ -23,6 +42,9 @@
  *   material    --slate-material  (matte panel: glow + 45° hatch + gradient)
  *   geometry    --slate-page-x  --slate-rail  --slate-list  --slate-col-gap
  *               --slate-card-w  --slate-card-h  --slate-thumb-w --slate-thumb-h
+ *               --covenant-col
+ *   hit areas   --slate-hud-hit  (declared on `#app`, NOT on the root — see the
+ *               note at that rule)
  * The `@media (max-width: 1500px)` block at the bottom of this file retunes the
  * geometry tokens for narrower desktop windows.
  *
@@ -33,29 +55,27 @@
  *     Full-bleed: host padding 0, dialog 100%×100%, matte material background,
  *     no border/radius/shadow, `padding: 26px var(--slate-page-x) 28px`, and the
  *     close button becomes a back chevron at the TOP-LEFT plus a title row.
+ *     On `body.touch-layout` the same shell retunes to 16px + safe-area
+ *     gutters, a 44px chevron and a 28px title, with a short-landscape
+ *     (`max-height: 500px`) and a tablet (`min-width: 900px`) pass.
  *
  *   FLOATING shell — confirm, detail, hand, menu, journal, discover, mulligan,
  *     choice, result, atelier, workspace.
  *     Host keeps dialog-layout's centering and gets a dim; the dialog is a
  *     rounded matte panel (16px radius, hairline border, drop shadow). Widths
  *     stay exactly as dialog-layout.css defines them — never override
- *     `--dialog-width` here. The close button stays a top-RIGHT round "×".
+ *     `--dialog-width` here. The close button stays a top-RIGHT round "×":
+ *     40px on desktop, 44px on touch.
  *
  * ---------------------------------------------------------------------------
  * SHARED CONTROLS (apply to EVERY dialog type, not just the pages above):
  *   font stack on text/controls; `.reference-page-brand`, `.panel-corner-trim`,
  *   `.folio-scroll-hint`, `.eyebrow` and `.selection-light` hidden;
  *   `.crafted-panel` (plus `.touch-hero-info` and `.atelier-vignette`, which
- *   carry the same legacy amber glass) neutralised;
- *   `:is(.modal-heading, .library-heading) h2`
- *   type scale; pills `.gold-btn` / `.ghost-btn` / `.text-btn` /
- *   `.library-inspect`; form controls `select.library-search`,
- *   `input.library-search`, `.deck-title-input`.
- *
- * ---------------------------------------------------------------------------
- * RULE FOR PAGE FILES (home/map/contracts/battle/dialogs/guide/mobile/heroes/
- * library/settings): only add page-specific selectors. Do not redefine tokens
- * and do not restate the shells — extend them.
+ *   carry the same legacy amber glass) neutralised; the
+ *   `:is(.modal-heading, .library-heading) h2` type scale; pills `.gold-btn` /
+ *   `.ghost-btn` / `.text-btn` / `.library-inspect`; form controls
+ *   `select.library-search`, `input.library-search`, `.deck-title-input`.
  */
 
 html[data-skin="slate"] {
@@ -85,12 +105,29 @@ html[data-skin="slate"] {
   --slate-card-h: 430px;
   --slate-thumb-w: 72px;
   --slate-thumb-h: 96px;
+  /* contracts page: the tab row and the panel live in different subtrees and
+   * have to share one column edge */
+  --covenant-col: clamp(400px, 42vw, 600px);
   --slate-material:
     radial-gradient(70% 55% at 12% 6%, #6f7d95 0%, #6f7d9500 62%),
     radial-gradient(45% 40% at 92% 96%, #3d4a5f 0%, #3d4a5f00 65%),
     radial-gradient(60% 50% at 60% 40%, #2e3849 0%, #2e384900 70%),
     repeating-linear-gradient(45deg, #ffffff09 0 1px, #ffffff00 1px 7px),
     linear-gradient(160deg, #2b3444 0%, #1e2532 55%, #171d29 100%);
+}
+
+/* Minimum hit area for HUD controls that live inside the scaled battle canvas.
+ * `#battle` is a 1600×940 logical canvas that `mobile-view.js` scales with
+ * `--scale`, so a control sized in logical px shrinks with the window; this
+ * keeps it at 44 REAL device px.
+ *
+ * It has to be declared on `#app` and not on the root: a custom property's
+ * `var()` references are substituted on the element that carries the
+ * declaration, and `mobile-view.js` writes `--scale` as an inline style on
+ * `#app`. On `html` the `var(--scale, 1)` here would always take the fallback
+ * and the token would collapse to a flat 44px. */
+html[data-skin="slate"] body #app {
+  --slate-hud-hit: max(44px, calc(44px / var(--scale, 1)));
 }
 
 /* ---------- full-bleed page shell ---------- */
@@ -490,6 +527,207 @@ html[data-skin="slate"]
   margin: 0;
 }
 
+/* ---------- page shell on touch ---------- */
+/* The same shell at phone/tablet gutters. `src/mobile-view.js` puts
+ * `body.touch-layout` on every touch device and on any window narrower than
+ * 1200px, so 1024×768 tablets land here too. GEOMETRY only — the material, the
+ * chevron drawing and the type family above are layout-agnostic and are not
+ * restated. */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="heroes"],
+    [data-dialog-size="library"],
+    [data-dialog-size="settings"],
+    [data-dialog-size="route"],
+    [data-dialog-size="covenant"],
+    [data-dialog-size="help"]
+  ) {
+  padding: calc(12px + env(safe-area-inset-top))
+    calc(16px + env(safe-area-inset-right))
+    calc(12px + env(safe-area-inset-bottom))
+    calc(16px + env(safe-area-inset-left));
+}
+/* back chevron: 44px hit area tucked into the safe area */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="heroes"],
+    [data-dialog-size="library"],
+    [data-dialog-size="settings"],
+    [data-dialog-size="route"],
+    [data-dialog-size="covenant"],
+    [data-dialog-size="help"]
+  )
+  > .modal-close {
+  top: calc(10px + env(safe-area-inset-top));
+  left: calc(10px + env(safe-area-inset-left));
+  width: 44px;
+  height: 44px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="heroes"],
+    [data-dialog-size="library"],
+    [data-dialog-size="settings"],
+    [data-dialog-size="route"],
+    [data-dialog-size="covenant"],
+    [data-dialog-size="help"]
+  )
+  > :is(.modal-heading, .library-heading) {
+  min-height: 44px;
+  padding-left: 44px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="heroes"],
+    [data-dialog-size="library"],
+    [data-dialog-size="settings"],
+    [data-dialog-size="route"],
+    [data-dialog-size="covenant"],
+    [data-dialog-size="help"]
+  )
+  :is(.modal-heading, .library-heading)
+  h2 {
+  font-size: 28px;
+  line-height: 36px;
+  letter-spacing: 2px;
+}
+/* short landscape windows buy the title row back for content */
+@media (max-height: 500px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="heroes"],
+      [data-dialog-size="library"],
+      [data-dialog-size="settings"],
+      [data-dialog-size="route"],
+      [data-dialog-size="covenant"],
+      [data-dialog-size="help"]
+    ) {
+    padding-top: calc(8px + env(safe-area-inset-top));
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="heroes"],
+      [data-dialog-size="library"],
+      [data-dialog-size="settings"],
+      [data-dialog-size="route"],
+      [data-dialog-size="covenant"],
+      [data-dialog-size="help"]
+    )
+    > :is(.modal-heading, .library-heading) {
+    min-height: 36px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="heroes"],
+      [data-dialog-size="library"],
+      [data-dialog-size="settings"],
+      [data-dialog-size="route"],
+      [data-dialog-size="covenant"],
+      [data-dialog-size="help"]
+    )
+    > .modal-close {
+    top: calc(8px + env(safe-area-inset-top));
+    left: calc(8px + env(safe-area-inset-left));
+    height: 44px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="heroes"],
+      [data-dialog-size="library"],
+      [data-dialog-size="settings"],
+      [data-dialog-size="route"],
+      [data-dialog-size="covenant"],
+      [data-dialog-size="help"]
+    )
+    :is(.modal-heading, .library-heading)
+    h2 {
+    font-size: 21px;
+    line-height: 28px;
+  }
+}
+/* tablets keep the desktop title scale and a wider gutter */
+@media (min-width: 900px) and (min-height: 620px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="heroes"],
+      [data-dialog-size="library"],
+      [data-dialog-size="settings"],
+      [data-dialog-size="route"],
+      [data-dialog-size="covenant"],
+      [data-dialog-size="help"]
+    ) {
+    padding: calc(22px + env(safe-area-inset-top))
+      calc(32px + env(safe-area-inset-right))
+      calc(20px + env(safe-area-inset-bottom))
+      calc(32px + env(safe-area-inset-left));
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="heroes"],
+      [data-dialog-size="library"],
+      [data-dialog-size="settings"],
+      [data-dialog-size="route"],
+      [data-dialog-size="covenant"],
+      [data-dialog-size="help"]
+    )
+    > .modal-close {
+    top: calc(20px + env(safe-area-inset-top));
+    left: calc(24px + env(safe-area-inset-left));
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="heroes"],
+      [data-dialog-size="library"],
+      [data-dialog-size="settings"],
+      [data-dialog-size="route"],
+      [data-dialog-size="covenant"],
+      [data-dialog-size="help"]
+    )
+    > :is(.modal-heading, .library-heading) {
+    padding-left: 48px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="heroes"],
+      [data-dialog-size="library"],
+      [data-dialog-size="settings"],
+      [data-dialog-size="route"],
+      [data-dialog-size="covenant"],
+      [data-dialog-size="help"]
+    )
+    :is(.modal-heading, .library-heading)
+    h2 {
+    font-size: 32px;
+    line-height: 44px;
+    letter-spacing: 3px;
+  }
+}
+
 /* ---------- form controls (all dialogs) ---------- */
 html[data-skin="slate"]
   body
@@ -669,6 +907,20 @@ html[data-skin="slate"]
   > .modal-close:hover {
   background: #1b2434d9;
   border-color: var(--slate-line-strong);
+}
+/* on touch the 40px round close button is below the 44px target AGENTS.md asks
+ * for. GEOMETRY only — the chrome above is unchanged.
+ * Deliberately still limited to `confirm` and `detail`, exactly as dialogs.css
+ * had it: the remaining floating sizes are laid out by mobile.css and growing
+ * their close button is a visual change, not a consolidation. Widening this
+ * `:is()` to the whole floating shell is the obvious follow-up. */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog:is([data-dialog-size="confirm"], [data-dialog-size="detail"])
+  > .modal-close {
+  width: 44px;
+  height: 44px;
 }
 
 /* ---------- narrower desktop windows ---------- */

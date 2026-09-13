@@ -28,9 +28,10 @@
  *      the panel below; landscape keeps the desktop reading (art left, panel
  *      right) at phone paddings with an independently scrolling column.
  *
- * `--covenant-col`, `--slate-cov-*` are page-local geometry values, not design
- * tokens: the tabs and the panel live in different subtrees and have to share
- * one column edge.
+ * `--covenant-col` moved into base.css on 2026-09-14 (the tabs and the panel
+ * live in different subtrees and have to share one column edge, so the value
+ * cannot sit on either of them); `--slate-cov-*` stay page-local geometry
+ * values, not design tokens.
  *
  * The `.scene-showcase` scrim is the one thing that legitimately differs per
  * layout: it is scene treatment, not component chrome, and it has to run along
@@ -510,12 +511,6 @@ html[data-skin="slate"]
 /* =========================================================================
  * 2. DESKTOP GEOMETRY — body:not(.touch-layout)
  * ====================================================================== */
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="contracts"]
-  > .covenant-box {
-  --covenant-col: clamp(400px, 42vw, 600px);
-}
 
 /* ---------- scene scrim: keep the goddess, buy legibility on the right ---------- */
 html[data-skin="slate"]

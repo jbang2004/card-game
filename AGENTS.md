@@ -24,7 +24,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 - 修改 `src/` 与素材源，然后构建；不要只改生成的 `index.html`。
 - `config/build.json` / `src/template.html` 决定模块顺序。只有当前注册表中的实现进入运行；不能因历史文档提及就恢复已经退役的 Three.js、程序化插画或旧素材缓存。仍有引用的 `tavern-ui.js` / `atelier*` 承担当前 UI 和 Canvas 职责。
 - 79 个卡牌 ID 必须各有新动漫插画；保持严格映射，不让缺图静默回退到旧程序化角色图。
-- 当前视觉为星海银蓝酒馆，见 `docs/design/REFERENCE_UI_STANDARD.md` 与目标页面档案；2026-09-07 的胡桃木古金要求属于历史版本。卡名、费用、攻血和规则文字保持实时 DOM，不烘焙进画面。
+- 当前默认视觉为磨砂青岩（slate）皮肤，见 `docs/design/SLATE_DESIGN_SYSTEM.md`；银蓝主题仍可用 `?skin=silverblue` 查看，属于对照/历史版本；新样式放在 `src/presentation/skins/slate/`（base = 令牌与外壳，页面文件 = 各页几何），不再往 components.css 添加新配色。卡名、费用、攻血和规则文字保持实时 DOM，不烘焙进画面。
 - 手机端是专用横/竖屏布局，不退回到把 1600×940 桌面等比缩小；保留滑动、点牌确认、长按、旋转后的同局状态。
 - `engine.js` 与 `rules/` 是纯规则层，AI 独立在 `rules/ai.js`；不要让画面粒子、昼夜切换、建筑互动改变对局状态。
 - 用户于 2026-09-08 确认游戏仍在测试期、没有旧对局需要保留：只支持当前 version 3 对局和命名卡组，不恢复 v1、旧 ruleset、混合职业放行或旧数组迁移。存储键名仍沿用，但不承诺旧格式兼容。

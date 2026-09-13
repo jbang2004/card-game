@@ -1,6 +1,8 @@
 /* Test skin "slate" (磨砂青岩) — desktop battle HUD (design system 5.4).
  *
- * Scope: every rule starts with `html[data-skin="slate"] body:not(.touch-layout)`.
+ * Scope: every rule starts with `html[data-skin="slate"] body:not(.touch-layout)`,
+ * except the battle topbar material in §1, which is shared with the touch
+ * layout and is therefore declared once without a layout guard (see §1).
  * The battle screen is template T5 — the boss scene, the cards, the badge SVGs,
  * the mana gems, the target lines and every animation stay exactly as the game
  * renders them; only the HUD chrome around them is restated in the slate
@@ -21,16 +23,29 @@
  *     and gradient on those four controls therefore lives on a pseudo-element,
  *     never on the control itself. Do not move them back onto the element.
  *
- * Token candidates raised for base.css are marked `token candidate` inline.
+ * The one token this file raised, `--slate-hud-hit`, now lives in base.css.
  */
 
 /* ---------------------------------------------------------------------------
  * 1. Topbar, battle view only
- * The topbar is shared with the lobby and the home task owns its default look;
- * everything here is scoped to `#app.battle-view`, the class `ui.js setView()`
- * puts on `#app` while a battle is on screen.
+ * The topbar markup is shared with the lobby and the home task owns its default
+ * look, so everything here is scoped to `#app.battle-view`, the class
+ * `ui.js setView()` puts on `#app` while a battle is on screen. `.lobby-view`
+ * and `.battle-view` are mutually exclusive, which is why home.css's topbar
+ * rules never reach this screen and the battle topbar has to be dressed here.
+ *
+ * EXCEPTION to this file's `body:not(.touch-layout)` scope: the veil, the
+ * hairline and the 36px round icon pills below carry NO layout guard. They were
+ * duplicated verbatim in `mobile.css` §1 — same selector, same values, only a
+ * different guard — and the responsive contract in REFERENCE_UI_STANDARD.md
+ * 「组件归属与响应式」 forbids them differing per layout anyway, so one
+ * declaration serves both. Only the two wordmark sizes below stay per-layout
+ * (mobile.css shrinks them to 17px/9px), and mobile.css still restates the
+ * `display: none` of `#fullscreen-btn` / `#touch-collection`, which the
+ * `display: grid` here would otherwise resurrect (design system §6 rules 7
+ * and 12).
  * ------------------------------------------------------------------------ */
-html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .topbar {
+html[data-skin="slate"] body #app.battle-view .topbar {
   background: linear-gradient(#0d1420cc, #0d142000);
   border: 0;
   border-bottom: 1px solid var(--slate-line);
@@ -49,11 +64,9 @@ html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .brand small {
   letter-spacing: 3px;
   color: var(--slate-ink-3);
 }
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #app.battle-view
-  .top-actions
-  .icon-btn {
+/* 36px pill per the brief; on touch the icon buttons sit in a 52px (portrait) /
+ * 44px (landscape) topbar, so the row itself supplies the rest of the slop. */
+html[data-skin="slate"] body #app.battle-view .top-actions .icon-btn {
   display: grid;
   place-items: center;
   width: 36px;
@@ -71,26 +84,17 @@ html[data-skin="slate"]
     border-color 0.15s,
     color 0.15s;
 }
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #app.battle-view
-  .top-actions
-  .icon-btn
-  svg {
+html[data-skin="slate"] body #app.battle-view .top-actions .icon-btn svg {
   width: 18px;
   height: 18px;
 }
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #app.battle-view
-  .top-actions
-  .icon-btn:hover {
+html[data-skin="slate"] body #app.battle-view .top-actions .icon-btn:hover {
   background: #1b2434d9;
   border-color: var(--slate-line-strong);
   color: #fff;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #app.battle-view
   .top-actions
   .icon-btn:focus-visible {
@@ -128,15 +132,12 @@ html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .turn-number {
  * 3. Utility tabs — dark pill chips with an icon
  * ------------------------------------------------------------------------ */
 /* `#battle` is a 1600×940 canvas scaled by `--scale`, so a control sized in
- * logical px shrinks on smaller desktop windows. This keeps every command
- * chip at 44 real device px down to the 1360×700 floor of the desktop layout,
- * the way `battle.css` already does for `#touch-cancel`.
- * token candidate: --slate-hud-hit */
-html[data-skin="slate"] body:not(.touch-layout) #battle {
-  --slate-battle-hit: max(44px, calc(44px / var(--scale, 1)));
-}
+ * logical px shrinks on smaller desktop windows. `--slate-hud-hit` (base.css,
+ * declared on `#app` where `--scale` lives) keeps every command chip at 44 real
+ * device px down to the 1360×700 floor of the desktop layout, the way
+ * `presentation/battle.css` already does for `#touch-cancel`. */
 html[data-skin="slate"] body:not(.touch-layout) #battle .utility-tab {
-  min-height: var(--slate-battle-hit);
+  min-height: var(--slate-hud-hit);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -461,13 +462,13 @@ html[data-skin="slate"]
  * ------------------------------------------------------------------------ */
 html[data-skin="slate"] body:not(.touch-layout) #battle .power-button {
   display: grid;
-  grid-template-columns: max(56px, var(--slate-battle-hit)) auto auto;
-  grid-template-rows: max(56px, var(--slate-battle-hit));
+  grid-template-columns: max(56px, var(--slate-hud-hit)) auto auto;
+  grid-template-rows: max(56px, var(--slate-hud-hit));
   align-items: center;
   justify-content: start;
   gap: 0;
   width: max-content;
-  height: max(56px, var(--slate-battle-hit));
+  height: max(56px, var(--slate-hud-hit));
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -482,8 +483,8 @@ html[data-skin="slate"] body:not(.touch-layout) #battle .power-button {
 html[data-skin="slate"] body:not(.touch-layout) #battle .power-button::before {
   content: "";
   grid-area: 1 / 1;
-  width: max(56px, var(--slate-battle-hit));
-  height: max(56px, var(--slate-battle-hit));
+  width: max(56px, var(--slate-hud-hit));
+  height: max(56px, var(--slate-hud-hit));
   box-sizing: border-box;
   border: 1px solid #ffffff3a;
   border-radius: 50%;
@@ -609,7 +610,7 @@ html[data-skin="slate"] body:not(.touch-layout) #battle .contract-open {
   font-family: var(--slate-font);
   text-shadow: none;
   overflow: hidden;
-  min-height: var(--slate-battle-hit);
+  min-height: var(--slate-hud-hit);
   transition:
     background 0.15s,
     border-color 0.15s;
@@ -754,7 +755,7 @@ html[data-skin="slate"] body:not(.touch-layout) #battle .end-turn {
   display: grid;
   place-items: center;
   width: 160px;
-  height: max(56px, var(--slate-battle-hit));
+  height: max(56px, var(--slate-hud-hit));
   padding: 0 20px;
   border: 1px solid #8cc4ff99;
   border-radius: 999px;

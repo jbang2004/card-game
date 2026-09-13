@@ -1,12 +1,22 @@
-# 磨砂青岩测试皮肤 / slate
+# 磨砂青岩皮肤 / slate — 从测试到默认
 
-2026-09-13。依据用户提供的参考截图（某卡牌游戏「阵容」页：深蓝灰磨砂面板、细斜纹、发丝分隔线、左侧节点导航轨、中列清单、右侧预览、药丸按钮）评估能否用同一套材质与布局重置本游戏页面。结论：**材质可以纯 CSS 复现，列表 / 预览分栏与导航轨在现有 DOM 上可以复现**；已在三个真实页面上实装为可切换的测试皮肤，未改动现有银蓝主题。
+**2026-09-14：本皮肤已成为默认视觉。** 不带查询参数时 `src/presentation/theme.js` 直接写入 `html[data-skin="slate"]`，全部页面（主页、英雄选择、万象秘典、旅途设置、冒险地图、诸神契约、桌面战场、全部弹窗、旅人手册）以及 `body.touch-layout` 的手机横竖屏布局都由 `src/presentation/skins/slate/` 提供。设计依据见 [SLATE_DESIGN_SYSTEM.md](SLATE_DESIGN_SYSTEM.md)。
+
+2026-09-13。依据用户提供的参考截图（某卡牌游戏「阵容」页：深蓝灰磨砂面板、细斜纹、发丝分隔线、左侧节点导航轨、中列清单、右侧预览、药丸按钮）评估能否用同一套材质与布局重置本游戏页面。结论：**材质可以纯 CSS 复现，列表 / 预览分栏与导航轨在现有 DOM 上可以复现**；当时已在三个真实页面上实装为可切换的测试皮肤，未改动现有银蓝主题。
 
 ## 开启方式
 
-在地址后加 `?skin=slate`，例如 `http://127.0.0.1:8000/dist/?debug=1&skin=slate`。开关在 `src/presentation/theme.js` 读取查询参数并写入 `html[data-skin]`；不带参数时页面与原版逐字节相同（已用截图 MD5 比对）。
+默认即为本皮肤，无需任何参数。
+
+- `?skin=silverblue` —— 切回旧的星海银蓝主题（`data-skin` 保持未设置，皮肤层全部规则不命中），用于对照与历史回看；`?skin=off` 等价。
+- `?skin=slate` —— 显式指定，与不带参数完全相同。
+- `?skin=<其他值>` —— 原样写入 `html[data-skin]`，留给后续皮肤实验。
+
+开关仍在 `src/presentation/theme.js`，用正则读 `globalThis.location?.search`（`tests/theme-presentation.test.cjs` 在 Node vm 里跑这个文件，不能依赖 `URLSearchParams` 或真实 `location`）。
 
 ## 落点
+
+> 以下自「落点」到文末为立项当天（2026-09-13）的评估记录，保留作为历史；分工与覆盖范围的现状以 [SLATE_DESIGN_SYSTEM.md](SLATE_DESIGN_SYSTEM.md) 为准。当时留空的 `{home,map,contracts,battle,dialogs,guide,mobile}.css` 已全部实装，`body:not(.touch-layout)` 的限制也已解除：base.css 同时提供桌面与触控两套外壳。
 
 皮肤按「共享底座 + 每页一文件」拆分，便于多人并行重置各页面。全部规则只在 `html[data-skin="slate"] body:not(.touch-layout)` 下生效。
 

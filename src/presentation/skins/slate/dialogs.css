@@ -1275,6 +1275,10 @@ html[data-skin="slate"]
   padding: 22px 0 6px;
 }
 html[data-skin="slate"] body #modal.folio-host .touch-hand-grid > button {
+  /* `legacy-components.css` rims these with the tavern amber border, which is
+   * invisible on the phone sheet but reads as a gold hairline around every card
+   * in the desktop hand overview. */
+  border: 0;
   border-radius: 12px;
   background: none;
   box-shadow: none;
@@ -1611,184 +1615,12 @@ html[data-skin="slate"]
    `body.mobile-portrait` / `body.mobile-landscape` split the two orientations.
 
    ---------------------------------------------------------------------------
-   NEEDS COORDINATOR MERGE INTO base.css: section 12.1 below is the PAGE shell,
-   which base.css owns. It is written here (and keyed only to the four page
-   sizes this task covers) because page files may not edit base.css. `route`
-   and `covenant` are deliberately absent — they belong to the map/contracts
-   task. When this moves to base.css it should simply gain those two sizes.
+   The PAGE shell's touch geometry (gutters, 44px back chevron, 28px title,
+   the short-landscape and tablet retunes) and the floating shell's 44px close
+   button used to live here as base.css candidates. They moved into base.css on
+   2026-09-14, which owns both shells for every layout; what is left below is
+   this file's own page geometry.
    ========================================================================== */
-
-/* --- 12.1 page shell on touch (base.css candidate) --- */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="help"]
-  ) {
-  padding: calc(12px + env(safe-area-inset-top))
-    calc(16px + env(safe-area-inset-right))
-    calc(12px + env(safe-area-inset-bottom))
-    calc(16px + env(safe-area-inset-left));
-}
-/* back chevron: 44px hit area tucked into the safe area */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="help"]
-  )
-  > .modal-close {
-  top: calc(10px + env(safe-area-inset-top));
-  left: calc(10px + env(safe-area-inset-left));
-  width: 44px;
-  height: 44px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="help"]
-  )
-  > :is(.modal-heading, .library-heading) {
-  min-height: 44px;
-  padding-left: 44px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="help"]
-  )
-  :is(.modal-heading, .library-heading)
-  h2 {
-  font-size: 28px;
-  line-height: 36px;
-  letter-spacing: 2px;
-}
-/* short landscape windows buy the title row back for content */
-@media (max-height: 500px) {
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="help"]
-    ) {
-    padding-top: calc(8px + env(safe-area-inset-top));
-    padding-bottom: calc(10px + env(safe-area-inset-bottom));
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="help"]
-    )
-    > :is(.modal-heading, .library-heading) {
-    min-height: 36px;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="help"]
-    )
-    > .modal-close {
-    top: calc(8px + env(safe-area-inset-top));
-    left: calc(8px + env(safe-area-inset-left));
-    height: 44px;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="help"]
-    )
-    :is(.modal-heading, .library-heading)
-    h2 {
-    font-size: 21px;
-    line-height: 28px;
-  }
-}
-/* tablets keep the desktop title scale and a wider gutter */
-@media (min-width: 900px) and (min-height: 620px) {
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="help"]
-    ) {
-    padding: calc(22px + env(safe-area-inset-top))
-      calc(32px + env(safe-area-inset-right))
-      calc(20px + env(safe-area-inset-bottom))
-      calc(32px + env(safe-area-inset-left));
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="help"]
-    )
-    > .modal-close {
-    top: calc(20px + env(safe-area-inset-top));
-    left: calc(24px + env(safe-area-inset-left));
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="help"]
-    )
-    > :is(.modal-heading, .library-heading) {
-    padding-left: 48px;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="help"]
-    )
-    :is(.modal-heading, .library-heading)
-    h2 {
-    font-size: 32px;
-    line-height: 44px;
-    letter-spacing: 3px;
-  }
-}
 
 /* --- 12.2 page-shell footer on touch: equal-width pills across the row --- */
 html[data-skin="slate"]
@@ -1978,18 +1810,6 @@ html[data-skin="slate"]
     flex: 1 1 0;
     min-height: 44px;
   }
-}
-
-/* the floating shell's 40px round close button is below the 44px touch target
- * AGENTS.md asks for. GEOMETRY only — base.css keeps the chrome.
- * NEEDS COORDINATOR MERGE INTO base.css together with 12.1. */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  > .folio-dialog:is([data-dialog-size="confirm"], [data-dialog-size="detail"])
-  > .modal-close {
-  width: 44px;
-  height: 44px;
 }
 
 /* --- 12.4 卡牌详情 / card detail on touch: card over copy --- */

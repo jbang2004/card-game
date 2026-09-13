@@ -33,9 +33,14 @@ const EmberTheme = (() => {
     }
   }
   document.documentElement.dataset.theme = definition.id;
-  // Presentation test only: `?skin=slate` opts into the matte slate skin layer.
+  // The matte slate skin (磨砂青岩) is the default presentation layer.
+  // `?skin=silverblue` (and `?skin=off`) leave `data-skin` unset so the earlier
+  // 星海银蓝 theme renders unchanged; any other explicit value is passed through
+  // for skin experiments. Parsed with a regex off `globalThis.location` so
+  // `tests/theme-presentation.test.cjs` can run this file in a bare Node vm.
   const skin = /[?&]skin=([\w-]+)/.exec(globalThis.location?.search || "")?.[1];
-  if (skin) document.documentElement.dataset.skin = skin;
+  if (skin !== "silverblue" && skin !== "off")
+    document.documentElement.dataset.skin = skin || "slate";
   document.title = definition.title;
   document.documentElement.style.setProperty(
     "--scene-backdrop",

@@ -7,10 +7,12 @@
  * `mobile-view.js` switches on below 1360×700 — one layout family, five sizes.
  *
  * This file owns the BATTLE screen and the BATTLE-TIME dialogs. The shared
- * tokens, the two dialog shells, the pill buttons and the round close button
- * are already layout-agnostic in `base.css`; `battle.css` and `dialogs.css`
- * are scoped to `body:not(.touch-layout)` and do nothing here, so every HUD
- * material they declare is restated below with the SAME literal values. That
+ * tokens, the two dialog shells (including their touch geometry), the pill
+ * buttons and the round close button are already layout-agnostic in
+ * `base.css`, and `battle.css` §1 declares the battle topbar material once for
+ * both layouts. Everything else in `battle.css` / `dialogs.css` is scoped to
+ * `body:not(.touch-layout)` and does nothing here, so the HUD material those
+ * files declare is restated below with the SAME literal values. That
  * repetition is deliberate and machine-checked:
  * `tests/e2e/responsive-component-style.spec.cjs` compares the computed
  * background / border / radius / shadow / colour / font-family / font-weight /
@@ -43,23 +45,18 @@
  *     buy back vertical room so the 「保留 / 替换」 pills stop being clipped at
  *     844×390.
  *
- * Token candidates raised for base.css are marked `token candidate` inline.
+ * This file raised no token candidates; the shared hit-area token
+ * `--slate-hud-hit` lives in base.css.
  */
 
 /* ---------------------------------------------------------------------------
  * 1. Topbar, battle view only
- * Same language as `battle.css` §1: veil + hairline, text wordmark, 36px round
- * icon pills. Scoped to `#app.battle-view` so the lobby topbar keeps whatever
- * the home task gives it.
+ * The veil + hairline and the 36px round icon pills are NOT restated here: they
+ * are identical in both layouts and `battle.css` §1 now declares them once with
+ * no layout guard. What is left is the wordmark type scale, which really does
+ * shrink on a phone, and the `display: none` restatements the shared
+ * `display: grid` would otherwise undo.
  * ------------------------------------------------------------------------ */
-html[data-skin="slate"] body.touch-layout #app.battle-view .topbar {
-  background: linear-gradient(#0d1420cc, #0d142000);
-  border: 0;
-  border-bottom: 1px solid var(--slate-line);
-  box-shadow: none;
-  color: var(--slate-ink);
-  font-family: var(--slate-font);
-}
 html[data-skin="slate"] body.touch-layout #app.battle-view .brand strong {
   font: 700 17px/1.1 var(--slate-font);
   letter-spacing: 3px;
@@ -71,60 +68,10 @@ html[data-skin="slate"] body.touch-layout #app.battle-view .brand small {
   letter-spacing: 2px;
   color: var(--slate-ink-3);
 }
-/* 36px pill per the brief; the icon buttons sit in a 52px (portrait) / 44px
- * (landscape) topbar, so the row itself supplies the rest of the touch slop. */
-html[data-skin="slate"]
-  body.touch-layout
-  #app.battle-view
-  .top-actions
-  .icon-btn {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  min-height: 36px;
-  padding: 0;
-  border: 1px solid var(--slate-pill-line);
-  border-radius: 50%;
-  background: var(--slate-pill);
-  box-shadow: none;
-  color: var(--slate-ink-2);
-  transition:
-    background 0.15s,
-    border-color 0.15s,
-    color 0.15s;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #app.battle-view
-  .top-actions
-  .icon-btn
-  svg {
-  width: 18px;
-  height: 18px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #app.battle-view
-  .top-actions
-  .icon-btn:hover {
-  background: #1b2434d9;
-  border-color: var(--slate-line-strong);
-  color: #fff;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #app.battle-view
-  .top-actions
-  .icon-btn:focus-visible {
-  outline: 2px solid var(--slate-blue);
-  outline-offset: 2px;
-}
 /* `mobile.css` hides the fullscreen button on touch and `battle.css` hides the
  * collection shortcut inside a battle; both are `.icon-btn`s, so the `display:
- * grid` above would resurrect them. Restate the hidden state (design system
- * §6.7). */
+ * grid` that battle.css §1 puts on every topbar icon pill would resurrect them.
+ * Restate the hidden state (design system §6 rule 7). */
 html[data-skin="slate"] body.touch-layout #app.battle-view #fullscreen-btn,
 html[data-skin="slate"] body.touch-layout #app.battle-view #touch-collection {
   display: none;

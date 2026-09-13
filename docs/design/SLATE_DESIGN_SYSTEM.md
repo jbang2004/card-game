@@ -29,6 +29,8 @@
 | `--slate-card-line` `--slate-card-base` | #d6dfe9aa / #0f141d | 卡片描边 / 卡片底 |
 | `--slate-material` | 三层径向渐变 + 45° 斜纹 + 160° 线性渐变 | 页面壳与浮层壳底 |
 | `--slate-page-x` `--slate-rail` `--slate-list` `--slate-col-gap` `--slate-card-w/h` `--slate-thumb-w/h` | 48 / 200 / 400 / 40 / 300×430 / 72×96 px；`max-width:1500px` 时 36 / 150 / 330 / 28 / 240×344 | 页面壳几何 |
+| `--covenant-col` | `clamp(400px, 42vw, 600px)` | 契约页右栏列宽。分页轨与面板在不同子树里，必须共用同一条列边，所以不能挂在其中任何一个上（2026-09-14 由 contracts.css 上收） |
+| `--slate-hud-hit` | `max(44px, calc(44px / var(--scale, 1)))` | 战场 HUD 的最小命中区。`#battle` 是被 `--scale` 缩放的 1600×940 逻辑画布，按逻辑 px 写的控件会随窗口缩小；本令牌把它还原成 44 个真实设备 px。**必须声明在 `#app` 上而不是根元素**：自定义属性里的 `var()` 在「持有该声明的元素」上求值，而 `mobile-view.js` 是把 `--scale` 作为内联样式写在 `#app` 上的；写在 `html` 上会永远取 fallback 1，塌成固定 44px（2026-09-14 由 battle.css 上收） |
 
 新增页面若需要新令牌（例如战场 HUD 的半透明底 `--slate-hud`），在最终报告中提出，由协调者并入 base.css；页面文件里先用字面值并加 `/* token candidate */` 注释。
 
@@ -137,6 +139,7 @@
 9. **药丸按钮上的 `::before` 必须自带 `display`。** base.css 对 `:is(.gold-btn, .ghost-btn, .text-btn, .library-inspect)::before / ::after` 统一写了 `content: none; display: none`，页面规则若要在 `.ghost-btn` / `.gold-btn` 上另建 `::before`（导航节点、指示点等），除 `content` 外还要声明 `display`；`components.css` 同时给这两个伪元素留了 `opacity: .14`，需要一并重置为 `1`，否则节点会发暗（手册导航轨曾因此只剩微光）。
 10. **战斗中弹窗的桌面验收尺寸下限是 1360×700。** `src/mobile-view.js` 会把宽 < 1360 或高 < 700 的战场视图切到 `body.touch-layout`，桌面皮肤规则随即失效。因此涉及对局内弹窗的桌面验收只取 1360×700 及以上，窄桌面统一用 1440×900。
 11. **`.reference-page-brand` 由 base.css 隐藏。** T5 场景页若需要文字字标，在自己的页面文件里重新打开并定位（参考 map.css 左下角字标）。
+12. **把材质规则从 `body:not(.touch-layout)` 提升到 `body` 会掉一级权重。** 合并桌面与触控的重复声明时，去掉布局守卫等于少了一个类，选择器权重随之下降一级；皮肤层内部按 BASE → HOME → … → MOBILE 排序，于是**排在后面的皮肤文件会因此反超**原本输不掉的规则。典型例子：`dialogs.css` 的页脚规则本来打不过地图页脚，把地图那条提升到 `body` 之后就被 `dialogs.css` 盖住了。提升前先确认没有更靠后的文件命中同一元素；确实需要保留归属时，用对话框根（`.folio-dialog`，或 `[data-dialog-size="…"]`、`[data-type="…"]`）把选择器限定回去，把丢掉的那一级补上。base.css 里那些「刻意打平」的权重结对（`.crafted-panel` 中和 vs 页面壳）也按同一条规则理解：同文件内整体降级不影响相对关系，跨文件才会出问题。
 
 ## 7. 协调者验收清单
 
