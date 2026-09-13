@@ -62,3 +62,37 @@
 已知差异：契约从战斗中打开，而 `src/mobile-view.js` 对 `battle-view` 窗口在 `rawW < 1360 || rawH < 700` 时切到 `body.touch-layout`，因此 1280×720 的契约页仍是既有紧凑/触控构图，桌面皮肤按规则不介入，归简报 5.7 第二阶段。窄桌面验收改用 1440×900。首关敌方未携带契约，敌方分页只能验证只读文案，未构造携带契约的敌方存档。
 
 验收：1672×941、1440×900 各含我方、敌方分页、切换缩略卡三态，另有星焰法师单契约一张；1280×720 记录触控回退现状。见 [截图与说明](../../../output/slate-map-contracts-20260913/README.md)。不带 `?skin` 的同页截图与改动前 MD5 逐字节一致。`node --test tests/*.test.cjs` 全通过；`?skin=slate` 下 `pantheon.spec.cjs` 全通过，`contracts.spec.cjs` 9 项中 8 项通过，失败项为 1600×940 的 `expect(clipPath).toContain("round 999px")`——base.css 的共用药丸语言把 `.gold-btn` 的 `clip-path` 设为 `none`（同段的 `border-radius >= 20` 仍通过），该断言绑定旧晶体按钮材质，需由协调者统一决定。
+
+## 2026-09-14 触控布局皮肤
+
+第二阶段：`body.touch-layout` 下契约页有了专用竖屏 / 横屏排版，唯一改动文件仍是
+`src/presentation/skins/slate/contracts.css`（`src/application/contracts.js` 仍未动）。文件重排成
+**材质 → 桌面几何 → 触控几何** 三段；材质段以 `html[data-skin="slate"] body` 开头，桌面段保持
+`body:not(.touch-layout)` 且与 2026-09-13 逐像素一致。
+
+材质段一次性定义：标题去框、文字分页（未选 ink-3、选中白色 700 + 下划亮条、项间竖线）、无框面板与发丝线分节、
+`[标签 / 6px 轨 / 数值]` 进度行与 meter 渐变、菱形 `ritual-stones` 隐藏、缩略卡的圆角 10 + 描边 + 选中蓝光、
+唤醒药丸与禁用态。列宽、内距、字号、分栏位置留在各布局段。
+
+竖屏 390×844：神祇原画占上方 `--slate-cov-art`（36dvh），竖向压暗到面板边；面板自上而下是三张缩略卡（72px 高）→
+文字分页条 → 名称 21px → 元信息 → 效果说明 → 三行进度 → 需求说明 → **整栏宽**的「唤醒 …」药丸。
+
+横屏 844×390 / 568×320 / 1024×768：原画在左（背景定位移到 `8% top`，否则 `auto 100%` 的绘制会把神像正好停在面板底下），
+横向压暗；面板在右侧 58%，独立滚动。分页条按同一条 42% 分栏线定位（`calc(16px + (100% - 32px) * 0.42)`），与面板左沿严格对齐。
+
+三点值得记录：
+
+- `.folio-pane` 本身在横屏里**没有**被推到右边——`contracts.spec.cjs` 断言紧凑构图的窗格左/右/下内距相等（各 16px）。
+  两栏效果来自窗格**内容**（`.covenant-roster` / `.covenant-grid`）取 58% 宽并右对齐。
+- 触控段给窗格 `max-height: none`：`components.css` 的紧凑块把它压到 `min(60dvh, 560px)`，那会让下内距不均，
+  并且在 ≥800 高的手机上把唤醒药丸挤到折线以下（同一条 spec 的 `panelBottom <= paneBottom` 断言）。
+  原画份额定为 36dvh 而不是简报写的 40%，正是为了让整块面板在 390×844 上不滚动就能读完——这是本页与简报的偏差。
+- 标题下的发丝线在触控下**保留**（桌面仍然去掉，因为它会横穿神像）：`contracts.spec.cjs` 断言
+  `.covenant-heading::after` 是绝对定位、`content != none`、`right >= 48`。这里用 `--slate-line-art` 重画成一条只有标题宽
+  （`right: calc(100% - 240px)`）的短分隔线，既满足断言也不压到原画上。
+
+验证：`node --test tests/*.test.cjs` 127 通过；`?skin=slate` 下 `contracts.spec.cjs` 9 项中 4 项通过、5 项失败，
+失败项全部是同一条 `expect(clipPath).toContain("round 999px")`（base.css 把 `.gold-btn` 的 `clip-path` 设为 `none`），
+与本次改动前在 `?skin=slate` 下的结果逐项相同。`responsive-component-style.spec.cjs` 的跨视口材质比对中
+`contracts` 一页的差异由 60 条降到 **0** 条。桌面 1672×941 与改动前逐像素完全一致（0 像素差）。
+截图见 [output/slate-mobile-scene-20260914/](../../../output/slate-mobile-scene-20260914/README.md)。

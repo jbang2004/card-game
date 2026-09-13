@@ -66,3 +66,29 @@
 验证：`python3 build.py`；`node --test tests/*.test.cjs`（127 通过）；`home-reference.spec.cjs` 在 `?skin=slate` 下 10 通过，不带 `?skin` 同样 10 通过。不带 `?skin` 的 1672×941 截图与改动前的控制组逐像素比较——单通道最大差 1、无像素差 > 8，小于同一构建两帧之间的 Canvas 噪声底（1.137 % 像素、最大差 1）。截图与逐项实测数据：[output/slate-home-20260913/](../../../output/slate-home-20260913/README.md)。
 
 已知差异：手机布局（`body.touch-layout`）不在本次范围，属设计系统第 5.7 节第二阶段。
+
+## 2026-09-14 触控布局皮肤
+
+`?skin=slate` 的第二阶段：`body.touch-layout` 下主页有了专用的竖屏 / 横屏排版，唯一改动文件仍是
+`src/presentation/skins/slate/home.css`（模板、`home.js`、`mobile.css`、`components.css` 均未动）。
+
+文件重排成三段，顺序固定：**材质 → 桌面几何 → 触控几何**。
+
+- **材质段**以 `html[data-skin="slate"] body` 开头，不带布局限定：底色、描边、圆角、投影、字族/字重/字距、文字颜色、阴影与 hover/pressed/focus/disabled 反馈在桌面、竖屏、横屏三种视口里只写一次。字号随 `font:` 简写带到材质段（桌面值），各布局段只重写 `font-size`——这正是 `REFERENCE_UI_STANDARD.md`「只允许改变位置、尺寸、间距、排列、可见性及必要的字号密度」允许的那一项。
+- **桌面几何段**保持 `body:not(.touch-layout)`，与 2026-09-13 完全一致。
+- **触控几何段**为 `body.touch-layout`（再按 `.mobile-portrait` / `.mobile-landscape` 与高度分档）。
+
+竖屏 390×844：顶栏变两行栅格——第一行文字字标（「烬域」19px + `EMBERFALL` 9px，`mobile.css` 原本隐藏第二行，这里重新打开）与右侧 44px 圆形图标药丸，第二行是三等分的文字分页条（选中白色 700 + 下划亮条）；`#lobby` 顶部相应下移 44px。位图 Logo 缩到文字列宽（300×172）；主/次药丸改为整列同宽（最大 360px）、各 56px 高、同一栅格模板；收藏区改为平排三张 96×140 描边卡 + 44px 圆形箭头药丸，页脚保留发丝线。
+
+横屏 844×390 / 568×320：左栏文案 + 两枚药丸，右栏收藏，两栏各占 `min(…, calc(50% - 24px))`，分页条收回顶栏单行。568×320 另有一档更紧的字号与 76px 卡片。竖屏 ≤620 高（320×568）还有一档收口，把装饰先压掉以保证两枚药丸与收藏条之间仍有 ≥12px 走廊。
+
+三点值得记录：
+
+- 图标药丸在触控下是 **44px** 而不是简报写的 36px。`AGENTS.md` 与本规范都要求触控命中区 ≥44px，而 `home-reference.spec.cjs` 也直接断言 `#sound-btn` / `#settings-btn` 的宽高 ≥44。材质（圆形、`--slate-pill` 底、`--slate-pill-line` 边）与桌面完全相同，只有尺寸变——这属于允许的差异。
+- 触控下收藏卡取消桌面的错位与 3D 倾角（`transform: none`），并且必须同时写 `transition: none`：`components.css` 给 `transform` 挂了 180ms 过渡，否则每次布局翻转都会播一段「倾斜→摊平」，而且量到的是**变换后的**包围盒而不是 94px 的边框盒，箭头药丸与卡片右缘的 ≥12px 实测会偏小 6px。
+- 横屏顶栏改成 `height: auto; min-height: var(--header-h)`：`--header-h` 是行高而顶栏另有 1px 发丝线，定高会让内容盒只剩 43px，44px 的药丸被居中到 `y = -0.5`，`home-reference.spec.cjs` 的 `r.y >= 0` 会失败。
+- 横屏高度 ≤500 时页脚（装饰性）整条隐藏：左栏的高度被 Logo、文案和两枚药丸占满，按规范「空间不足时先减少装饰，不挤压主要操作」。
+
+验证：`node --test tests/*.test.cjs` 127 通过；`?skin=slate` 下 `home-reference.spec.cjs` 10/10 通过（含 390×844、320×568、844×390、568×320、768×1024 五档触控），`mobile-layout.spec.cjs` 5/5 通过。`responsive-component-style.spec.cjs` 的跨视口材质比对中，`lobby` 一页的差异由 144 条降到 **0** 条。桌面 1672×941 与改动前逐像素比较：单通道最大差 1、无像素差 > 8（即只有 Canvas 场景噪声）。截图见 [output/slate-mobile-scene-20260914/](../../../output/slate-mobile-scene-20260914/README.md)。
+
+已知差异：战场 `body.touch-layout` 不在本任务范围。

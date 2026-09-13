@@ -10,21 +10,47 @@
  * right-hand column with the relic row + primary pill pinned to its bottom.
  * What changes is the material: matte column, hairline sections, rail-node
  * level markers, chip statistics, and no four-corner / paper ornament.
+ *
+ * ---------------------------------------------------------------------------
+ * FILE SHAPE (phase 2, 2026-09-14), three sections in this order:
+ *
+ *   1. MATERIAL — `html[data-skin="slate"] body`, no layout guard. One matte,
+ *      one rim, one node language, one type colour for desktop, portrait and
+ *      landscape. `tests/e2e/responsive-component-style.spec.cjs` compares
+ *      `.adventure-atlas`, `.modal-close`, `.atlas-stage`, `.atlas-node`,
+ *      `.atlas-heading h2`, `.atlas-dossier` and `.atlas-footer` across
+ *      viewports, so nothing here may be restated per layout. Font size and
+ *      line-height ride in the `font:` shorthand at the desktop value; the
+ *      layout sections below only retune `font-size`.
+ *   2. DESKTOP GEOMETRY — `body:not(.touch-layout)`: the 380px dossier column
+ *      with the footer pinned under it. Unchanged from phase 1.
+ *   3. TOUCH GEOMETRY — `body.touch-layout`: portrait stacks title row → map
+ *      stage → dossier sheet → footer pill; landscape keeps the desktop
+ *      two-column reading (map left, 300px dossier right) at phone paddings.
+ *
+ * The `border-left` hairline on the dossier and the footer is the COLUMN
+ * DIVIDER: it exists only in the layouts that actually have a second column
+ * (desktop and touch landscape). That is a visibility change of a separator,
+ * which the responsive contract allows; the panel's own background, radius and
+ * shadow never change.
  */
 
-/* ---------- page shell: the map is full bleed, so drop the shell padding ---------- */
+/* =========================================================================
+ * 1. MATERIAL — one contract for desktop, portrait and landscape
+ * ====================================================================== */
+
+/* The page shell paints `--slate-material`; the map covers its own pane with
+ * artwork, so the shell ground is flattened to one dark value everywhere. */
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="map"]
   > .adventure-atlas {
-  padding: 0;
-  gap: 0;
   background: #0d121b;
 }
 
 /* ---------- ornament removal ---------- */
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="map"]
   .adventure-atlas
   :is(.atlas-corners, .panel-corner-trim, .atlas-cartography, .atlas-emblem, .atlas-chapter, .atlas-focus, .atlas-pennant) {
@@ -32,6 +58,441 @@ html[data-skin="slate"]
 }
 
 /* ---------- title row ---------- */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  > .modal-heading {
+  border: 0;
+  background: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  .atlas-heading
+  h2 {
+  margin: 0;
+  font: 700 32px/44px var(--slate-font);
+  letter-spacing: 3px;
+  color: #fff;
+  text-shadow:
+    0 2px 12px #000c,
+    0 0 4px #0009;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  .atlas-kicker {
+  display: block;
+  margin: 0;
+  font: 400 16px/1.2 var(--slate-font);
+  letter-spacing: 1px;
+  color: var(--slate-ink-3);
+  text-shadow: 0 2px 10px #000c;
+}
+
+/* ---------- route lines ---------- */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-paths {
+  filter: drop-shadow(0 0 6px #4d93ff55);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-paths
+  path {
+  stroke: #a8d3ffd9;
+  stroke-width: 2;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-paths
+  .atlas-route-shadow {
+  stroke: #00000073;
+  stroke-width: 5;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-paths
+  .traversed {
+  stroke: var(--slate-blue);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-paths
+  circle {
+  fill: #8cc4ffcc;
+  stroke: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-loading {
+  background: #0f151fee;
+  color: var(--slate-ink);
+  font-family: var(--slate-font);
+}
+
+/* ---------- level nodes: the navigation-rail node language ---------- */
+html[data-skin="slate"] body #modal.folio-host[data-type="map"] .atlas-node {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-node[aria-pressed="true"] {
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-node
+  .atlas-landmark {
+  position: relative;
+  flex: none;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 1px solid #ffffff3a;
+  background: #212c3d;
+  box-shadow: inset 0 0 8px #0009;
+  clip-path: none;
+  transition:
+    width 0.2s,
+    height 0.2s,
+    box-shadow 0.2s;
+}
+/* cleared — filled node with a check */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .done
+  .atlas-landmark {
+  border-color: #8cc4ff8c;
+  background: linear-gradient(180deg, #3f7fd6, #23509c);
+  box-shadow:
+    0 0 14px #2f72d666,
+    inset 0 0 8px #0006;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .done
+  .atlas-number
+  svg {
+  color: #fff;
+}
+/* current playable — blue glow around the live boss portrait */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .current
+  .atlas-landmark {
+  border: 1px solid #bcdcff;
+  background: #0d1523;
+  box-shadow:
+    0 0 0 4px #4d93ff33,
+    0 0 24px #4d93ffaa,
+    inset 0 0 8px #0009;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .current
+  .atlas-number
+  img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+/* locked — hollow dot with a lock */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .locked
+  .atlas-landmark {
+  border: 2px solid #aab4c3;
+  background: #1c2330d9;
+  box-shadow: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .locked
+  .atlas-number
+  svg {
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"] body #modal.folio-host[data-type="map"] .atlas-number {
+  position: static;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: #fff;
+}
+/* selection is a separate axis from progress, so it gets its own ring */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-node[aria-pressed="true"]
+  .atlas-landmark {
+  border-color: #cfe6ff;
+  background: #16304f;
+  box-shadow:
+    0 0 0 5px #8cc4ff3d,
+    0 0 26px #8cc4ffb3,
+    inset 0 0 8px #0009;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-node:hover
+  .atlas-landmark {
+  border-color: #ffffff8c;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-node:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 6px;
+  border-radius: 10px;
+}
+
+/* node labels */
+html[data-skin="slate"] body #modal.folio-host[data-type="map"] .atlas-name {
+  font: 700 20px/1.3 var(--slate-font);
+  letter-spacing: 1px;
+  color: #fff;
+  text-shadow:
+    0 2px 6px #000d,
+    0 0 12px #0009;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-name
+  small {
+  display: block;
+  margin: 0 0 2px;
+  font: 700 25px/1.1 var(--slate-font);
+  letter-spacing: 2px;
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .locked
+  .atlas-name {
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .locked
+  .atlas-name
+  small {
+  color: var(--slate-ink-3);
+}
+
+/* ---------- dossier ---------- */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  .atlas-dossier {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  /* matte column: the page material, flattened a little for legibility */
+  background-color: #0e141d;
+  background-image: linear-gradient(180deg, #0e141de8, #0e141df7),
+    var(--slate-material);
+  background-attachment: scroll;
+  color: var(--slate-ink);
+  font-family: var(--slate-font);
+}
+/* boss card */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier
+  > img {
+  opacity: 1;
+  mask-image: none;
+  -webkit-mask-image: none;
+  border: 1.5px solid var(--slate-card-line);
+  border-radius: 12px;
+  background: var(--slate-card-base);
+  box-shadow: 0 8px 20px #0007;
+  object-fit: cover;
+  object-position: 50% 26%;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier
+  h3 {
+  margin: 0;
+  font: 700 28px/1.25 var(--slate-font);
+  letter-spacing: 1px;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier
+  > .atlas-dossier-status {
+  display: block;
+  font: 400 14px/1.5 var(--slate-font);
+  letter-spacing: 1px;
+  color: var(--slate-ink-3);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier-quote {
+  border-top: 1px solid var(--slate-line);
+  font: 400 15px/1.8 var(--slate-font);
+  color: var(--slate-ink-2);
+}
+/* statistics chips */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier-rule {
+  border-top: 1px solid var(--slate-line);
+  border-bottom: 0;
+  font: 400 14px/1.6 var(--slate-font);
+  color: var(--slate-ink);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier-sep {
+  display: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier-stat {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 14px;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  font: 500 14px/1.5 var(--slate-font);
+  color: var(--slate-ink);
+  white-space: nowrap;
+}
+/* the skill line is a full sentence, so it wraps inside a softer chip */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier-stat.atlas-dossier-skill {
+  display: block;
+  width: 100%;
+  border-radius: 14px;
+  padding: 10px 16px;
+  font-weight: 400;
+  line-height: 1.7;
+  color: var(--slate-ink-2);
+  white-space: normal;
+}
+
+/* ---------- relic section + primary pill ---------- */
+/* `.atlas-footer` is also a `.modal-footer`, and `dialogs.css` flattens every
+ * dialog footer with `.folio-dialog > :is(.modal-footer, …) { border: 0;
+ * border-top: 1px …; background: none }`. Phase 1 out-ranked that by one class
+ * through its `body:not(.touch-layout)` guard; dropping the guard here would
+ * hand the matte column back to dialogs.css on source order, so the dialog
+ * root's own `.folio-dialog` class restores the same class count. */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas.folio-dialog
+  > .atlas-footer {
+  border: 0;
+  border-top: 1px solid var(--slate-line);
+  background-color: #0e141d;
+  background-image: linear-gradient(180deg, #0e141df2, #0e141dfa),
+    var(--slate-material);
+  background-attachment: scroll;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-footer
+  .atlas-relics {
+  border: 0;
+  background: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-relic-label {
+  border-bottom: 1px solid var(--slate-line);
+  font: 700 20px/1.2 var(--slate-font);
+  letter-spacing: 1px;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-relic {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--slate-line-strong);
+  border-radius: 10px;
+  background: #0f141d99;
+  box-shadow: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-relic-empty {
+  font: 400 15px/1.6 var(--slate-font);
+  color: var(--slate-ink-3);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  #map-continue {
+  font: 600 18px/1 var(--slate-font);
+  letter-spacing: 1px;
+}
+
+/* =========================================================================
+ * 2. DESKTOP GEOMETRY — body:not(.touch-layout)
+ * ====================================================================== */
+
+/* the map is full bleed, so drop the shell padding */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  > .adventure-atlas {
+  padding: 0;
+  gap: 0;
+}
+
 /* The chevron is placed by base.css at top 26 / left 36 (44px box), so the
  * title row starts at 36 and reserves 60px to land the heading on the usual
  * 96px text axis. */
@@ -52,8 +513,6 @@ html[data-skin="slate"]
   gap: 18px;
   margin: 0;
   padding: 0 0 0 60px;
-  border: 0;
-  background: none;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -72,13 +531,6 @@ html[data-skin="slate"]
   .atlas-heading
   h2 {
   order: 0;
-  margin: 0;
-  font: 700 32px/44px var(--slate-font);
-  letter-spacing: 3px;
-  color: #fff;
-  text-shadow:
-    0 2px 12px #000c,
-    0 0 4px #0009;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -86,12 +538,6 @@ html[data-skin="slate"]
   .adventure-atlas
   .atlas-kicker {
   order: 1;
-  display: block;
-  margin: 0;
-  font: 400 16px/1.2 var(--slate-font);
-  letter-spacing: 1px;
-  color: var(--slate-ink-3);
-  text-shadow: 0 2px 10px #000c;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -138,7 +584,7 @@ html[data-skin="slate"]
   text-shadow: 0 2px 10px #000c;
 }
 
-/* ---------- scene + route lines ---------- */
+/* ---------- scene ---------- */
 /* The desktop components layer sizes the scene off the WINDOW
  * (`.atlas-stage { height: 100dvh; min-height: 100dvh }`, components.css inside
  * `@media (min-width: 1100px) and (min-height: 650px)`). That only ever fits
@@ -167,102 +613,21 @@ html[data-skin="slate"]
   .modal-scroll {
   padding-bottom: 0;
 }
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
-  .atlas-paths {
-  filter: drop-shadow(0 0 6px #4d93ff55);
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
-  .atlas-paths
-  path {
-  stroke: #a8d3ffd9;
-  stroke-width: 2;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
-  .atlas-paths
-  .atlas-route-shadow {
-  stroke: #00000073;
-  stroke-width: 5;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
-  .atlas-paths
-  .traversed {
-  stroke: var(--slate-blue);
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
-  .atlas-paths
-  circle {
-  fill: #8cc4ffcc;
-  stroke: none;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
-  .atlas-loading {
-  background: #0f151fee;
-  color: var(--slate-ink);
-  font-family: var(--slate-font);
-}
 
-/* ---------- level nodes: the navigation-rail node language ---------- */
+/* ---------- nodes ---------- */
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
   .atlas-node {
   gap: 16px;
-  padding: 0;
-  border: 0;
-  background: none;
-  box-shadow: none;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
-  .atlas-node[aria-pressed="true"] {
-  background: none;
-  border: 0;
-  box-shadow: none;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
   .atlas-node
   .atlas-landmark {
-  position: relative;
-  flex: none;
-  box-sizing: border-box;
   width: 56px;
   height: 56px;
-  border-radius: 50%;
-  border: 1px solid #ffffff3a;
-  background: #212c3d;
-  box-shadow: inset 0 0 8px #0009;
-  clip-path: none;
-  transition:
-    width 0.2s,
-    height 0.2s,
-    box-shadow 0.2s;
-}
-/* cleared — filled node with a check */
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
-  .done
-  .atlas-landmark {
-  border-color: #8cc4ff8c;
-  background: linear-gradient(180deg, #3f7fd6, #23509c);
-  box-shadow:
-    0 0 14px #2f72d666,
-    inset 0 0 8px #0006;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -272,34 +637,7 @@ html[data-skin="slate"]
   svg {
   width: 26px;
   height: 26px;
-  color: #fff;
 }
-/* current playable — 56px blue glow around the live boss portrait */
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
-  .current
-  .atlas-landmark {
-  border: 1px solid #bcdcff;
-  background: #0d1523;
-  box-shadow:
-    0 0 0 4px #4d93ff33,
-    0 0 24px #4d93ffaa,
-    inset 0 0 8px #0009;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
-  .current
-  .atlas-number
-  img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
-}
-/* locked — 44px hollow dot with a lock */
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
@@ -307,9 +645,6 @@ html[data-skin="slate"]
   .atlas-landmark {
   width: 44px;
   height: 44px;
-  border: 2px solid #aab4c3;
-  background: #1c2330d9;
-  box-shadow: none;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -319,92 +654,12 @@ html[data-skin="slate"]
   svg {
   width: 18px;
   height: 18px;
-  color: var(--slate-ink-2);
 }
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
-  .atlas-number {
-  position: static;
-  width: 100%;
-  height: 100%;
-  border: 0;
-  background: none;
-  box-shadow: none;
-  color: #fff;
-}
-/* selection is a separate axis from progress, so it gets its own ring */
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
-  .atlas-node[aria-pressed="true"]
-  .atlas-landmark {
-  border-color: #cfe6ff;
-  background: #16304f;
-  box-shadow:
-    0 0 0 5px #8cc4ff3d,
-    0 0 26px #8cc4ffb3,
-    inset 0 0 8px #0009;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
-  .atlas-node:hover
-  .atlas-landmark {
-  border-color: #ffffff8c;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
-  .atlas-node:focus-visible {
-  outline: 2px solid var(--slate-blue);
-  outline-offset: 6px;
-  border-radius: 10px;
-}
-
-/* node labels */
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
   .atlas-location-copy {
   gap: 2px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
-  .atlas-name {
-  font: 700 20px/1.3 var(--slate-font);
-  letter-spacing: 1px;
-  color: #fff;
-  text-shadow:
-    0 2px 6px #000d,
-    0 0 12px #0009;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
-  .atlas-name
-  small {
-  display: block;
-  margin: 0 0 2px;
-  font: 700 25px/1.1 var(--slate-font);
-  letter-spacing: 2px;
-  color: var(--slate-ink-2);
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
-  .locked
-  .atlas-name {
-  color: var(--slate-ink-2);
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
-  .locked
-  .atlas-name
-  small {
-  color: var(--slate-ink-3);
 }
 
 /* ---------- dossier column ---------- */
@@ -421,20 +676,9 @@ html[data-skin="slate"]
   gap: 0;
   margin: 0;
   padding: 28px 28px 210px;
-  border: 0;
   border-left: 1px solid var(--slate-line);
-  border-radius: 0;
-  box-shadow: none;
-  /* matte column: the page material, flattened a little for legibility */
-  background-color: #0e141d;
-  background-image: linear-gradient(180deg, #0e141de8, #0e141df7),
-    var(--slate-material);
-  background-attachment: scroll;
-  color: var(--slate-ink);
-  font-family: var(--slate-font);
   overflow: hidden auto;
 }
-/* boss card */
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
@@ -446,15 +690,6 @@ html[data-skin="slate"]
   width: 100%;
   height: 208px;
   margin: 0 0 22px;
-  opacity: 1;
-  mask-image: none;
-  -webkit-mask-image: none;
-  border: 1.5px solid var(--slate-card-line);
-  border-radius: 12px;
-  background: var(--slate-card-base);
-  box-shadow: 0 8px 20px #0007;
-  object-fit: cover;
-  object-position: 50% 26%;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -463,10 +698,6 @@ html[data-skin="slate"]
   h3 {
   order: 2;
   min-height: 0;
-  margin: 0;
-  font: 700 28px/1.25 var(--slate-font);
-  letter-spacing: 1px;
-  color: #fff;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -474,11 +705,7 @@ html[data-skin="slate"]
   .atlas-dossier
   > .atlas-dossier-status {
   order: 3;
-  display: block;
   margin: 10px 0 0;
-  font: 400 14px/1.5 var(--slate-font);
-  letter-spacing: 1px;
-  color: var(--slate-ink-3);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -487,11 +714,7 @@ html[data-skin="slate"]
   order: 4;
   margin: 18px 0 0;
   padding: 18px 0 0;
-  border-top: 1px solid var(--slate-line);
-  font: 400 15px/1.8 var(--slate-font);
-  color: var(--slate-ink-2);
 }
-/* statistics chips */
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
@@ -503,45 +726,6 @@ html[data-skin="slate"]
   gap: 10px;
   margin: 18px 0 0;
   padding: 18px 0 0;
-  border-top: 1px solid var(--slate-line);
-  border-bottom: 0;
-  font: 400 14px/1.6 var(--slate-font);
-  color: var(--slate-ink);
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
-  .atlas-dossier-sep {
-  display: none;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
-  .atlas-dossier-stat {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  padding: 4px 14px;
-  border: 1px solid var(--slate-pill-line);
-  border-radius: 999px;
-  background: var(--slate-pill);
-  font: 500 14px/1.5 var(--slate-font);
-  color: var(--slate-ink);
-  white-space: nowrap;
-}
-/* the skill line is a full sentence, so it wraps inside a softer chip */
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
-  .atlas-dossier-stat.atlas-dossier-skill {
-  display: block;
-  width: 100%;
-  border-radius: 14px;
-  padding: 10px 16px;
-  font-weight: 400;
-  line-height: 1.7;
-  color: var(--slate-ink-2);
-  white-space: normal;
 }
 
 /* ---------- relic section + primary pill, pinned to the column bottom ---------- */
@@ -561,13 +745,7 @@ html[data-skin="slate"]
   gap: 0;
   margin: 0;
   padding: 22px 28px 28px;
-  border: 0;
-  border-top: 1px solid var(--slate-line);
   border-left: 1px solid var(--slate-line);
-  background-color: #0e141d;
-  background-image: linear-gradient(180deg, #0e141df2, #0e141dfa),
-    var(--slate-material);
-  background-attachment: scroll;
   justify-content: flex-end;
 }
 html[data-skin="slate"]
@@ -582,8 +760,6 @@ html[data-skin="slate"]
   width: 100%;
   margin: 0 0 20px;
   padding: 0;
-  border: 0;
-  background: none;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -592,24 +768,13 @@ html[data-skin="slate"]
   flex: 0 0 100%;
   margin: 0 0 4px;
   padding: 0 0 12px;
-  border-bottom: 1px solid var(--slate-line);
-  font: 700 20px/1.2 var(--slate-font);
-  letter-spacing: 1px;
-  color: #fff;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
   .atlas-relic {
-  display: grid;
-  place-items: center;
   width: 56px;
   height: 56px;
-  padding: 0;
-  border: 1px solid var(--slate-line-strong);
-  border-radius: 10px;
-  background: #0f141d99;
-  box-shadow: none;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -622,20 +787,11 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
-  .atlas-relic-empty {
-  font: 400 15px/1.6 var(--slate-font);
-  color: var(--slate-ink-3);
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
   #map-continue {
   width: 100%;
   min-width: 0;
   min-height: 52px;
   margin: 0;
-  font: 600 18px/1 var(--slate-font);
-  letter-spacing: 1px;
 }
 
 /* ---------- narrower desktop windows ---------- */
@@ -683,4 +839,400 @@ html[data-skin="slate"]
     > .reference-page-brand {
     left: 36px;
   }
+}
+
+/* =========================================================================
+ * 3. TOUCH GEOMETRY — body.touch-layout
+ *
+ * `--slate-map-x` is a page-local inset, not a design token.
+ * ====================================================================== */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  > .adventure-atlas {
+  --slate-map-x: max(16px, env(safe-area-inset-left, 0px));
+  --slate-map-r: max(16px, env(safe-area-inset-right, 0px));
+  padding: 0;
+  gap: 0;
+}
+/* The chevron rides the safe area instead of the desktop 36/26 axis. */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  > .adventure-atlas
+  > .modal-close {
+  top: max(10px, env(safe-area-inset-top, 0px));
+  left: max(10px, env(safe-area-inset-left, 0px));
+  right: auto;
+  z-index: 5;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  > .modal-heading {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 54px;
+  margin: 0;
+  padding: max(10px, env(safe-area-inset-top, 0px)) var(--slate-map-r) 10px 60px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  .atlas-heading
+  h2 {
+  font-size: 22px;
+  line-height: 1.2;
+  letter-spacing: 2px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  .atlas-kicker {
+  font-size: 12px;
+}
+
+/* ---------- stage + nodes ---------- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  .modal-scroll {
+  padding-bottom: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .atlas-node {
+  gap: 8px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .atlas-node
+  .atlas-landmark {
+  width: 48px;
+  height: 48px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .locked
+  .atlas-landmark {
+  width: 44px;
+  height: 44px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .done
+  .atlas-number
+  svg {
+  width: 22px;
+  height: 22px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .locked
+  .atlas-number
+  svg {
+  width: 16px;
+  height: 16px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .atlas-location {
+  width: 124px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .atlas-location-copy {
+  gap: 1px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .atlas-name {
+  font-size: 13px;
+  letter-spacing: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .atlas-name
+  small {
+  font-size: 15px;
+  letter-spacing: 1px;
+}
+
+/* ---------- dossier + footer shared touch chrome ---------- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  .atlas-dossier {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  margin: 0;
+}
+/* The touch dossier is a fixed-height flex column, so its children would flex-
+ * shrink to nothing (the boss name collapsed to 0px at 568×320 before this).
+ * The column scrolls instead. */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier
+  > :is(img, h3, .atlas-dossier-status, .atlas-dossier-quote, .atlas-dossier-rule) {
+  flex: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier
+  > img {
+  order: 1;
+  position: static;
+  z-index: auto;
+  width: 100%;
+  margin: 0 0 14px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier
+  h3 {
+  order: 2;
+  min-height: 0;
+  font-size: 22px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier
+  > .atlas-dossier-status {
+  order: 3;
+  margin: 8px 0 0;
+  font-size: 13px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier-quote {
+  order: 4;
+  margin: 14px 0 0;
+  padding: 14px 0 0;
+  font-size: 14px;
+  line-height: 1.65;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier-rule {
+  order: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 14px 0 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier-stat {
+  min-height: 28px;
+  padding: 4px 12px;
+  font-size: 13px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier-stat.atlas-dossier-skill {
+  padding: 8px 14px;
+  font-size: 13px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  > .atlas-footer {
+  min-height: 0;
+  margin: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .atlas-footer
+  .atlas-relics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: 0 0 12px;
+  padding: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .atlas-relic-label {
+  flex: 0 0 100%;
+  margin: 0 0 2px;
+  padding: 0 0 8px;
+  font-size: 15px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .atlas-relic {
+  width: 48px;
+  height: 48px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .atlas-relic
+  img {
+  width: 34px;
+  height: 34px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  .atlas-relic-empty {
+  font-size: 13px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
+  #map-continue {
+  width: 100%;
+  min-width: 0;
+  min-height: 52px;
+  margin: 0;
+  font-size: 17px;
+}
+
+/* ---------- portrait: title row → stage → dossier sheet → footer ---------- */
+html[data-skin="slate"]
+  body.touch-layout.mobile-portrait
+  #modal.folio-host[data-type="map"]
+  .atlas-stage {
+  flex: none;
+  width: auto;
+  height: min(35dvh, 320px);
+  min-height: 230px;
+}
+html[data-skin="slate"]
+  body.touch-layout.mobile-portrait
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  .atlas-dossier {
+  width: auto;
+  padding: 18px var(--slate-map-r) 20px var(--slate-map-x);
+  overflow: visible;
+}
+html[data-skin="slate"]
+  body.touch-layout.mobile-portrait
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier
+  > img {
+  height: 112px;
+}
+html[data-skin="slate"]
+  body.touch-layout.mobile-portrait
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  > .atlas-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 14px var(--slate-map-r) calc(14px + env(safe-area-inset-bottom, 0px))
+    var(--slate-map-x);
+}
+
+/* ---------- landscape: map left, 300px dossier right ---------- */
+html[data-skin="slate"]
+  body.touch-layout.mobile-landscape
+  #modal.folio-host[data-type="map"]
+  .atlas-stage {
+  flex: 1 1 auto;
+  width: auto;
+  height: auto;
+  min-height: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout.mobile-landscape
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  .modal-scroll {
+  gap: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout.mobile-landscape
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  .atlas-dossier {
+  flex: 0 0 min(300px, 45%);
+  width: min(300px, 45%);
+  padding: 16px var(--slate-map-r) 16px 16px;
+  border-left: 1px solid var(--slate-line);
+  overflow: hidden auto;
+}
+html[data-skin="slate"]
+  body.touch-layout.mobile-landscape
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier
+  > img {
+  height: 104px;
+}
+html[data-skin="slate"]
+  body.touch-layout.mobile-landscape
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  > .atlas-footer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 12px var(--slate-map-r) calc(12px + env(safe-area-inset-bottom, 0px))
+    var(--slate-map-x);
+}
+html[data-skin="slate"]
+  body.touch-layout.mobile-landscape
+  #modal.folio-host[data-type="map"]
+  .atlas-footer
+  .atlas-relics {
+  flex: 1 1 auto;
+  width: auto;
+  margin: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout.mobile-landscape
+  #modal.folio-host[data-type="map"]
+  .atlas-relic-label {
+  flex: 0 0 auto;
+  margin: 0 8px 0 0;
+  padding: 0;
+  border-bottom: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout.mobile-landscape
+  #modal.folio-host[data-type="map"]
+  #map-continue {
+  width: 300px;
+  flex: 0 0 300px;
 }
