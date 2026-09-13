@@ -39,3 +39,9 @@
 卡牌使用独立透明金属边框，标题与数值继续实时绘制；确认按钮使用切角冰晶纹理。
 
 复杂纹理由 image-gen 重建，简单图标与轮廓由原生 SVG/CSS 完成。生成图并非原图无损分层；具体透明通道限制见 [素材记录](../../../assets/ui/detail-polish-v1/provenance.json)。本次截图和检查见 [细节打磨记录](../../../output/detail-polish-20260913/VALIDATION.md)。
+
+## 2026-09-13 磨砂青岩皮肤
+
+`?skin=slate` 下改为浮层壳（1060）：标题「命运的第一手」26px/700 + 15px ink-2 副标 + 发丝线；三张牌面与网格完全不动，只把「保留 / 替换」状态标签换成药丸（替换 = 蓝色渐变填充，保留 = 深色药丸），hover 提亮；提示文字 15px ink-2 居中；底部发丝线 + 主药丸 260×52。规则见 [SLATE_DESIGN_SYSTEM.md](../SLATE_DESIGN_SYSTEM.md) §5.5，实现在 `src/presentation/skins/slate/dialogs.css`，截图见 `output/slate-dialogs-20260913/`。
+
+已知差异：1280×720 在战场视图下 `mobile-view.js` 的 `compactDesktop` 判定会加上 `body.touch-layout`，皮肤按规则不生效，该尺寸仍是旧主题；桌面窄尺寸以 1360×768 验收。

@@ -1,3 +1,1413 @@
-/* Test skin "slate" — 浮层弹窗 / floating dialogs. Empty placeholder.
- * Owned by the dialogs restyle task; tokens and the two dialog shells
- * live in base.css — only add page-specific selectors here. */
+/* Test skin "slate" (磨砂青岩) — 过场与对话 / dialogs and interludes.
+ *
+ * Tokens, the two dialog shells, the pill buttons and the form controls live in
+ * base.css. This file only adds the per-dialog content language for:
+ *   mulligan · rewards(choice) · result + defeat · card detail · discover ·
+ *   confirm · menu · journal · hand overview · hero info · gallery(atelier)
+ *
+ * Notes for whoever edits this next:
+ *  - `EmberDialogs.mount` rewrites every dialog into
+ *      .folio-dialog > [.modal-close] [.modal-heading]
+ *                      .folio-pane > .folio-viewport > .modal-scroll.folio-flow
+ *                      [.modal-footer | .reward-footer | .atelier-foot]
+ *    so content selectors must not assume the authored nesting.
+ *  - `components.css` gives several of these dialogs a bitmap backdrop plus a
+ *    much larger `--dialog-width` inside `@media (min-width: 1100px) and
+ *    (min-height: 650px)`. The brief pins detail/discover/result to the widths
+ *    `dialog-layout.css` declares, so those overrides are restated here — this
+ *    is the one place the skin is allowed to touch `--dialog-width`.
+ *  - Rewards is the only floating size promoted to the PAGE shell; the block is
+ *    a copy of base.css's page-shell rules keyed to `choice` alone.
+ */
+
+/* ==========================================================================
+   1. shared floating chrome — heading rule, sub-title, footer rule
+   ========================================================================== */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .folio-dialog
+  > .modal-heading::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 1px;
+  background: var(--slate-line);
+  box-shadow: none;
+  border: 0;
+  opacity: 1;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .folio-dialog
+  > .modal-heading {
+  padding-bottom: 16px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .folio-dialog
+  > .modal-heading
+  p {
+  margin: 10px 0 0;
+  font: 400 15px/1.6 var(--slate-font);
+  letter-spacing: 0.5px;
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .folio-dialog
+  > :is(.modal-footer, .reward-footer, .atelier-foot) {
+  gap: 16px;
+  margin-top: 4px;
+  padding-top: 20px;
+  border: 0;
+  border-top: 1px solid var(--slate-line);
+  background: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .folio-dialog
+  > :is(.modal-footer, .reward-footer, .atelier-foot)::before,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .folio-dialog
+  > :is(.modal-footer, .reward-footer, .atelier-foot)::after {
+  content: none;
+}
+/* disabled pill: ink-3 text on a hairline rim (design system §3 states) */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  :is(.gold-btn, .ghost-btn, .text-btn):disabled {
+  background: none;
+  border-color: #ffffff1a;
+  color: var(--slate-ink-3);
+}
+
+/* ==========================================================================
+   2. 起手换牌 / mulligan — floating 1060
+   ========================================================================== */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="mulligan"]
+  .modal-heading
+  h2 {
+  font: 700 26px/1.35 var(--slate-font);
+  letter-spacing: 2px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .mulligan-box
+  .mulligan-cards {
+  padding: 22px 0 4px;
+}
+/* the three card faces stay exactly as the game draws them; only the
+ * 「保留 / 替换」 state label becomes a pill */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .mulligan-choice-state {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: auto;
+  min-height: 38px;
+  margin: 0 auto;
+  padding: 0 22px;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  box-shadow: none;
+  text-shadow: none;
+  clip-path: none;
+  color: var(--slate-ink-2);
+  font: 500 15px/1 var(--slate-font);
+  letter-spacing: 1px;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .mulligan-choice-state::before,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .mulligan-choice-state::after {
+  content: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .mulligan-choice-state
+  svg {
+  width: 16px;
+  height: 16px;
+  color: currentColor;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .mulligan-card:hover
+  .mulligan-choice-state {
+  border-color: var(--slate-line-strong);
+  background: #1b2434d9;
+  color: var(--slate-ink);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .mulligan-card.replace
+  .mulligan-choice-state {
+  border-color: #8cc4ff99;
+  background: linear-gradient(180deg, #4a8be6, #2c66c4);
+  color: #fff;
+  font-weight: 600;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .mulligan-box
+  .hero-deck-note {
+  margin: 0 0 4px;
+  font: 400 15px/1.7 var(--slate-font);
+  color: var(--slate-ink-2);
+  text-align: center;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .mulligan-box
+  > .modal-footer {
+  justify-content: center;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .mulligan-box
+  #mulligan-confirm {
+  min-width: 260px;
+  min-height: 52px;
+}
+
+/* ==========================================================================
+   3. 遗物奖励 / rewards — promoted from the floating shell to the PAGE shell.
+   The next four blocks mirror base.css's page-shell rules, keyed to `choice`.
+   ========================================================================== */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host:has(> .folio-dialog[data-dialog-size="choice"]) {
+  padding: 0;
+  background: #1b2230;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="choice"] {
+  --dialog-width: 100%;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
+  margin: 0;
+  padding: 26px var(--slate-page-x) 28px;
+  gap: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--slate-material);
+  background-attachment: scroll;
+  color: var(--slate-ink);
+  font-family: var(--slate-font);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="choice"]
+  > .modal-heading {
+  margin: 0;
+  padding: 0 0 18px;
+  border: 0;
+  background: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="choice"]
+  > .folio-pane {
+  flex: 1 1 auto;
+  margin: 0;
+}
+/* the page shell is full height, so the decision block centres in the space
+ * between the title row and the footer instead of hugging the title */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="choice"]
+  .modal-scroll {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100%;
+  padding: 0;
+}
+
+/* --- three relic cards --- */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  .relic-options {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+  width: 100%;
+  max-width: 1180px;
+  margin: 28px auto 0;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  .relic-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  height: auto;
+  padding: 26px 24px 20px;
+  border: 1.5px solid var(--slate-card-line);
+  border-radius: 14px;
+  background: var(--slate-card-base);
+  box-shadow: 0 8px 20px #0007;
+  color: var(--slate-ink);
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  .relic-choice::before,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  .relic-choice::after {
+  content: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  .relic-choice:hover {
+  background: #16202e;
+  border-color: #ffffffcc;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  .relic-choice[aria-pressed="true"] {
+  border-color: var(--slate-blue);
+  background: #16243a;
+  box-shadow:
+    inset 0 0 0 1px var(--slate-blue),
+    0 0 28px #8cc4ff40,
+    0 8px 20px #0007;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  .relic-art {
+  width: 100%;
+  height: 190px;
+  place-items: center;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  .relic-art
+  img {
+  width: 170px;
+  height: 170px;
+  border: 0;
+  border-radius: 0;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 22px #0009);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  .relic-choice
+  h3 {
+  margin: 4px 0 0;
+  font: 700 22px/1.35 var(--slate-font);
+  letter-spacing: 1.5px;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  .relic-choice
+  p {
+  flex: 0 0 auto;
+  margin: 0;
+  font: 400 15px/1.75 var(--slate-font);
+  color: var(--slate-ink-2);
+  text-align: center;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  .relic-pick-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-height: 34px;
+  margin: auto auto 0;
+  padding: 0 22px;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  box-shadow: none;
+  color: var(--slate-ink-2);
+  font: 500 14px/1 var(--slate-font);
+  letter-spacing: 1px;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  .relic-choice[aria-pressed="true"]
+  .relic-pick-label {
+  border-color: #8cc4ff99;
+  background: linear-gradient(180deg, #4a8be6, #2c66c4);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* --- 「酒馆整备」 as a hairline section, not a boxed <details> --- */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  .campaign-refit {
+  width: 100%;
+  max-width: 1180px;
+  margin: 30px auto 0;
+  padding: 22px 0 0;
+  border: 0;
+  border-top: 1px solid var(--slate-line);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  .campaign-refit
+  > summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  list-style: none;
+  color: #fff;
+  font: 700 20px/1.4 var(--slate-font);
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  .campaign-refit
+  > summary::-webkit-details-marker {
+  display: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  .campaign-refit
+  > summary::after {
+  content: "";
+  width: 9px;
+  height: 9px;
+  margin-left: 2px;
+  border-right: 2px solid var(--slate-ink-3);
+  border-bottom: 2px solid var(--slate-ink-3);
+  transform: translateY(-2px) rotate(-45deg);
+  transition: transform 0.15s;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  .campaign-refit[open]
+  > summary::after {
+  transform: translateY(2px) rotate(45deg);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  .campaign-refit
+  > summary
+  span {
+  font: 400 14px/1.4 var(--slate-font);
+  letter-spacing: 0.5px;
+  color: var(--slate-ink-3);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  .refit-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 40px;
+  max-width: 760px;
+  margin: 18px 0 0;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  .refit-fields
+  label {
+  gap: 10px;
+  font: 500 15px/1.4 var(--slate-font);
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  #refit-status {
+  margin: 16px 0 0;
+  font: 400 14px/1.7 var(--slate-font);
+  color: var(--slate-ink-3);
+}
+
+/* --- footer: status left, primary pill right --- */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  > .reward-footer {
+  margin-top: 18px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  .reward-next {
+  display: block;
+  font: 600 16px/1.4 var(--slate-font);
+  letter-spacing: 1px;
+  color: var(--slate-ink);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  #reward-selection {
+  margin: 6px 0 0;
+  font: 400 14px/1.5 var(--slate-font);
+  color: var(--slate-ink-3);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  #reward-confirm {
+  min-width: 240px;
+  min-height: 52px;
+  font: 600 18px/1 var(--slate-font);
+}
+
+/* ==========================================================================
+   4. 胜利结算 / 失败 — result + defeat, floating 620
+   ========================================================================== */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="result"] {
+  background: #0b0f16b8;
+  backdrop-filter: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog.result-box {
+  --dialog-width: 620px;
+  width: min(100%, 620px);
+  max-height: 100%;
+  text-align: center;
+}
+/* components.css pushes the defeat panel to `margin-left: 42%` and hides its
+ * sigil so the old defeat bitmap could show through on the left. The slate
+ * shell has no bitmap backdrop, so defeat returns to the centred result panel
+ * the brief asks for, sigil included. */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog.result-box[data-outcome="loss"] {
+  width: min(100%, 620px);
+  margin-left: 0;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .result-box
+  .result-sigil {
+  display: grid;
+  place-items: center;
+  width: 140px;
+  height: 140px;
+  margin: 6px auto 10px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .result-box[data-outcome="loss"]
+  .result-sigil
+  svg {
+  color: var(--slate-ink-2);
+  filter: drop-shadow(0 0 16px #0008);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .result-box
+  .result-sigil
+  svg {
+  width: 104px;
+  height: 104px;
+  filter: drop-shadow(0 0 18px #8cc4ff55);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .result-box
+  .result-sub {
+  display: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .result-box
+  .result-title {
+  margin: 0;
+  font: 700 44px/1.25 var(--slate-font);
+  letter-spacing: 6px;
+  color: #fff;
+  text-shadow: 0 2px 14px #0007;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .result-box
+  .boss-quote {
+  margin: 14px 0 0;
+  font: 400 15px/1.8 var(--slate-font);
+  letter-spacing: 1px;
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .result-box
+  .result-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  width: 100%;
+  margin: 24px 0 6px;
+  padding: 24px 0 4px;
+  /* the reset clears the silver-blue bottom rule components.css leaves here;
+   * the footer already carries the closing hairline */
+  border: 0;
+  border-top: 1px solid var(--slate-line);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .result-box
+  .result-stats
+  > div {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  width: auto;
+  padding: 4px 0;
+  border: 0;
+  border-right: 1px solid var(--slate-line);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .result-box
+  .result-stats
+  > div:last-child {
+  border-right: 0;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .result-box
+  .result-stats
+  strong {
+  font: 700 40px/1.1 var(--slate-font);
+  letter-spacing: 1px;
+  color: #fff;
+  text-shadow: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .result-box
+  .result-stats
+  span {
+  font: 500 15px/1.4 var(--slate-font);
+  letter-spacing: 1.5px;
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .result-box
+  > .modal-footer {
+  justify-content: center;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .result-box
+  > .modal-footer
+  > button {
+  min-width: 180px;
+  min-height: 52px;
+}
+
+/* ==========================================================================
+   5. 卡牌详情 / card detail — floating 740
+   ========================================================================== */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="library-card"],
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="inspect"],
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="touch-card"] {
+  background: #0b0f16b8;
+  backdrop-filter: none;
+}
+/* dialog-layout.css already declares 740px for `detail`; components.css blows
+ * it up to 1600px on wide desktops. Restate the brief's width here. */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="detail"] {
+  --dialog-width: 740px;
+  width: min(100%, 740px);
+  height: auto;
+  max-height: 100%;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="detail"]
+  .modal-heading
+  h2 {
+  font: 700 26px/1.35 var(--slate-font);
+  letter-spacing: 2px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="detail"]
+  .card-detail-layout {
+  grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
+  align-items: start;
+  gap: 32px;
+  height: auto;
+  padding: 22px 0 6px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="detail"]
+  .card-detail-art {
+  max-width: 260px;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="detail"]
+  .card-detail-art
+  > .card {
+  width: 100%;
+  height: auto;
+  max-width: 260px;
+  aspect-ratio: var(--card-face-ratio, 5 / 7.4);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .card-detail-copy {
+  gap: 0;
+  padding: 0;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .card-detail-copy
+  h3 {
+  margin: 0 0 14px;
+  font: 700 26px/1.3 var(--slate-font);
+  letter-spacing: 2px;
+  color: #fff;
+}
+/* the rule text drops the boxed panel and becomes plain copy */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .card-detail-copy
+  .card-detail-rule {
+  margin: 0 0 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font: 400 15px/1.85 var(--slate-font);
+  letter-spacing: 0.5px;
+  color: var(--slate-ink-2);
+}
+/* every remaining line in the info column is a hairline row */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .card-detail-copy
+  > :is(p, small):not(.card-detail-rule) {
+  display: flex;
+  align-items: center;
+  min-height: 46px;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--slate-line);
+  font: 400 15px/1.6 var(--slate-font);
+  letter-spacing: 0.5px;
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .card-detail-copy
+  > :is(p, small):not(.card-detail-rule):last-child {
+  border-bottom: 1px solid var(--slate-line);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .card-detail-copy
+  .touch-live-stat {
+  border: 0;
+  border-top: 1px solid var(--slate-line);
+  border-radius: 0;
+  background: none;
+  font: 500 15px/1.6 var(--slate-font);
+  color: var(--slate-ink);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="detail"]
+  > .modal-footer {
+  justify-content: center;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="detail"]
+  > .modal-footer
+  > button {
+  min-width: 170px;
+}
+
+/* ==========================================================================
+   6. 发现 / discover — floating 820
+   ========================================================================== */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="discover"] {
+  background: #0b0f16b8;
+  backdrop-filter: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="discover"] {
+  --dialog-width: 820px;
+  width: min(100%, 820px);
+  height: auto;
+  max-height: 100%;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="discover"]
+  .modal-heading
+  h2 {
+  font: 700 26px/1.35 var(--slate-font);
+  letter-spacing: 2px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="discover"]
+  .discover-options {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  height: auto;
+  padding: 24px 0 8px;
+  align-items: start;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="discover"]
+  .discover-card {
+  width: 100%;
+  max-width: 230px;
+  border-radius: 12px;
+  background: none;
+  box-shadow: none;
+  filter: none;
+  transition:
+    filter 0.15s,
+    transform 0.15s;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="discover"]
+  .discover-card::before,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="discover"]
+  .discover-card::after {
+  content: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="discover"]
+  .discover-card:is(:hover, :focus-visible) {
+  outline: none;
+  box-shadow: none;
+  /* the card face is not a filled rectangle, so the selection glow follows its
+   * alpha via drop-shadow rather than a box-shadow ring */
+  filter:
+    drop-shadow(0 0 4px #8cc4ffcc) drop-shadow(0 0 20px #8cc4ff88);
+}
+
+/* ==========================================================================
+   7. 确认 / confirm — floating 480
+   ========================================================================== */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="confirm"] {
+  background: #0b0f16b8;
+  backdrop-filter: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="confirm"]
+  .confirm-box {
+  --dialog-width: 480px;
+  width: min(100%, 480px);
+  min-height: 0;
+  text-align: left;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="confirm"]
+  .confirm-box
+  .modal-heading
+  h2 {
+  font: 700 22px/1.4 var(--slate-font);
+  letter-spacing: 2px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="confirm"]
+  .confirm-box
+  .modal-scroll
+  p {
+  margin: 20px 0 6px;
+  font: 400 15px/1.8 var(--slate-font);
+  letter-spacing: 0.5px;
+  color: var(--slate-ink-2);
+  text-align: left;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="confirm"]
+  .confirm-box
+  > .modal-footer {
+  justify-content: flex-end;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="confirm"]
+  .confirm-box
+  > .modal-footer
+  > button {
+  min-width: 140px;
+}
+
+/* ==========================================================================
+   8. 菜单 / menu — floating 560
+   ========================================================================== */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="menu"]
+  .modal-heading
+  h2 {
+  font: 700 26px/1.35 var(--slate-font);
+  letter-spacing: 2px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .touch-menu-grid {
+  gap: 12px;
+  padding: 22px 0 6px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .touch-menu-grid
+  .menu-action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  min-height: 52px;
+  padding: 0 22px;
+  border-radius: 999px;
+  border: 1px solid var(--slate-pill-line);
+  background: var(--slate-pill);
+  color: var(--slate-ink);
+  font: 500 16px/1 var(--slate-font);
+  letter-spacing: 1px;
+  text-align: left;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .touch-menu-grid
+  .menu-action
+  > svg {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  color: var(--slate-blue);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .touch-menu-grid
+  .menu-action:hover {
+  background: #1b2434d9;
+  border-color: var(--slate-line-strong);
+}
+
+/* ==========================================================================
+   9. 战斗记录 / journal — floating 720, hairline rows
+   ========================================================================== */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="journal"]
+  .modal-heading
+  h2 {
+  font: 700 26px/1.35 var(--slate-font);
+  letter-spacing: 2px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .touch-log {
+  gap: 0;
+  padding: 6px 0 4px;
+  font-family: var(--slate-font);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  :is(.touch-log, .tactical-sheet .touch-log)
+  > p {
+  margin: 0;
+  padding: 13px 0;
+  border: 0;
+  border-bottom: 1px solid var(--slate-line);
+  background: none;
+  font: 400 15px/1.7 var(--slate-font);
+  letter-spacing: 0.5px;
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  :is(.touch-log, .tactical-sheet .touch-log)
+  > p:last-child {
+  border-bottom: 0;
+}
+
+/* ==========================================================================
+   10. 手牌总览 / hand overview — floating 1060
+   ========================================================================== */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="hand"]
+  .modal-heading
+  h2 {
+  font: 700 26px/1.35 var(--slate-font);
+  letter-spacing: 2px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .touch-hand-grid {
+  gap: 20px;
+  padding: 22px 0 6px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .touch-hand-grid
+  > button {
+  border-radius: 12px;
+  background: none;
+  box-shadow: none;
+  transition: box-shadow 0.15s;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .touch-hand-grid
+  > button:is(:hover, :focus-visible) {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--slate-blue),
+    0 0 26px #8cc4ff4d;
+}
+
+/* ==========================================================================
+   11. 英雄信息 / hero info — the tactical sheet loses its amber glass
+   ========================================================================== */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .tactical-sheet {
+  background: var(--slate-material);
+  background-attachment: scroll;
+  color: var(--slate-ink);
+}
+/* legacy-components.css paints `.touch-hero-info` with the tavern amber glass;
+ * the extra `.folio-dialog` qualifier matches that rule's specificity so this
+ * one wins on source order. */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .folio-dialog
+  .touch-hero-info {
+  grid-template-columns: minmax(0, 200px) minmax(0, 1fr);
+  gap: 28px;
+  padding: 22px 0 6px;
+  align-items: start;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--slate-ink);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .touch-hero-info
+  > img {
+  width: 100%;
+  max-width: 200px;
+  border: 1.5px solid var(--slate-card-line);
+  border-radius: 10px;
+  background: var(--slate-card-base);
+  box-shadow: 0 8px 20px #0007;
+  object-fit: cover;
+  aspect-ratio: 3 / 4;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .touch-hero-info
+  > div {
+  display: grid;
+  gap: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .touch-hero-info
+  .touch-live-stat {
+  display: flex;
+  align-items: center;
+  min-height: 46px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--slate-line);
+  border-radius: 0;
+  background: none;
+  font: 600 16px/1.5 var(--slate-font);
+  letter-spacing: 1px;
+  color: var(--slate-ink);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .touch-hero-info
+  > div
+  > p {
+  margin: 0;
+  padding: 14px 0;
+  border: 0;
+  border-bottom: 1px solid var(--slate-line);
+  border-radius: 0;
+  background: none;
+  font: 400 15px/1.8 var(--slate-font);
+  letter-spacing: 0.5px;
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .touch-hero-info
+  > div
+  > p:last-child {
+  border-bottom: 0;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .touch-hero-info
+  > div
+  > p
+  b {
+  display: block;
+  margin-bottom: 4px;
+  font: 700 16px/1.5 var(--slate-font);
+  letter-spacing: 1px;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .tactical-sheet
+  > .modal-footer {
+  justify-content: center;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .tactical-sheet
+  > .modal-footer
+  > button {
+  min-width: 170px;
+}
+
+/* ==========================================================================
+   12. 战场画廊 / gallery — floating 1100, scene blocks as bordered cards
+   ========================================================================== */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="atelier"]
+  .modal-heading
+  h2 {
+  font: 700 26px/1.35 var(--slate-font);
+  letter-spacing: 2px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .atelier-architecture {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+  padding: 22px 0 6px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .atelier-box
+  .atelier-vignette {
+  overflow: hidden;
+  padding: 0 0 14px;
+  border: 1.5px solid var(--slate-card-line);
+  border-radius: 12px;
+  background: var(--slate-card-base);
+  box-shadow: 0 8px 20px #0007;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .atelier-box
+  .atelier-vignette::before,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .atelier-box
+  .atelier-vignette::after {
+  content: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .atelier-box
+  .atelier-vignette:hover {
+  border-color: var(--slate-blue);
+  box-shadow:
+    0 0 22px #8cc4ff33,
+    0 8px 20px #0007;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .atelier-box
+  .atelier-vignette
+  img {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .atelier-box
+  .atelier-vignette
+  h3 {
+  margin: 14px 16px 0;
+  font: 700 17px/1.4 var(--slate-font);
+  letter-spacing: 1px;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .atelier-box
+  .atelier-vignette
+  p {
+  margin: 6px 16px 0;
+  font: 400 14px/1.5 var(--slate-font);
+  letter-spacing: 0.5px;
+  color: var(--slate-ink-3);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .atelier-box
+  > .atelier-foot
+  p {
+  margin: 0 auto 0 0;
+  font: 400 15px/1.6 var(--slate-font);
+  color: var(--slate-ink-2);
+}
+
+/* ==========================================================================
+   13. narrower desktop windows
+   ========================================================================== */
+@media (max-width: 1400px) {
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host
+    .rewards-box
+    .relic-art {
+    height: 150px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host
+    .rewards-box
+    .relic-art
+    img {
+    width: 136px;
+    height: 136px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host
+    .rewards-box
+    .relic-choice {
+    padding: 20px 18px 16px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host
+    .result-box
+    .result-sigil {
+    width: 110px;
+    height: 110px;
+    margin: 2px auto 6px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host
+    .result-box
+    .result-sigil
+    svg {
+    width: 84px;
+    height: 84px;
+  }
+}

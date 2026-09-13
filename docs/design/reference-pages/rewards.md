@@ -39,3 +39,9 @@
 遗物选择面板增加四角银线；继续冒险按钮使用冰晶纹理和原生箭头。
 
 复杂纹理由 image-gen 重建，简单图标与轮廓由原生 SVG/CSS 完成。生成图并非原图无损分层；具体透明通道限制见 [素材记录](../../../assets/ui/detail-polish-v1/provenance.json)。本次截图和检查见 [细节打磨记录](../../../output/detail-polish-20260913/VALIDATION.md)。
+
+## 2026-09-13 磨砂青岩皮肤
+
+`?skin=slate` 下这一页从浮层壳提升为页面壳（在 `dialogs.css` 内覆盖 `[data-dialog-size="choice"]`，不改 base.css）：满屏磨砂材质、无边框圆角，标题行 + 发丝线 → 三张遗物卡（圆角 14、1.5px `--slate-card-line` 描边、`--slate-card-base` 底、遗物图 170px、名称 22px/700、说明 15px、「选择此遗物」小药丸；选中 = 蓝边 + 内描边 + 外发光 + 蓝色药丸）→「酒馆整备」由方框 `<details>` 改为发丝线分节（20px/700 节标题 + ink-3 补充 + 旋转 chevron，两个药丸下拉）→ 底部发丝线，左下「下一站 / 已选择」状态，右下主药丸「继续冒险」。决策区在标题与底栏之间垂直居中。
+
+已知差异：1280×720 在战场视图下进入 `body.touch-layout`，皮肤不生效；桌面窄尺寸以 1360×768 验收。截图见 `output/slate-dialogs-20260913/`。
