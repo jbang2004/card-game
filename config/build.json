@@ -67,5 +67,15 @@
   "POLISH_BATTLE": "presentation/polish-battle.css",
   "POLISH_MOBILE": "presentation/polish-mobile.css",
   "HOME_PRESENTATION": "presentation/home.js",
-  "SKIN_SLATE": "presentation/skins/slate.css"
+  "SKIN_SLATE_BASE": "presentation/skins/slate/base.css",
+  "SKIN_SLATE_HOME": "presentation/skins/slate/home.css",
+  "SKIN_SLATE_HEROES": "presentation/skins/slate/heroes.css",
+  "SKIN_SLATE_LIBRARY": "presentation/skins/slate/library.css",
+  "SKIN_SLATE_MAP": "presentation/skins/slate/map.css",
+  "SKIN_SLATE_CONTRACTS": "presentation/skins/slate/contracts.css",
+  "SKIN_SLATE_BATTLE": "presentation/skins/slate/battle.css",
+  "SKIN_SLATE_DIALOGS": "presentation/skins/slate/dialogs.css",
+  "SKIN_SLATE_SETTINGS": "presentation/skins/slate/settings.css",
+  "SKIN_SLATE_GUIDE": "presentation/skins/slate/guide.css",
+  "SKIN_SLATE_MOBILE": "presentation/skins/slate/mobile.css"
 }

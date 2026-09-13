@@ -1,0 +1,776 @@
+/* Test skin "slate" — 英雄选择 / hero-select page.
+ * Tokens, the full-bleed page shell, pills and form controls live in base.css;
+ * this file only adds heroes-specific selectors.
+ */
+
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-chooser
+  .modal-heading::after {
+  content: none;
+}
+
+/* ---------- heroes ---------- */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-chooser
+  > .folio-pane {
+  flex: 1 1 auto;
+  margin: 18px 0 0;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-chooser
+  .folio-viewport {
+  overflow-y: auto;
+  height: 100%;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-single-sheet {
+  display: grid;
+  grid-template-columns: var(--slate-rail) var(--slate-list) minmax(0, 1fr);
+  column-gap: var(--slate-col-gap);
+  padding: 0;
+  min-height: 100%;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-roster {
+  display: contents;
+}
+
+/* rail */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-roster-heading {
+  position: relative;
+  grid-column: 1;
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  grid-template-rows: 56px;
+  align-content: start;
+  align-items: center;
+  column-gap: 20px;
+  padding: 34px 0 0;
+  margin: 0;
+  border: 0;
+  background: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-roster-heading::before {
+  content: "";
+  position: absolute;
+  left: 27px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--slate-line);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-roster-heading::after {
+  content: "";
+  grid-area: 1 / 1;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid #ffffff3a;
+  background: radial-gradient(
+    circle,
+    #cfe6ff 0 5px,
+    #4d93ff 6px 10px,
+    #1a3d78 11px 16px,
+    #0d1523 17px 22px,
+    #212c3d 23px
+  );
+  box-shadow:
+    0 0 24px #4d93ff55,
+    inset 0 0 8px #0009;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-roster-heading > span {
+  grid-area: 1 / 2;
+  position: relative;
+  font: 700 25px/1.2 var(--slate-font);
+  color: #fff;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 8px #0006;
+}
+
+/* list */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-options {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  margin: 0;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-options::before {
+  content: "全部英雄";
+  display: block;
+  padding: 0 0 12px 8px;
+  border-bottom: 1px solid var(--slate-line);
+  font: 700 20px/1.2 var(--slate-font);
+  color: #fff;
+  letter-spacing: 1px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-option {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--slate-thumb-w) minmax(0, 1fr);
+  grid-template-rows: 30px auto auto;
+  grid-template-areas:
+    "head head"
+    "img power"
+    "img action";
+  column-gap: 18px;
+  row-gap: 8px;
+  align-items: start;
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 12px 8px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--slate-line);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--slate-ink);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-option::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 46px;
+  height: 1px;
+  background: var(--slate-line);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-option:hover,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-option.selected {
+  background: linear-gradient(90deg, #ffffff0d, #ffffff00 85%);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-option:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: -2px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-option-text {
+  display: contents;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-option h3 {
+  grid-area: head;
+  justify-self: start;
+  align-self: center;
+  margin: 0;
+  font: 700 22px/1.3 var(--slate-font);
+  color: #fff;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-option small {
+  grid-area: head;
+  display: block;
+  justify-self: end;
+  align-self: center;
+  max-width: 55%;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 400 13px/1.3 var(--slate-font);
+  color: var(--slate-ink-3);
+  letter-spacing: 1px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-option img {
+  grid-area: img;
+  width: var(--slate-thumb-w);
+  height: var(--slate-thumb-h);
+  margin: 2px 0 0;
+  padding: 0;
+  object-fit: cover;
+  clip-path: none;
+  border-radius: 8px;
+  border: 1.5px solid var(--slate-card-line);
+  background: var(--slate-card-base);
+  box-shadow: 0 8px 20px #0007;
+  transform: none;
+  filter: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-option em {
+  grid-area: power;
+  display: block;
+  margin: 2px 0 0;
+  font: 400 14px/1.5 var(--slate-font);
+  font-style: normal;
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-option .selected-check,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-option:not(.selected)::after {
+  grid-area: action;
+  justify-self: start;
+  align-self: end;
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-sizing: border-box;
+  min-width: 170px;
+  height: 38px;
+  margin: 0;
+  padding: 0 22px;
+  border-radius: 999px;
+  border: 1px solid var(--slate-pill-line);
+  background: var(--slate-pill);
+  color: #fff;
+  font: 500 16px/1 var(--slate-font);
+  letter-spacing: 1px;
+  transform: none;
+  box-shadow: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-option:not(.selected)::after {
+  content: "选择英雄";
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-option:not(.selected):hover::after {
+  background: #1b2434d9;
+  border-color: var(--slate-line-strong);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-option .selected-check {
+  color: var(--slate-ink-3);
+  border-color: #ffffff1a;
+  background: #0d121b8c;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-option .selected-check svg {
+  width: 16px;
+  height: 16px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-option .selected-check::after {
+  content: "已选择";
+}
+
+/* preview card (hero art) */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-chooser
+  > .scene-showcase {
+  position: absolute;
+  inset: auto;
+  left: calc(
+    var(--slate-page-x) + var(--slate-rail) + var(--slate-list) + 2 *
+      var(--slate-col-gap)
+  );
+  top: 150px;
+  width: var(--slate-card-w);
+  height: var(--slate-card-h);
+  z-index: 2;
+  border-radius: 12px;
+  border: 1.5px solid var(--slate-card-line);
+  background-color: var(--slate-card-base);
+  background-image: var(--scene-art);
+  background-size: cover;
+  background-position: 50% var(--hero-scene-y, 22%);
+  box-shadow:
+    0 18px 44px #0009,
+    inset 0 0 0 1px #0008;
+  overflow: hidden;
+  filter: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-chooser
+  > .scene-showcase::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 8px;
+  border: 1px solid #ffffff2a;
+  pointer-events: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-chooser
+  > .scene-showcase::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #0b101800 55%, #0b1018d9 100%);
+}
+
+/* configuration column */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-configuration {
+  grid-column: 3;
+  display: block;
+  position: relative;
+  min-height: calc(var(--slate-card-h) + 60px);
+  margin: 0;
+  padding: 0 0 0 calc(var(--slate-card-w) + 40px);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin: 0 0 20px calc(-1 * (var(--slate-card-w) + 40px));
+  padding: 0 0 12px;
+  border-bottom: 1px solid var(--slate-line);
+  background: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading::before {
+  content: "英雄预览";
+  order: 0;
+  font: 700 26px/1.2 var(--slate-font);
+  color: #fff;
+  letter-spacing: 1px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading h3 {
+  order: 1;
+  margin: 0;
+  font: 500 22px/1.2 var(--slate-font);
+  color: var(--slate-blue);
+  letter-spacing: 1px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading h3::before {
+  content: "|";
+  margin-right: 14px;
+  color: var(--slate-ink-3);
+  font-weight: 300;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading small {
+  order: 2;
+  font: 400 18px/1.2 var(--slate-font);
+  color: var(--slate-ink-2);
+  letter-spacing: 1px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 10px 16px;
+  align-items: center;
+  margin: 0 0 18px;
+  padding: 0;
+  border: 0;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill > .hero-skill-label {
+  grid-column: 1 / -1;
+  margin: 0;
+  font: 700 20px/1.2 var(--slate-font);
+  color: #fff;
+  letter-spacing: 1px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill > .theme-orbit {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  border: 1.5px solid var(--slate-card-line);
+  background: var(--slate-card-base);
+  box-shadow: 0 6px 16px #0006;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill > .theme-orbit::before,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill > .theme-orbit::after {
+  content: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill svg {
+  width: 34px;
+  height: 34px;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill strong {
+  display: block;
+  font: 600 20px/1.3 var(--slate-font);
+  color: #fff;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill p {
+  margin: 4px 0 0;
+  font: 400 15px/1.5 var(--slate-font);
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-intro {
+  display: block;
+  margin: 0;
+  padding: 12px 0 4px;
+  border-top: 1px solid var(--slate-line);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .config-kicker {
+  display: block;
+  margin: 0 0 6px;
+  font: 700 20px/1.2 var(--slate-font);
+  color: #fff;
+  letter-spacing: 1px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-deck-note {
+  margin: 0;
+  font: 400 15px/1.55 var(--slate-font);
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .archetype-picker {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 10px 0;
+  font: 500 18px/1.2 var(--slate-font);
+  color: #fff;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-mode {
+  /* The mode cards below mirror this select; keep it for the script only. */
+  display: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  margin: 0;
+  padding: 12px 0 10px;
+  border-top: 1px solid var(--slate-line);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards::before {
+  content: "游戏模式";
+  position: static;
+  grid-column: 1 / -1;
+  margin: 0;
+  font: 700 20px/1.2 var(--slate-font);
+  color: #fff;
+  letter-spacing: 1px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards button {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-height: 62px;
+  margin: 0;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--slate-line-strong);
+  background: #0f141d99;
+  color: #fff;
+  text-align: left;
+  box-shadow: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards button::before,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards button::after {
+  content: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards button[aria-pressed="true"] {
+  border-color: var(--slate-blue);
+  box-shadow:
+    inset 0 0 0 1px var(--slate-blue),
+    0 0 18px #8cc4ff33;
+  background: #16243a;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards svg {
+  width: 30px;
+  height: 30px;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards span {
+  display: block;
+  font: 700 18px/1.2 var(--slate-font);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards small {
+  display: block;
+  margin: 4px 0 0;
+  font: 400 13px/1.3 var(--slate-font);
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-composition {
+  margin: 0;
+  padding: 12px 0 8px;
+  border-top: 1px solid var(--slate-line);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .comp-head {
+  position: static;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 0 0 8px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .comp-head h4 {
+  display: block;
+  margin: 0;
+  font: 700 20px/1.2 var(--slate-font);
+  color: #fff;
+  letter-spacing: 1px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .comp-head span {
+  font: 600 18px/1.2 var(--slate-font);
+  color: var(--slate-blue);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .comp-counts {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 10px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .comp-counts span {
+  padding: 4px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--slate-pill-line);
+  background: var(--slate-pill);
+  font: 400 14px/1.4 var(--slate-font);
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .comp-counts b {
+  color: #fff;
+  font-weight: 700;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .comp-curve-title {
+  display: block;
+  margin: 0 0 4px;
+  font: 400 14px/1.4 var(--slate-font);
+  color: var(--slate-ink-3);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract {
+  margin: 0;
+  padding: 12px 0;
+  border-top: 1px solid var(--slate-line);
+  border-bottom: 0;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract summary {
+  font: 700 20px/1.2 var(--slate-font);
+  color: #fff;
+  letter-spacing: 1px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract summary small {
+  font: 400 14px/1.4 var(--slate-font);
+  color: var(--slate-ink-3);
+  letter-spacing: 0;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-plan {
+  margin: 0;
+  padding: 14px 0 8px;
+  border-top: 1px solid var(--slate-line);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-plan::before {
+  content: "牌组思路";
+  display: block;
+  margin: 0 0 6px;
+  font: 700 20px/1.2 var(--slate-font);
+  color: #fff;
+  letter-spacing: 1px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-plan .deck-plan {
+  display: block;
+  margin: 0;
+  font: 400 15px/1.55 var(--slate-font);
+  color: var(--slate-ink-2);
+}
+
+/* ---------- narrower desktop windows ---------- */
+@media (max-width: 1500px) {
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="heroes"]
+    .hero-roster-heading > span {
+    font-size: 20px;
+    white-space: nowrap;
+  }
+}

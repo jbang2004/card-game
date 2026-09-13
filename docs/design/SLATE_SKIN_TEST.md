@@ -8,12 +8,25 @@
 
 ## 落点
 
+皮肤按「共享底座 + 每页一文件」拆分，便于多人并行重置各页面。全部规则只在 `html[data-skin="slate"] body:not(.touch-layout)` 下生效。
+
 | 文件 | 作用 |
 | --- | --- |
-| `src/presentation/skins/slate.css` | 全部皮肤规则，只在 `html[data-skin="slate"] body:not(.touch-layout)` 下生效 |
-| `src/template.html` | 级联层顺序改为 `legacy, layout, theme, components, skin`，新增 `/*SKIN_SLATE*/` |
-| `config/build.json` | 注册 `SKIN_SLATE` |
-| `src/presentation/theme.js` | 三行查询参数开关 |
+| `src/presentation/skins/slate/base.css` | 共享底座：`--slate-*` 令牌（材质与几何）、两套外壳、通用控件（药丸按钮、表单、关闭按钮、`.crafted-panel` 中和、装饰隐藏）、`max-width: 1500px` 令牌覆盖 |
+| `src/presentation/skins/slate/heroes.css` | 英雄选择页专属规则 |
+| `src/presentation/skins/slate/library.css` | 万象秘典页专属规则 |
+| `src/presentation/skins/slate/settings.css` | 旅途设置页专属规则 |
+| `src/presentation/skins/slate/{home,map,contracts,battle,dialogs,guide,mobile}.css` | 空占位，各由对应页面的重置任务认领 |
+| `src/template.html` | 级联层顺序 `legacy, layout, theme, components, skin`；`@layer skin` 内按 BASE → HOME → HEROES → LIBRARY → MAP → CONTRACTS → BATTLE → DIALOGS → SETTINGS → GUIDE → MOBILE 排列 |
+| `config/build.json` | 注册 `SKIN_SLATE_BASE` 等 11 个令牌 |
+| `src/presentation/theme.js` | 三行查询参数开关（接受任意值，`?skin=silverblue` 无副作用） |
+
+两套外壳按 `dialog-layout.js` 写入的 `[data-dialog-size]` 区分，不再按 `[data-type]` 枚举：
+
+- **整页外壳**（`heroes` / `library` / `settings` / `route` / `covenant` / `help`）：宿主去内边距、对话框 100%×100% 铺满、磨砂材质、无边框圆角阴影、左上返回箭头与标题行。
+- **浮层外壳**（`confirm` / `detail` / `hand` / `menu` / `journal` / `discover` / `mulligan` / `choice` / `result` / `atelier` / `workspace`）：宿主保留居中并加暗底，对话框为 16px 圆角磨砂面板（发丝描边 + 投影），宽度仍由 `dialog-layout.css` 的 `--dialog-width` 决定，关闭按钮保持右上圆形「×」。
+
+通用控件与排版规则作用于**全部**弹窗类型；页面文件只追加自己的选择器，不重新定义令牌。
 
 皮肤放在 `components` 之后的独立级联层，因此不需要和现有 6700 行组件规则比拼选择器权重，也没有修改任何既有声明。这是**评估用的临时层**：若采用，应按 AGENTS.md 的约定把颜色/材质令牌并入 `components.css`，几何并入各页面布局模块，然后删除本层。
 
