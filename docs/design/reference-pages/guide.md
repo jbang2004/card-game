@@ -59,3 +59,7 @@
 - 调试过程中发现并修正一处皮肤内部冲突：`.help-key-preview span` / `.help-key-preview svg` 选择器原本未加范围限定，意外命中 `panels.js` 自动注入到每个 `.crafted-panel` 内的 `.panel-corner-trim` 四角描边（其 DOM 也是 `span` 包 `svg`），特异度高于 base.css 的隐藏规则，导致窄桌面尺寸下「关键词速查」卡片重新露出旧四角银线；已改为 `.help-key-preview > div span` / `> div i svg` 的精确范围。
 - 截图：`output/slate-guide-20260913/`（1672×941、1280×720，各四章节 + 一张不带 `?skin` 的对照图）。
 - 验证：`node --test tests/*.test.cjs`（127 通过）；本地追加 `&skin=slate` 的 `dialog-sizing` / `interface-audit` / `remaining-reference` / `responsive-component-style` / `uiux` 五个 e2e 规格在端口 8106 跑通，25/28 通过；3 个失败（`dialog-sizing` 设置弹窗宽度期望 1100px、`responsive-component-style` 材质指纹、`uiux` 长卡牌规则文本）与本页无关，在改动前的原始构建上同样失败，均依赖尚未更新的旧材质断言。
+
+## 2026-09-14 导航轨节点补修
+
+`base.css` 对 `.ghost-btn` 等药丸的共享规则在 `::before` 上同时设了 `content: none; display: none`；`guide.css` 的 `.help-toc button::before` 只覆盖了 `content`，未覆盖 `display`，导致该属性仍取 base.css 的 `display: none`（级联按属性而非按规则块生效），节点完全不渲染。修复：在该规则补上 `display: block`；同时给 `.help-toc button` 加 `white-space: nowrap` 并将字号从 25px 降到 22px/700，导航列宽从 260px 增到 280px（窄桌面断点 `@media (max-width:1500px)` 同步从 220px 增到 260px），避免「02 出牌与攻击」等标签换行。已用 `getBoundingClientRect`/`getComputedStyle` 验证四个章节按钮在 1672×941、1280×720 下 `::before` 均为非零盒模型（16px 空心点 / 56px 发光节点）且标签单行不溢出；截图已更新于 `output/slate-guide-20260913/`。

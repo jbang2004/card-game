@@ -29,7 +29,7 @@ html[data-skin="slate"]
   .help-box
   .modal-scroll {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
+  grid-template-columns: 280px minmax(0, 1fr);
   column-gap: 60px;
   align-items: start;
   padding: 0;
@@ -79,10 +79,11 @@ html[data-skin="slate"]
   border-radius: 0;
   background: none;
   box-shadow: none;
-  font: 700 25px/1.3 var(--slate-font);
+  font: 700 22px/1.3 var(--slate-font);
   letter-spacing: 1px;
   color: var(--slate-ink-2);
   text-align: left;
+  white-space: nowrap;
   text-shadow: 0 2px 8px #0006;
   transition: color 0.15s;
 }
@@ -91,6 +92,7 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="help"]
   .help-toc button::before {
   content: "";
+  display: block;
   position: absolute;
   left: 20px;
   top: 50%;
@@ -615,7 +617,7 @@ html[data-skin="slate"]
     #modal.folio-host[data-type="help"]
     .help-box
     .modal-scroll {
-    grid-template-columns: 220px minmax(0, 1fr);
+    grid-template-columns: 260px minmax(0, 1fr);
     column-gap: 40px;
   }
 }
