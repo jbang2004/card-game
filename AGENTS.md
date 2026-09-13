@@ -20,7 +20,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 ## 修改边界
 
-- 组件样式遵循 `legacy → layout → theme → components` 层级；新配色与卡图容器放在 `presentation/components.css`，手机规则不要另外定义主题颜色。
+- 组件样式遵循 `legacy → layout → theme → components` 层级；卡图容器与旧主题规则留在 `presentation/components.css`，新配色/材质一律放在 `src/presentation/skins/slate/`（base = 令牌与外壳，页面文件 = 各页几何），手机规则不要另外定义主题颜色。
 - 修改 `src/` 与素材源，然后构建；不要只改生成的 `index.html`。
 - `config/build.json` / `src/template.html` 决定模块顺序。只有当前注册表中的实现进入运行；不能因历史文档提及就恢复已经退役的 Three.js、程序化插画或旧素材缓存。仍有引用的 `tavern-ui.js` / `atelier*` 承担当前 UI 和 Canvas 职责。
 - 79 个卡牌 ID 必须各有新动漫插画；保持严格映射，不让缺图静默回退到旧程序化角色图。
