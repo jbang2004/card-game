@@ -1049,8 +1049,7 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="contracts"]
   .covenant-tabs {
   left: calc(
-    var(--slate-cov-x) + (100% - var(--slate-cov-x) - var(--slate-cov-r)) *
-      0.42
+    var(--slate-cov-x) + (100% - var(--slate-cov-x) - var(--slate-cov-r)) * 0.42
   );
   right: var(--slate-cov-r);
   top: 56px;

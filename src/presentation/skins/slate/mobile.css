@@ -217,10 +217,7 @@ html[data-skin="slate"] body.touch-layout #battle .contract-open.ready {
 html[data-skin="slate"] body.touch-layout #battle .contract-open.ready small {
   color: var(--slate-blue);
 }
-html[data-skin="slate"]
-  body.touch-layout
-  #battle
-  .contract-open:focus-visible {
+html[data-skin="slate"] body.touch-layout #battle .contract-open:focus-visible {
   outline: 2px solid var(--slate-blue);
   outline-offset: 3px;
 }
@@ -367,10 +364,7 @@ html[data-skin="slate"] body.touch-layout #battle .power-button > span {
   letter-spacing: 1px;
   text-shadow: 0 2px 8px #000a;
 }
-html[data-skin="slate"]
-  body.touch-layout
-  #battle
-  .power-button:disabled {
+html[data-skin="slate"] body.touch-layout #battle .power-button:disabled {
   opacity: 1;
   color: var(--slate-ink-3);
 }
@@ -388,11 +382,7 @@ html[data-skin="slate"]
   );
   box-shadow: inset 0 0 8px #0009;
 }
-html[data-skin="slate"]
-  body.touch-layout
-  #battle
-  .power-button:disabled
-  > svg {
+html[data-skin="slate"] body.touch-layout #battle .power-button:disabled > svg {
   filter: grayscale(0.6) drop-shadow(0 1px 2px #00000099);
 }
 html[data-skin="slate"]
@@ -403,10 +393,7 @@ html[data-skin="slate"]
   border-color: #ffffff1a;
   color: var(--slate-ink-3);
 }
-html[data-skin="slate"]
-  body.touch-layout
-  #battle
-  .power-button:focus-visible {
+html[data-skin="slate"] body.touch-layout #battle .power-button:focus-visible {
   outline: 2px solid var(--slate-blue);
   outline-offset: 4px;
 }
@@ -582,17 +569,11 @@ html[data-skin="slate"]
   color: #ffd9dc;
 }
 /* the target bar is the only rail with a control inside it */
-html[data-skin="slate"]
-  body.touch-layout
-  #app.battle-view
-  #touch-target-bar {
+html[data-skin="slate"] body.touch-layout #app.battle-view #touch-target-bar {
   gap: 8px;
   padding: 0 4px 0 14px;
 }
-html[data-skin="slate"]
-  body.touch-layout
-  #app.battle-view
-  #touch-target-text {
+html[data-skin="slate"] body.touch-layout #app.battle-view #touch-target-text {
   color: var(--slate-ink);
   font: 500 13px/1.35 var(--slate-font);
   letter-spacing: 0.5px;
@@ -623,10 +604,7 @@ html[data-skin="slate"] body.touch-layout #app.battle-view #touch-cancel {
     border-color 0.15s,
     color 0.15s;
 }
-html[data-skin="slate"]
-  body.touch-layout
-  #app.battle-view
-  #touch-cancel:hover {
+html[data-skin="slate"] body.touch-layout #app.battle-view #touch-cancel:hover {
   background: #1b2434d9;
   border-color: var(--slate-line-strong);
   color: #fff;
@@ -723,8 +701,9 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="touch-hero"] {
-  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
-    max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  padding: max(12px, env(safe-area-inset-top))
+    max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom))
+    max(12px, env(safe-area-inset-left));
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -2005,10 +1984,7 @@ html[data-skin="slate"]
  * 14. 战术底板 / tactical sheets — menu, battle log, hand overview, hero info
  * ======================================================================== */
 /* --- 菜单 / menu --- */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .touch-menu-grid {
+html[data-skin="slate"] body.touch-layout #modal.folio-host .touch-menu-grid {
   gap: 10px;
   padding: 14px 0 4px;
 }
@@ -2061,10 +2037,7 @@ html[data-skin="slate"]
   background: #1b2434d9;
   border-color: var(--slate-line-strong);
 }
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .touch-menu-note {
+html[data-skin="slate"] body.touch-layout #modal.folio-host .touch-menu-note {
   margin: 12px 0 0;
   font: 400 13px/1.6 var(--slate-font);
   color: var(--slate-ink-3);
@@ -2100,10 +2073,7 @@ html[data-skin="slate"]
 }
 
 /* --- 手牌总览 / hand overview --- */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .touch-hand-grid {
+html[data-skin="slate"] body.touch-layout #modal.folio-host .touch-hand-grid {
   gap: 12px;
   padding: 14px 0 4px;
 }

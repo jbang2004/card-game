@@ -236,10 +236,7 @@ html[data-skin="slate"]
 /* `ui.js` renders the last eight entries as `.log-line` divs inside a legacy
  * bottom-anchored flex column with a fade mask. The slate panel reads as a
  * hairline list that flows from the top instead. */
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #app.battle-view
-  .battle-log {
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .battle-log {
   display: block;
   height: auto;
   max-height: 296px;
@@ -278,11 +275,7 @@ html[data-skin="slate"]
   color: #fff;
   font-weight: 600;
 }
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #app.battle-view
-  .battle-log
-  b {
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .battle-log b {
   color: var(--slate-blue);
   font-weight: 600;
 }
@@ -554,10 +547,7 @@ html[data-skin="slate"]
     0 0 32px #4d93ff88,
     inset 0 0 8px #0009;
 }
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #battle
-  .power-button:disabled {
+html[data-skin="slate"] body:not(.touch-layout) #battle .power-button:disabled {
   opacity: 1;
   color: var(--slate-ink-3);
 }
@@ -674,20 +664,14 @@ html[data-skin="slate"]
   color: var(--slate-ink);
   font-family: var(--slate-font);
 }
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #app.battle-view
-  .enemy-deck {
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .enemy-deck {
   /* joins the top rail beside the two utility tabs (which start at x=1270).
    * It cannot sit further right: the log and boss shells occupy x≥1346 from
    * y=76 downwards, and would cover the counter whenever one is open. */
   left: 1112px;
   top: 21px;
 }
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #app.battle-view
-  .player-deck {
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .player-deck {
   /* right rail, clear of the widest hand fan (which ends near x=1350) */
   left: 1396px;
   top: 712px;
@@ -789,10 +773,7 @@ html[data-skin="slate"]
   .end-turn:active:not(:disabled) {
   transform: scale(0.98);
 }
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #battle
-  .end-turn.ready-end {
+html[data-skin="slate"] body:not(.touch-layout) #battle .end-turn.ready-end {
   border-color: var(--slate-blue);
   color: #fff;
 }
@@ -867,10 +848,7 @@ html[data-skin="slate"] body:not(.touch-layout) #battle .hand-label b {
   color: #fff;
   font: 700 14px/1 var(--slate-font);
 }
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #app.battle-view
-  .board-empty {
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .board-empty {
   color: var(--slate-ink-3);
   font: 400 14px/1.5 var(--slate-font);
   letter-spacing: 2px;

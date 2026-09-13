@@ -178,7 +178,22 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  :is(h2, h3, h4, strong, b, summary, label, p, small, em, span, button, input, select) {
+  :is(
+    h2,
+    h3,
+    h4,
+    strong,
+    b,
+    summary,
+    label,
+    p,
+    small,
+    em,
+    span,
+    button,
+    input,
+    select
+  ) {
   font-family: var(--slate-font);
 }
 html[data-skin="slate"]
@@ -201,10 +216,7 @@ html[data-skin="slate"]
  * here instead of being re-neutralised page by page. `:is()` reports the
  * highest specificity among its arguments — all three are plain classes — so
  * the deliberate tie described above is unchanged. */
-html[data-skin="slate"]
-  body
-  #modal.folio-host
-  .folio-dialog.crafted-panel,
+html[data-skin="slate"] body #modal.folio-host .folio-dialog.crafted-panel,
 html[data-skin="slate"]
   body
   #modal.folio-host
@@ -236,10 +248,7 @@ html[data-skin="slate"]
   :is(.crafted-panel, .touch-hero-info, .atelier-vignette)::after {
   content: none;
 }
-html[data-skin="slate"]
-  body
-  #modal.folio-host
-  .selection-light {
+html[data-skin="slate"] body #modal.folio-host .selection-light {
   content: none;
   display: none;
 }
@@ -461,12 +470,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type]
-  button.crafted-action:is(
-    .gold-btn,
-    .ghost-btn,
-    .text-btn,
-    .library-inspect
-  ) {
+  button.crafted-action:is(.gold-btn, .ghost-btn, .text-btn, .library-inspect) {
   display: inline-grid;
   grid-template-columns: 1em minmax(0, 1fr) 1em;
 }
@@ -481,7 +485,8 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  :is(.gold-btn, .ghost-btn) > img {
+  :is(.gold-btn, .ghost-btn)
+  > img {
   content: none;
   display: none;
 }
@@ -492,24 +497,15 @@ html[data-skin="slate"]
   background: #1b2434d9;
   border-color: var(--slate-line-strong);
 }
-html[data-skin="slate"]
-  body
-  #modal.folio-host
-  .gold-btn {
+html[data-skin="slate"] body #modal.folio-host .gold-btn {
   background: linear-gradient(180deg, #4a8be6, #2c66c4);
   border-color: #8cc4ff99;
   font-weight: 600;
 }
-html[data-skin="slate"]
-  body
-  #modal.folio-host
-  .gold-btn:hover {
+html[data-skin="slate"] body #modal.folio-host .gold-btn:hover {
   background: linear-gradient(180deg, #5b98ee, #3572cf);
 }
-html[data-skin="slate"]
-  body
-  #modal.folio-host
-  .gold-btn svg {
+html[data-skin="slate"] body #modal.folio-host .gold-btn svg {
   width: 18px;
   height: 18px;
 }
@@ -774,7 +770,11 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  :is(select.library-search, input.library-search, .deck-title-input):focus-visible {
+  :is(
+    select.library-search,
+    input.library-search,
+    .deck-title-input
+  ):focus-visible {
   outline: 2px solid var(--slate-blue);
   outline-offset: 2px;
 }

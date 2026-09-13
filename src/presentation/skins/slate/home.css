@@ -136,11 +136,7 @@ html[data-skin="slate"] body #app.lobby-view .nav-link.active {
 }
 /* components.css disables this underline in favour of the moving light band;
  * the slate skin brings it back and parks the band (see header note). */
-html[data-skin="slate"]
-  body
-  #app.lobby-view
-  .top-nav
-  .nav-link.active::after {
+html[data-skin="slate"] body #app.lobby-view .top-nav .nav-link.active::after {
   content: "";
   display: block;
   position: absolute;
@@ -899,7 +895,11 @@ html[data-skin="slate"] body.touch-layout #lobby #quick-btn {
   font-size: 17px;
 }
 html[data-skin="slate"] body.touch-layout #lobby .home-action-symbol,
-html[data-skin="slate"] body.touch-layout #lobby #quick-btn .home-action-symbol {
+html[data-skin="slate"]
+  body.touch-layout
+  #lobby
+  #quick-btn
+  .home-action-symbol {
   width: 24px;
   height: 24px;
   justify-self: center;
@@ -951,8 +951,14 @@ html[data-skin="slate"] body.touch-layout #lobby .home-collection-cards {
   height: 140px;
 }
 html[data-skin="slate"] body.touch-layout #lobby .home-collection-card,
-html[data-skin="slate"] body.touch-layout #lobby .home-collection-card:nth-child(2),
-html[data-skin="slate"] body.touch-layout #lobby .home-collection-card:nth-child(3) {
+html[data-skin="slate"]
+  body.touch-layout
+  #lobby
+  .home-collection-card:nth-child(2),
+html[data-skin="slate"]
+  body.touch-layout
+  #lobby
+  .home-collection-card:nth-child(3) {
   flex: 1 1 0;
   min-width: 0;
   max-width: 96px;
@@ -1170,10 +1176,7 @@ html[data-skin="slate"]
     body.touch-layout.mobile-landscape
     #lobby
     .home-action,
-  html[data-skin="slate"]
-    body.touch-layout.mobile-landscape
-    #lobby
-    #quick-btn {
+  html[data-skin="slate"] body.touch-layout.mobile-landscape #lobby #quick-btn {
     height: 44px;
     font-size: 15px;
   }
@@ -1227,10 +1230,7 @@ html[data-skin="slate"]
  * the ≤700 values. Decoration shrinks first — logo, type scale, card height —
  * and the pills keep a 48px hit box with a ≥ 12px corridor to the strip. */
 @media (orientation: portrait) and (max-height: 620px) {
-  html[data-skin="slate"]
-    body.touch-layout.mobile-portrait
-    #lobby
-    .lobby-copy {
+  html[data-skin="slate"] body.touch-layout.mobile-portrait #lobby .lobby-copy {
     top: calc(var(--header-h, 52px) + 44px + 6px);
   }
   html[data-skin="slate"]
@@ -1261,14 +1261,8 @@ html[data-skin="slate"]
     margin: 12px 0 0;
     gap: 8px;
   }
-  html[data-skin="slate"]
-    body.touch-layout.mobile-portrait
-    #lobby
-    .home-action,
-  html[data-skin="slate"]
-    body.touch-layout.mobile-portrait
-    #lobby
-    #quick-btn {
+  html[data-skin="slate"] body.touch-layout.mobile-portrait #lobby .home-action,
+  html[data-skin="slate"] body.touch-layout.mobile-portrait #lobby #quick-btn {
     height: 48px;
     font-size: 16px;
   }
@@ -1336,10 +1330,7 @@ html[data-skin="slate"]
  * The range is exclusive with the block above so the two compactions never
  * fight on source order. */
 @media (orientation: portrait) and (min-height: 621px) and (max-height: 700px) {
-  html[data-skin="slate"]
-    body.touch-layout.mobile-portrait
-    #lobby
-    .lobby-copy {
+  html[data-skin="slate"] body.touch-layout.mobile-portrait #lobby .lobby-copy {
     top: calc(var(--header-h, 52px) + 44px + 8px);
   }
   html[data-skin="slate"]
