@@ -39,3 +39,9 @@
 返回按钮采用深蓝金属纹理，继续按钮采用切角冰晶纹理；动作图标使用原生 SVG。
 
 复杂纹理由 image-gen 重建，简单图标与轮廓由原生 SVG/CSS 完成。生成图并非原图无损分层；具体透明通道限制见 [素材记录](../../../assets/ui/detail-polish-v1/provenance.json)。本次截图和检查见 [细节打磨记录](../../../output/detail-polish-20260913/VALIDATION.md)。
+
+## 2026-09-13 磨砂青岩皮肤
+
+`?skin=slate` 下胜利与失败共用浮层壳（620）：徽记保留（140px 容器 / 104px 图形），英文小标 `.result-sub` 随 `.eyebrow` 一起隐藏，标题 44px/700，引言 15px ink-2；三项统计并排为等宽三列，列间竖发丝线，数字 40px/700 白字、标签 15px ink-2；上下各一条发丝线；底部次药丸 + 主药丸居中。
+
+失败结算另外撤销了 `components.css` 为旧失败底图准备的 `margin-left: 42%` 偏移与 `.result-sigil { display: none }`，改回居中并显示徽记（皮肤没有底图，偏移会留下空白）。截图见 `output/slate-dialogs-20260913/`；1280×720 在战场视图下进入 `body.touch-layout`，以 1360×768 验收。
