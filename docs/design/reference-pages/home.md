@@ -47,3 +47,22 @@
 - 最后重描：[按钮截图](../../../output/home-implementation-20260912/compass-traced-button.png)、[页脚截图](../../../output/home-implementation-20260912/compass-traced-footer.png)、[SVG 导出](../../../output/home-implementation-20260912/compass-traced-normal.svg)。运行代码仍以 `src/art.js` 为唯一编辑源，导出供复用和比较。
 
 最后重描时实际执行 `python3 build.py`，`node --test tests/*.test.cjs tests/art/*.test.cjs`（131 通过），`npx playwright test tests/e2e/home-reference.spec.cjs`（10 通过）；本次整理仅保存既有日志，没有重新运行游戏验收。日志：[规则/素材](../../../output/home-implementation-20260912/compass-traced-unit.log)、[浏览器](../../../output/home-implementation-20260912/compass-traced-browser.log)。Chrome/触控视口模拟，不是实体手机验收；未发布线上。
+
+## 2026-09-13 磨砂青岩皮肤
+
+`?skin=slate` 下主页 UI 层按 [SLATE_DESIGN_SYSTEM.md](../SLATE_DESIGN_SYSTEM.md) 第 5.1 节重做，Canvas 场景原画与昼夜切换保留。唯一改动文件是 `src/presentation/skins/slate/home.css`（模板与 `home.js` 未动）；全部规则以 `html[data-skin="slate"] body:not(.touch-layout)` 开头，不带 `?skin` 时本页与改动前一致（逐像素比较见下）。
+
+- 顶栏：品牌改文字字标（「烬域」20px/700 + `EMBERFALL` 10px 字距 3px）；三个导航改文字分页（未选 ink-3，选中白色 700 + 3px 白色发光下划亮条）；图标按钮改 36px 圆形药丸。
+- 标题区：保留 `homeLogo` 位图；「灰烬酒馆」28px/700、标语 18px ink-2、存档状态 15px ink-3，均为黑体；存档状态改回文档流，不再固定在 318px。
+- 主按钮：位图皮肤隐藏；`#start-btn` 蓝色主药丸 320×64（22px 标签），`#quick-btn` 深色次药丸 300×56。两者用同一栅格模板与同一内容盒跨度（左 24px → 280px），因此左边缘、图标槽、标签列、箭头槽四条轴完全重合。
+- 收藏区：「我的收藏」改节标题 + 发丝线；三张卡保留错位与倾角，加圆角 10 + 1.5px `--slate-card-line` 描边 + 投影，图片改 `object-fit: cover`，标题字改黑体；箭头改 44px 圆形药丸。
+- 页脚与寄语改黑体 ink-2，页脚上方加发丝线。
+- `--home-veil` / `--home-collection-veil` / `--home-caption-shadow` 在 `#lobby` 上调为中性深蓝灰（这三个是 components.css 的场景令牌，不是 slate 令牌；只作用于 `#lobby`，不外溢）。
+
+两处位图用 `opacity: 0` 而非 `display: none` 隐藏：`.home-action-skin` 与导航光带 `.nav-light`。两者本就脱离文档流（绝对定位、`z-index:-1` / `pointer-events:none`），不影响几何；同时 `home-reference.spec.cjs` 断言按钮皮肤可见、且光带跟随指针/焦点移动，`display:none` 会把这两条断言变成永远成立的空断言。皮肤下光带不可见，选中态改由 `.nav-link.active::after` 的下划亮条承担。
+
+既往批注结论全部复测通过（三档视口，`getBoundingClientRect` 屏幕 px）：两按钮左边缘差与箭头中心差均为 0；卡片变换后边界间隔最小 14.60px；箭头药丸到卡片右缘最小 17.05px；药丸与 chevron 中心差 ≤ 0.005px。舞台按 `min(w/1600, h/940)` 缩放，1280×720 时为 0.766，上述值已是缩放后的实测值。
+
+验证：`python3 build.py`；`node --test tests/*.test.cjs`（127 通过）；`home-reference.spec.cjs` 在 `?skin=slate` 下 10 通过，不带 `?skin` 同样 10 通过。不带 `?skin` 的 1672×941 截图与改动前的控制组逐像素比较——单通道最大差 1、无像素差 > 8，小于同一构建两帧之间的 Canvas 噪声底（1.137 % 像素、最大差 1）。截图与逐项实测数据：[output/slate-home-20260913/](../../../output/slate-home-20260913/README.md)。
+
+已知差异：手机布局（`body.touch-layout`）不在本次范围，属设计系统第 5.7 节第二阶段。

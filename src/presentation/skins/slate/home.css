@@ -1,3 +1,604 @@
-/* Test skin "slate" — 主页 / home screen. Empty placeholder.
- * Owned by the home restyle task; tokens and the two dialog shells
- * live in base.css — only add page-specific selectors here. */
+/* Test skin "slate" (磨砂青岩) — 主页 / home screen (template T5).
+ *
+ * The scene painting and its day/night canvas stay exactly as they are; only
+ * the UI layer on top of it is rebuilt in the slate component language:
+ * text wordmark + text tabs with a glowing underline, 36px round icon pills,
+ * a sans title block, one primary / one secondary pill sharing a single
+ * column and alignment axis, a hairline section title over the collection
+ * cards, a 44px round chevron pill and a hairline-topped footer.
+ *
+ * Unlike every other page, home is NOT inside `#modal`, so none of base.css's
+ * `#modal.folio-host` rules reach it — the tokens do (they live on
+ * `html[data-skin="slate"]`), the component rules do not, and are restated
+ * here for `#lobby` / `.topbar` only.
+ *
+ * Tokens are never redefined here. `--home-veil`, `--home-caption-shadow` and
+ * `--home-collection-veil` are components.css scene tokens (not slate tokens);
+ * the brief allows retuning them toward neutral blue-grey, and they are set on
+ * `#lobby` so the retune cannot leak to any other screen.
+ *
+ * Two bitmaps are hidden with `opacity: 0` rather than `display: none`:
+ * `.home-action-skin` and `.nav-light`. Both are out of flow already
+ * (absolutely positioned, `z-index: -1` / `pointer-events: none`), so this
+ * hides them without changing geometry AND keeps
+ * `tests/e2e/home-reference.spec.cjs` meaningful — it asserts the button skin
+ * is visible and that the nav light tracks pointer/focus, both of which a
+ * `display: none` would silently turn into dead assertions.
+ */
+
+/* ---------- scene veil: neutral blue-grey instead of the navy wash ---------- */
+html[data-skin="slate"] body:not(.touch-layout) #lobby {
+  --home-veil: linear-gradient(
+    90deg,
+    #0e131bee 0%,
+    #161c27b8 20%,
+    #161c2700 46%
+  );
+  --home-caption-shadow: 0 2px 8px #070a10cc, 0 0 24px #070a1099;
+  --home-collection-veil: linear-gradient(
+    90deg,
+    #13192400,
+    #131924a1 16%,
+    #131924cc 84%,
+    #13192400
+  );
+}
+
+/* ---------- shared typography ---------- */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  :is(#app.lobby-view .topbar, #lobby)
+  :is(h1, p, small, b, strong, span, div, button, i) {
+  font-family: var(--slate-font);
+  text-transform: none;
+}
+
+/* =========================================================================
+ * 1. TOPBAR — wordmark, text tabs, round icon pills
+ * ====================================================================== */
+html[data-skin="slate"] body:not(.touch-layout) #app.lobby-view .topbar {
+  height: 76px;
+  padding: 0 40px;
+  gap: 28px;
+  background: linear-gradient(180deg, #0e131bc4 0%, #0e131b5c 62%, #0e131b00);
+  border: 0;
+  border-bottom: 1px solid var(--slate-line);
+  color: var(--slate-ink);
+}
+
+/* --- brand wordmark --- */
+html[data-skin="slate"] body:not(.touch-layout) #app.lobby-view .brand {
+  width: auto;
+  min-width: 0;
+  height: 48px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.lobby-view
+  .brand-wordmark {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #app.lobby-view .brand strong {
+  font: 700 20px/1.15 var(--slate-font);
+  letter-spacing: 3px;
+  padding: 0;
+  color: var(--slate-ink);
+  text-shadow: var(--home-caption-shadow);
+}
+html[data-skin="slate"] body:not(.touch-layout) #app.lobby-view .brand small {
+  font: 700 10px/1.2 var(--slate-font);
+  letter-spacing: 3px;
+  padding: 0;
+  color: var(--slate-ink-3);
+  text-shadow: var(--home-caption-shadow);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.lobby-view
+  .brand:hover
+  strong {
+  color: #fff;
+}
+
+/* --- nav: text tabs with a glowing underline bar --- */
+html[data-skin="slate"] body:not(.touch-layout) #app.lobby-view .top-nav {
+  margin-left: 0;
+  gap: 8px;
+  height: 44px;
+  align-items: stretch;
+  padding-left: 30px;
+  border-left: 1px solid var(--slate-line-strong);
+}
+html[data-skin="slate"] body:not(.touch-layout) #app.lobby-view .nav-link {
+  position: relative;
+  min-width: 0;
+  padding: 4px 22px 12px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  font: 500 20px/1.2 var(--slate-font);
+  letter-spacing: 2px;
+  color: var(--slate-ink-3);
+  text-shadow: var(--home-caption-shadow);
+  transition: color 0.15s;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.lobby-view
+  .nav-link:hover {
+  color: #fff;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.lobby-view
+  .nav-link.active {
+  color: #fff;
+  font-weight: 700;
+}
+/* components.css disables this underline in favour of the moving light band;
+ * the slate skin brings it back and parks the band (see header note). */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.lobby-view
+  .top-nav
+  .nav-link.active::after {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 0;
+  height: 3px;
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: 0 0 10px #fff9;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.lobby-view
+  .nav-link:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #app.lobby-view .nav-light {
+  opacity: 0;
+}
+
+/* --- icon buttons: 36px round pills --- */
+html[data-skin="slate"] body:not(.touch-layout) #app.lobby-view .top-actions {
+  gap: 12px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.lobby-view
+  .top-actions
+  .icon-btn {
+  /* NOTE: no `display` here on purpose. components.css hides `#fullscreen-btn`,
+   * `#wind-time` and the `.touch-only` buttons on the lobby with `display:none`,
+   * and the skin layer would out-rank that and resurrect them. */
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 50%;
+  background: var(--slate-pill);
+  box-shadow: none;
+  color: var(--slate-ink-2);
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.lobby-view
+  .top-actions
+  .icon-btn:hover {
+  background: #1b2434d9;
+  border-color: var(--slate-line-strong);
+  color: #fff;
+  transform: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.lobby-view
+  .top-actions
+  .icon-btn:active {
+  transform: scale(0.96);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.lobby-view
+  .top-actions
+  .icon-btn:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 2px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.lobby-view
+  .top-actions
+  .icon-btn
+  > .ui-icon,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.lobby-view
+  .top-actions
+  .icon-btn
+  svg {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+/* =========================================================================
+ * 2. TITLE BLOCK — bitmap logo kept, sans copy under it
+ * ====================================================================== */
+html[data-skin="slate"] body:not(.touch-layout) #lobby .lobby-copy {
+  left: 54px;
+  top: 168px;
+  width: 360px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #lobby .lobby-title {
+  width: 330px;
+  height: 196px;
+  margin: 0 0 4px -20px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #lobby .lobby-chinese {
+  margin: 0;
+  font: 700 28px/1.35 var(--slate-font);
+  letter-spacing: 4px;
+  color: var(--slate-ink);
+  text-shadow: var(--home-caption-shadow);
+}
+html[data-skin="slate"] body:not(.touch-layout) #lobby .lobby-tagline {
+  margin: 8px 0 0;
+  font: 400 18px/1.5 var(--slate-font);
+  letter-spacing: 2px;
+  color: var(--slate-ink-2);
+  text-shadow: var(--home-caption-shadow);
+}
+/* Save status joins the flow instead of being pinned at a fixed 318px, so the
+ * whole block keeps its rhythm at the new (smaller) type scale. */
+html[data-skin="slate"] body:not(.touch-layout) #lobby .lobby-desc {
+  position: static;
+  top: auto;
+  left: auto;
+  margin: 10px 0 0;
+  max-width: 340px;
+  font: 400 15px/1.55 var(--slate-font);
+  letter-spacing: 1px;
+  color: var(--slate-ink-3);
+  text-shadow: var(--home-caption-shadow);
+}
+
+/* =========================================================================
+ * 3. ACTION PILLS — one column, one alignment axis
+ *
+ * Both buttons use the same grid template and the same *content box* span
+ * (24px from the left edge to 280px), so the icon slot, the label column and
+ * the arrow slot land on identical x axes even though the pills are 320 and
+ * 300 wide. `home-reference.spec.cjs` asserts the two arrow centres agree to
+ * within 1px; this is what keeps that true.
+ * ====================================================================== */
+html[data-skin="slate"] body:not(.touch-layout) #lobby .lobby-actions {
+  width: 360px;
+  margin: 30px 0 0;
+  gap: 14px;
+  align-items: flex-start;
+}
+html[data-skin="slate"] body:not(.touch-layout) #lobby .home-action {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 26px;
+  align-items: center;
+  gap: 12px;
+  border-radius: 999px;
+  text-shadow: none;
+  clip-path: none;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    transform 0.15s;
+}
+html[data-skin="slate"] body:not(.touch-layout) #lobby #start-btn {
+  width: 320px;
+  height: 64px;
+  padding: 0 40px 0 24px;
+  border: 1px solid #8cc4ff99;
+  background: linear-gradient(180deg, #4a8be6, #2c66c4);
+  color: #fff;
+  font: 700 22px/1 var(--slate-font);
+  letter-spacing: 3px;
+  box-shadow: 0 10px 26px #060c16a6;
+}
+html[data-skin="slate"] body:not(.touch-layout) #lobby #quick-btn {
+  width: 300px;
+  height: 56px;
+  padding: 0 20px 0 24px;
+  border: 1px solid var(--slate-pill-line);
+  background: var(--slate-pill);
+  color: var(--slate-ink);
+  font: 600 19px/1 var(--slate-font);
+  letter-spacing: 3px;
+  box-shadow: 0 8px 20px #060c1680;
+}
+html[data-skin="slate"] body:not(.touch-layout) #lobby .home-action-skin {
+  opacity: 0;
+}
+html[data-skin="slate"] body:not(.touch-layout) #lobby .home-action-symbol,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #lobby
+  #quick-btn
+  .home-action-symbol {
+  width: 26px;
+  height: 26px;
+  justify-self: center;
+  color: currentColor;
+}
+html[data-skin="slate"] body:not(.touch-layout) #lobby .home-action-arrow {
+  justify-self: center;
+}
+html[data-skin="slate"] body:not(.touch-layout) #lobby .home-action-arrow svg {
+  width: 26px;
+  height: 20px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #lobby .home-action-label {
+  text-align: center;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #lobby
+  .home-action:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 3px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #lobby .home-action:active {
+  transform: scale(0.98);
+  filter: none;
+}
+@media (hover: hover) {
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #lobby
+    #start-btn:not(:disabled):hover {
+    background: linear-gradient(180deg, #5b98ee, #3572cf);
+    filter: none;
+    transform: none;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #lobby
+    #quick-btn:not(:disabled):hover {
+    background: #1b2434e6;
+    border-color: var(--slate-line-strong);
+    filter: none;
+    transform: none;
+  }
+}
+
+/* =========================================================================
+ * 4. COLLECTION — hairline section title, framed cards, 44px chevron pill
+ * ====================================================================== */
+html[data-skin="slate"] body:not(.touch-layout) #lobby .lobby-collection {
+  right: 30px;
+  bottom: 126px;
+  width: 452px;
+  height: 244px;
+}
+/* 76px reserves the 44px chevron pill plus a gap that still measures ≥ 12 CSS
+ * px after the 1600×940 stage is scaled down to 0.766 at 1280×720. */
+html[data-skin="slate"] body:not(.touch-layout) #lobby #lobby-library-btn {
+  padding: 0 76px 0 0;
+  font: 500 16px/1.4 var(--slate-font);
+  color: var(--slate-ink);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #lobby
+  #lobby-library-btn::before {
+  inset: -20px -16px -18px -30px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #lobby
+  #lobby-library-btn:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #lobby
+  .home-collection-heading {
+  display: block;
+  height: auto;
+  margin: 0 0 14px;
+  padding: 0 0 10px;
+  /* `--slate-line-strong` rather than `--slate-line`: this hairline sits on
+   * painted scene art, not on the matte panel the token was tuned for. */
+  border-bottom: 1px solid var(--slate-line-strong);
+  font: 700 20px/1.2 var(--slate-font);
+  letter-spacing: 2px;
+  color: #fff;
+  text-shadow: var(--home-caption-shadow);
+}
+html[data-skin="slate"] body:not(.touch-layout) #lobby .home-collection-cards {
+  gap: 22px;
+  height: 190px;
+}
+/* Stagger and tilt are the established home language and stay untouched; only
+ * the container chrome changes. */
+html[data-skin="slate"] body:not(.touch-layout) #lobby .home-collection-card {
+  height: 180px;
+  border-radius: 10px;
+  border: 1.5px solid var(--slate-card-line);
+  background: var(--slate-card-base);
+  box-shadow: 0 8px 20px #0007;
+  overflow: hidden;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #lobby
+  .home-collection-card:nth-child(2) {
+  height: 190px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #lobby
+  .home-collection-card:nth-child(3) {
+  height: 200px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #lobby
+  .home-collection-card
+  img {
+  object-fit: cover;
+  filter: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #lobby
+  .home-collection-card
+  > span {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 6px 9px;
+  font: 500 15px/1.3 var(--slate-font);
+  letter-spacing: 1px;
+  color: var(--slate-ink);
+  background: linear-gradient(#0b0f1600, #0b0f16e8 68%);
+  text-shadow: 0 1px 4px #000a;
+}
+html[data-skin="slate"] body:not(.touch-layout) #lobby .home-collection-arrow {
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translateY(-50%);
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 50%;
+  background: var(--slate-pill);
+  color: var(--slate-ink-2);
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #lobby
+  .home-collection-arrow
+  svg {
+  width: 20px;
+  height: 20px;
+}
+@media (hover: hover) {
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #lobby
+    #lobby-library-btn:hover
+    .home-collection-arrow {
+    background: #1b2434e6;
+    border-color: var(--slate-line-strong);
+    color: #fff;
+  }
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #lobby
+  #lobby-library-btn:focus-visible
+  .home-collection-arrow {
+  border-color: var(--slate-blue);
+  color: #fff;
+  box-shadow: 0 0 0 1px var(--slate-blue) inset;
+}
+html[data-skin="slate"] body:not(.touch-layout) #lobby .home-collection-note {
+  right: 34px;
+  top: 268px;
+  font: 400 16px/1.5 var(--slate-font);
+  font-style: normal;
+  letter-spacing: 2px;
+  color: var(--slate-ink-2);
+  text-shadow: var(--home-caption-shadow);
+}
+
+/* =========================================================================
+ * 5. VERSE + FOOTER
+ * ====================================================================== */
+html[data-skin="slate"] body:not(.touch-layout) #lobby .home-verse {
+  font: 400 15px/1.8 var(--slate-font);
+  letter-spacing: 1px;
+  color: var(--slate-ink-2);
+  text-shadow: var(--home-caption-shadow);
+}
+html[data-skin="slate"] body:not(.touch-layout) #lobby .home-verse.lower {
+  font-style: normal;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #lobby
+  .home-verse.lower::before {
+  background: var(--slate-line-strong);
+}
+html[data-skin="slate"] body:not(.touch-layout) #lobby .lobby-bottom {
+  left: 54px;
+  right: 52px;
+  bottom: 40px;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--slate-line);
+  font: 500 16px/1.5 var(--slate-font);
+  color: var(--slate-ink-2);
+  text-shadow: var(--home-caption-shadow);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #lobby
+  .lobby-bottom
+  :is(b, span) {
+  font: inherit;
+  letter-spacing: 2px;
+  color: inherit;
+}
+html[data-skin="slate"] body:not(.touch-layout) #lobby .home-footer-emblem {
+  color: var(--slate-ink-3);
+  filter: none;
+}
+html[data-skin="slate"] body:not(.touch-layout) #lobby .lobby-bottom small {
+  top: 40px;
+  font: 400 12px/1.4 var(--slate-font);
+  letter-spacing: 1px;
+  color: var(--slate-ink-3);
+}
+html[data-skin="slate"] body:not(.touch-layout) #lobby #atelier-open {
+  font: 400 12px/1.4 var(--slate-font);
+  letter-spacing: 1px;
+  color: var(--slate-ink-3);
+}
+
+/* Respect the existing reduced-motion contract: no new animation is added,
+ * and every transition above is dropped with the rest. */
+html[data-skin="slate"]
+  body.reduced-motion:not(.touch-layout)
+  :is(#app.lobby-view .topbar, #lobby)
+  :is(button, .home-collection-arrow, .home-collection-card, .nav-link) {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    :is(#app.lobby-view .topbar, #lobby)
+    :is(button, .home-collection-arrow, .home-collection-card, .nav-link) {
+    transition: none;
+  }
+}
