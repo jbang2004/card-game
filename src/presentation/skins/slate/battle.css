@@ -1,3 +1,1025 @@
-/* Test skin "slate" — 战斗界面 / battle screen. Empty placeholder.
- * Owned by the battle restyle task; tokens and the two dialog shells
- * live in base.css — only add page-specific selectors here. */
+/* Test skin "slate" (磨砂青岩) — desktop battle HUD (design system 5.4).
+ *
+ * Scope: every rule starts with `html[data-skin="slate"] body:not(.touch-layout)`.
+ * The battle screen is template T5 — the boss scene, the cards, the badge SVGs,
+ * the mana gems, the target lines and every animation stay exactly as the game
+ * renders them; only the HUD chrome around them is restated in the slate
+ * component language (pills, chips, hairlines, rail nodes, floating shells).
+ *
+ * Two structural facts shape this file:
+ *
+ *  1. `#battle` is an absolutely positioned 1600×940 logical canvas that
+ *     `#app` scales with `--scale`. Geometry here is in that logical space, so
+ *     hit areas shrink with the window: 56px is 45.8 device px at the narrowest
+ *     desktop viewport (1360×768) that still uses this layout. Below
+ *     1360px wide or 700px tall the battle switches to `body.touch-layout`
+ *     (`compact-desktop`), which belongs to the phase-2 mobile task.
+ *
+ *  2. `tests/e2e/action-feedback.spec.cjs` asserts that `#power-btn`,
+ *     `#contract-open`, `#end-turn` and `#touch-cancel` each compute
+ *     `background-image: none` and stay at least 43×43 device px. Every glow
+ *     and gradient on those four controls therefore lives on a pseudo-element,
+ *     never on the control itself. Do not move them back onto the element.
+ *
+ * Token candidates raised for base.css are marked `token candidate` inline.
+ */
+
+/* ---------------------------------------------------------------------------
+ * 1. Topbar, battle view only
+ * The topbar is shared with the lobby and the home task owns its default look;
+ * everything here is scoped to `#app.battle-view`, the class `ui.js setView()`
+ * puts on `#app` while a battle is on screen.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .topbar {
+  background: linear-gradient(#0d1420cc, #0d142000);
+  border: 0;
+  border-bottom: 1px solid var(--slate-line);
+  box-shadow: none;
+  color: var(--slate-ink);
+  font-family: var(--slate-font);
+}
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .brand strong {
+  font: 700 20px/1.1 var(--slate-font);
+  letter-spacing: 4px;
+  color: #fff;
+  text-shadow: 0 2px 8px #0008;
+}
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .brand small {
+  font: 500 10px/1.6 var(--slate-font);
+  letter-spacing: 3px;
+  color: var(--slate-ink-3);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .top-actions
+  .icon-btn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 50%;
+  background: var(--slate-pill);
+  box-shadow: none;
+  color: var(--slate-ink-2);
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .top-actions
+  .icon-btn
+  svg {
+  width: 18px;
+  height: 18px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .top-actions
+  .icon-btn:hover {
+  background: #1b2434d9;
+  border-color: var(--slate-line-strong);
+  color: #fff;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .top-actions
+  .icon-btn:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+ * 2. Turn label — a centred dark chip that hugs its text
+ * `.turn-number` is laid out at left 630 / width 340, i.e. centred on the
+ * 1600px canvas at x=800. `left:50%` keeps that centre while the chip shrinks
+ * to its content.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .turn-number {
+  left: 50%;
+  width: max-content;
+  max-width: 420px;
+  height: 36px;
+  padding: 0 22px;
+  transform: translateX(-50%);
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  box-shadow: none;
+  color: #fff;
+  font: 600 15px/1 var(--slate-font);
+  letter-spacing: 1px;
+  text-shadow: none;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------------
+ * 3. Utility tabs — dark pill chips with an icon
+ * ------------------------------------------------------------------------ */
+/* `#battle` is a 1600×940 canvas scaled by `--scale`, so a control sized in
+ * logical px shrinks on smaller desktop windows. This keeps every command
+ * chip at 44 real device px down to the 1360×700 floor of the desktop layout,
+ * the way `battle.css` already does for `#touch-cancel`.
+ * token candidate: --slate-hud-hit */
+html[data-skin="slate"] body:not(.touch-layout) #battle {
+  --slate-battle-hit: max(44px, calc(44px / var(--scale, 1)));
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .utility-tab {
+  min-height: var(--slate-battle-hit);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 0 16px;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  box-shadow: none;
+  color: var(--slate-ink-2);
+  font: 500 14px/1 var(--slate-font);
+  letter-spacing: 1px;
+  text-shadow: none;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .utility-tab svg {
+  width: 17px;
+  height: 17px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .utility-tab:hover {
+  background: #1b2434d9;
+  border-color: var(--slate-line-strong);
+  color: #fff;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .utility-tab[aria-expanded="true"] {
+  border-color: #8cc4ff99;
+  background: #16243a;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .utility-tab:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 3px;
+}
+
+/* ---------------------------------------------------------------------------
+ * 4. Log and boss dossier — floating shells (12px radius, matte, hairlines)
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  :is(.log-panel, .boss-panel) {
+  /* legacy `refinement.css` pins .log-panel to 246px; the shell hugs content */
+  height: auto;
+  padding: 18px 20px 20px;
+  border: 1px solid var(--slate-line-strong);
+  border-radius: 12px;
+  background: var(--slate-material);
+  background-attachment: scroll;
+  box-shadow: 0 24px 60px #000a;
+  color: var(--slate-ink);
+  font-family: var(--slate-font);
+  backdrop-filter: none;
+  clip-path: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  :is(.log-panel, .boss-panel)::before,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  :is(.log-panel, .boss-panel)::after {
+  content: none;
+}
+/* `panels.js` appends four SVG corner brackets to every `.crafted-panel`;
+ * the slate shell is a plain rounded rectangle (design system §1.2). */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  :is(.log-panel, .boss-panel)
+  > .panel-corner-trim {
+  display: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .log-panel
+  .section-label {
+  display: block;
+  margin: 0 0 10px;
+  padding: 0 0 10px;
+  border-bottom: 1px solid var(--slate-line);
+  color: #fff;
+  font: 700 16px/1.3 var(--slate-font);
+  letter-spacing: 2px;
+}
+/* `ui.js` renders the last eight entries as `.log-line` divs inside a legacy
+ * bottom-anchored flex column with a fade mask. The slate panel reads as a
+ * hairline list that flows from the top instead. */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .battle-log {
+  display: block;
+  height: auto;
+  max-height: 296px;
+  margin: 0;
+  gap: 0;
+  overflow: auto;
+  mask-image: none;
+  -webkit-mask-image: none;
+  scrollbar-width: thin;
+  scrollbar-color: #ffffff33 transparent;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .battle-log
+  .log-line {
+  margin: 0;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--slate-line);
+  color: var(--slate-ink-2);
+  font: 400 13px/1.6 var(--slate-font);
+  letter-spacing: 0;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .battle-log
+  .log-line:last-child {
+  border-bottom: 0;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .battle-log
+  .log-line.log-turn {
+  color: #fff;
+  font-weight: 600;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .battle-log
+  b {
+  color: var(--slate-blue);
+  font-weight: 600;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .boss-panel
+  .boss-order {
+  color: var(--slate-ink-3);
+  font: 500 11px/1.5 var(--slate-font);
+  letter-spacing: 2px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .boss-panel
+  :is(h3, .boss-info-name) {
+  margin: 10px 0 4px;
+  color: #fff;
+  font: 700 22px/1.35 var(--slate-font);
+  letter-spacing: 1px;
+  text-shadow: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .boss-panel
+  .chapter-name {
+  margin: 0 0 14px;
+  color: var(--slate-ink-3);
+  font: 400 13px/1.6 var(--slate-font);
+  letter-spacing: 0;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .boss-panel
+  :is(.boss-power-info, .phase-info) {
+  margin: 0;
+  padding: 14px 0 0;
+  border: 0;
+  border-top: 1px solid var(--slate-line);
+  font: 400 13px/1.7 var(--slate-font);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .boss-panel
+  .boss-power-info {
+  padding-bottom: 14px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .boss-panel
+  .boss-power-info
+  strong {
+  color: var(--slate-blue);
+  font: 600 15px/1.5 var(--slate-font);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .boss-panel
+  :is(.boss-power-info, .phase-info)
+  p {
+  margin: 6px 0 0;
+  color: var(--slate-ink-2);
+  font: 400 13px/1.7 var(--slate-font);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .boss-panel
+  .phase-info
+  small {
+  color: var(--slate-ink);
+  font: 600 11px/1.6 var(--slate-font);
+  letter-spacing: 1.5px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .boss-panel
+  .relic-slots {
+  gap: 8px;
+  margin-top: 14px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .boss-panel
+  .relic-slot {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 50%;
+  background: var(--slate-pill);
+  box-shadow: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * 5. Heroes — the portrait becomes a 10px bordered card, the half-surround
+ * plaque becomes a dark name pill. Size, aspect and the ATK/HP/mana/armour
+ * badge SVGs are untouched; `.hero-name` keeps its symmetric 17.8% insets so
+ * the `ui-alignment` centring assertion still holds.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  :is(.hero.enemy, .hero.player) {
+  border: 1.5px solid var(--slate-card-line);
+  border-radius: 10px;
+  background: var(--slate-card-base);
+  box-shadow: 0 8px 20px #0007;
+  color: var(--slate-ink);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  :is(.hero.enemy, .hero.player)
+  .hero-card-inner {
+  inset: 3px;
+  border-radius: 7px;
+  background: var(--slate-card-base);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  :is(.hero.enemy, .hero.player)
+  .hero-card-plaque {
+  display: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  :is(.hero.enemy, .hero.player)
+  .hero-name {
+  padding: 1px 5%;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  box-shadow: 0 3px 10px #0008;
+  clip-path: none;
+  color: #fff;
+  font: 600 clamp(10px, 7cqw, 18px) / 1.15 var(--slate-font);
+  letter-spacing: 1px;
+  text-shadow: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  :is(.hero.enemy, .hero.player)
+  .hero-phase {
+  padding: 3px 10px;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  color: var(--slate-ink-2);
+  font: 500 11px/1.3 var(--slate-font);
+  letter-spacing: 1px;
+}
+/* The brief also asks for the enemy "◆ 0/5" readout as a chip. That element
+ * (`#enemy-mana`, a rotated 10px square plus `mana / maxMana`) was removed from
+ * the game in commit 39ac031 — it is not in `src/template.html`, `src/ui.js` or
+ * the built page at this commit, and enemy mana is now the `.hero-mana` badge
+ * inside the portrait. There is nothing left to restyle, so no rule is written
+ * for it rather than shipping a dead selector. */
+
+/* ---------------------------------------------------------------------------
+ * 6. Right rail — hero power as a 56px rail node, contract as a pill chip,
+ * deck counters as pills. The rail reads top to bottom:
+ * tabs 18 · enemy deck 120 · power 204 · contract 276 · player deck 712 ·
+ * end turn 776 · mana 874.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body:not(.touch-layout) #battle .power-button {
+  display: grid;
+  grid-template-columns: max(56px, var(--slate-battle-hit)) auto auto;
+  grid-template-rows: max(56px, var(--slate-battle-hit));
+  align-items: center;
+  justify-content: start;
+  gap: 0;
+  width: max-content;
+  height: max(56px, var(--slate-battle-hit));
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  /* the glow lives on ::before — this control must compute background-image:none */
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+  color: #fff;
+  font-family: var(--slate-font);
+  text-shadow: none;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .power-button::before {
+  content: "";
+  grid-area: 1 / 1;
+  width: max(56px, var(--slate-battle-hit));
+  height: max(56px, var(--slate-battle-hit));
+  box-sizing: border-box;
+  border: 1px solid #ffffff3a;
+  border-radius: 50%;
+  /* same node as settings.css `.settings-nav button.active::before` */
+  background: radial-gradient(
+    circle,
+    #4d93ff 0 12px,
+    #1a3d78 13px 17px,
+    #0d1523 18px 22px,
+    #212c3d 23px
+  );
+  box-shadow:
+    0 0 24px #4d93ff55,
+    inset 0 0 8px #0009;
+  transition: box-shadow 0.18s;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .power-button > svg {
+  grid-area: 1 / 1;
+  z-index: 1;
+  width: 26px;
+  height: 26px;
+  margin: auto;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .power-button > span {
+  grid-area: 1 / 2;
+  position: static;
+  display: flex;
+  align-items: center;
+  width: auto;
+  max-width: 128px;
+  height: 32px;
+  margin-left: 12px;
+  padding: 0 10px 0 14px;
+  transform: none;
+  border: 1px solid var(--slate-pill-line);
+  border-right: 0;
+  border-radius: 999px 0 0 999px;
+  background: var(--slate-pill);
+  color: #fff;
+  font: 600 15px/1 var(--slate-font);
+  letter-spacing: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .power-button > b {
+  grid-area: 1 / 3;
+  position: static;
+  display: flex;
+  align-items: center;
+  width: auto;
+  height: 32px;
+  padding: 0 14px 0 10px;
+  border: 1px solid var(--slate-pill-line);
+  border-left: 0;
+  border-radius: 0 999px 999px 0;
+  background: var(--slate-pill);
+  box-shadow: inset 1px 0 0 var(--slate-line);
+  color: var(--slate-blue);
+  font: 700 15px/1 var(--slate-font);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .power-button:hover:not(:disabled)::before {
+  box-shadow:
+    0 0 32px #4d93ff88,
+    inset 0 0 8px #0009;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .power-button:disabled {
+  opacity: 1;
+  color: var(--slate-ink-3);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .power-button:disabled::before {
+  border-color: #ffffff1a;
+  background: radial-gradient(
+    circle,
+    #3a4557 0 12px,
+    #232c3a 13px 17px,
+    #0d1523 18px 22px,
+    #1a212d 23px
+  );
+  box-shadow: inset 0 0 8px #0009;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .power-button:disabled
+  > svg {
+  filter: grayscale(0.6) drop-shadow(0 1px 2px #00000099);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .power-button:disabled
+  > :is(span, b) {
+  border-color: #ffffff1a;
+  color: var(--slate-ink-3);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .power-button:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 4px;
+}
+
+html[data-skin="slate"] body:not(.touch-layout) #battle .contract-open {
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 2px 10px;
+  padding: 8px 18px 8px 12px;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  box-shadow: none;
+  color: #fff;
+  font-family: var(--slate-font);
+  text-shadow: none;
+  overflow: hidden;
+  min-height: var(--slate-battle-hit);
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .contract-open:hover {
+  background: #1b2434d9;
+  border-color: var(--slate-line-strong);
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .contract-label {
+  color: #fff;
+  font: 600 14px/1.3 var(--slate-font);
+  letter-spacing: 1px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .contract-open small {
+  color: var(--slate-ink-3);
+  font: 400 12px/1.3 var(--slate-font);
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .contract-open.ready {
+  border-color: #8cc4ff99;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .contract-open.ready
+  small {
+  color: var(--slate-blue);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .contract-open:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 3px;
+}
+
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  :is(.enemy-deck, .player-deck) {
+  display: flex;
+  place-items: initial;
+  align-items: center;
+  gap: 8px;
+  right: auto;
+  width: max-content;
+  height: 38px;
+  padding: 0 16px 0 10px;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  box-shadow: none;
+  transform: none;
+  /* same plane as the other HUD chips, so the top rail counter is not buried
+     under the topbar veil */
+  z-index: 18;
+  color: var(--slate-ink);
+  font-family: var(--slate-font);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .enemy-deck {
+  /* joins the top rail beside the two utility tabs (which start at x=1270).
+   * It cannot sit further right: the log and boss shells occupy x≥1346 from
+   * y=76 downwards, and would cover the counter whenever one is open. */
+  left: 1112px;
+  top: 21px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .player-deck {
+  /* right rail, clear of the widest hand fan (which ends near x=1350) */
+  left: 1396px;
+  top: 712px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  :is(.enemy-deck, .player-deck)
+  > [data-icon] {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  :is(.enemy-deck, .player-deck)
+  svg {
+  width: 20px;
+  height: 20px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  :is(.enemy-deck, .player-deck)
+  .deck-count {
+  position: static;
+  top: auto;
+  left: auto;
+  width: auto;
+  transform: none;
+  color: #fff;
+  font: 700 15px/1 var(--slate-font);
+  font-variant-numeric: tabular-nums;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  :is(.enemy-deck, .player-deck)
+  .deck-caption {
+  /* legacy `tavern.css` hides the caption; the pill wants it back */
+  display: inline;
+  position: static;
+  top: auto;
+  left: auto;
+  width: auto;
+  transform: none;
+  color: var(--slate-ink-3);
+  font: 400 12px/1 var(--slate-font);
+  letter-spacing: 0.5px;
+}
+
+/* ---------------------------------------------------------------------------
+ * 7. End turn and mana
+ * The primary pill's gradient sits on ::before so the control itself keeps
+ * `background-image: none` (see the header note).
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body:not(.touch-layout) #battle .turn-controls {
+  gap: 10px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .end-turn {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  width: 160px;
+  height: max(56px, var(--slate-battle-hit));
+  padding: 0 20px;
+  border: 1px solid #8cc4ff99;
+  border-radius: 999px;
+  outline: 0;
+  background: none;
+  box-shadow: none;
+  color: #fff;
+  font: 600 18px/1 var(--slate-font);
+  letter-spacing: 2px;
+  text-shadow: none;
+  transition: border-color 0.15s;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .end-turn::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #4a8be6, #2c66c4);
+  transition: background 0.15s;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .end-turn:hover:not(:disabled)::before {
+  background: linear-gradient(180deg, #5b98ee, #3572cf);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .end-turn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .end-turn.ready-end {
+  border-color: var(--slate-blue);
+  color: #fff;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .end-turn:disabled {
+  border-color: #ffffff1a;
+  background: none;
+  color: var(--slate-ink-3);
+  opacity: 1;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .end-turn:disabled::before {
+  background: var(--slate-pill);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .end-turn:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 4px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .turn-shortcut {
+  color: var(--slate-ink-3);
+  font: 400 12px/1.4 var(--slate-font);
+  letter-spacing: 1px;
+  opacity: 1;
+  text-shadow: none;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .mana-panel {
+  color: var(--slate-ink);
+  text-shadow: none;
+  font-family: var(--slate-font);
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .mana-caption > span {
+  color: var(--slate-ink-3);
+  font: 400 12px/1.4 var(--slate-font);
+  letter-spacing: 1px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .mana-caption strong {
+  color: #fff;
+  font: 700 22px/1.2 var(--slate-font);
+}
+
+/* ---------------------------------------------------------------------------
+ * 8. Hand label and empty-board line
+ * `.hand-label` is `display:none` on the desktop battle screen (components.css
+ * `#app.battle-view`); it is styled here so the chip is correct wherever the
+ * label is shown.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body:not(.touch-layout) #battle .hand-label {
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 14px;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  color: var(--slate-ink-2);
+  font: 500 13px/1 var(--slate-font);
+  letter-spacing: 1px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hand-label b {
+  color: #fff;
+  font: 700 14px/1 var(--slate-font);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  .board-empty {
+  color: var(--slate-ink-3);
+  font: 400 14px/1.5 var(--slate-font);
+  letter-spacing: 2px;
+  opacity: 1;
+  text-shadow: 0 2px 10px #0009;
+}
+
+/* ---------------------------------------------------------------------------
+ * 9. Message rails — one dark pill language for every transient bar
+ * All five sit on the same centre (x = 800 on the 1600px canvas). `#toast` is
+ * the exception that proves the rule: `ui.js positionBattleNotice()` writes
+ * `left/top/width` inline for the desktop rail {x:370, w:860}, and inline
+ * styles outrank cascade layers, so the pill is narrowed with `max-width`
+ * (which beats `width`) and re-centred with a matching `margin-left`.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  :is(#hint, #toast, #combat-preview, #action-status, #touch-target-bar) {
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 9px 20px;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  box-shadow: 0 10px 30px #0008;
+  color: var(--slate-ink);
+  font: 500 16px/1.4 var(--slate-font);
+  letter-spacing: 0.5px;
+  text-align: center;
+  text-shadow: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  :is(#hint, #combat-preview, #action-status, #touch-target-bar) {
+  left: 50%;
+  right: auto;
+  width: max-content;
+  max-width: 520px;
+  margin-left: 0;
+  transform: translateX(-50%);
+}
+/* `#toast` keeps the inline left:370/width:860 the notice rail writes. */
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view #toast {
+  max-width: 520px;
+  margin-left: 170px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  #toast[data-kind="error"] {
+  border-color: #e3899199;
+  color: #ffd9dc;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  #combat-preview {
+  height: auto;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  #combat-preview
+  small {
+  display: block;
+  color: var(--slate-ink-3);
+  font: 400 13px/1.5 var(--slate-font);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  #touch-target-bar {
+  height: auto;
+  gap: 12px;
+  padding: 6px 8px 6px 20px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  #touch-target-text {
+  color: var(--slate-ink);
+  font: 500 16px/1.4 var(--slate-font);
+  letter-spacing: 0.5px;
+  text-align: center;
+  text-shadow: none;
+}
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view #touch-cancel {
+  display: grid;
+  place-items: center;
+  /* battle.css sets `flex: 0 0 52px`, which clips the two-character label once
+   * the pill has padding. Keep the same 44px device-pixel floor, but let the
+   * chip size to its text. */
+  flex: 0 0 auto;
+  min-width: max(56px, calc(44px / var(--scale, 1)));
+  padding: 0 16px;
+  white-space: nowrap;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  box-shadow: none;
+  color: var(--slate-ink-2);
+  font: 500 14px/1 var(--slate-font);
+  letter-spacing: 1px;
+  text-shadow: none;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  #touch-cancel:hover {
+  background: #1b2434d9;
+  border-color: var(--slate-line-strong);
+  color: #fff;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  #touch-cancel:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 3px;
+}
+
+/* ---------------------------------------------------------------------------
+ * 10. Motion budget — the skin adds transitions only, and drops them under the
+ * platform setting and the in-game "reduce motion" preference.
+ * ------------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #app.battle-view
+    :is(
+      .icon-btn,
+      .utility-tab,
+      .power-button::before,
+      .contract-open,
+      .end-turn,
+      .end-turn::before,
+      #touch-cancel
+    ) {
+    transition: none;
+  }
+}
+html[data-skin="slate"]
+  body.reduced-motion:not(.touch-layout)
+  #app.battle-view
+  :is(
+    .icon-btn,
+    .utility-tab,
+    .power-button::before,
+    .contract-open,
+    .end-turn,
+    .end-turn::before,
+    #touch-cancel
+  ) {
+  transition: none;
+}
