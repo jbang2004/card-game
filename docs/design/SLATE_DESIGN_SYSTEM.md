@@ -24,6 +24,7 @@
 | `--slate-ink` `--slate-ink-2` `--slate-ink-3` | #f3f6fa / #c3ccd8 / #8e99a9 | 主文字 / 次文字 / 弱文字 |
 | `--slate-blue` `--slate-blue-deep` | #8cc4ff / #2f72d6 | 强调文字、选中描边 / 主按钮、选中填充 |
 | `--slate-line` `--slate-line-strong` | #ffffff26 / #ffffff40 | 发丝线 / 竖线分隔、浮层边 |
+| `--slate-line-art` | #ffffff59 | 场景原画（T5）上的发丝线，`--slate-line` 压在画面上会看不见 |
 | `--slate-pill` `--slate-pill-line` | #121824b3 / #ffffff2e | 深色药丸底 / 边 |
 | `--slate-card-line` `--slate-card-base` | #d6dfe9aa / #0f141d | 卡片描边 / 卡片底 |
 | `--slate-material` | 三层径向渐变 + 45° 斜纹 + 160° 线性渐变 | 页面壳与浮层壳底 |
@@ -131,6 +132,11 @@
 4. 每次修改后 `python3 build.py`；用分配的端口 `python3 -m http.server <port> --bind 127.0.0.1` 在后台服务；Playwright 从 `/Users/yijun/codebase/card-game/node_modules/playwright` 以绝对路径 require，Chrome 为 `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`；页面就绪条件 `window.Emberfall && !AtelierWorld.loading`（120 s 超时），截图前解码 `#modal img`。
 5. 验收：按简报尺寸截图，覆盖 hover/选中/禁用与真实交互；同时截一张不带 `?skin` 的同页确认原主题不变（MD5 或像素差在卡图区以外为零）。`node --test tests/*.test.cjs` 必须通过；简报点名的 e2e 规格在 `?skin=slate` 下运行一次（可通过在 spec 里临时加查询参数的本地副本，不提交该副本），记录通过/失败与原因。
 6. 完成后在 worktree 分支提交（信息前缀 `feat(slate): …`，结尾 `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`），不推送。最终报告固定包含：worktree 路径与分支、提交哈希、改动文件、截图目录、测试结果、与简报的偏差及原因、需要协调者合并的共享改动、已知差异。
+7. **皮肤层无条件胜出，隐藏要重说一遍。** `skin` 排在 `components` 之后，层级先于选择器权重结算：组件层里任何「必须保持隐藏」的 `display: none`，只要皮肤规则命中同一元素、或被某条裸后代选择器扫到，就会被皮肤的 `display` 覆盖而复活。命中这类元素时在皮肤规则里重新声明 `display: none`。
+8. **`.crafted-panel` 下不要用裸 `span` / `svg` 后代选择器。** `panels.js` 会往 `.crafted-panel` 注入 `.panel-corner-trim`（内含 `span` / `svg`），裸选择器会连它一起命中，把四角装饰重新画出来。一律带类名限定（如 `.help-section > svg`、`.atlas-number svg`）。
+9. **药丸按钮上的 `::before` 必须自带 `display`。** base.css 对 `:is(.gold-btn, .ghost-btn, .text-btn, .library-inspect)::before / ::after` 统一写了 `content: none; display: none`，页面规则若要在 `.ghost-btn` / `.gold-btn` 上另建 `::before`（导航节点、指示点等），除 `content` 外还要声明 `display`；`components.css` 同时给这两个伪元素留了 `opacity: .14`，需要一并重置为 `1`，否则节点会发暗（手册导航轨曾因此只剩微光）。
+10. **战斗中弹窗的桌面验收尺寸下限是 1360×700。** `src/mobile-view.js` 会把宽 < 1360 或高 < 700 的战场视图切到 `body.touch-layout`，桌面皮肤规则随即失效。因此涉及对局内弹窗的桌面验收只取 1360×700 及以上，窄桌面统一用 1440×900。
+11. **`.reference-page-brand` 由 base.css 隐藏。** T5 场景页若需要文字字标，在自己的页面文件里重新打开并定位（参考 map.css 左下角字标）。
 
 ## 7. 协调者验收清单
 

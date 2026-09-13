@@ -103,6 +103,12 @@ html[data-skin="slate"]
   border-radius: 50%;
   border: 2px solid #aab4c3;
   background: #1c2330;
+  /* The chapter buttons are `.ghost-btn`s, and `components.css` gives every
+   * `:is(.gold-btn, .ghost-btn)::before` an `opacity: 0.14` inset rim. base.css
+   * only switches that pseudo off (`content: none; display: none`), so once
+   * this rule turns it back on the 0.14 comes with it and both the hollow dot
+   * and the active glow render nearly invisible. Restate the opacity. */
+  opacity: 1;
   transition:
     width 0.2s,
     height 0.2s,
