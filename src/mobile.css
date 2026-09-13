@@ -107,55 +107,18 @@ body.touch-layout #battle {
   inset: 0;
   overflow: hidden;
 }
-body.touch-layout .campaign-panel,
 body.touch-layout .enemy-hand,
-body.touch-layout .hero-caption,
-body.touch-layout .hero-side-label,
 body.touch-layout .enemy-deck,
 body.touch-layout .player-deck,
-body.touch-layout .board-props,
-body.touch-layout .battle-bottom,
-body.touch-layout #log-toggle,
-body.touch-layout #intel-toggle,
 body.touch-layout .log-panel,
-body.touch-layout .boss-panel,
-body.touch-layout #combat-preview,
-body.touch-layout #hint,
-body.touch-layout .mana-desc {
+body.touch-layout .boss-panel {
   display: none;
 }
 body.touch-layout .arena {
   pointer-events: auto;
   z-index: 1;
 }
-body.touch-layout #touch-match-chip {
-  position: absolute;
-  display: block;
-  color: #e2c69a;
-  padding: 5px 0;
-  z-index: 4;
-  pointer-events: none;
-  overflow: hidden;
-}
-body.touch-layout #touch-match-chip small {
-  display: block;
-  font: 10px var(--sans);
-  letter-spacing: 1.2px;
-  color: #aa8d66;
-  margin-bottom: 6px;
-}
-body.touch-layout #touch-match-chip strong {
-  display: block;
-  font: 600 13px/1.4 var(--serif);
-  letter-spacing: 0.5px;
-  text-shadow: 0 2px 5px #201219;
-}
-body.touch-layout #touch-match-chip span {
-  display: block;
-  font-size: 10px;
-  color: #c5a579;
-  margin-top: 5px;
-}
+
 body.touch-layout .hero {
   transition: filter 0.18s;
   z-index: 10;
@@ -193,22 +156,6 @@ body.touch-layout .hero.player .hero-name {
   z-index: 6;
   white-space: nowrap;
 }
-body.touch-layout .hero-health {
-  width: 29px;
-  height: 33px;
-  font-size: 24px;
-  right: -8px;
-  bottom: -5px;
-  border-width: 1px;
-  z-index: 9;
-}
-body.touch-layout .hero-armor {
-  width: 25px;
-  height: 28px;
-  font-size: 21px;
-  left: -6px;
-  bottom: -4px;
-}
 body.touch-layout .secret-indicator {
   left: -9px;
   top: 6px;
@@ -224,40 +171,7 @@ body.touch-layout .hero.valid-target .portrait-frame {
   outline: 2px solid #ecae55;
   outline-offset: 4px;
 }
-body.touch-layout .power-button {
-  border-width: 2px;
-  box-shadow:
-    0 0 0 2px #d5ad68,
-    0 0 0 4px #33251d,
-    0 5px 9px #170b1777;
-  z-index: 12;
-  transition: none;
-}
-body.touch-layout .power-button:hover {
-  transform: none;
-}
-body.touch-layout .power-button svg {
-  width: 25px;
-  height: 25px;
-}
-body.touch-layout .power-button b {
-  width: 23px;
-  height: 25px;
-  top: -5px;
-  bottom: auto;
-  right: -5px;
-  font-size: 20px;
-}
-body.touch-layout .power-button span {
-  display: block;
-  width: 70px;
-  left: -10px;
-  top: 57px;
-  font-size: 10px;
-  letter-spacing: 0;
-  color: #efd3aa;
-  pointer-events: none;
-}
+
 body.touch-layout .weapon-slot {
   left: 24px;
   top: calc(var(--view-h) - 303px);
@@ -277,24 +191,7 @@ body.touch-layout .weapon-slot b {
   bottom: -1px;
   box-shadow: 0 0 0 1px #c49c5f;
 }
-body.touch-layout .enemy-mana {
-  font: 600 14px Georgia;
-  gap: 5px;
-  margin: 0;
-  border-width: 1px;
-  z-index: 9;
-  box-shadow:
-    inset 0 1px #dbddb466,
-    0 3px 5px #180d1b55;
-}
-body.touch-layout .enemy-mana i {
-  width: 8px;
-  height: 10px;
-  margin: 0;
-}
-body.touch-layout .enemy-mana span {
-  margin: 0;
-}
+
 body.touch-layout .minion {
   --unit-w: 60px;
   transition: filter 0.15s;
@@ -385,93 +282,7 @@ body.touch-layout .board-empty {
   z-index: 2;
 }
 /* Resource and action controls stay outside the scrolling cards. */
-body.touch-layout .turn-controls {
-  right: auto;
-  text-align: center;
-  z-index: 15;
-}
-body.touch-layout .turn-number {
-  position: absolute;
-  bottom: calc(100% + 7px);
-  width: 100%;
-  font: 11px var(--sans);
-  letter-spacing: 0;
-  color: #eac894;
-  margin: 0;
-  white-space: nowrap;
-}
-body.touch-layout .end-turn {
-  width: 100%;
-  height: 100%;
-  min-height: 48px;
-  font: 700 18px var(--serif);
-  letter-spacing: 1px;
-  border: 2px solid #725030;
-  border-radius: 13px;
-  box-shadow:
-    0 0 0 1px #efd09a,
-    0 4px 0 #2e211b,
-    0 5px 12px #100b1544;
-  background: linear-gradient(#fff0b6, #ebc46f 45%, #c98b36);
-  clip-path: none;
-}
-body.touch-layout .end-turn:before {
-  inset: 4px;
-  border: 1px solid #fff5c2a0;
-  border-radius: 9px;
-}
-body.touch-layout .end-turn.thinking {
-  font-size: 15px;
-  background: linear-gradient(#6d655b, #4b4743);
-  color: #dfd3bb;
-}
-body.touch-layout .end-turn:hover {
-  transform: none;
-}
-body.touch-layout .turn-shortcut {
-  display: none;
-}
-body.touch-layout .mana-panel {
-  right: auto;
-  padding: 0 1px;
-  border: 0;
-  outline: 0;
-  box-shadow: none;
-  border-radius: 0;
-  background: none;
-  z-index: 12;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 9px;
-}
-body.touch-layout .mana-caption {
-  padding: 0;
-  display: flex;
-  gap: 5px;
-  margin: 0;
-}
-body.touch-layout .mana-caption > span {
-  display: none;
-}
-body.touch-layout .mana-caption strong {
-  font: 700 18px Georgia;
-  color: #dbf6ff;
-  white-space: nowrap;
-  letter-spacing: 0;
-}
-body.touch-layout .mana-gems {
-  padding: 0;
-  gap: 2px;
-  flex-wrap: nowrap;
-  justify-content: flex-start;
-}
-body.touch-layout .mana-gem {
-  width: 8px;
-  height: 12px;
-  flex-shrink: 0;
-  box-shadow: none;
-}
+
 body.touch-layout .hand-label {
   writing-mode: horizontal-tb;
   height: auto;
@@ -487,10 +298,6 @@ body.touch-layout .hand-label {
   box-shadow: none;
 }
 body.touch-layout .hand-label::before {
-  display: none;
-}
-body.touch-layout .hand-label .hand-en,
-body.touch-layout .hand-label .hand-tip {
   display: none;
 }
 body.touch-layout .hand-label b {
@@ -706,31 +513,7 @@ body.touch-layout .cinematic-quote {
   letter-spacing: 0.3px;
   line-height: 1.7;
 }
-body.touch-layout #action-status {
-  display: none;
-}
-body.touch-layout #toast,
-body.touch-layout .battle-view #toast {
-  left: 50%;
-  top: calc(var(--header-h) + 4px);
-  bottom: auto;
-  max-width: calc(100% - 28px);
-  width: max-content;
-  min-width: 0;
-  font-size: 13px;
-  line-height: 1.55;
-  letter-spacing: 0;
-  padding: 10px 14px;
-  transform: translateX(-50%);
-  z-index: 120;
-  border-radius: 9px;
-  background: #261b16f2;
-  border: 1px solid #d4b079;
-  color: #ffe8c0;
-  white-space: normal;
-  text-align: center;
-  pointer-events: none;
-}
+
 /* An actual phone menu, not a letterboxed desktop invitation. */
 body.touch-layout #lobby {
   inset: var(--header-h) 0 0;
@@ -917,12 +700,7 @@ body.touch-layout #modal .modal-box {
   overflow: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  border-width: 3px;
-  border-radius: 14px;
-  padding: 16px 15px;
-  box-shadow:
-    0 0 0 1px #c39a65,
-    0 10px 35px #080511bb;
+
   color: var(--touch-ink);
   scrollbar-width: thin;
   scrollbar-color: #a3804d44 transparent;
@@ -1099,7 +877,7 @@ body.touch-layout .hero-option.selected {
     0 0 0 1px #9c6d2f,
     0 0 16px #ffd27955;
 }
-body.touch-layout .mulligan-cards,
+
 body.touch-layout .discover-options {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
@@ -1109,7 +887,7 @@ body.touch-layout .discover-options {
   margin: 20px 4px;
   clear: both;
 }
-body.touch-layout .mulligan-card,
+
 body.touch-layout .discover-card {
   width: 100%;
   max-width: 210px;
@@ -1121,8 +899,7 @@ body.touch-layout .discover-card .card {
   height: auto;
   aspect-ratio: var(--card-face-ratio, 5 / 7.4);
 }
-body.touch-layout .mulligan-card:hover,
-body.touch-layout .mulligan-card.replace,
+
 body.touch-layout .discover-card:hover {
   transform: none;
 }
@@ -1167,7 +944,7 @@ body.touch-layout .relic-options {
 body.touch-layout .relic-choice {
   min-height: 118px;
   width: 100%;
-  padding: 14px 14px 14px 88px;
+
   position: relative;
   text-align: left;
 }
@@ -1239,20 +1016,7 @@ body.touch-layout .key-table div {
 body.touch-layout .key-table b {
   font-size: 15px;
 }
-body.touch-layout .setting-row {
-  gap: 16px;
-  padding: 16px 0;
-}
-body.touch-layout .setting-row h3 {
-  font-size: 15px;
-  letter-spacing: 0;
-}
-body.touch-layout .setting-row p {
-  font-size: 13px;
-  line-height: 1.6;
-  max-width: 380px;
-  color: #8b6c45;
-}
+
 body.touch-layout .toggle {
   width: 52px;
   height: 32px;
@@ -1434,8 +1198,6 @@ body.touch-layout .library-foot {
 body.touch-layout .deck-editor {
   display: none;
   width: 100%;
-  padding: 8px 0 0;
-  border: 0;
 }
 body.touch-layout .touch-show-deck .deck-editor {
   display: block;
@@ -1560,15 +1322,6 @@ body.touch-layout .touch-inspect-detail small {
   letter-spacing: 0.3px;
   color: #9b794b;
 }
-body.touch-layout .touch-live-stat {
-  font: 600 13px/1.6 var(--sans);
-  color: #72522e;
-  background: #b78f4e20;
-  border: 1px solid #b98f4c33;
-  border-radius: 8px;
-  padding: 6px 9px;
-  margin: 5px 0 10px;
-}
 body.touch-layout .touch-keywords {
   display: flex;
   flex-direction: column;
@@ -1647,39 +1400,12 @@ body.touch-layout .touch-menu-grid {
   gap: 10px;
   clear: both;
 }
-body.touch-layout .touch-menu-grid button {
-  min-height: 68px;
-  text-align: left;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid #ad885753;
-  border-radius: 10px;
-  background: #b28c5117;
-  font-size: 15px;
-  color: #73502d;
-}
-body.touch-layout .touch-menu-grid button svg {
-  width: 21px;
-  height: 21px;
-  color: #9a7441;
-  flex-shrink: 0;
-}
+
 body.touch-layout .touch-menu-note {
   font-size: 12px;
   line-height: 1.7;
   color: #927044;
   margin: 16px 0 3px;
-}
-body.touch-layout .touch-log {
-  font: 14px/1.85 var(--sans);
-  clear: both;
-}
-body.touch-layout .touch-log p {
-  padding: 9px 0;
-  border-bottom: 1px solid #aa8c6233;
-  color: #72522e;
 }
 body.touch-layout .touch-inline-detail {
   position: absolute;
@@ -1802,47 +1528,12 @@ body.touch-layout #app.fx-busy .hand-card {
   cursor: wait;
 }
 /* Landscape reallocates space: heroes left, action rail right, horizontal hand below. */
-body.mobile-landscape #touch-match-chip {
-  padding: 0;
-  text-align: center;
-}
-body.mobile-landscape #touch-match-chip small,
-body.mobile-landscape #touch-match-chip span {
-  display: none;
-}
-body.mobile-landscape #touch-match-chip strong {
-  font: 10px var(--sans);
-  color: #caaa79;
-  letter-spacing: 1px;
-  opacity: 0.8;
-}
-body.mobile-landscape .mana-panel {
-  flex-direction: column;
-  gap: 3px;
-  align-items: center;
-  justify-content: center;
-}
-body.mobile-landscape .mana-caption strong {
-  font-size: 16px;
-}
-.mobile-landscape .mana-gem {
-  width: 7px;
-  height: 10px;
-}
-body.mobile-landscape .power-button span {
-  top: 56px;
-  font-size: 9px;
-}
+
 body.mobile-landscape .hand-label {
   display: none;
 }
 body.mobile-landscape .hero-name {
   font-size: 8px;
-}
-body.mobile-landscape .hero-health {
-  font-size: 22px;
-  width: 26px;
-  height: 30px;
 }
 body.mobile-landscape .weapon-slot {
   left: 10px;
@@ -1854,14 +1545,7 @@ body.mobile-landscape .weapon-slot img {
   width: 32px;
   height: 32px;
 }
-body.mobile-landscape .end-turn {
-  font-size: 16px;
-  letter-spacing: 0;
-}
-body.mobile-landscape .turn-number {
-  font-size: 10px;
-  bottom: calc(100% + 5px);
-}
+
 body.mobile-landscape .lobby-view #lobby {
   padding: 8px;
   justify-content: center;
@@ -1950,7 +1634,7 @@ body.mobile-landscape .hero-option em {
   margin-top: 6px;
   padding-top: 6px;
 }
-body.mobile-landscape .mulligan-cards,
+
 body.mobile-landscape .discover-options {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   max-width: 560px;
@@ -1962,7 +1646,6 @@ body.mobile-landscape .relic-options {
   gap: 12px;
 }
 body.mobile-landscape .relic-choice {
-  padding: 14px;
   min-height: 210px;
   text-align: center;
 }
@@ -2104,9 +1787,11 @@ body.touch-layout .hand-card:first-child {
 body.touch-layout .hand-card:last-child {
   margin-right: auto;
 }
-body.touch-layout #app.is-targe
-
-body.touch-layout .minion[data-compact="true"] .stat {
+body.touch-layout
+  #app.is-targe
+  body.touch-layout
+  .minion[data-compact="true"]
+  .stat {
   width: calc(var(--unit-w) * 0.49);
   height: 24px;
   font-size: clamp(16px, calc(var(--unit-w) * 0.39), 19px);
@@ -2120,11 +1805,7 @@ body.touch-layout .minion[data-compact="true"] .stat.hp {
 
 /* On narrow portraits the skill caption would share the resource row. The icon
  * and cost remain visible; long-press exposes the full skill explanation. */
-@media (max-width: 360px) {
-  body.touch-layout.mobile-portrait .power-button span {
-    display: none;
-  }
-}
+
 body.touch-layout .weapon-slot {
   pointer-events: none;
 }

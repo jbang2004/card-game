@@ -36,13 +36,16 @@ test("79 manifest entries match collectible, token and contract IDs", () => {
 });
 test("Every output is distinct and matches its recorded file hash", () => {
   const hashes = new Set();
+  const heroPortraits = new Set(D.heroes.map((hero) => hero.portraitId));
   for (const [id, m] of Object.entries(manifest.items)) {
     const blob = fs.readFileSync(path.join(root, "assets/anime", m.file));
     assert.equal(sha(blob), m.sha256);
     hashes.add(m.sha256);
     assert.deepEqual(
       m.outputSize,
-      D.byId[id].contract?.divine ? [768, 1024] : [336, 448],
+      D.byId[id].contract || heroPortraits.has(id)
+        ? [768, 1024]
+        : [336, 448],
     );
   }
   assert.equal(hashes.size, 79);

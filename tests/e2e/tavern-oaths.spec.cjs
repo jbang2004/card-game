@@ -10,7 +10,9 @@ async function practice(page) {
   await page.goto("./?debug=1");
   await ready(page);
   await page.locator("#start-btn").click();
-  await page.locator("#game-mode").selectOption("practice");
+  if (await page.locator('[data-mode="practice"]').isVisible())
+    await page.locator('[data-mode="practice"]').click();
+  else await page.locator("#game-mode").selectOption("practice");
   await page.locator("#practice-opponent").selectOption("ranger_pack");
   await page.locator("#hero-confirm").click();
   await page.locator("#mulligan-confirm").click();
@@ -92,7 +94,9 @@ test("practice preserves an existing campaign save, survives both hero powers an
     await page.locator("#quick-btn").click();
     await page.locator("#ok-confirm").click();
   }
-  await page.locator("#game-mode").selectOption("practice");
+  if (await page.locator('[data-mode="practice"]').isVisible())
+    await page.locator('[data-mode="practice"]').click();
+  else await page.locator("#game-mode").selectOption("practice");
   await page.locator("#practice-opponent").selectOption("mage_frost");
   await page.locator("#hero-confirm").click();
   await page.locator("#mulligan-confirm").click();
@@ -127,7 +131,9 @@ for (const [width, height] of [
     await page.goto("http://127.0.0.1:8000/dist/?debug=1");
     await ready(page);
     await page.locator("#start-btn").tap();
-    await page.locator("#game-mode").selectOption("practice");
+    if (await page.locator('[data-mode="practice"]').isVisible())
+      await page.locator('[data-mode="practice"]').click();
+    else await page.locator("#game-mode").selectOption("practice");
     await page.locator("#practice-opponent").scrollIntoViewIfNeeded();
     expect(
       await page.locator("#practice-opponent").evaluate((el) => {
@@ -159,7 +165,9 @@ test("full practice game through visible card/target controls with no stuck trig
   await page.locator("#start-btn").click();
   await page.locator('[data-hero="ranger"]').click();
   await page.locator("#hero-archetype").selectOption("ranger_death");
-  await page.locator("#game-mode").selectOption("practice");
+  if (await page.locator('[data-mode="practice"]').isVisible())
+    await page.locator('[data-mode="practice"]').click();
+  else await page.locator("#game-mode").selectOption("practice");
   await page.locator("#practice-opponent").selectOption("mage_burn");
   await page.locator("#hero-confirm").click();
   await page.locator("#mulligan-confirm").click();
@@ -204,8 +212,10 @@ test("full practice game through visible card/target controls with no stuck trig
     if (a.type === "play") {
       await page.locator(`#hand [data-hand="${a.uid}"]`).click();
       if (target) await page.locator(target).click();
-      else if (await page.evaluate(() => Emberfall.selection?.type === 'card-play'))
-        await page.locator('#arena').click({position:{x:16,y:16}});
+      else if (
+        await page.evaluate(() => Emberfall.selection?.type === "card-play")
+      )
+        await page.locator("#arena").click({ position: { x: 16, y: 16 } });
     }
     if (a.type === "attack") {
       await page

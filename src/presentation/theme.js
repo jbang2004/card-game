@@ -33,11 +33,55 @@ const EmberTheme = (() => {
     }
   }
   document.documentElement.dataset.theme = definition.id;
+  // Presentation test only: `?skin=slate` opts into the matte slate skin layer.
+  const skin = /[?&]skin=([\w-]+)/.exec(globalThis.location?.search || "")?.[1];
+  if (skin) document.documentElement.dataset.skin = skin;
   document.title = definition.title;
   document.documentElement.style.setProperty(
     "--scene-backdrop",
     `url("${art("backdrop")}")`,
   );
+  for (const name of [
+    "mulligan",
+    "rewards",
+    "result",
+    "settings",
+    "guide",
+    "detail",
+    "discover",
+    "confirm",
+  ])
+    if (definition.art["reference" + name[0].toUpperCase() + name.slice(1)])
+      document.documentElement.style.setProperty(
+        `--reference-${name}`,
+        `url("${art("reference" + name[0].toUpperCase() + name.slice(1))}")`,
+      );
+  for (const [name, role] of [
+    ["victory-sigil", "victorySigil"],
+    ["defeat", "defeatBackground"],
+  ])
+    if (definition.art[role])
+      document.documentElement.style.setProperty(
+        `--reference-${name}`,
+        `url("${art(role)}")`,
+      );
+  if (definition.art.homePrimary)
+    document.documentElement.style.setProperty(
+      "--reference-primary",
+      `url("${art("homePrimary")}")`,
+    );
+  for (const [name, role] of Object.entries({
+    "card-frame": "polishCardFrame",
+    "button-capsule": "polishButtonCapsule",
+    "button-night": "polishButtonNight",
+    "selection-panel": "polishSelectionPanel",
+  })) {
+    if (definition.art[role])
+      document.documentElement.style.setProperty(
+        `--polish-${name}`,
+        `url("${art(role)}")`,
+      );
+  }
   return Object.freeze({
     art,
     image,

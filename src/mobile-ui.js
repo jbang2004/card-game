@@ -69,7 +69,7 @@
     const usable = side === "p" && !$("power-btn").disabled,
       canAttack = side === "p" && E.game.canAttack("p", "hero");
     E.showModal(
-      `<section class="modal-box"><div class="modal-heading"><div class="eyebrow">${side === "p" ? "我方英雄" : "敌方情报"}</div><h2>${esc(power ? d.power : d.name)}</h2></div><div class="touch-hero-info"><img src="${A.character(d)}" alt="${esc(d.name)}"><div><div class="touch-live-stat">${p.hp} / ${p.maxHp} 生命${p.armor ? " · " + p.armor + " 护甲" : ""}</div><p><b>${esc(d.power)}</b><br>${esc(d.powerText)}</p>${side === "e" ? `<p>${s.phase2 ? "已进入第二阶段" : "半血时觉醒"}<br>${esc(d.phaseText)}</p>` : p.weapon ? `<p>${D.byId[p.weapon.cid].name} · ${p.weapon.atk} 攻 / ${p.weapon.durability} 耐久</p>` : ""}</div></div><div class="modal-footer"><button id="touch-hero-close" class="ghost-btn">回到战场</button>${usable ? `<button id="touch-hero-power" class="gold-btn">英雄技能 · ${d.powerCost} 法力</button>` : canAttack ? '<button id="touch-hero-attack" class="gold-btn">武器攻击</button>' : ""}</div></section>`,
+      `<section class="modal-box ${side === "e" ? "tactical-sheet tactical-intel" : ""}"><div class="modal-heading"><div class="eyebrow">${side === "p" ? "我方英雄" : "敌方情报 · 战术档案"}</div><h2>${esc(power ? d.power : d.name)}</h2></div><div class="touch-hero-info"><img src="${A.character(d)}" alt="${esc(d.name)}"><div><div class="touch-live-stat">${p.hp} / ${p.maxHp} 生命${p.armor ? " · " + p.armor + " 护甲" : ""}</div><p><b>${esc(d.power)}</b><br>${esc(d.powerText)}</p>${side === "e" ? `<p>${s.phase2 ? "已进入第二阶段" : "半血时觉醒"}<br>${esc(d.phaseText)}</p>` : p.weapon ? `<p>${D.byId[p.weapon.cid].name} · ${p.weapon.atk} 攻 / ${p.weapon.durability} 耐久</p>` : ""}</div></div><div class="modal-footer"><button id="touch-hero-close" class="ghost-btn">回到战场</button>${usable ? `<button id="touch-hero-power" class="gold-btn">英雄技能 · ${d.powerCost} 法力</button>` : canAttack ? '<button id="touch-hero-attack" class="gold-btn">武器攻击</button>' : ""}</div></section>`,
       "touch-hero",
     );
     $("touch-hero-close").onclick = () => E.closeModal();
@@ -149,7 +149,7 @@
   function showLog() {
     if (blocked()) return;
     E.showModal(
-      `<section class="modal-box"><div class="modal-heading"><h2>战斗记录</h2></div><div class="touch-log">${E.game.s.log
+      `<section class="modal-box tactical-sheet tactical-log"><div class="modal-heading"><div class="eyebrow">战场纪要 · 最新在前</div><h2>战斗记录</h2></div><div class="touch-log">${E.game.s.log
         .slice(-24)
         .reverse()
         .map((l) => `<p>${esc(l)}</p>`)
@@ -163,7 +163,7 @@
       ["map", "map", "冒险地图"],
       ["cards", "book", "卡牌收藏"],
       ["guide", "book", "玩法手册"],
-      ["gallery", "gem", "工匠画廊"],
+      ["gallery", "gem", "战场画廊"],
       ["settings", "settings", "设置"],
     ];
     if (E.inBattle)
@@ -174,7 +174,7 @@
       );
     opts.push(["full", "full", "全屏"]);
     E.showModal(
-      `<section class="modal-box"><div class="modal-heading"><h2>菜单</h2></div><div class="touch-menu-grid">${opts.map(([id, icon, label]) => `<button data-touch-menu="${id}">${A.icon(icon)}<span>${label}</span></button>`).join("")}</div></section>`,
+      `<section class="modal-box"><div class="modal-heading"><h2>菜单</h2></div><div class="touch-menu-grid">${opts.map(([id, icon, label]) => `<button class="ghost-btn menu-action" data-touch-menu="${id}">${A.icon(icon)}<span>${label}</span></button>`).join("")}</div></section>`,
       "touch-menu",
     );
     const fn = {
@@ -244,8 +244,7 @@
   menu.className = "icon-btn touch-only";
   menu.id = "touch-menu";
   menu.setAttribute("aria-label", "打开菜单");
-  menu.innerHTML =
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 6h14M5 12h14M5 18h14"/><circle cx="8" cy="6" r="1" fill="currentColor"/></svg>';
+  menu.innerHTML = A.icon("menu");
   menu.onclick = showMenu;
   document.querySelector(".top-actions").append(menu);
   $("touch-cancel").onclick = () => E.clearSelection();

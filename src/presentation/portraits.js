@@ -62,6 +62,41 @@ const EmberPortraits = (() => {
     record.used = performance.now();
     return record;
   }
+  /* Wanxiang v4 has one approved illustration for every character. On the
+   * battle board we animate that approved source as a restrained camera drift,
+   * instead of allowing the retired layer atlas to cover it. The old atlas
+   * remains available only to legacy/test markup without the version marker. */
+  function loadStatic(id, src) {
+    const key = "static:" + id;
+    if (!assets.has(key)) {
+      if (pendingLoads >= 2) return null;
+      pendingLoads++;
+      const record = { ready: false, images: {}, used: performance.now() };
+      assets.set(key, record);
+      const image = new Image();
+      image.onload = async () => {
+        try {
+          await image.decode();
+          record.images.static = image;
+          record.ready = true;
+        } catch (error) {
+          record.failed = true;
+        } finally {
+          pendingLoads--;
+          wake();
+        }
+      };
+      image.onerror = () => {
+        record.failed = true;
+        pendingLoads--;
+        wake();
+      };
+      image.src = src;
+    }
+    const record = assets.get(key);
+    record.used = performance.now();
+    return record;
+  }
   function prepareSummons(events) {
     if (disabled()) return;
     const now = performance.now();
@@ -70,7 +105,10 @@ const EmberPortraits = (() => {
       const key = JSON.stringify([e.side + ":" + e.uid, e.cid]);
       arrivals.set(key, now + 7000);
       // Share the normal loader and its two-request limit; never animate hand art.
-      load(e.cid);
+      const staticSource =
+        AnimeAssets[CharacterCatalog[e.cid]?.staticKey];
+      if (staticSource) loadStatic(e.cid, staticSource);
+      else load(e.cid);
     }
     wake();
   }
@@ -180,6 +218,7 @@ const EmberPortraits = (() => {
         ctx: canvas.getContext("2d"),
         art: null,
         context,
+        staticMotion: img.dataset.artVersion === "wanxiang-v4",
         frozen: img.dataset.portraitState === "frozen",
         visible: previous?.visible ?? false,
         painted: previous?.painted ?? false,
@@ -197,8 +236,9 @@ const EmberPortraits = (() => {
       measure(e);
       // The summon beat has already laid out this unit. Paint a warm rig before
       // its first visible frame instead of waiting for IntersectionObserver/RAF.
-      if (e.entering && e.sized && assets.get(id)?.ready && !disabled()) {
-        e.art = assets.get(id);
+      const assetKey = e.staticMotion ? "static:" + id : id;
+      if (e.entering && e.sized && assets.get(assetKey)?.ready && !disabled()) {
+        e.art = assets.get(assetKey);
         paint(e, performance.now());
       }
       resize.observe(host);
@@ -227,8 +267,36 @@ const EmberPortraits = (() => {
     const elapsed = Math.max(0, Math.min(50, now - clock.last));
     if (!e.frozen) clock.t += elapsed / 1000;
     clock.last = now;
-    const t = clock.t,
-      [nativeW, nativeH] = CharacterCatalog[e.id].motion.size,
+    const t = clock.t;
+    if (e.staticMotion) {
+      const image = e.art.images.static;
+      const nativeW = image.naturalWidth,
+        nativeH = image.naturalHeight,
+        cover = Math.max(w / nativeW, h / nativeH),
+        zoom = 1.055 + Math.sin(t * 0.46) * 0.012,
+        drawW = nativeW * cover * zoom,
+        drawH = nativeH * cover * zoom,
+        driftX = Math.sin(t * 0.72) * w * 0.011,
+        driftY = Math.cos(t * 0.58) * h * 0.008;
+      // Keep the same per-display-frame canvas contract as layered rigs. It
+      // prevents stale pixels when a source crop moves and preserves the
+      // renderer's measurable redraw budget.
+      e.ctx.clearRect(0, 0, w, h);
+      e.ctx.drawImage(
+        image,
+        (w - drawW) * e.px + driftX,
+        (h - drawH) * e.py + driftY,
+        drawW,
+        drawH,
+      );
+      e.painted = true;
+      e.host.classList.remove("motion-arriving");
+      e.host.classList.add("motion-ready");
+      e.entering = false;
+      frames++;
+      return;
+    }
+    const [nativeW, nativeH] = CharacterCatalog[e.id].motion.size,
       scale = Math.max(w / nativeW, h / nativeH),
       dw = nativeW * scale,
       dh = nativeH * scale;
@@ -383,8 +451,11 @@ const EmberPortraits = (() => {
         e.art = null;
         continue;
       }
-      keep.add(e.id);
-      e.art = load(e.id);
+      const assetKey = e.staticMotion ? "static:" + e.id : e.id;
+      keep.add(assetKey);
+      e.art = e.staticMotion
+        ? loadStatic(e.id, e.img.currentSrc || e.img.src)
+        : load(e.id);
       if (!e.art?.ready) {
         if (!e.art?.failed) hasWork = true;
         continue;

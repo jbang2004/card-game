@@ -161,8 +161,7 @@ body:not(.touch-layout) .lobby-copy {
   padding: 48px 60px 32px;
   border: 4px solid #9f9c7e;
   border-radius: 18px 12px 17px 12px;
-  background:
-    linear-gradient(115deg, #fcf4dbdf, #eee3c6d9), var(--wind-paper-texture);
+
   box-shadow:
     inset 0 0 0 2px #fcf8e1,
     0 5px 0 #7e8468,
@@ -282,7 +281,7 @@ body:not(.touch-layout) .lobby-collection {
 .card.epic,
 .card.legendary {
   --rim: #968965;
-  background: var(--wind-paper-texture), #e7dcbb;
+
   border: 2px solid #7f8061;
   border-radius: 43% 43% 8px 8px / 18% 18% 8px 8px;
   box-shadow:
@@ -340,8 +339,7 @@ body:not(.touch-layout) .lobby-collection {
 }
 .card-inner:before {
   inset: 58% -1% 0;
-  background:
-    linear-gradient(105deg, #f6edd7b0, #e6dbb670), var(--wind-paper-texture);
+
   border: 0;
   border-radius: 0 0 4px 4px;
   box-shadow: none;
@@ -517,16 +515,6 @@ body:not(.touch-layout) .lobby-collection {
   box-shadow: 0 1px #6e7356;
   border-color: #8f9677;
 }
-.hero-health {
-  color: #fff6d5;
-  background: linear-gradient(140deg, #d3906c, #ac5544);
-  border-color: #865f47;
-  text-shadow: 0 1px #634937;
-  box-shadow: inset 0 0 0 1px #f2d5a6;
-}
-.hero-health.damaged {
-  color: #ffddb7;
-}
 .hero.ready .portrait-frame {
   outline: 2px solid #a6bb7d;
   outline-offset: 2px;
@@ -584,78 +572,7 @@ body:not(.touch-layout) .lobby-collection {
   filter: drop-shadow(0 0 5px #e6d7a6);
 }
 /* Battle chrome remains clearly readable over the village. */
-.end-turn {
-  background: linear-gradient(135deg, #eedb9d, #d9b36b);
-  border: 2px solid #8d875f;
-  border-radius: 12px;
-  color: #514c34;
-  box-shadow:
-    inset 0 0 0 2px #f7e8b9,
-    0 4px 0 #77775a,
-    0 7px 10px #36503935;
-  text-shadow: none;
-  clip-path: none;
-}
-.end-turn:before {
-  inset: 5px;
-  border: 1px solid #a2986b;
-  border-radius: 7px;
-}
-.end-turn.thinking {
-  background: #8e9b82;
-  color: #f1ebd8;
-  opacity: 1;
-}
-.end-turn:not(:disabled):hover {
-  filter: brightness(1.05);
-}
-.power-button {
-  color: #fff4ca;
-  background: radial-gradient(at 35% 28%, #c7d7a6, #87986b 65%, #617954);
-  border-color: #8a9270;
-  box-shadow:
-    0 0 0 3px #d1c79e,
-    0 0 0 4px #788468,
-    0 5px 8px #304c303f;
-}
-.power-button b {
-  background: #648f9c;
-  border-color: #bacfc5;
-}
-.power-button span {
-  color: #f3e8bf;
-  text-shadow: 0 1px #4d684f;
-}
-.power-button:hover {
-  transform: none;
-}
-.mana-panel {
-  background: linear-gradient(115deg, #cfddd6, #a7c4bd);
-  border: 3px solid #899a7d;
-  outline: none;
-  box-shadow:
-    inset 0 0 0 1px #f0eed1,
-    0 3px 0 #5e785f;
-  border-radius: 14px;
-}
-.mana-caption {
-  color: #5e7d6c;
-}
-.mana-caption strong {
-  color: #3b686f;
-  text-shadow: none;
-}
-.mana-gem.available {
-  filter: saturate(0.62);
-}
-.enemy-mana {
-  background: #73949a;
-  border-color: #b5c1a6;
-  color: #f9f2d8;
-  box-shadow: 0 2px 0 #5d756b;
-}
-.turn-number,
-.turn-shortcut,
+
 .hand-label {
   color: #e7ead0;
   text-shadow: 0 1px 2px #456347;
@@ -663,35 +580,9 @@ body:not(.touch-layout) .lobby-collection {
 .chapter-name {
   color: #466650;
 }
-.chapter-sub {
-  color: #6c836a;
-}
-.campaign-panel {
-  background: #ece6c654;
-  border-radius: 6px;
-  padding: 7px 11px;
-}
-.utility-tab {
-  background: #e9e2cbdc;
-  color: #647659;
-  border: 1px solid #a8b490;
-  box-shadow: none;
-  border-radius: 8px;
-}
-.utility-tab:hover {
-  color: #335942;
-  background: #f2ebd5;
-}
-.utility-tab .utility-key {
-  color: #95a482;
-  border-color: #b7c2a2;
-}
+
 .boss-panel,
 .log-panel {
-  background: linear-gradient(#f4ebd6f5, #e0dbc0f5);
-  border: 2px solid #a4ae8c;
-  box-shadow: 0 8px 20px #314b3845;
-  border-radius: 12px;
   color: #465f47;
 }
 .boss-info-name {
@@ -739,15 +630,7 @@ body:not(.touch-layout) .lobby-collection {
   color: #dde0c8;
   opacity: 0.6;
 }
-.battle-bottom {
-  color: #d6dabe;
-}
-#hint,
-#toast,
-.battle-view #toast,
-#combat-preview,
-.keyword-notes,
-#prop-tooltip {
+.keyword-notes {
   background: #f2e8cbf5;
   border: 1px solid #aab08b;
   color: #52664b;
@@ -755,9 +638,7 @@ body:not(.touch-layout) .lobby-collection {
   border-radius: 8px;
   text-shadow: none;
 }
-#combat-preview:before {
-  color: #7d8a6e;
-}
+
 .keyword-notes b {
   color: #426b50;
 }
@@ -774,24 +655,13 @@ body:not(.touch-layout) .lobby-collection {
 #target-circle {
   stroke: #be985e;
 }
-#action-status {
-  color: #81936d;
-}
+
 /* A paper travel journal for collection, planning and in-game decisions. */
 #modal {
   background: #273d375f;
   backdrop-filter: blur(9px);
 }
 .modal-box {
-  background:
-    linear-gradient(120deg, #fbf4d9ed, #eae2c7d9), var(--wind-paper-texture);
-  border: 4px solid #9b9e7d;
-  border-radius: 16px 12px 16px 12px;
-  box-shadow:
-    inset 0 0 0 2px #faf5de,
-    0 0 0 1px #728267,
-    0 7px 0 #74846a,
-    0 20px 65px #2941374d;
   color: #415740;
   scrollbar-color: #aab38c #e6e3c7;
 }
@@ -867,9 +737,7 @@ body:not(.touch-layout) .lobby-collection {
 .library-foot {
   color: #899877;
 }
-.deck-editor {
-  border-color: #b4bd9d55;
-}
+
 .deck-editor h3 {
   color: #4e6a4d;
 }
@@ -987,15 +855,9 @@ body:not(.touch-layout) .lobby-collection {
   color: #8b9d7a;
 }
 .relic-choice {
-  background: #e6e9cc;
-  border: 1px solid #acbb93;
   color: #53714b;
-  box-shadow: none;
 }
-.relic-choice:hover {
-  background: #dce9c7;
-  border-color: #91b67a;
-}
+
 .relic-choice h3 {
   color: #506e47;
 }
@@ -1028,14 +890,11 @@ body:not(.touch-layout) .lobby-collection {
 .result-stats span {
   color: #94a380;
 }
-.setting-row {
-  border-color: #b9c3a15c;
-}
-.setting-row h3,
+
 .help-section h3 {
   color: #577453;
 }
-.setting-row p,
+
 .help-section p,
 .key-table div {
   color: #7c9071;
@@ -1057,9 +916,6 @@ body:not(.touch-layout) .lobby-collection {
   border-color: #b7c7a055;
 }
 .atelier-vignette {
-  background: linear-gradient(#a6c4b28a, #d6debf);
-  border: 1px solid #a9bb95;
-  border-radius: 12px;
   overflow: hidden;
 }
 .atelier-vignette img {
@@ -1096,8 +952,6 @@ body.touch-layout .topbar {
   color: #46694d;
 }
 body.touch-layout .lobby-copy {
-  background:
-    linear-gradient(110deg, #f7f0d7ec, #e7e3c8e8), var(--wind-paper-texture);
   border: 3px solid #a3ad88;
   box-shadow:
     inset 0 0 0 1px #fff7de,
@@ -1130,15 +984,7 @@ body.touch-layout .lobby-world-label {
   background: #59764ee6;
   color: #e8eccb;
 }
-body.touch-layout #touch-match-chip strong {
-  color: #f0f2d9;
-  text-shadow: 0 1px 3px #3d644a;
-}
-.touch-layout #touch-match-chip small,
-.touch-layout #touch-match-chip span {
-  color: #e0e6c4;
-  text-shadow: 0 1px 2px #416449;
-}
+
 body.touch-layout .hero .portrait-frame {
   border-color: #74805f;
   background: #c5bf98;
@@ -1172,65 +1018,12 @@ body.touch-layout .minion .minion-art {
 .touch-layout .minion.ready .minion-art {
   outline-color: #97b47b;
 }
-body.touch-layout .power-button {
-  background: radial-gradient(at 35% 25%, #ceda9f, #8ea36f 55%, #70895b);
-  border-color: #d3d2aa;
-  box-shadow:
-    0 0 0 2px #91a17b,
-    0 3px 5px #38593659;
-  color: #faf4d5;
-}
-.touch-layout .power-button b {
-  background: #699fa7;
-}
-.touch-layout .power-button span {
-  color: #ebedc9;
-  text-shadow: 0 1px #426243;
-}
-body.touch-layout .end-turn {
-  background: linear-gradient(120deg, #ecdfa6, #c7b578);
-  color: #4f5739;
-  border-color: #919976;
-  box-shadow:
-    inset 0 0 0 1px #f7edc7,
-    0 3px 0 #6a7957,
-    0 4px 8px #4053333a;
-}
-.touch-layout .end-turn.thinking {
-  background: #91a285;
-  color: #f2f1d7;
-}
-.touch-layout .end-turn:before {
-  border-color: #f5ecc67a;
-}
-.touch-layout .turn-number {
-  color: #e8efcb;
-  text-shadow: 0 1px #385a36;
-}
-body.touch-layout .mana-panel {
-  background: none;
-  border: 0;
-  box-shadow: none;
-}
-.touch-layout .mana-caption strong {
-  color: #e1f0dd;
-  text-shadow: 0 1px #31564f;
-}
-.touch-layout .enemy-mana {
-  background: #799d96;
-  border-color: #c6d3b7;
-}
+
 body.touch-layout #modal {
   background: #304d427a;
 }
 .touch-layout .modal-box {
-  border: 3px solid #a2ad87;
-  background:
-    linear-gradient(130deg, #f7f0d7ed, #e5e4c8f5), var(--wind-paper-texture);
   color: #425f44;
-  box-shadow:
-    inset 0 0 0 1px #fdf6dd,
-    0 7px 25px #2944344d;
 }
 body.touch-layout .modal-close {
   background: #d8e0ba;
@@ -1305,21 +1098,11 @@ body.touch-layout .touch-inspect-detail h2,
   background: #dce6c66b;
   border-color: #bbcca375;
 }
-body.touch-layout .touch-menu-grid button {
-  background: #dce8c4;
-  border-color: #b8c8a0;
-  color: #61854f;
-  box-shadow: 0 2px #b1bf99;
-}
+
 .touch-layout .touch-menu-note {
   color: #8da777;
 }
-.touch-layout .setting-row h3 {
-  color: #5e7e51;
-}
-.touch-layout .setting-row p {
-  color: #91a77d;
-}
+
 body.touch-layout .gold-btn {
   background: linear-gradient(130deg, #98ae7f, #708e60);
   border-color: #658256;
@@ -1334,11 +1117,7 @@ body.touch-layout .gold-btn {
   border-color: #afbd95;
   box-shadow: 0 3px #a1b48a;
 }
-body.touch-layout #toast {
-  background: #f4eed6f7;
-  color: #627d50;
-  border-color: #b7c49a;
-}
+
 .anime-art-button {
   color: #74915f;
   border-color: #b2c99b;
@@ -1412,7 +1191,6 @@ body.touch-layout #toast {
 .library-foot,
 .library-item .owned-count,
 .library-item .add-label,
-.setting-row p,
 .help-section p,
 .key-table div,
 .hero-option p,
@@ -1426,7 +1204,6 @@ body.touch-layout #toast {
 }
 body.touch-layout .modal-heading p,
 body.touch-layout .hero-option p,
-body.touch-layout .setting-row p,
 body.touch-layout .touch-menu-note {
   color: #66765a;
 }

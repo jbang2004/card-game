@@ -1406,7 +1406,9 @@ const EmberFX = (() => {
         ),
       ),
       startTransform = `translate(0,0) rotate(${startTilt}deg) scale(${startScale})`,
-      liftedTransform = `translate(0,${track.startPose.alreadyLifted ? 0 : -12}px) rotate(0deg) scale(${Math.max(startScale, 0.92)})`,
+      /* Keep the deck-to-hand center moving during the lift beat. Holding x/y
+       * still here forced the remaining flight to accelerate visibly. */
+      liftedTransform = `translate(${dx * liftAt}px,${dy * liftAt - (track.startPose.alreadyLifted ? 0 : 12)}px) rotate(0deg) scale(${Math.max(startScale, 0.92)})`,
       approachTransform = `translate(${dx * 0.78}px,${dy * 0.78 - 18}px) rotate(2deg) scale(.86)`,
       frames = [{ opacity: 0.98, transform: startTransform, offset: 0 }];
     if (!track.startPose.alreadyLifted && liftAt > 0 && liftAt < 1)

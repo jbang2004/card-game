@@ -8,7 +8,9 @@ const AtelierWorld = (() => {
     key = "",
     dusk = false,
     hover = null,
-    activeImage;
+    activeImage,
+    encounter = "warden",
+    activeArtwork = "home";
   const hits = [];
   const layers = Object.freeze(
     theme.scenery.map((a) => ({
@@ -36,8 +38,14 @@ const AtelierWorld = (() => {
       H = V.height;
     const role = view === "lobby" ? "home" : "battle",
       scene = theme.scenes[role];
-    activeImage = EmberTheme.image(scene.art);
-    const next = [W, H, role, dusk].join(":");
+    // Content can introduce a boss before it introduces a bespoke backdrop.
+    // Keep that encounter playable on the approved battle scene rather than
+    // throwing during render (named shipped bosses still have unique scenes).
+    const artwork =
+      role === "battle" ? theme.encounters[encounter] || scene.art : scene.art;
+    activeArtwork = artwork;
+    activeImage = EmberTheme.image(artwork);
+    const next = [W, H, role, artwork, role === "home" && dusk].join(":");
     if (dirty || next !== key) {
       cache.width = W;
       cache.height = H;
@@ -60,15 +68,23 @@ const AtelierWorld = (() => {
         );
       }
       ctx.save();
-      ctx.globalAlpha = scene.shade + (dusk ? 0.22 : 0);
+      ctx.globalAlpha = scene.shade + (role === "home" && dusk ? 0.22 : 0);
       ctx.fillStyle = theme.light.ambient;
       ctx.fillRect(0, 0, W, H);
       ctx.restore();
+      if (role === "battle") {
+        const veil = ctx.createRadialGradient(W * .5, H * .48, W * .08, W * .5, H * .48, W * .65);
+        veil.addColorStop(0, "rgba(8, 18, 32, .46)");
+        veil.addColorStop(.65, "rgba(8, 18, 32, .24)");
+        veil.addColorStop(1, "rgba(8, 18, 32, .06)");
+        ctx.fillStyle = veil;
+        ctx.fillRect(0, 0, W, H);
+      }
       dirty = false;
       key = next;
     }
     c.drawImage(cache, 0, 0);
-    if (!V.mobile && !low)
+    if (role === "home" && !V.mobile && !low)
       for (const a of layers)
         glow(
           c,
@@ -90,6 +106,16 @@ const AtelierWorld = (() => {
   }
   return Object.freeze({
     paint,
+    setEncounter(id) {
+      const resolved = Object.hasOwn(theme.encounters, id) ? id : null;
+      if (encounter !== resolved) {
+        encounter = resolved;
+        dirty = true;
+      }
+    },
+    get sceneId() {
+      return activeArtwork;
+    },
     layers,
     ping(id) {
       const a = layers.find((x) => x.id === id);

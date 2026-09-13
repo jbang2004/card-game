@@ -68,7 +68,7 @@ const EmberCampaign = {
     {
       id: "paladin",
       classId: "paladin",
-      powerIcon: "shield",
+      powerIcon: "banner",
       name: "黎明圣卫",
       title: "雷昂",
       sub: "LIGHT & HONOR",
@@ -92,7 +92,7 @@ const EmberCampaign = {
     {
       id: "ranger",
       classId: "ranger",
-      powerIcon: "sword",
+      powerIcon: "bow",
       name: "暗影游侠",
       title: "薇丝珀",
       sub: "WILD & SHADOW",
@@ -116,7 +116,7 @@ const EmberCampaign = {
     {
       id: "morla",
       classId: "ranger",
-      powerIcon: "raven",
+      powerIcon: "lantern",
       name: "送魂人",
       title: "莫菈",
       sub: "MOON & MEMORY",

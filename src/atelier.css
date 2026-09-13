@@ -626,47 +626,6 @@
   letter-spacing: 1px;
   color: #ffedc8;
 }
-.hero-health {
-  right: -13px;
-  bottom: -2px;
-  font-size: 33px;
-  width: 43px;
-  height: 47px;
-  border: 2px solid #513d2d;
-  background: radial-gradient(at 28% 21%, #faac80, #c33e33 48%, #722a2c);
-  clip-path: polygon(
-    50% 0,
-    82% 7%,
-    100% 39%,
-    92% 72%,
-    50% 100%,
-    8% 72%,
-    0 39%,
-    18% 7%
-  );
-  box-shadow: inset 0 0 0 2px #dabd8c;
-  text-shadow:
-    0 2px #2c2020,
-    -1px -1px #472722;
-  color: #fff6dc;
-  z-index: 5;
-}
-.hero-armor {
-  left: -10px;
-  bottom: 0;
-  width: 36px;
-  height: 39px;
-  font: 700 28px Georgia;
-  background: linear-gradient(
-    135deg,
-    #f2f0d5,
-    #7da6b4 40%,
-    #405f72 80%,
-    #d5e2d6
-  );
-  color: #fffce8;
-  text-shadow: 0 2px #2b3943;
-}
 .hero-phase {
   display: none;
 }
@@ -825,62 +784,7 @@
 .card-back:before {
   inset: 3px;
 }
-.enemy-mana {
-  left: 1004px;
-  top: 113px;
-  width: 104px;
-  height: 34px;
-  justify-content: center;
-  border: 3px solid #827259;
-  background: linear-gradient(#405c74, #182a3d);
-  border-radius: 18px;
-  color: #e9eff3;
-  font: 700 19px Georgia;
-  box-shadow:
-    0 3px 0 #2d2722,
-    inset 0 1px #c3c8b6;
-  z-index: 14;
-}
-.enemy-mana i {
-  width: 12px;
-  height: 15px;
-  margin-right: 9px;
-}
-.power-button {
-  left: 918px;
-  top: 647px;
-  width: 72px;
-  height: 72px;
-  border: 5px solid #b88a46;
-  box-shadow:
-    0 0 0 2px #4a3927,
-    0 0 0 4px #d5b579,
-    0 5px 0 4px #423326,
-    inset 0 0 0 3px #594029,
-    inset 0 2px #ffedb3;
-  background: radial-gradient(
-    at 29% 20%,
-    #fff3bf,
-    #e9b75e 40%,
-    #ae7a3b 67%,
-    #634829
-  );
-  color: #fff0bf;
-}
-.power-button b {
-  top: -12px;
-  right: -2px;
-  bottom: auto;
-  border-radius: 8px 8px 9px 9px;
-  font-size: 22px;
-}
-.power-button span {
-  font-size: 11px;
-  color: #c9a875;
-}
-.power-button:disabled {
-  filter: grayscale(0.5) brightness(0.68);
-}
+
 .hand-zone {
   top: 744px;
   left: 280px;
@@ -925,104 +829,8 @@
 .hand-label b {
   font-size: 10px;
 }
-.hand-label .hand-tip {
-  display: none;
-}
 /* Primary turn actions live in their own hardware, not in the play surface. */
-.turn-controls {
-  left: 1401px;
-  top: 383px;
-  width: 181px;
-  z-index: 18;
-}
-.turn-number {
-  font-size: 10px;
-  margin-bottom: 10px;
-  color: #e5c897;
-}
-.end-turn {
-  width: 180px;
-  height: 68px;
-  border: 5px solid #8f6b38;
-  border-radius: 20% 20% 20% 20% / 26% 26% 26% 26%;
-  background:
-    radial-gradient(ellipse at 50% 0, #fff8ce, transparent 60%),
-    linear-gradient(#ffdf84, #e5b34d 51%, #cb9130 55%, #f3c86d);
-  box-shadow:
-    0 0 0 2px #dec38e,
-    0 0 0 4px #58462f,
-    0 5px 0 4px #38291d,
-    inset 0 0 0 2px #f8e5ad,
-    0 0 18px #ffc4533b;
-  color: #493018;
-  font-size: 20px;
-}
-.end-turn:disabled {
-  filter: saturate(0.36) brightness(0.82);
-  box-shadow:
-    0 0 0 2px #9b8b6f,
-    0 4px 0 3px #38291d,
-    inset 0 0 0 2px #baa985;
-}
-.turn-shortcut {
-  font-size: 8px;
-  letter-spacing: 1px;
-  color: #c7ad7f;
-  margin-top: 14px;
-}
-.mana-panel {
-  left: 1192px;
-  top: 846px;
-  width: 346px;
-  border: 4px solid #8d7659;
-  border-radius: 17px;
-  padding: 8px 12px 10px;
-  background: linear-gradient(#405263, #223143);
-  box-shadow:
-    0 0 0 1px #cdbb92,
-    inset 0 2px 0 #697983,
-    0 4px 0 3px #332a21,
-    0 8px 14px #231a2070;
-}
-.mana-caption {
-  font-size: 9px;
-  margin-bottom: 4px;
-}
-.mana-caption strong {
-  font-size: 21px;
-}
-.mana-gems {
-  gap: 5px;
-  justify-content: center;
-}
-.mana-gem {
-  width: 23px;
-  height: 26px;
-  background: linear-gradient(128deg, #576a77, #263c4b);
-  clip-path: polygon(50% 0, 90% 18%, 100% 55%, 50% 100%, 0 55%, 10% 18%);
-}
-.mana-gem.available {
-  background: conic-gradient(
-    from 20deg at 50% 45%,
-    #e5fdff,
-    #60baef 21%,
-    #257abf 38%,
-    #91e8ff 56%,
-    #daf9ff 65%,
-    #2e82ce 83%,
-    #b4f3ff
-  );
-  filter: drop-shadow(0 0 4px #48baff);
-}
-.mana-gem.used {
-  opacity: 0.54;
-}
-.mana-gem:not(.used):not(.available) {
-  opacity: 0.23;
-}
-.mana-desc {
-  display: none;
-}
+
 .enemy-deck {
   left: 1484px;
   top: 307px;
@@ -1039,67 +847,21 @@
 .player-deck {
   filter: drop-shadow(0 3px 2px #17142066);
 }
-.campaign-panel {
-  left: 546px;
-  top: 104px;
-  width: 137px;
-}
 .chapter-name {
   font: 700 15px var(--serif);
   color: #e8cc9c;
   letter-spacing: 1px;
 }
-.chapter-sub {
-  font-size: 7px;
-  line-height: 1.5;
-  color: #baa278;
-  letter-spacing: 1px;
-}
-.campaign-panel .relic-slots {
-  display: none;
-}
-.utility-tab {
-  background: linear-gradient(#63513eec, #34291fec);
-  border: 1px solid #b2936377;
-  box-shadow:
-    inset 0 1px #d2b98555,
-    0 3px 0 #211c16;
-  color: #e7cba0;
-  font-size: 10px;
-  letter-spacing: 0.3px;
-  border-radius: 7px;
-  padding: 9px 11px;
-}
-.utility-tab svg {
-  width: 13px;
-  height: 13px;
-}
+
 .utility-key {
   font-size: 8px;
 }
-.utility-tab:hover {
-  background: #7c6443;
-}
-.utility-tab#log-toggle {
-  left: 31px;
-  top: 377px;
-}
-.utility-tab#intel-toggle {
-  left: auto;
-  right: 30px;
-  top: 53px;
-}
+
 .log-panel {
   top: 421px;
   left: 27px;
-  background: #211c18ee;
-  border: 1px solid #ab8356;
-  border-radius: 9px;
 }
 .boss-panel {
-  background: #2c231bef;
-  border: 1px solid #c39e65;
-  border-radius: 9px;
   top: 98px;
   right: 28px;
   color: #eddcbd;
@@ -1109,11 +871,6 @@
   color: #8a6a4380;
   font-size: 13px;
   letter-spacing: 2px;
-}
-.battle-bottom {
-  left: 23px;
-  bottom: 12px;
-  opacity: 0.65;
 }
 .prop-chimney {
   left: 5px;
@@ -1149,16 +906,6 @@
 }
 .board-prop:focus-visible {
   box-shadow: inset 0 0 0 2px #ffe5a9;
-}
-.prop-tooltip {
-  border: 1px solid #c6a779;
-  background: #2b221be8;
-  color: #f1d6a7;
-  box-shadow: 0 6px 16px #13101366;
-  border-radius: 8px;
-  font-size: 11px;
-  max-width: 245px;
-  padding: 10px 14px;
 }
 /* Main menu: a single framed invitation with two collectible card specimens. */
 #lobby {
@@ -1303,21 +1050,7 @@
   backdrop-filter: blur(8px);
 }
 .modal-box {
-  border-width: 6px;
-  border-color: #83603e;
-  border-radius: 15px;
-  box-shadow:
-    0 0 0 2px #d1ad74,
-    0 0 0 4px #37271c,
-    0 8px 0 5px #2d211a,
-    0 25px 80px #110d15b0,
-    inset 0 0 0 2px #f6dca7;
   max-height: 823px;
-  padding: 29px 37px;
-  background:
-    linear-gradient(125deg, #f5e4bedf, transparent 70%),
-    var(--parchment-texture), #dfc18e;
-  background-size: auto, 512px, auto;
 }
 .modal-heading {
   margin-bottom: 20px;
@@ -1427,11 +1160,8 @@
 .atelier-vignette {
   position: relative;
   height: 298px;
-  border: 1px solid #856440;
-  border-radius: 13px;
-  background: radial-gradient(ellipse at 50% 30%, #685240, #30231d 80%);
+
   overflow: hidden;
-  box-shadow: inset 0 1px #b0926677;
 }
 .atelier-vignette img {
   position: absolute;
@@ -1637,10 +1367,6 @@ body.mobile-ui .library-layout {
 }
 body.mobile-ui .deck-editor {
   width: auto;
-  padding-left: 0;
-  border-left: 0;
-  border-top: 1px solid #beac7e29;
-  padding-top: 18px;
 }
 body.mobile-ui .library-grid {
   grid-template-columns: repeat(4, 180px);
@@ -1681,12 +1407,6 @@ body.mobile-ui #card-preview[data-mode="hover"] {
     left: 1112px;
     top: 448px;
     transform: scale(0.96);
-    transform-origin: top left;
-  }
-  body.mobile-ui .campaign-panel {
-    left: 34px;
-    top: 38px;
-    transform: scale(0.92);
     transform-origin: top left;
   }
 }

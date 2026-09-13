@@ -1,6 +1,20 @@
 /* Production battle layout. This file owns desktop hand geometry and HUD rails.
    World imagery remains behind the interaction plane; mobile geometry belongs
    to EmberViewport and mobile.css. */
+body:not(.touch-layout) #battle .hero.enemy,
+body:not(.touch-layout) #battle .hero.player {
+  width: var(--battle-card-w, 156px);
+  height: auto;
+  aspect-ratio: var(--card-face-ratio, 5 / 7.4);
+}
+body:not(.touch-layout) #battle .hero.enemy {
+  left: 32px;
+  top: 94px;
+}
+body:not(.touch-layout) #battle .hero.player {
+  left: 32px;
+  top: calc(753px - var(--battle-card-h, 231px) - 18px);
+}
 body:not(.touch-layout) .hand-zone {
   left: 200px;
   right: auto;
@@ -51,53 +65,8 @@ body:not(.touch-layout) .hand-card .card-text {
 body:not(.touch-layout) .hand-label {
   left: 227px;
   top: 722px;
-  color: #f4ebce;
 }
-body:not(.touch-layout) .hand-label .hand-tip {
-  display: inline;
-  color: var(--ink-secondary);
-}
-body:not(.touch-layout) .mana-panel {
-  left: 1404px;
-  top: 508px;
-  width: 176px;
-  height: 102px;
-  padding: 12px;
-  border-width: 2px;
-  border-radius: 12px;
-}
-body:not(.touch-layout) .mana-caption {
-  font-size: 10px;
-}
-body:not(.touch-layout) .mana-caption strong {
-  font-size: 21px;
-}
-body:not(.touch-layout) .mana-gems {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 5px 3px;
-}
-body:not(.touch-layout) .mana-gem {
-  width: 19px;
-  height: 19px;
-}
-body:not(.touch-layout) .mana-desc {
-  display: none;
-}
-body:not(.touch-layout) .turn-controls {
-  left: 1404px;
-  width: 176px;
-  top: 409px;
-}
-body:not(.touch-layout) .turn-controls .end-turn {
-  width: 176px;
-}
-body:not(.touch-layout) .turn-shortcut {
-  font-size: 9px;
-}
-body:not(.touch-layout) .turn-number {
-  color: #f4ecd5;
-}
+
 body:not(.touch-layout) .player-deck {
   left: 1315px;
   top: 663px;
@@ -105,10 +74,6 @@ body:not(.touch-layout) .player-deck {
 body:not(.touch-layout) .enemy-deck {
   left: 1430px;
   top: 302px;
-}
-body:not(.touch-layout) .campaign-panel {
-  background: #f4ead7ed;
-  border: 1px solid #a8b18b;
 }
 body:not(.touch-layout) .chapter-name {
   text-shadow: none;
@@ -135,105 +100,537 @@ body:not(.touch-layout) .card-preview .keyword-notes {
 .engine-status {
   display: none;
 }
-/* Small screens need a quiet backing behind text laid over buildings. */
-.touch-layout #touch-match-chip {
-  background: #314b3ba8;
-  border-radius: 7px;
-  padding: 5px;
-}
-.touch-layout .hand-zone {
-  border-top: 1px solid #b9c79866;
-  background: linear-gradient(#40584055, #2d443b99);
-  border-radius: 10px;
-}
-.touch-layout .turn-number {
-  background: #30493690;
-  border-radius: 4px;
-  padding: 3px 5px;
-}
+
 @media (prefers-reduced-motion: reduce) {
   body:not(.touch-layout) .hand-card {
     transition: none;
   }
 }
 /* Notifications use the scenery rail, never the player's hero or hand. */
-body:not(.touch-layout) #hint {
-  left: 1404px;
-  top: 626px;
-  bottom: auto;
-  width: 176px;
-  min-width: 0;
-  max-width: 176px;
-  padding: 10px;
-  transform: none;
-  font-size: 12px;
-  line-height: 1.6;
-  pointer-events: none;
-}
-body:not(.touch-layout) #toast,
-body:not(.touch-layout) .battle-view #toast {
-  left: 22px;
-  top: 92px;
-  bottom: auto;
-  width: 268px;
-  max-width: 268px;
-  padding: 12px 16px;
-  transform: none;
-  font-size: 13px;
-  line-height: 1.6;
-}
-#combat-preview small,
-#combat-preview .survive {
-  color: #45643e;
-}
-#combat-preview .kill {
-  color: #a34635;
-}
+
 /* A reserved status strip prevents temporary notifications hiding units. */
-body.touch-layout .battle-view #toast {
-  left: var(--notice-x);
-  top: var(--notice-y);
-  width: var(--notice-w);
-  height: var(--notice-h);
-  max-width: none;
-  transform: none;
-  padding: 3px 8px;
-  font-size: 11px;
-  line-height: 18px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  background: #f4ecd7;
-  color: #40533e;
-  border-color: #a6b28c;
-}
-body.mobile-landscape .mana-gems {
-  display: none;
-}
-body.mobile-landscape .mana-caption strong {
-  font-size: 13px;
-}
-body.mobile-landscape .mana-caption:before {
-  content: "法力";
-  font-size: 10px;
-  color: #eef1d8;
-}
-body.mobile-landscape .enemy-mana {
-  font-size: 11px;
-  line-height: 16px;
-  padding: 0 4px;
-}
-body.mobile-landscape .enemy-mana i {
-  display: none;
-}
-body.mobile-landscape .enemy-mana:before {
-  content: "敌方法力";
-  font-size: 9px;
-}
+
 body.mobile-portrait .hand-label {
   width: 122px !important;
   white-space: nowrap;
 }
 body.mobile-portrait .hand-label > * {
   flex-shrink: 0;
+}
+
+/* Shared battle control structure. Responsive geometry follows below. */
+:where(#battle) :is(.utility-tab, .contract-open, .power-button, .end-turn),
+body #touch-cancel {
+  letter-spacing: 0.04em;
+}
+:where(#battle) .utility-tab {
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+:where(#battle) .utility-tab [data-icon] {
+  display: grid;
+  place-items: center;
+}
+:where(#battle) .utility-tab svg {
+  width: 19px;
+  height: 19px;
+}
+:where(#battle) .utility-key {
+  display: none;
+  font-size: 10px;
+  margin-left: 8px;
+}
+:where(#battle) .contract-open {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-content: center;
+  align-items: center;
+  gap: 3px 8px;
+  padding: 6px 10px;
+  text-align: left;
+}
+:where(#battle) .contract-open[hidden] {
+  display: none;
+}
+:where(#battle) .contract-sigil {
+  grid-row: 1 / 3;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+}
+:where(#battle) .contract-sigil svg {
+  width: 26px;
+  height: 26px;
+}
+:where(#battle) .contract-label {
+  font-size: 13px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+:where(#battle) .contract-open small {
+  grid-column: 2;
+  font-size: 11px;
+  line-height: 1.3;
+}
+:where(#battle) .power-button {
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  overflow: visible;
+}
+:where(#battle) .power-button > svg {
+  width: 52%;
+  height: 52%;
+  min-width: 23px;
+  min-height: 23px;
+}
+:where(#battle) .power-button b {
+  position: absolute;
+  top: -3px;
+  right: -5px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  font: 600 13px/1 var(--ui-font);
+}
+:where(#battle) .power-button span {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  width: max-content;
+  max-width: 120px;
+  transform: translateX(-50%);
+  font: 12px/1.3 var(--ui-font);
+  white-space: nowrap;
+}
+:where(#battle) .end-turn {
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  white-space: nowrap;
+  font-size: 18px;
+}
+:where(#battle) .turn-number,
+:where(#battle) .turn-shortcut {
+  font: 12px/1.5 var(--ui-font);
+  text-align: center;
+  white-space: nowrap;
+}
+:where(#battle) .turn-shortcut {
+  font-size: 10px;
+}
+:where(#battle) .mana-panel {
+  font-variant-numeric: tabular-nums;
+}
+:where(#battle) .mana-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+:where(#battle) .mana-caption strong {
+  font: 600 22px/1.2 var(--ui-font);
+}
+:where(#battle) .mana-gems {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 8px;
+}
+:where(#battle) .mana-gem {
+  width: 12px;
+  height: 15px;
+}
+:where(#battle) .mana-gem svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+:where(#battle) #touch-match-chip {
+  padding: 0;
+}
+:where(#battle) #touch-match-chip strong {
+  display: block;
+  font: 500 12px/1.5 var(--ui-font);
+}
+:where(#battle) #touch-match-chip small,
+:where(#battle) #touch-match-chip span {
+  font: 11px/1.4 var(--ui-font);
+}
+body :is(#hint, #toast, #combat-preview, #action-status) {
+  position: absolute;
+  z-index: 55;
+  margin: 0;
+  padding: 4px 8px;
+  font: 500 12px/1.5 var(--ui-font);
+  text-align: center;
+  pointer-events: none;
+}
+body #toast {
+  display: none;
+}
+body #toast.visible {
+  display: grid;
+  align-content: center;
+}
+body #hint:empty,
+body #action-status:empty {
+  display: none;
+}
+body #combat-preview {
+  display: none;
+}
+body #combat-preview small {
+  display: block;
+  font: 12px/1.5 var(--ui-font);
+}
+body #touch-target-bar {
+  position: absolute;
+  z-index: 54;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: none;
+}
+body .battle-notice-active #touch-target-bar {
+  visibility: hidden;
+}
+body #touch-target-bar[hidden] {
+  display: none;
+}
+body #touch-target-text {
+  min-width: 0;
+  font: 500 12px/1.5 var(--ui-font);
+  text-align: left;
+}
+body #touch-cancel {
+  flex: 0 0 52px;
+  height: 44px;
+  padding: 0 6px;
+  pointer-events: auto;
+  font-size: 12px;
+}
+body .battle-view #hint {
+  display: none;
+}
+body .battle-view #action-status {
+  display: none;
+}
+:where(#battle) .power-button::before,
+:where(#battle) .end-turn::before {
+  content: none;
+}
+
+/* The desktop court has a central play area and a single command rail.
+   These coordinates also anchor the rule-neutral viewport hit geometry. */
+body:not(.touch-layout) .hero.enemy {
+  left: 48px;
+  top: 154px;
+  width: 168px;
+  height: 208px;
+}
+body:not(.touch-layout) .hero.player {
+  left: 48px;
+  top: 706px;
+  width: 168px;
+  height: 208px;
+}
+body:not(.touch-layout) .arena {
+  left: 270px;
+  top: 212px;
+  width: 1060px;
+  height: 414px;
+}
+body:not(.touch-layout) .enemy-hand {
+  left: 380px;
+  top: 15px;
+  width: 240px;
+  height: 65px;
+}
+body:not(.touch-layout) .hand-zone {
+  left: 240px;
+  top: 701px;
+  width: 1120px;
+  height: 238px;
+  padding: 0 10px;
+}
+body:not(.touch-layout) .hand-label {
+  left: 276px;
+  top: 676px;
+}
+body:not(.touch-layout) .enemy-deck {
+  left: 1275px;
+  top: 145px;
+}
+body:not(.touch-layout) .player-deck {
+  left: 1290px;
+  top: 770px;
+}
+:is(
+  .utility-tab,
+  .power-button,
+  .contract-open,
+  .mana-panel,
+  .turn-controls,
+  .turn-number,
+  #touch-match-chip
+) {
+  position: absolute;
+  z-index: 18;
+}
+.turn-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+body:not(.touch-layout) #log-toggle {
+  left: 1270px;
+  top: 18px;
+  width: 140px;
+  height: 44px;
+}
+body:not(.touch-layout) #intel-toggle {
+  left: 1420px;
+  top: 18px;
+  width: 148px;
+  height: 44px;
+}
+body:not(.touch-layout) .contract-open {
+  left: 1400px;
+  top: 276px;
+  width: 160px;
+  height: 58px;
+}
+body:not(.touch-layout) .power-button {
+  left: 1400px;
+  top: 204px;
+  width: 160px;
+  height: 56px;
+}
+body:not(.touch-layout) .turn-controls {
+  left: 1400px;
+  top: 776px;
+  width: 160px;
+}
+body:not(.touch-layout) .end-turn {
+  width: 152px;
+  height: 64px;
+  flex-shrink: 0;
+}
+body:not(.touch-layout) .mana-panel {
+  left: 1396px;
+  top: 874px;
+  width: 168px;
+  padding: 0 4px;
+}
+body:not(.touch-layout) .turn-number {
+  position: absolute;
+  left: 630px;
+  top: 20px;
+  width: 340px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  z-index: 30;
+}
+body:not(.touch-layout) .power-button {
+  grid-template-columns: 28px 1fr 24px;
+  gap: 8px;
+  padding: 8px;
+}
+body:not(.touch-layout) .power-button span {
+  position: static;
+  width: auto;
+  transform: none;
+  font-size: 13px;
+  grid-column: 2;
+  grid-row: 1;
+}
+body:not(.touch-layout) .power-button b {
+  position: static;
+  grid-column: 3;
+  grid-row: 1;
+}
+body:not(.touch-layout) .power-button > svg {
+  width: 26px;
+  height: 26px;
+  grid-column: 1;
+  grid-row: 1;
+}
+body:not(.touch-layout) .battle-view .top-actions {
+  position: absolute;
+  left: 200px;
+  right: auto;
+}
+body:not(.touch-layout) .battle-view .local-status {
+  display: none;
+}
+body.touch-layout .turn-number {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  z-index: 30;
+}
+body.touch-layout .battle-view #touch-collection {
+  display: none;
+}
+@media (max-width: 360px) {
+  body.mobile-portrait .battle-view #sound-btn {
+    display: none;
+  }
+}
+body:not(.touch-layout) #touch-target-bar {
+  left: 370px;
+  top: 145px;
+  width: 860px;
+  height: max(44px, calc(44px / var(--scale, 1)));
+}
+body:not(.touch-layout) #touch-cancel {
+  height: max(44px, calc(44px / var(--scale, 1)));
+  flex-basis: max(52px, calc(44px / var(--scale, 1)));
+}
+body:not(.touch-layout) #combat-preview {
+  left: 520px;
+  top: 636px;
+  width: 560px;
+  height: 54px;
+}
+body:not(.touch-layout) #toast {
+  left: 370px;
+  top: 145px;
+  width: 860px;
+  min-height: 44px;
+}
+body:not(.touch-layout) #hint {
+  left: 370px;
+  top: 145px;
+  width: 860px;
+}
+body:not(.touch-layout) .log-panel {
+  left: 32px;
+  top: 164px;
+}
+body:not(.touch-layout) .boss-panel {
+  left: auto;
+  right: 32px;
+  top: 164px;
+}
+body.touch-layout #battle :is(#log-toggle, #intel-toggle) {
+  display: none;
+}
+body.touch-layout .turn-controls {
+  gap: 8px;
+}
+body.touch-layout .end-turn {
+  width: 76px;
+  height: 76px;
+  flex-shrink: 0;
+  font-size: 13px;
+}
+body.touch-layout .turn-number {
+  font-size: 11px;
+}
+body.touch-layout .turn-shortcut {
+  display: none;
+}
+body.touch-layout .mana-caption strong {
+  font-size: 16px;
+}
+body.touch-layout .mana-gems {
+  display: none;
+}
+body.touch-layout .mana-caption {
+  justify-content: flex-end;
+}
+body.touch-layout .mana-caption > span {
+  font-size: 11px;
+}
+body.touch-layout #toast {
+  min-height: 40px;
+}
+body.mobile-landscape #touch-match-chip {
+  display: none;
+}
+body.mobile-landscape .contract-open {
+  grid-template-columns: 1fr;
+  padding: 2px;
+  justify-items: center;
+}
+body.mobile-landscape .contract-open .contract-label {
+  font-size: 11px;
+}
+body.mobile-landscape .contract-open small {
+  display: none;
+}
+body.mobile-landscape .contract-sigil {
+  grid-row: auto;
+  width: 22px;
+  height: 22px;
+}
+body.mobile-landscape .contract-sigil svg {
+  width: 21px;
+  height: 21px;
+}
+body.mobile-landscape .end-turn {
+  width: 86px;
+  height: 48px;
+  font-size: 13px;
+}
+body.mobile-landscape .power-button span {
+  font-size: 10px;
+}
+body.mobile-landscape .mana-caption > span {
+  display: none;
+}
+body.mobile-landscape .mana-caption {
+  justify-content: center;
+}
+body.mobile-landscape .turn-number {
+  font-size: 10px;
+}
+body.mobile-portrait #touch-match-chip small,
+body.mobile-portrait #touch-match-chip span {
+  display: none;
+}
+body.mobile-portrait .contract-open small {
+  display: none;
+}
+body.mobile-portrait .contract-sigil {
+  grid-row: auto;
+}
+body.mobile-portrait .contract-label {
+  font-size: 12px;
+}
+body.mobile-portrait .mana-caption > span {
+  display: none;
+}
+@media (max-height: 650px) and (orientation: portrait) {
+  body.mobile-portrait .end-turn {
+    width: 64px;
+    height: 64px;
+    font-size: 12px;
+  }
+  body.mobile-portrait .turn-number {
+    font-size: 10px;
+  }
+}
+
+@media (max-height: 349px) and (orientation: landscape) {
+  body.mobile-landscape .power-button span {
+    display: none;
+  }
+  body.mobile-landscape .end-turn {
+    height: 44px;
+  }
 }

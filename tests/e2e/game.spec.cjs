@@ -40,7 +40,7 @@ test("web build: all assets decode, no external dependencies, actual spells, mel
     await page.evaluate(async () => {
       for (const src of [
         ...Object.values(AnimeAssets),
-        ...Object.values(WindborneAssets),
+        ...Object.keys(EmberThemeDefinition.art).map(key => EmberTheme.art(key)),
       ]) {
         const image = new Image();
         image.src = src;
@@ -119,6 +119,7 @@ test("real origin: campaign, settings and day/night survive reload; demo leaves 
   await page.locator("#mulligan-confirm").click();
   await idle(page);
   await page.locator("#settings-btn").click();
+  await page.locator('[data-section="options"]').click();
   await page.locator('[data-setting="reduced"]').click();
   await page.locator(".wind-time-setting").click();
   await page.locator("#settings-done").click();
@@ -150,6 +151,9 @@ const screens = [
   [1440, 900, false],
   [1280, 720, false],
   [1024, 768, false],
+  [1006, 740, false],
+  [1199, 740, false],
+  [1200, 740, false],
   [390, 844, true],
   [320, 568, true],
   [844, 390, true],
@@ -554,7 +558,7 @@ test("production API is read-only and has one renderer/art implementation", asyn
   ).toBe(26);
   await page.locator("#home-btn").click();
   await page.locator("#atelier-open").click();
-  expect(await page.locator(".atelier-vignette img").count()).toBe(4);
+  expect(await page.locator(".atelier-vignette img").count()).toBe(6);
   await page.locator("#atelier-done").click();
   await page.evaluate(() => Emberfall.showFullArt("cleric"));
   await expect(page.locator(".anime-viewer img")).toBeVisible();

@@ -199,11 +199,11 @@ async function releaseArcherWithPose(page, settleMs) {
       firstSnappedAt: null,
     };
     const transformScale = (value) => {
-      const numbers = value?.match(/^matrix\(([^)]+)\)$/)?.[1]
+      const numbers = value
+        ?.match(/^matrix\(([^)]+)\)$/)?.[1]
         ?.split(",")
         .map(Number);
-      if (!numbers || numbers.length < 4)
-        return { x: 1, y: 1 };
+      if (!numbers || numbers.length < 4) return { x: 1, y: 1 };
       return {
         x: Math.hypot(numbers[0], numbers[1]),
         y: Math.hypot(numbers[2], numbers[3]),
@@ -297,7 +297,10 @@ async function releaseArcherWithPose(page, settleMs) {
             .at(-1) || firstSnapped
         : samples.at(-1),
       snapped = samples.filter((sample) => sample.snapped),
-      transitionMs = Math.max(0, ...samples.map((sample) => sample.transitionMs)),
+      transitionMs = Math.max(
+        0,
+        ...samples.map((sample) => sample.transitionMs),
+      ),
       currentScaleX = current?.scaleX ?? 1,
       currentScaleY = current?.scaleY ?? 1,
       hasIntermediateScale = samples.some(
@@ -376,9 +379,10 @@ async function releaseArcherWithPose(page, settleMs) {
       intermediate,
       notFinal,
       movedFromStart,
-      releaseDelta: release && state?.firstSnappedAt
-        ? release.t - state.firstSnappedAt
-        : null,
+      releaseDelta:
+        release && state?.firstSnappedAt
+          ? release.t - state.firstSnappedAt
+          : null,
     };
   });
   const releasePose = releaseInfo.release,
@@ -661,9 +665,45 @@ for (const [label, viewport] of VIEWPORTS) {
       expect(card).toBeTruthy();
       const before = await handState(page);
       const from = await boxOf(page, card.uid);
-      await touchDrag(page, from, { x: from.x, y: from.y - 90 }, 8);
-      expect((await handState(page)).hint).toContain("拖入战场");
-      await touchDrag(page, { x: from.x, y: from.y - 90 }, from, 8);
+      // One continuous drag leaves the rail and returns before touchEnd.
+      // Two separate touchDrag calls would release (and play) the first card.
+      const cdp = await page.context().newCDPSession(page);
+      const outside = await emptyDropPoint(page);
+      await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [from],
+      });
+      for (let i = 1; i <= 10; i++) {
+        await cdp.send("Input.dispatchTouchEvent", {
+          type: "touchMove",
+          touchPoints: [
+            {
+              x: from.x + ((outside.x - from.x) * i) / 10,
+              y: from.y + ((outside.y - from.y) * i) / 10,
+            },
+          ],
+        });
+        await page.waitForTimeout(16);
+      }
+      expect((await handState(page)).ghost).toBe(1);
+      for (let i = 1; i <= 10; i++) {
+        await cdp.send("Input.dispatchTouchEvent", {
+          type: "touchMove",
+          touchPoints: [
+            {
+              x: outside.x + ((from.x - outside.x) * i) / 10,
+              y: outside.y + ((from.y - outside.y) * i) / 10,
+            },
+          ],
+        });
+        await page.waitForTimeout(16);
+      }
+      await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+      });
+      await cdp.detach();
+      await idle(page);
       const after = await handState(page);
       const stillInHand = await page.evaluate(
         (uid) => !!document.querySelector(`#hand [data-hand="${uid}"]`),
@@ -889,7 +929,12 @@ for (const [label, viewport] of VIEWPORTS) {
       expect(pose.releasePose?.snapped).toBe(true);
       expect(Math.abs(pose.releasePose.scaleX - 0.78)).toBeLessThan(0.025);
       expect(Math.abs(pose.releasePose.scaleY - 0.78)).toBeLessThan(0.025);
-      expect(Math.hypot(pose.ghostPose.x - pose.proxyPose.x, pose.ghostPose.y - pose.proxyPose.y)).toBeLessThan(8);
+      expect(
+        Math.hypot(
+          pose.ghostPose.x - pose.proxyPose.x,
+          pose.ghostPose.y - pose.proxyPose.y,
+        ),
+      ).toBeLessThan(8);
       expect(Math.abs(pose.ghostPose.w - pose.proxyPose.w)).toBeLessThan(8);
       expect(Math.abs(pose.ghostPose.h - pose.proxyPose.h)).toBeLessThan(8);
       await page.waitForFunction(() => !EmberFX.busy);
@@ -913,7 +958,12 @@ for (const [label, viewport] of VIEWPORTS) {
       expect(pose.releaseNotFinal).toBe(true);
       expect(pose.releaseMovedFromStart).toBeGreaterThan(0.1);
       expect(pose.releaseDelta).toBeGreaterThan(0);
-      expect(Math.hypot(pose.ghostPose.x - pose.proxyPose.x, pose.ghostPose.y - pose.proxyPose.y)).toBeLessThan(14);
+      expect(
+        Math.hypot(
+          pose.ghostPose.x - pose.proxyPose.x,
+          pose.ghostPose.y - pose.proxyPose.y,
+        ),
+      ).toBeLessThan(14);
       expect(Math.abs(pose.ghostPose.w - pose.proxyPose.w)).toBeLessThan(14);
       expect(Math.abs(pose.ghostPose.h - pose.proxyPose.h)).toBeLessThan(14);
       await page.waitForFunction(() => !EmberFX.busy);
@@ -948,7 +998,10 @@ for (const [label, viewport] of VIEWPORTS) {
       await startTouch(page);
       const filled = await fillHand(page);
       expect(filled.n).toBeGreaterThan(6);
-      const start = await page.locator("#hand .hand-card .card-text").first().boundingBox();
+      const start = await page
+        .locator("#hand .hand-card .card-text")
+        .first()
+        .boundingBox();
       expect(start).toBeTruthy();
       const before = await handState(page);
       await touchDrag(
@@ -970,14 +1023,19 @@ for (const [label, viewport] of [
   test.describe(`desktop card source continuity · ${label}`, () => {
     test.use({ viewport, isMobile: false, hasTouch: false });
 
-    test("click-play starts at the captured source geometry", async ({ page }) => {
+    test("click-play starts at the captured source geometry", async ({
+      page,
+    }) => {
       await startTouch(page);
       const uid = await prepareSingleMinion(page),
         card = page.locator(`#hand [data-hand="${uid}"]`),
         source = await card.boundingBox();
       await card.click();
       const arena = await page.locator("#arena").boundingBox();
-      await page.mouse.click(arena.x + arena.width / 2, arena.y + arena.height / 2);
+      await page.mouse.click(
+        arena.x + arena.width / 2,
+        arena.y + arena.height / 2,
+      );
       assertPoseContinuity(source, await firstPlayProxyPose(page));
       await page.waitForFunction(() => !EmberFX.busy);
     });
@@ -990,7 +1048,10 @@ for (const [label, viewport] of [
         card = page.locator(`#hand [data-hand="${uid}"]`),
         source = await card.boundingBox(),
         arena = await page.locator("#arena").boundingBox(),
-        from = { x: source.x + source.width / 2, y: source.y + source.height / 2 },
+        from = {
+          x: source.x + source.width / 2,
+          y: source.y + source.height / 2,
+        },
         to = { x: arena.x + arena.width / 2, y: arena.y + arena.height / 2 };
       await page.mouse.move(from.x, from.y);
       await page.mouse.down();

@@ -101,6 +101,7 @@ for (const [width, height] of [
     });
     await expect(page.locator("#deck-save")).toBeEnabled();
     await page.locator("#touch-card-tab").click();
+    await page.locator("#library-filters > summary").click();
     await expect(page.locator("#library-search")).toBeVisible();
     expect(
       await page.evaluate(

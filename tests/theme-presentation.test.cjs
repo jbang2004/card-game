@@ -42,8 +42,8 @@ function runtime(definition) {
 test("theme artwork has independent roles, verified local payloads and provenance", () => {
   const dir = path.join(root, "assets/themes/silverblue");
   const manifest = JSON.parse(fs.readFileSync(path.join(dir, "manifest.json")));
-  assert.equal(manifest.assets.length, 9);
-  assert.equal(new Set(manifest.assets.map((a) => a.role)).size, 9);
+  assert.equal(manifest.assets.length, 8);
+  assert.equal(new Set(manifest.assets.map((a) => a.role)).size, 8);
   for (const entry of manifest.assets) {
     const bytes = fs.readFileSync(path.join(dir, entry.file));
     assert.equal(bytes.toString("ascii", 0, 4), "RIFF");
@@ -80,4 +80,43 @@ test("a replacement theme binds semantic art without gameplay or storage service
   assert.equal(theme.image("home"), theme.image("home"));
   assert.equal(theme.hasArt("missing"), false);
   assert.throws(() => theme.art("missing"), /Theme artwork missing/);
+});
+
+// Boss identity owns scenery; responsive layouts may only crop the same asset.
+test("all six map bosses bind distinct packaged battle scenes", () => {
+  const context = {};
+  vm.runInNewContext(fs.readFileSync(path.join(root, "src/presentation/themes/silverblue.js"), "utf8") + ";this.definition=EmberThemeDefinition", context);
+  const { definition } = context;
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, "assets/scenes/boss-topdown-v1/generation.json")));
+  const ids = ["warden", "queen", "oracle", "frost", "dragon", "moonkeeper"];
+  assert.equal(manifest.records.length, ids.length);
+  const sources = new Set();
+  for (const id of ids) {
+    const entry = manifest.records.find(r => r.id === id);
+    const file = definition.art[definition.encounters[id]].replace("asset:", "assets/");
+    assert.equal(file, entry.runtime);
+    sources.add(file);
+    const bytes = fs.readFileSync(path.join(root, file));
+    assert.equal(bytes.toString("ascii", 8, 12), "WEBP");
+    assert.equal(crypto.createHash("sha256").update(bytes).digest("hex"), entry.sha256);
+  }
+  assert.equal(sources.size, 6);
+  assert.equal(definition.art.battlePortrait, undefined);
+  assert.equal(definition.art.battleLandscape, undefined);
+});
+
+test("responsive polish sheets own layout, never a second component skin", () => {
+  const materialDeclaration =
+    /(?:^|[;{]\s*)(?:background(?:-[\w-]+)?|border(?:-[\w-]+)?|box-shadow|clip-path|color|font|font-family|font-weight|text-shadow)\s*:/gm;
+  for (const file of ["polish-desktop.css", "polish-mobile.css"]) {
+    const css = fs.readFileSync(
+      path.join(root, "src/presentation", file),
+      "utf8",
+    );
+    assert.doesNotMatch(
+      css,
+      materialDeclaration,
+      `${file} must contain geometry and responsive flow only`,
+    );
+  }
 });

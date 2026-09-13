@@ -152,7 +152,7 @@
 
 莫菈复用 soulguide，断契监誓者复用 moonguard。全游戏 41 个随从均有分层待机，其余 32 张法术/武器保持静态。完整清单见 [CHARACTER_ROSTER.txt](CHARACTER_ROSTER.txt)。
 
-神祇的运行卡图保留 768×1024，以支持全屏仪式；普通卡仍为 336×448。该尺寸由统一 packer 依据 divine 元数据派生，网页与离线单文件使用同一张图。
+神祇、契兽与四位英雄的正式肖像卡图均保留 768×1024，以支持全屏契约档案及英雄选择底图；普通卡仍为 336×448。该尺寸由统一 packer 依据 contract 元数据和英雄 portraitId 派生，网页与离线单文件使用同一张图。
 
 ## 月影系列动漫风统一（2026-09-08）
 
@@ -175,3 +175,18 @@
 `assets/ui/manifest.json` 管理原创星火徽章与胡桃木古金透明边框，制作简报见 `assets/ui/PROMPTS.md`。源图保存在 `assets/ui/sources/`；WebP 用于界面，所有文字和数值仍由 DOM 绘制。`tools/ui_assets.py` 使用标准库校验 SHA-256 并生成 `src/ui-assets.js`，由构建注册表装入离线版与 HTTP 版。此次没有替换任何角色原画。
 
 本轮后续新增专用英雄冠饰、收藏书脊、契约祭坛环。书脊首版因实际显示像短把手被拒收，v2重新生成14:1细长装订条；原图和返工记录均保留。完整来源、提示词、处理参数以 `assets/ui/manifest.json` 为准，评审见 `docs/UI_CRAFT_REVIEW_20260909.md`。
+
+
+## 2026-09-13 剩余参考页面素材
+
+`assets/ui/page-reference-v1/`：换牌、奖励、胜利/失败、设置、手册、手机横竖屏战场与三个二级页面背景，以及透明遗物/胜利徽记。以 `EmberThemeDefinition.art` 语义角色消费；卡牌插画映射不变。生成来源、Alpha 实测与散列见该目录 `provenance.json`；页面状态与对照见 [参考页面档案](design/reference-pages/INDEX.md)。素材为参考重建，未声称原图无损提取。
+
+## 2026-09-13 · 地图对应的俯视战场
+
+生产场景位于 `assets/scenes/boss-topdown-v1/`，六个 Boss 一一映射，按 ID 选择，尺寸不改变美术角色。建筑、植被和火山在边缘；中央庭院供实时卡牌与数值使用。`generation.json` 保存内置 image_gen 提示词、源文件与 SHA-256；`sources/` 保留原始 PNG。只对运行文件做 WebP 格式封装。
+
+上一轮地面视角图保存在 `output/boss-topdown-20260913/ground-level-sources/`，旧桌面/横竖屏背景保存在 `output/boss-map-20260913/retired/`，均移出生产素材注册。官方参考仅作为研究证据，见 `output/boss-topdown-20260913/RESEARCH.md`，没有复制其图片到游戏。
+
+## 2026-09-13 · 战场控件与旧运行素材清理
+
+战场辅助按钮与结束回合改为原生细线控件，主题注册不再引用 `polishTurnRing`。旧纸木地图纹理声明和 `WORLD_ASSETS` 注册已移除；早期 `WindborneAssets` 建筑仅保留源文件，不进入当前游戏。画廊消费现有六处 Boss 场景，没有新增或替换卡牌原画。`premium.css` 只保留必要数字与牌面几何，现行材质归属 `components.css`。验证见 [本轮记录](../output/battle-layout-20260913/VALIDATION.md)。

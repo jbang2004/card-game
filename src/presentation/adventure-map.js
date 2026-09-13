@@ -20,7 +20,7 @@
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   })[c]);
   const compass = '<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="33"/><circle cx="50" cy="50" r="40"/><path d="M50 3 60 40 97 50 60 60 50 97 40 60 3 50 40 40Z"/><path d="M50 3V97M3 50H97M20 20 80 80M20 80 80 20"/></svg>';
-  const lock = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3M5 10h14v11H5zM12 14v3"/></svg>';
+  const lock = A.icon('lock');
 
   function campaignState() {
     if (E.inBattle && E.game.s) return E.game.s;
@@ -55,14 +55,14 @@
               <span class="atlas-landmark">
 
                 <span class="atlas-pennant" aria-hidden="true">${i > chapter && !complete ? lock : compass}</span>
-                <span class="atlas-number">${String(i + 1).padStart(2, '0')}</span>
+                <span class="atlas-number">${condition(i) === "done" ? A.icon("check") : condition(i) === "locked" ? lock : `<img src="${A.character(boss)}" alt="">`}</span>
               </span>
-              <span class="atlas-location-copy"><strong class="atlas-name">${escape(boss.title)}</strong><span class="atlas-boss">${escape(boss.name)} <span>· ${boss.hp} 生命</span></span><span class="atlas-status">${condition(i) === 'done' ? '✓ ' : condition(i) === 'current' ? '◆ ' : ''}${status(i)}</span></span>
+              <span class="atlas-location-copy"><strong class="atlas-name"><small>${String(i + 1).padStart(2, "0")}</small>${escape(boss.name)}</strong><span class="atlas-boss">${escape(boss.name)} <span>· ${boss.hp} 生命</span></span><span class="atlas-status">${condition(i) === 'done' ? '✓ ' : condition(i) === 'current' ? '◆ ' : ''}${status(i)}</span></span>
             </button>
           </article>`;
         }).join('')}
       </div>
-      <aside class="atlas-dossier" aria-live="polite"><img class="atlas-dossier-art" alt=""><small class="atlas-dossier-status"></small><h3></h3><p class="atlas-dossier-quote"></p><div class="atlas-dossier-rule"></div></aside>
+      <aside class="atlas-dossier crafted-panel" aria-live="polite"><img class="atlas-dossier-art" alt=""><small class="atlas-dossier-status"></small><h3></h3><p class="atlas-dossier-quote"></p><div class="atlas-dossier-rule"></div></aside>
       <div class="modal-footer atlas-footer">
         <div class="atlas-focus" aria-live="polite"><strong></strong><span></span></div>
         <div class="atlas-relics" aria-label="旅途遗物"><span class="atlas-relic-label">旅途遗物</span>${relics.length ? relics.map(r => `<span class="atlas-relic" title="${escape(r.name + '：' + r.text)}"><img src="${A.relic(r.id)}" alt="${escape(r.name)}" width="30" height="30"></span>`).join('') : '<span class="atlas-relic-empty">击败首领后获得</span>'}</div>

@@ -22,23 +22,31 @@ for (const [width, height] of [
     await page.goto("./?debug=1");
     await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
     await page
-      .locator(width < 1000 ? "#touch-collection" : "#collection-nav")
+      .locator("#touch-collection:visible, #collection-nav:visible")
       .click();
-    const collectionHeader = await page.locator(".library-heading").evaluate((heading) => {
-      const close = heading.parentElement.querySelector(":scope > .modal-close");
-      const closeRect = close.getBoundingClientRect();
-      const line = getComputedStyle(heading, "::after");
-      return {
-        close: [closeRect.width, closeRect.height],
-        border: getComputedStyle(heading).borderBottomStyle,
-        content: line.content,
-        right: parseFloat(line.right),
-      };
-    });
+    const collectionHeader = await page
+      .locator(".library-heading")
+      .evaluate((heading) => {
+        const close = heading.parentElement.querySelector(
+          ":scope > .modal-close",
+        );
+        const closeRect = close.getBoundingClientRect();
+        const line = getComputedStyle(heading, "::after");
+        return {
+          close: [closeRect.width, closeRect.height],
+          border: getComputedStyle(heading).borderBottomStyle,
+          content: line.content,
+          right: parseFloat(line.right),
+        };
+      });
     expect(collectionHeader.close).toEqual([44, 44]);
-    expect(collectionHeader.border).toBe("none");
+    expect(collectionHeader.border).toBe(
+      width >= 1100 && height >= 650 ? "solid" : "none",
+    );
     expect(collectionHeader.content).not.toBe("none");
     expect(collectionHeader.right).toBeGreaterThanOrEqual(48);
+    if (!(await page.locator("#library-search").isVisible()))
+      await page.locator("#library-filters > summary").click();
     const search = await page.locator("#library-search").boundingBox();
     const close = await page.locator(".modal-close").boundingBox();
     expect(
@@ -91,7 +99,15 @@ for (const [width, height] of [
         await page.locator(".mana-panel").evaluate((el) => {
           const p = el.getBoundingClientRect(),
             v = el.querySelector("strong").getBoundingClientRect(),
-            g = el.querySelector(".mana-gems").getBoundingClientRect();
+            gems = el.querySelector(".mana-gems"),
+            g = gems.getBoundingClientRect();
+          if (getComputedStyle(gems).display === "none")
+            return (
+              v.left >= p.left &&
+              v.right <= p.right &&
+              v.top >= p.top &&
+              v.bottom <= p.bottom
+            );
           return (
             [...el.querySelectorAll(".mana-gem")].every((e) => {
               const r = e.getBoundingClientRect();

@@ -38,8 +38,8 @@ async function assertPlacementCue(page) {
   expect(cue.circle.width).toBeGreaterThan(20);
 }
 
-test.describe("three-layer action feedback", () => {
-  test("insufficient mana stays local to its card and resource", async ({
+test.describe("battle instruction and feedback rails", () => {
+  test("insufficient mana highlights its source and explains the error outside the court", async ({
     page,
   }) => {
     await startDemo(page);
@@ -61,14 +61,16 @@ test.describe("three-layer action feedback", () => {
     await expect(page.locator(".mana-panel")).toHaveClass(/feedback-error/);
     const geometry = await page.evaluate(() => {
       const n = document.getElementById("toast").getBoundingClientRect(),
-        c = document.querySelector("#hand .feedback-error").getBoundingClientRect();
+        c = document
+          .querySelector("#hand .feedback-error")
+          .getBoundingClientRect();
       return { n, c };
     });
-    expect(geometry.n.width).toBeLessThanOrEqual(280);
+    expect(geometry.n.width).toBeLessThanOrEqual(900);
     expect(geometry.n.bottom).toBeLessThanOrEqual(geometry.c.top + 2);
   });
 
-  test("desktop targetless play uses a compact board drop guide", async ({
+  test("desktop targetless play offers a visible instruction and cancel action", async ({
     page,
   }) => {
     await startDemo(page);
@@ -84,7 +86,8 @@ test.describe("three-layer action feedback", () => {
     const cue = page.locator("#target-lines");
     await expect(cue).toBeVisible();
     await expect(cue).toHaveAttribute("data-mode", "placement");
-    await expect(page.locator("#touch-target-bar")).toBeHidden();
+    await expect(page.locator("#touch-target-bar")).toBeVisible();
+    await expect(page.locator("#touch-target-text")).toBeVisible();
     await assertPlacementCue(page);
   });
 
@@ -113,18 +116,20 @@ test.describe("three-layer action feedback", () => {
         });
       return {
         target,
-        overlaps: !!target && units.some(
-          (r) =>
-            Math.abs(target.x - r.x) <= r.w / 2 &&
-            Math.abs(target.y - r.y) <= r.h / 2,
-        ),
+        overlaps:
+          !!target &&
+          units.some(
+            (r) =>
+              Math.abs(target.x - r.x) <= r.w / 2 &&
+              Math.abs(target.y - r.y) <= r.h / 2,
+          ),
       };
     });
     expect(placement.target).not.toBeNull();
     expect(placement.overlaps).toBe(false);
   });
 
-  test("mobile targetless play keeps confirmation beside the hand", async ({
+  test("mobile targetless play keeps instructions above the court", async ({
     browser,
   }) => {
     const context = await browser.newContext({
@@ -152,14 +157,167 @@ test.describe("three-layer action feedback", () => {
       "placement",
     );
     const geometry = await page.evaluate(() => {
-      const chip = document.getElementById("touch-target-bar").getBoundingClientRect(),
+      const chip = document
+          .getElementById("touch-target-bar")
+          .getBoundingClientRect(),
         hand = document.getElementById("hand").getBoundingClientRect(),
-        label = document.getElementById("touch-target-text").getBoundingClientRect();
+        label = document
+          .getElementById("touch-target-text")
+          .getBoundingClientRect();
       return { chip, hand, label };
     });
-    expect(geometry.chip.width).toBeLessThanOrEqual(64);
+    expect(geometry.chip.width).toBeGreaterThanOrEqual(280);
     expect(geometry.chip.bottom).toBeLessThanOrEqual(geometry.hand.top + 1);
-    expect(geometry.label.width).toBeLessThanOrEqual(1);
+    expect(geometry.label.width).toBeGreaterThan(40);
+    const cancel = await page.locator("#touch-cancel").boundingBox();
+    expect(cancel.width).toBeGreaterThanOrEqual(44);
+    expect(cancel.height).toBeGreaterThanOrEqual(44);
+    await page.locator("#touch-cancel").click();
+    await expect(chip).toBeHidden();
     await context.close();
   });
+});
+
+for (const [width, height] of [
+  [1600, 940],
+  [1360, 768],
+  [1359, 768],
+  [1280, 720],
+  [390, 844],
+  [320, 568],
+  [844, 390],
+  [667, 375],
+  [568, 320],
+]) {
+  test(`commands, visible instructions and cancellation fit ${width}x${height}`, async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      viewport: { width, height },
+      hasTouch: width < 1000,
+      isMobile: width < 1000,
+    });
+    const page = await context.newPage();
+    await startDemo(page);
+    await expect(page.locator("#end-turn")).toBeEnabled();
+    await page.locator('#hand [data-cardid="frostbolt"]').click();
+    await expect(page.locator("#touch-target-text")).toBeVisible();
+    const before = await page.evaluate(() => JSON.stringify(EmberDebug.game.s));
+    const faults = await page.evaluate(() => {
+      const errors = [],
+        controls = [
+          ...document.querySelectorAll(
+            "#power-btn,#contract-open,#end-turn,#touch-cancel",
+          ),
+        ];
+      const overlap = (a, b) =>
+        Math.min(a.right, b.right) > Math.max(a.left, b.left) + 1 &&
+        Math.min(a.bottom, b.bottom) > Math.max(a.top, b.top) + 1;
+      for (const el of controls) {
+        const r = el.getBoundingClientRect();
+        if (r.width < 43 || r.height < 43) errors.push("small:" + el.id);
+        if (
+          r.left < 0 ||
+          r.top < 0 ||
+          r.right > innerWidth + 1 ||
+          r.bottom > innerHeight + 1
+        )
+          errors.push("outside:" + el.id);
+        if (getComputedStyle(el).backgroundImage !== "none")
+          errors.push("texture:" + el.id);
+        const hit = document.elementFromPoint(
+          r.x + r.width / 2,
+          r.y + r.height / 2,
+        );
+        if (!el.contains(hit)) errors.push("blocked:" + el.id);
+      }
+      for (let i = 0; i < controls.length; i++)
+        for (let j = i + 1; j < controls.length; j++)
+          if (
+            overlap(
+              controls[i].getBoundingClientRect(),
+              controls[j].getBoundingClientRect(),
+            )
+          )
+            errors.push("control-overlap");
+      const bar = document.querySelector("#touch-target-bar"),
+        r = bar.getBoundingClientRect();
+      for (const el of document.querySelectorAll(
+        "#battle .hero,#battle .minion,#hand",
+      ))
+        if (overlap(r, el.getBoundingClientRect()))
+          errors.push("instruction-overlap:" + el.className);
+      const label = document.querySelector("#touch-target-text"),
+        range = document.createRange();
+      range.selectNodeContents(label);
+      const text = range.getBoundingClientRect();
+      if (
+        text.left < r.left ||
+        text.right > r.right ||
+        text.top < r.top - 1 ||
+        text.bottom > r.bottom + 1
+      )
+        errors.push("text-outside");
+      if (label.scrollHeight > label.clientHeight + 1)
+        errors.push("clipped-copy");
+      return errors;
+    });
+    expect(faults).toEqual([]);
+    await page.screenshot({
+      path: `output/battle-layout-20260913/target-${width}.png`,
+    });
+    await page.locator("#touch-cancel").click();
+    await expect(page.locator("#touch-target-bar")).toBeHidden();
+    expect(await page.evaluate(() => JSON.stringify(EmberDebug.game.s))).toBe(
+      before,
+    );
+    if (width < 1000) {
+      await page.setViewportSize({ width: height, height: width });
+      await page.waitForFunction(() => EmberViewport.width === innerWidth);
+      expect(await page.evaluate(() => JSON.stringify(EmberDebug.game.s))).toBe(
+        before,
+      );
+    }
+    await context.close();
+  });
+}
+
+test("a rejected action temporarily replaces its instruction without covering units", async ({
+  page,
+}) => {
+  await startDemo(page);
+  await page.locator('#hand [data-cardid="frostbolt"]').click();
+  await page.evaluate(() =>
+    Emberfall.toast("请点击高亮的合法目标，再确认本次行动。", {
+      duration: 1000,
+    }),
+  );
+  await expect(page.locator("#toast")).toBeVisible();
+  await expect(page.locator("#touch-target-bar")).toBeHidden();
+  await expect(page.locator("#toast")).toBeHidden();
+  await expect(page.locator("#touch-target-bar")).toBeVisible();
+  await page.locator("#touch-cancel").click();
+});
+
+test("the gallery shows the six current scenes and no retired building bundle", async ({
+  page,
+}) => {
+  await page.goto("./?debug=1");
+  await ready(page);
+  await page.evaluate(() => Emberfall.showAtelier());
+  await expect(page.locator(".atelier-vignette")).toHaveCount(6);
+  expect(await page.evaluate(() => typeof WindborneAssets)).toBe("undefined");
+  expect(
+    await page.evaluate(() =>
+      [...document.querySelectorAll(".atelier-vignette img")].every(
+        (img, i) =>
+          img.getAttribute("src") ===
+          EmberTheme.art(
+            EmberThemeDefinition.encounters[EmberData.bosses[i].id],
+          ),
+      ),
+    ),
+  ).toBe(true);
+  await page.locator("#atelier-done").click();
+  await expect(page.locator("#modal")).not.toHaveClass(/visible/);
 });

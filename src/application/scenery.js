@@ -8,26 +8,8 @@
   $(".lobby-copy>.eyebrow").textContent = copy.eyebrow;
   $(".lobby-chinese").textContent = copy.subtitle;
   $(".lobby-tagline").textContent = copy.tagline;
-  $(".lobby-desc").textContent =
-    `${EmberData.heroes.length} 位旅人 · ${EmberData.cards.filter((c) => !c.token).length} 张卡牌 · ${EmberData.bosses.length} 段首领冒险`;
-  $(".lobby-bottom small").textContent = copy.footer;
-  $("#lobby-card-one").innerHTML = E.cardHTML(EmberData.byId.huntress);
-  $("#lobby-card-two").innerHTML = E.cardHTML(EmberData.byId.phoenix);
   $("#atelier-open").innerHTML = "原画档案<small>THE ART COLLECTION</small>";
   $(".board-empty").textContent = "故事的下一笔，由你来写";
-  const metadata = Object.fromEntries(
-    EmberTheme.definition.scenery.map((a) => [a.id, a]),
-  );
-  for (const b of document.querySelectorAll("[data-prop]")) {
-    const a = metadata[b.dataset.prop];
-    if (!a) {
-      b.hidden = true;
-      continue;
-    }
-    b.title = a.name;
-    b.setAttribute("aria-label", a.hint);
-    Object.assign(b.style, a.box);
-  }
   const button = document.createElement("button");
   button.id = "wind-time";
   button.type = "button";
@@ -40,9 +22,9 @@
     isDusk = JSON.parse(localStorage.getItem(key))?.dusk === true;
   } catch {}
   const sun =
-    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg>';
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9ZM12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M5 5l1.8 1.8M17.2 17.2 19 19M19 5l-1.8 1.8M6.8 17.2 5 19"/></svg>';
   const moon =
-    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 15A8 8 0 0 1 9 5a8 8 0 1 0 10 10Z"/></svg>';
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3A9 9 0 1 0 21 15.5 7.5 7.5 0 0 1 16.5 3Z"/><path d="M15 8.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8Z" stroke-width="1" opacity=".38"/></svg>';
   function sync() {
     button.innerHTML =
       (AtelierWorld.dusk ? moon : sun) + (AtelierWorld.dusk ? "暮色" : "晴昼");
@@ -76,6 +58,12 @@
       box.querySelector(".modal-scroll");
     if (content) content.append(row);
     else box.insertBefore(row, box.querySelector(".modal-footer"));
+    const fullscreen = document.createElement("div");
+    fullscreen.className = "setting-row";
+    fullscreen.innerHTML = '<div class="setting-copy"><h3>全屏游玩</h3><p>使用完整屏幕展示酒馆与战场</p></div><button type="button" class="ghost-btn small-btn" id="settings-fullscreen">切换全屏</button>';
+    row.after(fullscreen);
+    fullscreen.querySelector("button").onclick = () =>
+      document.getElementById("fullscreen-btn").click();
     row.querySelector("button").onclick = toggle;
     sync();
   }
@@ -92,17 +80,4 @@
     new3DMeshes: false,
   });
   E.toggleWorldTime = toggle;
-})();
-
-(() => {
-  const collection = document.getElementById("lobby-library-btn");
-  if (collection)
-    collection.firstChild.textContent = `我的收藏 · ${EmberData.cards.filter((c) => !c.token).length} 张卡牌 `;
-  const footer = document.querySelector(".lobby-bottom > div");
-  if (footer) {
-    footer.querySelector("b").textContent =
-      `01—${String(EmberData.bosses.length).padStart(2, "0")}`;
-    footer.querySelector("span").textContent =
-      `${EmberData.bosses.length} 位首领，等你出牌`;
-  }
 })();

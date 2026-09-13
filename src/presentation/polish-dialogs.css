@@ -13,19 +13,7 @@ body #modal.folio-host .card-detail-art {
 body #modal.folio-host .toggle::after {
   border-color: var(--line);
 }
-body
-  #modal.folio-host
-  .audio-level
-  input[type="range"]::-webkit-slider-runnable-track {
-  background: var(--line);
-  border: 0;
-  height: 3px;
-}
-body #modal.folio-host .audio-level input[type="range"]::-webkit-slider-thumb {
-  border: 2px solid var(--accent);
-  background: var(--accent-strong);
-  box-shadow: none;
-}
+
 body #modal.folio-host .covenant-grid > p {
   padding: 18px 20px;
   color: var(--ink-secondary);
@@ -34,6 +22,20 @@ body #modal.folio-host .covenant-grid > p {
 }
 body #modal.folio-host .relic-art img {
   border-color: var(--line);
+}
+body #modal.folio-host .atlas-stage {
+  border: 1px solid var(--line);
+}
+
+body #modal.folio-host .atlas-footer {
+  border-top: 1px solid var(--line);
+}
+
+body #modal.folio-host .card-detail-rule {
+  background: #0e1929bb;
+  border: 1px solid #abbad455;
+  font-family: var(--ui-display);
+  font-weight: 400;
 }
 body #modal.folio-host .campaign-refit > summary {
   padding: 14px 16px;
@@ -44,12 +46,21 @@ body #modal.folio-host .help-toc button {
   background: transparent;
   box-shadow: none;
   border-color: var(--line);
+  border-radius: 12px;
+  font-family: var(--ui-font);
+  font-weight: 500;
 }
 body #modal.folio-host .help-toc button:hover,
 body #modal.folio-host .help-toc button:focus-visible {
   color: var(--accent);
   background: var(--surface-soft);
   border-color: var(--accent);
+}
+body
+  #modal.folio-host[data-type="contracts"]
+  .covenant-tabs
+  button[aria-pressed="true"] {
+  box-shadow: 0 0 18px #9edaff55;
 }
 @media (min-width: 851px) and (min-height: 501px) {
   body:not(.touch-layout) #modal.folio-host .settings-box .modal-scroll {
@@ -82,28 +93,7 @@ body #modal.folio-host .help-toc button:focus-visible {
   body:not(.touch-layout) #modal.folio-host .settings-options {
     gap: 8px;
   }
-  body:not(.touch-layout) #modal.folio-host .setting-row {
-    min-height: 78px;
-    padding: 16px;
-    border: 1px solid var(--line);
-    border-radius: 3px;
-  }
-  body:not(.touch-layout) #modal.folio-host .audio-sliders {
-    align-content: start;
-    align-items: start;
-    gap: 24px;
-    padding: 24px;
-    border: 1px solid var(--line);
-    border-radius: 3px;
-  }
-  body:not(.touch-layout) #modal.folio-host .audio-level {
-    gap: 12px;
-    padding: 0 0 18px;
-    min-height: 72px;
-  }
-  body:not(.touch-layout) #modal.folio-host .audio-level:last-child {
-    padding-bottom: 0;
-  }
+
   body:not(.touch-layout) #modal.folio-host .settings-box .hero-deck-note {
     grid-column: 1 / -1;
     text-align: left;
@@ -141,8 +131,6 @@ body #modal.folio-host .help-toc button:focus-visible {
   }
   body:not(.touch-layout) #modal.folio-host .help-toc button {
     min-height: 52px;
-    border-radius: 2px;
-    font-weight: 500;
     letter-spacing: 0.025em;
   }
   body:not(.touch-layout) #modal.folio-host .key-table {
@@ -178,7 +166,6 @@ body #modal.folio-host .help-toc button:focus-visible {
     margin: 12px 0 20px;
   }
   body:not(.touch-layout) #modal.folio-host .mulligan-box .modal-footer button {
-    font-size: 20px;
     letter-spacing: 0.08em;
   }
   body:not(.touch-layout) #modal.folio-host .covenant-copy h4 {
@@ -197,9 +184,7 @@ body #modal.folio-host .help-toc button:focus-visible {
     margin-top: 8px;
     min-height: 48px;
   }
-  body:not(.touch-layout) #modal.folio-host .relic-choice {
-    padding-top: 20px;
-  }
+
   body:not(.touch-layout) #modal.folio-host .relic-choice h3 {
     margin: 16px 0;
     line-height: 1.4;
@@ -223,23 +208,57 @@ body #modal.folio-host .key-table > div > b {
   color: var(--accent);
   font: 500 16px/1.5 var(--ui-display);
 }
-body #modal.folio-host .audio-level input[type="range"] {
-  appearance: none;
-  -webkit-appearance: none;
-  background: transparent;
-  border: 0;
-}
-/* Scroll cues occupy their own row instead of obscuring the last text line. */
-body #modal.folio-host .folio-scroll-hint {
-  position: static;
-  inset: auto;
-  display: none;
-  flex: 0 0 22px;
-  min-height: 22px;
-  height: 22px;
-  background: var(--surface);
-  font: 400 11px/1.5 var(--ui-font);
-}
+
+/* Native scrolling stays available without a competing footer-like cue. */
+body #modal.folio-host .folio-scroll-hint,
 body #modal.folio-host .folio-pane.has-scroll > .folio-scroll-hint {
-  display: flex;
+  display: none;
+}
+body.touch-layout,
+body.touch-layout * {
+  scrollbar-width: none;
+}
+body.touch-layout *::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+/* Prefer a stable reading surface over translucent type on bright artwork. */
+body #modal.folio-host .hero-option:not(.selected) .hero-option-text {
+  color: var(--ink);
+  text-shadow:
+    0 1px 3px var(--surface),
+    0 0 7px var(--surface);
+}
+body #modal.folio-host .hero-option:not(.selected) h3 {
+  color: var(--ink);
+}
+body #modal.folio-host .modal-close {
+  outline-offset: 2px;
+}
+
+body #modal.folio-host :is(.touch-library-tabs button, .help-toc button) {
+  border-radius: 12px;
+}
+body #modal.folio-host :is(.gold-btn, .ghost-btn) {
+  border-radius: 16px 5px 16px 5px;
+}
+body #modal.folio-host .ghost-btn {
+  border-radius: 14px;
+}
+body #modal.folio-host .filter-btn {
+  border-radius: 18px;
+}
+body #modal.folio-host #settings-done {
+  font-weight: 600;
+}
+body #modal.folio-host :is(.library-search, .deck-title-input, select) {
+  border-radius: 10px;
+}
+body #modal.folio-host .gold-btn:disabled {
+  background: var(--surface-raised);
+  color: var(--ink-secondary);
+  border-color: var(--line);
+  opacity: 1;
+  filter: none;
 }

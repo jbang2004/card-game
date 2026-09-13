@@ -28,8 +28,10 @@ for (const [width, height] of [
     await turnTo(page, '[data-hero="morla"]');
     await page.locator('[data-hero="morla"]').click();
     if (width < 1000) {
-      const heroSheet = await page.locator("#modal .folio-pane").first().evaluate(
-        (pane) => {
+      const heroSheet = await page
+        .locator("#modal .folio-pane")
+        .first()
+        .evaluate((pane) => {
           const viewport = pane.querySelector(".folio-viewport"),
             flow = pane.querySelector(".folio-flow");
           return {
@@ -38,8 +40,7 @@ for (const [width, height] of [
             horizontalOverflow: flow.scrollWidth - viewport.clientWidth,
             pagerCount: pane.querySelectorAll(".folio-pager").length,
           };
-        },
-      );
+        });
       expect(heroSheet.heroCount).toBe(4);
       expect(heroSheet.overflowY).toBe("auto");
       expect(heroSheet.horizontalOverflow).toBeLessThanOrEqual(1);
@@ -59,8 +60,12 @@ for (const [width, height] of [
       await expect(page.locator(".hero-dossier")).toHaveCount(0);
     }
 
-    await turnTo(page, "#game-mode");
-    await page.locator("#game-mode").selectOption("practice");
+    if (await page.locator('[data-mode="practice"]').isVisible())
+      await page.locator('[data-mode="practice"]').click();
+    else {
+      await turnTo(page, "#game-mode");
+      await page.locator("#game-mode").selectOption("practice");
+    }
     await turnTo(page, "#practice-opponent");
     await page.locator("#practice-opponent").selectOption("mage_frost");
     await assertDialogFit(page);
@@ -71,7 +76,7 @@ for (const [width, height] of [
       await page.locator(".modal-close").click();
     }
     await page
-      .locator(width < 1000 ? "#touch-collection" : "#collection-nav")
+      .locator("#touch-collection:visible, #collection-nav:visible")
       .click();
     await assertDialogFit(page);
     await page.locator("[data-library-inspect]").first().click();
@@ -105,8 +110,12 @@ test("arbitrary resize retains hero choices and unsaved deck edits", async ({
   await page.locator("#start-btn").click();
   await turnTo(page, '[data-hero="morla"]');
   await page.locator('[data-hero="morla"]').click();
-  await turnTo(page, "#game-mode");
-  await page.locator("#game-mode").selectOption("practice");
+  if (await page.locator('[data-mode="practice"]').isVisible())
+    await page.locator('[data-mode="practice"]').click();
+  else {
+    await turnTo(page, "#game-mode");
+    await page.locator("#game-mode").selectOption("practice");
+  }
   for (const [width, height] of [
     [431, 777],
     [777, 431],
@@ -114,7 +123,12 @@ test("arbitrary resize retains hero choices and unsaved deck edits", async ({
   ]) {
     await page.setViewportSize({ width, height });
     await assertDialogFit(page);
-    await turnTo(page, "#game-mode");
+    if (await page.locator('[data-mode="practice"]').isVisible())
+      await expect(page.locator('[data-mode="practice"]')).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+    else await turnTo(page, "#game-mode");
     await expect(page.locator("#game-mode")).toHaveValue("practice");
     await expect(page.locator('[data-hero="morla"]')).toHaveClass(/selected/);
   }

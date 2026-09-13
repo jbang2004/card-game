@@ -92,13 +92,37 @@
     },
   });
   const screenContext = {
-    game, deckStore, library, showModal, closeModal, toast, save, startGame,
-    home, demo, clearSelection, showConfirm, applySettings, writeStore, settings, defaults,
-    keywords, showHeroes, showHelp,
-    get chosenHero() { return chosenHero; },
-    set chosenHero(value) { chosenHero = value; },
-    get isDemo() { return isDemo; },
-    get inBattle() { return inBattle; },
+    game,
+    deckStore,
+    library,
+    showModal,
+    closeModal,
+    toast,
+    save,
+    startGame,
+    home,
+    demo,
+    clearSelection,
+    showConfirm,
+    applySettings,
+    writeStore,
+    settings,
+    defaults,
+    keywords,
+    showHeroes,
+    showHelp,
+    get chosenHero() {
+      return chosenHero;
+    },
+    set chosenHero(value) {
+      chosenHero = value;
+    },
+    get isDemo() {
+      return isDemo;
+    },
+    get inBattle() {
+      return inBattle;
+    },
   };
   const screens = Object.freeze({
     heroes: EmberHeroScreens.create(screenContext),
@@ -122,7 +146,9 @@
   let actionGuide = { text: "", mode: null };
   function clearFeedbackMarks() {
     document
-      .querySelectorAll("#hand .hand-card.feedback-error,#hand .hand-card.feedback-info")
+      .querySelectorAll(
+        "#hand .hand-card.feedback-error,#hand .hand-card.feedback-info",
+      )
       .forEach((el) => el.classList.remove("feedback-error", "feedback-info"));
     document.querySelector(".mana-panel")?.classList.remove("feedback-error");
   }
@@ -153,7 +179,7 @@
     if (bar) {
       bar.dataset.mode = mode;
       bar.setAttribute("aria-label", text);
-      bar.hidden = !EmberViewport.mobile;
+      bar.hidden = false;
     }
     app.classList.toggle("placement-active", mode === "placement");
   }
@@ -210,7 +236,14 @@
       `M${from.x},${from.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${to.x},${to.y}`,
     );
     const angle = Math.atan2(to.y - c2.y, to.x - c2.x),
-      tip = mode === "placement" ? (EmberViewport.mobile ? 10 : 15) : EmberViewport.mobile ? 9 : 13,
+      tip =
+        mode === "placement"
+          ? EmberViewport.mobile
+            ? 10
+            : 15
+          : EmberViewport.mobile
+            ? 9
+            : 13,
       wing = tip * 0.55,
       ux = Math.cos(angle),
       uy = Math.sin(angle);
@@ -271,7 +304,10 @@
       }
     }
     return {
-      x: Math.max(arena.left + margin, Math.min(arena.right - margin, candidate.x)),
+      x: Math.max(
+        arena.left + margin,
+        Math.min(arena.right - margin, candidate.x),
+      ),
       y: Math.max(minY, Math.min(maxY, candidate.y)),
     };
   }
@@ -288,44 +324,27 @@
         )
       : null;
   }
-  function positionBattleNotice(text, sourceUid, mana) {
+  function positionBattleNotice() {
     const notice = $("toast");
     if (!notice) return;
-    const anchor = localRect(sourceCard(sourceUid)) ||
-      (mana && localRect(document.querySelector(".mana-panel"))) ||
-      null,
-      width = Math.min(
-        280,
-        Math.max(154, 34 + [...String(text)].length * 13),
-      );
-    // Measure wrapped copy in the active theme before anchoring above a card.
-    notice.style.width = width + "px";
-    const height = notice.offsetHeight || 38;
-    const rail = EmberViewport.mobile ? EmberViewport.layout.notice : {x:25,y:510,w:222};
-    let x = rail.x, y = rail.y;
-    if (!anchor) {
-      Object.assign(notice.style, {left:rail.x+'px', top:rail.y+'px',width:rail.w+'px'});
-      return;
-    }
-    if (anchor) {
-      x = anchor.left + (anchor.w - width) / 2;
-      y = anchor.top - height - 10;
-      if (y < 48) y = anchor.bottom + 10;
-    }
-    x = Math.max(14, Math.min(EmberViewport.width - width - 14, x));
-    y = Math.max(44, Math.min(EmberViewport.height - height - 14, y));
+    const rail = EmberViewport.mobile
+      ? EmberViewport.layout.notice
+      : { x: 370, y: 145, w: 860, h: 44 };
     Object.assign(notice.style, {
-      left: Math.round(x) + "px",
-      top: Math.round(y) + "px",
-      width: width + "px",
+      left: rail.x + "px",
+      top: rail.y + "px",
+      width: rail.w + "px",
+      minHeight: rail.h + "px",
     });
   }
+
   function hideBattleNotice() {
     clearTimeout(toastTimer);
     clearFeedbackMarks();
     const notice = $("toast");
     notice?.classList.remove("visible");
     notice?.removeAttribute("data-kind");
+    app.classList.remove("battle-notice-active");
   }
   function showBattleNotice(
     text,
@@ -337,8 +356,9 @@
     clearFeedbackMarks();
     notice.textContent = text;
     notice.dataset.kind = kind;
+    app.classList.add("battle-notice-active");
     notice.classList.add("visible");
-    positionBattleNotice(text, sourceUid, mana);
+    positionBattleNotice();
     sourceCard(sourceUid)?.classList.add(
       kind === "info" ? "feedback-info" : "feedback-error",
     );
@@ -383,9 +403,17 @@
     document.querySelector(".local-status").textContent = discarded
       ? "测试存档已失效，请重新开始"
       : "单人战役";
-    $("start-btn").innerHTML =
-      (s ? "继续冒险" : "开启冒险") + " " + A.icon("arrow");
-    $("quick-btn").textContent = s ? "新的旅程" : "战斗试玩";
+    $("start-btn").querySelector(".home-action-label").textContent = s
+      ? "继续冒险"
+      : "开启冒险";
+    $("quick-btn").querySelector(".home-action-label").textContent = s
+      ? "新的旅程"
+      : "战斗试玩";
+    $("lobby-save-status").textContent = discarded
+      ? "测试存档已失效，请重新开始"
+      : s
+        ? "旅程已保存，等待你归来。"
+        : "";
     $("quick-btn").title = s
       ? "开始新战役（确认后覆盖当前进度）"
       : "从第 6 回合开始的示范战斗，不影响战役存档";
@@ -437,6 +465,10 @@
     app.classList.toggle("lobby-view", !battle);
     $("lobby").style.display = battle ? "none" : "block";
     $("battle").style.display = battle ? "block" : "none";
+    // The compact command layout is deliberately battle-only. Refresh after
+    // the view class changes so a 1200–1360px desktop window never inherits
+    // phone geometry on the hero, library, or map pages.
+    EmberViewport.resize();
     EmberFX.setView(battle ? "battle" : "lobby");
     document
       .querySelectorAll(".nav-link")
@@ -444,6 +476,13 @@
     $("adventure-nav").classList.add("active");
     if (!battle) {
       app.classList.remove("log-open", "intel-open");
+      for (const [button, panel] of [
+        ["log-toggle", ".log-panel"],
+        ["intel-toggle", ".boss-panel"],
+      ]) {
+        $(button).setAttribute("aria-expanded", "false");
+        document.querySelector(panel).hidden = true;
+      }
       closeCardDetail();
       $("card-preview").style.display = "none";
       clearSelection();
@@ -478,7 +517,7 @@
     closeModal(false);
     setView(true);
     game.demo();
-    toast("战斗试玩：点击手牌或己方随从，再选择目标。");
+    toast("点击手牌或己方随从，开始行动", { kind: "info" });
   }
   function showModal(html, type, locked = false) {
     clearTimeout(toastTimer);
@@ -505,6 +544,29 @@
     }
     EmberDialogs.mount($("modal").firstElementChild, type);
     const openedBox = $("modal").firstElementChild;
+    if (
+      [
+        "heroes",
+        "map",
+        "contracts",
+        "mulligan",
+        "rewards",
+        "result",
+        "settings",
+        "help",
+        "library",
+        "discover",
+        "confirm",
+        "library-card",
+      ].includes(type)
+    ) {
+      const brand = document.createElement("div");
+      brand.className = "reference-page-brand";
+      brand.setAttribute("aria-hidden", "true");
+      brand.innerHTML = "<span>烬域</span><small>EMBERFALL</small>";
+      openedBox.append(brand);
+    }
+
     requestAnimationFrame(() => {
       if (!openedBox?.isConnected || openedBox.contains(document.activeElement))
         return;
@@ -535,8 +597,12 @@
       fn();
     };
   }
-  function showHeroes(...args) { return screens.heroes.showHeroes(...args); }
-  function showMulligan(...args) { return screens.heroes.showMulligan(...args); }
+  function showHeroes(...args) {
+    return screens.heroes.showHeroes(...args);
+  }
+  function showMulligan(...args) {
+    return screens.heroes.showMulligan(...args);
+  }
   function centerOf(el) {
     return EmberViewport.pos(el);
   }
@@ -563,10 +629,7 @@
     const transform = computed?.transform;
     if (transform && transform !== "none") {
       const values = transform.startsWith("matrix3d(")
-        ? transform
-            .slice(9, -1)
-            .split(",")
-            .map(Number)
+        ? transform.slice(9, -1).split(",").map(Number)
         : transform
             .slice(transform.startsWith("matrix(") ? 7 : 0, -1)
             .split(",")
@@ -670,54 +733,33 @@
               phaseText: "双方 30 血，无遗物与首领觉醒。",
             }
           : D.bosses[s.bossIndex];
-    $("chapter-name").textContent = boss.title;
-    $("chapter-sub").textContent =
-      "CHAPTER " +
-      String(s.bossIndex + 1).padStart(2, "0") +
-      " · " +
-      (isDemo ? "战斗试玩" : "失落的王国");
-    $("path-list").innerHTML = D.bosses
-      .map(
-        (b, i) =>
-          `<div class="path-item ${i === s.bossIndex ? "current" : i < s.bossIndex ? "done" : ""}"><div class="path-node"><span>${i < s.bossIndex ? "✓" : String(i + 1).padStart(2, "0")}</span></div><div><strong>${b.title}</strong><small>${b.name}</small></div></div>`,
-      )
+    AtelierWorld.setEncounter(s.mode === "practice" ? "practice" : boss.id);
+    $("chapter-name").textContent =
+      s.mode === "practice" ? "酒馆练习" : boss.title;
+    $("relic-slots").innerHTML = s.relics
+      .map((id) => {
+        const r = D.relics.find((x) => x.id === id);
+        return `<div class="relic-slot" title="${r.name}：${r.text}">${A.icon(r.icon)}</div>`;
+      })
       .join("");
-    $("relic-slots").innerHTML =
-      s.relics
-        .map((id) => {
-          const r = D.relics.find((x) => x.id === id);
-          return `<div class="relic-slot" title="${r.name}：${r.text}">${A.icon(r.icon)}</div>`;
-        })
-        .join("") +
-      Array.from(
-        { length: Math.max(0, 3 - s.relics.length) },
-        () => '<div class="relic-slot empty">' + A.icon("gem") + "</div>",
-      ).join("");
+    $("relic-slots").hidden = !s.relics.length;
     $("boss-order").textContent =
-      "BOSS ENCOUNTER · " + String(s.bossIndex + 1).padStart(2, "0");
-    if (s.mode === "practice") {
-      $("chapter-name").textContent = "酒馆练习";
-      $("chapter-sub").textContent = D.archetypes.find(
-        (a) => a.id === s.opponent,
-      ).name;
-      $("boss-order").textContent = "PRACTICE DUEL";
-      $("path-list").innerHTML =
-        '<p class="deck-plan">' +
-        D.archetypes.find((a) => a.id === s.opponent).plan +
-        "</p>";
-    }
+      s.mode === "practice" ? "对手情报" : "首领情报";
     $("boss-name").textContent = boss.name;
-    $("boss-english").textContent = boss.en;
     $("boss-power-info").innerHTML =
-      `<strong>${boss.power}</strong><p>${boss.powerText}</p>`;
+      `<strong>${boss.power}</strong><p>${boss.powerText || "双方使用英雄技能，无首领觉醒。"}</p>`;
     $("phase-info").classList.toggle("awaken", s.phase2);
     $("phase-info").innerHTML =
       `<small>${s.mode === "practice" ? "公平练习" : s.phase2 ? "PHASE II · 已觉醒" : "PHASE II · 半血觉醒"}</small><p>${boss.phaseText}</p>`;
     for (const side of ["p", "e"]) {
       const p = s[side],
         data = side === "p" ? hero : boss,
-        el = $(side === "p" ? "player-hero" : "enemy-hero");
-      el.innerHTML = `<div class="portrait-frame"><img src="${A.character(data)}" data-art-key="${data.portraitId}" data-portrait-mode="hero" data-portrait-instance="${side}:hero" data-portrait-state="${p.frozen ? "frozen" : "idle"}" alt="${data.name}" draggable="false" style="${artStyleForHero(data, "hero")}"></div><div class="hero-name">${data.name}</div><div class="hero-health ${p.hp < p.maxHp ? "damaged" : ""}">${Math.max(0, p.hp)}</div>${p.armor ? `<div class="hero-armor" title="护甲 ${p.armor}">${p.armor}</div>` : ""}${p.secrets.length ? '<div class="secret-indicator" title="奥秘已布置">?</div>' : ""}${side === "e" && s.mode !== "practice" ? `<div class="hero-phase">${s.phase2 ? "阶段 II" : "阶段 I"}</div>` : ""}`;
+        el = $(side === "p" ? "player-hero" : "enemy-hero"),
+        attack = p.weapon?.atk ?? 0,
+        hasMana = p.maxMana > 0,
+        health = Math.max(0, p.hp),
+        stats = `<div class="hero-stat hero-mana"${hasMana ? ` title="法力 ${p.mana}/${p.maxMana}"` : " hidden"}>${A.badgeFrame("mana")}<span class="stat-value">${p.mana}</span></div><div class="hero-stat hero-attack" title="攻击 ${attack}">${A.badgeFrame("blade")}<span class="stat-value">${attack}</span></div><div class="hero-stat hero-health ${health < p.maxHp ? "damaged" : ""}">${A.badgeFrame("heart")}<span class="stat-value">${health}</span></div>${p.armor ? `<div class="hero-stat hero-armor" title="护甲 ${p.armor}">${A.badgeFrame("ward")}<span class="stat-value">${p.armor}</span></div>` : ""}`;
+      el.innerHTML = `<div class="hero-card-inner"><div class="portrait-frame"><img src="${A.character(data)}" data-art-key="${data.portraitId}" data-art-version="wanxiang-v4" data-portrait-mode="hero" data-portrait-instance="${side}:hero" data-portrait-state="${p.frozen ? "frozen" : "idle"}" alt="${data.name}" draggable="false" style="${artStyleForHero(data, "hero")}"></div><span class="hero-card-plaque" aria-hidden="true"></span><div class="hero-name">${data.name}</div></div>${stats}${p.secrets.length ? '<div class="secret-indicator" title="奥秘已布置">?</div>' : ""}${side === "e" && s.mode !== "practice" ? `<div class="hero-phase">${s.phase2 ? "阶段 II" : "阶段 I"}</div>` : ""}`;
       el.dataset.heroClass = data.classId || "boss";
       el.classList.toggle("frozen", p.frozen);
       el.classList.toggle("ready", game.canAttack(side, "hero"));
@@ -725,21 +767,24 @@
         "aria-label",
         data.name +
           "，生命 " +
-          Math.max(0, p.hp) +
+          health +
+          "，攻击 " +
+          attack +
           "，护甲 " +
           p.armor +
+          (hasMana ? `，法力 ${p.mana}/${p.maxMana}` : "") +
           (p.frozen ? "，已冻结" : ""),
       );
       el.title =
         data.name +
         " · " +
-        Math.max(0, p.hp) +
+        health +
         "/" +
         p.maxHp +
+        " · 攻击 " +
+        attack +
         (p.armor ? " · 护甲 " + p.armor : "");
     }
-    $("hero-side-label").innerHTML =
-      `<strong>${hero.title}</strong>${isDemo ? "战斗试玩" : "余火的旅人"}`;
     $("power-btn").innerHTML =
       A.icon(hero.powerIcon) +
       "<b>" +
@@ -750,8 +795,6 @@
     $("power-btn").dataset.heroClass = hero.classId;
     $("power-btn").title = hero.powerText;
     $("power-btn").disabled = !!game.legalPower("p");
-    $("enemy-mana").innerHTML =
-      "<i></i><span>" + s.e.mana + " / " + s.e.maxMana + "</span>";
     $("enemy-hand").innerHTML = s.e.hand
       .map(
         (c, i) =>
@@ -807,7 +850,7 @@
                   })[t],
               )
               .join("");
-            return `<button class="minion ${side === "e" ? "enemy" : "friendly"} ${m.tags.join(" ")} ${ready ? "ready" : ""} ${m.frozen ? "frozen" : ""} ${c.rarity}" style="left:${x}px;top:${y}px;width:${geo.w}px;height:${geo.h}px;--unit-w:${geo.w}px" data-compact="${geo.w < 50}" data-side="${side}" data-uid="${m.uid}" data-cardid="${c.id}" aria-label="${c.name}，攻击 ${m.atk}，生命 ${m.hp}，${m.tags.map((t) => D.kw[t]).join("、")}${m.frozen ? "，被冻结" : ""}"><div class="minion-art"><img src="${A.card(c)}" alt="" draggable="false" data-art-key="${artKeyForCard(c)}" data-portrait-mode="board" data-portrait-instance="${side}:${m.uid}" data-portrait-state="${m.frozen ? "frozen" : "idle"}" style="${artStyleForCard(c, "minion")}"></div><span class="unit-aura" aria-hidden="true"></span><div class="minion-name">${c.name}</div><span class="stat atk">${A.badgeFrame("blade")}<span class="stat-value">${m.atk}</span></span><span class="stat hp ${m.hp < m.maxHp ? "hurt" : ""}">${A.badgeFrame("heart")}<span class="stat-value">${Math.max(0, m.hp)}</span></span><span class="minion-status">${m.frozen ? "❄" : specials ? '<span class="special">' + specials + "</span>" : m.sick && !ready ? '<span class="sleep">z z</span>' : ""}</span>${ready ? '<span class="ready-dot"></span>' : ""}</button>`;
+            return `<button class="minion ${side === "e" ? "enemy" : "friendly"} ${m.tags.join(" ")} ${ready ? "ready" : ""} ${m.frozen ? "frozen" : ""} ${c.rarity}" style="left:${x}px;top:${y}px;width:${geo.w}px;height:${geo.h}px;--unit-w:${geo.w}px" data-compact="${geo.w < 50}" data-side="${side}" data-uid="${m.uid}" data-cardid="${c.id}" aria-label="${c.name}，攻击 ${m.atk}，生命 ${m.hp}，${m.tags.map((t) => D.kw[t]).join("、")}${m.frozen ? "，被冻结" : ""}"><div class="minion-art"><img src="${A.card(c)}" alt="" draggable="false" data-art-key="${artKeyForCard(c)}" data-art-version="wanxiang-v4" data-portrait-mode="board" data-portrait-instance="${side}:${m.uid}" data-portrait-state="${m.frozen ? "frozen" : "idle"}" style="${artStyleForCard(c, "minion")}"></div><span class="unit-aura" aria-hidden="true"></span><div class="minion-name">${c.name}</div><span class="stat atk">${A.badgeFrame("blade")}<span class="stat-value">${m.atk}</span></span><span class="stat hp ${m.hp < m.maxHp ? "hurt" : ""}">${A.badgeFrame("heart")}<span class="stat-value">${Math.max(0, m.hp)}</span></span><span class="minion-status">${m.frozen ? "❄" : specials ? '<span class="special">' + specials + "</span>" : m.sick && !ready ? '<span class="sleep">z z</span>' : ""}</span>${ready ? '<span class="ready-dot"></span>' : ""}</button>`;
           })
           .join(""),
       )
@@ -818,6 +861,10 @@
     const metrics = EmberHand.metrics(s.p.hand.length);
     $("hand").style.setProperty("--desktop-card-w", metrics.width + "px");
     $("hand").style.setProperty("--desktop-card-h", metrics.height + "px");
+    if (!document.body.classList.contains("touch-layout")) {
+      app.style.setProperty("--battle-card-w", metrics.width + "px");
+      app.style.setProperty("--battle-card-h", metrics.height + "px");
+    }
     const gap = metrics.step;
     $("hand").innerHTML = s.p.hand
       .map((card, i) => {
@@ -829,10 +876,7 @@
       .join("");
     const ours = s.active === "p";
     $("turn-number").textContent =
-      "TURN " +
-      String(s.turn).padStart(2, "0") +
-      " · " +
-      (ours ? "你的回合" : "敌方回合");
+      "第 " + s.turn + " 回合" + " · " + (ours ? "你的回合" : "敌方回合");
     syncEndTurn(s);
     $("end-turn").classList.toggle("thinking", !ours);
     const anyAction =
@@ -848,7 +892,7 @@
     $("mana-gems").innerHTML = Array.from(
       { length: 10 },
       (_, i) =>
-        `<span class="mana-gem ${i < s.p.mana ? "available" : i < s.p.maxMana ? "used" : ""}"></span>`,
+        `<span class="mana-gem ${i < s.p.mana ? "available" : i < s.p.maxMana ? "used" : ""}">${A.badgeFrame("mana")}</span>`,
     ).join("");
     $("battle-log").innerHTML = s.log
       .slice(-8)
@@ -890,7 +934,6 @@
       el.addEventListener("mouseenter", () => preview(el.dataset.cardid, el));
       el.addEventListener("mouseleave", hidePreview);
     });
-    updateHandTip();
     if (EmberViewport.mobile) $("hand").scrollLeft = handScroll;
     window.EmberMobile?.afterRender(s);
     updateSelection();
@@ -900,11 +943,6 @@
     // so the next frame continues from the painted pose instead of replaying a
     // template entrance.
     EmberFX.syncCardTargets?.();
-  }
-  function updateHandTip() {
-    const tip = document.querySelector(".hand-tip");
-    if (tip && !EmberViewport.mobile)
-      tip.textContent = "拖到战场出牌 · 点按选中/瞄准 · 悬停看大图";
   }
   /* One detail layer for every input: hover (mouse), keyboard focus, right
    * click and touch long-press all magnify the same card. Nothing else is
@@ -1153,7 +1191,8 @@
       /* Dismissal must not fall through to the board or a hand card. */
       e.preventDefault();
       e.stopPropagation();
-      suppressNextClick(60);
+      // This click is already stopped. A new tap may immediately play a card;
+      // a timed suppressor here would swallow that separate user gesture.
     },
     true,
   );
@@ -1169,9 +1208,7 @@
     // A successful drag already carries an immutable geometry/markup snapshot.
     // Do not reinterpret its ghost through the live hand node a second time.
     const capturedOrigin =
-      origin?.point && origin.html
-        ? origin
-        : captureCardOrigin(selectedOrigin);
+      origin?.point && origin.html ? origin : captureCardOrigin(selectedOrigin);
     hidePreview();
     clearSelection();
     pendingCardOrigin = capturedOrigin;
@@ -1249,10 +1286,10 @@
     const c = card && D.byId[card.cid];
     if (armCard(uid)) return EmberAudio.fx("select");
     if (c && !c.target) return prepareCard(uid);
-    return act(
-      () => game.dispatch({ type: "play", side: "p", uid }),
-      { side: "p", uid },
-    );
+    return act(() => game.dispatch({ type: "play", side: "p", uid }), {
+      side: "p",
+      uid,
+    });
   }
   function clickUnit(side, uid) {
     if (modalType || !inBattle || EmberFX.busy) return;
@@ -1406,7 +1443,8 @@
     setGuide(
       actionGuide.text ||
         (selection.type === "card-play" ? "点击战场空位确认" : "选择目标"),
-      actionGuide.mode || (selection.type === "card-play" ? "placement" : "target"),
+      actionGuide.mode ||
+        (selection.type === "card-play" ? "placement" : "target"),
     );
     if (selection.type === "card-play") updatePlacementCue();
     else updateTargetLine();
@@ -1454,12 +1492,11 @@
       side = el?.dataset?.side;
     const legalTarget =
       uid && side && c?.target
-        ? game.targets(c.target, "p").some(
-            (t) => t.side === side && t.uid === uid,
-          )
+        ? game
+            .targets(c.target, "p")
+            .some((t) => t.side === side && t.uid === uid)
         : false;
-    if (el && legalTarget)
-      return { kind: "target", point: centerOf(el) || p };
+    if (el && legalTarget) return { kind: "target", point: centerOf(el) || p };
     if (el && c?.target) return null;
     if (el && c?.type !== "weapon") return null;
     if (inPlayArea(p)) return { kind: "board", point: p };
@@ -1644,11 +1681,7 @@
       if (!drag.started) {
         const dx = e.clientX - drag.sx,
           dy = e.clientY - drag.sy;
-        if (
-          touch &&
-          Math.abs(dx) > 10 &&
-          Math.abs(dx) > Math.abs(dy) + 4
-        ) {
+        if (touch && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) + 4) {
           drag.horizontal = true;
           if (drag.timer) {
             clearTimeout(drag.timer);
@@ -1658,9 +1691,7 @@
         }
         if (touch && drag.horizontal) return;
         const intent = touch
-          ? dy < -14 &&
-            -dy > Math.abs(dx) + 6 &&
-            !drag.horizontal
+          ? dy < -14 && -dy > Math.abs(dx) + 6 && !drag.horizontal
           : Math.hypot(p.x - drag.x, p.y - drag.y) > 12;
         if (!intent) return;
         startDrag(drag, touch);
@@ -1733,11 +1764,21 @@
         toast((D.byId[e.cid]?.name || "奥秘") + "触发。");
     }
   }
-  function showDiscover(...args) { return screens.campaign.showDiscover(...args); }
-  function showResult(...args) { return screens.campaign.showResult(...args); }
-  function showRewards(...args) { return screens.campaign.showRewards(...args); }
-  function showSettings(...args) { return screens.preferences.showSettings(...args); }
-  function showHelp(...args) { return screens.preferences.showHelp(...args); }
+  function showDiscover(...args) {
+    return screens.campaign.showDiscover(...args);
+  }
+  function showResult(...args) {
+    return screens.campaign.showResult(...args);
+  }
+  function showRewards(...args) {
+    return screens.campaign.showRewards(...args);
+  }
+  function showSettings(...args) {
+    return screens.preferences.showSettings(...args);
+  }
+  function showHelp(...args) {
+    return screens.preferences.showHelp(...args);
+  }
   $("start-btn").onclick = () => {
     EmberAudio.unlock();
     validSave() ? continueGame() : showHeroes();
@@ -1798,10 +1839,10 @@
   $("arena").onclick = () => {
     if (selection?.type === "card-play") {
       const uid = selection.uid;
-      act(
-        () => game.dispatch({ type: "play", side: "p", uid }),
-        { side: "p", uid },
-      );
+      act(() => game.dispatch({ type: "play", side: "p", uid }), {
+        side: "p",
+        uid,
+      });
     } else clearSelection();
   };
   document.addEventListener("pointerdown", () => EmberAudio.unlock(), {
@@ -1833,7 +1874,9 @@
         ...$("modal").querySelectorAll(
           'button:not(:disabled),input,select,[tabindex="0"]',
         ),
-      ].filter((el) => el.offsetParent !== null);
+      ].filter(
+        (el) => el.offsetParent !== null && el.tabIndex >= 0 && !el.disabled,
+      );
       if (nodes.length) {
         const first = nodes[0],
           last = nodes[nodes.length - 1];
@@ -1871,9 +1914,8 @@
   window.addEventListener("beforeunload", save);
   resize();
   iconify();
-  $("lobby-art").src = A.card(D.byId.ashdragon);
-  $("lobby-card-one").innerHTML = cardHTML(D.byId.ashdragon);
-  $("lobby-card-two").innerHTML = cardHTML(D.byId.phoenix);
+  EmberTheme.bind($("lobby"));
+  EmberTheme.bind(document.querySelector(".topbar"));
   for (let i = 0; i < 35; i++) {
     const e = document.createElement("span");
     e.className = "ember";

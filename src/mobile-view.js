@@ -28,7 +28,14 @@ const EmberViewport = (() => {
       rawH = Math.round(vv?.height || innerHeight);
     const touch =
       matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
-    const mobile = rawW < 960 || (touch && rawW < 1366);
+    /* A 1600-wide optical canvas becomes illegible before the old 1200px
+       breakpoint.  Treat narrow mouse windows as a dedicated command layout,
+       rather than letterboxing a scaled desktop table. */
+    const compactDesktop =
+      !touch &&
+      (rawW < 1360 || rawH < 700) &&
+      app.classList.contains("battle-view");
+    const mobile = rawW < 1200 || compactDesktop || (touch && rawW < 1366);
     const portrait = mobile && rawH >= rawW;
     const css = getComputedStyle(probe);
     const safe = {
@@ -42,6 +49,7 @@ const EmberViewport = (() => {
     const scale = mobile ? 1 : Math.min(rawW / 1600, rawH / 940);
     const signature = [
       mobile,
+      compactDesktop,
       portrait,
       W,
       H,
@@ -51,6 +59,7 @@ const EmberViewport = (() => {
     ].join(":");
     document.body.classList.toggle("mobile-ui", mobile);
     document.body.classList.toggle("touch-layout", mobile);
+    document.body.classList.toggle("compact-desktop", compactDesktop);
     document.body.classList.toggle("mobile-portrait", portrait);
     document.body.classList.toggle("mobile-landscape", mobile && !portrait);
     app.style.setProperty("--scale", scale);
@@ -65,6 +74,7 @@ const EmberViewport = (() => {
         padR = safe.right + 12,
         usableW = W - padL - padR;
       l.header = safe.top + (portrait ? 52 : 44);
+      // Preserve the established card rail and physical card sizes.
       const handH = portrait
         ? H >= 720
           ? 204
@@ -72,7 +82,7 @@ const EmberViewport = (() => {
             ? 184
             : 166
         : H >= 380
-          ? 176
+          ? Math.round(clamp(H * 0.36, 138, 176))
           : 138;
       l.hand = {
         x: padL - 4,
@@ -80,114 +90,139 @@ const EmberViewport = (() => {
         w: usableW + 8,
         h: handH,
       };
+      const cardH = portrait ? handH - 12 : handH - 10,
+        cardW = Math.round((cardH * 5) / 7.4),
+        shortLandscape = !portrait && H < 420;
       if (portrait) {
-        const heroH = H >= 700 ? 102 : 84,
-          heroW = heroH * 0.8;
+        const short = H < 650;
+        const heroH = cardH,
+          heroW = cardW;
         l.enemy = {
           x: W / 2 - heroW / 2,
-          y: l.header + 18,
+          y: l.header + (short ? 4 : 10),
           w: heroW,
           h: heroH,
         };
-        const ctrlY = l.hand.y - 28 - (H >= 700 ? 112 : 98);
+        const playerY = l.hand.y - heroH - 12,
+          ctrlY = l.hand.y - (short ? 106 : 126);
         l.player = {
-          x: padL + 15,
-          y: ctrlY + 5,
-          w: H >= 700 ? 74 : 65,
-          h: H >= 700 ? 92 : 82,
+          x: padL + 10,
+          y: playerY,
+          w: heroW,
+          h: heroH,
         };
-        l.power = {
-          x: Math.round(padL + usableW * 0.36),
-          y: ctrlY + 44,
-          w: 52,
-          h: 52,
+        l.power = { x: Math.round(W * 0.43), y: ctrlY + 18, w: 48, h: 48 };
+        l.turn = {
+          x: W - padR - 86,
+          y: ctrlY + (short ? -10 : 2),
+          w: 86,
+          h: short ? 88 : 102,
         };
-        l.turn = { x: W - padR - 120, y: ctrlY + 43, w: 120, h: 52 };
-        l.mana = { x: W - padR - 168, y: l.hand.y - 31, w: 168, h: 25 };
-        const top = l.enemy.y + l.enemy.h + 44,
-          bottom = Math.max(top + 100, ctrlY - 8);
-        l.notice = { x: padL, y: l.enemy.y + l.enemy.h + 9, w: usableW, h: 26 };
-        l.arena = { x: padL - 2, y: top, w: usableW + 4, h: bottom - top };
-        l.enemyMana = {
-          x: Math.min(W - padR - 80, l.enemy.x + l.enemy.w + 20),
-          y: l.enemy.y + 34,
-          w: 76,
-          h: 28,
-        };
+        l.mana = { x: W - padR - 150, y: l.hand.y - 23, w: 150, h: 22 };
         l.chip = {
           x: padL,
-          y: l.enemy.y + 8,
-          w: Math.max(70, l.enemy.x - padL - 12),
-          h: 76,
+          y: l.enemy.y,
+          w: Math.max(86, l.enemy.x - padL - 10),
+          h: short ? 20 : 38,
         };
-      } else {
-        const heroH = clamp((l.hand.y - l.header - 10) * 0.36, 54, 88),
-          heroW = heroH * 0.81;
-        l.enemy = { x: padL + 14, y: l.header + 9, w: heroW, h: heroH };
-        l.player = {
-          x: padL + 14,
-          y: l.hand.y - heroH - 26,
-          w: heroW,
-          h: heroH,
-        };
-        const railR = W - padR - 104;
-        l.power = { x: railR + 24, y: l.header + 16, w: 52, h: 52 };
-        l.turn = { x: railR, y: l.hand.y - 72, w: 104, h: 50 };
-        l.mana = { x: railR, y: l.hand.y - 20, w: 104, h: 18 };
-        l.arena = {
-          x: padL + 106,
-          y: l.header + 28,
-          w: W - padL - padR - 226,
-          h: l.hand.y - l.header - 48,
-        };
-        l.enemyMana = { x: padL, y: l.hand.y - 19, w: 94, h: 18 };
-        l.chip = { x: l.arena.x, y: l.header + 2, w: l.arena.w, h: 20 };
-        l.notice = { ...l.chip };
-      }
-      if (portrait) {
-        l.chip.h = Math.max(28, l.enemy.h - 56);
         l.contract = {
           x: padL,
-          y: l.enemy.y + l.enemy.h - 44,
-          w: l.chip.w,
+          y: l.enemy.y + (short ? 24 : 44),
+          w: Math.max(114, l.chip.w),
           h: 44,
+        };
+        /* On very narrow portrait screens the full-width notice used to sit
+         * over the player's hero card. Keep the same surface, but dock it in
+         * the open right rail so both heroes remain fully readable. */
+        const noticeW = W < 430 ? Math.min(180, usableW) : usableW;
+        l.notice = {
+          x: W < 430 ? W - padR - noticeW : padL,
+          y: Math.max(l.enemy.y + heroH, l.contract.y + 44) + 8,
+          w: noticeW,
+          h: 44,
+        };
+        const top = l.notice.y + l.notice.h + 8;
+        l.arena = {
+          x: padL - 2,
+          y: top,
+          w: usableW + 4,
+          h: Math.max(84, ctrlY - 12 - top),
         };
       } else {
-        // The right rail is partitioned into skill, covenant, turn and mana.
-        l.power.y = l.header + 8;
-        l.power.w = l.power.h = H < 370 ? 44 : 48;
-        l.contract = {
-          x: l.turn.x,
-          y: l.power.y + l.power.h + 6,
-          w: l.turn.w,
-          h: 44,
+        const rail = compactDesktop ? 128 : 104;
+        const heroH = cardH,
+          heroW = cardW;
+        const railX = W - padR - rail;
+        const leftRail = shortLandscape
+          ? padL + heroW * 2 + 20
+          : padL + heroW + 20;
+        l.notice = {
+          x: leftRail,
+          y: l.header + 2,
+          w: W - leftRail - padR - rail,
+          h: 40,
         };
-        if (l.contract.y + l.contract.h + 6 > l.turn.y) {
-          l.power.x = l.turn.x;
-          l.contract = { x: l.turn.x + 60, y: l.power.y, w: 44, h: 44 };
-        }
-      }
-      l.handLabel = { x: padL, y: l.hand.y - 44, w: 100, h: 44 };
-      const chipW = Math.min(58, usableW - 18);
-      l.actionChip = portrait
-        ? {
-            x: Math.round(W - padR - chipW),
-            y: l.arena.y + l.arena.h - 42,
-            w: chipW,
-            h: 30,
-          }
-        : {
-            x: Math.round(l.arena.x + l.arena.w - chipW - 8),
-            y: l.hand.y - 48,
-            w: chipW,
-            h: 30,
+        const arenaTop = l.notice.y + l.notice.h + 6;
+        l.arena = {
+          x: leftRail,
+          y: arenaTop,
+          w: Math.max(120, l.notice.w),
+          h: Math.max(90, l.hand.y - 14 - arenaTop),
+        };
+        if (shortLandscape) {
+          const heroY = l.header + 4;
+          l.enemy = { x: padL + 8, y: heroY, w: heroW, h: heroH };
+          l.player = {
+            x: padL + 16 + heroW,
+            y: heroY,
+            w: heroW,
+            h: heroH,
           };
+        } else {
+          l.enemy = {
+            x: padL + 8,
+            y: l.header + 12,
+            w: heroW,
+            h: heroH,
+          };
+          l.player = {
+            x: padL + 8,
+            y: l.hand.y - heroH - 14,
+            w: heroW,
+            h: heroH,
+          };
+        }
+        l.power = { x: railX, y: l.header + 10, w: 44, h: 44 };
+        l.contract = { x: railX + rail - 48, y: l.power.y, w: 48, h: 44 };
+        l.turn = {
+          x: railX,
+          y:
+            H < 350 ? l.power.y + 56 : Math.max(l.power.y + 88, l.hand.y - 106),
+          w: rail,
+          h: 80,
+        };
+        l.mana = {
+          x: railX,
+          y: l.hand.y - (H < 350 ? 20 : 24),
+          w: rail,
+          h: H < 350 ? 20 : 22,
+        };
+        l.chip = { x: padL, y: l.header, w: 80, h: 20 };
+      }
+      l.round = {
+        x: W / 2 - (portrait ? 50 : 110),
+        y: safe.top + 6,
+        w: portrait ? 100 : 220,
+        h: portrait ? 34 : 30,
+      };
+      l.handLabel = { x: padL, y: l.hand.y - 28, w: 110, h: 24 };
+      l.actionChip = { ...l.notice };
       /* The hand is the same physical card as every other card surface. Keep
        * its 5:7.4 face ratio and derive width from the available rail height;
        * independent width/height clamps were making the art aperture change
        * between the hand and the opening-hand dialog. */
-      l.cardH = portrait ? handH - 12 : handH - 10;
-      l.cardW = Math.round((l.cardH * 5) / 7.4);
+      l.cardH = cardH;
+      l.cardW = cardW;
     }
     const before = state;
     state = {
@@ -209,10 +244,10 @@ const EmberViewport = (() => {
         "player-hero": l.player,
         "power-btn": l.power,
         "contract-open": l.contract,
-        "enemy-mana": l.enemyMana,
         hand: l.hand,
         "touch-target-bar": l.actionChip,
         "touch-match-chip": l.chip,
+        "turn-number": l.round,
       };
       for (const [id, r] of Object.entries(roots))
         box(document.getElementById(id), r);
@@ -221,6 +256,8 @@ const EmberViewport = (() => {
       box(document.querySelector(".hand-label"), l.handLabel);
       app.style.setProperty("--hand-card-w", l.cardW + "px");
       app.style.setProperty("--hand-card-h", l.cardH + "px");
+      app.style.setProperty("--battle-card-w", l.cardW + "px");
+      app.style.setProperty("--battle-card-h", l.cardH + "px");
       app.style.setProperty("--header-h", l.header + "px");
       app.style.setProperty(
         "--enemy-row-y",
@@ -244,10 +281,10 @@ const EmberViewport = (() => {
         "player-hero",
         "power-btn",
         "contract-open",
-        "enemy-mana",
         "hand",
         "board-empty",
         "weapon-slot",
+        "turn-number",
       ]) {
         const el = document.getElementById(id);
         if (el)
@@ -307,30 +344,28 @@ const EmberViewport = (() => {
   }
   function deckAnchor(side) {
     const fallback =
-      side === "p"
-        ? {
-            x: state.mobile ? state.width - 28 : 1137,
-            y: state.mobile ? state.height - 92 : 723,
-          }
-        : {
-            x: state.mobile ? 28 : 1137,
-            y: state.mobile ? 86 : 182,
-          },
+        side === "p"
+          ? {
+              x: state.mobile ? state.width - 28 : 1137,
+              y: state.mobile ? state.height - 92 : 723,
+            }
+          : {
+              x: state.mobile ? 28 : 1137,
+              y: state.mobile ? 86 : 182,
+            },
       size = state.mobile ? { w: 78, h: 110 } : { w: 125, h: 178 };
-    return elementPosition(
-      side === "p" ? ".player-deck" : ".enemy-deck",
-      {
-        ...fallback,
-        ...size,
-        left: fallback.x - size.w / 2,
-        top: fallback.y - size.h / 2,
-      },
-    );
+    return elementPosition(side === "p" ? ".player-deck" : ".enemy-deck", {
+      ...fallback,
+      ...size,
+      left: fallback.x - size.w / 2,
+      top: fallback.y - size.h / 2,
+    });
   }
   function intersectionStatus(el, region) {
     if (!el?.isConnected) return "absent";
     const style = getComputedStyle(el);
-    if (style.display === "none" || style.visibility === "hidden") return "absent";
+    if (style.display === "none" || style.visibility === "hidden")
+      return "absent";
     const rect = el.getBoundingClientRect();
     if (!rect.width || !rect.height) return "absent";
     const viewport = {
@@ -357,7 +392,8 @@ const EmberViewport = (() => {
     return fullyVisible ? "visible" : "clipped";
   }
   function handCardAnchor(side, uid) {
-    const selector = side === "p" ? "#hand .hand-card" : "#enemy-hand .card-back",
+    const selector =
+        side === "p" ? "#hand .hand-card" : "#enemy-hand .card-back",
       el = [...document.querySelectorAll(selector)].find(
         (node) =>
           (side === "p" ? node.dataset.hand : node.dataset.enemyHand) === uid,
@@ -382,23 +418,28 @@ const EmberViewport = (() => {
   function minion(side, i, n) {
     if (!state.mobile)
       return {
-        x: 800 + (i - (n - 1) / 2) * 128 - 58,
-        y: side === "e" ? 291 : 444,
+        x: 800 + (i - (n - 1) / 2) * 132 - 58,
+        y: side === "e" ? 222 : 386,
         w: 116,
-        h: 134,
+        h: 146,
       };
     const a = state.layout.arena;
     const gap = n > 5 ? 3 : state.portrait ? 9 : 12;
     const maxW = state.portrait ? 76 : 70;
-    const availableH = a.h * 0.5 - 14;
+    // Short landscape uses wider portrait tokens, not tiny tall cards. Both
+    // layout and hit testing consume these same measured dimensions.
+    const compactLandscape = !state.portrait && state.height < 370;
+    const availableH = a.h * 0.5 - (compactLandscape ? 4 : 14);
     const w = Math.floor(
       Math.min(
         maxW,
         (a.w - 16 - (n - 1) * gap) / Math.max(1, n),
-        availableH / 1.18,
+        compactLandscape ? availableH * 1.25 : availableH / 1.18,
       ),
     );
-    const h = Math.round(w * 1.22),
+    const h = compactLandscape
+        ? Math.min(availableH, Math.round(w * 1.22))
+        : Math.round(w * 1.22),
       total = n * w + (n - 1) * gap;
     return {
       x: a.x + (a.w - total) / 2 + i * (w + gap),
@@ -426,7 +467,15 @@ const EmberViewport = (() => {
       const r = state.layout[side === "p" ? "player" : "enemy"];
       return { x: r.x + r.w / 2, y: r.y + r.h / 2 };
     }
-    if (uid === "hero") return { x: 800, y: side === "p" ? 660 : 195 };
+    if (uid === "hero") {
+      const el = document.getElementById(
+        side === "p" ? "player-hero" : "enemy-hero",
+      );
+      return {
+        x: el.offsetLeft + el.offsetWidth / 2,
+        y: el.offsetTop + el.offsetHeight / 2,
+      };
+    }
     const arr = s[side].board,
       i = Math.max(
         0,

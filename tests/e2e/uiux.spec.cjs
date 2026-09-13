@@ -197,6 +197,8 @@ test("long collection rules stay above stats on desktop and phone", async ({
     await page
       .locator(width < 500 ? "#touch-collection" : "#collection-nav")
       .click();
+    if (!(await page.locator("#library-search").isVisible()))
+      await page.locator("#library-filters > summary").click();
     await page.locator("#library-search").fill("引火学徒");
     const card = page.locator(".library-item .card");
     await expect(card).toHaveCount(1);
@@ -223,9 +225,11 @@ test("long collection rules stay above stats on desktop and phone", async ({
     });
     await page.locator("[data-library-inspect]").click();
     await assertDialogFit(page);
-    await expect(page.locator(".modal-heading")).toContainText("引火学徒");
+    await expect(page.locator(".card-detail-copy > h3")).toHaveText("引火学徒");
     await turnTo(page, ".card-detail-copy > p:last-child");
-    await expect(page.locator(".card-detail-copy > p:last-child")).not.toBeEmpty();
+    await expect(
+      page.locator(".card-detail-copy > p:last-child"),
+    ).not.toBeEmpty();
     await page.locator("#library-detail-back").click();
     await expect(page.locator("#library-search")).toHaveValue("引火学徒");
     await ctx.close();

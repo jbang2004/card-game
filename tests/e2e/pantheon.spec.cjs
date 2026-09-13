@@ -7,6 +7,7 @@ const gods = [
 ];
 for (const [width, height, touch] of [
   [1600, 940, false],
+  [511, 983, true],
   [390, 844, true],
   [844, 390, true],
 ])

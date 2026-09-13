@@ -9,7 +9,9 @@ async function expectSingleScreenControls(page, selector) {
     const view = dialog.querySelector(".folio-viewport"),
       flow = dialog.querySelector(".folio-flow"),
       vr = view.getBoundingClientRect(),
-      controls = [...dialog.querySelectorAll(controlSelector)];
+      controls = [...dialog.querySelectorAll(controlSelector)].filter((el) =>
+        el.checkVisibility(),
+      );
     return {
       horizontalOverflow: flow.scrollWidth - view.clientWidth,
       verticalOverflow: flow.scrollHeight - view.clientHeight,
@@ -33,14 +35,23 @@ async function expectSingleScreenControls(page, selector) {
     };
   }, selector);
   expect(result.horizontalOverflow).toBeLessThanOrEqual(1);
-  if (result.verticalOverflow > 1) await expect(viewport).toHaveCSS('overflow-y','auto');
+  if (result.verticalOverflow > 1)
+    await expect(viewport).toHaveCSS("overflow-y", "auto");
   for (const control of await box.locator(selector).all()) {
+    if (!(await control.isVisible())) continue;
     await control.scrollIntoViewIfNeeded();
     await expect(control).toBeInViewport();
-    expect(await control.evaluate(el => {
-      const r=el.getBoundingClientRect();
-      return r.left>=0 && r.right<=innerWidth && r.top>=0 && r.bottom<=innerHeight;
-    })).toBe(true);
+    expect(
+      await control.evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        return (
+          r.left >= 0 &&
+          r.right <= innerWidth &&
+          r.top >= 0 &&
+          r.bottom <= innerHeight
+        );
+      }),
+    ).toBe(true);
   }
   expect(result.undersizedButtons).toBe(0);
   await expect(viewport).toBeVisible();
@@ -65,10 +76,13 @@ for (const [width, height] of [
     await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
 
     await page.evaluate(() => Emberfall.showSettings());
-    await expectSingleScreenControls(
-      page,
-      ".setting-row,.audio-level,.toggle,.wind-time-setting",
-    );
+    for (const section of ["audio", "options", "operation"]) {
+      await page.locator(`[data-section="${section}"]`).click();
+      await expectSingleScreenControls(
+        page,
+        ".setting-row,.audio-level,.toggle,.wind-time-setting",
+      );
+    }
     await page.evaluate(() => Emberfall.closeModal(false));
 
     await page.evaluate(() => Emberfall.demo());
@@ -79,7 +93,9 @@ for (const [width, height] of [
   });
 }
 
-test("long mobile views scroll vertically without a pager", async ({ browser }) => {
+test("long mobile views scroll vertically without a pager", async ({
+  browser,
+}) => {
   const context = await browser.newContext({
     viewport: { width: 320, height: 568 },
     hasTouch: true,

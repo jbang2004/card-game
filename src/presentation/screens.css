@@ -198,9 +198,8 @@ body
   border: 0;
   border-radius: 0;
   padding: 30px 42px;
-  gap: 20px;
-  background-image:
-    var(--workspace-veil), var(--scene-backdrop);
+  gap: var(--panel-gap);
+  background-image: var(--workspace-veil), var(--scene-backdrop);
   background-size: cover;
 }
 body
@@ -269,14 +268,6 @@ body #modal.folio-host[data-type="heroes"] .hero-option {
   min-height: 84px;
   overflow: visible;
 }
-body #modal.folio-host[data-type="heroes"] .hero-option > img {
-  width: 74px;
-  height: 74px;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  object-fit: cover;
-  flex: none;
-}
 body #modal.folio-host[data-type="heroes"] .hero-option .hero-option-text {
   padding: 0;
   display: block;
@@ -301,10 +292,9 @@ body #modal.folio-host[data-type="heroes"] .hero-option .selected-check {
 body #modal.folio-host[data-type="heroes"] .hero-configuration {
   grid-column: 3;
   grid-template-columns: minmax(0, 1fr);
-  gap: 16px;
+
   margin: 0;
-  padding: 0 6px 0 18px;
-  background: transparent;
+
   min-width: 0;
 }
 body #modal.folio-host[data-type="heroes"] .hero-configuration > * {
@@ -471,9 +461,6 @@ body #modal.folio-host .deck-editor {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: 3px;
 }
 body #modal.folio-host .deck-editor > .folio-pane {
   flex: 1;
@@ -487,20 +474,6 @@ body #modal.folio-host .deck-row {
   padding: 6px 8px;
   font-size: 13px;
 }
-body #modal.folio-host .deck-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding-top: 12px;
-  flex: none;
-  border-top: 1px solid var(--line);
-}
-body #modal.folio-host .deck-actions button {
-  flex: 1;
-  min-width: 85px;
-  padding: 8px;
-  font-size: 13px;
-}
 body #modal.folio-host .touch-library-tabs {
   display: none;
 }
@@ -508,9 +481,10 @@ body #modal.folio-host .touch-library-tabs {
 /* Reward, opening-hand and result screens keep the decision centered. */
 body #modal.folio-host > .mulligan-box {
   --dialog-width: 1160px;
-  padding: 36px 50px;
 }
-body:not(.mobile-portrait):not(.mobile-landscape) #modal.folio-host > .modal-box:has(.discover-options) {
+body:not(.mobile-portrait):not(.mobile-landscape)
+  #modal.folio-host
+  > .modal-box:has(.discover-options) {
   --dialog-width: 1040px;
 }
 body #modal.folio-host .card-detail-art {
@@ -519,16 +493,8 @@ body #modal.folio-host .card-detail-art {
 }
 body #modal.folio-host > .rewards-box {
   --dialog-width: 1240px;
-  padding: 36px 45px;
-  background: var(--reward-veil), var(--scene-backdrop);
-  background-size: cover;
 }
-body #modal.folio-host .mulligan-box .modal-heading,
-body #modal.folio-host .rewards-box .modal-heading,
-body #modal.folio-host .result-box .modal-heading {
-  text-align: center;
-}
-body #modal.folio-host .mulligan-cards,
+
 body #modal.folio-host .discover-options {
   justify-content: center;
   grid-template-columns: repeat(auto-fit, minmax(160px, 230px));
@@ -536,17 +502,7 @@ body #modal.folio-host .discover-options {
   margin: 20px 0;
   padding: 10px 18px 30px;
 }
-body #modal.folio-host .mulligan-box .modal-footer {
-  justify-content: center;
-}
-body #modal.folio-host .mulligan-box .modal-footer button {
-  min-width: 330px;
-  font-size: 23px;
-  min-height: 60px;
-}
-body #modal.folio-host .mulligan-box > .folio-pane + .modal-footer {
-  border: 0;
-}
+
 body #modal.folio-host .relic-options {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -554,7 +510,6 @@ body #modal.folio-host .relic-options {
   margin: 15px 0 25px;
 }
 body #modal.folio-host .relic-choice {
-  padding: 10px 20px 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -590,10 +545,6 @@ body #modal.folio-host .relic-pick-label {
 body #modal.folio-host > .result-box {
   --dialog-width: 980px;
   text-align: center;
-  background: var(--result-veil);
-  border: 0;
-  box-shadow: none;
-  padding: 40px;
 }
 body #modal.folio-host .result-box::before {
   display: none;
@@ -639,16 +590,6 @@ body #modal.folio-host .result-stats > div {
 body #modal.folio-host .result-stats strong {
   font-size: 60px;
   line-height: 1.2;
-}
-body #modal.folio-host .result-box .modal-footer {
-  justify-content: center;
-  gap: 30px;
-  border: 0;
-}
-body #modal.folio-host .result-box .modal-footer button {
-  min-width: 260px;
-  min-height: 60px;
-  font-size: 23px;
 }
 
 /* Map: painterly terrain, live anchors and a readable dossier. */
@@ -814,9 +755,8 @@ body .atlas-location {
   flex: none;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+
   overflow: auto;
-  padding: 0 0 10px 10px;
 }
 .atlas-dossier > img {
   width: 100%;
@@ -901,7 +841,6 @@ body .atlas-relic-empty {
 /* Utility pages are functional information layouts, not picture backgrounds. */
 body #modal.folio-host > .settings-box {
   --dialog-width: 1080px;
-  padding: 30px 40px;
 }
 body #modal.folio-host .settings-box .modal-scroll {
   display: grid;
@@ -916,42 +855,9 @@ body #modal.folio-host .settings-section-heading {
   padding: 0 0 12px;
   font-size: 18px;
 }
-body #modal.folio-host .setting-row {
-  padding: 16px 12px;
-  gap: 20px;
-  min-height: 85px;
-}
-body #modal.folio-host .setting-copy h3 {
-  font-size: 15px;
-  margin: 0 0 6px;
-}
-body #modal.folio-host .setting-copy p {
-  font-size: 12px;
-  line-height: 1.6;
-  margin: 0;
-}
-body #modal.folio-host .audio-sliders {
-  display: grid;
-  gap: 25px;
-  padding: 20px;
-}
-body #modal.folio-host .audio-level {
-  display: grid;
-  grid-template-columns: 1fr 50px;
-  gap: 14px;
-}
-body #modal.folio-host .audio-level input {
-  grid-row: 2;
-  grid-column: 1/-1;
-  width: 100%;
-}
-body #modal.folio-host .audio-level output {
-  grid-column: 2;
-  grid-row: 1;
-}
+
 body #modal.folio-host > .help-box {
   --dialog-width: 1280px;
-  padding: 30px 40px;
 }
 body #modal.folio-host .help-box .modal-scroll {
   display: grid;
@@ -1032,8 +938,6 @@ body #modal.folio-host .covenant-grid {
 body #modal.folio-host .covenant-card {
   display: grid;
   grid-template-columns: 38% minmax(0, 1fr);
-  padding: 15px;
-  gap: 20px;
 }
 body #modal.folio-host .covenant-card > img {
   width: 100%;
@@ -1056,9 +960,15 @@ body #modal.folio-host .covenant-copy p {
   line-height: 1.7;
 }
 body #modal.folio-host .covenant-copy .gold-btn {
-  width: 100%;
-  padding: 12px 8px;
+  width: fit-content;
+  min-width: 220px;
+  max-width: 100%;
+  align-self: center;
+  flex: 0 0 auto;
+  margin-inline: auto;
+  padding: 14px 30px;
   font-size: 16px;
+  white-space: nowrap;
 }
 body #modal.folio-host .ritual-mark {
   display: none;
@@ -1074,40 +984,16 @@ body #modal.folio-host .ritual-count {
   font-size: 13px;
   gap: 8px;
 }
-
-/* Desktop board and command rails. Hit boxes share viewport coordinates. */
-body:not(.touch-layout) .campaign-panel {
-  display: block;
-  left: 25px;
-  top: 128px;
-  width: 222px;
-  padding: 20px;
-}
-body:not(.touch-layout) .campaign-panel .path-list {
-  display: block;
-  margin-top: 22px;
-}
-body:not(.touch-layout) .campaign-panel .path-node {
-  font-size: 12px;
-  min-height: 43px;
-  display: flex;
-  align-items: center;
-  padding: 8px;
-}
 body:not(.touch-layout) .chapter-name {
   font: 400 25px var(--ui-display);
   margin: 12px 0;
 }
-body:not(.touch-layout) .chapter-sub {
-  font-size: 10px;
-  letter-spacing: 1px;
-}
 body:not(.touch-layout) .boss-panel {
-  left: 1350px;
+  left: 1335px;
   right: auto;
-  top: 128px;
-  width: 225px;
-  padding: 20px;
+  top: 155px;
+  width: 240px;
+
   display: block;
 }
 body:not(.touch-layout) .boss-info-name {
@@ -1118,123 +1004,21 @@ body:not(.touch-layout) .phase-info {
   font-size: 12px;
   line-height: 1.7;
 }
-body:not(.touch-layout) #intel-toggle {
-  top: 83px;
-  left: 1390px;
-  width: 185px;
-}
-body:not(.touch-layout) #log-toggle {
-  left: 25px;
-  top: 585px;
-  width: 222px;
-}
+
 body:not(.touch-layout) .log-panel {
   left: 25px;
-  top: 630px;
+  top: 155px;
   width: 240px;
   max-height: 240px;
-  padding: 12px;
 }
-body:not(.touch-layout) .hero.enemy {
-  left: 737px;
-  top: 93px;
-  width: 126px;
-  height: 151px;
-}
-body:not(.touch-layout) .hero.player {
-  left: 737px;
-  top: 566px;
-  width: 126px;
-  height: 154px;
-}
-body:not(.touch-layout) .enemy-mana {
-  left: 915px;
-  top: 160px;
-}
+
 body:not(.touch-layout) .enemy-hand {
-  left: 520px;
-  top: 55px;
-  width: 550px;
-  height: 70px;
   opacity: 0.8;
-}
-body:not(.touch-layout) .arena {
-  left: 270px;
-  top: 245px;
-  width: 1060px;
-  height: 316px;
-}
-body:not(.touch-layout) .turn-controls {
-  left: 1390px;
-  top: 626px;
-  width: 152px;
-}
-body:not(.touch-layout) .turn-controls .end-turn {
-  width: 152px;
-  height: 108px;
-  border-radius: 50%;
-  font-size: 23px;
-}
-body:not(.touch-layout) .turn-number {
-  font-size: 12px;
-  margin-bottom: 10px;
-}
-body:not(.touch-layout) .turn-shortcut {
-  font-size: 9px;
-  margin-top: 9px;
-}
-body:not(.touch-layout) .mana-panel {
-  left: 1100px;
-  top: 638px;
-  width: 218px;
-  padding: 10px;
-}
-body:not(.touch-layout) .mana-caption {
-  font-size: 12px;
-}
-body:not(.touch-layout) .power-button {
-  left: 904px;
-  top: 635px;
-  width: 62px;
-  height: 62px;
-}
-body:not(.touch-layout) .contract-open {
-  left: 410px;
-  top: 635px;
-  width: 244px;
-  min-height: 60px;
-}
-body:not(.touch-layout) .hand-zone {
-  left: 240px;
-  top: 749px;
-  width: 1120px;
-  height: 181px;
-  padding: 0 10px;
-}
-body:not(.touch-layout) .hand-label {
-  left: 335px;
-  top: 721px;
-  width: 650px;
-}
-body:not(.touch-layout) .player-deck {
-  left: 1290px;
-  top: 770px;
-}
-body:not(.touch-layout) .enemy-deck {
-  left: 1275px;
-  top: 145px;
-}
-body:not(.touch-layout) .hero-caption,
-body:not(.touch-layout) .hero-side-label {
-  display: none;
 }
 body:not(.touch-layout) .board-empty {
   left: 400px;
   top: 467px;
   width: 800px;
-}
-body:not(.touch-layout) .board-props {
-  opacity: 0.4;
 }
 
 /* Size changes are geometry-only: no alternate mobile color palette. */
@@ -1253,10 +1037,6 @@ body:not(.touch-layout) .board-props {
   }
   body #modal.folio-host[data-type="heroes"] .hero-single-sheet {
     grid-template-columns: 170px minmax(20px, 1fr) minmax(330px, 40%);
-  }
-  body #modal.folio-host[data-type="heroes"] .hero-option > img {
-    width: 57px;
-    height: 57px;
   }
   body #modal.folio-host[data-type="heroes"] .hero-option h3 {
     font-size: 16px;
@@ -1325,9 +1105,7 @@ body:not(.touch-layout) .board-props {
   body #modal.folio-host .relic-options {
     gap: 12px;
   }
-  body #modal.folio-host .relic-choice {
-    padding: 8px 10px 0;
-  }
+
   body #modal.folio-host .relic-art {
     height: 120px;
   }
@@ -1345,9 +1123,8 @@ body:not(.touch-layout) .board-props {
     width: 100%;
     display: grid;
     grid-template-columns: 80px 1fr;
-    gap: 10px;
+
     max-height: 160px;
-    padding: 0;
   }
   .atlas-dossier > img {
     width: 80px;
@@ -1381,8 +1158,6 @@ body:not(.touch-layout) .board-props {
 @media (max-width: 600px) {
   body #modal.folio-host > .folio-dialog {
     --inset: 18px;
-    padding: 18px;
-    gap: 14px;
   }
   body #modal.folio-host h2 {
     font-size: 26px;
@@ -1427,10 +1202,6 @@ body:not(.touch-layout) .board-props {
     padding: 5px 0;
     min-height: 100px;
   }
-  body #modal.folio-host[data-type="heroes"] .hero-option > img {
-    width: 54px;
-    height: 54px;
-  }
   body #modal.folio-host[data-type="heroes"] .hero-option h3 {
     font-size: 13px;
   }
@@ -1442,11 +1213,8 @@ body:not(.touch-layout) .board-props {
   }
   body #modal.folio-host[data-type="heroes"] .hero-configuration {
     display: grid;
-    padding: 22px 15px;
+
     margin-top: 165px;
-    background: var(--surface-glass);
-    border: 1px solid var(--line);
-    gap: 15px;
   }
   body #modal.folio-host[data-type="heroes"] .modal-footer {
     width: 100%;
@@ -1463,18 +1231,14 @@ body:not(.touch-layout) .board-props {
   .hero-profile-heading h3 {
     font-size: 29px;
   }
-  body #modal.folio-host .mulligan-cards,
+
   body #modal.folio-host .discover-options {
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     gap: 20px 14px;
     padding: 14px 8px;
     margin: 0;
   }
-  body #modal.folio-host .mulligan-box .modal-footer button {
-    min-width: 0;
-    width: 100%;
-    font-size: 18px;
-  }
+
   body #modal.folio-host .relic-options {
     grid-template-columns: 1fr;
   }
@@ -1482,8 +1246,6 @@ body:not(.touch-layout) .board-props {
     display: grid;
     grid-template-columns: 95px 1fr;
     text-align: left;
-    gap: 8px 12px;
-    padding: 14px;
   }
   body #modal.folio-host .relic-art {
     width: 95px;
@@ -1524,18 +1286,9 @@ body:not(.touch-layout) .board-props {
   body #modal.folio-host .result-stats span {
     font-size: 12px;
   }
-  body #modal.folio-host .result-box .modal-footer {
-    gap: 12px;
-  }
-  body #modal.folio-host .result-box .modal-footer button {
-    min-width: 0;
-    flex: 1;
-    font-size: 17px;
-  }
+
   body #modal.folio-host .covenant-card {
     grid-template-columns: 105px minmax(0, 1fr);
-    gap: 14px;
-    padding: 12px;
   }
   body #modal.folio-host .covenant-card > img {
     min-height: 190px;
@@ -1705,24 +1458,8 @@ body.touch-layout .hand-zone {
   padding: 4px 8px 6px;
   border-top: 1px solid var(--line);
 }
-body.touch-layout .hero,
-body.touch-layout .minion {
-  border-radius: 6px;
-}
-body.touch-layout .end-turn {
-  width: 100%;
-  height: 100%;
-  font-size: 17px;
-  border-radius: 6px;
-}
 body.touch-layout .hand-label {
   font-size: 10px;
-}
-body.touch-layout .mana-caption strong {
-  font-size: 16px;
-}
-body.touch-layout .power-button {
-  border-radius: 50%;
 }
 
 body.mobile-landscape .lobby-copy {
@@ -1769,10 +1506,6 @@ body.mobile-landscape .lobby-collection {
   height: 145px;
 }
 @media (max-height: 600px) and (min-width: 601px) {
-  body #modal.folio-host > .folio-dialog {
-    padding: 14px 24px;
-    gap: 9px;
-  }
   body #modal.folio-host h2 {
     font-size: 25px;
   }
@@ -1786,10 +1519,6 @@ body.mobile-landscape .lobby-collection {
   body #modal.folio-host[data-type="heroes"] .hero-option {
     min-height: 57px;
     padding: 3px;
-  }
-  body #modal.folio-host[data-type="heroes"] .hero-option > img {
-    width: 46px;
-    height: 46px;
   }
   body #modal.folio-host[data-type="heroes"] .hero-option .selected-check {
     left: 34px;
@@ -1819,10 +1548,7 @@ body.mobile-landscape .lobby-collection {
   body #modal.folio-host .result-stats strong {
     font-size: 35px;
   }
-  body #modal.folio-host .result-box .modal-footer button {
-    min-height: 44px;
-    font-size: 17px;
-  }
+
   body .atlas-stage {
     min-height: 250px;
   }
@@ -1832,26 +1558,7 @@ body.mobile-landscape .lobby-collection {
 }
 
 /* Reset both opposing edges when moving legacy absolute-positioned controls. */
-body:not(.touch-layout) .contract-open {
-  right: auto;
-  bottom: auto;
-  height: 65px;
-  display: grid;
-  grid-template-columns: 42px 1fr;
-  grid-template-rows: 1fr 1fr;
-  align-items: center;
-}
-body:not(.touch-layout) .contract-open .contract-sigil {
-  grid-row: 1/3;
-}
-body:not(.touch-layout) .contract-open .contract-label {
-  grid-column: 2;
-  align-self: end;
-}
-body:not(.touch-layout) .contract-open small {
-  grid-column: 2;
-  align-self: start;
-}
+
 body .atlas-location {
   right: auto;
   bottom: auto;
@@ -1889,9 +1596,6 @@ body #modal.folio-host .hero-configuration select {
 body #modal.folio-host .hero-option::after {
   display: none;
 }
-body #modal.folio-host .hero-option.selected {
-  background: var(--surface-soft);
-}
 body #modal.folio-host .covenant-box {
   isolation: isolate;
 }
@@ -1928,8 +1632,7 @@ body #modal.folio-host .covenant-grid {
 body #modal.folio-host .covenant-card {
   display: grid;
   grid-template-columns: 85px minmax(0, 1fr);
-  gap: 15px;
-  padding: 15px;
+
   min-height: 0;
 }
 body #modal.folio-host .covenant-card > img {
@@ -1965,31 +1668,7 @@ body #modal.folio-host .covenant-progress {
 body #modal.folio-host .covenant-card .gold-btn {
   min-height: 48px;
 }
-@media (max-width: 850px) {
-  body #modal.folio-host .covenant-box > .folio-pane {
-    margin-left: 40%;
-  }
-  body #modal.folio-host .covenant-card {
-    grid-template-columns: 1fr;
-  }
-  body #modal.folio-host .covenant-card > img {
-    display: none;
-  }
-}
 @media (max-width: 600px) and (orientation: portrait) {
-  body #modal.folio-host .covenant-box > .folio-pane {
-    margin-left: 0;
-    margin-top: 170px;
-  }
-  body #modal.folio-host .covenant-box > .scene-showcase {
-    right: 0;
-    background-position: 35% top;
-    background-size: auto 520px;
-    background-repeat: no-repeat;
-  }
-  body #modal.folio-host .covenant-card {
-    background: var(--surface-glass);
-  }
   body .atlas-node {
     flex-direction: column;
   }
@@ -2017,29 +1696,7 @@ body #modal.folio-host .help-section {
   padding: 0 0 25px;
   box-sizing: border-box;
 }
-body:not(.touch-layout) #hint {
-  left: 1350px;
-  top: 445px;
-  width: 225px;
-  max-width: 225px;
-}
-body.mobile-landscape .contract-open {
-  display: grid;
-  place-items: center;
-  min-width: 0;
-  padding: 3px;
-  overflow: hidden;
-  border-radius: 6px;
-}
-body.mobile-landscape .contract-open .contract-sigil {
-  width: 30px;
-  height: 30px;
-  grid-row: auto;
-}
-body.mobile-landscape .contract-open .contract-label,
-body.mobile-landscape .contract-open small {
-  display: none;
-}
+
 @media (max-width: 850px) {
   .atlas-dossier-rule {
     grid-column: 2;
@@ -2096,6 +1753,13 @@ body .atlas-extended .atlas-location:nth-of-type(n) {
   }
 }
 @media (orientation: landscape) and (max-height: 500px) {
+  /* A short viewport cannot pin a roster taller than its reading area. */
+  body #modal.folio-host[data-type="heroes"] .hero-roster {
+    position: static;
+  }
+  body #modal.folio-host[data-type="heroes"] .hero-options {
+    grid-template-columns: minmax(0, 1fr);
+  }
   body.mobile-landscape .lobby-collection {
     display: none;
   }
@@ -2110,8 +1774,6 @@ body .atlas-extended .atlas-location:nth-of-type(n) {
   }
   body #modal.folio-host > .folio-dialog {
     --inset: 12px;
-    padding: 12px 18px;
-    gap: 8px;
   }
   body #modal.folio-host .library-heading {
     display: flex;
@@ -2140,19 +1802,7 @@ body .atlas-extended .atlas-location:nth-of-type(n) {
     min-height: 34px;
     padding: 4px;
   }
-  body #modal.folio-host .deck-editor {
-    padding: 8px 10px;
-    gap: 6px;
-  }
-  body #modal.folio-host .deck-actions {
-    padding-top: 6px;
-    gap: 8px;
-  }
-  body #modal.folio-host .deck-actions button {
-    height: 44px;
-    min-height: 44px;
-    padding: 4px;
-  }
+
   body #modal.folio-host .deck-identity > img {
     width: 30px;
     height: 35px;
@@ -2173,16 +1823,11 @@ body .atlas-extended .atlas-location:nth-of-type(n) {
     display: none;
   }
   body #modal.folio-host .deck-editor:has(.deck-tools[open]) .deck-content {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    min-height: 0;
+    display: block;
+    height: auto;
   }
   body #modal.folio-host .deck-tools[open] {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
+    display: block;
     margin: 0;
   }
   body #modal.folio-host .deck-tools[open] > summary {
@@ -2192,9 +1837,7 @@ body .atlas-extended .atlas-location:nth-of-type(n) {
   }
   body #modal.folio-host .deck-tools[open] .deck-tools-body {
     display: block;
-    flex: 1;
-    min-height: 80px;
-    overflow: auto;
+    overflow: visible;
     padding: 6px;
   }
   body #modal.folio-host .deck-tools-body > * {
@@ -2207,7 +1850,7 @@ body .atlas-extended .atlas-location:nth-of-type(n) {
     flex-direction: row;
   }
   body .atlas-stage {
-    min-height: 140px;
+    min-height: 0;
   }
   body #modal.folio-host .atlas-dossier {
     display: flex;
@@ -2245,14 +1888,6 @@ body .atlas-extended .atlas-location:nth-of-type(n) {
   }
 }
 @media (orientation: landscape) and (max-height: 500px) {
-  body #modal.folio-host .deck-editor {
-    row-gap: 6px;
-  }
-  body #modal.folio-host .deck-editor .deck-actions {
-    margin: 0;
-    min-height: 44px;
-    max-height: 51px;
-  }
   body #modal.folio-host .deck-editor > .folio-pane {
     margin: 0;
   }
@@ -2268,17 +1903,6 @@ body .atlas-extended .atlas-location:nth-of-type(n) {
     overflow: auto;
     font-size: 11px;
     margin: 4px 0;
-  }
-  body #modal.folio-host .deck-tools[open]::details-content {
-    display: contents;
-  }
-  body #modal.folio-host .deck-tools[open] .deck-tools-body {
-    height: 0;
-    min-height: 80px;
-    flex: 1 1 0%;
-  }
-  body #modal.folio-host .deck-editor:has(.deck-tools[open]) .folio-viewport {
-    overflow: hidden;
   }
   body #modal.folio-host .library-heading {
     flex-wrap: nowrap;
@@ -2353,15 +1977,7 @@ body .atlas-extended .atlas-location:nth-of-type(n) {
     font-size: 25px;
   }
 }
-body.mobile-landscape #toast[data-kind] {
-  height: 20px;
-  min-height: 20px;
-  padding: 2px 6px;
-  font-size: 10px;
-  line-height: 16px;
-  white-space: nowrap;
-  overflow: hidden;
-}
+
 @media (orientation: landscape) and (max-width: 650px) {
   body.mobile-landscape .lobby-actions {
     width: 340px;

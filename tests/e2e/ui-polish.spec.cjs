@@ -2,6 +2,7 @@ const { test, expect } = require("@playwright/test");
 const { openDeckTools } = require("./helpers/deck-tools.cjs");
 for (const [width, height] of [
   [1600, 940],
+  [1210, 983],
   [390, 844],
   [844, 390],
   [568, 320],
@@ -36,6 +37,17 @@ for (const [width, height] of [
     await page.locator("#hero-confirm").click();
     await page.locator("#mulligan-confirm").click();
     await page.waitForFunction(() => !EmberFX.busy);
+    const commandStyles = await page
+      .locator("#log-toggle,#contract-open,#intel-toggle")
+      .evaluateAll((buttons) =>
+        buttons.map((button) => {
+          const style = getComputedStyle(button);
+          return `${style.clipPath}|${style.backgroundImage}`;
+        }),
+      );
+    // Peripheral controls share the current lightweight icon/text treatment.
+    // Retired textures and clipped material silhouettes must not return.
+    expect(commandStyles).toEqual(["none|none", "none|none", "none|none"]);
     const rects = await page
       .locator("#power-btn,#contract-open,#end-turn")
       .evaluateAll((xs) => xs.map((x) => x.getBoundingClientRect().toJSON()));
@@ -49,9 +61,19 @@ for (const [width, height] of [
         ).toBe(0);
       }
     await page.locator("#contract-open").click();
-    await expect(page.locator(".ritual-stones").first()).toBeVisible();
+    await expect(
+      page
+        .locator(
+          width >= 1100
+            ? ".reference-active-contract .ritual-gate meter"
+            : ".ritual-stones",
+        )
+        .first(),
+    ).toBeVisible();
     await expect(page.locator("#toast")).not.toBeVisible();
     await page.locator(".modal-close").click();
+    if (width === 1210)
+      await page.screenshot({ path: "artifacts/qa/battle-controls-1210.png" });
     expect(errors).toEqual([]);
     await ctx.close();
   });

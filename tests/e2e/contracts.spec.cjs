@@ -14,6 +14,8 @@ async function begin(page) {
 }
 for (const [width, height, touch] of [
   [1600, 940, false],
+  [752, 1056, true],
+  [546, 983, true],
   [390, 844, true],
   [844, 390, true],
 ]) {
@@ -49,23 +51,28 @@ for (const [width, height, touch] of [
     });
     await page.locator("#contract-open").click();
     await expect(page.locator('[data-invoke="selmyra"]')).toBeEnabled();
-    const poster = await page.locator(".covenant-card").first().evaluate((card) => {
-      const art = card.querySelector(":scope > img"),
-        copy = card.querySelector(":scope > .covenant-copy"),
-        ritualMark = card.querySelector(":scope > .covenant-copy > .ritual-mark"),
-        cardRect = card.getBoundingClientRect(),
-        artRect = art.getBoundingClientRect(),
-        ritualMarkRect = ritualMark.getBoundingClientRect(),
-        copyRect = copy.getBoundingClientRect();
-      return {
-        card: [cardRect.width, cardRect.height],
-        art: [artRect.width, artRect.height],
-        ritualMark: [ritualMarkRect.width, ritualMarkRect.height],
-        copyPosition: getComputedStyle(copy).position,
-        copyBottom: cardRect.bottom - copyRect.bottom,
-        copyTop: copyRect.top - cardRect.top,
-      };
-    });
+    const poster = await page
+      .locator(".covenant-card")
+      .first()
+      .evaluate((card) => {
+        const art = card.querySelector(":scope > img"),
+          copy = card.querySelector(":scope > .covenant-copy"),
+          ritualMark = card.querySelector(
+            ":scope > .covenant-copy > .ritual-mark",
+          ),
+          cardRect = card.getBoundingClientRect(),
+          artRect = art.getBoundingClientRect(),
+          ritualMarkRect = ritualMark.getBoundingClientRect(),
+          copyRect = copy.getBoundingClientRect();
+        return {
+          card: [cardRect.width, cardRect.height],
+          art: [artRect.width, artRect.height],
+          ritualMark: [ritualMarkRect.width, ritualMarkRect.height],
+          copyPosition: getComputedStyle(copy).position,
+          copyBottom: cardRect.bottom - copyRect.bottom,
+          copyTop: copyRect.top - cardRect.top,
+        };
+      });
     // The silver-blue edition uses a scene poster plus a compact live dossier.
     // Its thumbnail is optional on narrow screens; rule copy must stay in flow.
     expect(poster.copyPosition).not.toBe("absolute");
@@ -76,13 +83,50 @@ for (const [width, height, touch] of [
     expect(poster.ritualMark[0]).toBeLessThanOrEqual(36);
     expect(poster.ritualMark[1]).toBeLessThanOrEqual(36);
     if (touch) {
-      const scroll = await page.locator("#modal .folio-viewport").first().evaluate((viewport) => ({
-        overflowY: getComputedStyle(viewport).overflowY,
-        scrollable: viewport.scrollHeight > viewport.clientHeight + 2,
-      }));
-      expect(scroll).toEqual({ overflowY: "auto", scrollable: true });
+      const compactLayout = await page
+        .locator(".covenant-box")
+        .evaluate((box) => {
+          const pane = box.querySelector(":scope > .folio-pane");
+          const boxRect = box.getBoundingClientRect();
+          const paneRect = pane.getBoundingClientRect();
+          return {
+            overflowY: getComputedStyle(pane.querySelector(".folio-viewport"))
+              .overflowY,
+            leftGap: paneRect.left - boxRect.left,
+            rightGap: boxRect.right - paneRect.right,
+            bottomGap: boxRect.bottom - paneRect.bottom,
+            panelBottom: box
+              .querySelector(
+                ".reference-active-side .reference-active-contract",
+              )
+              .getBoundingClientRect().bottom,
+            paneBottom: paneRect.bottom,
+          };
+        });
+      expect(compactLayout.overflowY).toBe("auto");
+      expect(
+        Math.abs(compactLayout.leftGap - compactLayout.rightGap),
+      ).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs(compactLayout.leftGap - compactLayout.bottomGap),
+      ).toBeLessThanOrEqual(1);
+      if (height >= 800)
+        expect(compactLayout.panelBottom).toBeLessThanOrEqual(
+          compactLayout.paneBottom + 1,
+        );
     }
     await page.locator('[data-invoke="selmyra"]').scrollIntoViewIfNeeded();
+    const invokeStyle = await page
+      .locator('[data-invoke="selmyra"]')
+      .evaluate((button) => {
+        const style = getComputedStyle(button);
+        return {
+          radius: parseFloat(style.borderRadius),
+          clipPath: style.clipPath,
+        };
+      });
+    expect(invokeStyle.radius).toBeGreaterThanOrEqual(20);
+    expect(invokeStyle.clipPath).toContain("round 999px");
     expect(
       await page.locator('[data-invoke="selmyra"]').evaluate((button) => {
         const r = button.getBoundingClientRect();
@@ -133,7 +177,7 @@ for (const [width, height] of [
   [320, 568],
   [568, 320],
 ]) {
-  test(`each covenant action stays with its deity and scrolls into view ${width}x${height}`, async ({
+  test(`each compact covenant portrait selects its matching action ${width}x${height}`, async ({
     browser,
   }) => {
     const ctx = await browser.newContext({
@@ -154,29 +198,51 @@ for (const [width, height] of [
     await page.locator("#contract-open").click();
     const buttons = page.locator(".covenant-card [data-invoke]");
     await expect(buttons).toHaveCount(3);
-    for (const button of await buttons.all()) {
+    const portraits = page.locator(
+      ".reference-active-side .covenant-roster [data-contract-select]",
+    );
+    await expect(portraits).toHaveCount(3);
+    for (const portrait of await portraits.all()) {
+      const id = await portrait.getAttribute("data-contract-select");
+      await portrait.click();
+      await expect(portrait).toHaveAttribute("aria-pressed", "true");
+      const button = page.locator(
+        `.reference-active-contract[data-deity="${id}"] [data-invoke="${id}"]`,
+      );
       await button.scrollIntoViewIfNeeded();
+      await expect(button).toBeVisible();
       await expect(button).toBeEnabled();
-      expect(await button.evaluate((element) => {
-        const r = element.getBoundingClientRect();
-        const card = element.closest(".covenant-card");
-        return card.dataset.deity === element.dataset.invoke &&
-          r.width >= 44 && r.height >= 44 &&
-          r.left >= 0 && r.right <= innerWidth &&
-          r.top >= 0 && r.bottom <= innerHeight;
-      })).toBe(true);
+      expect(
+        await button.evaluate((element) => {
+          const r = element.getBoundingClientRect();
+          const card = element.closest(".covenant-card");
+          return (
+            card.dataset.deity === element.dataset.invoke &&
+            r.width >= 44 &&
+            r.height >= 44 &&
+            r.left >= 0 &&
+            r.right <= innerWidth &&
+            r.top >= 0 &&
+            r.bottom <= innerHeight
+          );
+        }),
+      ).toBe(true);
     }
     await expect(page.locator(".covenant-actions")).toHaveCount(0);
-    const close = await page.locator(".covenant-box > .modal-close").boundingBox();
-    const headingLine = await page.locator(".covenant-heading").evaluate((heading) => {
-      const style = getComputedStyle(heading, "::after");
-      return {
-        border: getComputedStyle(heading).borderBottomStyle,
-        content: style.content,
-        position: style.position,
-        right: parseFloat(style.right),
-      };
-    });
+    const close = await page
+      .locator(".covenant-box > .modal-close")
+      .boundingBox();
+    const headingLine = await page
+      .locator(".covenant-heading")
+      .evaluate((heading) => {
+        const style = getComputedStyle(heading, "::after");
+        return {
+          border: getComputedStyle(heading).borderBottomStyle,
+          content: style.content,
+          position: style.position,
+          right: parseFloat(style.right),
+        };
+      });
     expect(close.width).toBe(44);
     expect(close.height).toBe(44);
     expect(headingLine.border).toBe("none");

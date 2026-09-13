@@ -18,7 +18,6 @@ body #modal.folio-host {
 }
 body #modal.folio-host > .folio-dialog {
   --dialog-width: 1000px;
-  --rim: 14px;
   --inset: clamp(16px, 2.4vmin, 28px);
   box-sizing: border-box;
   container: dialog / inline-size;
@@ -26,7 +25,8 @@ body #modal.folio-host > .folio-dialog {
   display: flex;
   flex: 0 1 auto;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--panel-gap);
+
   width: min(100%, var(--dialog-width));
   height: auto;
   /* Legacy touch width is in an earlier cascade layer. Cap the
@@ -37,7 +37,7 @@ body #modal.folio-host > .folio-dialog {
   min-height: 0;
   aspect-ratio: auto;
   margin: 0;
-  padding: var(--inset);
+
   overflow: hidden;
   transform: none;
 }
@@ -74,8 +74,7 @@ body #modal.folio-host > [data-dialog-size="choice"] {
 body #modal.folio-host > [data-dialog-size="covenant"] {
   --dialog-width: 500px;
 }
-/* Retired covenant padding is important in components.css (the same layer).
- * Reset that property only; keep the atlas's authored padding independent. */
+/* Full-art pages own their outside gutter; contained panels use panel-inset. */
 body #modal.folio-host > .folio-dialog.covenant-box {
   padding: var(--inset);
 }
@@ -271,9 +270,7 @@ body #modal.folio-host .card[data-rule-size="long"] .card-text {
 body #modal.folio-host .card .card-class-seal {
   top: 42%;
 }
-body
-  #modal.folio-host
-  :is(.mulligan-cards, .discover-options, .touch-hand-grid) {
+body #modal.folio-host :is(.discover-options, .touch-hand-grid) {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
   align-items: start;
@@ -281,9 +278,7 @@ body
   width: 100%;
   margin: 0;
 }
-body
-  #modal.folio-host
-  :is(.mulligan-card, .discover-card, .touch-hand-grid > button) {
+body #modal.folio-host :is(.discover-card, .touch-hand-grid > button) {
   position: relative;
   display: block;
   justify-self: center;
@@ -295,13 +290,71 @@ body
   margin: 0;
   padding: 0;
 }
-body
-  #modal.folio-host
-  :is(.mulligan-card, .discover-card, .touch-hand-grid > button)
-  > .card {
+body #modal.folio-host :is(.discover-card, .touch-hand-grid > button) > .card {
   width: 100%;
   height: auto;
   aspect-ratio: var(--card-face-ratio, 5 / 7.4);
+}
+/* The choice label is part of each grid item, never an overlay below a fixed
+ * card-height box. Short landscape screens keep the entire hand on one row. */
+body #modal.folio-host .mulligan-cards {
+  --opening-columns: 3;
+  --opening-width: 245px;
+  display: grid;
+  grid-template-columns: repeat(
+    var(--opening-columns),
+    minmax(0, var(--opening-width))
+  );
+  align-items: start;
+  justify-content: center;
+  gap: var(--panel-gap);
+  width: 100%;
+  margin: 0;
+  padding: 6px 8px;
+}
+body #modal.folio-host .mulligan-cards:has(> :nth-child(4)) {
+  --opening-columns: 4;
+}
+body #modal.folio-host .mulligan-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: clamp(12px, 1.6vmin, 16px);
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  max-width: none;
+  height: auto;
+  aspect-ratio: auto;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  transform: none;
+}
+body #modal.folio-host .mulligan-card > .card {
+  flex: none;
+}
+@container dialog (max-width: 799px) {
+  body #modal.folio-host .mulligan-cards {
+    --opening-columns: 2;
+  }
+  body #modal.folio-host .mulligan-cards:has(> :nth-child(4)) {
+    --opening-columns: 2;
+  }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  body #modal.folio-host .mulligan-cards {
+    --opening-columns: 3;
+    --opening-width: clamp(70px, calc((100dvh - 250px) / 1.48), 160px);
+  }
+  body #modal.folio-host .mulligan-cards:has(> :nth-child(4)) {
+    --opening-columns: 4;
+  }
+  body #modal.folio-host .mulligan-box .panel-heading p,
+  body #modal.folio-host .mulligan-box .hero-deck-note {
+    display: none;
+  }
 }
 body #modal.folio-host .card-detail-layout {
   display: grid;
@@ -343,7 +396,10 @@ body #modal.folio-host[data-type="heroes"] .hero-options {
   gap: 16px;
   margin: 0;
 }
-body #modal.folio-host[data-type="heroes"] > .folio-dialog > .modal-heading::after,
+body
+  #modal.folio-host[data-type="heroes"]
+  > .folio-dialog
+  > .modal-heading::after,
 body #modal.folio-host[data-type="heroes"] .folio-scroll-hint {
   display: none;
 }
@@ -356,16 +412,6 @@ body #modal.folio-host[data-type="heroes"] .hero-option {
   min-height: 0;
   padding: 0;
   overflow: hidden;
-}
-body #modal.folio-host[data-type="heroes"] .hero-option > img {
-  position: static;
-  display: block;
-  flex: 0 0 auto;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 3 / 4;
-  object-fit: cover;
-  transform: none;
 }
 body #modal.folio-host[data-type="heroes"] .hero-option .hero-option-text {
   position: static;
@@ -383,7 +429,7 @@ body #modal.folio-host[data-type="heroes"] .hero-option :is(h3, p, em, small) {
 body #modal.folio-host .hero-configuration {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+
   margin-top: 20px;
 }
 body #modal.folio-host .hero-configuration > * {
@@ -413,7 +459,9 @@ body #modal.folio-host[data-type="heroes"] .hero-configuration select {
   background-position:
     calc(100% - 19px) 50%,
     calc(100% - 13px) 50%;
-  background-size: 6px 6px, 6px 6px;
+  background-size:
+    6px 6px,
+    6px 6px;
   background-repeat: no-repeat;
 }
 
@@ -692,10 +740,6 @@ body #modal.folio-host :is(.deck-actions, .deck-presets) {
   flex-wrap: wrap;
   gap: 8px;
 }
-body #modal.folio-host .deck-actions > button {
-  flex: 1 1 110px;
-  width: auto;
-}
 body #modal.folio-host .deck-tools {
   flex: 0 1 auto;
   min-height: 0;
@@ -718,8 +762,9 @@ body #modal.folio-host .deck-tools > summary {
 body #modal.folio-host .deck-tools:not([open]) > .deck-tools-body {
   display: none;
 }
-body #modal.folio-host .deck-content > * { margin-bottom: 12px; }
-body #modal.folio-host .deck-editor .deck-actions { position: static; }
+body #modal.folio-host .deck-content > * {
+  margin-bottom: 12px;
+}
 body #modal.folio-host .deck-tools-body {
   display: grid;
   gap: 10px;
@@ -745,7 +790,6 @@ body #modal.folio-host .relic-choice {
   align-items: center;
   height: auto;
   min-height: 0;
-  padding: 16px;
 }
 body #modal.folio-host .relic-art {
   display: grid;
@@ -798,32 +842,69 @@ body #modal.folio-host .help-toc {
   gap: 8px;
   margin-bottom: 16px;
 }
-body #modal.folio-host .setting-row {
-  display: flex;
+
+/* Shared form rhythm. Rows are separators inside a panel, not nested boxes. */
+body #modal.folio-host :is(.setting-row, .audio-level) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  min-height: 56px;
+  gap: 10px 16px;
+  min-height: 60px;
+  height: auto;
+  padding: 12px 0;
+  margin: 0;
 }
-body #modal.folio-host .setting-row > div {
+body #modal.folio-host .setting-copy {
+  display: block;
   min-width: 0;
 }
-body #modal.folio-host .setting-row p {
+body #modal.folio-host .setting-copy h3 {
+  width: auto;
+  margin: 0 0 4px;
+  font-size: clamp(15px, 1.8vmin, 18px);
+  line-height: 1.4;
+}
+body #modal.folio-host .setting-copy p {
   display: block;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
 }
 body #modal.folio-host .audio-sliders {
   display: grid;
-  gap: 12px;
-  margin-top: 14px;
+  gap: 0;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
 }
-body #modal.folio-host .audio-level {
-  display: grid;
-  grid-template-columns: minmax(70px, auto) minmax(0, 1fr) 40px;
-  align-items: center;
-  gap: 10px;
+body #modal.folio-host .audio-level > span,
+body #modal.folio-host .audio-level output {
+  font-size: clamp(14px, 1.8vmin, 18px);
+  line-height: 1.4;
 }
 body #modal.folio-host .audio-level input {
+  grid-column: 1 / -1;
+  grid-row: 2;
   width: 100%;
+  min-width: 0;
+}
+body #modal.folio-host .audio-level output {
+  grid-column: 2;
+  grid-row: 1;
+  text-align: right;
+}
+@container dialog (min-width: 650px) {
+  body #modal.folio-host .audio-level {
+    grid-template-columns: minmax(80px, 24%) minmax(0, 1fr) 48px;
+  }
+  body #modal.folio-host .audio-level input {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  body #modal.folio-host .audio-level output {
+    grid-column: 3;
+  }
 }
 body #modal.folio-host[data-type="settings"] .settings-section {
   display: grid;
@@ -837,65 +918,13 @@ body #modal.folio-host[data-type="settings"] .settings-options {
   width: 100%;
   min-width: 0;
 }
-body #modal.folio-host[data-type="settings"] .setting-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 18px;
-  min-height: 60px;
-}
-body #modal.folio-host[data-type="settings"] .setting-row > .setting-copy {
-  min-width: 0;
-}
-body #modal.folio-host[data-type="settings"] .audio-sliders {
-  display: grid;
-  gap: 1px;
-  width: 100%;
-  min-width: 0;
-  margin-top: 0;
-}
-body #modal.folio-host[data-type="settings"] .audio-level {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: auto 20px;
-  align-items: center;
-  gap: 4px 12px;
-}
-body #modal.folio-host[data-type="settings"] .audio-level input {
-  grid-column: 1 / -1;
-  grid-row: 2;
-  width: 100%;
-}
-body #modal.folio-host[data-type="settings"] .audio-level output {
-  grid-column: 2;
-  grid-row: 1;
-}
+
 @container dialog (max-width: 540px) {
   body #modal.folio-host[data-type="settings"] .settings-section {
     gap: 6px;
   }
   body #modal.folio-host[data-type="settings"] .settings-options {
     gap: 4px;
-  }
-  body #modal.folio-host[data-type="settings"] .setting-row {
-    min-height: 44px;
-    padding: 0 10px;
-    gap: 10px;
-  }
-  body #modal.folio-host[data-type="settings"] .audio-level {
-    grid-template-columns: minmax(0, 1fr) minmax(70px, 1fr) auto;
-    grid-template-rows: auto;
-    gap: 2px 8px;
-    padding: 4px 0;
-  }
-  body #modal.folio-host[data-type="settings"] .audio-level input {
-    grid-column: 2;
-    grid-row: 1;
-    min-height: 20px;
-  }
-  body #modal.folio-host[data-type="settings"] .audio-level output {
-    grid-column: 3;
-    grid-row: 1;
   }
 }
 @container dialog (max-width: 359px) {
@@ -905,35 +934,12 @@ body #modal.folio-host[data-type="settings"] .audio-level output {
   body #modal.folio-host[data-type="settings"] .settings-options {
     gap: 2px;
   }
-  body #modal.folio-host[data-type="settings"] .setting-row {
-    padding: 0 7px;
-  }
-  body #modal.folio-host[data-type="settings"] .setting-row p {
-    display: none;
-  }
-  body #modal.folio-host[data-type="settings"] .setting-row h3 {
-    font-size: 12px;
-    line-height: 1.2;
-  }
+
   body #modal.folio-host[data-type="settings"] .toggle {
     width: 70px;
     flex-basis: 70px;
   }
-  body #modal.folio-host[data-type="settings"] .audio-sliders {
-    padding: 2px 8px;
-  }
-  body #modal.folio-host[data-type="settings"] .audio-level {
-    gap: 0 6px;
-    padding: 0;
-  }
-  body #modal.folio-host[data-type="settings"] .audio-level > span,
-  body #modal.folio-host[data-type="settings"] .audio-level output {
-    font-size: 11px;
-    line-height: 1.1;
-  }
-  body #modal.folio-host[data-type="settings"] .audio-level input {
-    min-height: 16px;
-  }
+
   body #modal.folio-host[data-type="settings"] .settings-audio-section {
     margin-top: 0;
   }
@@ -952,11 +958,7 @@ body #modal.folio-host[data-type="settings"] .audio-level output {
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 4px;
   }
-  body #modal.folio-host[data-type="settings"] .setting-row {
-    min-height: 44px;
-    padding: 0 4px;
-    gap: 3px;
-  }
+
   body #modal.folio-host[data-type="settings"] .wind-light-row {
     margin-top: 0;
   }
@@ -978,20 +980,12 @@ body #modal.folio-host[data-type="settings"] .audio-level output {
     font-size: 18px;
     line-height: 1;
   }
-  body #modal.folio-host[data-type="settings"] .wind-time-setting[aria-pressed="true"]::before {
+  body
+    #modal.folio-host[data-type="settings"]
+    .wind-time-setting[aria-pressed="true"]::before {
     content: "☾";
   }
-  body #modal.folio-host[data-type="settings"] .setting-row p {
-    display: none;
-  }
-  body #modal.folio-host[data-type="settings"] .setting-row h3 {
-    min-width: 0;
-    overflow: hidden;
-    font-size: 9px;
-    line-height: 1.2;
-    letter-spacing: 0;
-    white-space: nowrap;
-  }
+
   body #modal.folio-host[data-type="settings"] .toggle {
     width: 44px;
     flex-basis: 44px;
@@ -1018,29 +1012,14 @@ body #modal.folio-host[data-type="settings"] .audio-level output {
     gap: 6px;
     margin-top: 0;
   }
-  body #modal.folio-host[data-type="settings"] .settings-audio-section .settings-section-heading {
+  body
+    #modal.folio-host[data-type="settings"]
+    .settings-audio-section
+    .settings-section-heading {
     display: grid;
     gap: 1px;
   }
-  body #modal.folio-host[data-type="settings"] .audio-sliders {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    padding: 2px 8px;
-  }
-  body #modal.folio-host[data-type="settings"] .audio-level {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: auto 16px;
-    gap: 0 5px;
-    padding: 0 5px;
-  }
-  body #modal.folio-host[data-type="settings"] .audio-level input {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    min-height: 16px;
-  }
-  body #modal.folio-host[data-type="settings"] .audio-level output {
-    grid-column: 2;
-    grid-row: 1;
-  }
+
   body #modal.folio-host[data-type="settings"] .hero-deck-note {
     display: none;
   }
@@ -1053,12 +1032,24 @@ body #modal.folio-host .touch-menu-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
-body #modal.folio-host .touch-menu-grid button {
-  display: flex;
+body #modal.folio-host .menu-action {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 48px;
+  justify-content: start;
+  text-align: left;
+  gap: 12px;
+  min-height: 56px;
+  padding: 12px 16px;
+  font-size: 15px;
+}
+body #modal.folio-host .menu-action > svg {
+  position: static;
+  width: 24px;
+  height: 24px;
+  color: currentColor;
+  margin: 0;
+  transform: none;
 }
 body #modal.folio-host .touch-log {
   display: grid;
@@ -1071,7 +1062,7 @@ body #modal.folio-host .touch-log > p {
 }
 body #modal.folio-host :is(.atelier-architecture, .atelier-specimens) {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   gap: 18px;
 }
 body #modal.folio-host :is(.atelier-vignette, .atelier-specimens > div) {
@@ -1084,7 +1075,21 @@ body #modal.folio-host .atelier-vignette img {
   position: static;
   width: 100%;
   height: auto;
-  object-fit: contain;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  display: block;
+}
+body #modal.folio-host .atelier-vignette :is(h3, p) {
+  position: static;
+  margin: 10px 12px;
+  text-align: left;
+  letter-spacing: 0.03em;
+}
+body #modal.folio-host .atelier-vignette h3 {
+  font-size: 16px;
+}
+body #modal.folio-host .atelier-vignette p {
+  font-size: 12px;
 }
 body #modal.folio-host .touch-hero-info {
   display: grid;
@@ -1101,16 +1106,11 @@ body #modal.folio-host .touch-hero-info > img {
 @container dialog (max-width: 799px) {
   /* The opening hand follows the hero roster on touch screens: two cards per
    * row, with the complete card frame preserved inside the scroll pane. */
-  body #modal.folio-host[data-type="mulligan"] .mulligan-cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
-    gap: 16px 12px;
-    margin: 0;
-  }
-  body #modal.folio-host[data-type="mulligan"] .mulligan-card {
-    max-width: none;
-  }
-  body #modal.folio-host[data-type="heroes"] > .folio-dialog > .modal-heading::after {
+
+  body
+    #modal.folio-host[data-type="heroes"]
+    > .folio-dialog
+    > .modal-heading::after {
     display: none;
   }
   body #modal.folio-host[data-type="heroes"] .hero-roster-heading {
@@ -1118,7 +1118,7 @@ body #modal.folio-host .touch-hero-info > img {
     margin: 0 0 10px;
     color: var(--panel-muted);
     font: 600 13px/1.4 var(--panel-body-font);
-    letter-spacing: .08em;
+    letter-spacing: 0.08em;
   }
   body #modal.folio-host[data-type="heroes"] .hero-options {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1132,15 +1132,6 @@ body #modal.folio-host .touch-hero-info > img {
     height: auto;
     min-height: 0;
     flex: none;
-  }
-  body #modal.folio-host[data-type="heroes"] .hero-option > img {
-    position: static;
-    width: 100%;
-    height: auto;
-    aspect-ratio: 3 / 4;
-    object-fit: cover;
-    object-position: 50% 22%;
-    transform: none;
   }
   body #modal.folio-host[data-type="heroes"] .hero-option .selected-check {
     top: 12px;
@@ -1159,11 +1150,11 @@ body #modal.folio-host .touch-hero-info > img {
   }
   body #modal.folio-host[data-type="heroes"] .hero-option small {
     font-size: 10px;
-    letter-spacing: .08em;
+    letter-spacing: 0.08em;
   }
   body #modal.folio-host[data-type="heroes"] .hero-option h3 {
     font-size: 18px;
-    letter-spacing: .03em;
+    letter-spacing: 0.03em;
   }
   body #modal.folio-host[data-type="heroes"] .hero-option em {
     min-width: 0;
@@ -1174,7 +1165,6 @@ body #modal.folio-host .touch-hero-info > img {
     overflow-wrap: anywhere;
   }
   body #modal.folio-host[data-type="heroes"] .hero-configuration {
-    gap: 16px;
     margin-top: 28px;
   }
   body #modal.folio-host[data-type="heroes"] .hero-config-intro {
@@ -1192,10 +1182,16 @@ body #modal.folio-host .touch-hero-info > img {
     padding: 10px 34px 10px 0;
     list-style: none;
   }
-  body #modal.folio-host[data-type="heroes"] .hero-config-contract > summary::-webkit-details-marker {
+  body
+    #modal.folio-host[data-type="heroes"]
+    .hero-config-contract
+    > summary::-webkit-details-marker {
     display: none;
   }
-  body #modal.folio-host[data-type="heroes"] .hero-config-contract > summary::after {
+  body
+    #modal.folio-host[data-type="heroes"]
+    .hero-config-contract
+    > summary::after {
     content: "⌄";
     position: absolute;
     top: 50%;
@@ -1205,13 +1201,19 @@ body #modal.folio-host .touch-hero-info > img {
     line-height: 1;
     transform: translateY(-50%);
   }
-  body #modal.folio-host[data-type="heroes"] .hero-config-contract[open] > summary::after {
+  body
+    #modal.folio-host[data-type="heroes"]
+    .hero-config-contract[open]
+    > summary::after {
     content: "⌃";
   }
   body #modal.folio-host[data-type="heroes"] .hero-config-contract > p {
     margin: 0 0 10px;
   }
-  body #modal.folio-host[data-type="heroes"] .hero-config-contract > label:last-child {
+  body
+    #modal.folio-host[data-type="heroes"]
+    .hero-config-contract
+    > label:last-child {
     margin-bottom: 10px;
   }
   body #modal.folio-host[data-type="heroes"] .hero-composition {
@@ -1238,12 +1240,19 @@ body #modal.folio-host .touch-hero-info > img {
   body #modal.folio-host .library-box.touch-show-deck .library-main {
     display: none;
   }
-  body #modal.folio-host .library-box.touch-show-deck .library-heading > #library-search {
+  body
+    #modal.folio-host
+    .library-box.touch-show-deck
+    .library-heading
+    > #library-search {
     display: none;
   }
 }
 @container dialog (max-width: 540px) {
-  body #modal.folio-host[data-type="library-card"] > .folio-dialog > .modal-footer {
+  body
+    #modal.folio-host[data-type="library-card"]
+    > .folio-dialog
+    > .modal-footer {
     box-sizing: border-box;
     padding-inline: 2px;
     transform: translateY(-4px);
@@ -1263,10 +1272,10 @@ body #modal.folio-host .touch-hero-info > img {
   }
 }
 @container dialog (max-width: 359px) {
-  body #modal.folio-host .library-heading > input { flex-basis: 100%; }
-  body #modal.folio-host[data-type="mulligan"] .mulligan-cards {
-    gap: 14px 8px;
+  body #modal.folio-host .library-heading > input {
+    flex-basis: 100%;
   }
+
   body #modal.folio-host[data-type="heroes"] .hero-options {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px 8px;
@@ -1290,12 +1299,6 @@ body #modal.folio-host .touch-hero-info > img {
  * small gallery tile. The portrait remains complete inside the left rail
  * instead of being cropped to fill a shallow landscape card. */
 @media (orientation: landscape) and (max-width: 900px) {
-  body #modal.folio-host[data-type="mulligan"] .mulligan-cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    max-width: 560px;
-    gap: 12px;
-    margin-inline: auto;
-  }
   body #modal.folio-host[data-type="heroes"] .hero-options {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
@@ -1306,15 +1309,6 @@ body #modal.folio-host .touch-hero-info > img {
     grid-template-rows: minmax(0, 1fr);
     height: clamp(132px, 42dvh, 170px);
     min-height: 0;
-  }
-  body #modal.folio-host[data-type="heroes"] .hero-option > img {
-    width: 100%;
-    height: 100%;
-    min-height: 0;
-    aspect-ratio: auto;
-    object-fit: contain;
-    object-position: center;
-    background: #181410;
   }
   body #modal.folio-host[data-type="heroes"] .hero-option .hero-option-text {
     align-content: center;
@@ -1345,10 +1339,18 @@ body #modal.folio-host [hidden] {
   display: none;
 }
 @media (max-height: 560px) {
-  body #modal.folio-host > .folio-dialog { gap: 8px; --inset: 14px; }
-  body #modal.folio-host .library-heading { flex-wrap: nowrap; }
-  body #modal.folio-host .library-heading h2 { font-size: 22px; }
-  body #modal.folio-host .library-heading > input { flex: 1 1 120px; }
+  body #modal.folio-host > .folio-dialog {
+    --inset: 14px;
+  }
+  body #modal.folio-host .library-heading {
+    flex-wrap: nowrap;
+  }
+  body #modal.folio-host .library-heading h2 {
+    font-size: 22px;
+  }
+  body #modal.folio-host .library-heading > input {
+    flex: 1 1 120px;
+  }
 }
 
 /* Phone collection: two equal columns are the smallest useful card grid.

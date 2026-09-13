@@ -8,6 +8,20 @@
     app = $("app");
   function togglePanel(type) {
     const v = app.classList.toggle(type + "-open");
+    if (v) {
+      const other = type === "log" ? "intel" : "log";
+      app.classList.remove(other + "-open");
+      document.querySelector(
+        other === "log" ? ".log-panel" : ".boss-panel",
+      ).hidden = true;
+      $(other === "log" ? "log-toggle" : "intel-toggle").setAttribute(
+        "aria-expanded",
+        "false",
+      );
+    }
+    document.querySelector(
+      type === "log" ? ".log-panel" : ".boss-panel",
+    ).hidden = !v;
     $(type === "log" ? "log-toggle" : "intel-toggle").setAttribute(
       "aria-expanded",
       String(v),
@@ -51,11 +65,6 @@
         if (text && p) {
           box.innerHTML = text;
           box.style.display = "block";
-          box.style.left =
-            Math.max(259, Math.min(1185, p.top < 190 ? p.x - 285 : p.x - 83)) +
-            "px";
-          box.style.top =
-            (p.top < 190 ? p.y - 40 : Math.max(92, p.top - 84)) + "px";
         } else box.style.display = "none";
       } else box.style.display = "none";
       const card = e.target.closest?.(".hand-card,.library-item");
@@ -82,8 +91,17 @@
     const side = el.dataset.side,
       unit = E.game.s?.[side]?.board.find((m) => m.uid === el.dataset.uid),
       hand = E.game.s?.p.hand.find((v) => v.uid === el.dataset.uid),
-      opts = unit ? { atk: unit.atk, hp: unit.hp } : hand ? { cost: E.game.cost(hand) } : {},
-      rarity = { common: "普通", rare: "稀有", epic: "史诗", legendary: "传说" }[c.rarity],
+      opts = unit
+        ? { atk: unit.atk, hp: unit.hp }
+        : hand
+          ? { cost: E.game.cost(hand) }
+          : {},
+      rarity = {
+        common: "普通",
+        rare: "稀有",
+        epic: "史诗",
+        legendary: "传说",
+      }[c.rarity],
       status = unit
         ? `${unit.atk} 攻击 / ${unit.hp} 生命${unit.frozen ? " · 冻结" : ""}${unit.silenced ? " · 已沉默" : ""}`
         : `${opts.cost ?? c.cost} 法力`,
