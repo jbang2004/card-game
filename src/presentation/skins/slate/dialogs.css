@@ -22,11 +22,29 @@
 
 /* ==========================================================================
    1. shared floating chrome — heading rule, sub-title, footer rule
+
+   These MUST stay keyed to the eleven floating `[data-dialog-size]` values.
+   base.css's page-shell rules (heroes/library/settings/route/covenant/help)
+   set `.modal-heading { padding: 0; border: 0 }` and no footer rule; an
+   unqualified `.folio-dialog > .modal-heading` here ties/outranks them and
+   silently re-adds a hairline under every page title plus ~16px of shift.
    ========================================================================== */
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
-  .folio-dialog
+  .folio-dialog:is(
+    [data-dialog-size="confirm"],
+    [data-dialog-size="detail"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="choice"],
+    [data-dialog-size="result"],
+    [data-dialog-size="atelier"],
+    [data-dialog-size="workspace"]
+  )
   > .modal-heading::after {
   content: "";
   position: absolute;
@@ -40,14 +58,38 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
-  .folio-dialog
+  .folio-dialog:is(
+    [data-dialog-size="confirm"],
+    [data-dialog-size="detail"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="choice"],
+    [data-dialog-size="result"],
+    [data-dialog-size="atelier"],
+    [data-dialog-size="workspace"]
+  )
   > .modal-heading {
   padding-bottom: 16px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
-  .folio-dialog
+  .folio-dialog:is(
+    [data-dialog-size="confirm"],
+    [data-dialog-size="detail"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="choice"],
+    [data-dialog-size="result"],
+    [data-dialog-size="atelier"],
+    [data-dialog-size="workspace"]
+  )
   > .modal-heading
   p {
   margin: 10px 0 0;
@@ -58,7 +100,19 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
-  .folio-dialog
+  .folio-dialog:is(
+    [data-dialog-size="confirm"],
+    [data-dialog-size="detail"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="choice"],
+    [data-dialog-size="result"],
+    [data-dialog-size="atelier"],
+    [data-dialog-size="workspace"]
+  )
   > :is(.modal-footer, .reward-footer, .atelier-foot) {
   gap: 16px;
   margin-top: 4px;
@@ -70,18 +124,42 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
-  .folio-dialog
+  .folio-dialog:is(
+    [data-dialog-size="confirm"],
+    [data-dialog-size="detail"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="choice"],
+    [data-dialog-size="result"],
+    [data-dialog-size="atelier"],
+    [data-dialog-size="workspace"]
+  )
   > :is(.modal-footer, .reward-footer, .atelier-foot)::before,
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
-  .folio-dialog
+  .folio-dialog:is(
+    [data-dialog-size="confirm"],
+    [data-dialog-size="detail"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="choice"],
+    [data-dialog-size="result"],
+    [data-dialog-size="atelier"],
+    [data-dialog-size="workspace"]
+  )
   > :is(.modal-footer, .reward-footer, .atelier-foot)::after {
   content: none;
 }
 /* disabled pill: ink-3 text on a hairline rim (design system §3 states) */
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   :is(.gold-btn, .ghost-btn, .text-btn):disabled {
   background: none;
@@ -93,7 +171,7 @@ html[data-skin="slate"]
    2. 起手换牌 / mulligan — floating 1060
    ========================================================================== */
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   > .folio-dialog[data-dialog-size="mulligan"]
   .modal-heading
@@ -110,18 +188,7 @@ html[data-skin="slate"]
 }
 /* the three card faces stay exactly as the game draws them; only the
  * 「保留 / 替换」 state label becomes a pill */
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host
-  .mulligan-choice-state {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: auto;
-  min-height: 38px;
-  margin: 0 auto;
-  padding: 0 22px;
+html[data-skin="slate"] body #modal.folio-host .mulligan-choice-state {
   border: 1px solid var(--slate-pill-line);
   border-radius: 999px;
   background: var(--slate-pill);
@@ -139,12 +206,22 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
-  .mulligan-choice-state::before,
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host
-  .mulligan-choice-state::after {
+  .mulligan-choice-state {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: auto;
+  min-height: 38px;
+  margin: 0 auto;
+  padding: 0 22px;
+}
+html[data-skin="slate"] body #modal.folio-host .mulligan-choice-state::before,
+html[data-skin="slate"] body #modal.folio-host .mulligan-choice-state::after {
   content: none;
+}
+html[data-skin="slate"] body #modal.folio-host .mulligan-choice-state svg {
+  color: currentColor;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -153,10 +230,9 @@ html[data-skin="slate"]
   svg {
   width: 16px;
   height: 16px;
-  color: currentColor;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   .mulligan-card:hover
   .mulligan-choice-state {
@@ -165,7 +241,7 @@ html[data-skin="slate"]
   color: var(--slate-ink);
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   .mulligan-card.replace
   .mulligan-choice-state {
@@ -174,14 +250,16 @@ html[data-skin="slate"]
   color: #fff;
   font-weight: 600;
 }
+html[data-skin="slate"] body #modal.folio-host .mulligan-box .hero-deck-note {
+  font: 400 15px/1.7 var(--slate-font);
+  color: var(--slate-ink-2);
+}
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
   .mulligan-box
   .hero-deck-note {
   margin: 0 0 4px;
-  font: 400 15px/1.7 var(--slate-font);
-  color: var(--slate-ink-2);
   text-align: center;
 }
 html[data-skin="slate"]
@@ -274,17 +352,7 @@ html[data-skin="slate"]
   max-width: 1180px;
   margin: 28px auto 0;
 }
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host
-  .rewards-box
-  .relic-choice {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  height: auto;
-  padding: 26px 24px 20px;
+html[data-skin="slate"] body #modal.folio-host .rewards-box .relic-choice {
   border: 1.5px solid var(--slate-card-line);
   border-radius: 14px;
   background: var(--slate-card-base);
@@ -299,16 +367,28 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
   .rewards-box
+  .relic-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  height: auto;
+  padding: 26px 24px 20px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  .rewards-box
   .relic-choice::before,
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   .rewards-box
   .relic-choice::after {
   content: none;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   .rewards-box
   .relic-choice:hover {
@@ -316,7 +396,7 @@ html[data-skin="slate"]
   border-color: #ffffffcc;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   .rewards-box
   .relic-choice[aria-pressed="true"] {
@@ -336,14 +416,7 @@ html[data-skin="slate"]
   height: 190px;
   place-items: center;
 }
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host
-  .rewards-box
-  .relic-art
-  img {
-  width: 170px;
-  height: 170px;
+html[data-skin="slate"] body #modal.folio-host .rewards-box .relic-art img {
   border: 0;
   border-radius: 0;
   object-fit: contain;
@@ -353,9 +426,12 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
   .rewards-box
-  .relic-choice
-  h3 {
-  margin: 4px 0 0;
+  .relic-art
+  img {
+  width: 170px;
+  height: 170px;
+}
+html[data-skin="slate"] body #modal.folio-host .rewards-box .relic-choice h3 {
   font: 700 22px/1.35 var(--slate-font);
   letter-spacing: 1.5px;
   color: #fff;
@@ -365,25 +441,24 @@ html[data-skin="slate"]
   #modal.folio-host
   .rewards-box
   .relic-choice
-  p {
-  flex: 0 0 auto;
-  margin: 0;
+  h3 {
+  margin: 4px 0 0;
+}
+html[data-skin="slate"] body #modal.folio-host .rewards-box .relic-choice p {
   font: 400 15px/1.75 var(--slate-font);
   color: var(--slate-ink-2);
-  text-align: center;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
   .rewards-box
-  .relic-pick-label {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: auto;
-  min-height: 34px;
-  margin: auto auto 0;
-  padding: 0 22px;
+  .relic-choice
+  p {
+  flex: 0 0 auto;
+  margin: 0;
+  text-align: center;
+}
+html[data-skin="slate"] body #modal.folio-host .rewards-box .relic-pick-label {
   border: 1px solid var(--slate-pill-line);
   border-radius: 999px;
   background: var(--slate-pill);
@@ -400,6 +475,19 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
   .rewards-box
+  .relic-pick-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-height: 34px;
+  margin: auto auto 0;
+  padding: 0 22px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  .rewards-box
   .relic-choice[aria-pressed="true"]
   .relic-pick-label {
   border-color: #8cc4ff99;
@@ -409,15 +497,7 @@ html[data-skin="slate"]
 }
 
 /* --- 「酒馆整备」 as a hairline section, not a boxed <details> --- */
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host
-  .rewards-box
-  .campaign-refit {
-  width: 100%;
-  max-width: 1180px;
-  margin: 30px auto 0;
-  padding: 22px 0 0;
+html[data-skin="slate"] body #modal.folio-host .rewards-box .campaign-refit {
   border: 0;
   border-top: 1px solid var(--slate-line);
   border-radius: 0;
@@ -428,13 +508,18 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
   .rewards-box
+  .campaign-refit {
+  width: 100%;
+  max-width: 1180px;
+  margin: 30px auto 0;
+  padding: 22px 0 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  .rewards-box
   .campaign-refit
   > summary {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 32px;
-  padding: 0;
   border: 0;
   border-radius: 0;
   background: none;
@@ -450,8 +535,31 @@ html[data-skin="slate"]
   #modal.folio-host
   .rewards-box
   .campaign-refit
+  > summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 32px;
+  padding: 0;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  .campaign-refit
   > summary::-webkit-details-marker {
   display: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  .rewards-box
+  .campaign-refit
+  > summary::after {
+  content: "";
+  border-right: 2px solid var(--slate-ink-3);
+  border-bottom: 2px solid var(--slate-ink-3);
+  transition: transform 0.15s;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -459,14 +567,10 @@ html[data-skin="slate"]
   .rewards-box
   .campaign-refit
   > summary::after {
-  content: "";
   width: 9px;
   height: 9px;
   margin-left: 2px;
-  border-right: 2px solid var(--slate-ink-3);
-  border-bottom: 2px solid var(--slate-ink-3);
   transform: translateY(-2px) rotate(-45deg);
-  transition: transform 0.15s;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -477,7 +581,7 @@ html[data-skin="slate"]
   transform: translateY(2px) rotate(45deg);
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   .rewards-box
   .campaign-refit
@@ -498,12 +602,11 @@ html[data-skin="slate"]
   margin: 18px 0 0;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   .rewards-box
   .refit-fields
   label {
-  gap: 10px;
   font: 500 15px/1.4 var(--slate-font);
   color: var(--slate-ink-2);
 }
@@ -511,10 +614,20 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
   .rewards-box
-  #refit-status {
-  margin: 16px 0 0;
+  .refit-fields
+  label {
+  gap: 10px;
+}
+html[data-skin="slate"] body #modal.folio-host .rewards-box #refit-status {
   font: 400 14px/1.7 var(--slate-font);
   color: var(--slate-ink-3);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  #refit-status {
+  margin: 16px 0 0;
 }
 
 /* --- footer: status left, primary pill right --- */
@@ -525,12 +638,7 @@ html[data-skin="slate"]
   > .reward-footer {
   margin-top: 18px;
 }
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host
-  .rewards-box
-  .reward-next {
-  display: block;
+html[data-skin="slate"] body #modal.folio-host .rewards-box .reward-next {
   font: 600 16px/1.4 var(--slate-font);
   letter-spacing: 1px;
   color: var(--slate-ink);
@@ -539,10 +647,22 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
   .rewards-box
-  #reward-selection {
-  margin: 6px 0 0;
+  .reward-next {
+  display: block;
+}
+html[data-skin="slate"] body #modal.folio-host .rewards-box #reward-selection {
   font: 400 14px/1.5 var(--slate-font);
   color: var(--slate-ink-3);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .rewards-box
+  #reward-selection {
+  margin: 6px 0 0;
+}
+html[data-skin="slate"] body #modal.folio-host .rewards-box #reward-confirm {
+  font: 600 18px/1 var(--slate-font);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -551,15 +671,12 @@ html[data-skin="slate"]
   #reward-confirm {
   min-width: 240px;
   min-height: 52px;
-  font: 600 18px/1 var(--slate-font);
 }
 
 /* ==========================================================================
    4. 胜利结算 / 失败 — result + defeat, floating 620
    ========================================================================== */
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="result"] {
+html[data-skin="slate"] body #modal.folio-host[data-type="result"] {
   background: #0b0f16b8;
   backdrop-filter: none;
 }
@@ -595,13 +712,16 @@ html[data-skin="slate"]
   margin: 6px auto 10px;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   .result-box[data-outcome="loss"]
   .result-sigil
   svg {
   color: var(--slate-ink-2);
   filter: drop-shadow(0 0 16px #0008);
+}
+html[data-skin="slate"] body #modal.folio-host .result-box .result-sigil svg {
+  filter: drop-shadow(0 0 18px #8cc4ff55);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -611,7 +731,6 @@ html[data-skin="slate"]
   svg {
   width: 104px;
   height: 104px;
-  filter: drop-shadow(0 0 18px #8cc4ff55);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -620,12 +739,7 @@ html[data-skin="slate"]
   .result-sub {
   display: none;
 }
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host
-  .result-box
-  .result-title {
-  margin: 0;
+html[data-skin="slate"] body #modal.folio-host .result-box .result-title {
   font: 700 44px/1.25 var(--slate-font);
   letter-spacing: 6px;
   color: #fff;
@@ -635,11 +749,26 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
   .result-box
-  .boss-quote {
-  margin: 14px 0 0;
+  .result-title {
+  margin: 0;
+}
+html[data-skin="slate"] body #modal.folio-host .result-box .boss-quote {
   font: 400 15px/1.8 var(--slate-font);
   letter-spacing: 1px;
   color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .result-box
+  .boss-quote {
+  margin: 14px 0 0;
+}
+html[data-skin="slate"] body #modal.folio-host .result-box .result-stats {
+  /* the reset clears the silver-blue bottom rule components.css leaves here;
+   * the footer already carries the closing hairline */
+  border: 0;
+  border-top: 1px solid var(--slate-line);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -652,10 +781,10 @@ html[data-skin="slate"]
   width: 100%;
   margin: 24px 0 6px;
   padding: 24px 0 4px;
-  /* the reset clears the silver-blue bottom rule components.css leaves here;
-   * the footer already carries the closing hairline */
+}
+html[data-skin="slate"] body #modal.folio-host .result-box .result-stats > div {
   border: 0;
-  border-top: 1px solid var(--slate-line);
+  border-right: 1px solid var(--slate-line);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -670,11 +799,9 @@ html[data-skin="slate"]
   gap: 10px;
   width: auto;
   padding: 4px 0;
-  border: 0;
-  border-right: 1px solid var(--slate-line);
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   .result-box
   .result-stats
@@ -682,7 +809,7 @@ html[data-skin="slate"]
   border-right: 0;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   .result-box
   .result-stats
@@ -692,12 +819,7 @@ html[data-skin="slate"]
   color: #fff;
   text-shadow: none;
 }
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host
-  .result-box
-  .result-stats
-  span {
+html[data-skin="slate"] body #modal.folio-host .result-box .result-stats span {
   font: 500 15px/1.4 var(--slate-font);
   letter-spacing: 1.5px;
   color: var(--slate-ink-2);
@@ -722,15 +844,9 @@ html[data-skin="slate"]
 /* ==========================================================================
    5. 卡牌详情 / card detail — floating 740
    ========================================================================== */
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="library-card"],
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="inspect"],
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="touch-card"] {
+html[data-skin="slate"] body #modal.folio-host[data-type="library-card"],
+html[data-skin="slate"] body #modal.folio-host[data-type="inspect"],
+html[data-skin="slate"] body #modal.folio-host[data-type="touch-card"] {
   background: #0b0f16b8;
   backdrop-filter: none;
 }
@@ -746,7 +862,7 @@ html[data-skin="slate"]
   max-height: 100%;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   > .folio-dialog[data-dialog-size="detail"]
   .modal-heading
@@ -766,15 +882,21 @@ html[data-skin="slate"]
   padding: 22px 0 6px;
 }
 html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="detail"]
+  .card-detail-art {
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
   > .folio-dialog[data-dialog-size="detail"]
   .card-detail-art {
   max-width: 260px;
   padding: 0;
-  border: 0;
-  background: none;
-  box-shadow: none;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -794,24 +916,24 @@ html[data-skin="slate"]
   gap: 0;
   padding: 0;
 }
+html[data-skin="slate"] body #modal.folio-host .card-detail-copy h3 {
+  font: 700 26px/1.3 var(--slate-font);
+  letter-spacing: 2px;
+  color: #fff;
+}
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
   .card-detail-copy
   h3 {
   margin: 0 0 14px;
-  font: 700 26px/1.3 var(--slate-font);
-  letter-spacing: 2px;
-  color: #fff;
 }
 /* the rule text drops the boxed panel and becomes plain copy */
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   .card-detail-copy
   .card-detail-rule {
-  margin: 0 0 18px;
-  padding: 0;
   border: 0;
   border-radius: 0;
   background: none;
@@ -819,7 +941,25 @@ html[data-skin="slate"]
   letter-spacing: 0.5px;
   color: var(--slate-ink-2);
 }
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .card-detail-copy
+  .card-detail-rule {
+  margin: 0 0 18px;
+  padding: 0;
+}
 /* every remaining line in the info column is a hairline row */
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  .card-detail-copy
+  > :is(p, small):not(.card-detail-rule) {
+  border-top: 1px solid var(--slate-line);
+  font: 400 15px/1.6 var(--slate-font);
+  letter-spacing: 0.5px;
+  color: var(--slate-ink-2);
+}
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
@@ -830,20 +970,16 @@ html[data-skin="slate"]
   min-height: 46px;
   margin: 0;
   padding: 0;
-  border-top: 1px solid var(--slate-line);
-  font: 400 15px/1.6 var(--slate-font);
-  letter-spacing: 0.5px;
-  color: var(--slate-ink-2);
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   .card-detail-copy
   > :is(p, small):not(.card-detail-rule):last-child {
   border-bottom: 1px solid var(--slate-line);
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   .card-detail-copy
   .touch-live-stat {
@@ -873,9 +1009,7 @@ html[data-skin="slate"]
 /* ==========================================================================
    6. 发现 / discover — floating 820
    ========================================================================== */
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="discover"] {
+html[data-skin="slate"] body #modal.folio-host[data-type="discover"] {
   background: #0b0f16b8;
   backdrop-filter: none;
 }
@@ -889,7 +1023,7 @@ html[data-skin="slate"]
   max-height: 100%;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   > .folio-dialog[data-dialog-size="discover"]
   .modal-heading
@@ -908,11 +1042,9 @@ html[data-skin="slate"]
   align-items: start;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="discover"]
   .discover-card {
-  width: 100%;
-  max-width: 230px;
   border-radius: 12px;
   background: none;
   box-shadow: none;
@@ -924,31 +1056,35 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="discover"]
+  .discover-card {
+  width: 100%;
+  max-width: 230px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="discover"]
   .discover-card::before,
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="discover"]
   .discover-card::after {
   content: none;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="discover"]
   .discover-card:is(:hover, :focus-visible) {
   outline: none;
   box-shadow: none;
   /* the card face is not a filled rectangle, so the selection glow follows its
    * alpha via drop-shadow rather than a box-shadow ring */
-  filter:
-    drop-shadow(0 0 4px #8cc4ffcc) drop-shadow(0 0 20px #8cc4ff88);
+  filter: drop-shadow(0 0 4px #8cc4ffcc) drop-shadow(0 0 20px #8cc4ff88);
 }
 
 /* ==========================================================================
    7. 确认 / confirm — floating 480
    ========================================================================== */
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="confirm"] {
+html[data-skin="slate"] body #modal.folio-host[data-type="confirm"] {
   background: #0b0f16b8;
   backdrop-filter: none;
 }
@@ -962,7 +1098,7 @@ html[data-skin="slate"]
   text-align: left;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="confirm"]
   .confirm-box
   .modal-heading
@@ -971,15 +1107,22 @@ html[data-skin="slate"]
   letter-spacing: 2px;
 }
 html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="confirm"]
+  .confirm-box
+  .modal-scroll
+  p {
+  font: 400 15px/1.8 var(--slate-font);
+  letter-spacing: 0.5px;
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="confirm"]
   .confirm-box
   .modal-scroll
   p {
   margin: 20px 0 6px;
-  font: 400 15px/1.8 var(--slate-font);
-  letter-spacing: 0.5px;
-  color: var(--slate-ink-2);
   text-align: left;
 }
 html[data-skin="slate"]
@@ -1002,7 +1145,7 @@ html[data-skin="slate"]
    8. 菜单 / menu — floating 560
    ========================================================================== */
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   > .folio-dialog[data-dialog-size="menu"]
   .modal-heading
@@ -1017,6 +1160,14 @@ html[data-skin="slate"]
   gap: 12px;
   padding: 22px 0 6px;
 }
+html[data-skin="slate"] body #modal.folio-host .touch-menu-grid .menu-action {
+  border-radius: 999px;
+  border: 1px solid var(--slate-pill-line);
+  background: var(--slate-pill);
+  color: var(--slate-ink);
+  font: 500 16px/1 var(--slate-font);
+  letter-spacing: 1px;
+}
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
@@ -1028,13 +1179,15 @@ html[data-skin="slate"]
   gap: 12px;
   min-height: 52px;
   padding: 0 22px;
-  border-radius: 999px;
-  border: 1px solid var(--slate-pill-line);
-  background: var(--slate-pill);
-  color: var(--slate-ink);
-  font: 500 16px/1 var(--slate-font);
-  letter-spacing: 1px;
   text-align: left;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  .touch-menu-grid
+  .menu-action
+  > svg {
+  color: var(--slate-blue);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -1045,10 +1198,9 @@ html[data-skin="slate"]
   flex: 0 0 20px;
   width: 20px;
   height: 20px;
-  color: var(--slate-blue);
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   .touch-menu-grid
   .menu-action:hover {
@@ -1060,7 +1212,7 @@ html[data-skin="slate"]
    9. 战斗记录 / journal — floating 720, hairline rows
    ========================================================================== */
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   > .folio-dialog[data-dialog-size="journal"]
   .modal-heading
@@ -1068,21 +1220,18 @@ html[data-skin="slate"]
   font: 700 26px/1.35 var(--slate-font);
   letter-spacing: 2px;
 }
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host
-  .touch-log {
-  gap: 0;
-  padding: 6px 0 4px;
+html[data-skin="slate"] body #modal.folio-host .touch-log {
   font-family: var(--slate-font);
 }
+html[data-skin="slate"] body:not(.touch-layout) #modal.folio-host .touch-log {
+  gap: 0;
+  padding: 6px 0 4px;
+}
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   :is(.touch-log, .tactical-sheet .touch-log)
   > p {
-  margin: 0;
-  padding: 13px 0;
   border: 0;
   border-bottom: 1px solid var(--slate-line);
   background: none;
@@ -1094,6 +1243,14 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
   :is(.touch-log, .tactical-sheet .touch-log)
+  > p {
+  margin: 0;
+  padding: 13px 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  :is(.touch-log, .tactical-sheet .touch-log)
   > p:last-child {
   border-bottom: 0;
 }
@@ -1102,7 +1259,7 @@ html[data-skin="slate"]
    10. 手牌总览 / hand overview — floating 1060
    ========================================================================== */
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   > .folio-dialog[data-dialog-size="hand"]
   .modal-heading
@@ -1117,18 +1274,14 @@ html[data-skin="slate"]
   gap: 20px;
   padding: 22px 0 6px;
 }
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host
-  .touch-hand-grid
-  > button {
+html[data-skin="slate"] body #modal.folio-host .touch-hand-grid > button {
   border-radius: 12px;
   background: none;
   box-shadow: none;
   transition: box-shadow 0.15s;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   .touch-hand-grid
   > button:is(:hover, :focus-visible) {
@@ -1141,10 +1294,7 @@ html[data-skin="slate"]
 /* ==========================================================================
    11. 英雄信息 / hero info — the tactical sheet loses its amber glass
    ========================================================================== */
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host
-  .tactical-sheet {
+html[data-skin="slate"] body #modal.folio-host .tactical-sheet {
   background: var(--slate-material);
   background-attachment: scroll;
   color: var(--slate-ink);
@@ -1152,6 +1302,13 @@ html[data-skin="slate"]
 /* legacy-components.css paints `.touch-hero-info` with the tavern amber glass;
  * the extra `.folio-dialog` qualifier matches that rule's specificity so this
  * one wins on source order. */
+html[data-skin="slate"] body #modal.folio-host .folio-dialog .touch-hero-info {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--slate-ink);
+}
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
@@ -1161,11 +1318,13 @@ html[data-skin="slate"]
   gap: 28px;
   padding: 22px 0 6px;
   align-items: start;
-  border: 0;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-  color: var(--slate-ink);
+}
+html[data-skin="slate"] body #modal.folio-host .touch-hero-info > img {
+  border: 1.5px solid var(--slate-card-line);
+  border-radius: 10px;
+  background: var(--slate-card-base);
+  box-shadow: 0 8px 20px #0007;
+  object-fit: cover;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -1174,12 +1333,13 @@ html[data-skin="slate"]
   > img {
   width: 100%;
   max-width: 200px;
-  border: 1.5px solid var(--slate-card-line);
-  border-radius: 10px;
-  background: var(--slate-card-base);
-  box-shadow: 0 8px 20px #0007;
-  object-fit: cover;
   aspect-ratio: 3 / 4;
+}
+html[data-skin="slate"] body #modal.folio-host .touch-hero-info > div {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -1189,21 +1349,12 @@ html[data-skin="slate"]
   display: grid;
   gap: 0;
   padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   .touch-hero-info
   .touch-live-stat {
-  display: flex;
-  align-items: center;
-  min-height: 46px;
-  margin: 0;
-  padding: 0;
   border: 0;
   border-bottom: 1px solid var(--slate-line);
   border-radius: 0;
@@ -1216,10 +1367,14 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
   .touch-hero-info
-  > div
-  > p {
+  .touch-live-stat {
+  display: flex;
+  align-items: center;
+  min-height: 46px;
   margin: 0;
-  padding: 14px 0;
+  padding: 0;
+}
+html[data-skin="slate"] body #modal.folio-host .touch-hero-info > div > p {
   border: 0;
   border-bottom: 1px solid var(--slate-line);
   border-radius: 0;
@@ -1233,8 +1388,22 @@ html[data-skin="slate"]
   #modal.folio-host
   .touch-hero-info
   > div
+  > p {
+  margin: 0;
+  padding: 14px 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  .touch-hero-info
+  > div
   > p:last-child {
   border-bottom: 0;
+}
+html[data-skin="slate"] body #modal.folio-host .touch-hero-info > div > p b {
+  font: 700 16px/1.5 var(--slate-font);
+  letter-spacing: 1px;
+  color: #fff;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -1245,9 +1414,6 @@ html[data-skin="slate"]
   b {
   display: block;
   margin-bottom: 4px;
-  font: 700 16px/1.5 var(--slate-font);
-  letter-spacing: 1px;
-  color: #fff;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -1269,7 +1435,7 @@ html[data-skin="slate"]
    12. 战场画廊 / gallery — floating 1100, scene blocks as bordered cards
    ========================================================================== */
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   > .folio-dialog[data-dialog-size="atelier"]
   .modal-heading
@@ -1285,13 +1451,7 @@ html[data-skin="slate"]
   gap: 22px;
   padding: 22px 0 6px;
 }
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host
-  .atelier-box
-  .atelier-vignette {
-  overflow: hidden;
-  padding: 0 0 14px;
+html[data-skin="slate"] body #modal.folio-host .atelier-box .atelier-vignette {
   border: 1.5px solid var(--slate-card-line);
   border-radius: 12px;
   background: var(--slate-card-base);
@@ -1304,16 +1464,24 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
   .atelier-box
+  .atelier-vignette {
+  overflow: hidden;
+  padding: 0 0 14px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  .atelier-box
   .atelier-vignette::before,
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   .atelier-box
   .atelier-vignette::after {
   content: none;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   .atelier-box
   .atelier-vignette:hover {
@@ -1323,7 +1491,7 @@ html[data-skin="slate"]
     0 8px 20px #0007;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   .atelier-box
   .atelier-vignette
@@ -1333,12 +1501,11 @@ html[data-skin="slate"]
   box-shadow: none;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
   .atelier-box
   .atelier-vignette
   h3 {
-  margin: 14px 16px 0;
   font: 700 17px/1.4 var(--slate-font);
   letter-spacing: 1px;
   color: #fff;
@@ -1348,8 +1515,15 @@ html[data-skin="slate"]
   #modal.folio-host
   .atelier-box
   .atelier-vignette
+  h3 {
+  margin: 14px 16px 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  .atelier-box
+  .atelier-vignette
   p {
-  margin: 6px 16px 0;
   font: 400 14px/1.5 var(--slate-font);
   letter-spacing: 0.5px;
   color: var(--slate-ink-3);
@@ -1358,11 +1532,21 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
   .atelier-box
+  .atelier-vignette
+  p {
+  margin: 6px 16px 0;
+}
+html[data-skin="slate"] body #modal.folio-host .atelier-box > .atelier-foot p {
+  font: 400 15px/1.6 var(--slate-font);
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .atelier-box
   > .atelier-foot
   p {
   margin: 0 auto 0 0;
-  font: 400 15px/1.6 var(--slate-font);
-  color: var(--slate-ink-2);
 }
 
 /* ==========================================================================
@@ -1409,5 +1593,582 @@ html[data-skin="slate"]
     svg {
     width: 84px;
     height: 84px;
+  }
+}
+
+/* ==========================================================================
+   12. 触控布局 / touch layouts (body.touch-layout)
+   ==========================================================================
+   The material above is layout-agnostic (`html[data-skin="slate"] body …`).
+   Everything below is pure GEOMETRY: position, size, spacing, arrangement and
+   per-layout visibility only — never a second skin. Per
+   REFERENCE_UI_STANDARD.md 「组件归属与响应式」 a visible node must not change
+   background, border, radius, shadow, font family/weight or state feedback
+   between desktop, portrait and landscape.
+
+   `src/mobile-view.js` puts `body.touch-layout` on every touch device and on
+   any window narrower than 1200px, so 1024×768 tablets land here too.
+   `body.mobile-portrait` / `body.mobile-landscape` split the two orientations.
+
+   ---------------------------------------------------------------------------
+   NEEDS COORDINATOR MERGE INTO base.css: section 12.1 below is the PAGE shell,
+   which base.css owns. It is written here (and keyed only to the four page
+   sizes this task covers) because page files may not edit base.css. `route`
+   and `covenant` are deliberately absent — they belong to the map/contracts
+   task. When this moves to base.css it should simply gain those two sizes.
+   ========================================================================== */
+
+/* --- 12.1 page shell on touch (base.css candidate) --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="heroes"],
+    [data-dialog-size="library"],
+    [data-dialog-size="settings"],
+    [data-dialog-size="help"]
+  ) {
+  padding: calc(12px + env(safe-area-inset-top))
+    calc(16px + env(safe-area-inset-right))
+    calc(12px + env(safe-area-inset-bottom))
+    calc(16px + env(safe-area-inset-left));
+}
+/* back chevron: 44px hit area tucked into the safe area */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="heroes"],
+    [data-dialog-size="library"],
+    [data-dialog-size="settings"],
+    [data-dialog-size="help"]
+  )
+  > .modal-close {
+  top: calc(10px + env(safe-area-inset-top));
+  left: calc(10px + env(safe-area-inset-left));
+  width: 44px;
+  height: 44px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="heroes"],
+    [data-dialog-size="library"],
+    [data-dialog-size="settings"],
+    [data-dialog-size="help"]
+  )
+  > :is(.modal-heading, .library-heading) {
+  min-height: 44px;
+  padding-left: 44px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="heroes"],
+    [data-dialog-size="library"],
+    [data-dialog-size="settings"],
+    [data-dialog-size="help"]
+  )
+  :is(.modal-heading, .library-heading)
+  h2 {
+  font-size: 28px;
+  line-height: 36px;
+  letter-spacing: 2px;
+}
+/* short landscape windows buy the title row back for content */
+@media (max-height: 500px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="heroes"],
+      [data-dialog-size="library"],
+      [data-dialog-size="settings"],
+      [data-dialog-size="help"]
+    ) {
+    padding-top: calc(8px + env(safe-area-inset-top));
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="heroes"],
+      [data-dialog-size="library"],
+      [data-dialog-size="settings"],
+      [data-dialog-size="help"]
+    )
+    > :is(.modal-heading, .library-heading) {
+    min-height: 36px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="heroes"],
+      [data-dialog-size="library"],
+      [data-dialog-size="settings"],
+      [data-dialog-size="help"]
+    )
+    > .modal-close {
+    top: calc(8px + env(safe-area-inset-top));
+    left: calc(8px + env(safe-area-inset-left));
+    height: 44px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="heroes"],
+      [data-dialog-size="library"],
+      [data-dialog-size="settings"],
+      [data-dialog-size="help"]
+    )
+    :is(.modal-heading, .library-heading)
+    h2 {
+    font-size: 21px;
+    line-height: 28px;
+  }
+}
+/* tablets keep the desktop title scale and a wider gutter */
+@media (min-width: 900px) and (min-height: 620px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="heroes"],
+      [data-dialog-size="library"],
+      [data-dialog-size="settings"],
+      [data-dialog-size="help"]
+    ) {
+    padding: calc(22px + env(safe-area-inset-top))
+      calc(32px + env(safe-area-inset-right))
+      calc(20px + env(safe-area-inset-bottom))
+      calc(32px + env(safe-area-inset-left));
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="heroes"],
+      [data-dialog-size="library"],
+      [data-dialog-size="settings"],
+      [data-dialog-size="help"]
+    )
+    > .modal-close {
+    top: calc(20px + env(safe-area-inset-top));
+    left: calc(24px + env(safe-area-inset-left));
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="heroes"],
+      [data-dialog-size="library"],
+      [data-dialog-size="settings"],
+      [data-dialog-size="help"]
+    )
+    > :is(.modal-heading, .library-heading) {
+    padding-left: 48px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="heroes"],
+      [data-dialog-size="library"],
+      [data-dialog-size="settings"],
+      [data-dialog-size="help"]
+    )
+    :is(.modal-heading, .library-heading)
+    h2 {
+    font-size: 32px;
+    line-height: 44px;
+    letter-spacing: 3px;
+  }
+}
+
+/* --- 12.2 page-shell footer on touch: equal-width pills across the row --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="heroes"],
+    [data-dialog-size="settings"],
+    [data-dialog-size="help"]
+  )
+  > .modal-footer {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 10px;
+  margin: 8px 0 0;
+  padding: 10px 0 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="heroes"],
+    [data-dialog-size="settings"],
+    [data-dialog-size="help"]
+  )
+  > .modal-footer
+  > button {
+  flex: 1 1 0;
+  min-width: 0;
+  /* `components.css` caps `.panel-actions > button` at 240px, which leaves a
+   * phone footer two-thirds empty. Touch rows use the full width instead. */
+  max-width: none;
+  min-height: 48px;
+  padding: 0 12px;
+}
+@media (max-height: 500px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="heroes"],
+      [data-dialog-size="settings"],
+      [data-dialog-size="help"]
+    )
+    > .modal-footer {
+    margin-top: 6px;
+    padding-top: 8px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="heroes"],
+      [data-dialog-size="settings"],
+      [data-dialog-size="help"]
+    )
+    > .modal-footer
+    > button {
+    min-height: 44px;
+    font-size: 15px;
+  }
+}
+
+/* --- 12.3 floating shell on touch: 16px margins, stacked footer pills --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="confirm"],
+    [data-dialog-size="detail"]
+  ) {
+  width: calc(100% - 32px);
+  max-width: calc(100% - 32px);
+  max-height: calc(100% - 32px);
+  margin: 16px;
+  padding: 20px;
+}
+/* the heading hairline is an absolutely-placed ornament, so its geometry has to
+ * be restated per layout; colour and weight stay the shared ones above */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog:is([data-dialog-size="confirm"], [data-dialog-size="detail"])
+  > .modal-heading {
+  position: relative;
+  padding-bottom: 12px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog:is([data-dialog-size="confirm"], [data-dialog-size="detail"])
+  > .modal-heading::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 1px;
+  opacity: 1;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog:is([data-dialog-size="confirm"], [data-dialog-size="detail"])
+  > .modal-heading
+  h2 {
+  font-size: 22px;
+  line-height: 1.35;
+  letter-spacing: 1.5px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog:is([data-dialog-size="confirm"], [data-dialog-size="detail"])
+  > .modal-heading
+  p {
+  margin: 8px 0 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog:is([data-dialog-size="confirm"], [data-dialog-size="detail"])
+  > .modal-footer {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: stretch;
+  gap: 10px;
+  margin-top: 4px;
+  padding-top: 16px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog:is([data-dialog-size="confirm"], [data-dialog-size="detail"])
+  > .modal-footer
+  > button {
+  /* the row is `column-reverse` here, so `components.css`'s
+   * `flex: 1 1 140px` would turn each pill into a 140px-tall slab */
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto;
+  min-width: 0;
+  max-width: none;
+  min-height: 48px;
+}
+/* short landscape: stacked pills would eat the whole window, so they go back
+ * onto one row (still ≥ 44px tall) */
+@media (max-height: 500px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="confirm"],
+      [data-dialog-size="detail"]
+    ) {
+    padding: 14px 16px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="confirm"],
+      [data-dialog-size="detail"]
+    )
+    > .modal-heading {
+    padding-bottom: 8px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="confirm"],
+      [data-dialog-size="detail"]
+    )
+    > .modal-footer {
+    flex-direction: row;
+    gap: 10px;
+    padding-top: 10px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="confirm"],
+      [data-dialog-size="detail"]
+    )
+    > .modal-footer
+    > button {
+    flex: 1 1 0;
+    min-height: 44px;
+  }
+}
+
+/* the floating shell's 40px round close button is below the 44px touch target
+ * AGENTS.md asks for. GEOMETRY only — base.css keeps the chrome.
+ * NEEDS COORDINATOR MERGE INTO base.css together with 12.1. */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog:is([data-dialog-size="confirm"], [data-dialog-size="detail"])
+  > .modal-close {
+  width: 44px;
+  height: 44px;
+}
+
+/* --- 12.4 卡牌详情 / card detail on touch: card over copy --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="detail"]
+  .card-detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  align-items: start;
+  gap: 16px;
+  height: auto;
+  padding: 16px 0 4px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="detail"]
+  .card-detail-art {
+  width: 168px;
+  max-width: 168px;
+  padding: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="detail"]
+  .card-detail-art
+  > .card {
+  width: 100%;
+  height: auto;
+  max-width: 168px;
+  aspect-ratio: var(--card-face-ratio, 5 / 7.4);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="detail"]
+  .card-detail-copy {
+  width: 100%;
+  gap: 0;
+  padding: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .card-detail-copy
+  h3 {
+  margin: 0 0 10px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .card-detail-copy
+  .card-detail-rule {
+  margin: 0 0 14px;
+  padding: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .card-detail-copy
+  > :is(p, small):not(.card-detail-rule) {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+}
+/* landscape puts the card back beside the copy — the window is short, not narrow */
+@media (max-height: 500px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog[data-dialog-size="detail"]
+    .card-detail-layout {
+    grid-template-columns: 116px minmax(0, 1fr);
+    justify-items: start;
+    gap: 18px;
+    padding: 10px 0 2px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog[data-dialog-size="detail"]
+    .card-detail-art,
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog[data-dialog-size="detail"]
+    .card-detail-art
+    > .card {
+    width: 116px;
+    max-width: 116px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .card-detail-copy
+    > :is(p, small):not(.card-detail-rule) {
+    min-height: 34px;
+  }
+}
+@media (min-width: 900px) and (min-height: 620px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog[data-dialog-size="detail"]
+    .card-detail-layout {
+    grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
+    justify-items: start;
+    gap: 28px;
+    padding: 20px 0 6px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog[data-dialog-size="detail"]
+    .card-detail-art,
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog[data-dialog-size="detail"]
+    .card-detail-art
+    > .card {
+    width: 240px;
+    max-width: 240px;
+  }
+}
+
+/* --- 12.5 确认 / confirm on touch --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .folio-dialog[data-dialog-size="confirm"] {
+  width: min(calc(100% - 32px), 480px);
+  max-width: min(calc(100% - 32px), 480px);
+  margin: 16px auto;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  .confirm-box
+  .modal-scroll
+  > p {
+  margin: 14px 0 2px;
+}
+
+/* --- 12.6 tablet footers: a 1024px-wide pill reads as a banner, so the page
+       shell goes back to centred pills at desktop-ish widths --- */
+@media (min-width: 900px) and (min-height: 620px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="heroes"],
+      [data-dialog-size="settings"],
+      [data-dialog-size="help"]
+    )
+    > .modal-footer {
+    justify-content: center;
+    gap: 16px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .folio-dialog:is(
+      [data-dialog-size="heroes"],
+      [data-dialog-size="settings"],
+      [data-dialog-size="help"]
+    )
+    > .modal-footer
+    > button {
+    flex: 0 1 auto;
+    min-width: 180px;
+    max-width: min(320px, 100%);
+    min-height: 52px;
+    padding: 0 28px;
   }
 }

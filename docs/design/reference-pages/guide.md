@@ -63,3 +63,11 @@
 ## 2026-09-14 导航轨节点补修
 
 `base.css` 对 `.ghost-btn` 等药丸的共享规则在 `::before` 上同时设了 `content: none; display: none`；`guide.css` 的 `.help-toc button::before` 只覆盖了 `content`，未覆盖 `display`，导致该属性仍取 base.css 的 `display: none`（级联按属性而非按规则块生效），节点完全不渲染。修复：在该规则补上 `display: block`；同时给 `.help-toc button` 加 `white-space: nowrap` 并将字号从 25px 降到 22px/700，导航列宽从 260px 增到 280px（窄桌面断点 `@media (max-width:1500px)` 同步从 220px 增到 260px），避免「02 出牌与攻击」等标签换行。已用 `getBoundingClientRect`/`getComputedStyle` 验证四个章节按钮在 1672×941、1280×720 下 `::before` 均为非零盒模型（16px 空心点 / 56px 发光节点）且标签单行不溢出；截图已更新于 `output/slate-guide-20260913/`。
+
+## 2026-09-14 触控布局皮肤
+
+`?skin=slate` 第二阶段：章节标题发丝线、三块内容卡（圆角 12 + 1px 线 + `#0f141d80` 底）、56px 圆角图标块、关键词行等材质上移到 `html[data-skin="slate"] body`；桌面 `[280px][1fr]` 轨 + 内容几何留在 `body:not(.touch-layout)`。
+
+触控几何：`.help-toc` 与设置页同样由导航轨收成横向文字分页（44px 以上命中区，选中 3px 下划亮条，无竖线分隔——理由同设置页）。手机宽度（≤600px）下四个章节标签放不进一行，分页改为折行两排，选中章节与它的亮条始终可见；横屏与平板一行排得下，保持单排（并留 `overflow-x: auto` 兜底）。竖屏下 `.help-reference-overview` 三块内容卡纵向堆叠、卡面图解改为「卡片在上、标注在下」、关键词表单列；短横屏与平板恢复两列（回合流程跨整行），卡面图解回到左右排列。
+
+验收：四个章节 × 四个视口的截图见 [output/slate-mobile-pages-20260914](../../../output/slate-mobile-pages-20260914/)。
