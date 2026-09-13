@@ -1,0 +1,664 @@
+/* Test skin "slate" (磨砂青岩) — shared base. Desktop only.
+ * Activated by `?skin=slate` (html[data-skin="slate"], see presentation/theme.js).
+ * The whole skin lives in the `skin` cascade layer, which sits after
+ * `components`, so it never has to out-specify existing rules.
+ *
+ * ---------------------------------------------------------------------------
+ * TOKENS (defined here, on html[data-skin="slate"] — page files must NOT
+ * redefine them; ask for a new token instead):
+ *   typography  --slate-font
+ *   ink         --slate-ink  --slate-ink-2  --slate-ink-3
+ *   accent      --slate-blue  --slate-blue-deep
+ *   hairlines   --slate-line  --slate-line-strong
+ *   pills       --slate-pill  --slate-pill-line
+ *   card chrome --slate-card-line  --slate-card-base
+ *   material    --slate-material  (matte panel: glow + 45° hatch + gradient)
+ *   geometry    --slate-page-x  --slate-rail  --slate-list  --slate-col-gap
+ *               --slate-card-w  --slate-card-h  --slate-thumb-w --slate-thumb-h
+ * The `@media (max-width: 1500px)` block at the bottom of this file retunes the
+ * geometry tokens for narrower desktop windows.
+ *
+ * ---------------------------------------------------------------------------
+ * TWO SHELLS, keyed off `[data-dialog-size]` (set by presentation/dialog-layout.js):
+ *
+ *   PAGE shell  — heroes, library, settings, route, covenant, help.
+ *     Full-bleed: host padding 0, dialog 100%×100%, matte material background,
+ *     no border/radius/shadow, `padding: 26px var(--slate-page-x) 28px`, and the
+ *     close button becomes a back chevron at the TOP-LEFT plus a title row.
+ *
+ *   FLOATING shell — confirm, detail, hand, menu, journal, discover, mulligan,
+ *     choice, result, atelier, workspace.
+ *     Host keeps dialog-layout's centering and gets a dim; the dialog is a
+ *     rounded matte panel (16px radius, hairline border, drop shadow). Widths
+ *     stay exactly as dialog-layout.css defines them — never override
+ *     `--dialog-width` here. The close button stays a top-RIGHT round "×".
+ *
+ * ---------------------------------------------------------------------------
+ * SHARED CONTROLS (apply to EVERY dialog type, not just the pages above):
+ *   font stack on text/controls; `.reference-page-brand`, `.panel-corner-trim`,
+ *   `.folio-scroll-hint`, `.eyebrow` and `.selection-light` hidden;
+ *   `.crafted-panel` neutralised; `:is(.modal-heading, .library-heading) h2`
+ *   type scale; pills `.gold-btn` / `.ghost-btn` / `.text-btn` /
+ *   `.library-inspect`; form controls `select.library-search`,
+ *   `input.library-search`, `.deck-title-input`.
+ *
+ * ---------------------------------------------------------------------------
+ * RULE FOR PAGE FILES (home/map/contracts/battle/dialogs/guide/mobile/heroes/
+ * library/settings): only add page-specific selectors. Do not redefine tokens
+ * and do not restate the shells — extend them.
+ */
+
+html[data-skin="slate"] {
+  --slate-font:
+    "PingFang SC", "Hiragino Sans GB", "Source Han Sans SC", "Noto Sans SC",
+    "Microsoft YaHei", system-ui, sans-serif;
+  --slate-ink: #f3f6fa;
+  --slate-ink-2: #c3ccd8;
+  --slate-ink-3: #8e99a9;
+  --slate-blue: #8cc4ff;
+  --slate-blue-deep: #2f72d6;
+  --slate-line: #ffffff26;
+  --slate-line-strong: #ffffff40;
+  --slate-pill: #121824b3;
+  --slate-pill-line: #ffffff2e;
+  --slate-card-line: #d6dfe9aa;
+  --slate-card-base: #0f141d;
+  /* heroes page geometry (desktop ≥ 1500px; narrower desktops override below) */
+  --slate-page-x: 48px;
+  --slate-rail: 200px;
+  --slate-list: 400px;
+  --slate-col-gap: 40px;
+  --slate-card-w: 300px;
+  --slate-card-h: 430px;
+  --slate-thumb-w: 72px;
+  --slate-thumb-h: 96px;
+  --slate-material:
+    radial-gradient(70% 55% at 12% 6%, #6f7d95 0%, #6f7d9500 62%),
+    radial-gradient(45% 40% at 92% 96%, #3d4a5f 0%, #3d4a5f00 65%),
+    radial-gradient(60% 50% at 60% 40%, #2e3849 0%, #2e384900 70%),
+    repeating-linear-gradient(45deg, #ffffff09 0 1px, #ffffff00 1px 7px),
+    linear-gradient(160deg, #2b3444 0%, #1e2532 55%, #171d29 100%);
+}
+
+/* ---------- full-bleed page shell ---------- */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host:has(
+    > .folio-dialog:is(
+        [data-dialog-size="heroes"],
+        [data-dialog-size="library"],
+        [data-dialog-size="settings"],
+        [data-dialog-size="route"],
+        [data-dialog-size="covenant"],
+        [data-dialog-size="help"]
+      )
+  ) {
+  padding: 0;
+  background: #1b2230;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="heroes"],
+    [data-dialog-size="library"],
+    [data-dialog-size="settings"],
+    [data-dialog-size="route"],
+    [data-dialog-size="covenant"],
+    [data-dialog-size="help"]
+  ) {
+  --dialog-width: 100%;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
+  margin: 0;
+  padding: 26px var(--slate-page-x) 28px;
+  gap: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--slate-material);
+  background-attachment: scroll;
+  color: var(--slate-ink);
+  font-family: var(--slate-font);
+}
+
+/* ---------- shared typography and ornament removal (all dialogs) ---------- */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  :is(h2, h3, h4, strong, b, summary, label, p, small, em, span, button, input, select) {
+  font-family: var(--slate-font);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  :is(.reference-page-brand, .panel-corner-trim, .folio-scroll-hint, .eyebrow) {
+  display: none;
+}
+/* `panels.js` puts `.crafted-panel` on every dialog root whose type is not one
+ * of heroes/library/map/contracts (so: settings, help and all floating sizes),
+ * plus on contained surfaces. This neutralisation deliberately ties on
+ * specificity with the page-shell rule above and wins on source order, which is
+ * what keeps the settings page flat instead of matte. Keep the `.folio-dialog`
+ * qualifier: dropping it lowers specificity and silently repaints those pages.
+ * The floating shell below is ordered after this rule and so still wins. */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .folio-dialog.crafted-panel,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .folio-dialog
+  .crafted-panel {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .folio-dialog.crafted-panel::before,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .folio-dialog.crafted-panel::after,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .folio-dialog
+  .crafted-panel::before,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .folio-dialog
+  .crafted-panel::after {
+  content: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .selection-light {
+  content: none;
+  display: none;
+}
+
+/* back chevron replaces the round close button (page shell only) */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="heroes"],
+    [data-dialog-size="library"],
+    [data-dialog-size="settings"],
+    [data-dialog-size="route"],
+    [data-dialog-size="covenant"],
+    [data-dialog-size="help"]
+  )
+  > .modal-close {
+  top: 26px;
+  left: 36px;
+  right: auto;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  box-shadow: none;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="heroes"],
+    [data-dialog-size="library"],
+    [data-dialog-size="settings"],
+    [data-dialog-size="route"],
+    [data-dialog-size="covenant"],
+    [data-dialog-size="help"]
+  )
+  > .modal-close
+  svg {
+  display: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="heroes"],
+    [data-dialog-size="library"],
+    [data-dialog-size="settings"],
+    [data-dialog-size="route"],
+    [data-dialog-size="covenant"],
+    [data-dialog-size="help"]
+  )
+  > .modal-close::before {
+  content: "";
+  display: block;
+  position: absolute;
+  inset: auto;
+  left: 17px;
+  top: 13px;
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  border: 0;
+  border-left: 3px solid #fff;
+  border-bottom: 3px solid #fff;
+  border-radius: 2px;
+  background: none;
+  box-shadow: none;
+  opacity: 1;
+  transform: rotate(45deg);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="heroes"],
+    [data-dialog-size="library"],
+    [data-dialog-size="settings"],
+    [data-dialog-size="route"],
+    [data-dialog-size="covenant"],
+    [data-dialog-size="help"]
+  )
+  > .modal-close::after {
+  content: none;
+  display: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="heroes"],
+    [data-dialog-size="library"],
+    [data-dialog-size="settings"],
+    [data-dialog-size="route"],
+    [data-dialog-size="covenant"],
+    [data-dialog-size="help"]
+  )
+  > .modal-close:hover::before {
+  border-color: var(--slate-blue);
+}
+
+/* page title row (page shell only) */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="heroes"],
+    [data-dialog-size="library"],
+    [data-dialog-size="settings"],
+    [data-dialog-size="route"],
+    [data-dialog-size="covenant"],
+    [data-dialog-size="help"]
+  )
+  > .modal-heading {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0 0 48px;
+  margin: 0;
+  border: 0;
+  background: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="heroes"],
+    [data-dialog-size="library"],
+    [data-dialog-size="settings"],
+    [data-dialog-size="route"],
+    [data-dialog-size="covenant"],
+    [data-dialog-size="help"]
+  )
+  > .modal-heading::before,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="heroes"],
+    [data-dialog-size="library"],
+    [data-dialog-size="settings"],
+    [data-dialog-size="route"],
+    [data-dialog-size="covenant"],
+    [data-dialog-size="help"]
+  )
+  > .modal-heading::after {
+  content: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="heroes"],
+    [data-dialog-size="library"],
+    [data-dialog-size="settings"],
+    [data-dialog-size="route"],
+    [data-dialog-size="covenant"],
+    [data-dialog-size="help"]
+  )
+  > .modal-heading
+  p {
+  display: none;
+}
+
+/* dialog heading type scale (all dialogs) */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .folio-dialog
+  :is(.modal-heading, .library-heading)
+  h2 {
+  margin: 0;
+  font: 700 32px/44px var(--slate-font);
+  letter-spacing: 3px;
+  color: #fff;
+  text-shadow: 0 2px 10px #0006;
+}
+
+/* ---------- pill buttons (all dialogs) ---------- */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  :is(.gold-btn, .ghost-btn, .text-btn, .library-inspect) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 28px;
+  border-radius: 999px;
+  border: 1px solid var(--slate-pill-line);
+  background: var(--slate-pill);
+  color: #fff;
+  font: 500 18px/1 var(--slate-font);
+  letter-spacing: 1px;
+  box-shadow: none;
+  text-shadow: none;
+  clip-path: none;
+  mask: none;
+  -webkit-mask: none;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  :is(.gold-btn, .ghost-btn, .text-btn, .library-inspect)::before,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  :is(.gold-btn, .ghost-btn, .text-btn, .library-inspect)::after,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  :is(.gold-btn, .ghost-btn) > img {
+  content: none;
+  display: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  :is(.ghost-btn, .text-btn, .library-inspect):hover {
+  background: #1b2434d9;
+  border-color: var(--slate-line-strong);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .gold-btn {
+  background: linear-gradient(180deg, #4a8be6, #2c66c4);
+  border-color: #8cc4ff99;
+  font-weight: 600;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .gold-btn:hover {
+  background: linear-gradient(180deg, #5b98ee, #3572cf);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  .gold-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* footer row (page shell only) */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="heroes"],
+    [data-dialog-size="library"],
+    [data-dialog-size="settings"],
+    [data-dialog-size="route"],
+    [data-dialog-size="covenant"],
+    [data-dialog-size="help"]
+  )
+  > .modal-footer {
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 18px 0 0;
+  border: 0;
+  background: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="heroes"],
+    [data-dialog-size="library"],
+    [data-dialog-size="settings"],
+    [data-dialog-size="route"],
+    [data-dialog-size="covenant"],
+    [data-dialog-size="help"]
+  )
+  > .modal-footer
+  > button {
+  min-width: 220px;
+  min-height: 52px;
+  margin: 0;
+}
+
+/* ---------- form controls (all dialogs) ---------- */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  :is(select.library-search, input.library-search, .deck-title-input) {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid var(--slate-pill-line);
+  background: var(--slate-pill);
+  color: #fff;
+  font: 400 16px var(--slate-font);
+  box-shadow: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  :is(select.library-search, input.library-search, .deck-title-input):focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 2px;
+}
+
+/* ---------- floating dialog shell ---------- */
+/* Every size that is NOT a full-bleed page. Widths stay as dialog-layout.css
+ * sets them; this only restates the material, rim and padding. */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host:has(
+    > .folio-dialog:is(
+        [data-dialog-size="confirm"],
+        [data-dialog-size="detail"],
+        [data-dialog-size="hand"],
+        [data-dialog-size="menu"],
+        [data-dialog-size="journal"],
+        [data-dialog-size="discover"],
+        [data-dialog-size="mulligan"],
+        [data-dialog-size="choice"],
+        [data-dialog-size="result"],
+        [data-dialog-size="atelier"],
+        [data-dialog-size="workspace"]
+      )
+  ) {
+  background: #0b0f16b8;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="confirm"],
+    [data-dialog-size="detail"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="choice"],
+    [data-dialog-size="result"],
+    [data-dialog-size="atelier"],
+    [data-dialog-size="workspace"]
+  ) {
+  padding: 28px 32px;
+  border: 1px solid var(--slate-line-strong);
+  border-radius: 16px;
+  box-shadow: 0 30px 80px #000a;
+  background: var(--slate-material);
+  background-attachment: scroll;
+  color: var(--slate-ink);
+  font-family: var(--slate-font);
+}
+/* the close button stays a top-right round "×" here */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="confirm"],
+    [data-dialog-size="detail"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="choice"],
+    [data-dialog-size="result"],
+    [data-dialog-size="atelier"],
+    [data-dialog-size="workspace"]
+  )
+  > .modal-close {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 50%;
+  background: var(--slate-pill);
+  box-shadow: none;
+  color: #fff;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="confirm"],
+    [data-dialog-size="detail"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="choice"],
+    [data-dialog-size="result"],
+    [data-dialog-size="atelier"],
+    [data-dialog-size="workspace"]
+  )
+  > .modal-close::before,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="confirm"],
+    [data-dialog-size="detail"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="choice"],
+    [data-dialog-size="result"],
+    [data-dialog-size="atelier"],
+    [data-dialog-size="workspace"]
+  )
+  > .modal-close::after {
+  content: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="confirm"],
+    [data-dialog-size="detail"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="choice"],
+    [data-dialog-size="result"],
+    [data-dialog-size="atelier"],
+    [data-dialog-size="workspace"]
+  )
+  > .modal-close
+  svg {
+  position: relative;
+  z-index: 1;
+  width: 18px;
+  height: 18px;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host
+  > .folio-dialog:is(
+    [data-dialog-size="confirm"],
+    [data-dialog-size="detail"],
+    [data-dialog-size="hand"],
+    [data-dialog-size="menu"],
+    [data-dialog-size="journal"],
+    [data-dialog-size="discover"],
+    [data-dialog-size="mulligan"],
+    [data-dialog-size="choice"],
+    [data-dialog-size="result"],
+    [data-dialog-size="atelier"],
+    [data-dialog-size="workspace"]
+  )
+  > .modal-close:hover {
+  background: #1b2434d9;
+  border-color: var(--slate-line-strong);
+}
+
+/* ---------- narrower desktop windows ---------- */
+@media (max-width: 1500px) {
+  html[data-skin="slate"] {
+    --slate-page-x: 36px;
+    --slate-rail: 150px;
+    --slate-list: 330px;
+    --slate-col-gap: 28px;
+    --slate-card-w: 240px;
+    --slate-card-h: 344px;
+  }
+}
