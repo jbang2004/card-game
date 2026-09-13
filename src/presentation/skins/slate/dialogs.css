@@ -444,8 +444,11 @@ html[data-skin="slate"]
   h3 {
   margin: 4px 0 0;
 }
+/* The relic description is body copy on a decision screen: it stays at the
+ * 16px legibility floor the reward regression enforces, rather than the 15px
+ * the brief sketched. */
 html[data-skin="slate"] body #modal.folio-host .rewards-box .relic-choice p {
-  font: 400 15px/1.75 var(--slate-font);
+  font: 400 16px/1.7 var(--slate-font);
   color: var(--slate-ink-2);
 }
 html[data-skin="slate"]

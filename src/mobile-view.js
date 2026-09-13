@@ -103,7 +103,11 @@ const EmberViewport = (() => {
           w: heroW,
           h: heroH,
         };
-        const playerY = l.hand.y - heroH - 12,
+        /* The readout row above the hand (`l.handLabel` on the left, `l.mana`
+         * on the right) starts 28px above the hand. A 12px gap let the player
+         * hero card reach into it, so the 手牌 chip sat across the card's
+         * bottom edge; clear the whole row instead. */
+        const playerY = l.hand.y - heroH - 28,
           ctrlY = l.hand.y - (short ? 106 : 126);
         l.player = {
           x: padL + 10,
@@ -131,13 +135,20 @@ const EmberViewport = (() => {
           w: Math.max(114, l.chip.w),
           h: 44,
         };
-        /* On very narrow portrait screens the full-width notice used to sit
-         * over the player's hero card. Keep the same surface, but dock it in
-         * the open right rail so both heroes remain fully readable. */
-        const noticeW = W < 430 ? Math.min(180, usableW) : usableW;
+        /* The notice doubles as the targeting bar (`l.actionChip`), which
+         * carries an instruction plus a 44px cancel button, so it wants the
+         * whole rail. What it must not do is sit across the player's hero
+         * card — and whether it would is a question of the screen's HEIGHT,
+         * not its width: on a tall portrait the hero starts well below the
+         * bar, on a short one it reaches up into it. Measure instead of
+         * guessing from the width, and only fall back to the docked right
+         * rail when the bar genuinely cannot clear the card. */
+        const noticeY = Math.max(l.enemy.y + heroH, l.contract.y + 44) + 8;
+        const noticeClearsHero = noticeY + 44 <= playerY;
+        const noticeW = noticeClearsHero ? usableW : Math.min(180, usableW);
         l.notice = {
-          x: W < 430 ? W - padR - noticeW : padL,
-          y: Math.max(l.enemy.y + heroH, l.contract.y + 44) + 8,
+          x: noticeClearsHero ? padL : W - padR - noticeW,
+          y: noticeY,
           w: noticeW,
           h: 44,
         };

@@ -737,6 +737,14 @@ html[data-skin="slate"] body.touch-layout #app.lobby-view .top-nav {
   align-items: stretch;
   border-left: 0;
 }
+/* `mobile-ui.js` prepends `#touch-collection` to `.top-actions` because the
+ * legacy phone header has no tab strip. With the strip re-opened above, that
+ * icon is a second control for 卡牌收藏 in the same header: one destination,
+ * two entries. The strip is the slate navigation, so the duplicate icon is
+ * closed on the lobby (`battle.css` already closes it in battle). */
+html[data-skin="slate"] body.touch-layout #app.lobby-view #touch-collection {
+  display: none;
+}
 html[data-skin="slate"] body.touch-layout #app.lobby-view .nav-link {
   display: flex;
   align-items: center;

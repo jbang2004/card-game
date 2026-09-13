@@ -359,7 +359,14 @@ html[data-skin="slate"]
   display: flex;
   align-items: center;
   min-height: 44px;
-  padding: 0 0 0 48px;
+  /* The back chevron is absolutely placed at `left: 36px` of the dialog box
+   * and is 44px wide, so its right edge is always 80px. The heading box, on
+   * the other hand, starts at `--slate-page-x`, so a constant 48px of padding
+   * only clears the chevron while the page inset is 48. Below 1500px the
+   * inset drops to 36 and the title used to land 4px from the chevron. Park
+   * the title at a constant 96px instead: identical at the wide inset, clear
+   * at the narrow one. */
+  padding: 0 0 0 max(48px, calc(96px - var(--slate-page-x)));
   margin: 0;
   border: 0;
   background: none;
@@ -445,6 +452,23 @@ html[data-skin="slate"]
   transition:
     background 0.15s,
     border-color 0.15s;
+}
+/* `components.css` lays `button.crafted-action` out on a `1em 1fr 1em` grid so
+ * that a leading icon is mirrored by an empty track and the label stays
+ * centred on the button. The pill rule above flattens that to a flex row,
+ * where the icon and its gap shove the label half their width off centre.
+ * Pills that are also crafted actions keep the grid. */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type]
+  button.crafted-action:is(
+    .gold-btn,
+    .ghost-btn,
+    .text-btn,
+    .library-inspect
+  ) {
+  display: inline-grid;
+  grid-template-columns: 1em minmax(0, 1fr) 1em;
 }
 html[data-skin="slate"]
   body
@@ -580,7 +604,10 @@ html[data-skin="slate"]
   )
   > :is(.modal-heading, .library-heading) {
   min-height: 44px;
-  padding-left: 44px;
+  /* The touch chevron sits at `left: 10px` and is 44px wide, so it ends at
+   * 54px while the heading box starts at the dialog's 16px gutter. 44px of
+   * padding put the title 6px from it; 54px restores a 16px gap. */
+  padding-left: 54px;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -707,7 +734,9 @@ html[data-skin="slate"]
       [data-dialog-size="help"]
     )
     > :is(.modal-heading, .library-heading) {
-    padding-left: 48px;
+    /* the tablet chevron moves to `left: 24px`, ending at 68px against a
+     * 32px gutter, so 48px of padding left only 12px of air */
+    padding-left: 52px;
   }
   html[data-skin="slate"]
     body.touch-layout

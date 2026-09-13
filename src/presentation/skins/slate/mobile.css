@@ -655,6 +655,47 @@ html[data-skin="slate"]
   }
 }
 
+/* `battle.css` gives the battle log and the boss dossier their matte floating
+ * shell under `body:not(.touch-layout)`. `mobile-view.js` also switches the
+ * battle to `body.touch-layout` whenever the window is narrower than 1360 or
+ * shorter than 700, so compact desktop windows fall out of that rule and the
+ * two panels keep the retired silverblue material. Restate the shell here —
+ * this file is last in the skin layer, so it also wins over the touch sheet
+ * rules below (design system §6.12). */
+html[data-skin="slate"]
+  body.touch-layout
+  #app.battle-view
+  :is(.log-panel, .boss-panel) {
+  padding: 14px 16px 16px;
+  border: 1px solid var(--slate-line-strong);
+  border-radius: 12px;
+  background: var(--slate-material);
+  background-attachment: scroll;
+  box-shadow: 0 24px 60px #000a;
+  color: var(--slate-ink);
+  font-family: var(--slate-font);
+  backdrop-filter: none;
+  clip-path: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #app.battle-view
+  :is(.log-panel, .boss-panel)::before,
+html[data-skin="slate"]
+  body.touch-layout
+  #app.battle-view
+  :is(.log-panel, .boss-panel)::after {
+  content: none;
+}
+/* `panels.js` appends four SVG corner brackets to every `.crafted-panel`. */
+html[data-skin="slate"]
+  body.touch-layout
+  #app.battle-view
+  :is(.log-panel, .boss-panel)
+  > .panel-corner-trim {
+  display: none;
+}
+
 /* ===========================================================================
  * 9. Battle-time dialogs — shared touch chrome
  * The floating shell itself (matte, 16px rim, round close) comes from
@@ -1158,6 +1199,91 @@ html[data-skin="slate"]
     font-size: 13px;
     white-space: nowrap;
   }
+  /* At 568×320 the slate chrome (18px shell padding, a 36px title row and a
+   * 14px-padded footer) left the pane 147px for 202px of opening hand, so the
+   * pane opened scrolled to its end and beheaded all three cards. Buy the
+   * rows back from the chrome rather than shrinking the cards below the 70px
+   * floor: the hand is the decision, and a 50px card cannot be read. */
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host:not([data-type="library-card"])
+    > .folio-dialog[data-dialog-size="mulligan"] {
+    padding: 10px 16px 10px;
+  }
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host:not([data-type="library-card"])
+    > .folio-dialog[data-dialog-size="mulligan"]
+    > .modal-heading {
+    min-height: 26px;
+    padding: 0 44px 6px 0;
+  }
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host:not([data-type="library-card"])
+    > .folio-dialog[data-dialog-size="mulligan"]
+    > .modal-heading
+    h2 {
+    font-size: 17px;
+    line-height: 1.2;
+  }
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host:not([data-type="library-card"])
+    > .folio-dialog[data-dialog-size="mulligan"]
+    > .modal-footer {
+    padding: 8px 0 0;
+  }
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host:not([data-type="library-card"])
+    > .folio-dialog[data-dialog-size="mulligan"]
+    > .modal-footer
+    button {
+    min-height: 44px;
+  }
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .mulligan-box
+    .mulligan-card {
+    gap: 8px;
+  }
+  /* Chrome's scroll anchoring re-pins the pane as the card art decodes, which
+   * is what parked it at the end; the hand always reads from the top. */
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host:not([data-type="library-card"])
+    > .folio-dialog[data-dialog-size="mulligan"]
+    .folio-viewport {
+    overflow-anchor: none;
+  }
+}
+/* The shortest supported landscape (568×320) still overruns after the chrome
+ * trims above, so the card budget tightens here only — 844×390 keeps its
+ * larger hand. */
+@media (orientation: landscape) and (max-height: 360px) {
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .mulligan-box
+    .mulligan-cards {
+    --opening-width: clamp(70px, calc((100dvh - 206px) / 1.48), 160px);
+    padding: 2px 0 0;
+  }
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    > .folio-dialog[data-dialog-size="mulligan"]
+    .modal-scroll.folio-flow {
+    padding-bottom: 2px;
+  }
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .mulligan-choice-state {
+    min-height: 36px;
+  }
 }
 
 /* ===========================================================================
@@ -1296,7 +1422,7 @@ html[data-skin="slate"]
   p {
   flex: 0 0 auto;
   margin: 0;
-  font: 400 13px/1.65 var(--slate-font);
+  font: 400 16px/1.6 var(--slate-font);
   color: var(--slate-ink-2);
 }
 html[data-skin="slate"]
@@ -1314,7 +1440,6 @@ html[data-skin="slate"]
   .relic-choice
   p {
   text-align: center;
-  font-size: 12px;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1542,7 +1667,6 @@ html[data-skin="slate"]
     .rewards-box
     .relic-choice
     p {
-    font-size: 14px;
     line-height: 1.7;
   }
   html[data-skin="slate"]
@@ -1608,7 +1732,6 @@ html[data-skin="slate"]
     .rewards-box
     .relic-choice
     p {
-    font-size: 11px;
     line-height: 1.55;
   }
   html[data-skin="slate"]
@@ -1654,7 +1777,6 @@ html[data-skin="slate"]
     .rewards-box
     .relic-choice
     p {
-    font-size: 10px;
     line-height: 1.45;
   }
   html[data-skin="slate"]

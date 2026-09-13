@@ -822,6 +822,14 @@ html[data-skin="slate"] body:not(.touch-layout) #battle .turn-shortcut {
   opacity: 1;
   text-shadow: none;
 }
+/* `battle.css` puts 14px between the pill and its shortcut line, which left
+ * roughly as much air below the line as above it — the caption then read as
+ * though it belonged to the 法力水晶 panel underneath rather than to 结束回合.
+ * Tightening the column gap groups the shortcut with its own button and
+ * widens the space before the mana caption (design system §5.4). */
+html[data-skin="slate"] body:not(.touch-layout) #battle .turn-controls {
+  gap: 6px;
+}
 html[data-skin="slate"] body:not(.touch-layout) #battle .mana-panel {
   color: var(--slate-ink);
   text-shadow: none;
