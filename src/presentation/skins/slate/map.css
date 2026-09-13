@@ -1,3 +1,665 @@
-/* Test skin "slate" — 冒险地图 / adventure map page. Empty placeholder.
- * Owned by the map restyle task; tokens and the two dialog shells
- * live in base.css — only add page-specific selectors here. */
+/* Test skin "slate" — 冒险地图 / adventure map page (brief 5.2, template T5 + T1 preview column).
+ *
+ * Tokens, the full-bleed page shell (this page is `[data-dialog-size="route"]`),
+ * the back chevron, the title type scale and the pill buttons all live in
+ * base.css; this file only adds map-specific selectors.
+ *
+ * Composition kept from the existing desktop layout: the map artwork stays a
+ * full-bleed scene (`.atlas-stage`), the level anchors stay percentage-placed
+ * over it, the route `<svg>` keeps its live geometry, and the dossier stays the
+ * right-hand column with the relic row + primary pill pinned to its bottom.
+ * What changes is the material: matte column, hairline sections, rail-node
+ * level markers, chip statistics, and no four-corner / paper ornament.
+ */
+
+/* ---------- page shell: the map is full bleed, so drop the shell padding ---------- */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  > .adventure-atlas {
+  padding: 0;
+  gap: 0;
+  background: #0d121b;
+}
+
+/* ---------- ornament removal ---------- */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  :is(.atlas-corners, .panel-corner-trim, .atlas-cartography, .atlas-emblem, .atlas-chapter, .atlas-focus, .atlas-pennant) {
+  display: none;
+}
+
+/* ---------- title row ---------- */
+/* The chevron is placed by base.css at top 26 / left 36 (44px box), so the
+ * title row starts at 36 and reserves 60px to land the heading on the usual
+ * 96px text axis. */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  > .modal-heading {
+  position: absolute;
+  top: 26px;
+  left: 36px;
+  right: auto;
+  width: auto;
+  min-height: 44px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 0;
+  padding: 0 0 0 60px;
+  border: 0;
+  background: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  > .modal-heading
+  > div:not(.atlas-chapter) {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  .atlas-heading
+  h2 {
+  order: 0;
+  margin: 0;
+  font: 700 32px/44px var(--slate-font);
+  letter-spacing: 3px;
+  color: #fff;
+  text-shadow:
+    0 2px 12px #000c,
+    0 0 4px #0009;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  .atlas-kicker {
+  order: 1;
+  display: block;
+  margin: 0;
+  font: 400 16px/1.2 var(--slate-font);
+  letter-spacing: 1px;
+  color: var(--slate-ink-3);
+  text-shadow: 0 2px 10px #000c;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  > .modal-close {
+  z-index: 5;
+}
+
+/* ---------- text word mark, bottom left of the scene ---------- */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  > .adventure-atlas
+  > .reference-page-brand {
+  display: flex;
+  position: absolute;
+  inset: auto auto 32px 48px;
+  z-index: 3;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  > .adventure-atlas
+  > .reference-page-brand
+  > span {
+  font: 700 20px/1.2 var(--slate-font);
+  letter-spacing: 4px;
+  text-shadow: 0 2px 10px #000c;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  > .adventure-atlas
+  > .reference-page-brand
+  > small {
+  font: 400 10px/1.2 var(--slate-font);
+  letter-spacing: 3px;
+  color: var(--slate-ink-2);
+  text-shadow: 0 2px 10px #000c;
+}
+
+/* ---------- scene + route lines ---------- */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-stage {
+  flex: 1 1 auto;
+  width: auto;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-paths {
+  filter: drop-shadow(0 0 6px #4d93ff55);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-paths
+  path {
+  stroke: #a8d3ffd9;
+  stroke-width: 2;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-paths
+  .atlas-route-shadow {
+  stroke: #00000073;
+  stroke-width: 5;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-paths
+  .traversed {
+  stroke: var(--slate-blue);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-paths
+  circle {
+  fill: #8cc4ffcc;
+  stroke: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-loading {
+  background: #0f151fee;
+  color: var(--slate-ink);
+  font-family: var(--slate-font);
+}
+
+/* ---------- level nodes: the navigation-rail node language ---------- */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-node {
+  gap: 16px;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-node[aria-pressed="true"] {
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-node
+  .atlas-landmark {
+  position: relative;
+  flex: none;
+  box-sizing: border-box;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid #ffffff3a;
+  background: #212c3d;
+  box-shadow: inset 0 0 8px #0009;
+  clip-path: none;
+  transition:
+    width 0.2s,
+    height 0.2s,
+    box-shadow 0.2s;
+}
+/* cleared — filled node with a check */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .done
+  .atlas-landmark {
+  border-color: #8cc4ff8c;
+  background: linear-gradient(180deg, #3f7fd6, #23509c);
+  box-shadow:
+    0 0 14px #2f72d666,
+    inset 0 0 8px #0006;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .done
+  .atlas-number
+  svg {
+  width: 26px;
+  height: 26px;
+  color: #fff;
+}
+/* current playable — 56px blue glow around the live boss portrait */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .current
+  .atlas-landmark {
+  border: 1px solid #bcdcff;
+  background: #0d1523;
+  box-shadow:
+    0 0 0 4px #4d93ff33,
+    0 0 24px #4d93ffaa,
+    inset 0 0 8px #0009;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .current
+  .atlas-number
+  img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+/* locked — 44px hollow dot with a lock */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .locked
+  .atlas-landmark {
+  width: 44px;
+  height: 44px;
+  border: 2px solid #aab4c3;
+  background: #1c2330d9;
+  box-shadow: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .locked
+  .atlas-number
+  svg {
+  width: 18px;
+  height: 18px;
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-number {
+  position: static;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: #fff;
+}
+/* selection is a separate axis from progress, so it gets its own ring */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-node[aria-pressed="true"]
+  .atlas-landmark {
+  border-color: #cfe6ff;
+  background: #16304f;
+  box-shadow:
+    0 0 0 5px #8cc4ff3d,
+    0 0 26px #8cc4ffb3,
+    inset 0 0 8px #0009;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-node:hover
+  .atlas-landmark {
+  border-color: #ffffff8c;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-node:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 6px;
+  border-radius: 10px;
+}
+
+/* node labels */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-location-copy {
+  gap: 2px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-name {
+  font: 700 20px/1.3 var(--slate-font);
+  letter-spacing: 1px;
+  color: #fff;
+  text-shadow:
+    0 2px 6px #000d,
+    0 0 12px #0009;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-name
+  small {
+  display: block;
+  margin: 0 0 2px;
+  font: 700 25px/1.1 var(--slate-font);
+  letter-spacing: 2px;
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .locked
+  .atlas-name {
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .locked
+  .atlas-name
+  small {
+  color: var(--slate-ink-3);
+}
+
+/* ---------- dossier column ---------- */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  .atlas-dossier {
+  position: relative;
+  flex: 0 0 380px;
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 28px 28px 210px;
+  border: 0;
+  border-left: 1px solid var(--slate-line);
+  border-radius: 0;
+  box-shadow: none;
+  /* matte column: the page material, flattened a little for legibility */
+  background-color: #0e141d;
+  background-image: linear-gradient(180deg, #0e141de8, #0e141df7),
+    var(--slate-material);
+  background-attachment: scroll;
+  color: var(--slate-ink);
+  font-family: var(--slate-font);
+  overflow: hidden auto;
+}
+/* boss card */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier
+  > img {
+  order: 1;
+  position: static;
+  z-index: auto;
+  width: 100%;
+  height: 208px;
+  margin: 0 0 22px;
+  opacity: 1;
+  mask-image: none;
+  -webkit-mask-image: none;
+  border: 1.5px solid var(--slate-card-line);
+  border-radius: 12px;
+  background: var(--slate-card-base);
+  box-shadow: 0 8px 20px #0007;
+  object-fit: cover;
+  object-position: 50% 26%;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier
+  h3 {
+  order: 2;
+  min-height: 0;
+  margin: 0;
+  font: 700 28px/1.25 var(--slate-font);
+  letter-spacing: 1px;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier
+  > .atlas-dossier-status {
+  order: 3;
+  display: block;
+  margin: 10px 0 0;
+  font: 400 14px/1.5 var(--slate-font);
+  letter-spacing: 1px;
+  color: var(--slate-ink-3);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier-quote {
+  order: 4;
+  margin: 18px 0 0;
+  padding: 18px 0 0;
+  border-top: 1px solid var(--slate-line);
+  font: 400 15px/1.8 var(--slate-font);
+  color: var(--slate-ink-2);
+}
+/* statistics chips */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier-rule {
+  order: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 18px 0 0;
+  padding: 18px 0 0;
+  border-top: 1px solid var(--slate-line);
+  border-bottom: 0;
+  font: 400 14px/1.6 var(--slate-font);
+  color: var(--slate-ink);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier-sep {
+  display: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier-stat {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 14px;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  font: 500 14px/1.5 var(--slate-font);
+  color: var(--slate-ink);
+  white-space: nowrap;
+}
+/* the skill line is a full sentence, so it wraps inside a softer chip */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-dossier-stat.atlas-dossier-skill {
+  display: block;
+  width: 100%;
+  border-radius: 14px;
+  padding: 10px 16px;
+  font-weight: 400;
+  line-height: 1.7;
+  color: var(--slate-ink-2);
+  white-space: normal;
+}
+
+/* ---------- relic section + primary pill, pinned to the column bottom ---------- */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  > .atlas-footer {
+  position: absolute;
+  inset: auto 0 0 auto;
+  width: 380px;
+  min-height: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  margin: 0;
+  padding: 22px 28px 28px;
+  border: 0;
+  border-top: 1px solid var(--slate-line);
+  border-left: 1px solid var(--slate-line);
+  background-color: #0e141d;
+  background-image: linear-gradient(180deg, #0e141df2, #0e141dfa),
+    var(--slate-material);
+  background-attachment: scroll;
+  justify-content: flex-end;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-footer
+  .atlas-relics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0 0 20px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-relic-label {
+  flex: 0 0 100%;
+  margin: 0 0 4px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid var(--slate-line);
+  font: 700 20px/1.2 var(--slate-font);
+  letter-spacing: 1px;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-relic {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 1px solid var(--slate-line-strong);
+  border-radius: 10px;
+  background: #0f141d99;
+  box-shadow: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-relic
+  img {
+  width: 40px;
+  height: 40px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-relic-empty {
+  font: 400 15px/1.6 var(--slate-font);
+  color: var(--slate-ink-3);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  #map-continue {
+  width: 100%;
+  min-width: 0;
+  min-height: 52px;
+  margin: 0;
+  font: 600 18px/1 var(--slate-font);
+  letter-spacing: 1px;
+}
+
+/* ---------- narrower desktop windows ---------- */
+@media (max-width: 1500px) {
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="map"]
+    .adventure-atlas
+    .atlas-dossier,
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="map"]
+    .adventure-atlas
+    > .atlas-footer {
+    flex-basis: 336px;
+    width: 336px;
+    padding-left: 22px;
+    padding-right: 22px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="map"]
+    .adventure-atlas
+    .atlas-dossier {
+    padding-bottom: 200px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="map"]
+    .atlas-dossier
+    > img {
+    height: 178px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="map"]
+    .atlas-dossier
+    h3 {
+    font-size: 25px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="map"]
+    > .adventure-atlas
+    > .reference-page-brand {
+    left: 36px;
+  }
+}

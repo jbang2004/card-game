@@ -33,3 +33,19 @@
 ## 验证与交付
 
 当前结果以 [本轮验证记录](../../../output/remaining-reference-20260913/VALIDATION.md) 为准。新增截图/交互脚本：`tests/e2e/remaining-reference.spec.cjs`。手机为 Chromium 触控模拟，无实体手机验收；未更新公开站点。
+
+## 2026-09-13 磨砂青岩皮肤
+
+`?skin=slate` 下的地图按 [设计系统](../SLATE_DESIGN_SYSTEM.md) 简报 5.2 重做 UI 层，实现文件只有
+`src/presentation/skins/slate/map.css`（全部规则以 `html[data-skin="slate"] body:not(.touch-layout)` 开头，无 `!important`，无新位图）。
+
+保留：地图原画满幅铺底、六个关卡节点的百分比坐标、随 DOM 锚点实时重绘的路径 SVG、右栏信息与「准备出发」的既有动作接口。
+
+替换：去掉四角 SVG（`.atlas-corners`）、罗盘徽记与纸面材质；标题行改为 base.css 的返回箭头 + 「冒险地图」32px/700，「远征图志 · 06 境」为 ink-3 16px 并列在标题右侧，章节计数沿用桌面既有的隐藏；左下品牌字标改为黑体文字（「烬域」20px/700 + `EMBERFALL` 10px 字距 3px）。关卡节点统一为导航轨节点语言：当前可打 56px 蓝光节点（内嵌首领原画）、已通关 56px 实心蓝节点带勾、未解锁 44px 空心点加锁；编号 25px/700、名称 20px/700，均带阴影。右栏改为 380px 磨砂列（比浮层壳更不透明，左侧发丝线分隔），发丝线分节依次为首领卡（圆角 12、1.5px 描边、`object-fit: cover`）→ 名称 28px/700 → 地区副标 14px ink-3 → 引言 15px ink-2 → 属性芯片 →「旅途遗物」节标题 + 56px 圆角遗物格 → 底部主药丸「准备出发」。
+
+`src/presentation/adventure-map.js` 只做了一处非行为改动：`.atlas-dossier-rule` 由一条文本改为
+`.atlas-dossier-stat` / `.atlas-dossier-sep` / `.atlas-dossier-stat.atlas-dossier-skill` 三个 span，拼接文本与原来逐字相同，供皮肤渲染成芯片。
+
+选中态是独立于进度的第三个轴（任何节点都能点开查看），因此额外给 `[aria-pressed="true"]` 一圈蓝色描边与外发光，简报未列出此状态。技能芯片文字是整句规则，采用圆角 14 的可换行芯片而非 28px 定高药丸。
+
+验收：1672×941、1440×900、1280×720 各一张默认图与一张切换节点图，见 [截图与说明](../../../output/slate-map-contracts-20260913/README.md)。不带 `?skin` 的同页截图与改动前 MD5 逐字节一致。`node --test tests/*.test.cjs` 全通过；`?skin=slate` 下 `map-detail.spec.cjs` 四个尺寸全通过。
