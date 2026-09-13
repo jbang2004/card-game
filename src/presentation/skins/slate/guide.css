@@ -37,6 +37,10 @@ html[data-skin="slate"]
 }
 
 /* ---------- .help-toc: same node-rail language as .settings-nav ---------- */
+html[data-skin="slate"] body #modal.folio-host[data-type="help"] .help-toc {
+  border: 0;
+  background: none;
+}
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="help"]
@@ -50,8 +54,6 @@ html[data-skin="slate"]
   height: auto;
   margin: 0;
   padding: 34px 0 0;
-  border: 0;
-  background: none;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -66,15 +68,10 @@ html[data-skin="slate"]
   background: var(--slate-line);
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="help"]
-  .help-toc button {
-  position: relative;
-  display: block;
-  width: 100%;
-  min-height: 56px;
-  margin: 0;
-  padding: 15px 0 15px 76px;
+  .help-toc
+  button {
   border: 0;
   border-radius: 0;
   background: none;
@@ -82,15 +79,28 @@ html[data-skin="slate"]
   font: 700 22px/1.3 var(--slate-font);
   letter-spacing: 1px;
   color: var(--slate-ink-2);
-  text-align: left;
-  white-space: nowrap;
   text-shadow: 0 2px 8px #0006;
   transition: color 0.15s;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="help"]
-  .help-toc button::before {
+  .help-toc
+  button {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 56px;
+  margin: 0;
+  padding: 15px 0 15px 76px;
+  text-align: left;
+  white-space: nowrap;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="help"]
+  .help-toc
+  button::before {
   content: "";
   display: block;
   position: absolute;
@@ -117,32 +127,32 @@ html[data-skin="slate"]
     margin 0.2s;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="help"]
-  .help-toc button::after {
+  .help-toc
+  button::after {
   content: none;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="help"]
-  .help-toc button:hover {
+  .help-toc
+  button:hover {
   color: #fff;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="help"]
-  .help-toc button.active {
+  .help-toc
+  button.active {
   color: #fff;
   background: none;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="help"]
-  .help-toc button.active::before {
-  left: 0;
-  width: 56px;
-  height: 56px;
-  margin-top: -28px;
+  .help-toc
+  button.active::before {
   border: 1px solid #ffffff3a;
   background: radial-gradient(
     circle,
@@ -158,7 +168,18 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="help"]
-  .help-toc button:focus-visible {
+  .help-toc
+  button.active::before {
+  left: 0;
+  width: 56px;
+  height: 56px;
+  margin-top: -28px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="help"]
+  .help-toc
+  button:focus-visible {
   outline: 2px solid var(--slate-blue);
   outline-offset: 4px;
 }
@@ -181,6 +202,10 @@ html[data-skin="slate"]
   > div {
   display: contents;
 }
+html[data-skin="slate"] body #modal.folio-host[data-type="help"] .help-section {
+  border: 0;
+  break-inside: auto;
+}
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="help"]
@@ -188,15 +213,12 @@ html[data-skin="slate"]
   display: block;
   margin: 0;
   padding: 0;
-  border: 0;
-  break-inside: auto;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="help"]
-  .help-section h3 {
-  margin: 0 0 16px;
-  padding: 0 0 14px;
+  .help-section
+  h3 {
   border-bottom: 1px solid var(--slate-line);
   font: 700 26px/1.2 var(--slate-font);
   color: #fff;
@@ -206,14 +228,28 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="help"]
   .help-section
+  h3 {
+  margin: 0 0 16px;
+  padding: 0 0 14px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="help"]
+  .help-section
   > p {
-  max-width: 860px;
-  margin: 0 0 22px;
   font: 400 16px/1.7 var(--slate-font);
   color: var(--slate-ink-2);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
+  #modal.folio-host[data-type="help"]
+  .help-section
+  > p {
+  max-width: 860px;
+  margin: 0 0 22px;
+}
+html[data-skin="slate"]
+  body
   #modal.folio-host[data-type="help"]
   .help-section
   > p
@@ -224,28 +260,39 @@ html[data-skin="slate"]
 
 /* basic-rules disclosure */
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="help"]
   .help-basic-rules {
-  max-width: 860px;
-  margin: 24px 0 0;
-  padding: 18px 0 0;
   border-top: 1px solid var(--slate-line);
   color: var(--slate-ink-2);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="help"]
+  .help-basic-rules {
+  max-width: 860px;
+  margin: 24px 0 0;
+  padding: 18px 0 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="help"]
   .help-basic-rules
   > summary {
   cursor: pointer;
   list-style: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
   font: 700 16px/1.4 var(--slate-font);
   color: var(--slate-ink);
   letter-spacing: 0.5px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="help"]
+  .help-basic-rules
+  > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -255,7 +302,7 @@ html[data-skin="slate"]
   display: none;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="help"]
   .help-basic-rules
   > summary::before {
@@ -271,16 +318,22 @@ html[data-skin="slate"]
   transform: rotate(90deg);
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="help"]
   .help-basic-rules
   > p {
-  margin: 14px 0 0;
   font: 400 15px/1.7 var(--slate-font);
   color: var(--slate-ink-2);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
+  #modal.folio-host[data-type="help"]
+  .help-basic-rules
+  > p {
+  margin: 14px 0 0;
+}
+html[data-skin="slate"]
+  body
   #modal.folio-host[data-type="help"]
   .help-basic-rules
   > p
@@ -324,11 +377,9 @@ html[data-skin="slate"]
 
 /* uniform matte content-card treatment for all three panels */
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="help"]
   :is(.help-turn-flow, .help-card-anatomy, .help-key-preview) {
-  margin: 0;
-  padding: 24px 28px;
   border: 1px solid var(--slate-line);
   border-radius: 12px;
   background: #0f141d80;
@@ -337,10 +388,15 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="help"]
+  :is(.help-turn-flow, .help-card-anatomy, .help-key-preview) {
+  margin: 0;
+  padding: 24px 28px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="help"]
   :is(.help-turn-flow, .help-card-anatomy, .help-key-preview)
   > h3 {
-  margin: 0 0 14px;
-  padding: 0;
   border: 0;
   font: 700 20px/1.3 var(--slate-font);
   color: #fff;
@@ -349,12 +405,26 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="help"]
+  :is(.help-turn-flow, .help-card-anatomy, .help-key-preview)
+  > h3 {
+  margin: 0 0 14px;
+  padding: 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="help"]
+  :is(.help-turn-flow, .help-card-anatomy)
+  > p {
+  font: 400 15px/1.6 var(--slate-font);
+  color: var(--slate-ink-3);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="help"]
   :is(.help-turn-flow, .help-card-anatomy)
   > p {
   max-width: none;
   margin: 0 0 18px;
-  font: 400 15px/1.6 var(--slate-font);
-  color: var(--slate-ink-3);
 }
 
 /* turn-flow: three steps + 56px rounded icon tile */
@@ -397,14 +467,10 @@ html[data-skin="slate"]
   background: var(--slate-line);
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="help"]
   .help-turn-flow
   i {
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
   border-radius: 12px;
   border: 1.5px solid var(--slate-card-line);
   background: var(--slate-card-base);
@@ -416,14 +482,31 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="help"]
   .help-turn-flow
+  i {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="help"]
+  .help-turn-flow
   i
   svg {
-  width: 28px;
-  height: 28px;
   color: #fff;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
+  #modal.folio-host[data-type="help"]
+  .help-turn-flow
+  i
+  svg {
+  width: 28px;
+  height: 28px;
+}
+html[data-skin="slate"]
+  body
   #modal.folio-host[data-type="help"]
   .help-turn-flow
   strong {
@@ -431,7 +514,7 @@ html[data-skin="slate"]
   color: #fff;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="help"]
   .help-turn-flow
   small {
@@ -470,6 +553,14 @@ html[data-skin="slate"]
   min-width: 0;
 }
 html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="help"]
+  .help-card-labels
+  p {
+  font: 400 14px/1.5 var(--slate-font);
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="help"]
   .help-card-labels
@@ -478,8 +569,16 @@ html[data-skin="slate"]
   flex-direction: column;
   gap: 6px;
   margin: 0;
-  font: 400 14px/1.5 var(--slate-font);
-  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="help"]
+  .help-card-labels
+  b {
+  border: 1px solid var(--slate-line-strong);
+  border-radius: 6px;
+  font: 600 14px/1.6 var(--slate-font);
+  color: #fff;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -489,13 +588,16 @@ html[data-skin="slate"]
   display: block;
   width: max-content;
   padding: 3px 12px;
-  border: 1px solid var(--slate-line-strong);
-  border-radius: 6px;
-  font: 600 14px/1.6 var(--slate-font);
-  color: #fff;
 }
 
 /* key-preview mini list (4 keywords) */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="help"]
+  .help-key-preview
+  > div {
+  border-top: 1px solid var(--slate-line);
+}
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="help"]
@@ -505,15 +607,31 @@ html[data-skin="slate"]
   align-items: center;
   gap: 14px;
   padding: 14px 0;
-  border-top: 1px solid var(--slate-line);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="help"]
+  .help-key-preview
+  > div:first-of-type {
+  border-top: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="help"]
   .help-key-preview
   > div:first-of-type {
-  border-top: 0;
   padding-top: 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="help"]
+  .help-key-preview
+  i {
+  border-radius: 10px;
+  border: 1.5px solid var(--slate-card-line);
+  background: var(--slate-card-base);
+  color: var(--slate-blue);
+  font-style: normal;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -525,11 +643,6 @@ html[data-skin="slate"]
   flex: none;
   width: 48px;
   height: 48px;
-  border-radius: 10px;
-  border: 1.5px solid var(--slate-card-line);
-  background: var(--slate-card-base);
-  color: var(--slate-blue);
-  font-style: normal;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -551,14 +664,30 @@ html[data-skin="slate"]
   min-width: 0;
 }
 html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="help"]
+  .help-key-preview
+  > div
+  strong {
+  font: 700 16px/1.3 var(--slate-font);
+  color: #fff;
+}
+html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="help"]
   .help-key-preview
   > div
   strong {
   display: block;
-  font: 700 16px/1.3 var(--slate-font);
-  color: #fff;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="help"]
+  .help-key-preview
+  > div
+  span {
+  font: 400 13px/1.5 var(--slate-font);
+  color: var(--slate-ink-3);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -568,8 +697,6 @@ html[data-skin="slate"]
   span {
   display: block;
   margin-top: 4px;
-  font: 400 13px/1.5 var(--slate-font);
-  color: var(--slate-ink-3);
 }
 
 /* ---------- key-table (chapter 04): hairline rows ---------- */
@@ -584,11 +711,10 @@ html[data-skin="slate"]
   margin: 0;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="help"]
   .key-table
   > div {
-  padding: 16px 0;
   border: 0;
   border-bottom: 1px solid var(--slate-line);
   font: 400 15px/1.7 var(--slate-font);
@@ -598,11 +724,20 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="help"]
   .key-table
+  > div {
+  padding: 16px 0;
+}
+html[data-skin="slate"] body #modal.folio-host[data-type="help"] .key-table b {
+  font: 700 16px/1.3 var(--slate-font);
+  color: #fff;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="help"]
+  .key-table
   b {
   display: block;
   margin: 0 0 4px;
-  font: 700 16px/1.3 var(--slate-font);
-  color: #fff;
 }
 
 /* ---------- footer: keep in flow, stop it overlapping the card diagram ---------- */
@@ -625,5 +760,570 @@ html[data-skin="slate"]
     .modal-scroll {
     grid-template-columns: 260px minmax(0, 1fr);
     column-gap: 40px;
+  }
+}
+
+/* ==========================================================================
+   触控布局 / touch layouts (body.touch-layout) — GEOMETRY ONLY
+   ==========================================================================
+   Same move as `settings.css`: the 导航轨 collapses into the 文字分页 strip
+   (design system §3), chapter content becomes one column in portrait and two
+   in landscape / on tablets. The chapter buttons keep every material
+   declaration they have on the desktop; only the rail spine and the node dot
+   are hidden, and the active underline is the 文字分页 indicator.
+   ========================================================================== */
+
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-box
+  > .folio-pane {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 10px 0 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-box
+  .modal-scroll {
+  display: block;
+  min-height: 0;
+  padding: 0;
+}
+
+/* --- chapter rail → horizontal text-tab strip --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-toc {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 0;
+  align-self: auto;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--slate-line);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+/* §6.7: the spine and the node dot are rail ornaments — restate the hide */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-toc::before,
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-toc
+  button::before {
+  content: none;
+  display: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-toc
+  button {
+  position: relative;
+  display: block;
+  flex: 1 0 auto;
+  width: auto;
+  min-width: 0;
+  min-height: 48px;
+  margin: 0;
+  padding: 0 12px 12px;
+  text-align: center;
+  white-space: nowrap;
+  font-size: 16px;
+}
+/* no 1px column rules here either — see the note in `settings.css` */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-toc
+  button.active::after {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  top: auto;
+  bottom: -1px;
+  width: auto;
+  height: 3px;
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: 0 0 10px #fff8;
+  opacity: 1;
+}
+
+/* --- chapter content: one column --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-columns {
+  display: block;
+  columns: auto;
+  column-gap: 0;
+  margin: 0;
+  padding: 14px 0 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-columns
+  > div {
+  display: contents;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-section {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-section
+  h3 {
+  margin: 0 0 12px;
+  padding: 0 0 10px;
+  font-size: 20px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-section
+  > p {
+  max-width: none;
+  margin: 0 0 16px;
+  font-size: 15px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-basic-rules {
+  max-width: none;
+  margin: 18px 0 0;
+  padding: 14px 0 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-basic-rules
+  > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+
+/* --- the three reference panels stack --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-reference-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto;
+  gap: 14px;
+  margin: 18px 0 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  :is(.help-turn-flow, .help-card-anatomy, .help-key-preview) {
+  grid-column: auto;
+  grid-row: auto;
+  margin: 0;
+  padding: 16px 16px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  :is(.help-turn-flow, .help-card-anatomy, .help-key-preview)
+  > h3 {
+  margin: 0 0 12px;
+  padding: 0;
+  font-size: 18px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  :is(.help-turn-flow, .help-card-anatomy)
+  > p {
+  max-width: none;
+  margin: 0 0 14px;
+  font-size: 14px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-turn-flow
+  > div {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-turn-flow
+  > div
+  > div {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-turn-flow
+  i {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-turn-flow
+  i
+  svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* card anatomy: the diagram stacks under its labels on a phone */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-card-diagram {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-card-diagram
+  > .card {
+  flex: none;
+  width: 150px;
+  height: 218px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-card-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: none;
+  width: 100%;
+  min-width: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-card-labels
+  p {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-card-labels
+  b {
+  display: block;
+  width: max-content;
+  padding: 3px 12px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-key-preview
+  > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-key-preview
+  > div:first-of-type {
+  padding-top: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-key-preview
+  i {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-key-preview
+  > div
+  i
+  svg {
+  width: 22px;
+  height: 22px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-key-preview
+  > div
+  p {
+  margin: 0;
+  min-width: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-key-preview
+  > div
+  strong {
+  display: block;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-key-preview
+  > div
+  span {
+  display: block;
+  margin-top: 3px;
+}
+
+/* --- keyword table: one hairline row per keyword --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .key-table {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: 0;
+  max-width: none;
+  margin: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .key-table
+  > div {
+  padding: 12px 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .key-table
+  b {
+  display: block;
+  margin: 0 0 3px;
+}
+
+/* --- the return pill stays in flow under the content --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-box
+  > .modal-footer {
+  position: static;
+  left: auto;
+  bottom: auto;
+}
+
+/* --- landscape ≤ 500px tall and tablets: two content columns --- */
+@media (max-height: 500px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .help-box
+    > .folio-pane {
+    margin: 6px 0 0;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .help-toc
+    button {
+    min-height: 44px;
+    padding: 0 10px 9px;
+    font-size: 15px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .help-columns {
+    padding: 10px 0 0;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .help-section
+    h3 {
+    margin: 0 0 10px;
+    padding: 0 0 8px;
+    font-size: 18px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .help-reference-overview {
+    grid-template-columns: minmax(0, 1.4fr) minmax(220px, 1fr);
+    gap: 12px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .help-turn-flow {
+    grid-column: 1 / -1;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .help-card-diagram {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .help-card-labels {
+    flex: 1 1 auto;
+    width: auto;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .key-table {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 32px;
+  }
+}
+@media (min-width: 900px) and (min-height: 620px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .help-box
+    > .folio-pane {
+    margin: 18px 0 0;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .help-toc
+    button {
+    min-height: 56px;
+    padding: 0 16px 14px;
+    font-size: 20px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .help-columns {
+    padding: 22px 0 0;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .help-section
+    h3 {
+    margin: 0 0 16px;
+    padding: 0 0 14px;
+    font-size: 24px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .help-reference-overview {
+    grid-template-columns: minmax(0, 1.6fr) minmax(240px, 1fr);
+    gap: 18px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .help-turn-flow {
+    grid-column: 1 / -1;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    :is(.help-turn-flow, .help-card-anatomy, .help-key-preview) {
+    padding: 22px 24px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .help-card-diagram {
+    flex-direction: row;
+    gap: 20px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .help-card-labels {
+    flex: 1 1 auto;
+    width: auto;
+    gap: 24px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .key-table {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 40px;
+  }
+}
+
+/* Four chapter labels do not fit one 358px row at a readable size, and a
+ * horizontally scrolled strip can leave the ACTIVE chapter off-screen (only a
+ * real tap scrolls it back). On phone-width windows the strip wraps to two
+ * rows instead, so every chapter — and the underline on the current one — is
+ * always visible. */
+@media (max-width: 600px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .help-toc {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    row-gap: 0;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .help-toc
+    button {
+    flex: 1 0 44%;
+    padding: 0 6px 10px;
   }
 }

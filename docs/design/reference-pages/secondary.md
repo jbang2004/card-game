@@ -58,3 +58,17 @@
 - 菜单 / 战斗记录 / 手牌总览 / 英雄信息 / 战场画廊：菜单项改药丸（左图标槽 + 文字）；记录改发丝线行；手牌 hover 蓝色发光；英雄信息去掉 `legacy-components.css` 的琥珀玻璃底，头像改圆角描边卡，数值与技能说明改发丝线行；画廊六个场景块改圆角 12 描边卡。
 
 已知差异：菜单图标仍由 `art.js` 返回彩色 emoji（地图 / 书 / 宝石），未统一为描边 SVG，需在共享层处理。截图见 `output/slate-dialogs-20260913/`。
+
+## 2026-09-14 触控布局皮肤
+
+`?skin=slate` 第二阶段，`dialogs.css`：
+
+**桌面回归修复（优先）。** `base.css` 现在对所有布局生效后，本文件开头那段「浮层通用装饰」——`.folio-dialog > .modal-heading`（下边发丝线 + 16px 下内边距）与 `> :is(.modal-footer, .reward-footer, .atelier-foot)`（上边发丝线 + 20px 上内边距）——不再被页面壳规则压住，于是六个页面壳（英雄 / 图鉴 / 设置 / 地图 / 契约 / 手册）的标题行下多出一条发丝线，正文整体下移约 16px。已把这段规则限定到十一种浮层尺寸（`confirm` `detail` `hand` `menu` `journal` `discover` `mulligan` `choice` `result` `atelier` `workspace`）。修复后 1672×941 的英雄页与 `output/slate-skin-test-20260913/heroes-slate-1672x941.png` 像素差为 0（修复前差 239,752 px）。
+
+**触控布局（第 12 节）。** 页面壳在触控下改为 16px 侧边距 + 安全区、28px 标题、左上 44px 返回箭头（短横屏 21px 标题、平板恢复 32px）；页面壳底部药丸整行等分（平板回到居中定宽）。浮层壳（确认 / 卡牌详情）改为 16px 外边距、标题 22px、底部药丸整宽纵向堆叠（短横屏回到一行）；卡牌详情竖屏为「卡面在上、信息在下」，短横屏与平板恢复左右两栏。
+
+`components.css` 的 `.panel-actions > button { max-width: min(240px, 100%) }` 会让手机底部药丸只占三分之二宽，触控下解除该上限；同一条规则在 `column-reverse` 的堆叠底栏里还会让 `flex: 1 1 140px` 把药丸撑成 140px 高的方块，已改为 `flex: 0 0 auto`。
+
+需要协调者并入 `base.css` 的共享改动：第 12.1 节整段（页面壳的触控几何）以及浮层壳关闭按钮在触控下的 44px 命中区。两者现在只挂了本任务负责的四种尺寸，并入 `base.css` 时应补上 `route` 与 `covenant`。
+
+验收：确认框与卡牌详情 × 四个视口的截图见 [output/slate-mobile-pages-20260914](../../../output/slate-mobile-pages-20260914/)。

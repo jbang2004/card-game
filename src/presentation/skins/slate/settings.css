@@ -25,6 +25,13 @@ html[data-skin="slate"]
   min-height: 100%;
 }
 html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="settings"]
+  .settings-nav {
+  border: 0;
+  background: none;
+}
+html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="settings"]
   .settings-nav {
@@ -36,8 +43,6 @@ html[data-skin="slate"]
   height: auto;
   margin: 0;
   padding: 34px 0 0;
-  border: 0;
-  background: none;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -52,9 +57,25 @@ html[data-skin="slate"]
   background: var(--slate-line);
 }
 html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="settings"]
+  .settings-nav
+  button {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  font: 700 25px/1.2 var(--slate-font);
+  letter-spacing: 1px;
+  color: var(--slate-ink-2);
+  text-shadow: 0 2px 8px #0006;
+  transition: color 0.15s;
+}
+html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="settings"]
-  .settings-nav button {
+  .settings-nav
+  button {
   position: relative;
   display: grid;
   grid-template-columns: 56px minmax(0, 1fr);
@@ -65,27 +86,14 @@ html[data-skin="slate"]
   min-height: 56px;
   margin: 0;
   padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-  font: 700 25px/1.2 var(--slate-font);
-  letter-spacing: 1px;
-  color: var(--slate-ink-2);
   text-align: left;
-  text-shadow: 0 2px 8px #0006;
-  transition: color 0.15s;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="settings"]
-  .settings-nav button::before {
+  .settings-nav
+  button::before {
   content: "";
-  grid-area: 1 / 1;
-  width: 16px;
-  height: 16px;
-  margin: auto;
-  box-sizing: border-box;
   border-radius: 50%;
   border: 2px solid #aab4c3;
   background: #1c2330;
@@ -96,40 +104,62 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="settings"]
-  .settings-nav button::after {
+  .settings-nav
+  button::before {
+  grid-area: 1 / 1;
+  width: 16px;
+  height: 16px;
+  margin: auto;
+  box-sizing: border-box;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="settings"]
+  .settings-nav
+  button::after {
   content: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="settings"]
+  .settings-nav
+  button
+  svg {
+  color: #fff;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="settings"]
-  .settings-nav button svg {
+  .settings-nav
+  button
+  svg {
   grid-area: 1 / 1;
   display: none;
   width: 24px;
   height: 24px;
   margin: auto;
-  color: #fff;
   z-index: 1;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="settings"]
-  .settings-nav button:hover {
+  .settings-nav
+  button:hover {
   color: #fff;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="settings"]
-  .settings-nav button.active {
+  .settings-nav
+  button.active {
   color: #fff;
   background: none;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="settings"]
-  .settings-nav button.active::before {
-  width: 56px;
-  height: 56px;
+  .settings-nav
+  button.active::before {
   border: 1px solid #ffffff3a;
   background: radial-gradient(
     circle,
@@ -145,13 +175,24 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="settings"]
-  .settings-nav button.active svg {
-  display: block;
+  .settings-nav
+  button.active::before {
+  width: 56px;
+  height: 56px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="settings"]
-  .settings-nav button:focus-visible {
+  .settings-nav
+  button.active
+  svg {
+  display: block;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="settings"]
+  .settings-nav
+  button:focus-visible {
   outline: 2px solid var(--slate-blue);
   outline-offset: 4px;
 }
@@ -163,22 +204,24 @@ html[data-skin="slate"]
   margin: 0;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="settings"]
   .settings-section {
-  display: block;
-  margin: 0;
-  padding: 0;
   border: 0;
   background: none;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="settings"]
-  .settings-section-heading {
+  .settings-section {
   display: block;
-  margin: 0 0 4px;
-  padding: 0 0 14px;
+  margin: 0;
+  padding: 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="settings"]
+  .settings-section-heading {
   border: 0;
   border-bottom: 1px solid var(--slate-line);
   font: 700 26px/1.2 var(--slate-font);
@@ -188,12 +231,27 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="settings"]
+  .settings-section-heading {
+  display: block;
+  margin: 0 0 4px;
+  padding: 0 0 14px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="settings"]
   .settings-section-heading::before,
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="settings"]
   .settings-section-heading::after {
   content: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="settings"]
+  :is(.settings-options, .audio-sliders) {
+  border: 0;
+  background: none;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -202,8 +260,16 @@ html[data-skin="slate"]
   display: block;
   margin: 0;
   padding: 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="settings"]
+  .setting-row {
   border: 0;
+  border-bottom: 1px solid var(--slate-line);
+  border-radius: 0;
   background: none;
+  box-shadow: none;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -215,27 +281,47 @@ html[data-skin="slate"]
   gap: 24px;
   margin: 0;
   padding: 20px 0;
-  border: 0;
-  border-bottom: 1px solid var(--slate-line);
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="settings"]
-  .setting-copy h3 {
-  margin: 0;
+  .setting-copy
+  h3 {
   font: 500 20px/1.3 var(--slate-font);
   color: #fff;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="settings"]
-  .setting-copy p {
-  margin: 4px 0 0;
+  .setting-copy
+  h3 {
+  margin: 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="settings"]
+  .setting-copy
+  p {
   font: 400 15px/1.5 var(--slate-font);
   color: var(--slate-ink-3);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="settings"]
+  .setting-copy
+  p {
+  margin: 4px 0 0;
+}
+html[data-skin="slate"] body #modal.folio-host[data-type="settings"] .toggle {
+  border-radius: 999px;
+  border: 1px solid var(--slate-pill-line);
+  background: var(--slate-pill);
+  color: var(--slate-ink-2);
+  font: 500 15px/1 var(--slate-font);
+  box-shadow: none;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -248,16 +334,7 @@ html[data-skin="slate"]
   min-height: 40px;
   margin: 0;
   padding: 0 0 0 42px;
-  border-radius: 999px;
-  border: 1px solid var(--slate-pill-line);
-  background: var(--slate-pill);
-  color: var(--slate-ink-2);
-  font: 500 15px/1 var(--slate-font);
   text-align: center;
-  box-shadow: none;
-  transition:
-    background 0.2s,
-    border-color 0.2s;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -277,10 +354,9 @@ html[data-skin="slate"]
     background 0.2s;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="settings"]
   .toggle.on {
-  padding: 0 42px 0 0;
   background: var(--slate-blue-deep);
   border-color: #8cc4ff99;
   color: #fff;
@@ -288,20 +364,25 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="settings"]
+  .toggle.on {
+  padding: 0 42px 0 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="settings"]
   .toggle.on::after {
-  left: 68px;
   background: #fff;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="settings"]
+  .toggle.on::after {
+  left: 68px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="settings"]
   .audio-level {
-  display: grid;
-  grid-template-columns: 200px minmax(0, 1fr) 72px;
-  align-items: center;
-  gap: 24px;
-  margin: 0;
-  padding: 20px 0;
   border: 0;
   border-bottom: 1px solid var(--slate-line);
   border-radius: 0;
@@ -313,18 +394,41 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="settings"]
-  .audio-level output {
-  text-align: right;
+  .audio-level {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) 72px;
+  align-items: center;
+  gap: 24px;
+  margin: 0;
+  padding: 20px 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="settings"]
+  .audio-level
+  output {
   font: 700 20px/1 var(--slate-font);
   color: var(--slate-blue);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="settings"]
+  .audio-level
+  output {
+  text-align: right;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="settings"]
   .settings-operation-note {
-  margin: 16px 0 0;
   font: 400 15px/1.6 var(--slate-font);
   color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="settings"]
+  .settings-operation-note {
+  margin: 16px 0 0;
 }
 
 /* ---------- narrower desktop windows ---------- */
@@ -336,5 +440,464 @@ html[data-skin="slate"]
     .modal-scroll {
     grid-template-columns: 220px minmax(0, 1fr);
     column-gap: 40px;
+  }
+}
+
+/* ==========================================================================
+   触控布局 / touch layouts (body.touch-layout) — GEOMETRY ONLY
+   ==========================================================================
+   The 导航轨 (design system §3 「导航轨」) is a desktop device: a 2px spine with
+   56px glowing nodes needs a 220-260px column. On touch the same `nav` becomes
+   the other documented navigation component, 文字分页 (§3 「文字分页」): one
+   horizontal strip of labels, 1px vertical rules between them and a 3px white
+   underline on the active one — the same treatment `library.css` gives
+   `.filter-type-group`. The BUTTON keeps every material declaration it has on
+   the desktop (font, colours, hover/active/focus feedback) — only the rail
+   spine and the node dot, both pure ornaments, are hidden.
+   ========================================================================== */
+
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .settings-box
+  > .folio-pane {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 10px 0 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .settings-box
+  .modal-scroll {
+  display: block;
+  min-height: 0;
+  padding: 0;
+}
+
+/* --- rail → horizontal text-tab strip --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .settings-nav {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  align-self: auto;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--slate-line);
+}
+/* the 2px spine and the node dot are rail ornaments (§6.7: restate the hide) */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .settings-nav::before,
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .settings-nav
+  button::before,
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .settings-nav
+  button
+  svg {
+  content: none;
+  display: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .settings-nav
+  button {
+  position: relative;
+  display: block;
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+  min-height: 48px;
+  margin: 0;
+  padding: 0 6px 12px;
+  text-align: center;
+  font-size: 19px;
+}
+/* NOTE: the strip carries no 1px column rules between tabs. `::before` is the
+ * rail's node dot and `::after` is the active underline, so a divider would
+ * have to steal one of them — and the divider next to the ACTIVE tab would
+ * then disappear. The underline alone marks the selection; `library.css`'s
+ * `.filter-type-group` keeps the rules because there both pseudos are free. */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .settings-nav
+  button.active::after {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  top: auto;
+  bottom: -1px;
+  width: auto;
+  height: 3px;
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: 0 0 10px #fff8;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .settings-nav
+  button:focus-visible {
+  outline-offset: 2px;
+}
+
+/* --- content rows --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .settings-content {
+  margin: 0;
+  padding: 14px 0 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .settings-section {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .settings-section-heading {
+  display: block;
+  margin: 0 0 2px;
+  padding: 0 0 10px;
+  font-size: 20px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  :is(.settings-options, .audio-sliders) {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .setting-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  padding: 12px 0;
+  min-height: 60px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .setting-copy
+  h3 {
+  margin: 0;
+  font-size: 17px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .setting-copy
+  p {
+  margin: 3px 0 0;
+  font-size: 13px;
+}
+
+/* --- toggle: 92×44 with a 36px knob ---
+   The brief asks for 88×36. A `.toggle` is a real `<button>`, and both
+   AGENTS.md and `mobile-dialog-fit.spec.cjs` require every touch control in a
+   settings row to be at least 44×44, so the pill keeps the brief's width and
+   grows to a 44px hit area instead. --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .toggle {
+  position: relative;
+  box-sizing: border-box;
+  width: 92px;
+  height: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 0 0 40px;
+  text-align: center;
+  font-size: 14px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .toggle::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  width: 36px;
+  height: 36px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .toggle.on {
+  padding: 0 40px 0 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .toggle.on::after {
+  left: 52px;
+}
+
+/* --- volume rows: label + value on one line, slider full width under it --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .audio-level {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 56px;
+  grid-template-areas:
+    "label value"
+    "slider slider";
+  align-items: center;
+  gap: 8px 12px;
+  margin: 0;
+  padding: 12px 0;
+  font-size: 17px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .audio-level
+  > span:first-child {
+  grid-area: label;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .audio-level
+  input[type="range"] {
+  grid-area: slider;
+  width: 100%;
+  min-width: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .audio-level
+  output {
+  grid-area: value;
+  text-align: right;
+  font-size: 17px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .settings-operation-note {
+  margin: 12px 0 0;
+  font-size: 14px;
+}
+
+/* --- short landscape (844×390, 568×320): every row collapses onto one line so
+       the section clears a 390px window without an inner scroller --- */
+@media (max-height: 500px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="settings"]
+    .settings-box
+    > .folio-pane {
+    margin: 6px 0 0;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="settings"]
+    .settings-nav
+    button {
+    min-height: 44px;
+    padding: 0 4px 9px;
+    font-size: 16px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="settings"]
+    .settings-content {
+    padding: 10px 0 0;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="settings"]
+    .settings-section-heading {
+    padding-bottom: 8px;
+    font-size: 18px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="settings"]
+    .setting-row {
+    gap: 12px;
+    padding: 8px 0;
+    min-height: 52px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="settings"]
+    .setting-copy
+    h3 {
+    font-size: 16px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="settings"]
+    .setting-copy
+    p {
+    font-size: 12px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="settings"]
+    .audio-level {
+    grid-template-columns: minmax(84px, 0.6fr) minmax(0, 1fr) 48px;
+    grid-template-areas: "label slider value";
+    gap: 12px;
+    padding: 6px 0;
+    font-size: 15px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="settings"]
+    .audio-level
+    output {
+    font-size: 15px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="settings"]
+    .settings-operation-note {
+    margin: 8px 0 0;
+    font-size: 13px;
+  }
+}
+
+/* --- tablet 1024×768: the strip stays, rows breathe like the desktop --- */
+@media (min-width: 900px) and (min-height: 620px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="settings"]
+    .settings-box
+    > .folio-pane {
+    margin: 18px 0 0;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="settings"]
+    .settings-nav
+    button {
+    min-height: 56px;
+    padding: 0 8px 14px;
+    font-size: 22px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="settings"]
+    .settings-content {
+    padding: 22px 0 0;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="settings"]
+    .settings-section-heading {
+    padding-bottom: 14px;
+    font-size: 24px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="settings"]
+    .setting-row {
+    gap: 24px;
+    padding: 18px 0;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="settings"]
+    .setting-copy
+    h3 {
+    font-size: 19px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="settings"]
+    .setting-copy
+    p {
+    font-size: 14px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="settings"]
+    .audio-level {
+    grid-template-columns: 200px minmax(0, 1fr) 72px;
+    grid-template-areas: "label slider value";
+    gap: 24px;
+    padding: 18px 0;
+    font-size: 19px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="settings"]
+    .audio-level
+    output {
+    font-size: 19px;
+  }
+}
+
+/* `components.css` only sizes `.settings-section-heading > span` under
+ * `body:not(.touch-layout)`, so on touch the label falls back to the 12px/700
+ * silverblue mobile size. Restate the same weight the desktop heading uses
+ * (400 — the 700 lives on the wrapper) and pick a touch size. */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .settings-section-heading
+  > span {
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 1.2;
+  letter-spacing: 1px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="settings"]
+  .settings-section-heading
+  small {
+  display: none;
+}
+@media (max-height: 500px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="settings"]
+    .settings-section-heading
+    > span {
+    font-size: 18px;
+  }
+}
+@media (min-width: 900px) and (min-height: 620px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="settings"]
+    .settings-section-heading
+    > span {
+    font-size: 25px;
   }
 }

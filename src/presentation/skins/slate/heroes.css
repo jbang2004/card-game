@@ -4,7 +4,7 @@
  */
 
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
   .hero-chooser
   .modal-heading::after {
@@ -47,6 +47,13 @@ html[data-skin="slate"]
 
 /* rail */
 html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-roster-heading {
+  border: 0;
+  background: none;
+}
+html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
   .hero-roster-heading {
@@ -61,8 +68,6 @@ html[data-skin="slate"]
   column-gap: 20px;
   padding: 34px 0 0;
   margin: 0;
-  border: 0;
-  background: none;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -77,13 +82,10 @@ html[data-skin="slate"]
   background: var(--slate-line);
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
   .hero-roster-heading::after {
   content: "";
-  grid-area: 1 / 1;
-  width: 56px;
-  height: 56px;
   border-radius: 50%;
   border: 1px solid #ffffff3a;
   background: radial-gradient(
@@ -101,13 +103,28 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .hero-roster-heading > span {
-  grid-area: 1 / 2;
-  position: relative;
+  .hero-roster-heading::after {
+  grid-area: 1 / 1;
+  width: 56px;
+  height: 56px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-roster-heading
+  > span {
   font: 700 25px/1.2 var(--slate-font);
   color: #fff;
   letter-spacing: 1px;
   text-shadow: 0 2px 8px #0006;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-roster-heading
+  > span {
+  grid-area: 1 / 2;
+  position: relative;
 }
 
 /* list */
@@ -123,16 +140,34 @@ html[data-skin="slate"]
   margin: 0;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
   .hero-options::before {
   content: "全部英雄";
-  display: block;
-  padding: 0 0 12px 8px;
   border-bottom: 1px solid var(--slate-line);
   font: 700 20px/1.2 var(--slate-font);
   color: #fff;
   letter-spacing: 1px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-options::before {
+  display: block;
+  padding: 0 0 12px 8px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-option {
+  border: 0;
+  border-bottom: 1px solid var(--slate-line);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--slate-ink);
+  cursor: pointer;
+  transition: background 0.15s;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -153,15 +188,7 @@ html[data-skin="slate"]
   min-height: 0;
   margin: 0;
   padding: 12px 8px 16px;
-  border: 0;
-  border-bottom: 1px solid var(--slate-line);
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-  color: var(--slate-ink);
   text-align: left;
-  cursor: pointer;
-  transition: background 0.15s;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -176,17 +203,17 @@ html[data-skin="slate"]
   background: var(--slate-line);
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
   .hero-option:hover,
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
   .hero-option.selected {
   background: linear-gradient(90deg, #ffffff0d, #ffffff00 85%);
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
   .hero-option:focus-visible {
   outline: 2px solid var(--slate-blue);
@@ -199,22 +226,39 @@ html[data-skin="slate"]
   display: contents;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
-  .hero-option h3 {
-  grid-area: head;
-  justify-self: start;
-  align-self: center;
-  margin: 0;
+  .hero-option
+  h3 {
   font: 700 22px/1.3 var(--slate-font);
   color: #fff;
   letter-spacing: 1px;
-  white-space: nowrap;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .hero-option small {
+  .hero-option
+  h3 {
+  grid-area: head;
+  justify-self: start;
+  align-self: center;
+  margin: 0;
+  white-space: nowrap;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  small {
+  font: 400 13px/1.3 var(--slate-font);
+  color: var(--slate-ink-3);
+  letter-spacing: 1px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  small {
   grid-area: head;
   display: block;
   justify-self: end;
@@ -224,35 +268,37 @@ html[data-skin="slate"]
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font: 400 13px/1.3 var(--slate-font);
-  color: var(--slate-ink-3);
-  letter-spacing: 1px;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
-  .hero-option img {
-  grid-area: img;
-  width: var(--slate-thumb-w);
-  height: var(--slate-thumb-h);
-  margin: 2px 0 0;
-  padding: 0;
+  .hero-option
+  img {
   object-fit: cover;
   clip-path: none;
   border-radius: 8px;
   border: 1.5px solid var(--slate-card-line);
   background: var(--slate-card-base);
   box-shadow: 0 8px 20px #0007;
-  transform: none;
   filter: none;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .hero-option em {
-  grid-area: power;
-  display: block;
+  .hero-option
+  img {
+  grid-area: img;
+  width: var(--slate-thumb-w);
+  height: var(--slate-thumb-h);
   margin: 2px 0 0;
+  padding: 0;
+  transform: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  em {
   font: 400 14px/1.5 var(--slate-font);
   font-style: normal;
   color: var(--slate-ink-2);
@@ -260,7 +306,34 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .hero-option .selected-check,
+  .hero-option
+  em {
+  grid-area: power;
+  display: block;
+  margin: 2px 0 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  .selected-check,
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-option:not(.selected)::after {
+  border-radius: 999px;
+  border: 1px solid var(--slate-pill-line);
+  background: var(--slate-pill);
+  color: #fff;
+  font: 500 16px/1 var(--slate-font);
+  letter-spacing: 1px;
+  box-shadow: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  .selected-check,
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
@@ -278,32 +351,26 @@ html[data-skin="slate"]
   height: 38px;
   margin: 0;
   padding: 0 22px;
-  border-radius: 999px;
-  border: 1px solid var(--slate-pill-line);
-  background: var(--slate-pill);
-  color: #fff;
-  font: 500 16px/1 var(--slate-font);
-  letter-spacing: 1px;
   transform: none;
-  box-shadow: none;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
   .hero-option:not(.selected)::after {
   content: "选择英雄";
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
   .hero-option:not(.selected):hover::after {
   background: #1b2434d9;
   border-color: var(--slate-line-strong);
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
-  .hero-option .selected-check {
+  .hero-option
+  .selected-check {
   color: var(--slate-ink-3);
   border-color: #ffffff1a;
   background: #0d121b8c;
@@ -311,18 +378,37 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .hero-option .selected-check svg {
+  .hero-option
+  .selected-check
+  svg {
   width: 16px;
   height: 16px;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
-  .hero-option .selected-check::after {
+  .hero-option
+  .selected-check::after {
   content: "已选择";
 }
 
 /* preview card (hero art) */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-chooser
+  > .scene-showcase {
+  border-radius: 12px;
+  border: 1.5px solid var(--slate-card-line);
+  background-color: var(--slate-card-base);
+  background-image: var(--scene-art);
+  background-size: cover;
+  background-position: 50% var(--hero-scene-y, 22%);
+  box-shadow:
+    0 18px 44px #0009,
+    inset 0 0 0 1px #0008;
+  filter: none;
+}
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
@@ -338,17 +424,7 @@ html[data-skin="slate"]
   width: var(--slate-card-w);
   height: var(--slate-card-h);
   z-index: 2;
-  border-radius: 12px;
-  border: 1.5px solid var(--slate-card-line);
-  background-color: var(--slate-card-base);
-  background-image: var(--scene-art);
-  background-size: cover;
-  background-position: 50% var(--hero-scene-y, 22%);
-  box-shadow:
-    0 18px 44px #0009,
-    inset 0 0 0 1px #0008;
   overflow: hidden;
-  filter: none;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -386,6 +462,13 @@ html[data-skin="slate"]
   padding: 0 0 0 calc(var(--slate-card-w) + 40px);
 }
 html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading {
+  border-bottom: 1px solid var(--slate-line);
+  background: none;
+}
+html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
   .hero-profile-heading {
@@ -394,15 +477,12 @@ html[data-skin="slate"]
   gap: 14px;
   margin: 0 0 20px calc(-1 * (var(--slate-card-w) + 40px));
   padding: 0 0 12px;
-  border-bottom: 1px solid var(--slate-line);
-  background: none;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
   .hero-profile-heading::before {
   content: "英雄预览";
-  order: 0;
   font: 700 26px/1.2 var(--slate-font);
   color: #fff;
   letter-spacing: 1px;
@@ -410,9 +490,14 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .hero-profile-heading h3 {
-  order: 1;
-  margin: 0;
+  .hero-profile-heading::before {
+  order: 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading
+  h3 {
   font: 500 22px/1.2 var(--slate-font);
   color: var(--slate-blue);
   letter-spacing: 1px;
@@ -420,20 +505,45 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .hero-profile-heading h3::before {
+  .hero-profile-heading
+  h3 {
+  order: 1;
+  margin: 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading
+  h3::before {
   content: "|";
-  margin-right: 14px;
   color: var(--slate-ink-3);
   font-weight: 300;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .hero-profile-heading small {
-  order: 2;
+  .hero-profile-heading
+  h3::before {
+  margin-right: 14px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading
+  small {
   font: 400 18px/1.2 var(--slate-font);
   color: var(--slate-ink-2);
   letter-spacing: 1px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading
+  small {
+  order: 2;
+}
+html[data-skin="slate"] body #modal.folio-host[data-type="heroes"] .hero-skill {
+  border: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -445,14 +555,12 @@ html[data-skin="slate"]
   align-items: center;
   margin: 0 0 18px;
   padding: 0;
-  border: 0;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
-  .hero-skill > .hero-skill-label {
-  grid-column: 1 / -1;
-  margin: 0;
+  .hero-skill
+  > .hero-skill-label {
   font: 700 20px/1.2 var(--slate-font);
   color: #fff;
   letter-spacing: 1px;
@@ -460,11 +568,16 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .hero-skill > .theme-orbit {
-  width: 64px;
-  height: 64px;
-  display: grid;
-  place-items: center;
+  .hero-skill
+  > .hero-skill-label {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill
+  > .theme-orbit {
   border-radius: 12px;
   border: 1.5px solid var(--slate-card-line);
   background: var(--slate-card-base);
@@ -474,36 +587,75 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .hero-skill > .theme-orbit::before,
+  .hero-skill
+  > .theme-orbit {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+}
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
-  .hero-skill > .theme-orbit::after {
+  .hero-skill
+  > .theme-orbit::before,
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill
+  > .theme-orbit::after {
   content: none;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
-  .hero-skill svg {
-  width: 34px;
-  height: 34px;
+  .hero-skill
+  svg {
   color: #fff;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .hero-skill strong {
-  display: block;
+  .hero-skill
+  svg {
+  width: 34px;
+  height: 34px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill
+  strong {
   font: 600 20px/1.3 var(--slate-font);
   color: #fff;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .hero-skill p {
-  margin: 4px 0 0;
+  .hero-skill
+  strong {
+  display: block;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill
+  p {
   font: 400 15px/1.5 var(--slate-font);
   color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill
+  p {
+  margin: 4px 0 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-intro {
+  border-top: 1px solid var(--slate-line);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -512,14 +664,11 @@ html[data-skin="slate"]
   display: block;
   margin: 0;
   padding: 12px 0 4px;
-  border-top: 1px solid var(--slate-line);
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
   .config-kicker {
-  display: block;
-  margin: 0 0 6px;
   font: 700 20px/1.2 var(--slate-font);
   color: #fff;
   letter-spacing: 1px;
@@ -527,10 +676,29 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
+  .config-kicker {
+  display: block;
+  margin: 0 0 6px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
   .hero-deck-note {
-  margin: 0;
   font: 400 15px/1.55 var(--slate-font);
   color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-deck-note {
+  margin: 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .archetype-picker {
+  font: 500 18px/1.2 var(--slate-font);
+  color: #fff;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -542,8 +710,6 @@ html[data-skin="slate"]
   gap: 12px;
   margin: 0;
   padding: 10px 0;
-  font: 500 18px/1.2 var(--slate-font);
-  color: #fff;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -551,6 +717,12 @@ html[data-skin="slate"]
   .hero-config-mode {
   /* The mode cards below mirror this select; keep it for the script only. */
   display: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards {
+  border-top: 1px solid var(--slate-line);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -561,16 +733,12 @@ html[data-skin="slate"]
   gap: 10px 14px;
   margin: 0;
   padding: 12px 0 10px;
-  border-top: 1px solid var(--slate-line);
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
   .hero-mode-cards::before {
   content: "游戏模式";
-  position: static;
-  grid-column: 1 / -1;
-  margin: 0;
   font: 700 20px/1.2 var(--slate-font);
   color: #fff;
   letter-spacing: 1px;
@@ -578,19 +746,20 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .hero-mode-cards button {
-  display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
-  align-items: center;
-  gap: 12px;
-  min-height: 62px;
+  .hero-mode-cards::before {
+  position: static;
+  grid-column: 1 / -1;
   margin: 0;
-  padding: 10px 16px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards
+  button {
   border-radius: 10px;
   border: 1px solid var(--slate-line-strong);
   background: #0f141d99;
   color: #fff;
-  text-align: left;
   box-shadow: none;
   transition:
     border-color 0.15s,
@@ -599,17 +768,34 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .hero-mode-cards button::before,
+  .hero-mode-cards
+  button {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-height: 62px;
+  margin: 0;
+  padding: 10px 16px;
+  text-align: left;
+}
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
-  .hero-mode-cards button::after {
+  .hero-mode-cards
+  button::before,
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards
+  button::after {
   content: none;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
-  .hero-mode-cards button[aria-pressed="true"] {
+  .hero-mode-cards
+  button[aria-pressed="true"] {
   border-color: var(--slate-blue);
   box-shadow:
     inset 0 0 0 1px var(--slate-blue),
@@ -617,28 +803,55 @@ html[data-skin="slate"]
   background: #16243a;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
-  .hero-mode-cards svg {
-  width: 30px;
-  height: 30px;
+  .hero-mode-cards
+  svg {
   color: #fff;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .hero-mode-cards span {
-  display: block;
+  .hero-mode-cards
+  svg {
+  width: 30px;
+  height: 30px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards
+  span {
   font: 700 18px/1.2 var(--slate-font);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .hero-mode-cards small {
+  .hero-mode-cards
+  span {
   display: block;
-  margin: 4px 0 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards
+  small {
   font: 400 13px/1.3 var(--slate-font);
   color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards
+  small {
+  display: block;
+  margin: 4px 0 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-composition {
+  border-top: 1px solid var(--slate-line);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -646,7 +859,6 @@ html[data-skin="slate"]
   .hero-composition {
   margin: 0;
   padding: 12px 0 8px;
-  border-top: 1px solid var(--slate-line);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -659,11 +871,10 @@ html[data-skin="slate"]
   margin: 0 0 8px;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
-  .comp-head h4 {
-  display: block;
-  margin: 0;
+  .comp-head
+  h4 {
   font: 700 20px/1.2 var(--slate-font);
   color: #fff;
   letter-spacing: 1px;
@@ -671,7 +882,16 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .comp-head span {
+  .comp-head
+  h4 {
+  display: block;
+  margin: 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .comp-head
+  span {
   font: 600 18px/1.2 var(--slate-font);
   color: var(--slate-blue);
 }
@@ -684,10 +904,10 @@ html[data-skin="slate"]
   margin: 0 0 10px;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
-  .comp-counts span {
-  padding: 4px 14px;
+  .comp-counts
+  span {
   border-radius: 999px;
   border: 1px solid var(--slate-pill-line);
   background: var(--slate-pill);
@@ -697,9 +917,24 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .comp-counts b {
+  .comp-counts
+  span {
+  padding: 4px 14px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .comp-counts
+  b {
   color: #fff;
   font-weight: 700;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .comp-curve-title {
+  font: 400 14px/1.4 var(--slate-font);
+  color: var(--slate-ink-3);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -707,8 +942,13 @@ html[data-skin="slate"]
   .comp-curve-title {
   display: block;
   margin: 0 0 4px;
-  font: 400 14px/1.4 var(--slate-font);
-  color: var(--slate-ink-3);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract {
+  border-top: 1px solid var(--slate-line);
+  border-bottom: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -716,24 +956,31 @@ html[data-skin="slate"]
   .hero-config-contract {
   margin: 0;
   padding: 12px 0;
-  border-top: 1px solid var(--slate-line);
-  border-bottom: 0;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
-  .hero-config-contract summary {
+  .hero-config-contract
+  summary {
   font: 700 20px/1.2 var(--slate-font);
   color: #fff;
   letter-spacing: 1px;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
-  .hero-config-contract summary small {
+  .hero-config-contract
+  summary
+  small {
   font: 400 14px/1.4 var(--slate-font);
   color: var(--slate-ink-3);
   letter-spacing: 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-plan {
+  border-top: 1px solid var(--slate-line);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -741,15 +988,12 @@ html[data-skin="slate"]
   .hero-config-plan {
   margin: 0;
   padding: 14px 0 8px;
-  border-top: 1px solid var(--slate-line);
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host[data-type="heroes"]
   .hero-config-plan::before {
   content: "牌组思路";
-  display: block;
-  margin: 0 0 6px;
   font: 700 20px/1.2 var(--slate-font);
   color: #fff;
   letter-spacing: 1px;
@@ -757,11 +1001,25 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .hero-config-plan .deck-plan {
+  .hero-config-plan::before {
   display: block;
-  margin: 0;
+  margin: 0 0 6px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-plan
+  .deck-plan {
   font: 400 15px/1.55 var(--slate-font);
   color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-plan
+  .deck-plan {
+  display: block;
+  margin: 0;
 }
 
 /* ---------- narrower desktop windows ---------- */
@@ -769,8 +1027,722 @@ html[data-skin="slate"]
   html[data-skin="slate"]
     body:not(.touch-layout)
     #modal.folio-host[data-type="heroes"]
-    .hero-roster-heading > span {
+    .hero-roster-heading
+    > span {
     font-size: 20px;
     white-space: nowrap;
   }
+}
+
+/* ==========================================================================
+   触控布局 / touch layouts (body.touch-layout) — GEOMETRY ONLY
+   ==========================================================================
+   The material above this line is scoped `html[data-skin="slate"] body` and so
+   already paints on touch: thumbnails keep their 8px radius and 1.5px card
+   rim, the roster rows keep their hairline, the 「选择英雄」 pill keeps its pill
+   chrome, the preview keeps its card chrome. Everything below only moves and
+   resizes those same components (REFERENCE_UI_STANDARD.md 「组件归属与响应式」).
+
+   Portrait 390×844 — single column: compact roster rows (56px thumb · name ·
+   power · small pill), then the hero preview card, then the configuration
+   sections. `.scene-showcase` is a SIBLING of `.folio-pane` in
+   `screens/heroes.js`, so it cannot be placed between the roster and the
+   configuration without a DOM change; it is taken out of its `inset: 0`
+   full-bleed placement and becomes a static 200px card directly under the
+   title row instead. That is the deviation from the brief's ordering; it is
+   what kills the baseline bug (configuration text sitting straight on the
+   artwork) without giving `.hero-configuration` a background the desktop
+   layout does not have.
+
+   Landscape ≤ 500px tall and tablet — two columns: the preview card gets its
+   own column and the roster + configuration share one scroll column.
+   ========================================================================== */
+
+/* --- the hero-chooser page shell becomes a grid so the preview card can own a
+       column in landscape; portrait keeps the single stacked column --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  > .hero-chooser {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "head"
+    "art"
+    "pane"
+    "foot";
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  > .hero-chooser
+  > .modal-heading {
+  grid-area: head;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  > .hero-chooser
+  > .folio-pane {
+  grid-area: pane;
+  min-height: 0;
+  margin: 10px 0 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  > .hero-chooser
+  > .modal-footer {
+  grid-area: foot;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-chooser
+  .folio-viewport {
+  overflow-y: auto;
+  height: 100%;
+}
+
+/* --- preview card: out of the full-bleed backdrop, into a 200px card --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-chooser
+  > .scene-showcase {
+  grid-area: art;
+  position: static;
+  inset: auto;
+  z-index: 0;
+  width: 200px;
+  height: 270px;
+  margin: 12px auto 0;
+  overflow: hidden;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-chooser
+  > .scene-showcase::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 8px;
+  border: 1px solid #ffffff2a;
+  pointer-events: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-chooser
+  > .scene-showcase::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #0b101800 55%, #0b1018d9 100%);
+}
+
+/* --- roster: one flat list, no navigation rail --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-single-sheet {
+  display: block;
+  min-height: 0;
+  padding: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-roster {
+  display: block;
+}
+/* the rail node and its 2px spine are a desktop-only navigation device */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-roster-heading {
+  display: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  margin: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-options::before {
+  display: block;
+  padding: 0 0 8px 2px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-option {
+  position: relative;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 96px;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "img head action"
+    "img power action";
+  column-gap: 14px;
+  row-gap: 2px;
+  align-items: center;
+  width: 100%;
+  min-height: 76px;
+  margin: 0;
+  padding: 10px 2px;
+  text-align: left;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  > img {
+  grid-area: img;
+  align-self: center;
+  width: 56px;
+  height: 56px;
+  margin: 0;
+  padding: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  h3 {
+  grid-area: head;
+  justify-self: start;
+  align-self: end;
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.25;
+}
+/* the roster subtitle has no room next to a 56px thumb on a phone */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  small {
+  display: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  em {
+  grid-area: power;
+  align-self: start;
+  display: block;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  line-height: 1.4;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  .selected-check,
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-option:not(.selected)::after {
+  grid-area: action;
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-sizing: border-box;
+  justify-self: end;
+  align-self: center;
+  min-width: 0;
+  height: 34px;
+  margin: 0;
+  padding: 0 14px;
+  font-size: 14px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  .selected-check
+  svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* --- configuration column: sections stack under the roster --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-configuration {
+  display: block;
+  position: relative;
+  min-height: 0;
+  margin: 16px 0 0;
+  padding: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 0 0 10px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading::before {
+  font-size: 20px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading
+  h3 {
+  font-size: 17px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading
+  h3::before {
+  margin-right: 8px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading
+  small {
+  font-size: 13px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 8px 14px;
+  align-items: center;
+  margin: 0 0 14px;
+  padding: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill
+  > .hero-skill-label {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 18px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill
+  > .theme-orbit {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill
+  svg {
+  width: 28px;
+  height: 28px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill
+  strong {
+  display: block;
+  font-size: 17px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill
+  p {
+  margin: 3px 0 0;
+  font-size: 14px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-intro {
+  display: block;
+  margin: 0;
+  padding: 10px 0 2px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .config-kicker {
+  display: block;
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-deck-note {
+  margin: 0;
+  font-size: 14px;
+}
+/* the deck / mode selects become full-width 44px rows */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .archetype-picker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 0 2px;
+  font-size: 16px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .archetype-picker
+  select {
+  width: 100%;
+  min-height: 44px;
+}
+/* On touch the 玩法 picker stays the native `<select>` (a 44px slate form pill,
+ * the same control the 套牌 row uses) and the two-up mode CARDS step aside.
+ * The desktop does the opposite. This is a per-layout visibility choice, which
+ * REFERENCE_UI_STANDARD.md allows; it also matches the non-slate touch layout
+ * and keeps `#game-mode` reachable, which `dialog-layout.spec.cjs` asserts at
+ * every viewport narrower than 1000px. §6.7: both hides are restated here
+ * because the skin layer would otherwise revive whichever node is hidden by
+ * `components.css`. */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-mode {
+  display: grid;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards {
+  display: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-composition {
+  margin: 0;
+  padding: 12px 0 6px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .comp-head {
+  position: static;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 8px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .comp-head
+  h4 {
+  display: block;
+  margin: 0;
+  font-size: 18px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .comp-head
+  span {
+  font-size: 16px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .comp-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .comp-counts
+  span {
+  padding: 4px 12px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .comp-curve-title {
+  display: block;
+  margin: 0 0 4px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract {
+  margin: 0;
+  padding: 12px 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract
+  summary {
+  min-height: 44px;
+  font-size: 18px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-plan {
+  margin: 0;
+  padding: 12px 0 4px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-plan::before {
+  display: block;
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-plan
+  .deck-plan {
+  display: block;
+  margin: 0;
+  font-size: 14px;
+}
+
+/* --- landscape ≤ 500px tall: preview card takes its own column --- */
+@media (max-height: 500px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    > .hero-chooser {
+    grid-template-columns: 132px minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "head head"
+      "art pane"
+      "art foot";
+    column-gap: 16px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-chooser
+    > .scene-showcase {
+    align-self: start;
+    width: 132px;
+    height: 178px;
+    margin: 8px 0 0;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    > .hero-chooser
+    > .folio-pane {
+    margin: 8px 0 0;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-option {
+    min-height: 60px;
+    padding: 6px 2px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-option
+    > img {
+    width: 44px;
+    height: 44px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-option {
+    grid-template-columns: 44px minmax(0, 1fr) 88px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-option
+    h3 {
+    font-size: 16px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-option
+    em {
+    font-size: 12px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-configuration {
+    margin-top: 12px;
+  }
+}
+
+/* --- tablet 1024×768: landscape arrangement with desktop-sized air --- */
+@media (min-width: 900px) and (min-height: 620px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    > .hero-chooser {
+    grid-template-columns: 240px minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "head head"
+      "art pane"
+      "art foot";
+    column-gap: 32px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-chooser
+    > .scene-showcase {
+    align-self: start;
+    width: 240px;
+    height: 344px;
+    margin: 18px 0 0;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    > .hero-chooser
+    > .folio-pane {
+    margin: 18px 0 0;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-single-sheet {
+    display: grid;
+    grid-template-columns: minmax(0, 390px) minmax(0, 1fr);
+    column-gap: 32px;
+    align-items: start;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-configuration {
+    margin: 0;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-option {
+    min-height: 88px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-option
+    > img {
+    width: 64px;
+    height: 64px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-option {
+    grid-template-columns: 64px minmax(0, 1fr) 108px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-option
+    h3 {
+    font-size: 20px;
+  }
+}
+
+/* the roster row is a grid; the text wrapper has to dissolve into it so name,
+ * power and the pill land in their own areas (same trick as the desktop rule) */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-option-text {
+  display: contents;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  .selected-check,
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-option:not(.selected)::after {
+  white-space: nowrap;
+}
+/* the pill fills its fixed action column, so the selected and unselected rows
+ * end up on the same right-hand alignment axis at every touch size */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  .selected-check,
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-option:not(.selected)::after {
+  width: 100%;
+  padding: 0 8px;
+  font-size: 13px;
+}
+
+/* `polish-mobile.css` pins `.hero-roster` with `position: sticky; top: 8px` for
+ * the silverblue landscape split (150px roster beside the configuration). The
+ * slate touch layout is one scroll column — roster first, configuration under
+ * it — and a sticky roster taller than the 192px landscape viewport strands its
+ * last rows outside every scroll position (`dialog-layout.spec.cjs`'s `turnTo`
+ * could never reach 送魂人 at 844×390 / 568×320). Put it back in flow. */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-roster {
+  position: static;
+  top: auto;
+  grid-column: auto;
+  padding: 0;
 }
