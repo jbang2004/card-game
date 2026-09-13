@@ -139,12 +139,33 @@ html[data-skin="slate"]
 }
 
 /* ---------- scene + route lines ---------- */
+/* The desktop components layer sizes the scene off the WINDOW
+ * (`.atlas-stage { height: 100dvh; min-height: 100dvh }`, components.css inside
+ * `@media (min-width: 1100px) and (min-height: 650px)`). That only ever fits
+ * because the same block zeroes the dialog's padding, so window height ==
+ * `.folio-viewport` height. The slate page shell (base.css) pads the dialog
+ * `26px … 28px`, so the moment anything lets that padding through, the scene is
+ * 54px taller than its pane and the map's `.folio-viewport` — which is
+ * `overflow: hidden` here, not `auto` — reports a 54px vertical overflow, the
+ * exact failure `tests/e2e/dialog-layout.spec.cjs` asserts against at 1600×940
+ * and 1280×800. Size the scene off the pane instead of the window so it tracks
+ * whatever height the shell leaves, and drop the flow's trailing 12px so the
+ * full-bleed scene still reaches the bottom edge. */
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
   .atlas-stage {
   flex: 1 1 auto;
   width: auto;
+  height: auto;
+  min-height: 0;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  .modal-scroll {
+  padding-bottom: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
