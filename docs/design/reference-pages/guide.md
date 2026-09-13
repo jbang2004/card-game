@@ -47,3 +47,15 @@
 ## 2026-09-13 内容留白
 
 桌面目录文字左对齐，统一起始位置；内容卡框内边距 24×28px，外框内边距 32px。保留正常内容流及单一纵向滚动。共享操作按钮采用独立居中文字槽。
+
+## 2026-09-13 磨砂青岩皮肤
+
+按 [SLATE_DESIGN_SYSTEM.md](../SLATE_DESIGN_SYSTEM.md) 5.6 简报，在 `?skin=slate` 下重做为 T2（导航轨 + 内容列）模板，实现于 `src/presentation/skins/slate/guide.css`（不改 `base.css`、其他页面文件；仅本页归属的 CSS）。
+
+- `.help-toc` 改为与旅途设置页相同的节点导航轨语言：左侧 2px 竖线、56px 发光节点（选中）/ 16px 空心点（未选中）、25px/700 标签；原实现为 `.ghost-btn` 药丸横排，现完全替换视觉（类名不变，仅样式覆盖）。实现改用绝对定位圆点（而非 CSS Grid 双列）承载长标签换行，避免章节文字（如「出牌与攻击」）在导航轨内被压缩到两三字一行。
+- 内容列三个 `.crafted-panel`（回合流程 / 卡牌说明 / 关键词速查）统一改为圆角 12、`#0f141d80` 磨砂底、1px 发丝线描边的内容卡，去除四角 SVG；回合流程步骤图标与关键词速查图标改为 56/48px 圆角方块（英雄页技能图标同语言）。卡牌说明示意图保留卡面组件本身（游戏语义不动），标签改为发丝线描边的小标签片。
+- 章节 04「关键词速查」的 `.key-table` 改为两列发丝线行，填满内容列宽度、减少纵向滚动。
+- 已知问题修复：旧实现中「返回游戏」主药丸使用 `position:absolute; left:28px; bottom:20px`（继承自 1100×650 以上桌面断点的旧规则），在磨砂青岩全屏页面壳下会压住「卡牌说明」卡片右下角；改为 `position:static`，随 `.modal-footer` 正常文档流排在内容之后，不再重叠。
+- 调试过程中发现并修正一处皮肤内部冲突：`.help-key-preview span` / `.help-key-preview svg` 选择器原本未加范围限定，意外命中 `panels.js` 自动注入到每个 `.crafted-panel` 内的 `.panel-corner-trim` 四角描边（其 DOM 也是 `span` 包 `svg`），特异度高于 base.css 的隐藏规则，导致窄桌面尺寸下「关键词速查」卡片重新露出旧四角银线；已改为 `.help-key-preview > div span` / `> div i svg` 的精确范围。
+- 截图：`output/slate-guide-20260913/`（1672×941、1280×720，各四章节 + 一张不带 `?skin` 的对照图）。
+- 验证：`node --test tests/*.test.cjs`（127 通过）；本地追加 `&skin=slate` 的 `dialog-sizing` / `interface-audit` / `remaining-reference` / `responsive-component-style` / `uiux` 五个 e2e 规格在端口 8106 跑通，25/28 通过；3 个失败（`dialog-sizing` 设置弹窗宽度期望 1100px、`responsive-component-style` 材质指纹、`uiux` 长卡牌规则文本）与本页无关，在改动前的原始构建上同样失败，均依赖尚未更新的旧材质断言。
