@@ -27,3 +27,38 @@
 ## 历史素材记录
 
 此前纹理按钮和左右分散英雄的方案已被本轮替代。原素材来源保留在 [细节素材记录](../../../assets/ui/detail-polish-v1/provenance.json)；场景制作见 [六处俯视场景](../../../output/boss-topdown-20260913/RESEARCH.md)。上述历史验收不能代替当前截图与检查。
+
+## 2026-09-13 磨砂青岩皮肤
+
+`?skin=slate` 下的桌面战场 HUD 按 [设计系统](../SLATE_DESIGN_SYSTEM.md) §5.4 重做，实现只在
+`src/presentation/skins/slate/battle.css`，全部规则以 `html[data-skin="slate"] body:not(.touch-layout)`
+开头，不用 `!important`，不新增位图，不改规则层、存档与卡牌映射。首领场景、随从牌面、手牌、
+费用/攻血徽章、法力晶体、目标线与全部动画保持原样；`.card-preview` 悬停放大未改。
+
+- 顶栏（仅 `#app.battle-view`）：字标改 20px/700 + `EMBERFALL` 10px 字距 3px；`.top-actions .icon-btn`
+  改 36px 圆形药丸；回合文字 `.turn-number` 收成居中深色芯片（`left:50%` + `width:max-content`）。
+- 英雄：`.hero` 改 10px 圆角 + 1.5px `--slate-card-line` 描边卡；半包围铭牌 `.hero-card-plaque` 隐藏，
+  `.hero-name` 改深色药丸并保留 17.8% 对称内缩（`ui-alignment.spec.cjs` 的居中断言仍成立）；
+  攻血/法力/护甲徽章不动。
+- 右栏：`#power-btn` 改 56px 发光节点（与 `settings.css` 选中节点同一径向渐变）+ 名称/费用连体芯片；
+  `#contract-open` 改深色药丸芯片；`.enemy-deck` / `.player-deck` 改「图标 + 数字 + 说明」药丸。
+- `#log-toggle` / `#intel-toggle` 改带图标的深色药丸；`.log-panel` / `.boss-panel` 改浮层壳
+  （12px 圆角、磨砂材质、发丝线分节、隐藏 `panels.js` 的四角 SVG、高度随内容）；
+  `.battle-log` 改自上而下的发丝线清单（去掉旧的底部对齐 flex 与渐隐遮罩）。
+- `#end-turn` 主药丸 160×56（渐变画在 `::before`），`.turn-shortcut` 12px ink-3；法力标签改黑体，
+  晶体不动；`#board-empty` 改黑体 ink-3。
+- `#combat-preview` `#action-status` `#hint` `#toast` `#touch-target-bar` 统一为最大 520px、16px、
+  居中的深色药丸提示条，同一时刻只显示一种的既有行为不变。`#toast` 的 `left/width` 由
+  `ui.js positionBattleNotice()` 写成内联样式（内联样式优先于层叠层），因此用 `max-width` 收窄、
+  用 `margin-left` 重新居中。
+
+命中区：`#battle` 是被 `--scale` 缩放的 1600×940 逻辑画布，指令芯片加了
+`--slate-battle-hit: max(44px, calc(44px / var(--scale,1)))` 下限，结束回合、英雄技能、两个工具页签、
+取消在 1672×941 / 1600×940 / 1440×900 / 1360×768 实测均 ≥ 44 设备像素。这四个控件的
+`background-image` 必须保持 `none`（`action-feedback.spec.cjs` 的 `texture:` 断言），发光一律画在伪元素上。
+
+已知边界：`src/mobile-view.js` 在战场视图下把 `rawW < 1360 || rawH < 700` 判为 `compactDesktop` 并打开
+`body.touch-layout`，所以 1280×720 的战场不走本皮肤，属于设计系统 §5.7 手机第二阶段。
+简报要求的敌方契约进度 `◆ 0/5`（`#enemy-mana`）已在提交 `39ac031` 删除，当前敌方法力是头像内的
+`.hero-mana` 徽章，没有可改的 DOM。截图、命中区实测与原主题对照见
+[磨砂青岩战场输出](../../../output/slate-battle-20260913/README.md)。
