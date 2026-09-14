@@ -64,7 +64,6 @@
   "SCREEN_PREFERENCES": "application/screens/preferences.js",
   "POLISH_DESKTOP": "presentation/polish-desktop.css",
   "POLISH_DIALOGS": "presentation/polish-dialogs.css",
-  "POLISH_BATTLE": "presentation/polish-battle.css",
   "POLISH_MOBILE": "presentation/polish-mobile.css",
   "HOME_PRESENTATION": "presentation/home.js",
   "SKIN_SLATE_BASE": "presentation/skins/slate/base.css",

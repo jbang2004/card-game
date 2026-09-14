@@ -2948,9 +2948,8 @@ body #modal.folio-host .adventure-atlas .modal-scroll {
   position: absolute;
   inset: 0;
   z-index: -2;
-  background:
-    linear-gradient(#eed49b26, #35291818),
-    var(--map-terrain) center / cover;
+  /* the retired paper/terrain texture used to paint here */
+  background: none;
   opacity: 0.87;
   pointer-events: none;
 }

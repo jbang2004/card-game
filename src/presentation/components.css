@@ -807,7 +807,8 @@ body #battle .hero-card-plaque {
   right: 4.8%;
   bottom: 2.3%;
   left: 4.8%;
-  border: 1px solid color-mix(in srgb, var(--hero-plaque-accent), transparent 25%);
+  border: 1px solid
+    color-mix(in srgb, var(--hero-plaque-accent), transparent 25%);
   border-radius: 3px 3px 12px 12px;
   background: linear-gradient(160deg, #1a2a3dda, var(--hero-plaque-panel));
   box-shadow:
@@ -953,16 +954,6 @@ body #modal.folio-host .touch-live-stat {
 }
 body #modal.folio-host .touch-log {
   font: 400 14px/1.65 var(--ui-font);
-}
-body
-  :is(
-    .chapter-name,
-    .boss-info-name,
-    .boss-info-english,
-    .phase-info,
-    .boss-power-info
-  ) {
-  color: var(--ink);
 }
 body .relic-slot {
   background: var(--surface-soft);
@@ -2009,60 +2000,6 @@ body.mobile-landscape .minion[data-compact="true"] .stat.hp {
 #app .top-nav .nav-link.active::after {
   display: none;
 }
-#app .nav-light {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: var(--nav-light-width, 102px);
-  height: 2px;
-  pointer-events: none;
-  transform: translateX(var(--nav-light-x, 34px));
-  background: linear-gradient(
-    90deg,
-    transparent,
-    var(--accent) 43%,
-    #fff 50%,
-    var(--accent) 57%,
-    transparent
-  );
-  transition:
-    transform 220ms cubic-bezier(0.22, 0.7, 0.2, 1),
-    width 220ms ease;
-}
-#app .nav-light::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 78px;
-  height: 24px;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(
-    ellipse,
-    #d7f6ffb3,
-    #79c8ff55 25%,
-    transparent 70%
-  );
-}
-#app .nav-light::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 5px;
-  height: 5px;
-  transform: translate(-50%, -50%) rotate(45deg);
-  background: #eafaff;
-  box-shadow: 0 0 9px 2px #90d8ff;
-}
-body.reduced-motion #app .nav-light {
-  transition: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  #app .nav-light {
-    transition: none;
-  }
-}
 #app.lobby-view .top-actions {
   gap: 14px;
 }
@@ -2794,7 +2731,6 @@ body #modal.folio-host[data-type] :is(.gold-btn, .ghost-btn) {
   border-radius: 2px;
 }
 body #modal.folio-host[data-type] .gold-btn:not(:disabled) {
-  background-image: var(--reference-primary);
   background-size: 100% 100%;
   background-color: transparent;
   border-color: transparent;
@@ -3235,7 +3171,6 @@ body #modal.folio-host[data-type="heroes"] .hero-config-contract {
     font-size: 23px;
   }
   body:not(.touch-layout) #modal.folio-host[data-type][data-type="settings"] {
-    background: var(--reference-settings) center/cover;
     backdrop-filter: none;
   }
   body:not(.touch-layout) #modal.folio-host[data-type] > .settings-box {
@@ -3314,7 +3249,6 @@ body #modal.folio-host[data-type="heroes"] .hero-config-contract {
   }
 
   body:not(.touch-layout) #modal.folio-host[data-type][data-type="mulligan"] {
-    background: var(--reference-mulligan) center/cover;
     backdrop-filter: none;
   }
   body:not(.touch-layout) #modal.folio-host[data-type] > .mulligan-box {
@@ -3334,7 +3268,6 @@ body #modal.folio-host[data-type="heroes"] .hero-config-contract {
   }
 
   body:not(.touch-layout) #modal.folio-host[data-type][data-type="result"] {
-    background: var(--reference-result) center/cover;
     backdrop-filter: none;
   }
   body:not(.touch-layout) #modal.folio-host[data-type] > .result-box {
@@ -3389,7 +3322,6 @@ body #modal.folio-host[data-type="heroes"] .hero-config-contract {
   }
 
   body:not(.touch-layout) #modal.folio-host[data-type][data-type="rewards"] {
-    background: var(--reference-rewards) center/cover;
     backdrop-filter: none;
     padding: 0;
   }
@@ -3617,7 +3549,6 @@ body #modal.folio-host[data-type] .help-key-preview span {
     position: static;
   }
   body:not(.touch-layout) #modal.folio-host[data-type="help"] {
-    background: var(--reference-guide) center/cover;
     padding: 13.5dvh 24px 6.5dvh;
     backdrop-filter: none;
   }
@@ -4701,58 +4632,7 @@ body:not(.touch-layout) #app.battle-view .top-nav {
     cursor: not-allowed;
   }
 }
-.reference-page-brand {
-  display: none;
-  pointer-events: none;
-}
 @media (min-width: 1100px) and (min-height: 650px) {
-  body #modal.folio-host[data-type] .reference-page-brand {
-    display: flex;
-    position: fixed;
-    top: 20px;
-    left: 3%;
-    flex-direction: column;
-    align-items: center;
-    color: #e3e2df;
-    z-index: 1;
-  }
-  body #modal.folio-host[data-type] .reference-page-brand > span {
-    font: 58px/1.15 var(--ui-display);
-    letter-spacing: 8px;
-  }
-  body #modal.folio-host[data-type] .reference-page-brand > small {
-    font: 9px/1.6 var(--ui-display);
-    letter-spacing: 6px;
-  }
-  body #modal.folio-host[data-type="heroes"] .reference-page-brand {
-    left: auto;
-    right: 5%;
-    top: 15px;
-  }
-  body #modal.folio-host[data-type="heroes"] .reference-page-brand > span {
-    font-size: 35px;
-  }
-  body #modal.folio-host[data-type="map"] .reference-page-brand {
-    top: auto;
-    bottom: 32px;
-  }
-  body #modal.folio-host[data-type="contracts"] .reference-page-brand {
-    display: none;
-  }
-  body #modal.folio-host[data-type="mulligan"] .reference-page-brand {
-    left: 46%;
-    top: 15px;
-  }
-  body #modal.folio-host[data-type="mulligan"] .reference-page-brand > span {
-    font-size: 34px;
-  }
-  body #modal.folio-host[data-type="library"] .reference-page-brand {
-    top: 10px;
-    left: 24px;
-  }
-  body #modal.folio-host[data-type="library"] .reference-page-brand > span {
-    font-size: 42px;
-  }
   body #modal.folio-host[data-type="library"] .library-heading {
     height: 62px;
     min-height: 62px;
@@ -4786,11 +4666,6 @@ body:not(.touch-layout) #app.battle-view .top-nav {
   body #modal.folio-host[data-type="library"] .filter-btn {
     padding: 5px 8px;
   }
-  body #modal.folio-host[data-type="discover"] {
-    background:
-      linear-gradient(#0a172b55, #0a172b99),
-      var(--reference-guide) center/cover;
-  }
   body #modal.folio-host[data-type="discover"] > .modal-box {
     width: 80vw;
     --dialog-width: 1350px;
@@ -4806,11 +4681,6 @@ body:not(.touch-layout) #app.battle-view .top-nav {
     width: 260px;
     max-width: 28%;
   }
-  body #modal.folio-host[data-type="confirm"] {
-    background:
-      linear-gradient(#07132577, #071325bb),
-      var(--reference-guide) center/cover;
-  }
   body #modal.folio-host[data-type="confirm"] .confirm-box {
     --dialog-width: 750px;
   }
@@ -4820,11 +4690,6 @@ body:not(.touch-layout) #app.battle-view .top-nav {
   body #modal.folio-host[data-type="confirm"] .confirm-box .modal-scroll p {
     font: 17px/1.8 var(--ui-display);
     text-align: left;
-  }
-  body #modal.folio-host[data-type="library-card"] {
-    background:
-      linear-gradient(#0a172b55, #0a172b99),
-      var(--reference-guide) center/cover;
   }
   body #modal.folio-host[data-type="library-card"] > .modal-box {
     --dialog-width: 1250px;
@@ -4864,12 +4729,6 @@ body
   visibility: hidden;
 }
 @media (min-width: 1100px) and (min-height: 650px) {
-  body
-    #modal.folio-host[data-type="result"][data-type="result"]:has(
-      [data-outcome="loss"]
-    ) {
-    background: var(--reference-defeat) center/cover;
-  }
   body #modal.folio-host[data-type] .result-box[data-outcome="loss"] {
     margin-left: 42%;
     width: 52%;
@@ -5123,9 +4982,6 @@ body
     .hero-mode-cards
     button {
     min-height: 84px;
-    background:
-      linear-gradient(110deg, #18304b66, #0d182bbb),
-      var(--reference-settings) center/cover;
   }
   body
     #modal.folio-host[data-type="heroes"][data-type="heroes"]
@@ -5195,15 +5051,6 @@ body
 }
 
 @media (min-width: 1100px) and (min-height: 650px) {
-  body #modal.folio-host[data-type="library-card"][data-type="library-card"] {
-    background: var(--reference-detail) center/cover;
-  }
-  body #modal.folio-host[data-type="discover"][data-type="discover"] {
-    background: var(--reference-discover) center/cover;
-  }
-  body #modal.folio-host[data-type="confirm"][data-type="confirm"] {
-    background: var(--reference-confirm) center/cover;
-  }
   body #modal.folio-host[data-type="library-card"] > .modal-box {
     width: 94vw;
     --dialog-width: 1600px;
@@ -5237,17 +5084,6 @@ body
     font-size: 24px;
     line-height: 1.9;
     padding: 22px;
-  }
-
-  body #modal.folio-host[data-type="library-card"] .reference-page-brand,
-  body #modal.folio-host[data-type="confirm"] .reference-page-brand {
-    top: auto;
-    bottom: 24px;
-    left: 3%;
-  }
-  body #modal.folio-host[data-type="discover"] .reference-page-brand {
-    left: auto;
-    right: 3%;
   }
   body #modal.folio-host[data-type="discover"] > .modal-box {
     width: 92vw;
@@ -5287,72 +5123,8 @@ body #modal.folio-host .help-basic-rules > summary {
   cursor: pointer;
   padding: 4px 0;
 }
-
-/* Detail pass: one moving specular rail for each independent selector group. */
-body #modal.folio-host .selection-track {
-  position: relative;
-  isolation: isolate;
-}
-body #modal.folio-host .selection-track > .selection-light {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: var(--selection-width, 60px);
-  height: 2px;
-  transform: translate(var(--selection-x, 0px), var(--selection-y, 0px));
-  z-index: 6;
-  pointer-events: none;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    #bce7ff 43%,
-    #fff 50%,
-    #bce7ff 57%,
-    transparent
-  );
-  transition:
-    transform 220ms cubic-bezier(0.22, 0.7, 0.2, 1),
-    width 220ms ease;
-}
-body #modal.folio-host .selection-light::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: min(78px, 110%);
-  height: 23px;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(
-    ellipse,
-    #d7f6ffb3,
-    #79c8ff55 25%,
-    transparent 70%
-  );
-}
-body #modal.folio-host .selection-light::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 5px;
-  height: 5px;
-  transform: translate(-50%, -50%) rotate(45deg);
-  background: #eafaff;
-  box-shadow: 0 0 9px 2px #90d8ff;
-}
-body #modal.folio-host .selection-track > button {
-  transition:
-    color 160ms,
-    text-shadow 160ms,
-    background-color 160ms;
-}
-body #modal.folio-host .selection-track > button:hover,
-body #modal.folio-host .selection-track > button:focus-visible {
-  color: #f3faff;
-  text-shadow: 0 0 12px #9cdbff;
-}
-/* Contained surfaces share one material and one spacing scale. Full-page
- * artwork is a folio-page; only its inner dossiers receive this component. */
+/* Contained surfaces share one material and one spacing scale. A full-page
+ * dialog owns its own shell; only its inner dossiers receive this component. */
 body #modal.folio-host .crafted-panel,
 body #battle .crafted-panel {
   box-sizing: border-box;
@@ -5431,37 +5203,6 @@ body #modal.folio-host .crafted-panel > .folio-pane > .folio-viewport {
 body #modal.folio-host .relic-choice.crafted-panel[aria-pressed="true"] {
   border-color: var(--accent);
   box-shadow: inset 0 0 0 1px #bbdff94d;
-}
-body .panel-corner-trim {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 5;
-}
-body .panel-corner-trim > svg {
-  position: absolute;
-  width: 30px;
-  height: 30px;
-  filter: drop-shadow(0 0 2px #a6d3f744);
-}
-body .panel-corner-trim > svg:nth-child(1) {
-  left: 1px;
-  top: 1px;
-}
-body .panel-corner-trim > svg:nth-child(2) {
-  right: 1px;
-  top: 1px;
-  transform: rotate(90deg);
-}
-body .panel-corner-trim > svg:nth-child(3) {
-  right: 1px;
-  bottom: 1px;
-  transform: rotate(180deg);
-}
-body .panel-corner-trim > svg:nth-child(4) {
-  left: 1px;
-  bottom: 1px;
-  transform: rotate(270deg);
 }
 body #modal.folio-host[data-type] button.crafted-action {
   position: relative;
@@ -5558,14 +5299,6 @@ body #modal.folio-host[data-type] .modal-close {
 body #modal.folio-host[data-type] .modal-close:hover {
   background: #4c6a9180;
   border-color: #d0e9ff;
-}
-body.reduced-motion #modal .selection-light {
-  transition: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  body #modal .selection-light {
-    transition: none;
-  }
 }
 @media (min-width: 1100px) and (min-height: 650px) {
   body #modal.folio-host[data-type="library"] .library-heading {
@@ -5823,7 +5556,6 @@ body
     #result-next,
     #ok-confirm
   ) {
-  background: var(--polish-button-capsule) center 49.5% / 103% 490% no-repeat;
   border: 1px solid #c9e9ff;
   border-radius: 999px;
   color: #fff;
@@ -5841,7 +5573,6 @@ body
 body
   #modal.folio-host[data-type]
   :is(#hero-deck-btn, #result-home, #library-detail-back, #cancel-confirm) {
-  background: var(--polish-button-night) center 49.5% / 100% 510% no-repeat;
   border: 0;
   border-radius: 0;
   clip-path: polygon(9% 0, 91% 0, 100% 50%, 91% 100%, 9% 100%, 0 50%);
@@ -5851,9 +5582,6 @@ body
   font-family: var(--ui-display);
 }
 body #modal.folio-host[data-type] :is(.settings-nav, .help-toc) button.active {
-  background:
-    linear-gradient(#15273f55, #10203988),
-    var(--polish-selection-panel) center 50% / 104% 448% no-repeat;
   border: 1px solid #a9d7f788;
   box-shadow: inset 0 0 0 2px #b4dcff15;
   color: #fff5d9;
@@ -5862,7 +5590,6 @@ body #modal.folio-host[data-type] :is(.settings-nav, .help-toc) button.active {
 body
   #modal.folio-host[data-type]
   :is(#hero-confirm, #result-next, #mulligan-confirm) {
-  background: var(--polish-selection-panel) center 50% / 103% 450% no-repeat;
   border-radius: 0;
   clip-path: polygon(
     3% 0,
@@ -5878,7 +5605,6 @@ body
   text-shadow: 0 1px 2px #effbff88;
 }
 body #modal.folio-host[data-type] :is(#deck-copy, #deck-play) {
-  background: var(--polish-button-night) center 49.5% / 100% 510% no-repeat;
   border: 0;
   clip-path: polygon(9% 0, 91% 0, 100% 50%, 91% 100%, 9% 100%, 0 50%);
   padding-inline: 18px;
@@ -5922,9 +5648,6 @@ body #modal.folio-host[data-type] button.crafted-action:focus-visible {
   box-shadow: inset 0 0 0 3px #fff2be;
 }
 @media (min-width: 1100px) and (min-height: 650px) {
-  body #modal.folio-host[data-type="library"] .reference-page-brand {
-    display: none;
-  }
   body #modal.folio-host[data-type="library"] .library-heading {
     height: auto;
     min-height: 74px;
@@ -6344,17 +6067,6 @@ body
     height: 20px;
     min-width: 0;
     grid-column: 3;
-  }
-  body #modal.folio-host[data-type="heroes"] .reference-page-brand {
-    right: 104px;
-    top: 26px;
-  }
-  body #modal.folio-host[data-type="heroes"] .reference-page-brand > span {
-    font-size: 28px;
-  }
-  body #modal.folio-host[data-type="heroes"] .reference-page-brand > small {
-    letter-spacing: 3px;
-    font-size: 8px;
   }
 }
 body
