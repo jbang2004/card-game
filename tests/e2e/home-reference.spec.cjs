@@ -109,19 +109,18 @@ for (const [width, height, touch] of [
     await page.locator("#home-btn").click();
     await expect(page.locator("#start-btn")).toContainText("开启冒险");
     // Returning to the lobby restores the primary action's own treatment:
-    // slate paints it as the blue pill (§5.1) rather than the silverblue
-    // bitmap skin, which is still in the DOM but never painted.
+    // slate paints it as the blue pill (§5.1), and the retired bitmap button
+    // skin is no longer in the DOM at all.
     expect(
       await page.locator("#start-btn").evaluate((button) => {
         const style = getComputedStyle(button);
-        const skin = button.querySelector(".home-action-skin");
         return {
           pill: parseFloat(style.borderRadius) >= button.offsetHeight / 2,
           painted: style.backgroundImage !== "none",
-          skinPainted: skin ? getComputedStyle(skin).opacity !== "0" : false,
+          skins: button.querySelectorAll(".home-action-skin").length,
         };
       }),
-    ).toEqual({ pill: true, painted: true, skinPainted: false });
+    ).toEqual({ pill: true, painted: true, skins: 0 });
     expect(
       await page.evaluate(() => localStorage.getItem("emberfall.v1")),
     ).toBeNull();
@@ -145,24 +144,23 @@ test("saved campaign labels preserve the skins; cancel new journey preserves the
   await expect(page.locator("#start-btn")).toContainText("继续冒险");
   await expect(page.locator("#quick-btn")).toContainText("新的旅程");
   // Both lobby actions keep their pill treatment once a save exists: the
-  // primary carries the blue gradient, the secondary the dark pill, and
-  // neither paints the retired bitmap skin.
+  // primary carries the blue gradient, the secondary the dark pill, and the
+  // retired bitmap skin is gone from both.
   expect(
     await page
       .locator("#start-btn, #quick-btn")
       .evaluateAll((buttons) =>
         buttons.map((button) => {
           const style = getComputedStyle(button);
-          const skin = button.querySelector(".home-action-skin");
           return {
             pill: parseFloat(style.borderRadius) >= button.offsetHeight / 2,
-            skinPainted: skin ? getComputedStyle(skin).opacity !== "0" : false,
+            skins: button.querySelectorAll(".home-action-skin").length,
           };
         }),
       ),
   ).toEqual([
-    { pill: true, skinPainted: false },
-    { pill: true, skinPainted: false },
+    { pill: true, skins: 0 },
+    { pill: true, skins: 0 },
   ]);
   await page.locator("#quick-btn").click();
   await expect(page.locator("#ok-confirm")).toBeVisible();
