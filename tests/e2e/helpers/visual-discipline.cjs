@@ -46,7 +46,7 @@ async function inspectVisualDiscipline(page) {
     const close = document.querySelector("#modal .modal-close");
     if (close?.checkVisibility())
       for (const e of document.querySelectorAll(
-        "#modal .reference-page-brand,#modal .modal-heading h2",
+        "#modal .atlas-wordmark,#modal .modal-heading h2",
       ))
         if (e.checkVisibility())
           for (const t of texts(e))

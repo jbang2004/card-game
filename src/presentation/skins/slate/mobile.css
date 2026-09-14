@@ -665,14 +665,6 @@ html[data-skin="slate"]
   :is(.log-panel, .boss-panel)::after {
   content: none;
 }
-/* `panels.js` appends four SVG corner brackets to every `.crafted-panel`. */
-html[data-skin="slate"]
-  body.touch-layout
-  #app.battle-view
-  :is(.log-panel, .boss-panel)
-  > .panel-corner-trim {
-  display: none;
-}
 
 /* ===========================================================================
  * 9. Battle-time dialogs — shared touch chrome

@@ -36,15 +36,10 @@
  * the brief allows retuning them toward neutral blue-grey, and they are set on
  * `#lobby` so the retune cannot leak to any other screen.
  *
- * Two bitmaps are hidden with `opacity: 0` rather than `display: none`:
- * `.home-action-skin` and `.nav-light`. Both are out of flow already
- * (absolutely positioned, `z-index: -1` / `pointer-events: none`), so this
- * hides them without disturbing any geometry that still depends on them —
- * `.nav-light` in particular keeps tracking pointer and focus, it simply is
- * not painted. Note that `opacity: 0` is NOT a substitute for a test
- * assertion: Playwright still counts both elements as visible, so
- * `tests/e2e/home-reference.spec.cjs` asserts the pills and the
- * `.nav-link.active::after` underline that slate actually paints.
+ * The bitmap button skins and the moving nav light band the old theme drew
+ * here are gone from the DOM entirely; `tests/e2e/home-reference.spec.cjs`
+ * asserts the pills and the `.nav-link.active::after` underline that slate
+ * actually paints.
  *
  * NOTE on `display`: the touch section deliberately re-opens ONE element that
  * the legacy mobile sheet hides, `.top-nav` (the brief asks for a three-item
@@ -136,8 +131,8 @@ html[data-skin="slate"] body #app.lobby-view .nav-link.active {
   color: #fff;
   font-weight: 700;
 }
-/* components.css disables this underline in favour of the moving light band;
- * the slate skin brings it back and parks the band (see header note). */
+/* components.css disabled this underline in favour of the old theme's moving
+ * light band; the band is gone and the slate skin brings the underline back. */
 html[data-skin="slate"] body #app.lobby-view .top-nav .nav-link.active::after {
   content: "";
   display: block;
@@ -152,9 +147,6 @@ html[data-skin="slate"] body #app.lobby-view .nav-link:focus-visible {
   outline: 2px solid var(--slate-blue);
   outline-offset: 2px;
   border-radius: 6px;
-}
-html[data-skin="slate"] body #app.lobby-view .nav-light {
-  opacity: 0;
 }
 
 /* --- icon buttons: round pills --- */
@@ -242,9 +234,6 @@ html[data-skin="slate"] body #lobby #quick-btn {
   font: 600 19px/1 var(--slate-font);
   letter-spacing: 3px;
   box-shadow: 0 8px 20px #060c1680;
-}
-html[data-skin="slate"] body #lobby .home-action-skin {
-  opacity: 0;
 }
 html[data-skin="slate"] body #lobby .home-action-symbol,
 html[data-skin="slate"] body #lobby #quick-btn .home-action-symbol {

@@ -167,14 +167,15 @@ const pages = {
 };
 
 async function fingerprint(page, selectors) {
-  // Exercise the actual shared surfaces, including late-mounted guide content.
-  await page.waitForFunction(() =>
-    [...document.querySelectorAll(".crafted-panel")].every(
-      (panel) =>
-        panel.querySelectorAll(":scope > .panel-corner-trim > svg").length ===
-        4,
-    ),
-  );
+  // Exercise the actual shared surfaces. `presentation/home.js` labels the
+  // dialog actions from a `requestAnimationFrame`, so let that land (and the
+  // fonts settle) before any material is read.
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await new Promise((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(resolve)),
+    );
+  });
   await page.mouse.move(0, 0);
   const result = {};
   for (const selector of selectors) {
@@ -205,10 +206,11 @@ async function fingerprint(page, selectors) {
       ),
     });
   }
-  // `panels.js` puts `.crafted-panel` on dialog roots and on contained
-  // surfaces. Slate gives those two roles different shells (design system §1
-  // 「一种材质，两种外壳」), so audit each against its own shell rather than
-  // against silverblue's single square 16/26/42 panel.
+  // `panels.js` puts `.crafted-panel` on floating dialog roots, and the
+  // screens put it on contained surfaces. Slate gives those two roles
+  // different shells (design system §1 「一种材质，两种外壳」), so audit each
+  // against its own shell rather than against the retired single square
+  // 16/26/42 panel.
   const issues = await page.evaluate((pageShellSizes) => {
     const issues = [];
     for (const panel of document.querySelectorAll(".crafted-panel")) {

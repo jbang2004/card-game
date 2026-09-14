@@ -11,11 +11,12 @@ for (const width of [1672, 1280, 390])
     const spell = group.locator('[data-type="spell"]');
     await spell.click();
     await expect(spell).toHaveClass(/active/);
-    await expect(group.locator(".selection-light")).toHaveCount(1);
-    // Slate replaces silverblue's travelling `.selection-light` band with the
-    // underline bar the text pager owns (`.filter-btn.active::after`, design
-    // system §3 「文字分页」). The geometric intent is unchanged: the indicator
-    // is a thin bar pinned to the bottom of the active tab and centred on it.
+    // Slate replaced the old theme's travelling `.selection-light` band with
+    // the underline bar the text pager owns (`.filter-btn.active::after`,
+    // design system §3 「文字分页」); the band is no longer injected at all.
+    // The geometric intent is unchanged: the indicator is a thin bar pinned to
+    // the bottom of the active tab and centred on it.
+    await expect(group.locator(".selection-light")).toHaveCount(0);
     await expect
       .poll(() =>
         group.evaluate((e) => {
@@ -46,22 +47,32 @@ for (const width of [1672, 1280, 390])
     await expect(page.locator("#library-grid .card").first()).toHaveClass(
       /spell/,
     );
-    await group.locator('[data-type="minion"]').hover();
-    await expect(group).toHaveAttribute("data-light-target", "minion");
+    // The old theme moved one shared band onto whatever the pointer was over,
+    // which meant the indicator lied about which filter was applied. Slate
+    // marks hover on the label itself and leaves the underline on the tab that
+    // is actually active, so hovering must change neither selection nor grid.
+    const minion = group.locator('[data-type="minion"]');
+    await minion.hover();
+    await expect(minion).toHaveCSS("color", "rgb(255, 255, 255)");
+    await expect(minion).not.toHaveClass(/active/);
+    await expect(spell).toHaveClass(/active/);
+    await expect(page.locator("#library-grid .card").first()).toHaveClass(
+      /spell/,
+    );
     await page.mouse.move(2, 2);
-    await expect(group).toHaveAttribute("data-light-target", "spell");
+    await expect(spell).toHaveClass(/active/);
     const mana = page.locator(".filter-mana-group");
     await mana.locator('[data-mana="2"]').focus();
-    await expect(mana).toHaveAttribute("data-light-target", "2");
+    await expect(mana.locator('[data-mana="2"]')).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(mana.locator('[data-mana="2"]')).toHaveClass(/active/);
     await page.keyboard.press("Escape");
     await page.locator("#settings-btn").click();
     await page.locator('[data-section="operation"]').click();
-    await expect(page.locator(".settings-nav")).toHaveAttribute(
-      "data-light-target",
-      "operation",
-    );
+    await expect(
+      page.locator('.settings-nav [data-section="operation"]'),
+    ).toHaveClass(/active/);
+    await expect(page.locator(".settings-nav .active")).toHaveCount(1);
     await expect(page.locator("#settings-done > svg")).toHaveCount(1);
     expect(
       await page.evaluate(
@@ -78,23 +89,25 @@ test("guide panels are rounded matte cards with no corner ornament over the head
   await page.locator("#guide-nav").click();
   const panel = page.locator(".help-turn-flow");
   await expect(panel).toBeVisible();
-  // `panels.js` still injects the four-corner trim into every `.crafted-panel`,
-  // so it stays in the DOM; slate replaces the ornament with a rounded matte
-  // card (design system §5.6 「无四角」) and must keep it from rendering.
-  await expect(panel.locator(".panel-corner-trim svg")).toHaveCount(4);
+  // The four-corner trim `panels.js` used to inject into every
+  // `.crafted-panel` is gone from the DOM: slate's panel is a rounded matte
+  // card (design system §5.6 「无四角」).
+  await expect(panel.locator(".panel-corner-trim")).toHaveCount(0);
   const card = await panel.evaluate((e) => {
     const style = getComputedStyle(e);
     const heading = e.querySelector("h3");
     const box = e.getBoundingClientRect();
     const title = heading.getBoundingClientRect();
     return {
-      trim: getComputedStyle(e.querySelector(".panel-corner-trim")).display,
+      trim: e.querySelectorAll(".panel-corner-trim").length,
       radius: parseFloat(style.borderRadius),
       borderWidth: parseFloat(style.borderTopWidth),
       // the heading sits inside the card's padding, nothing on top of it
       headingInside:
-        title.left >= box.left && title.right <= box.right &&
-        title.top >= box.top && title.bottom <= box.bottom,
+        title.left >= box.left &&
+        title.right <= box.right &&
+        title.top >= box.top &&
+        title.bottom <= box.bottom,
       headingTopmost: (() => {
         const x = title.left + Math.min(8, title.width / 2);
         const hit = document.elementFromPoint(x, title.top + title.height / 2);
@@ -102,7 +115,7 @@ test("guide panels are rounded matte cards with no corner ornament over the head
       })(),
     };
   });
-  expect(card.trim).toBe("none");
+  expect(card.trim).toBe(0);
   expect(card.radius).toBeGreaterThanOrEqual(8);
   expect(card.borderWidth).toBeGreaterThan(0);
   expect(card.headingInside).toBe(true);

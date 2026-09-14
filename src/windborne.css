@@ -588,7 +588,6 @@ body:not(.touch-layout) .lobby-collection {
 .boss-info-name {
   color: #4c654e;
 }
-.boss-info-english,
 .boss-order,
 .log-line {
   color: #78876a;
@@ -617,7 +616,8 @@ body:not(.touch-layout) .lobby-collection {
 }
 .card-back:after {
   content: "";
-  background: var(--wind-leaf-seal) center/95% no-repeat;
+  /* the retired leaf-seal bitmap used to paint here; the surface stays blank */
+  background: none;
   border: 0;
   inset: 4px;
 }

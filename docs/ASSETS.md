@@ -179,7 +179,21 @@
 
 ## 2026-09-13 剩余参考页面素材
 
-`assets/ui/page-reference-v1/`：换牌、奖励、胜利/失败、设置、手册、手机横竖屏战场与三个二级页面背景，以及透明遗物/胜利徽记。以 `EmberThemeDefinition.art` 语义角色消费；卡牌插画映射不变。生成来源、Alpha 实测与散列见该目录 `provenance.json`；页面状态与对照见 [参考页面档案](design/reference-pages/INDEX.md)。素材为参考重建，未声称原图无损提取。
+`assets/ui/page-reference-v1/`：透明遗物图标与胜利徽记，以 `EmberThemeDefinition.art` 语义角色消费（`relicHeart` / `relicLens` / `relicCrown` 经 `src/art.js`，`victorySigil` 经 `--victory-sigil`）；卡牌插画映射不变。生成来源、Alpha 实测与散列见该目录 `provenance.json`；页面状态与对照见 [参考页面档案](design/reference-pages/INDEX.md)。素材为参考重建，未声称原图无损提取。
+
+> 2026-09-14 旧主题移除：本包原有的八张页面背景板（换牌、奖励、结算、设置、手册、详情、发现、确认）与失败背景只被旧星海银蓝材质规则消费，已连同其 PNG 生成副本删除。
+
+## 2026-09-14 旧主题位图清理
+
+磨砂青岩（slate）成为唯一表现层后，只有旧主题读取的界面位图全部退役：
+
+| 位置 | 处理 |
+|---|---|
+| `assets/ui/detail-polish-v1/` | 整目录删除（卡框、药丸按钮皮、选择面板、已退役的 turn-ring；主题角色 `polishCardFrame` / `polishButtonCapsule` / `polishButtonNight` / `polishSelectionPanel` 一并删除） |
+| `assets/ui/home-reference-v1/` | 只保留 `final/{logo,card-portal,card-tree,card-dragon}.webp` 与裁剪后的 `manifest.json` / `provenance.json` / `prompts/`；位图按钮皮、compass、全部 PNG 中间件与 `sources/`、`reference-crops/`、`process_assets.py`、`validation.json` 删除 |
+| `assets/ui/page-reference-v1/` | 只保留 `relic-*.webp` 与 `victory-sigil.webp`，其余删除 |
+
+这些文件不进入构建注册表（`tools/ui_assets.py` 只处理 `assets/ui/manifest.json` 的五项器物素材），删除不改变 `python3 build.py` 的产物路径。
 
 ## 2026-09-13 · 地图对应的俯视战场
 
