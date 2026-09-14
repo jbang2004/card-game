@@ -10,10 +10,10 @@
 
 ## 参考与素材
 
-- [原图](../../../assets/ui/home-reference-v1/sources/reference.png)：1672×941。
-- [裁切和素材清单](../../../assets/ui/home-reference-v1/manifest.json)、[来源记录](../../../assets/ui/home-reference-v1/provenance.json)、[原始加工脚本](../../../assets/ui/home-reference-v1/process_assets.py)。这是素材生产档案，不代表其中每项仍在运行。
-- 当前背景为 `assets/themes/silverblue/home.webp`。位图皮肤为 `final/` 中 Logo、两枚按钮、三张收藏图；指南针位图仅留档。
-- 双剑使用 SVG 实色银刃，冰晶徽记按 [62×68 原始裁切](../../../assets/ui/home-reference-v1/reference-crops/compass.png) 重描，使用断环、四向长芒和短斜角。`compass-small` 省略内弧。
+- 原图（该素材记录已随 2026-09-14 旧主题移除删除）：1672×941。
+- [裁切和素材清单](../../../assets/ui/home-reference-v1/manifest.json)、[来源记录](../../../assets/ui/home-reference-v1/provenance.json)。两者已在 2026-09-14 随旧主题移除裁剪为仍在运行的四项；原始加工脚本与生产归档已删除。
+- 当前背景为 `assets/themes/silverblue/home.webp`。仍在使用的位图只有 `final/` 中的 Logo 与三张收藏图；两枚位图按钮皮与指南针位图已删除，主/次操作改为纯 CSS 药丸。
+- 双剑使用 SVG 实色银刃，冰晶徽记按 62×68 原始裁切（该素材记录已随 2026-09-14 旧主题移除删除） 重描，使用断环、四向长芒和短斜角。`compass-small` 省略内弧。
 - 文案、按钮标签和收藏装饰标题使用 DOM。收藏插画是入口装饰，未注册成新的战斗卡牌。
 
 桌面仍是 1600×940 的游戏平面，目标视口按既有规则缩放，因此与原图存在比例/裁切差异；手机独立布局。主按钮桌面皮肤高 116（含光晕），副按钮 66；不把这些数字直接复用于其他页面。收藏区为箭头预留独立空间，按变换后的卡片边界实测间隔。

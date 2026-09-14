@@ -1,8 +1,24 @@
 # 磨砂青岩设计系统 / slate
 
-2026-09-13。本页是全站重构为「磨砂青岩」风格的唯一设计依据：令牌、材质、组件语言、布局模板、各页面简报与子代理工作规则。参考来源为用户提供的卡牌游戏「阵容」页截图（深蓝灰磨砂底、细斜纹、发丝分隔线、节点导航轨、中列清单、右侧预览、药丸按钮、粗黑体标题）。已实装样例：英雄选择、旅途设置、万象秘典（`?skin=slate`），见 [SLATE_SKIN_TEST.md](SLATE_SKIN_TEST.md)。
+2026-09-13 立项，2026-09-14 成为**唯一**表现层。本页是全站「磨砂青岩」风格的唯一设计依据：令牌、材质、组件语言、布局模板、各页面简报与子代理工作规则。参考来源为用户提供的卡牌游戏「阵容」页截图（深蓝灰磨砂底、细斜纹、发丝分隔线、节点导航轨、中列清单、右侧预览、药丸按钮、粗黑体标题）。
 
-用户决策（2026-09-13）：完成后设为默认皮肤并保留 `?skin=silverblue` 切回；主页 / 地图 / 战场保留场景原画，只重做 UI 层；手机布局纳入第二阶段。
+用户决策（2026-09-13）：完成后设为默认皮肤；主页 / 地图 / 战场保留场景原画，只重做 UI 层；手机布局纳入第二阶段。2026-09-14 旧的星海银蓝主题连同 `?skin=` 开关一并删除：`src/presentation/theme.js` 无条件写入 `html[data-skin="slate"]`，该属性是皮肤选择器的命名空间，不再是切换点。
+
+## 0. 参考元素到本项目的映射
+
+| 参考元素 | 本项目实现 |
+| --- | --- |
+| 深蓝灰磨砂底 + 左上柔光 + 细斜纹 | `--slate-material`：三层径向渐变 + `repeating-linear-gradient(45deg)` 7px 斜纹 + 160° 线性渐变，纯 CSS，无位图 |
+| 左上「‹ 阵容」 | 关闭按钮改为 44px 返回箭头（CSS 描边），标题 32px 粗黑体 |
+| 左侧节点导航轨（发光圆点 + 空心小点 + 竖线） | 设置页 `.settings-nav` 与手册 `.help-toc` 的真实分页按钮成为节点，选中项显示图标与蓝色发光 |
+| 中列条目（标题行 / 分隔线 / 缩略图 / 药丸按钮） | 英雄页 `.hero-option` 为 grid：名称 + 英文副标题一行、发丝线、72×96 圆角缩略图、技能说明、「选择英雄 / 已选择」药丸 |
+| 右侧「预览 \| 蓝色副标」+ 大卡 + 说明 | 英雄页 `.scene-showcase` 为 300×430 圆角预览卡，`.hero-profile-heading` 为「英雄预览 \| 英雄名」；技能、出发准备、套牌、模式、构成、契约按发丝线分节 |
+| 「新手 \| 进阶」文字分页 | 图鉴页类型筛选（全部 / 随从 / 法术 / 武器），竖线分隔 + 白色下划亮条 |
+| 圆形小徽章 | 图鉴页费用筛选 36px 圆形芯片，选中为蓝色 |
+| 深色药丸按钮 / 主按钮 | `.ghost-btn` 深色药丸、`.gold-btn` 蓝色药丸，取代原有位图按钮皮肤 |
+| 开关 | 设置页 `.toggle` 为 104×40 滑动开关 |
+
+所有文字、数值、选择状态与按钮动作仍是原有 DOM 与动作接口，未新增假按钮；「全部英雄 / 英雄预览 / 牌组预览 / 牌组思路」等为纯装饰标签。字体使用系统黑体栈（PingFang SC 等），不提交字体文件；Windows 上回退到微软雅黑，字重观感会有差异。
 
 ## 1. 设计原则
 
@@ -74,13 +90,13 @@
 每份简报：入口 / DOM 归属 / 模板 / 布局 / 保留与替换 / 验收尺寸。子代理先读该页档案（`docs/design/reference-pages/*.md`）确认真实入口与既往批注，再读源码核对类名。
 
 ### 5.1 主页 home（T5）— `src/template.html` `#lobby` 区、`src/presentation/home.js`、`src/presentation/components.css` 中 `.lobby-*` `.home-*` 规则
-- 顶栏：品牌改为文字字标（「烬域」20px/700 + `EMBERFALL` 10px 字距 3px），三个导航改为文字分页（下划亮条替代现有移动光带 `.selection-light`，光带节点隐藏），右侧图标按钮改为 36px 圆形药丸。
+- 顶栏：品牌改为文字字标（「烬域」20px/700 + `EMBERFALL` 10px 字距 3px），三个导航改为文字分页（`.nav-link.active::after` 下划亮条；旧的移动光带已删除），右侧图标按钮改为 36px 圆形药丸。
 - 标题区：保留 `homeLogo` 位图 Logo；「灰烬酒馆」28px/700，标语 18px ink-2，存档状态 15px ink-3。
-- 主按钮：隐藏 `.home-action-skin` 位图；`#start-btn` 为主药丸 320×64（左图标槽 + 文字 22px + 右箭头），`#quick-btn` 为次药丸 300×56。两者共用同一列与对齐轴（沿用主页档案批注结论）。
+- 主按钮：位图皮 `.home-action-skin` 已删除；`#start-btn` 为主药丸 320×64（左图标槽 + 文字 22px + 右箭头），`#quick-btn` 为次药丸 300×56。两者共用同一列与对齐轴（沿用主页档案批注结论）。
 - 收藏区：「我的收藏」改为节标题 + 发丝线；三张卡保留高低错位与倾角，容器改圆角 10 + 1.5px 描边 + 投影，标题字改黑体；箭头改 44px 圆形药丸。间距沿用 ≥12px 实测要求。
 - 页脚：黑体，顶部发丝线；寄语文字改黑体 ink-2。
 - 场景：保留 Canvas 场景与昼夜切换；左侧文字可读性靠既有 `--home-veil`，可微调为更中性的深蓝灰。
-- 验收：1672×941、1280×720、1440×900；`tests/e2e/home-reference.spec.cjs` 在 `?skin=slate` 下的几何断言（间距、箭头居中）仍应成立，若断言依赖旧材质请在报告中列出。
+- 验收：1672×941、1280×720、1440×900；`tests/e2e/home-reference.spec.cjs` 的几何断言（间距、箭头居中）仍应成立，若断言依赖旧材质请在报告中列出。
 
 ### 5.2 冒险地图 map（T5 + T1 预览列）— `src/presentation/adventure-map.js`（`.adventure-atlas`），`dialogSize` = `route`（页面壳）
 - 保留地图原画与路径线。标题行改为返回箭头 + 「冒险地图」；「远征图志 · 06 境」为 ink-3 小字；左下品牌字标改文字。
@@ -132,19 +148,19 @@
 2. 不修改 `base.css`、`config/build.json`、`src/template.html` 的 `@layer` 区、其他页面文件。需要共享改动时写入最终报告的「需要协调者合并的共享改动」。
 3. 皮肤规则一律以 `html[data-skin="slate"] body:not(.touch-layout)` 开头（手机任务用 `body.touch-layout`）；不用 `!important`；不新增位图；不改变规则层、存档格式与卡牌映射。
 4. 每次修改后 `python3 build.py`；用分配的端口 `python3 -m http.server <port> --bind 127.0.0.1` 在后台服务；Playwright 从 `/Users/yijun/codebase/card-game/node_modules/playwright` 以绝对路径 require，Chrome 为 `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`；页面就绪条件 `window.Emberfall && !AtelierWorld.loading`（120 s 超时），截图前解码 `#modal img`。
-5. 验收：按简报尺寸截图，覆盖 hover/选中/禁用与真实交互；同时截一张不带 `?skin` 的同页确认原主题不变（MD5 或像素差在卡图区以外为零）。`node --test tests/*.test.cjs` 必须通过；简报点名的 e2e 规格在 `?skin=slate` 下运行一次（可通过在 spec 里临时加查询参数的本地副本，不提交该副本），记录通过/失败与原因。
+5. 验收：按简报尺寸截图，覆盖 hover/选中/禁用与真实交互；与改动前的同页截图逐像素比对（Canvas 场景、随机手牌与卡图解码之外应为零差）。`node --test tests/*.test.cjs` 必须通过；简报点名的 e2e 规格运行一次，记录通过/失败与原因。
 6. 完成后在 worktree 分支提交（信息前缀 `feat(slate): …`，结尾 `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`），不推送。最终报告固定包含：worktree 路径与分支、提交哈希、改动文件、截图目录、测试结果、与简报的偏差及原因、需要协调者合并的共享改动、已知差异。
 7. **皮肤层无条件胜出，隐藏要重说一遍。** `skin` 排在 `components` 之后，层级先于选择器权重结算：组件层里任何「必须保持隐藏」的 `display: none`，只要皮肤规则命中同一元素、或被某条裸后代选择器扫到，就会被皮肤的 `display` 覆盖而复活。命中这类元素时在皮肤规则里重新声明 `display: none`。
-8. **`.crafted-panel` 下不要用裸 `span` / `svg` 后代选择器。** `panels.js` 会往 `.crafted-panel` 注入 `.panel-corner-trim`（内含 `span` / `svg`），裸选择器会连它一起命中，把四角装饰重新画出来。一律带类名限定（如 `.help-section > svg`、`.atlas-number svg`）。
+8. **不要用裸 `span` / `svg` 后代选择器。** 裸选择器会连同任何脚本注入的辅助节点一起命中，并且因为皮肤层排在最后，会盖掉组件层对那些节点的 `display: none`。真实事故：`heroes.css` 的 `.hero-mode-cards span { display: block }` 复活了 base.css 已经隐藏的 `.selection-light` 光带（2026-09-14 随光带一起删除）。一律带类名限定（如 `.help-section > svg`、`.atlas-number svg`）。
 9. **药丸按钮上的 `::before` 必须自带 `display`。** base.css 对 `:is(.gold-btn, .ghost-btn, .text-btn, .library-inspect)::before / ::after` 统一写了 `content: none; display: none`，页面规则若要在 `.ghost-btn` / `.gold-btn` 上另建 `::before`（导航节点、指示点等），除 `content` 外还要声明 `display`；`components.css` 同时给这两个伪元素留了 `opacity: .14`，需要一并重置为 `1`，否则节点会发暗（手册导航轨曾因此只剩微光）。
 10. **战斗中弹窗的桌面验收尺寸下限是 1360×700。** `src/mobile-view.js` 会把宽 < 1360 或高 < 700 的战场视图切到 `body.touch-layout`，桌面皮肤规则随即失效。因此涉及对局内弹窗的桌面验收只取 1360×700 及以上，窄桌面统一用 1440×900。
-11. **`.reference-page-brand` 由 base.css 隐藏。** T5 场景页若需要文字字标，在自己的页面文件里重新打开并定位（参考 map.css 左下角字标）。
+11. **场景页的文字字标由页面自己拥有。** 旧主题给十三种弹窗统一注入 `.reference-page-brand` 再由 base.css 隐藏；现在只有地图页需要字标，由 `adventure-map.js` 注入 `.atlas-wordmark`，`map.css` 负责桌面定位并在触控下隐藏。新页面需要字标时照此在自己的文件里实现，不要恢复统一注入。
 12. **把材质规则从 `body:not(.touch-layout)` 提升到 `body` 会掉一级权重。** 合并桌面与触控的重复声明时，去掉布局守卫等于少了一个类，选择器权重随之下降一级；皮肤层内部按 BASE → HOME → … → MOBILE 排序，于是**排在后面的皮肤文件会因此反超**原本输不掉的规则。典型例子：`dialogs.css` 的页脚规则本来打不过地图页脚，把地图那条提升到 `body` 之后就被 `dialogs.css` 盖住了。提升前先确认没有更靠后的文件命中同一元素；确实需要保留归属时，用对话框根（`.folio-dialog`，或 `[data-dialog-size="…"]`、`[data-type="…"]`）把选择器限定回去，把丢掉的那一级补上。base.css 里那些「刻意打平」的权重结对（`.crafted-panel` 中和 vs 页面壳）也按同一条规则理解：同文件内整体降级不影响相对关系，跨文件才会出问题。
 
 ## 7. 协调者验收清单
 
-- 合并后重新构建，全页面 `?skin=slate` 截图走查：材质一致、字体一致、按钮语言一致、无残留四角 / 玻璃 / 位图按钮。
+- 合并后重新构建，全页面截图走查：材质一致、字体一致、按钮语言一致、无残留四角 / 玻璃 / 位图按钮。
 - 交互抽查：主页三个导航、开始冒险全流程（英雄 → 换牌 → 战斗 → 记录/情报 → 结束回合 → 结算 → 奖励 → 地图）、图鉴筛选与保存、设置分页与开关、手册章节、契约唤醒。
-- 默认切换：`theme.js` 默认 `data-skin="slate"`，`?skin=silverblue` 关闭；更新 `AGENTS.md` 当前视觉说明与 `REFERENCE_UI_STANDARD.md` 的材质表。
+- 唯一表现层（2026-09-14 完成）：`theme.js` 无条件写入 `data-skin="slate"`，`?skin=` 开关、旧主题的位图按钮皮、页面背景板、四角装饰与光带全部删除；`AGENTS.md` 与 `REFERENCE_UI_STANDARD.md` 已同步。
 - 回归：`npm run test:release`；对依赖旧材质的断言逐条决定更新或保留。
 - 手机第二阶段后再做一次全量走查。

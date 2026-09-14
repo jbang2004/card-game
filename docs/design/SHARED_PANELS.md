@@ -1,14 +1,14 @@
 # 共享面板
 
-2026-09-13：非全屏面板统一使用银蓝深色玻璃底、细边线与四角 SVG。全屏原画页面保留构图，只将内部数据面板接入组件。不为每个数据行再套一层装饰框。
+2026-09-13 建立统一的面板归属；2026-09-14 随旧主题移除更新：面板材质由磨砂青岩（slate）的两套外壳提供（页面壳 / 浮层壳，见 [SLATE_DESIGN_SYSTEM.md](SLATE_DESIGN_SYSTEM.md) §1），**没有四角 SVG、玻璃底或位图皮肤**。全屏原画页面保留构图，只将内部数据面板接入组件。不为每个数据行再套一层装饰框。
 
 ## 单一归属
 
-- `src/presentation/panels.js` 的 `EmberPanels` 只负责装饰节点及面板标题/操作区标识；`decorate` 可重复执行，不重复插入四角。
-- `EmberDialogs.mount` 自动将普通弹窗接入组件。英雄、图鉴、地图、契约是全屏页面，内部显式声明 `.crafted-panel`。
-- `src/presentation/components.css` 统一材质、边线、内边距及内容间距。`--panel-inset: clamp(20px, 2.4vmin, 32px)` 四边一致；`--panel-gap: clamp(12px, 1.6vmin, 20px)` 作为内容节奏。
+- `src/presentation/panels.js` 的 `EmberPanels.mount` 只做标识：给浮层弹窗根加 `.crafted-panel`，给其标题行加 `.panel-heading`、操作区加 `.panel-actions`。它不再注入任何装饰节点（旧的四角 SVG `decorate()` 已删除）。
+- 英雄、图鉴、地图、契约是全屏页面，由 `EmberDialogs.mount` 按 `[data-dialog-size]` 套页面壳，`EmberPanels.mount` 对它们不做任何事；这些页面内部显式声明 `.crafted-panel` 的数据面板照常接入。
+- `src/presentation/components.css` 统一内边距及内容间距：`--panel-inset: clamp(20px, 2.4vmin, 32px)` 四边一致；`--panel-gap: clamp(12px, 1.6vmin, 20px)` 作为内容节奏。材质本身由 `skins/slate/base.css` 决定，它把 `.crafted-panel` 的旧玻璃底中和掉再套自己的外壳。
 - `.panel-heading` 为关闭按钮预留独立空间；`.panel-actions` 统一分隔线、居中操作组和按钮间距。表单内部用行分隔，不重复套框。
-- `dialog-layout.css` 与既有页面布局只负责宽高、列数和滚动。小屏不更换背景、圆角、SVG 或状态皮肤。
+- `dialog-layout.css` 与既有页面布局只负责宽高、列数和滚动。小屏不更换背景、圆角或状态皮肤。
 
 ## 覆盖范围
 
@@ -19,18 +19,20 @@
 | 独立内容块 | 遗物选择、画廊场景、手册流程/卡牌说明/关键词 |
 | 战场弹层 | 战斗记录与首领情报 |
 
-游戏卡牌继续采用悬浮铭牌；法力等 HUD、按钮、标签、表单行不属于通用面板，不强行添加四角。神的召唤按钮始终保留已确认的圆角胶囊样式。
+游戏卡牌继续采用悬浮铭牌；法力等 HUD、按钮、标签、表单行不属于通用面板。神的召唤按钮始终保留已确认的圆角胶囊样式。
 
 ## 清理范围
 
 移除了首页脚本按页面类名维护的十类装饰白名单、未使用的 `framed-dialog` 标记、普通弹窗伪元素旧外框，以及对应组件分散的底色、圆角、阴影、内边距与间距覆盖。菜单不再引用旧木色按钮。设置行不再使用多层嵌套圆角框；音量控件使用同一套滑轨和滑块。
 
+2026-09-14 进一步删除了四类只被皮肤隐藏的注入装饰：`panels.js` 的四角 SVG `.panel-corner-trim`、`showModal` 的 `.reference-page-brand` 字标、主页导航的 `.nav-light` 移动光带、各选择组的 `.selection-light` 光带。地图页左下角的文字字标改由 `adventure-map.js` 注入 `.atlas-wordmark`，归页面自己所有。
+
 起手换牌只有一个网格布局源，状态标签参与卡片自身高度计算；窄竖屏两列，短横屏一行。牌组工具展开后沿用外层纵向滚动，移除了短横屏内外双重滚动和固定最小高度。
 
-契约页使用内容驱动的底部面板，不再用固定高度和多层 `min-height: 100%` 撑高；单神、多契约共用同一条布局路径。短横屏与极窄屏保留高度上限和纵向滚动，常见竖屏可完整显示底部四角与胶囊按钮。
+契约页使用内容驱动的底部面板，不再用固定高度和多层 `min-height: 100%` 撑高；单神、多契约共用同一条布局路径。短横屏与极窄屏保留高度上限和纵向滚动。
 
 ## 验证
 
-`tests/e2e/responsive-component-style.spec.cjs` 在真实流程中比较桌面/竖屏/横屏材质；检查每个已挂载面板四角完整、四边内边距相同，并检查换牌标签不与卡片交叠。配合现有页面尺寸、触控、文字留白、卡组旋转和设置交互检查。
+`tests/e2e/responsive-component-style.spec.cjs` 在真实流程中比较桌面/竖屏/横屏材质，按外壳角色（页面壳 / 浮层壳 / 内容面）分别审计圆角与材质，并检查换牌标签不与卡片交叠。配合现有页面尺寸、触控、文字留白、卡组旋转和设置交互检查。
 
-本次截图及最终执行结果见 [验证记录](../../output/panel-unification-20260913/VALIDATION.md)。浏览器手机模拟不等于实体手机验收；未发布公开站点。
+最近一次全量回归与 38 张走查图集见 [发布记录](../../output/slate-release-20260914/README.md)。浏览器手机模拟不等于实体手机验收；未发布公开站点。

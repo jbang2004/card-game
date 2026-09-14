@@ -2,7 +2,7 @@
 
 ## 先阅读
 
-`README.md` → `docs/CODEX_HANDOFF.md` → `docs/ASSETS.md`。本项目是 v0.14.0 的既有可玩游戏，不需要从零另建框架。
+`README.md` → `docs/ASSETS.md` → `docs/design/SLATE_DESIGN_SYSTEM.md`。本项目是 v0.14.0 的既有可玩游戏，不需要从零另建框架。
 
 ## 参考页面复刻
 
@@ -24,7 +24,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 - 修改 `src/` 与素材源，然后构建；不要只改生成的 `index.html`。
 - `config/build.json` / `src/template.html` 决定模块顺序。只有当前注册表中的实现进入运行；不能因历史文档提及就恢复已经退役的 Three.js、程序化插画或旧素材缓存。仍有引用的 `tavern-ui.js` / `atelier*` 承担当前 UI 和 Canvas 职责。
 - 79 个卡牌 ID 必须各有新动漫插画；保持严格映射，不让缺图静默回退到旧程序化角色图。
-- 当前默认视觉为磨砂青岩（slate）皮肤，见 `docs/design/SLATE_DESIGN_SYSTEM.md`；银蓝主题仍可用 `?skin=silverblue` 查看，属于对照/历史版本；新样式放在 `src/presentation/skins/slate/`（base = 令牌与外壳，页面文件 = 各页几何），不再往 components.css 添加新配色。卡名、费用、攻血和规则文字保持实时 DOM，不烘焙进画面。
+- 磨砂青岩（slate）是**唯一**表现层，没有皮肤开关：`src/presentation/theme.js` 无条件写入 `html[data-skin="slate"]`，该属性是皮肤 CSS 的命名空间而不是切换点，必须保留。皮肤本体在 `src/presentation/skins/slate/`（`base.css` = 令牌与两套外壳，其余每页一文件 = 各页几何），规范见 `docs/design/SLATE_DESIGN_SYSTEM.md`；语义原画角色在 `src/presentation/themes/silverblue.js`（文件名沿用历史，内容是当前唯一的主题定义）。新配色/材质一律放皮肤层，不再往 components.css 添加。卡名、费用、攻血和规则文字保持实时 DOM，不烘焙进画面。
 - 手机端是专用横/竖屏布局，不退回到把 1600×940 桌面等比缩小；保留滑动、点牌确认、长按、旋转后的同局状态。
 - `engine.js` 与 `rules/` 是纯规则层，AI 独立在 `rules/ai.js`；不要让画面粒子、昼夜切换、建筑互动改变对局状态。
 - 用户于 2026-09-08 确认游戏仍在测试期、没有旧对局需要保留：只支持当前 version 3 对局和命名卡组，不恢复 v1、旧 ruleset、混合职业放行或旧数组迁移。存储键名仍沿用，但不承诺旧格式兼容。
@@ -34,7 +34,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 常规改动先构建并运行规则/素材单元测试；交互变更再跑相关 Playwright 脚本并检查截图。浏览器可通过 `CHROMIUM_PATH` 指定，未指定时寻找系统 Chromium，否则使用 Playwright 默认浏览器。
 
-`VALIDATION.md` 与现有测试结果属于输入 v0.7.0 的历史验收记录；本次交接打包的复验见 `HANDOFF_CHECKS.json`。没有实体手机、真实 GPU 3D 或真实跨刷新存储测试时，不把模拟/内存适配器结果称为相应验收。桌面与手机只有 Canvas 路径，旧 Three.js 预览已经删除。现有公开站点为 https://emberfall-gilded-tavern.jbang2004.chatgpt.site ，Sites 项目绑定见 `.openai/hosting.json`；仅用户明确要求发布时更新。
+最近一次完整回归（构建、规则/素材单元测试、Playwright 全量、38 张走查图集）见 `output/slate-release-20260914/README.md`。没有实体手机、真实 GPU 3D 或真实跨刷新存储测试时，不把模拟/内存适配器结果称为相应验收。桌面与手机只有 Canvas 路径，旧 Three.js 预览已经删除。现有公开站点为 https://emberfall-gilded-tavern.jbang2004.chatgpt.site ，Sites 项目绑定见 `.openai/hosting.json`；仅用户明确要求发布时更新。
 
 ## v0.11 内容与验证
 
