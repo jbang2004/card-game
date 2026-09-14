@@ -1,8 +1,8 @@
 /* Skin "slate" (磨砂青岩) — shared base. ALL layouts.
- * This is the DEFAULT presentation layer since 2026-09-14: presentation/theme.js
- * writes `html[data-skin="slate"]` unless the URL carries `?skin=silverblue`
- * (or `?skin=off`), which leaves `data-skin` unset and renders the earlier
- * 星海银蓝 theme. The whole skin lives in the `skin` cascade layer, which sits
+ * This is the ONLY presentation layer since 2026-09-14: presentation/theme.js
+ * writes `html[data-skin="slate"]` unconditionally, with no URL switch. The
+ * attribute is this skin's selector namespace, not a toggle — removing it would
+ * unstyle the whole app. The skin lives in the `skin` cascade layer, which sits
  * after `components`, so it never has to out-specify existing rules.
  *
  * ---------------------------------------------------------------------------

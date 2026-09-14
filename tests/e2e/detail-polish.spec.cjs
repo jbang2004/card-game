@@ -47,22 +47,32 @@ for (const width of [1672, 1280, 390])
     await expect(page.locator("#library-grid .card").first()).toHaveClass(
       /spell/,
     );
-    await group.locator('[data-type="minion"]').hover();
-    await expect(group).toHaveAttribute("data-light-target", "minion");
+    // The old theme moved one shared band onto whatever the pointer was over,
+    // which meant the indicator lied about which filter was applied. Slate
+    // marks hover on the label itself and leaves the underline on the tab that
+    // is actually active, so hovering must change neither selection nor grid.
+    const minion = group.locator('[data-type="minion"]');
+    await minion.hover();
+    await expect(minion).toHaveCSS("color", "rgb(255, 255, 255)");
+    await expect(minion).not.toHaveClass(/active/);
+    await expect(spell).toHaveClass(/active/);
+    await expect(page.locator("#library-grid .card").first()).toHaveClass(
+      /spell/,
+    );
     await page.mouse.move(2, 2);
-    await expect(group).toHaveAttribute("data-light-target", "spell");
+    await expect(spell).toHaveClass(/active/);
     const mana = page.locator(".filter-mana-group");
     await mana.locator('[data-mana="2"]').focus();
-    await expect(mana).toHaveAttribute("data-light-target", "2");
+    await expect(mana.locator('[data-mana="2"]')).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(mana.locator('[data-mana="2"]')).toHaveClass(/active/);
     await page.keyboard.press("Escape");
     await page.locator("#settings-btn").click();
     await page.locator('[data-section="operation"]').click();
-    await expect(page.locator(".settings-nav")).toHaveAttribute(
-      "data-light-target",
-      "operation",
-    );
+    await expect(
+      page.locator('.settings-nav [data-section="operation"]'),
+    ).toHaveClass(/active/);
+    await expect(page.locator(".settings-nav .active")).toHaveCount(1);
     await expect(page.locator("#settings-done > svg")).toHaveCount(1);
     expect(
       await page.evaluate(
@@ -94,8 +104,10 @@ test("guide panels are rounded matte cards with no corner ornament over the head
       borderWidth: parseFloat(style.borderTopWidth),
       // the heading sits inside the card's padding, nothing on top of it
       headingInside:
-        title.left >= box.left && title.right <= box.right &&
-        title.top >= box.top && title.bottom <= box.bottom,
+        title.left >= box.left &&
+        title.right <= box.right &&
+        title.top >= box.top &&
+        title.bottom <= box.bottom,
       headingTopmost: (() => {
         const x = title.left + Math.min(8, title.width / 2);
         const hit = document.elementFromPoint(x, title.top + title.height / 2);
