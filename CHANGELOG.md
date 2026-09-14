@@ -4,7 +4,7 @@
 
 # v0.9 — 2026-09-07
 
-连续酒馆桌面替代切片场景；古金、胡桃木与蓝宝石 UI；英雄生命、费用及紧凑随从两位数边界修复。新增真实字形容纳测试，保留规则和存档。详见 `docs/QA_V09.md`。
+连续酒馆桌面替代切片场景；古金、胡桃木与蓝宝石 UI；英雄生命、费用及紧凑随从两位数边界修复。新增真实字形容纳测试，保留规则和存档。
 
 # v0.8.0 — 本地工程整理与战场可读性
 
@@ -13,7 +13,6 @@
 - 完整手牌槽位、右侧操作区、桌面通知安全区；修复手机横屏法力及通知遮挡。
 - 默认统一手绘场景，继承 3D 路径改为显式开发预览。
 - 增加真实来源存档、11 种满场布局与遮挡检测的端到端回归。
-- 完整变化与验证见 `docs/QA_V08.md`。
 
 ---
 
@@ -24,7 +23,7 @@
 - 桌面与手机共用分层场景和缓存，保持已有命中与特效坐标。
 - 新增晴昼 / 暮色视觉切换及手机设置入口；不修改对局或卡牌数据。
 - 保留全部 56 张动漫卡图、规则和 AI 字节，新增环境 / 材质图版 9 个。
-- 35 项规则、10 项卡图单元、67 项浏览器检查通过；实际为 Canvas / 触控模拟，边界见 VALIDATION.md。
+- 35 项规则、10 项卡图单元、67 项浏览器检查通过；实际为 Canvas / 触控模拟。
 - 发布单文件 HTML、静态发布包和可重建源码；未执行公网部署。
 
 ---
@@ -50,7 +49,7 @@
 - Unified hit-test/effect coordinates and curve-tangent aim; resize drains one pending presentation commit without changing game rules.
 - Mobile uses offline Canvas without requesting Three.js; desktop direct-click and mouse drag preserved.
 - Fixed generic data-type selector collision with modal type, interrupted long-press close tap, hidden cinematic overlay, inherited desktop root dimensions and cross-layout weapon coordinates.
-- Rules/data and v1 save keys unchanged. See VALIDATION.md for executed tests and unverified physical-device/storage boundaries.
+- Rules/data and v1 save keys unchanged. Executed tests and unverified physical-device/storage boundaries were tracked in a since-removed historical validation record.
 
 ---
 

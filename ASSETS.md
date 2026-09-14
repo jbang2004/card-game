@@ -1,4 +1,6 @@
-# 素材目录与加工关系
+> 本文件是根目录下的历史快照，早于当前维护版本，其中提到的 `assets/windborne/`、`assets/atelier/`、`assets/references/`、`tools/build_world_assets.py`、`src/world-assets.js` 等已作为退役管线于本轮清理中删除。当前实际素材来源与加工关系以 [docs/ASSETS.md](docs/ASSETS.md) 为准，不要依据本文件恢复已退役的实现。
+
+# 素材目录与加工关系（历史快照）
 
 ## 当前版本的真实来源
 

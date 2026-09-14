@@ -4,7 +4,6 @@
 
 ## 当前实现入口
 
-- [实装时间线](../HOME_REFERENCE_IMPLEMENTATION.md)：按时间追加，早期位图指南针/七项角色描述已被后续 SVG 版本取代。
 - [模板](../../../src/template.html)、[组件样式](../../../src/presentation/components.css)、[图标](../../../src/art.js)、[导航光带](../../../src/presentation/home.js)。
 - [主题角色](../../../src/presentation/themes/silverblue.js)、[应用协调](../../../src/ui.js)、[场景设置](../../../src/application/scenery.js)、[专项测试](../../../tests/e2e/home-reference.spec.cjs)。
 

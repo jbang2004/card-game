@@ -88,7 +88,7 @@ npm run test:release
 
 保留原 56 张已确认卡图，新增六张独立法术插画；存储仍使用原四个键，但键名不代表支持旧存档格式。现有 CSS 层级仍为 `legacy → layout → theme → components`，其中基础布局规则仍被当前 UI 使用，不因历史命名删除有效样式。
 
-详细说明见 [架构](docs/ARCHITECTURE.md)、[卡牌修改指南](docs/CARD_AUTHORING.md) 和 [v0.11 验证记录](docs/QA_V11.md)。`CODEX_HANDOFF.md`、旧 QA、`HANDOFF_*` 是历史输入记录，不再作为当前源码必须保持不变的要求。
+详细说明见 [架构](docs/ARCHITECTURE.md)、[卡牌修改指南](docs/CARD_AUTHORING.md) 和 [v0.11 验证记录](docs/QA_V11.md)。历史交接记录与旧 QA 文档已按既有约定清理，不再作为当前源码必须保持不变的要求。
 
 公开试玩：https://emberfall-gilded-tavern.jbang2004.chatgpt.site 。没有账号、云存档或 PVP。浏览器回归属于 Chromium 桌面和触控模拟，不代表实体手机或其他浏览器验收。
 

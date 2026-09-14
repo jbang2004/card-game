@@ -144,8 +144,8 @@
 | 顶栏品牌位 / 大厅主标题 | 烬域 / EMBERFALL |
 | meta description | 烬域 Emberfall — …原创酒馆奇幻卡牌冒险 |
 | README v0.14 | 烬域 · 鎏金酒馆 |
-| 旧文档 docs/ANIME_V06.md | 烬域 · 动漫秘境 |
-| DISTRIBUTION.json | WIND BORNE / 风起之境 |
+| 旧文档 docs/ANIME_V06.md（已按历史文档清理删除） | 烬域 · 动漫秘境 |
+| DISTRIBUTION.json（已按历史文件清理删除） | WIND BORNE / 风起之境 |
 | package.json | emberfall-card-game |
 
 具体病灶四条：
@@ -267,7 +267,7 @@
 显示名改动很便宜，实测成本如下：
 
 1. `src/template.html`：`<title>`、`meta description`、顶栏品牌位（`<strong>烬域</strong><small>EMBERFALL</small>`）、大厅 `.lobby-title`。
-2. `README.md` 标题、`DISTRIBUTION.json` 的 `edition`、`package.json` 的 `description`（`name` 可留 `emberfall-card-game`，属内部标识）。
+2. `README.md` 标题、`package.json` 的 `description`（`name` 可留 `emberfall-card-game`，属内部标识）。`DISTRIBUTION.json` 已作为历史交接文件清理删除，不再需要同步。
 3. 重新构建：`python3 build.py`，然后 `node --test tests/*.test.cjs`。
 4. 已确认：**没有测试断言依赖显示名**（测试只引用内部全局 `window.Emberfall`），改名不会引发回归。
 5. 已确认：**没有把游戏名烘焙进图片素材**（顶栏是 `data-icon="fire"` 图标 + 实时 DOM 文字），因此不需要重做美术。

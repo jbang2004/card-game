@@ -9,7 +9,7 @@ description: 为烬域 Emberfall / card-game 项目制作或修复角色静态�
 
 ## 找到当前契约
 
-以用户提供的仓库为目标。先读仓库 `AGENTS.md`、`README.md`、`docs/CODEX_HANDOFF.md`、`docs/ASSETS.md`，再读 **`docs/CHARACTER_AUTHORING.md`**，它是字段、命令、模板和绑定的维护入口。若当前仓库不是此项目，不把示例路径当成授权去改另一产品。
+以用户提供的仓库为目标。先读仓库 `AGENTS.md`、`README.md`、`docs/ASSETS.md`，再读 **`docs/CHARACTER_AUTHORING.md`**，它是字段、命令、模板和绑定的维护入口。若当前仓库不是此项目，不把示例路径当成授权去改另一产品。
 
 当前完整目录在 `assets/characters.json`；静态图片来源仍在 `assets/anime/manifest.json`。先运行：
 
