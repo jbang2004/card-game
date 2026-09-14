@@ -192,10 +192,10 @@ test("navigation highlight follows pointer, focus and touch without triggering a
   page,
 }) => {
   await ready(page);
-  // Silverblue tracked the pointer with a sliding `.nav-light` band. Slate
-  // paints the indicator as an underline on the ACTIVE link instead
-  // (`.nav-link.active::after`, design system §4) and leaves the band
-  // unpainted, so the highlight is asserted where it is now drawn: hover,
+  // The old theme tracked the pointer with a sliding `.nav-light` band, which
+  // is gone. Slate paints the indicator as an underline on the ACTIVE link
+  // (`.nav-link.active::after`, design system §4), so the highlight is
+  // asserted where it is now drawn: hover,
   // focus and touch light the label they are over, and the underline stays on
   // whichever page is actually open.
   async function highlighted(id) {

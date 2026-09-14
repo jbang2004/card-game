@@ -544,29 +544,6 @@
     }
     EmberDialogs.mount($("modal").firstElementChild, type);
     const openedBox = $("modal").firstElementChild;
-    if (
-      [
-        "heroes",
-        "map",
-        "contracts",
-        "mulligan",
-        "rewards",
-        "result",
-        "settings",
-        "help",
-        "library",
-        "discover",
-        "confirm",
-        "library-card",
-      ].includes(type)
-    ) {
-      const brand = document.createElement("div");
-      brand.className = "reference-page-brand";
-      brand.setAttribute("aria-hidden", "true");
-      brand.innerHTML = "<span>烬域</span><small>EMBERFALL</small>";
-      openedBox.append(brand);
-    }
-
     requestAnimationFrame(() => {
       if (!openedBox?.isConnected || openedBox.contains(document.activeElement))
         return;

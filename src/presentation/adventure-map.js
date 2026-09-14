@@ -70,6 +70,15 @@
       </div>
     </section>`, 'map');
     const box = document.querySelector('.adventure-atlas');
+    // The scene page carries a text word mark in its bottom-left corner
+    // (design system §5.2). It is appended after the dialog shell has taken
+    // the section apart, so it stays a direct child of the atlas and out of
+    // the scrolling pane.
+    const wordmark = document.createElement('div');
+    wordmark.className = 'atlas-wordmark';
+    wordmark.setAttribute('aria-hidden', 'true');
+    wordmark.innerHTML = '<span>烬域</span><small>EMBERFALL</small>';
+    box.append(wordmark);
     const buttons = [...box.querySelectorAll('[data-map-node]')];
     const select = i => {
       buttons.forEach((button, n) => button.setAttribute('aria-pressed', String(i === n)));

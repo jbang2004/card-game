@@ -11,11 +11,12 @@ for (const width of [1672, 1280, 390])
     const spell = group.locator('[data-type="spell"]');
     await spell.click();
     await expect(spell).toHaveClass(/active/);
-    await expect(group.locator(".selection-light")).toHaveCount(1);
-    // Slate replaces silverblue's travelling `.selection-light` band with the
-    // underline bar the text pager owns (`.filter-btn.active::after`, design
-    // system §3 「文字分页」). The geometric intent is unchanged: the indicator
-    // is a thin bar pinned to the bottom of the active tab and centred on it.
+    // Slate replaced the old theme's travelling `.selection-light` band with
+    // the underline bar the text pager owns (`.filter-btn.active::after`,
+    // design system §3 「文字分页」); the band is no longer injected at all.
+    // The geometric intent is unchanged: the indicator is a thin bar pinned to
+    // the bottom of the active tab and centred on it.
+    await expect(group.locator(".selection-light")).toHaveCount(0);
     await expect
       .poll(() =>
         group.evaluate((e) => {
@@ -78,17 +79,17 @@ test("guide panels are rounded matte cards with no corner ornament over the head
   await page.locator("#guide-nav").click();
   const panel = page.locator(".help-turn-flow");
   await expect(panel).toBeVisible();
-  // `panels.js` still injects the four-corner trim into every `.crafted-panel`,
-  // so it stays in the DOM; slate replaces the ornament with a rounded matte
-  // card (design system §5.6 「无四角」) and must keep it from rendering.
-  await expect(panel.locator(".panel-corner-trim svg")).toHaveCount(4);
+  // The four-corner trim `panels.js` used to inject into every
+  // `.crafted-panel` is gone from the DOM: slate's panel is a rounded matte
+  // card (design system §5.6 「无四角」).
+  await expect(panel.locator(".panel-corner-trim")).toHaveCount(0);
   const card = await panel.evaluate((e) => {
     const style = getComputedStyle(e);
     const heading = e.querySelector("h3");
     const box = e.getBoundingClientRect();
     const title = heading.getBoundingClientRect();
     return {
-      trim: getComputedStyle(e.querySelector(".panel-corner-trim")).display,
+      trim: e.querySelectorAll(".panel-corner-trim").length,
       radius: parseFloat(style.borderRadius),
       borderWidth: parseFloat(style.borderTopWidth),
       // the heading sits inside the card's padding, nothing on top of it
@@ -102,7 +103,7 @@ test("guide panels are rounded matte cards with no corner ornament over the head
       })(),
     };
   });
-  expect(card.trim).toBe("none");
+  expect(card.trim).toBe(0);
   expect(card.radius).toBeGreaterThanOrEqual(8);
   expect(card.borderWidth).toBeGreaterThan(0);
   expect(card.headingInside).toBe(true);

@@ -131,8 +131,8 @@ html[data-skin="slate"] body #app.lobby-view .nav-link.active {
   color: #fff;
   font-weight: 700;
 }
-/* components.css disables this underline in favour of the moving light band;
- * the slate skin brings it back and parks the band (see header note). */
+/* components.css disabled this underline in favour of the old theme's moving
+ * light band; the band is gone and the slate skin brings the underline back. */
 html[data-skin="slate"] body #app.lobby-view .top-nav .nav-link.active::after {
   content: "";
   display: block;
@@ -147,9 +147,6 @@ html[data-skin="slate"] body #app.lobby-view .nav-link:focus-visible {
   outline: 2px solid var(--slate-blue);
   outline-offset: 2px;
   border-radius: 6px;
-}
-html[data-skin="slate"] body #app.lobby-view .nav-light {
-  opacity: 0;
 }
 
 /* --- icon buttons: round pills --- */

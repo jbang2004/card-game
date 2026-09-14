@@ -48,14 +48,17 @@ html[data-skin="slate"]
   background: #0d121b;
 }
 
-/* ---------- ornament removal ---------- */
+/* ---------- ornament removal ----------
+ * `.atlas-wordmark` is the one entry here that comes back: the desktop rule
+ * further down re-opens it as the bottom-left text word mark (§5.2) and wins
+ * on the extra `:not(.touch-layout)` class. Touch keeps it hidden. */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="map"]
   .adventure-atlas
   :is(
     .atlas-corners,
-    .panel-corner-trim,
+    .atlas-wordmark,
     .atlas-cartography,
     .atlas-emblem,
     .atlas-chapter,
@@ -548,7 +551,7 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
   > .adventure-atlas
-  > .reference-page-brand {
+  > .atlas-wordmark {
   display: flex;
   position: absolute;
   inset: auto auto 32px 48px;
@@ -562,7 +565,7 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
   > .adventure-atlas
-  > .reference-page-brand
+  > .atlas-wordmark
   > span {
   font: 700 20px/1.2 var(--slate-font);
   letter-spacing: 4px;
@@ -572,7 +575,7 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
   > .adventure-atlas
-  > .reference-page-brand
+  > .atlas-wordmark
   > small {
   font: 400 10px/1.2 var(--slate-font);
   letter-spacing: 3px;
@@ -832,7 +835,7 @@ html[data-skin="slate"]
     body:not(.touch-layout)
     #modal.folio-host[data-type="map"]
     > .adventure-atlas
-    > .reference-page-brand {
+    > .atlas-wordmark {
     left: 36px;
   }
 }

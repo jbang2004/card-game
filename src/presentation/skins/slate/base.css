@@ -69,8 +69,7 @@
  *
  * ---------------------------------------------------------------------------
  * SHARED CONTROLS (apply to EVERY dialog type, not just the pages above):
- *   font stack on text/controls; `.reference-page-brand`, `.panel-corner-trim`,
- *   `.folio-scroll-hint`, `.eyebrow` and `.selection-light` hidden;
+ *   font stack on text/controls; `.folio-scroll-hint` and `.eyebrow` hidden;
  *   `.crafted-panel` (plus `.touch-hero-info` and `.atelier-vignette`, which
  *   carry the same legacy amber glass) neutralised; the
  *   `:is(.modal-heading, .library-heading) h2` type scale; pills `.gold-btn` /
@@ -199,7 +198,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  :is(.reference-page-brand, .panel-corner-trim, .folio-scroll-hint, .eyebrow) {
+  :is(.folio-scroll-hint, .eyebrow) {
   display: none;
 }
 /* `panels.js` puts `.crafted-panel` on every dialog root whose type is not one
@@ -247,10 +246,6 @@ html[data-skin="slate"]
   .folio-dialog
   :is(.crafted-panel, .touch-hero-info, .atelier-vignette)::after {
   content: none;
-}
-html[data-skin="slate"] body #modal.folio-host .selection-light {
-  content: none;
-  display: none;
 }
 
 /* back chevron replaces the round close button (page shell only) */
