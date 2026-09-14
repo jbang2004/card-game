@@ -20,7 +20,18 @@ const EmberViewport = (() => {
     signature: "",
   };
   let queued = false;
+  /* #app is the shared coordinate frame: every hit test maps client pixels
+   * through its rect. Measuring it per pointer move forces a layout on every
+   * mousemove during aiming, so it is cached and invalidated whenever the
+   * frame can actually have moved — a relayout here, or a window/visual
+   * viewport change before one is queued. */
+  let appRect = null;
+  const invalidateAppRect = () => {
+    appRect = null;
+  };
+  const finePointer = matchMedia("(hover: hover) and (pointer: fine)");
   function resize() {
+    invalidateAppRect();
     const vv = window.visualViewport;
     // Do not fight browser pinch-to-zoom by laying out a narrower page on every pinch.
     if (vv && vv.scale > 1.05) return false;
@@ -47,21 +58,37 @@ const EmberViewport = (() => {
     const W = mobile ? rawW : 1600,
       H = mobile ? rawH : 940;
     const scale = mobile ? 1 : Math.min(rawW / 1600, rawH / 940);
+    /* §12.1: the hero is one card in three scales — 156x231 on desktop,
+     * 72x106 in landscape and on tablets, 60x89 in portrait. The round avatar
+     * survives only where a card genuinely cannot fit: the narrowest phones,
+     * and landscape so short the rail has no room for one. Decided up here
+     * because it changes both the body class and the strip heights. */
+    const shortLandscape = mobile && !portrait && H < 380,
+      mini = mobile && W > 320 && !shortLandscape;
     const signature = [
       mobile,
       compactDesktop,
       portrait,
+      mini,
       W,
       H,
       rawW,
       rawH,
       ...Object.values(safe),
     ].join(":");
+    /* Input class, independent of layout (design doc §12.2): a mouse gets the
+     * hover affordances at ANY window size, and a finger gets the riffle in
+     * their place. `touch-layout` answers "how is this laid out", never "what
+     * is pointing at it". */
+    document.body.classList.toggle("pointer-fine", finePointer.matches);
+    document.body.classList.toggle("pointer-coarse", !finePointer.matches);
     document.body.classList.toggle("mobile-ui", mobile);
     document.body.classList.toggle("touch-layout", mobile);
     document.body.classList.toggle("compact-desktop", compactDesktop);
     document.body.classList.toggle("mobile-portrait", portrait);
     document.body.classList.toggle("mobile-landscape", mobile && !portrait);
+    /* Which hero component is on screen — a card or the legacy round avatar. */
+    document.body.classList.toggle("hero-mini", mini);
     app.style.setProperty("--scale", scale);
     app.style.setProperty("--view-w", rawW + "px");
     app.style.setProperty("--view-h", rawH + "px");
@@ -70,170 +97,206 @@ const EmberViewport = (() => {
     if (signature === state.signature) return false;
     const l = {};
     if (mobile) {
+      /* Console + dock model (docs/design/BATTLE_REDESIGN_20260914.md):
+       *   portrait  = topbar / enemy console strip / arena / player console
+       *               strip / hand dock (cards peek 55%, god slot at the right)
+       *   landscape = topbar / [left rail: enemy console, player console]
+       *               arena [right rail: end turn] / hand dock
+       * The hero buttons ARE the consoles: they get the whole strip and lay
+       * their avatar, name and chips out in CSS; the skill node, mana pips
+       * and end-turn are boxed inside that strip so they stay adjacent. */
       const padL = safe.left + 12,
         padR = safe.right + 12,
         usableW = W - padL - padR;
       l.header = safe.top + (portrait ? 52 : 44);
-      // Preserve the established card rail and physical card sizes.
-      const handH = portrait
-        ? H >= 720
-          ? 204
-          : H >= 600
-            ? 184
-            : 166
-        : H >= 380
-          ? Math.round(clamp(H * 0.36, 138, 176))
-          : 138;
-      l.hand = {
-        x: padL - 4,
-        y: H - safe.bottom - handH - 6,
-        w: usableW + 8,
-        h: handH,
+      /* Tablets and compact desktops get the same layout at a larger scale. */
+      const roomy = portrait ? W >= 600 : W >= 1000;
+      const short = shortLandscape,
+        /* Landscape stacks both hero cards in one narrow rail, so the 72x106
+         * card is only affordable when the rail is tall enough for two of them
+         * plus their chip rows; a 390-high phone gets the smaller step. */
+        roomyRail = H >= 470,
+        heroW = portrait ? 60 : roomyRail ? 72 : 56,
+        heroH = portrait ? 89 : roomyRail ? 106 : 83;
+      const cardW = portrait
+          ? roomy
+            ? 140
+            : /* 360-wide phones: the dock also carries a full-size god slot
+                 now, so anything above 96 pushes their six-card step under
+                 the 24px pan threshold and costs them the riffle gesture. */
+              W < 380 || H < 640
+              ? 96
+              : H >= 760
+                ? 112
+                : 104
+          : roomy
+            ? 118
+            : H >= 380
+              ? 96
+              : 88,
+        cardH = Math.round((cardW * 7.4) / 5),
+        peek = Math.round(cardH * (!portrait && H < 380 ? 0.55 : 0.66)),
+        /* The god slot is a hand card: same size, same dock line, same
+         * peek (its lower third hangs off the screen just like the fan). */
+        godW = cardW,
+        godH = cardH;
+      /* The dock box extends below the screen: only the top `peek` px of a
+       * resting card are visible; a selected or dragged card rises out of it. */
+      const dockTop = H - safe.bottom - peek - 10;
+      l.hand = { x: 0, y: dockTop, w: 0, h: cardH + 20 };
+      /* The turn capsule shares the top bar with the brand wordmark on the
+       * left and the icon cluster on the right, so it may only claim the band
+       * BETWEEN them — a capsule centred on the screen runs under the volume
+       * button as soon as the phone is narrow. The band is measured from the
+       * same constants the bar is built from (brand 50 wide at padL + 14,
+       * `.top-actions` 116 wide ending padR + 14 from the right edge) with an
+       * 8px gutter on each side, and the capsule is centred IN THE BAND. */
+      const brandRight = padL + 52,
+        actionsLeft = W - padR - 118,
+        roundBand = Math.max(0, actionsLeft - 8 - (brandRight + 8)),
+        roundW = Math.min(portrait ? 200 : 260, roundBand);
+      l.round = {
+        x: Math.round(brandRight + 8 + (roundBand - roundW) / 2),
+        y: safe.top + 6,
+        w: Math.round(roundW),
+        h: portrait ? 34 : 30,
       };
-      const cardH = portrait ? handH - 12 : handH - 10,
-        cardW = Math.round((cardH * 5) / 7.4),
-        shortLandscape = !portrait && H < 420;
       if (portrait) {
-        const short = H < 650;
-        const heroH = cardH,
-          heroW = cardW;
-        l.enemy = {
-          x: W / 2 - heroW / 2,
-          y: l.header + (short ? 4 : 10),
-          w: heroW,
-          h: heroH,
-        };
-        /* The readout row above the hand (`l.handLabel` on the left, `l.mana`
-         * on the right) starts 28px above the hand. A 12px gap let the player
-         * hero card reach into it, so the 手牌 chip sat across the card's
-         * bottom edge; clear the whole row instead. */
-        const playerY = l.hand.y - heroH - 28,
-          ctrlY = l.hand.y - (short ? 106 : 126);
-        l.player = {
-          x: padL + 10,
-          y: playerY,
-          w: heroW,
-          h: heroH,
-        };
-        l.power = { x: Math.round(W * 0.43), y: ctrlY + 18, w: 48, h: 48 };
-        l.turn = {
-          x: W - padR - 86,
-          y: ctrlY + (short ? -10 : 2),
-          w: 86,
-          h: short ? 88 : 102,
-        };
-        l.mana = { x: W - padR - 150, y: l.hand.y - 23, w: 150, h: 22 };
-        l.chip = {
+        /* §12.1: the hero is the SAME card at every size, just three scales.
+         * A mini card needs a taller strip than a 56px avatar did. */
+        const consoleH = mini ? 96 : 82,
+          enemyH = mini ? 78 : 56;
+        l.hand.x = padL - 6;
+        l.hand.w = usableW + 6 - godW - 8;
+        l.contract = { x: W - padR - godW, y: dockTop + 10, w: godW, h: godH };
+        l.enemyConsole = { x: padL, y: l.header + 4, w: usableW, h: enemyH };
+        l.playerConsole = {
           x: padL,
-          y: l.enemy.y,
-          w: Math.max(86, l.enemy.x - padL - 10),
-          h: short ? 20 : 38,
+          y: dockTop - 6 - consoleH,
+          w: usableW,
+          h: consoleH,
         };
-        l.contract = {
-          x: padL,
-          y: l.enemy.y + (short ? 24 : 44),
-          w: Math.max(114, l.chip.w),
-          h: 44,
+        /* Hero boxes double as effect anchors. The player's mini card rises
+         * 12px out of the console band, like a name plate pulled from a slot;
+         * the enemy's mirrors it downwards so it never hits the top bar. */
+        l.enemy = mini
+          ? { x: padL + 6, y: l.enemyConsole.y + 2, w: heroW, h: heroH }
+          : { x: padL + 6, y: l.enemyConsole.y + 6, w: 44, h: 44 };
+        l.player = mini
+          ? { x: padL + 8, y: l.playerConsole.y - 12, w: heroW, h: heroH }
+          : { x: padL + 8, y: l.playerConsole.y + 12, w: 56, h: 56 };
+        const skillX = padL + (mini ? 16 + heroW : 72);
+        l.power = { x: skillX, y: l.playerConsole.y + 12, w: 56, h: 56 };
+        /* The mana row starts clear of the card, or the pips run under it. */
+        l.mana = {
+          x: mini ? skillX : padL + 10,
+          y: l.playerConsole.y + (mini ? 74 : 64),
+          /* Stops at the round button's left edge (64 + 12 of clearance). */
+          w: mini ? W - padR - 76 - skillX : 220,
+          h: 14,
         };
-        /* The notice doubles as the targeting bar (`l.actionChip`), which
-         * carries an instruction plus a 44px cancel button, so it wants the
-         * whole rail. What it must not do is sit across the player's hero
-         * card — and whether it would is a question of the screen's HEIGHT,
-         * not its width: on a tall portrait the hero starts well below the
-         * bar, on a short one it reaches up into it. Measure instead of
-         * guessing from the width, and only fall back to the docked right
-         * rail when the bar genuinely cannot clear the card. */
-        const noticeY = Math.max(l.enemy.y + heroH, l.contract.y + 44) + 8;
-        const noticeClearsHero = noticeY + 44 <= playerY;
-        const noticeW = noticeClearsHero ? usableW : Math.min(180, usableW);
-        l.notice = {
-          x: noticeClearsHero ? padL : W - padR - noticeW,
-          y: noticeY,
-          w: noticeW,
-          h: 44,
-        };
-        const top = l.notice.y + l.notice.h + 8;
+        /* §12.6: the primary action becomes a 64px round button at the
+         * bottom-right corner of the play area. It stays inside the console
+         * band, which is the only strip guaranteed clear of the god slot and
+         * the hand dock below it. */
+        l.turn = mini
+          ? { x: W - padR - 64, y: l.playerConsole.y + 16, w: 64, h: 64 }
+          : { x: W - padR - 124, y: l.playerConsole.y + 14, w: 124, h: 52 };
+        l.chip = { x: padL, y: l.header, w: 0, h: 0 };
+        const top = l.enemyConsole.y + enemyH + 6;
         l.arena = {
           x: padL - 2,
           y: top,
           w: usableW + 4,
-          h: Math.max(84, ctrlY - 12 - top),
+          h: Math.max(120, l.playerConsole.y - 6 - top),
         };
       } else {
-        const rail = compactDesktop ? 128 : 104;
-        const heroH = cardH,
-          heroW = cardW;
-        const railX = W - padR - rail;
-        const leftRail = shortLandscape
-          ? padL + heroW * 2 + 20
-          : padL + heroW + 20;
-        l.notice = {
-          x: leftRail,
-          y: l.header + 2,
-          w: W - leftRail - padR - rail,
-          h: 40,
+        /* The landscape rail holds the hero card, the skill node beside it and
+         * the mana pill under that. */
+        const rail = mini ? (roomyRail ? 150 : 128) : 104,
+          /* A 64px round button needs far less of the right edge than the old
+           * 124px pill did; the arena takes the difference. */
+          right = mini ? 76 : 124;
+        const arenaX = padL + rail + 8,
+          arenaW = W - arenaX - padR - right - 8;
+        l.contract = {
+          x: W - padR - right - 8 - godW,
+          y: dockTop + 10,
+          w: godW,
+          h: godH,
         };
-        const arenaTop = l.notice.y + l.notice.h + 6;
+        l.hand.x = arenaX - 4;
+        l.hand.w = l.contract.x - 8 - l.hand.x;
+        /* Both consoles are the card plus the chip row that sits under it. */
+        const railH = mini ? heroH + 30 : 0;
+        l.enemyConsole = {
+          x: padL,
+          y: l.header + 4,
+          w: rail,
+          h: mini ? railH : short ? 72 : 102,
+        };
+        const playerH = mini ? railH : short ? 96 : 118;
+        l.playerConsole = {
+          x: padL,
+          y: dockTop - 8 - playerH,
+          w: rail,
+          h: playerH,
+        };
+        l.enemy = mini
+          ? { x: padL + 6, y: l.enemyConsole.y + 2, w: heroW, h: heroH }
+          : { x: padL + 6, y: l.enemyConsole.y + 6, w: 40, h: 40 };
+        l.player = mini
+          ? { x: padL + 6, y: l.playerConsole.y + 6, w: heroW, h: heroH }
+          : { x: padL + 6, y: l.playerConsole.y + 8, w: 44, h: 44 };
+        l.power = {
+          x: padL + (mini ? 12 + heroW : 56),
+          y: l.playerConsole.y + 8,
+          w: 44,
+          h: 44,
+        };
+        /* Under the skill node, clear of the chip row that sits below the
+         * card — the rail has no spare height for a third band. */
+        l.mana = mini
+          ? {
+              x: padL + 12 + heroW,
+              y: l.playerConsole.y + 56,
+              w: rail - 18 - heroW,
+              h: 20,
+            }
+          : { x: padL + 6, y: l.playerConsole.y + playerH - 14, w: 92, h: 10 };
+        l.turn = mini
+          ? { x: W - padR - 64, y: dockTop - 8 - 64, w: 64, h: 64 }
+          : { x: W - padR - right, y: dockTop - 8 - 52, w: right, h: 52 };
+        l.chip = { x: padL, y: l.header, w: 0, h: 0 };
         l.arena = {
-          x: leftRail,
-          y: arenaTop,
-          w: Math.max(120, l.notice.w),
-          h: Math.max(90, l.hand.y - 14 - arenaTop),
+          x: arenaX,
+          y: l.header + 4,
+          w: Math.max(120, arenaW),
+          h: Math.max(100, dockTop - 8 - (l.header + 4)),
         };
-        if (shortLandscape) {
-          const heroY = l.header + 4;
-          l.enemy = { x: padL + 8, y: heroY, w: heroW, h: heroH };
-          l.player = {
-            x: padL + 16 + heroW,
-            y: heroY,
-            w: heroW,
-            h: heroH,
-          };
-        } else {
-          l.enemy = {
-            x: padL + 8,
-            y: l.header + 12,
-            w: heroW,
-            h: heroH,
-          };
-          l.player = {
-            x: padL + 8,
-            y: l.hand.y - heroH - 14,
-            w: heroW,
-            h: heroH,
-          };
-        }
-        l.power = { x: railX, y: l.header + 10, w: 44, h: 44 };
-        l.contract = { x: railX + rail - 48, y: l.power.y, w: 48, h: 44 };
-        l.turn = {
-          x: railX,
-          y:
-            H < 350 ? l.power.y + 56 : Math.max(l.power.y + 88, l.hand.y - 106),
-          w: rail,
-          h: 80,
-        };
-        l.mana = {
-          x: railX,
-          y: l.hand.y - (H < 350 ? 20 : 24),
-          w: rail,
-          h: H < 350 ? 20 : 22,
-        };
-        l.chip = { x: padL, y: l.header, w: 80, h: 20 };
       }
-      l.round = {
-        x: W / 2 - (portrait ? 50 : 110),
-        y: safe.top + 6,
-        w: portrait ? 100 : 220,
-        h: portrait ? 34 : 30,
-      };
-      l.handLabel = { x: padL, y: l.hand.y - 28, w: 110, h: 24 };
+      /* Transient messages float between the two minion rows in portrait
+       * (`minion()` keeps a 44px band free there); landscape has no spare
+       * height, so they take the topbar's centre instead. */
+      l.notice = portrait
+        ? {
+            x: l.arena.x + 8,
+            y: l.arena.y + l.arena.h / 2 - 20,
+            w: l.arena.w - 16,
+            h: 40,
+          }
+        : {
+            x: l.arena.x + 40,
+            y: safe.top + 4,
+            w: l.arena.w - 80,
+            h: 36,
+          };
+      l.handLabel = { x: padL, y: -100, w: 0, h: 0 };
       l.actionChip = { ...l.notice };
-      /* The hand is the same physical card as every other card surface. Keep
-       * its 5:7.4 face ratio and derive width from the available rail height;
-       * independent width/height clamps were making the art aperture change
-       * between the hand and the opening-hand dialog. */
       l.cardH = cardH;
       l.cardW = cardW;
+      l.peek = peek;
+      l.tokenScale = roomy ? 1.4 : 1;
     }
     const before = state;
     state = {
@@ -251,8 +314,8 @@ const EmberViewport = (() => {
         app.style.setProperty("--notice-" + key, value + "px");
       const roots = {
         arena: l.arena,
-        "enemy-hero": l.enemy,
-        "player-hero": l.player,
+        "enemy-hero": l.enemyConsole,
+        "player-hero": l.playerConsole,
         "power-btn": l.power,
         "contract-open": l.contract,
         hand: l.hand,
@@ -267,6 +330,9 @@ const EmberViewport = (() => {
       box(document.querySelector(".hand-label"), l.handLabel);
       app.style.setProperty("--hand-card-w", l.cardW + "px");
       app.style.setProperty("--hand-card-h", l.cardH + "px");
+      app.style.setProperty("--hand-peek", l.peek + "px");
+      app.style.setProperty("--hand-lift", l.cardH - l.peek + "px");
+      app.style.setProperty("--god-w", l.contract.w + "px");
       app.style.setProperty("--battle-card-w", l.cardW + "px");
       app.style.setProperty("--battle-card-h", l.cardH + "px");
       app.style.setProperty("--header-h", l.header + "px");
@@ -311,6 +377,7 @@ const EmberViewport = (() => {
     }
     const svg = document.getElementById("target-lines");
     svg?.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    invalidateAppRect();
     window.dispatchEvent(
       new CustomEvent("ember:viewport", { detail: { before, after: state } }),
     );
@@ -413,7 +480,28 @@ const EmberViewport = (() => {
     const measured = pos(el);
     const hand = document.getElementById(side === "p" ? "hand" : "enemy-hand"),
       handRect = hand?.getBoundingClientRect(),
-      status = intersectionStatus(el, handRect);
+      raw = intersectionStatus(el, handRect),
+      rect = el.getBoundingClientRect(),
+      /* Dock cards deliberately hang below the screen edge (peek); a card
+       * whose top strip is inside the dock and on screen is a valid landing
+       * point for draw flights, not a clipped one.
+       *
+       * The fan also rotates its outer cards by up to 3° (design doc §13.5),
+       * and a rotated element reports an AXIS-ALIGNED box, which sticks out
+       * past the dock edge by roughly `height * sin(3°)`. That is a
+       * measurement artefact, not a clipped card, so the horizontal tolerance
+       * has to absorb it or the draw flight silently stops animating. */
+      roll = Math.ceil(rect.height * 0.06) + 1,
+      status =
+        raw === "clipped" &&
+        state.mobile &&
+        handRect &&
+        rect.left >= handRect.left - roll &&
+        rect.right <= handRect.right + roll &&
+        rect.top >= handRect.top - 1 &&
+        rect.top < Math.min(window.innerHeight, handRect.bottom) - 40
+          ? "visible"
+          : raw;
     if (!measured)
       return { el, visible: false, clipped: status === "clipped", status };
     return {
@@ -434,29 +522,40 @@ const EmberViewport = (() => {
         w: 116,
         h: 146,
       };
-    const a = state.layout.arena;
-    const gap = n > 5 ? 3 : state.portrait ? 9 : 12;
-    const maxW = state.portrait ? 76 : 70;
-    // Short landscape uses wider portrait tokens, not tiny tall cards. Both
-    // layout and hit testing consume these same measured dimensions.
-    const compactLandscape = !state.portrait && state.height < 370;
-    const availableH = a.h * 0.5 - (compactLandscape ? 4 : 14);
-    const w = Math.floor(
-      Math.min(
-        maxW,
-        (a.w - 16 - (n - 1) * gap) / Math.max(1, n),
-        compactLandscape ? availableH * 1.25 : availableH / 1.18,
+    /* Board tokens are sized by how many units share the row, never by the
+     * seven-slot ceiling: three minions get three-minion tokens. A row that
+     * still cannot fit unstacked overlaps its tokens by 10px. A 44px band
+     * between the rows stays clear for the floating notice. */
+    const a = state.layout.arena,
+      count = Math.max(1, n),
+      rowH = a.h / 2,
+      tiers = state.portrait
+        ? [96, 96, 96, 84, 70, 58, 58]
+        : [88, 88, 88, 80, 70, 58, 54],
+      cap = Math.round(
+        tiers[Math.min(count, 7) - 1] * (state.layout.tokenScale || 1),
       ),
-    );
-    const h = compactLandscape
-        ? Math.min(availableH, Math.round(w * 1.22))
-        : Math.round(w * 1.22),
-      total = n * w + (n - 1) * gap;
+      inner = a.w - 16;
+    let gap = 8,
+      w = Math.floor(Math.min(cap, (rowH - (state.portrait ? 44 : 10)) / 1.25));
+    if (count * w + (count - 1) * gap > inner) {
+      w = Math.floor((inner - (count - 1) * gap) / count);
+      if (w < 58) {
+        gap = -10;
+        w = Math.min(cap, 58);
+        if (count * w + (count - 1) * gap > inner)
+          w = Math.floor((inner - (count - 1) * gap) / count);
+      }
+    }
+    w = Math.max(28, w);
+    const h = Math.round(w * 1.25),
+      total = count * w + (count - 1) * gap;
     return {
       x: a.x + (a.w - total) / 2 + i * (w + gap),
       y: a.y + a.h * (side === "e" ? 0.25 : 0.75) - h / 2,
       w,
       h,
+      stacked: gap < 0,
     };
   }
   function minionLandingBox(frame, side, uid) {
@@ -505,6 +604,7 @@ const EmberViewport = (() => {
         }
       : { x: 800, y: side === "e" ? 374 : 554 };
   function queue() {
+    invalidateAppRect();
     if (queued) return;
     queued = true;
     requestAnimationFrame(() => {
@@ -512,14 +612,25 @@ const EmberViewport = (() => {
       resize();
     });
   }
+  /* A mouse can be plugged in (or a tablet put in a keyboard dock) mid-game;
+   * the signature guard would swallow a class-only change, so force a relayout. */
+  finePointer.addEventListener?.("change", () => {
+    state.signature = "";
+    queue();
+  });
   window.addEventListener("resize", queue);
   window.visualViewport?.addEventListener("resize", queue);
   window.visualViewport?.addEventListener("scroll", queue);
   window.addEventListener("orientationchange", queue);
+  window.addEventListener("scroll", invalidateAppRect, { passive: true });
   resize();
   return {
     resize,
     box,
+    /* Cached #app rect, for hit tests that run on every pointer move. */
+    get appRect() {
+      return (appRect ||= app.getBoundingClientRect());
+    },
     point,
     pos,
     deckAnchor,

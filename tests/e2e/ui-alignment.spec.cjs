@@ -1,3 +1,4 @@
+const { openCovenantPage } = require("./helpers/covenant.cjs");
 const { assertDialogFit } = require("./helpers/dialog-pages.cjs");
 const { test, expect } = require("@playwright/test");
 for (const [width, height] of [
@@ -5,6 +6,7 @@ for (const [width, height] of [
   [1280, 800],
   [1024, 768],
   [390, 844],
+  [360, 780],
   [320, 568],
   [844, 390],
   [568, 320],
@@ -97,6 +99,15 @@ for (const [width, height] of [
         es.every((el) => {
           const r = el.getBoundingClientRect(),
             p = el.parentElement.getBoundingClientRect();
+          /* Touch consoles seat the name beside the round avatar, inside the
+           * hero strip; the desktop card keeps it centred on the plaque. */
+          if (document.body.classList.contains("touch-layout")) {
+            const hero = el.closest(".hero").getBoundingClientRect();
+            return (
+              getComputedStyle(el).display === "none" ||
+              (r.left >= hero.left && r.right <= hero.right + 1)
+            );
+          }
           return (
             r.left >= p.left - 1 &&
             r.right <= p.right + 1 &&
@@ -126,16 +137,43 @@ for (const [width, height] of [
                 r.top >= p.top && r.bottom <= p.bottom && r.right <= p.right
               );
             }) &&
-            g.left >= v.right + 3 &&
+            /* Round 3 (§12.6) moved the `6/6` read-out to the RIGHT of the
+             * pips so it reads as the caption of the round end-turn button in
+             * the corner; before that it led the row. The contract this
+             * protects — value and pips on one line, inside the panel,
+             * vertically centred on each other — is unchanged, so the order
+             * is no longer prescribed. */
+            (g.left >= v.right + 3 || v.left >= g.right + 3) &&
             Math.abs(v.top + v.bottom - (g.top + g.bottom)) < 2
           );
         }),
       ).toBe(true);
     }
+    /* The turn capsule shares the top bar with the brand on the left and the
+     * icon cluster on the right. It is centred in the band BETWEEN them, not
+     * on the screen, so it must never touch either — a screen-centred capsule
+     * ran under the volume button on every phone narrower than ~400px
+     * (design doc §12.6 / §14). */
+    expect(
+      await page.locator(".turn-number").evaluate((el) => {
+        const area = (a, b) =>
+          Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) *
+          Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+        const capsule = el.getBoundingClientRect();
+        return ["#sound-btn", ".brand"]
+          .map((sel) => document.querySelector(sel))
+          .filter((node) => node && getComputedStyle(node).display !== "none")
+          .reduce(
+            (worst, node) =>
+              Math.max(worst, area(capsule, node.getBoundingClientRect())),
+            0,
+          );
+      }),
+    ).toBe(0);
     await page.screenshot({
       path: `artifacts/ui-alignment/fixed-${width}-battle.png`,
     });
-    await page.locator("#contract-open").click();
+    await openCovenantPage(page);
     await expect(page.locator("#toast")).not.toBeVisible();
     await page
       .locator(".covenant-card > img")

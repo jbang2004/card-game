@@ -1,3 +1,4 @@
+const { openCovenantPage } = require("./helpers/covenant.cjs");
 const { turnTo, assertDialogFit } = require("./helpers/dialog-pages.cjs");
 const { test, expect } = require("@playwright/test");
 for (const [width, height] of [
@@ -80,7 +81,7 @@ for (const [width, height] of [
       e.textContent = "TURN AUDIT";
       document.getElementById("app").append(e);
     });
-    await page.locator("#contract-open").click();
+    await openCovenantPage(page);
     await expect(page.locator(".turn-cue[data-audit]")).toBeHidden();
     await page.screenshot({
       path: `artifacts/uiux/deck-detail-fixed-${width}-covenant.png`,

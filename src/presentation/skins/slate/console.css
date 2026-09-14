@@ -1,0 +1,2110 @@
+/* Test skin "slate" (磨砂青岩) — battle consoles, hand dock and god slot.
+ *
+ * Implements docs/design/BATTLE_REDESIGN_20260914.md on top of the existing
+ * DOM: the two hero buttons become "consoles" (avatar + name + chips, with the
+ * skill node, mana pips and end-turn boxed inside the same strip by
+ * `mobile-view.js`), the hand becomes a 55%-peek fan dock, and the covenant
+ * button becomes a gold card back parked at the right end of the dock.
+ *
+ * Geometry on touch comes from `mobile-view.js` inline boxes; this file lays
+ * out the INSIDE of those boxes. It is the last skin file, so ties in the
+ * cascade resolve here. Desktop keeps the 1600×940 canvas; §6 moves the skill
+ * node and the god slot beside the player's hero, unbinds the hero card from
+ * the hand card width and turns the desktop hand into a dock too.
+ *
+ * Round 2 (§11 of the design doc) added: the starfire crest on the gold back
+ * (§4), the desktop hand dock (§6) and the god stage — the contract card
+ * lifted out of its slot onto a blurred court (§7).
+ */
+
+/* ---------------------------------------------------------------------------
+ * 1. Consoles (touch) — the hero button is the whole strip
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body.touch-layout #battle .hero {
+  display: block;
+  box-sizing: border-box;
+  aspect-ratio: auto;
+  container-type: normal;
+  overflow: visible;
+  padding: 0;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 18px;
+  background: var(--slate-pill);
+  box-shadow: 0 10px 30px #0006;
+  backdrop-filter: blur(10px);
+  color: var(--slate-ink);
+  text-align: left;
+  transition: filter var(--m-base) var(--e-std);
+}
+html[data-skin="slate"] body.touch-layout #battle .hero.selected,
+html[data-skin="slate"] body.touch-layout #battle .hero:hover {
+  transform: none;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero.valid-target {
+  border-color: #ecae55;
+  box-shadow:
+    0 0 0 2px #ecae5566,
+    0 10px 30px #0006;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero.ready {
+  border-color: #8cc4ff99;
+}
+/* avatar: a round aperture, no card plaque */
+html[data-skin="slate"] body.touch-layout #battle .hero-card-inner {
+  position: absolute;
+  inset: auto;
+  left: 6px;
+  top: 6px;
+  width: 44px;
+  height: 44px;
+  overflow: visible;
+  border-radius: 50%;
+  background: none;
+}
+html[data-skin="slate"]
+  body.mobile-portrait
+  #battle
+  .hero.player
+  .hero-card-inner {
+  left: 8px;
+  top: 10px;
+  width: 56px;
+  height: 56px;
+}
+html[data-skin="slate"]
+  body.mobile-landscape
+  #battle
+  .hero.enemy
+  .hero-card-inner {
+  width: 40px;
+  height: 40px;
+}
+html[data-skin="slate"]
+  body.mobile-landscape
+  #battle
+  .hero.player
+  .hero-card-inner {
+  top: 8px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .hero-card-inner
+  .portrait-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 1.5px solid var(--slate-line-strong);
+  border-radius: 50%;
+  background: #07111d;
+  box-shadow:
+    0 0 0 3px #0f141dcc,
+    0 4px 12px #0008;
+  clip-path: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .hero-card-inner
+  .portrait-frame
+  img {
+  object-position: var(--art-pos, 50% 28%);
+  transform: scale(1.32);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .hero-card-inner
+  .portrait-frame::after {
+  background: radial-gradient(
+    70% 70% at 50% 40%,
+    transparent 55%,
+    #07111d99 100%
+  );
+}
+html[data-skin="slate"] body.touch-layout #battle .hero.ready .portrait-frame {
+  border-color: var(--slate-blue);
+  box-shadow:
+    0 0 0 3px #0f141dcc,
+    0 0 14px #8cc4ff88;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-card-plaque {
+  display: none;
+}
+/* name and chip row, to the right of the avatar */
+html[data-skin="slate"] body.touch-layout #battle .hero-name {
+  position: absolute;
+  inset: auto;
+  left: 52px;
+  top: 1px;
+  width: max-content;
+  max-width: 170px;
+  height: auto;
+  padding: 0;
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  border: 0;
+  border-radius: 0;
+  clip-path: none;
+  background: none;
+  color: #fff;
+  font: 700 13px/1.2 var(--slate-font);
+  letter-spacing: 1px;
+  text-shadow: 0 1px 4px #000a;
+}
+html[data-skin="slate"] body.mobile-portrait #battle .hero.player .hero-name {
+  left: 132px;
+  top: 2px;
+  font-size: 14px;
+}
+html[data-skin="slate"] body.mobile-landscape #battle .hero-name {
+  display: none;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-chips {
+  position: absolute;
+  left: 58px;
+  top: 28px;
+  right: 6px;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 5px;
+  pointer-events: none;
+}
+html[data-skin="slate"] body.mobile-portrait #battle .hero.player .hero-chips {
+  left: 140px;
+  top: 36px;
+  right: 120px;
+}
+html[data-skin="slate"] body.mobile-landscape #battle .hero-chips {
+  left: 6px;
+  right: 6px;
+  top: 52px;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+html[data-skin="slate"] body.mobile-landscape #battle .hero.player .hero-chips {
+  top: 58px;
+}
+html[data-skin="slate"] body.touch-layout #battle :is(.hero-stat, .hero-chip) {
+  position: static;
+  box-sizing: border-box;
+  width: auto;
+  height: 22px;
+  aspect-ratio: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 7px 0 3px;
+  border: 1px solid #ffffff2e;
+  border-radius: 999px;
+  background: #0f141dcc;
+  color: var(--slate-ink);
+  font: 600 12px/1 var(--slate-font);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-stat > .badge-frame {
+  position: static;
+  width: 16px;
+  height: 16px;
+  filter: drop-shadow(0 1px 2px #000c);
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-stat .stat-value {
+  display: block;
+  width: auto;
+  height: auto;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-attack.is-zero {
+  display: none;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-health.damaged {
+  border-color: #e3899166;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-chip svg {
+  width: 13px;
+  height: 13px;
+  color: #f0d48a;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-covenant {
+  padding-left: 5px;
+  color: #f6e3a1;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-covenant.ready {
+  border-color: #d4a53a99;
+  box-shadow: 0 0 8px #d4a53a55;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-covenant.spent {
+  color: var(--slate-ink-3);
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-hand {
+  padding-left: 5px;
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-hand i {
+  display: block;
+  width: 9px;
+  height: 12px;
+  border-radius: 1.5px;
+  background: linear-gradient(150deg, #dcecfb, #54769a 55%, #223a53);
+  box-shadow: 0 0 0 1px #0a121ba8;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-phase {
+  position: absolute;
+  right: 8px;
+  top: 6px;
+  height: 18px;
+  padding: 0 6px;
+  border: 1px solid var(--slate-line);
+  border-radius: 999px;
+  background: #0f141d99;
+  color: var(--slate-ink-3);
+  font: 500 10px/18px var(--slate-font);
+  letter-spacing: 1px;
+}
+html[data-skin="slate"] body.mobile-landscape #battle .hero-phase {
+  display: none;
+}
+html[data-skin="slate"] body.touch-layout #battle .secret-indicator {
+  left: 38px;
+  top: 0;
+  width: 20px;
+  height: 20px;
+  font-size: 13px;
+}
+/* the boss chip and hand-count chip are folded into the consoles */
+html[data-skin="slate"] body.touch-layout #battle #touch-match-chip,
+html[data-skin="slate"] body.touch-layout #battle .hand-label {
+  display: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * 2. Skill node, mana pips and end turn — boxed into the player console
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body.touch-layout #battle .power-button > span {
+  display: none;
+}
+html[data-skin="slate"] body.touch-layout #battle .power-button > b {
+  top: -2px;
+  right: -4px;
+}
+html[data-skin="slate"] body.touch-layout #battle .mana-panel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+html[data-skin="slate"] body.touch-layout #battle .mana-caption {
+  position: absolute;
+  right: 0;
+  top: -3px;
+  justify-content: flex-end;
+  gap: 4px;
+  color: var(--slate-ink-3);
+  font: 500 10px/1 var(--slate-font);
+  letter-spacing: 1px;
+}
+html[data-skin="slate"] body.touch-layout #battle .mana-caption > span {
+  display: none;
+}
+html[data-skin="slate"] body.touch-layout #battle .mana-caption strong {
+  color: #fff;
+  font: 700 12px/1 var(--slate-font);
+  font-variant-numeric: tabular-nums;
+}
+html[data-skin="slate"] body.mobile-portrait #battle .mana-gems {
+  display: flex;
+  gap: 3px;
+  margin: 0;
+  justify-content: flex-start;
+}
+html[data-skin="slate"] body.mobile-portrait #battle .mana-gem {
+  width: 10px;
+  height: 12px;
+  opacity: 0.28;
+  filter: saturate(0.2);
+  transition:
+    opacity var(--m-base) var(--e-std),
+    filter var(--m-base) var(--e-std);
+}
+html[data-skin="slate"] body.mobile-portrait #battle .mana-gem.used {
+  opacity: 0.5;
+  filter: saturate(0.3);
+}
+html[data-skin="slate"] body.mobile-portrait #battle .mana-gem.available {
+  opacity: 1;
+  filter: saturate(1) drop-shadow(0 0 3px #8cc4ff88);
+}
+html[data-skin="slate"] body.mobile-portrait #battle .mana-caption {
+  position: static;
+  order: -1;
+}
+html[data-skin="slate"] body.mobile-landscape #battle .mana-gems {
+  display: none;
+}
+html[data-skin="slate"] body.mobile-landscape #battle .mana-caption {
+  position: static;
+  height: 22px;
+  justify-content: center;
+  border: 1px solid #8cc4ff55;
+  border-radius: 999px;
+  background: #0f141dcc;
+}
+html[data-skin="slate"]
+  body.mobile-landscape
+  #battle
+  .mana-caption
+  strong::before {
+  content: "◆ ";
+  color: var(--slate-blue);
+  font-size: 9px;
+  vertical-align: 1px;
+}
+html[data-skin="slate"] body.touch-layout #battle .turn-controls {
+  display: block;
+}
+html[data-skin="slate"] body.touch-layout #battle .end-turn {
+  width: 100%;
+  height: 100%;
+  font-size: 14px;
+  letter-spacing: 2px;
+}
+html[data-skin="slate"] body.mobile-portrait #battle .end-turn {
+  font-size: 15px;
+}
+html[data-skin="slate"] body.mobile-landscape #battle .end-turn {
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+html[data-skin="slate"] body.touch-layout #battle .end-turn.ready-end::before {
+  animation: slate-console-breathe 2.2s ease-in-out infinite;
+}
+@keyframes slate-console-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 #8cc4ff00;
+  }
+  50% {
+    box-shadow: 0 0 18px 2px #8cc4ff66;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * 3. Hand dock (touch) — 55% peek, overlapping fan, native rail only when the
+ * step would drop below 24px (`.hand-pan`, set by ui.js)
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body.touch-layout #battle .hand-zone {
+  gap: 0;
+  align-items: flex-start;
+  padding: 10px 8px 0;
+  overflow: visible;
+  scroll-snap-type: none;
+  touch-action: pan-x;
+}
+html[data-skin="slate"] body.touch-layout #battle .hand-zone::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: var(--slate-line);
+  pointer-events: none;
+}
+html[data-skin="slate"] body.touch-layout #battle .hand-zone.hand-fits,
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .hand-zone.hand-fits
+  .hand-card {
+  /* nothing to pan: keep the browser from claiming a sideways finger and
+     cancelling the card gesture with pointercancel */
+  justify-content: center;
+  touch-action: none;
+}
+html[data-skin="slate"] body.touch-layout #battle .hand-zone.hand-pan {
+  overflow-x: auto;
+  overflow-y: hidden;
+  justify-content: flex-start;
+  mask-image: linear-gradient(90deg, #0000, #000 20px calc(100% - 20px), #0000);
+}
+html[data-skin="slate"] body.touch-layout #battle .hand-card {
+  margin-left: calc(var(--hand-step, var(--hand-card-w)) - var(--hand-card-w));
+  transform: translateY(0);
+  transition:
+    transform var(--m-base) var(--e-std),
+    filter var(--m-base) var(--e-std);
+  scroll-snap-align: none;
+}
+html[data-skin="slate"] body.touch-layout #battle .hand-card:first-child {
+  margin-left: 0;
+}
+/* Riffle (ui.js `riffle`) is the coarse-pointer equivalent of hover, so it has
+ * to show as much as hover does: the card under the finger leaves the dock
+ * completely and sits at full size, exactly where a selected card sits. A
+ * mouse in this same layout gets the identical pose on hover — the affordance
+ * follows the INPUT, not the breakpoint (design doc §12.2). */
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .hand-zone.hand-fits
+  .hand-card.peek,
+html[data-skin="slate"]
+  body.touch-layout.pointer-fine
+  #battle
+  .hand-zone.hand-fits
+  .hand-card:hover,
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .hand-zone.hand-fits
+  .hand-card:focus-visible {
+  transform: translateY(calc(-1 * var(--hand-lift, 60px))) scale(1);
+  z-index: 28;
+}
+/* A panning dock cannot lift a card clear of the rail without tearing the
+ * scroll, so a mouse there gets the shorter hint the selected card uses. */
+html[data-skin="slate"]
+  body.touch-layout.pointer-fine
+  #battle
+  .hand-zone.hand-pan
+  .hand-card:hover {
+  transform: translateY(-8px);
+  z-index: 28;
+}
+html[data-skin="slate"] body.touch-layout #battle .hand-card.selected {
+  transform: translateY(calc(-1 * var(--hand-lift, 60px)));
+  z-index: 30;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .hand-zone.hand-pan
+  .hand-card.selected {
+  transform: translateY(-8px);
+}
+html[data-skin="slate"] body.touch-layout #battle .hand-card.drag-source {
+  opacity: 0.35;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .hand-card.unaffordable
+  .card {
+  filter: saturate(0.55) brightness(0.8);
+}
+html[data-skin="slate"] body.touch-layout #battle .hand-zone:empty::after {
+  margin: 14px auto 0;
+  color: var(--slate-ink-3);
+  font: 400 12px/1.4 var(--slate-font);
+  letter-spacing: 1px;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="slate"] body.touch-layout #battle .hand-card {
+    transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * 4. God slot (touch) — the covenant button as a gold laser-steel card back.
+ * The control itself keeps `background-image: none` (action-feedback contract);
+ * the plate lives on `.contract-back`, extra stacked backs on `::before`.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body #app {
+  --gold-back:
+    linear-gradient(
+      126deg,
+      #ffffff00 0%,
+      #fff5d622 13%,
+      #fff2c870 22%,
+      #ffffff20 31%,
+      #ffffff00 45%,
+      #1c12042b 70%,
+      #12090152 100%
+    ),
+    radial-gradient(
+      62% 42% at 33% 25%,
+      #fff6dc9e 0%,
+      #f6e3a144 45%,
+      #ffffff00 100%
+    ),
+    radial-gradient(
+      26% 18% at 50% 42%,
+      #fff8e6cc 0%,
+      #f1dc9e8c 38%,
+      #cfae5a3d 68%,
+      #ffffff00 100%
+    ),
+    radial-gradient(
+      104% 86% at 74% 92%,
+      #2a1b06a8 0%,
+      #3a280c66 40%,
+      #0000 82%
+    ),
+    conic-gradient(
+      from 8deg at 50% 42%,
+      #b5872b 0deg,
+      #f6e3a1 30deg,
+      #a3761f 64deg,
+      #e2c476 100deg,
+      #6b4a12 134deg,
+      #fdf3d2 172deg,
+      #a3761f 206deg,
+      #d4a53a 242deg,
+      #6b4a12 276deg,
+      #e8cf85 306deg,
+      #8a6218 334deg,
+      #b5872b 360deg
+    ),
+    #b5872b;
+}
+html[data-skin="slate"] body #battle .contract-open {
+  display: block;
+  box-sizing: border-box;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  box-shadow: none;
+  color: #fdf3d2;
+  transform: none;
+}
+html[data-skin="slate"] body #battle .contract-open[hidden] {
+  display: none;
+}
+/* undo the HUD chip this used to be (skins/slate/mobile.css §"contract chip") */
+html[data-skin="slate"] body.touch-layout #battle .contract-open,
+html[data-skin="slate"] body.mobile-portrait #battle .contract-open,
+html[data-skin="slate"] body.mobile-landscape #battle .contract-open {
+  display: block;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  box-shadow: none;
+}
+html[data-skin="slate"] body.touch-layout #battle .contract-open.ready {
+  border: 0;
+}
+html[data-skin="slate"] body #battle .contract-back,
+html[data-skin="slate"] body #battle .contract-open::before {
+  position: absolute;
+  inset: 0;
+  display: block;
+  border-radius: 6px;
+  background: var(--gold-back);
+  box-shadow:
+    0 0 0 1px #f6e3a133,
+    inset 1px 1px 2px #fff8e65c,
+    inset -1px -1px 2px #1a100299,
+    inset 0 0 0 1px #2a1b06a8,
+    0 3px 8px #030a1690;
+}
+html[data-skin="slate"] body #battle .contract-back::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid #fff2c83a;
+  border-bottom-color: #2a1b0666;
+  border-right-color: #2a1b0655;
+  border-radius: 4px;
+}
+html[data-skin="slate"] body #battle .contract-open::before {
+  content: none;
+}
+html[data-skin="slate"]
+  body
+  #battle
+  .contract-open:not([data-count="1"])::before {
+  content: "";
+  z-index: -1;
+  transform: translate(-4px, -3px) rotate(-6deg);
+  filter: brightness(0.8);
+}
+html[data-skin="slate"]
+  body
+  #battle
+  .contract-open:not([data-count="1"])::after {
+  content: attr(data-count);
+  position: absolute;
+  right: -6px;
+  top: -6px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #f6e3a199;
+  border-radius: 999px;
+  background: #1a1204;
+  color: #fdf3d2;
+  font: 700 10px/1 var(--slate-font);
+}
+/* The project's starfire seal (assets/ui/starfire-seal.webp, published as the
+ * `--ui-starfire-seal` custom property by `ui-assets.js`) is the crest on the
+ * gold back. It is centred in the VISIBLE band: the dock slot peeks 66%, so
+ * the crest sits a third of the way down; the desktop slot is fully visible. */
+html[data-skin="slate"] body #battle .contract-seal,
+html[data-skin="slate"] body .god-card-back .contract-seal {
+  position: absolute;
+  left: 50%;
+  top: 33%;
+  z-index: 2;
+  width: 55%;
+  height: auto;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background: var(--ui-starfire-seal) center / contain no-repeat;
+  filter: drop-shadow(0 0 7px #f6e3a1cc) drop-shadow(0 0 18px #d4a53a66)
+    drop-shadow(0 2px 3px #0009);
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .contract-seal,
+html[data-skin="slate"] body .god-card-back .contract-seal {
+  top: 46%;
+}
+/* the ritual glyph keeps its meaning as a small badge under the crest */
+html[data-skin="slate"] body #battle .contract-sigil {
+  position: absolute;
+  left: 50%;
+  top: 76%;
+  z-index: 2;
+  width: 26%;
+  height: auto;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  border: 1px solid #f6e3a155;
+  border-radius: 50%;
+  background: radial-gradient(circle, #2a1b06dd 0%, #2a1b06aa 70%);
+  color: #fff6dc;
+  filter: drop-shadow(0 1px 2px #000c);
+}
+html[data-skin="slate"] body.touch-layout #battle .contract-sigil {
+  top: 56%;
+}
+html[data-skin="slate"] body #battle .contract-sigil svg {
+  width: 70%;
+  height: 70%;
+}
+html[data-skin="slate"] body #battle .contract-label,
+html[data-skin="slate"] body #battle .contract-open small {
+  display: none;
+}
+html[data-skin="slate"] body #battle .contract-open.ready .contract-back {
+  animation: slate-god-breathe 2.4s ease-in-out infinite;
+}
+@keyframes slate-god-breathe {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px #f6e3a133,
+      inset 1px 1px 2px #fff8e65c,
+      inset -1px -1px 2px #1a100299,
+      0 0 0 0 #f6e3a100;
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px #f6e3a1aa,
+      inset 1px 1px 2px #fff8e65c,
+      inset -1px -1px 2px #1a100299,
+      0 0 22px 3px #f6e3a177;
+  }
+}
+html[data-skin="slate"] body #battle .contract-open.spent .contract-back,
+html[data-skin="slate"] body #battle .contract-open.spent::before {
+  filter: saturate(0.25) brightness(0.55);
+}
+html[data-skin="slate"] body #battle .contract-open.spent .contract-sigil {
+  opacity: 0.5;
+}
+html[data-skin="slate"] body #battle .contract-open:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="slate"] body #battle .contract-open.ready .contract-back,
+  html[data-skin="slate"]
+    body.touch-layout
+    #battle
+    .end-turn.ready-end::before {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * 5. Floating notice (touch) sits between the two minion rows
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body.touch-layout #app.battle-view #touch-target-bar,
+html[data-skin="slate"] body.touch-layout #app.battle-view #toast {
+  min-height: 40px;
+  padding-top: 0;
+  padding-bottom: 0;
+  align-content: center;
+  /* both live directly under #app (the target bar was moved out of #battle
+     for this): in landscape they sit on the topbar, whose z-index is 55 */
+  z-index: 60;
+}
+
+/* ---------------------------------------------------------------------------
+ * 6. Desktop — the skill node and covenant chip beside the player's hero;
+ * the hero card no longer follows the hand card width.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero {
+  --battle-card-w: 156px;
+  --battle-card-h: 231px;
+  width: 156px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero.player {
+  top: 504px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero-chips {
+  display: contents;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero-hand {
+  display: none;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero-covenant {
+  position: absolute;
+  left: 50%;
+  top: -14px;
+  z-index: 8;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 9px 0 6px;
+  transform: translateX(-50%);
+  border: 1px solid #d4a53a66;
+  border-radius: 999px;
+  background: #0f141dcc;
+  color: #f6e3a1;
+  font: 600 12px/1 var(--slate-font);
+  white-space: nowrap;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero-covenant svg {
+  width: 13px;
+  height: 13px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero-covenant.spent {
+  color: var(--slate-ink-3);
+  border-color: var(--slate-line);
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .power-button {
+  left: 204px;
+  top: 512px;
+}
+/* The desktop slot is the same gold card back, at 0.72 of a desktop hand card
+ * (156x231), parked under the skill node beside the player's hero. */
+html[data-skin="slate"] body:not(.touch-layout) #battle .contract-open {
+  left: 204px;
+  top: 580px;
+  width: 112px;
+  height: 166px;
+  /* undo the HUD pill this used to be (skins/slate/battle.css §"command rail") */
+  display: block;
+  min-height: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  box-shadow: none;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .contract-open:hover {
+  background: none;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .contract-open.ready {
+  background: none;
+  border: 0;
+}
+/* Desktop hand dock: the card rests with 66% of its height above the canvas
+ * edge (`#app` clips the rest), and rises to full height on hover/focus.
+ * `EmberHand.metrics` keeps the card at 156x231 for any hand size and lets a
+ * ten-card hand overlap instead of shrinking. */
+html[data-skin="slate"] body:not(.touch-layout) #battle .hand-zone {
+  top: 787px;
+  height: 153px;
+  overflow: visible;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hand-label {
+  top: 753px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hand-card {
+  top: 0;
+  transition:
+    transform var(--m-base) var(--e-std),
+    filter var(--m-base) var(--e-std);
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hand-card:hover,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .hand-card:focus-visible {
+  transform: translateX(calc(-50% + var(--x))) translateY(-78px) scale(1.06);
+  z-index: 40;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hand-card.selected {
+  transform: translateX(calc(-50% + var(--x))) translateY(-78px) scale(1.03);
+  z-index: 39;
+}
+/* neighbours step aside for the raised card */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .hand-card:has(+ .hand-card:is(:hover, :focus-visible)) {
+  transform: translateX(calc(-50% + var(--x) - 22px));
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .hand-card:is(:hover, :focus-visible)
+  + .hand-card {
+  transform: translateX(calc(-50% + var(--x) + 22px));
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="slate"] body:not(.touch-layout) #battle .hand-card {
+    transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * 7. God stage — the contract card lifted out of its slot: blurred court,
+ * centred face, compact ritual panel. Built by `application/contracts.js`.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body .god-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  /* A gutter the centred shell cannot spend: the secondary link must never
+   * land flush against the screen edge on a short phone. */
+  box-sizing: border-box;
+  padding: 14px;
+}
+/* One timeline, both directions (design doc §13.1): on the way in the scrim's
+ * blur ramps up while the card is mid-flip; on the way out the card, the ritual
+ * text and the scrim all start at t=0 and finish inside the card's 0.3s flight
+ * instead of queueing up behind it. Exit durations are the 60% rule from §13.2:
+ * card `--m-stage`, ritual `--m-base`. */
+html[data-skin="slate"] body .god-scrim {
+  position: absolute;
+  inset: 0;
+  background: #050a12b8;
+  backdrop-filter: blur(8px);
+  animation: god-stage-in var(--m-cine) var(--e-std);
+}
+@keyframes god-stage-in {
+  0% {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  45% {
+    opacity: 0.72;
+    backdrop-filter: blur(1px);
+  }
+  100% {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
+}
+html[data-skin="slate"] body .god-stage.closing .god-scrim {
+  opacity: 0;
+  backdrop-filter: blur(0px);
+  animation: none;
+  transition:
+    opacity var(--m-stage) var(--e-exit),
+    backdrop-filter var(--m-stage) var(--e-exit);
+}
+html[data-skin="slate"] body .god-stage.closing .god-ritual-holder {
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity var(--m-base) var(--e-exit),
+    transform var(--m-base) var(--e-exit);
+}
+html[data-skin="slate"] body .god-shell {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+  max-width: 100%;
+}
+/* Two columns, museum label: card left, typography right, both centred on one
+ * axis (design doc §12.4). `wide` is any non-portrait stage showing one card;
+ * `flow` in landscape uses it too, because the height is the scarce axis. */
+html[data-skin="slate"] body .god-stage-wide .god-shell,
+html[data-skin="slate"] body.mobile-landscape .god-stage-flow .god-shell {
+  flex-direction: row;
+  align-items: center;
+  gap: clamp(20px, 4vw, 48px);
+}
+/* Cover flow lets its neighbours hang past the focused card — and past the
+ * screen edge, which is the look. They must NOT widen the shell, or the ritual
+ * column gets pushed off with them. */
+html[data-skin="slate"] body .god-stage-flow .god-cards {
+  overflow: visible;
+}
+html[data-skin="slate"] body .god-cards {
+  position: relative;
+  width: var(--god-card-w, 300px);
+  height: calc(var(--god-card-w, 300px) * 7.4 / 5);
+  flex: none;
+  touch-action: none;
+}
+/* Three equal cards on one line: the row is as wide as they are, and the
+ * typography sits underneath instead of beside (design doc §12.5). */
+html[data-skin="slate"] body .god-stage-spread .god-shell {
+  flex-direction: column;
+  gap: 22px;
+}
+/* The row is centred on the shell, so the box stays one card wide and the
+ * siblings are placed symmetrically around it by `stageLayout`. */
+html[data-skin="slate"] body .god-stage-spread .god-cards {
+  margin-top: 12px;
+  overflow: visible;
+}
+html[data-skin="slate"] body .god-stage-spread .god-card.focused {
+  box-shadow: 0 0 0 2px #f6e3a1cc;
+  border-radius: 8px;
+}
+html[data-skin="slate"] body .god-stage-spread .god-card:not(.focused) {
+  filter: brightness(0.75);
+}
+html[data-skin="slate"] body .god-card {
+  position: absolute;
+  inset: 0;
+  perspective: 1200px;
+  transform: var(--stack, none);
+  transition: transform var(--m-cine) var(--e-spring);
+  cursor: pointer;
+}
+html[data-skin="slate"] body .god-card:not(.focused) {
+  filter: brightness(0.68) saturate(0.8);
+}
+html[data-skin="slate"] body .god-card-inner {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  /* The flip is a keyframe animation (§12.3); this transition now only serves
+   * the parallax tilt and the closing flight. */
+  transition: transform var(--m-base) var(--e-std);
+}
+html[data-skin="slate"] body .god-stage.closing .god-card,
+html[data-skin="slate"] body .god-stage.closing .god-card-inner {
+  transition: transform var(--m-stage) var(--e-exit);
+}
+html[data-skin="slate"] body .god-card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 3.5% / 2.4%;
+}
+html[data-skin="slate"] body .god-card-face .card {
+  width: 100%;
+  height: 100%;
+}
+html[data-skin="slate"] body .god-card-back {
+  transform: rotateY(180deg);
+}
+html[data-skin="slate"] body .god-card-back .contract-back {
+  position: absolute;
+  inset: 0;
+  display: block;
+  border-radius: 6px;
+  background: var(--gold-back);
+  box-shadow:
+    0 0 0 1px #f6e3a133,
+    inset 1px 1px 2px #fff8e65c,
+    inset -1px -1px 2px #1a100299,
+    0 10px 28px #030a1690;
+}
+html[data-skin="slate"] body .god-ritual-holder {
+  width: min(420px, calc(100vw - 32px));
+}
+/* §12.4 column widths: card 340 / label 360 on the two-column stage. */
+html[data-skin="slate"] body .god-stage-wide .god-ritual-holder,
+html[data-skin="slate"]
+  body.mobile-landscape
+  .god-stage-flow
+  .god-ritual-holder {
+  width: min(360px, 42vw);
+}
+html[data-skin="slate"] body .god-stage-spread .god-ritual-holder {
+  width: min(520px, calc(100vw - 32px));
+}
+/* §12.4: the ritual is TYPOGRAPHY, not a panel — no fill, no border, no blur
+ * plate. Hierarchy comes from size, ink and one 2px rule.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body .god-ritual {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  text-shadow: 0 1px 6px #000a;
+}
+html[data-skin="slate"] body .god-eyebrow {
+  margin: 0;
+  color: var(--slate-ink-3);
+  font: 600 12px/1.3 var(--slate-font);
+  letter-spacing: 2px;
+}
+html[data-skin="slate"] body .god-cond {
+  margin: 0;
+  color: var(--slate-ink-2);
+  font: 500 15px/1.45 var(--slate-font);
+}
+html[data-skin="slate"] body .god-cond b {
+  color: var(--slate-ink);
+  font-weight: 700;
+}
+/* One rule across the whole measure with the count sitting on its right end:
+ * the progress and the number are one object, not a bar plus a caption. */
+html[data-skin="slate"] body .god-track {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+html[data-skin="slate"] body .god-rule {
+  flex: 1;
+  height: 2px;
+  background: #ffffff24;
+}
+html[data-skin="slate"] body .god-rule i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #b5872b, #f6e3a1);
+  box-shadow: 0 0 8px #f6e3a166;
+  transition: width var(--m-stage) var(--e-std);
+}
+html[data-skin="slate"] body .god-track > b {
+  color: #fff;
+  font: 700 14px/1 var(--slate-font);
+  font-variant-numeric: tabular-nums;
+}
+/* Cast spells are white words; what is still owed is a hollow dot. */
+html[data-skin="slate"] body .god-cast {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font: 500 13px/1.5 var(--slate-font);
+}
+html[data-skin="slate"] body .god-cast b {
+  color: #fff;
+  font-weight: 600;
+}
+html[data-skin="slate"] body .god-cast s {
+  color: var(--slate-ink-3);
+  text-decoration: none;
+}
+html[data-skin="slate"] body .god-cast i {
+  display: block;
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--slate-ink-3);
+  border-radius: 50%;
+}
+html[data-skin="slate"] body .god-invoke {
+  align-self: stretch;
+  height: 48px;
+  margin-top: 4px;
+  border-radius: 999px;
+  font-size: 15px;
+  letter-spacing: 2px;
+}
+html[data-skin="slate"] body .god-page-link {
+  align-self: center;
+  padding: 4px 6px;
+  border: 0;
+  background: none;
+  color: var(--slate-ink-3);
+  font: 500 13px/1.2 var(--slate-font);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+html[data-skin="slate"] body .god-page-link:hover {
+  color: var(--slate-ink);
+}
+/* Desktop keeps the label tight and precise instead of a scaled-up phone UI. */
+html[data-skin="slate"] body:not(.touch-layout) .god-ritual {
+  gap: 9px;
+}
+html[data-skin="slate"] body:not(.touch-layout) .god-cond {
+  font-size: 14px;
+}
+html[data-skin="slate"] body:not(.touch-layout) .god-invoke {
+  height: 44px;
+  font-size: 14px;
+}
+html[data-skin="slate"] body:not(.touch-layout) .god-page-link {
+  font-size: 12px;
+}
+/* Short landscape: the whole label has to live in ~300px of height. */
+html[data-skin="slate"] body.mobile-landscape .god-ritual {
+  gap: 7px;
+}
+html[data-skin="slate"] body.mobile-landscape .god-cond {
+  font-size: 13px;
+}
+html[data-skin="slate"] body.mobile-landscape .god-invoke {
+  height: 42px;
+  font-size: 14px;
+}
+/* The ritual copy is one group on one timeline: it starts 120ms after the card
+ * leaves the slot (not after it lands) and each line trails the one above by
+ * 60ms. `--i` is the line index, written by `contracts.js`. */
+html[data-skin="slate"] body .god-ritual > * {
+  animation: god-line-in calc(var(--m-stage) * 0.8) var(--e-std) both;
+  animation-delay: calc(120ms + var(--i, 0) * 60ms);
+}
+@keyframes god-line-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+/* --- §12.3 entrance choreography ------------------------------------------
+ * 1. the press is answered on the slot itself (`.lifting`, set by contracts.js)
+ * 2. the card leaves along a bent path, un-rolling -8° of roll and overshooting
+ *    its resting scale before settling (`--fly` / `--fly-mid`, measured in JS)
+ * 3. at the half-way point — which is also where the face comes round — a gold
+ *    highlight sweeps it while the scrim's blur is still rising
+ * 4. once landed the face answers the pointer with a ±6° parallax tilt      */
+html[data-skin="slate"] body #battle .contract-open:active .contract-back {
+  transform: scale(0.97);
+}
+html[data-skin="slate"] body #battle .contract-open.lifting .contract-back {
+  animation: god-slot-pop 240ms var(--e-spring);
+}
+@keyframes god-slot-pop {
+  0% {
+    transform: scale(0.97);
+  }
+  38% {
+    transform: scale(1.05);
+    box-shadow:
+      0 0 0 2px #fff6dce0,
+      0 0 24px 4px #f6e3a199;
+  }
+  100% {
+    transform: none;
+  }
+}
+html[data-skin="slate"] body .god-stage.flying .god-card {
+  animation: god-takeoff var(--m-cine) var(--e-spring) var(--fly-delay, 0ms)
+    both;
+}
+html[data-skin="slate"] body .god-stage.flying .god-card-inner {
+  animation: god-flip var(--m-cine) var(--e-std) var(--fly-delay, 0ms) both;
+}
+@keyframes god-takeoff {
+  0% {
+    transform: var(--fly);
+  }
+  52% {
+    transform: var(--fly-mid);
+  }
+  100% {
+    transform: var(--stack);
+  }
+}
+@keyframes god-flip {
+  0% {
+    transform: rotateY(180deg) translateZ(40px);
+  }
+  100% {
+    transform: none;
+  }
+}
+html[data-skin="slate"] body .god-card-front::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  border-radius: inherit;
+  opacity: 0;
+  background: linear-gradient(
+    114deg,
+    #fff6dc00 38%,
+    #fff6dc8c 48%,
+    #ffffffb3 52%,
+    #fff6dc8c 56%,
+    #fff6dc00 66%
+  );
+  pointer-events: none;
+}
+html[data-skin="slate"] body .god-stage.flying .god-card-front::after {
+  animation: god-sheen calc(var(--m-cine) * 0.7) var(--e-std) both;
+  animation-delay: calc(var(--fly-delay, 0ms) + var(--m-cine) * 0.48);
+}
+@keyframes god-sheen {
+  0% {
+    opacity: 0;
+    transform: translateX(-24%);
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(24%);
+  }
+}
+/* The tilt rides on the inner element, which is also what the close flight
+ * writes inline — so an inline transform always wins over the parallax. */
+html[data-skin="slate"] body .god-card.focused .god-card-inner {
+  transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+}
+/* Reduced motion (system setting or the game's own "减少动态效果"): the whole
+ * stage is one 0.2s cross-fade, in and out. */
+html[data-skin="slate"] body .god-stage.instant .god-card,
+html[data-skin="slate"] body .god-stage.instant .god-card-inner,
+html[data-skin="slate"] body .god-stage.instant .god-ritual-holder {
+  transition: none;
+}
+html[data-skin="slate"] body .god-stage.instant .god-ritual > * {
+  animation: none;
+}
+html[data-skin="slate"] body .god-stage.instant .god-scrim {
+  animation: god-plain-in 0.2s linear;
+  backdrop-filter: blur(8px);
+}
+@keyframes god-plain-in {
+  from {
+    opacity: 0;
+  }
+}
+html[data-skin="slate"] body .god-stage.instant.closing {
+  opacity: 0;
+  transition: opacity 0.2s linear;
+}
+html[data-skin="slate"] body .god-stage.instant.closing .god-scrim,
+html[data-skin="slate"] body .god-stage.instant.closing .god-ritual-holder {
+  opacity: 1;
+  backdrop-filter: blur(8px);
+  transform: none;
+  transition: none;
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="slate"] body .god-card,
+  html[data-skin="slate"] body .god-card-inner,
+  html[data-skin="slate"] body .god-ritual-holder {
+    transition: none;
+  }
+  html[data-skin="slate"] body .god-ritual > * {
+    animation: none;
+  }
+  html[data-skin="slate"] body .god-scrim {
+    animation: god-plain-in 0.2s linear;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * 8. Motion vocabulary on the board (design doc §13.2). Everything that moves
+ * during a turn shares the `--m-*` / `--e-*` tokens declared in base.css, so
+ * the fan, the tokens, the chips and the overlays never disagree about how
+ * fast "fast" is. Durations that used to be written per rule (0.18s here,
+ * 0.2s there, 0.45s on the stage) are now one of four values.
+ * ------------------------------------------------------------------------ */
+/* Board tokens transition their CHROME only. `legacy-components.css` §"FLIP /
+ * combat owns movement" deliberately keeps `transform` and `filter` off this
+ * element: the combat compositor animates the token itself, and a CSS
+ * transition on those two would trail it (tests/e2e/combat-motion.spec.cjs
+ * "freeze settles … delayed filter transitions" is the guard). The 120ms there
+ * is exactly `--m-fast`, so this is a token substitution, not a new rule. */
+html[data-skin="slate"] body #battle .minion {
+  transition:
+    box-shadow var(--m-fast) var(--e-std),
+    border-color var(--m-fast) var(--e-std);
+}
+html[data-skin="slate"] body #battle :is(.hero-stat, .hero-chip) {
+  transition:
+    color var(--m-fast) var(--e-std),
+    border-color var(--m-fast) var(--e-std),
+    box-shadow var(--m-fast) var(--e-std),
+    transform var(--m-fast) var(--e-spring);
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="slate"] body #battle .minion,
+  html[data-skin="slate"] body #battle :is(.hero-stat, .hero-chip) {
+    transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * 9. Arena: aiming, turn handover and token noise (design doc §13.3)
+ * ------------------------------------------------------------------------ */
+
+/* 9.1 The aim line is one confident stroke, not a marching dashed hint: 3px of
+ * gradient with a glowing head that sits on the target. Gold, because §13.6
+ * assigns gold to "target and divine". Placement keeps the blue of "mine". */
+html[data-skin="slate"] body #target-lines[data-mode="target"] #target-path {
+  stroke: url(#aim-gold);
+  stroke-width: 3;
+  stroke-dasharray: none;
+  stroke-linecap: round;
+  animation: none;
+  filter: drop-shadow(0 0 5px #e0b45599);
+}
+html[data-skin="slate"] body #target-lines[data-mode="target"] #target-arrow {
+  fill: #fff3cf;
+  stroke: #fff3cf;
+}
+html[data-skin="slate"] body #target-lines[data-mode="target"] #target-circle {
+  fill: #e0b45526;
+  stroke: #fff3cf;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 7px #f0cf82);
+}
+html[data-skin="slate"] body #target-lines[data-mode="placement"] #target-path {
+  stroke: url(#aim-gradient);
+}
+
+/* 9.2 While aiming, everything that cannot be chosen steps back. Saying which
+ * targets are illegal is faster to read than only marking the legal ones. */
+html[data-skin="slate"]
+  body
+  #app.is-targeting
+  #minions
+  .minion:not(.valid-target):not(.selected),
+html[data-skin="slate"]
+  body
+  #app.is-targeting
+  #battle
+  .hero:not(.valid-target):not(.selected) {
+  /* Keep the token's own drop shadow, or the board goes flat while aiming. */
+  filter: brightness(0.35) saturate(0.55)
+    drop-shadow(0 calc(var(--u, 1px) * 3) calc(var(--u, 1px) * 3) #030a16a6);
+}
+html[data-skin="slate"]
+  body
+  #app.is-targeting.placement-active
+  #minions
+  .minion,
+html[data-skin="slate"] body #app.is-targeting.placement-active #battle .hero {
+  /* Placing a minion has no targets at all; dimming the whole board there
+     would just make the screen go dark. */
+  filter: none;
+}
+
+/* 9.3 Turn handover. The enemy's turn is a red hairline along the top of the
+ * arena, and the end-turn control says what the opponent is doing. */
+html[data-skin="slate"] body #battle .arena::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  opacity: 0;
+  background: linear-gradient(90deg, #e0566000, #e05660 22% 78%, #e0566000);
+  box-shadow: 0 0 10px #e0566088;
+  transition: opacity var(--m-stage) var(--e-std);
+  pointer-events: none;
+}
+html[data-skin="slate"] body #app.enemy-turn #battle .arena::after {
+  opacity: 1;
+}
+html[data-skin="slate"] body #battle .end-turn.thinking {
+  position: relative;
+}
+html[data-skin="slate"] body #battle .end-turn.thinking::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  top: calc(50% - 6px);
+  width: 12px;
+  height: 12px;
+  border: 2px solid #ffffff3d;
+  border-top-color: var(--slate-ink-2);
+  border-radius: 50%;
+  animation: slate-thinking 0.9s linear infinite;
+}
+@keyframes slate-thinking {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 9.4 A refreshed mana row lights left to right, 40ms apart. */
+html[data-skin="slate"]
+  body
+  #battle
+  .mana-gems.mana-refresh
+  .mana-gem.available {
+  animation: slate-pip-on var(--m-base) var(--e-std) both;
+  animation-delay: calc(var(--pip, 0) * 40ms);
+}
+@keyframes slate-pip-on {
+  from {
+    opacity: 0.28;
+    filter: saturate(0.2);
+  }
+}
+
+/* 9.5 "Can attack" was a green underline plus a dot; it becomes a breathing
+ * BLUE rim and a 2px float (§13.3), and blue is also what §13.6 assigns to
+ * "mine and interactive". `card-face.css` composes a token's chrome from three
+ * independent custom properties (`--unit-ring` / `--unit-glow` / `--unit-inset`)
+ * so states can stack, so the recolour goes through those properties rather
+ * than overwriting the composed `box-shadow`. The breathing itself rides on
+ * `.unit-aura`, and the float on `.minion-art` — never on `.minion`, whose
+ * transform belongs to the combat compositor (see §8). */
+html[data-skin="slate"] body #battle .minion.ready .unit-aura {
+  border-bottom-color: var(--slate-blue);
+  box-shadow: 0 0.6cqw 1.4cqw #8cc4ff55;
+  animation: slate-ready-breathe 1.6s ease-in-out infinite;
+}
+html[data-skin="slate"] body #battle .minion.ready .minion-art {
+  --unit-glow: 0 0 1.8cqw #8cc4ff77;
+  --unit-inset: inset 0 0 0 1px #8cc4ff88;
+  animation: slate-ready-float 1.6s ease-in-out infinite;
+}
+@keyframes slate-ready-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes slate-ready-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+/* Nothing of ours can act on the enemy's turn, and while aiming the breathing
+ * would compete with the target highlight. */
+html[data-skin="slate"] body #app.enemy-turn #battle .minion.ready .unit-aura,
+html[data-skin="slate"] body #app.enemy-turn #battle .minion.ready .minion-art,
+html[data-skin="slate"] body #app.is-targeting #battle .minion.ready .unit-aura,
+html[data-skin="slate"]
+  body
+  #app.is-targeting
+  #battle
+  .minion.ready
+  .minion-art {
+  animation: none;
+}
+html[data-skin="slate"] body #battle .minion .ready-dot {
+  display: none;
+}
+
+/* 9.6 Below 90px a token cannot carry its class band and stay readable, so it
+ * keeps only the art, the two gems and the keyword marks. */
+@container (max-width: 89px) {
+  html[data-skin="slate"] body .minion .minion-band {
+    display: none;
+  }
+}
+@container (min-width: 90px) {
+  html[data-skin="slate"] body .minion .minion-band > span {
+    font-size: 9px;
+    letter-spacing: 1px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="slate"] body #battle .minion.ready .minion-art,
+  html[data-skin="slate"] body #battle .minion.ready .unit-aura,
+  html[data-skin="slate"] body #battle .end-turn.thinking::after,
+  html[data-skin="slate"] body #battle .mana-gems.mana-refresh .mana-gem {
+    animation: none;
+  }
+}
+html[data-skin="slate"] body.reduced-motion #battle .minion.ready .minion-art,
+html[data-skin="slate"] body.reduced-motion #battle .minion.ready .unit-aura,
+html[data-skin="slate"] body.reduced-motion #battle .end-turn.thinking::after {
+  animation: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * 10. Chips and the hand dock (design doc §13.4 / §13.5)
+ * ------------------------------------------------------------------------ */
+
+/* 10.1 A changed value is announced on the chip, not with a floating number:
+ * health that fell flashes red, health that rose flashes green, armour pops
+ * into existence and the enemy's hand count nudges. `ui.js` adds the classes
+ * and tweens the digits; these are the one-shot reactions. */
+html[data-skin="slate"] body #battle .hero-stat.chip-down {
+  animation: slate-chip-hurt var(--m-stage) var(--e-exit);
+}
+html[data-skin="slate"] body #battle .hero-stat.chip-up {
+  animation: slate-chip-heal var(--m-stage) var(--e-exit);
+}
+@keyframes slate-chip-hurt {
+  0%,
+  100% {
+    border-color: #ffffff2e;
+  }
+  30% {
+    border-color: #e05660;
+    color: #ffd7da;
+    box-shadow: 0 0 12px #e0566066;
+  }
+}
+@keyframes slate-chip-heal {
+  0%,
+  100% {
+    border-color: #ffffff2e;
+  }
+  30% {
+    border-color: #7fd6a2;
+    color: #d8ffe9;
+    box-shadow: 0 0 12px #7fd6a255;
+  }
+}
+html[data-skin="slate"] body #battle .hero-armor.chip-pop {
+  animation: slate-chip-pop var(--m-base) var(--e-spring);
+}
+@keyframes slate-chip-pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+html[data-skin="slate"] body #battle .hero-hand.chip-nudge {
+  animation: slate-chip-nudge var(--m-base) var(--e-spring);
+}
+@keyframes slate-chip-nudge {
+  50% {
+    transform: translateY(-3px) scale(1.06);
+  }
+}
+
+/* 10.2 Not enough mana greys the COST, not the node: the skill's icon is how
+ * a player recognises it, so it stays readable while unaffordable. */
+html[data-skin="slate"] body #battle .power-button[data-block="mana"] {
+  opacity: 1;
+  filter: none;
+}
+html[data-skin="slate"] body #battle .power-button[data-block="mana"] > b {
+  color: var(--slate-ink-3);
+  border-color: var(--slate-line);
+}
+
+/* 10.3 The dock is a fan, not a stack: `ui.js` writes ±3° of roll and a 2px
+ * arc per card into `--r` / `--y`. A card raised by the finger (or a mouse, or
+ * focus) straightens up — reading it must not mean reading it at an angle. */
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .hand-zone.hand-fits
+  .hand-card {
+  transform: translateY(var(--y, 0)) rotate(var(--r, 0deg));
+  transform-origin: 50% 165%;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .hand-zone.hand-fits
+  .hand-card.peek,
+html[data-skin="slate"]
+  body.touch-layout.pointer-fine
+  #battle
+  .hand-zone.hand-fits
+  .hand-card:hover,
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .hand-zone.hand-fits
+  .hand-card:focus-visible,
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .hand-zone.hand-fits
+  .hand-card.selected {
+  transform: translateY(calc(-1 * var(--hand-lift, 60px))) rotate(0deg) scale(1);
+}
+
+/* 10.4 Fresh mana unlocked this card: one 600ms white edge, once. */
+html[data-skin="slate"] body #battle .hand-card.just-playable::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: 6;
+  border: 1px solid #fff;
+  border-radius: 8px;
+  animation: slate-card-woke 600ms var(--e-exit) both;
+  pointer-events: none;
+}
+@keyframes slate-card-woke {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+    box-shadow:
+      0 0 10px #ffffffaa,
+      inset 0 0 8px #ffffff55;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="slate"] body #battle .hero-stat.chip-down,
+  html[data-skin="slate"] body #battle .hero-stat.chip-up,
+  html[data-skin="slate"] body #battle .hero-armor.chip-pop,
+  html[data-skin="slate"] body #battle .hero-hand.chip-nudge,
+  html[data-skin="slate"] body #battle .hand-card.just-playable::after {
+    animation: none;
+  }
+}
+html[data-skin="slate"]
+  body.reduced-motion
+  #battle
+  .hand-card.just-playable::after {
+  animation: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * 11. Colour semantics (design doc §13.6)
+ *
+ * The board had five meanings in five hues: playable = green, can attack =
+ * blue, legal target = orange/gold, divine = gold, error = red. Three remain:
+ *
+ *   BLUE  — mine, and interactive        (can attack, selected, my placement)
+ *   GOLD  — target, and divine           (legal target, aim line, contracts)
+ *   RED   — the enemy, and danger        (enemy turn, damage, rejection)
+ *
+ * "Playable" leaves the hue system entirely and becomes a thin WHITE edge
+ * light: it is a property of the card, not a party or a threat, and adding a
+ * sixth hue for it is what made the board hard to scan. The `ready` recolour
+ * lives in §9.5 with the rest of the attack affordance.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body .hand-card.playable > .card > .card-inner {
+  --card-edge-color: #ffffffc4;
+  --card-ring: 0 0 calc(var(--u) * 9) #ffffff3d;
+}
+/* The legacy green bar above the card is gone with the ring that replaced it;
+ * this keeps it gone if the legacy sheet is ever reinstated. */
+html[data-skin="slate"] body #battle .hand-card.playable::before {
+  content: none;
+}
+/* Legal target: gold, matching the aim line that points at it (§9.1). */
+html[data-skin="slate"] body .minion.valid-target .minion-art {
+  --unit-ring:
+    0 0 0 max(3px, 2.4cqw) #e0b455, 0 0 0 calc(max(3px, 2.4cqw) + 1px) #050910d9;
+  --unit-glow: 0 0 2.4cqw #f0cf8299;
+}
+html[data-skin="slate"] body #battle .hero.valid-target {
+  border-color: #e0b455;
+  box-shadow:
+    0 0 0 2px #e0b45566,
+    0 10px 30px #0006;
+}
+/* The old green "ready" hairline under a token (refinement.css
+ * `.minion.ready::after`) is replaced by the blue rim in §9.5. */
+html[data-skin="slate"] body #battle .minion.ready::after {
+  content: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * 12. The hero is one card at three scales (design doc §12.1)
+ *
+ * Desktop already showed a 156x231 hero card while touch showed a 56px round
+ * avatar — two different components for the same thing. Touch now shows the
+ * same card at 72x106 (landscape / tablet) or 60x89 (portrait); the round
+ * avatar survives only below 320px and in very short landscape, where
+ * `mobile-view.js` withholds `body.hero-mini`.
+ *
+ * The console loses its plate at the same time: §12.1 asks for frameless
+ * floating HUD, so the strip stops being a panel and the pieces that remain —
+ * card, chips, skill node — each carry their own shadow.
+ * ------------------------------------------------------------------------ */
+/* `skins/slate/mobile.css` §4 paints the hero plate through
+ * `:is(.hero.enemy, .hero.player)`, which counts as two classes — a plain
+ * `.hero` here would lose to it on specificity regardless of file order, so
+ * these rules use the same shape. */
+html[data-skin="slate"] body.hero-mini #battle :is(.hero.enemy, .hero.player) {
+  border: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  --mini-w: 72px;
+  --mini-h: 106px;
+  --mini-x: 6px;
+  --mini-y: 6px;
+}
+html[data-skin="slate"]
+  body.hero-mini
+  #battle
+  :is(.hero.enemy, .hero.player).valid-target,
+html[data-skin="slate"]
+  body.hero-mini
+  #battle
+  :is(.hero.enemy, .hero.player).ready {
+  border: 0;
+  box-shadow: none;
+}
+/* The card itself. `mobile-view.js` sizes and positions the hero BOX; this is
+ * what goes inside it. It is its own query container so the name plate scales
+ * with the card rather than with the viewport. */
+html[data-skin="slate"]
+  body.hero-mini
+  #battle
+  :is(.hero.enemy, .hero.player)
+  .hero-card-inner {
+  inset: auto;
+  left: var(--mini-x);
+  top: var(--mini-y);
+  width: var(--mini-w);
+  height: var(--mini-h);
+  container-type: inline-size;
+  border-radius: 6px;
+  overflow: visible;
+  background: none;
+  filter: drop-shadow(0 6px 14px #000a);
+}
+html[data-skin="slate"] body.hero-mini.mobile-portrait #battle .hero {
+  --mini-w: 60px;
+  --mini-h: 89px;
+}
+/* Portrait: the player's card stands 12px proud of the console band and the
+ * enemy's hangs below it, so both read as pulled out of a slot (§12.1). */
+html[data-skin="slate"] body.hero-mini.mobile-portrait #battle .hero.player {
+  --mini-x: 8px;
+  --mini-y: -12px;
+}
+html[data-skin="slate"] body.hero-mini.mobile-portrait #battle .hero.enemy {
+  --mini-y: 2px;
+}
+html[data-skin="slate"] body.hero-mini.mobile-landscape #battle .hero.enemy {
+  --mini-y: 2px;
+}
+/* Full-bleed art in a card silhouette, not a round aperture. */
+html[data-skin="slate"]
+  body.hero-mini
+  #battle
+  :is(.hero.enemy, .hero.player)
+  .hero-card-inner
+  .portrait-frame {
+  border-radius: inherit;
+  border: 1px solid var(--slate-card-line);
+  box-shadow:
+    inset 0 0 0 1px #050910cc,
+    0 2px 10px #000a;
+}
+html[data-skin="slate"]
+  body.hero-mini
+  #battle
+  .hero-card-inner
+  .portrait-frame
+  img {
+  object-position: var(--art-pos, 50% 24%);
+  transform: none;
+}
+html[data-skin="slate"] body.hero-mini #battle .hero.ready .portrait-frame {
+  border-color: var(--slate-blue);
+  box-shadow:
+    inset 0 0 0 1px #050910cc,
+    0 0 12px #8cc4ff88;
+}
+html[data-skin="slate"]
+  body.hero-mini
+  #battle
+  .hero.valid-target
+  .portrait-frame {
+  border-color: #e0b455;
+  box-shadow:
+    inset 0 0 0 1px #050910cc,
+    0 0 12px #f0cf8299;
+}
+/* The name plate rides the bottom edge of the card, as on a real card face.
+ * `mobile.css` §4 also targets `.hero-name` through `:is(...)`, so again the
+ * selector has to carry the same weight. */
+html[data-skin="slate"]
+  body.hero-mini
+  #battle
+  :is(.hero.enemy, .hero.player)
+  .hero-name {
+  position: absolute;
+  left: var(--mini-x);
+  right: auto;
+  top: auto;
+  bottom: calc(100% - var(--mini-y) - var(--mini-h));
+  z-index: 3;
+  display: block;
+  box-sizing: border-box;
+  width: var(--mini-w);
+  max-width: none;
+  padding: 3px 4px;
+  border: 0;
+  border-radius: 0 0 6px 6px;
+  background: linear-gradient(#0a111bcc, #060b12ee);
+  box-shadow: inset 0 1px 0 #ffffff26;
+  color: #fff;
+  font: 700 clamp(8px, 15cqw, 12px) / 1.15 var(--slate-font);
+  letter-spacing: 0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* The chip row moves clear of the card and floats on the scene: with the
+ * plate gone, each chip carries its own shadow (§12.1 "无框浮置").
+ *
+ * NOTE: attack and health stay in this row rather than becoming gems on the
+ * card. They live inside `.hero-chips`, which is the positioned ancestor, so
+ * placing them on the card would mean re-parenting them in `ui.js` — and the
+ * desktop/legacy badges are positioned in percentages of `.hero`, which
+ * `ui-detail` and `ui-alignment` assert on. At 12px in the row they are
+ * already legible, which is what §12.1 is actually after. */
+html[data-skin="slate"] body.hero-mini #battle .hero-chips {
+  left: calc(var(--mini-x) + var(--mini-w) + 8px);
+}
+html[data-skin="slate"] body.hero-mini #battle :is(.hero-stat, .hero-chip) {
+  box-shadow: 0 4px 12px #0009;
+}
+html[data-skin="slate"]
+  body.hero-mini.mobile-portrait
+  #battle
+  .hero.enemy
+  .hero-chips {
+  top: 30px;
+}
+html[data-skin="slate"]
+  body.hero-mini.mobile-portrait
+  #battle
+  .hero.player
+  .hero-chips {
+  left: calc(var(--mini-x) + var(--mini-w) + 72px);
+  top: 34px;
+  right: 86px;
+}
+/* §1 pins the landscape chip row through `.hero.player .hero-chips` (five
+ * classes); this has to carry the same weight to move it under the card. */
+html[data-skin="slate"]
+  body.hero-mini.mobile-landscape
+  #battle
+  :is(.hero.enemy, .hero.player)
+  .hero-chips {
+  left: 6px;
+  right: 4px;
+  top: calc(var(--mini-y) + var(--mini-h) + 4px);
+  gap: 3px;
+}
+/* The landscape rail is narrower than the card is tall, so the card steps
+ * down with it (mobile-view `roomyRail`). */
+@media (max-height: 469px) {
+  html[data-skin="slate"] body.hero-mini.mobile-landscape #battle .hero {
+    --mini-w: 56px;
+    --mini-h: 83px;
+  }
+  html[data-skin="slate"]
+    body.hero-mini.mobile-landscape
+    #battle
+    :is(.hero.enemy, .hero.player)
+    .hero-name {
+    font-size: 9px;
+    padding: 2px 3px;
+  }
+  html[data-skin="slate"]
+    body.hero-mini.mobile-landscape
+    #battle
+    :is(.hero-stat, .hero-chip) {
+    height: 19px;
+    padding: 0 5px 0 2px;
+    font-size: 11px;
+  }
+}
+html[data-skin="slate"] body.hero-mini #battle .hero-phase {
+  box-shadow: 0 4px 12px #0009;
+}
+
+/* ---------------------------------------------------------------------------
+ * 13. Landing slot, turn capsule, round end-turn, top-bar weight
+ *     (design doc §13.3 / §12.6 / §13.7)
+ * ------------------------------------------------------------------------ */
+
+/* 13.1 ONE landing marker at the end of the row. See `showLandingSlot` in
+ * ui.js for why there are not seven: the engine can only append. */
+html[data-skin="slate"] body #battle .landing-slot {
+  position: absolute;
+  z-index: 6;
+  border: 1px dashed #8cc4ff5c;
+  border-radius: 12% / 9%;
+  background: radial-gradient(60% 55% at 50% 60%, #8cc4ff1f, #8cc4ff00 72%);
+  box-shadow: inset 0 0 18px #8cc4ff1a;
+  animation: slate-slot-in var(--m-base) var(--e-std);
+  pointer-events: none;
+}
+@keyframes slate-slot-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+html[data-skin="slate"] body #battle .landing-slot[hidden] {
+  display: none;
+}
+
+/* 13.2 The turn read-out becomes a capsule, and the enemy's turn outlines it
+ * in red — the same signal as the hairline on the arena (§9.3). */
+html[data-skin="slate"] body #battle .turn-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  /* `mobile-ui.js` steps the wording down while `scrollWidth` exceeds the box,
+   * so the box has to actually clip rather than spill. */
+  overflow: hidden;
+  padding: 0 14px;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  box-shadow: 0 4px 14px #0007;
+  color: var(--slate-ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transition:
+    border-color var(--m-stage) var(--e-std),
+    color var(--m-stage) var(--e-std);
+}
+/* The shortest wording still did not fit: 12px is the floor (§12.6). */
+html[data-skin="slate"] body #battle .turn-number.turn-tight {
+  padding: 0 10px;
+  font-size: 12px;
+  letter-spacing: 0;
+}
+html[data-skin="slate"] body #app.enemy-turn #battle .turn-number {
+  border-color: #e0566099;
+  color: #ffd7da;
+}
+
+/* 13.3 Touch end turn: a 64px disc in the bottom-right corner (§12.6).
+ * `mobile-view.js` sizes the box; this makes it round and drops the shortcut
+ * caption, which is meaningless without a keyboard. */
+html[data-skin="slate"] body.hero-mini #battle .turn-controls {
+  border-radius: 50%;
+}
+html[data-skin="slate"] body.hero-mini #battle .end-turn {
+  border-radius: 50%;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1.15;
+  letter-spacing: 0;
+  white-space: normal;
+  box-shadow:
+    0 8px 22px #0009,
+    inset 0 1px 0 #ffffff2e;
+}
+html[data-skin="slate"] body.hero-mini #battle .turn-shortcut {
+  display: none;
+}
+/* The spinner has no room beside the text on a disc: it takes the bottom. */
+html[data-skin="slate"] body.hero-mini #battle .end-turn.thinking {
+  font-size: 11px;
+}
+html[data-skin="slate"] body.hero-mini #battle .end-turn.thinking::after {
+  right: calc(50% - 6px);
+  top: auto;
+  bottom: 6px;
+}
+/* The mana row ends at the disc's left edge, so `6/6` reads as its caption. */
+html[data-skin="slate"] body.hero-mini.mobile-portrait #battle .mana-caption {
+  position: static;
+  order: 1;
+  margin-left: auto;
+}
+
+/* 13.4 Desktop top bar (§13.7): the two word tabs become 36px icon pills, the
+ * same language as the volume and settings buttons. The ids, the panels they
+ * open and the shortcut hints in `title` are untouched — only the chrome. */
+html[data-skin="slate"] body:not(.touch-layout) #battle .utility-tab {
+  width: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  height: 36px;
+  padding: 0;
+  gap: 0;
+  border-radius: 50%;
+  font-size: 0;
+  letter-spacing: 0;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .utility-tab svg {
+  width: 18px;
+  height: 18px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .utility-key {
+  display: none;
+}
+/* The deck counter becomes a small chip on the hero's shoulder. */
+html[data-skin="slate"] body:not(.touch-layout) #battle .deck-caption {
+  display: none;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .deck-count {
+  font-variant-numeric: tabular-nums;
+}
+/* §13.7: the deck counters leave the top rail and the right rail and become
+ * small chips on their hero's shoulder — the count belongs to that player, and
+ * the top bar gets its space back. `ui.js` puts the full sentence in `title`,
+ * so dropping the caption costs no meaning. */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  :is(.enemy-deck, .player-deck) {
+  height: 30px;
+  padding: 0 11px 0 8px;
+  gap: 6px;
+  left: 200px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .enemy-deck {
+  top: 100px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .player-deck {
+  top: 462px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  :is(.enemy-deck, .player-deck)
+  .deck-caption {
+  display: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  :is(.enemy-deck, .player-deck)
+  :is(svg, [data-icon]) {
+  width: 15px;
+  height: 15px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  :is(.enemy-deck, .player-deck)
+  .deck-count {
+  font-size: 13px;
+}

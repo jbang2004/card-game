@@ -209,8 +209,28 @@
     const b = D.bosses[s.bossIndex];
     $("touch-match-chip").innerHTML =
       `<small>第 ${s.bossIndex + 1} 战</small><strong>${esc(b.name)}</strong><span>${s.phase2 ? "第二阶段 · 已觉醒" : "第一阶段"} · ${s.e.hand.length} 手牌</span>`;
-    $("turn-number").textContent =
-      (s.active === "p" ? "你的回合" : "敌方回合") + " · " + s.turn;
+    /* Same capsule wording as the desktop read-out (design doc §12.6): the
+     * round number leads, whose turn it is follows. The capsule only owns the
+     * band between the brand and the icon cluster (`mobile-view.js` `l.round`),
+     * so on a narrow phone the wording steps down until it fits rather than
+     * running under the volume button; 12px is the floor. */
+    const turn = $("turn-number"),
+      ours = s.active === "p";
+    turn.classList.remove("turn-tight");
+    const wordings = [
+      `第 ${s.turn} 回合 · ${ours ? "你的回合" : "敌方回合"}`,
+      `第 ${s.turn} 回合 · ${ours ? "你的" : "敌方"}`,
+      `回合 ${s.turn} · ${ours ? "你" : "敌"}`,
+    ];
+    let fitted = false;
+    for (const wording of wordings) {
+      turn.textContent = wording;
+      if (turn.scrollWidth <= turn.clientWidth + 1) {
+        fitted = true;
+        break;
+      }
+    }
+    if (!fitted) turn.classList.add("turn-tight");
     $("hand").setAttribute(
       "aria-label",
       `你的 ${s.p.hand.length} 张手牌，左右滑动，点按选中，拖动出牌，长按扶起拖动`,

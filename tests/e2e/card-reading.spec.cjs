@@ -107,12 +107,19 @@ test("hand rail keeps compact rules complete without a nested scroller", async (
         scrollHeight: text.scrollHeight,
         clientHeight: text.clientHeight,
         fontSize: Number.parseFloat(getComputedStyle(text).fontSize),
-        artHeight: card.querySelector(".card-art").getBoundingClientRect()
-          .height,
+        /* Layout height, not the painted box: the dock fans its cards by up
+         * to 3° (design doc §13.5) and a rotated element reports an
+         * axis-aligned rect, which would differ per card purely by position.
+         * The contract here is that one card art is one size in every hand. */
+        artHeight: card.querySelector(".card-art").offsetHeight,
         objectFit: getComputedStyle(card.querySelector(".card-art img"))
           .objectFit,
         ruleSize: card.dataset.ruleSize,
-        verticalFit: handRect.y >= 0 && handRect.bottom <= innerHeight + 1,
+        /* Dock cards peek above the screen edge by design (the lower part
+         * rises into view when the card is selected); the readable top band
+         * must be on screen and at least 60% of the card visible. */
+        verticalFit:
+          handRect.y >= 0 && innerHeight - handRect.y >= handRect.height * 0.6,
       };
     });
   });
@@ -160,7 +167,11 @@ test("desktop hand rail uses the same static card face contract", async ({
         objectFit: getComputedStyle(hand.querySelector(".card-art img"))
           .objectFit,
         ruleSize: hand.querySelector(".card").dataset.ruleSize,
-        verticalFit: rect.y >= 0 && rect.bottom <= innerHeight + 1,
+        /* The desktop hand is a dock (BATTLE_REDESIGN §11): a resting card
+           peeks ~66% and its lower third is clipped by the canvas edge on
+           purpose, so "fits" means the readable band is on screen. */
+        verticalFit:
+          rect.y >= 0 && Math.min(rect.bottom, innerHeight) - rect.y >= 100,
       };
     });
   });
@@ -227,10 +238,15 @@ for (const [name, viewport, touch] of [
       .locator("#hand .hand-card .card")
       .first()
       .evaluate((card) => {
-        const measure = (node) => {
-          const r = node.getBoundingClientRect();
-          return { width: r.width, height: r.height };
-        };
+        /* Layout box, not the painted one: the battle dock fans its cards by
+         * up to 3° (design doc §13.5), and a rotated element reports an
+         * axis-aligned rect whose ratio is not the card's ratio. What this
+         * test is about — one card aperture shared by the opening hand and
+         * the battle hand — is a property of the layout box. */
+        const measure = (node) => ({
+          width: node.offsetWidth,
+          height: node.offsetHeight,
+        });
         return {
           card: measure(card),
           art: measure(card.querySelector(".card-art")),

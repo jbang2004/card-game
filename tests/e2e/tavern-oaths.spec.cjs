@@ -1,3 +1,4 @@
+const { openCovenantPage } = require("./helpers/covenant.cjs");
 const { openDeckTools } = require("./helpers/deck-tools.cjs");
 const { test, expect } = require("@playwright/test");
 async function ready(page) {
@@ -192,7 +193,7 @@ test("full practice game through visible card/target controls with no stuck trig
       a.type,
     );
     if (a.type === "contract") {
-      await page.locator("#contract-open").click();
+      await openCovenantPage(page);
       await page.locator(`[data-invoke="${a.cid}"]`).click();
       continue;
     }
@@ -210,7 +211,7 @@ test("full practice game through visible card/target controls with no stuck trig
         : `.minion[data-uid="${a.target.uid}"]`
       : null;
     if (a.type === "play") {
-      await page.locator(`#hand [data-hand="${a.uid}"]`).click();
+      await page.locator(`#hand [data-hand="${a.uid}"]`).click({ position: { x: 14, y: 30 } });
       if (target) await page.locator(target).click();
       else if (
         await page.evaluate(() => Emberfall.selection?.type === "card-play")

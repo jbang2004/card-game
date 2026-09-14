@@ -1,18 +1,23 @@
-/* Desktop hand geometry. Touch retains its native scrolling layout.
- * Reserve space for every card's cost and stats, including a ten-card hand. */
+/* Desktop hand geometry. Touch retains its dock layout (mobile-view.js).
+ * The desktop hand is a dock too (docs/design/BATTLE_REDESIGN_20260914.md §11):
+ * the card size no longer shrinks with the hand — a ten-card hand overlaps
+ * instead, so a card is always legible and always ≥ `MIN_STEP` wide to hit. */
 const EmberHand = (() => {
   const CARD_RATIO = 5 / 7.4;
+  const RAIL = 1096;
+  const CARD_W = 156;
+  const GAP = 16;
+  const MIN_STEP = 40;
 
   function metrics(count) {
     const n = Math.max(1, Math.min(10, count));
-    const gap = 16;
-    const heightLimit = n > 7 ? 192 : 232;
-    const width = Math.min(
-      Math.floor(heightLimit * CARD_RATIO),
-      Math.floor((1096 - (n - 1) * gap) / n),
-    );
+    const width = CARD_W;
     const height = Math.round(width / CARD_RATIO);
-    return { width, height, step: width + gap };
+    const step =
+      n > 1
+        ? Math.max(MIN_STEP, Math.min(width + GAP, (RAIL - width) / (n - 1)))
+        : width + GAP;
+    return { width, height, step: Math.round(step) };
   }
   return Object.freeze({ metrics });
 })();

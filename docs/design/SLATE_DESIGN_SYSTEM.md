@@ -51,6 +51,8 @@
 | `--slate-page-x` `--slate-rail` `--slate-list` `--slate-col-gap` `--slate-card-w/h` `--slate-thumb-w/h` | 48 / 200 / 400 / 40 / 300×430 / 72×96 px；`max-width:1500px` 时 36 / 150 / 330 / 28 / 240×344 | 页面壳几何 |
 | `--covenant-col` | `clamp(400px, 42vw, 600px)` | 契约页右栏列宽。分页轨与面板在不同子树里，必须共用同一条列边，所以不能挂在其中任何一个上（2026-09-14 由 contracts.css 上收） |
 | `--slate-hud-hit` | `max(44px, calc(44px / var(--scale, 1)))` | 战场 HUD 的最小命中区。`#battle` 是被 `--scale` 缩放的 1600×940 逻辑画布，按逻辑 px 写的控件会随窗口缩小；本令牌把它还原成 44 个真实设备 px。**必须声明在 `#app` 上而不是根元素**：自定义属性里的 `var()` 在「持有该声明的元素」上求值，而 `mobile-view.js` 是把 `--scale` 作为内联样式写在 `#app` 上的；写在 `html` 上会永远取 fallback 1，塌成固定 44px（2026-09-14 由 battle.css 上收） |
+| `--m-fast` `--m-base` `--m-stage` `--m-cine` | 120ms / 180ms / 320ms / 550ms | 动效时长（2026-09-14 第三轮加入）。`--m-fast` = 芯片数值变化、hover 让位；`--m-base` = 手牌抬起、选中、令牌高亮；`--m-stage` = 浮层进出、随从落场；`--m-cine` = 神卡出场、降临仪式。**退场时长 = 进场的 60%**（例：神卡进场 `--m-cine`，退场 `--m-stage`），同组元素共用一条时间线；`prefers-reduced-motion` 与设置里的「减少动态效果」下一律退化为 0.2s 淡入淡出 |
+| `--e-std` `--e-spring` `--e-exit` | `cubic-bezier(.2,.8,.2,1)` / `cubic-bezier(.34,1.4,.64,1)` / `cubic-bezier(.4,0,1,1)` | 缓动（同上）。`--e-std` = 进场与常规过渡；`--e-spring` = 带过冲的落定（神卡飞行、芯片弹入）；`--e-exit` = 退场，加速离开 |
 
 新增页面若需要新令牌（例如战场 HUD 的半透明底 `--slate-hud`），在最终报告中提出，由协调者并入 base.css；页面文件里先用字面值并加 `/* token candidate */` 注释。
 

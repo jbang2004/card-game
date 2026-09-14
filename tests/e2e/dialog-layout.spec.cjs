@@ -142,8 +142,26 @@ test("arbitrary resize retains hero choices and unsaved deck edits", async ({
   ]) {
     await page.setViewportSize({ width, height });
     await assertDialogFit(page);
-    if (await page.locator("#touch-deck-tab").isVisible())
-      await page.locator("#touch-deck-tab").click();
-    await expect(page.locator("#deck-name")).toHaveValue("跨尺寸未保存草稿");
+    // A viewport change re-renders the library asynchronously: the stacked
+    // touch layout shows a tab strip, the two-column layout removes it and
+    // puts the deck column on screen permanently. Sampling `isVisible()` once
+    // can catch the frame in between — the strip reads visible, then settles
+    // away, and the click waits for an element that will never come back.
+    // Drive the end state instead: reveal the deck column if it needs
+    // revealing, and retry until it is actually on screen.
+    const deckName = page.locator("#deck-name"),
+      deckTab = page.locator("#touch-deck-tab");
+    await expect
+      .poll(
+        async () => {
+          if (await deckName.isVisible()) return "shown";
+          if (await deckTab.isVisible())
+            await deckTab.click({ timeout: 1000 }).catch(() => {});
+          return "hidden";
+        },
+        { timeout: 10000 },
+      )
+      .toBe("shown");
+    await expect(deckName).toHaveValue("跨尺寸未保存草稿");
   }
 });

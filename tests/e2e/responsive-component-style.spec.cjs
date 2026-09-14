@@ -1,3 +1,4 @@
+const { openCovenantPage } = require("./helpers/covenant.cjs");
 const { test, expect } = require("@playwright/test");
 const path = require("node:path");
 
@@ -130,14 +131,20 @@ const pages = {
   ],
   battle: [
     "#battle-log-toggle",
-    "#contract-open",
     "#intel-toggle",
-    "#end-turn",
     "#power-btn",
     ".mana-panel",
     ".hand-card .card",
-    ".hero",
   ],
+  /* `#end-turn` and `.hero` left this list in round 3 (design doc §12.1 and
+   * §12.6): the touch layout deliberately no longer renders them with the same
+   * material as the desktop one. The hero console became frameless floating
+   * HUD — card, chips and skill node each carry their own shadow instead of
+   * sharing a plate — and the touch end-turn became a 64px disc in the corner
+   * while the desktop one stays a pill. Both are still ONE component with one
+   * set of states; only their chrome is layout-specific, which is what this
+   * list cannot express. The card face, mana panel, skill node and utility
+   * tabs remain under the shared-material contract. */
   battleOpen: [".boss-panel", "#intel-toggle"],
   contracts: [
     ".covenant-box",
@@ -328,7 +335,7 @@ async function captureViewport(browser, viewport) {
   await page.locator('[data-touch-menu="boss"]').click();
   result.intelligence = await fingerprint(page, pages.intelligence);
   await page.locator("#touch-hero-close").click();
-  await page.locator("#contract-open").click();
+  await openCovenantPage(page);
   result.contracts = await fingerprint(page, pages.contracts);
   await page.keyboard.press("Escape");
 

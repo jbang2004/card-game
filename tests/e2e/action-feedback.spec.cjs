@@ -82,7 +82,9 @@ test.describe("battle instruction and feedback rails", () => {
       g.emit();
       return g.s.p.hand[0].uid;
     });
-    await page.locator(`#hand [data-hand="${uid}"]`).click();
+    await page
+      .locator(`#hand [data-hand="${uid}"]`)
+      .click({ position: { x: 14, y: 30 } });
     const cue = page.locator("#target-lines");
     await expect(cue).toBeVisible();
     await expect(cue).toHaveAttribute("data-mode", "placement");
@@ -105,7 +107,9 @@ test.describe("battle instruction and feedback rails", () => {
       g.s.p.hand = [g.card("guard")];
       g.emit();
     });
-    await page.locator('#hand [data-cardid="guard"]').click();
+    await page
+      .locator('#hand [data-cardid="guard"]')
+      .click({ position: { x: 14, y: 30 } });
     const placement = await page.evaluate(() => {
       const d = document.getElementById("target-path").getAttribute("d"),
         match = d?.match(/([0-9.-]+),([0-9.-]+)$/),
@@ -147,7 +151,9 @@ test.describe("battle instruction and feedback rails", () => {
       g.emit();
       return g.s.p.hand[0].uid;
     });
-    await page.locator(`#hand [data-hand="${uid}"]`).click();
+    await page
+      .locator(`#hand [data-hand="${uid}"]`)
+      .click({ position: { x: 14, y: 30 } });
     const chip = page.locator("#touch-target-bar");
     await expect(chip).toBeVisible();
     await expect(chip.locator("#touch-cancel")).toBeVisible();
@@ -200,7 +206,9 @@ for (const [width, height] of [
     const page = await context.newPage();
     await startDemo(page);
     await expect(page.locator("#end-turn")).toBeEnabled();
-    await page.locator('#hand [data-cardid="frostbolt"]').click();
+    await page
+      .locator('#hand [data-cardid="frostbolt"]')
+      .click({ position: { x: 14, y: 30 } });
     await expect(page.locator("#touch-target-text")).toBeVisible();
     const before = await page.evaluate(() => JSON.stringify(EmberDebug.game.s));
     const faults = await page.evaluate(() => {
@@ -216,18 +224,24 @@ for (const [width, height] of [
       for (const el of controls) {
         const r = el.getBoundingClientRect();
         if (r.width < 43 || r.height < 43) errors.push("small:" + el.id);
+        /* The god slot is a hand card parked at the end of the dock, so its
+           lower third hangs off the screen by design (BATTLE_REDESIGN §11);
+           the visible band still has to be a full 44px target. */
+        const dock = el.id === "contract-open" && EmberViewport.mobile;
         if (
           r.left < 0 ||
           r.top < 0 ||
           r.right > innerWidth + 1 ||
-          r.bottom > innerHeight + 1
+          (dock ? r.top + 44 : r.bottom) > innerHeight + 1
         )
           errors.push("outside:" + el.id);
         if (getComputedStyle(el).backgroundImage !== "none")
           errors.push("texture:" + el.id);
         const hit = document.elementFromPoint(
           r.x + r.width / 2,
-          r.y + r.height / 2,
+          dock
+            ? r.y + Math.min(r.height, innerHeight - r.y) / 2
+            : r.y + r.height / 2,
         );
         if (!el.contains(hit)) errors.push("blocked:" + el.id);
       }
@@ -286,7 +300,9 @@ test("a rejected action temporarily replaces its instruction without covering un
   page,
 }) => {
   await startDemo(page);
-  await page.locator('#hand [data-cardid="frostbolt"]').click();
+  await page
+    .locator('#hand [data-cardid="frostbolt"]')
+    .click({ position: { x: 14, y: 30 } });
   await page.evaluate(() =>
     Emberfall.toast("请点击高亮的合法目标，再确认本次行动。", {
       duration: 1000,
@@ -320,4 +336,149 @@ test("the gallery shows the six current scenes and no retired building bundle", 
   ).toBe(true);
   await page.locator("#atelier-done").click();
   await expect(page.locator("#modal")).not.toHaveClass(/visible/);
+});
+
+/* The reticle used to hit-test the pointer's design-space coordinates (the
+ * 1600x940 plane) straight against elementsFromPoint, which wants client
+ * pixels. Whenever #app is letterboxed or scaled the probe landed on a
+ * neighbouring unit — or on the enemy hero — so the aim line jumped away from
+ * the minion under the cursor. Both viewports below deliberately differ from
+ * the design plane so the mapping is actually exercised. */
+async function armFriendlyAim(page) {
+  await page.evaluate(() => {
+    const g = EmberDebug.game;
+    g.s.heroId = "morla";
+    g.s.p.board = [];
+    for (let i = 0; i < 3; i++) g.summon("p", "wisp", { sick: false });
+    g.s.p.mana = 10;
+    g.s.p.powerUsed = false;
+    g.emit();
+  });
+  /* Summoning runs the entrance FX; the power button ignores a click while the
+   * board is still animating. */
+  await idle(page);
+  await page.waitForFunction(
+    () => !document.getElementById("power-btn").disabled,
+  );
+  await page.locator("#power-btn").click();
+  await expect(page.locator("#target-lines")).toBeVisible();
+  return page.evaluate(() =>
+    [...document.querySelectorAll(".minion")]
+      .filter((el) => el.dataset.side !== "e")
+      .map((el) => el.dataset.uid),
+  );
+}
+
+/* The cue is drawn in design space; report its tip in client pixels so the
+ * assertion can compare it with the point the pointer was actually at. */
+async function reticleTip(page) {
+  return page.evaluate(() => {
+    const app = document.getElementById("app"),
+      r = app.getBoundingClientRect(),
+      c = document.getElementById("target-circle");
+    return {
+      x:
+        r.left + (Number(c.getAttribute("cx")) * r.width) / EmberViewport.width,
+      y:
+        r.top +
+        (Number(c.getAttribute("cy")) * r.height) / EmberViewport.height,
+      focus: [...document.querySelectorAll(".aim-focus")].map(
+        (el) => el.dataset.uid,
+      ),
+    };
+  });
+}
+
+/* A point inside the arena that no unit occupies, found the same way the hit
+ * test looks: by asking the document what is actually there. */
+async function emptyArenaPoint(page) {
+  return page.evaluate(() => {
+    const a = document.getElementById("arena").getBoundingClientRect();
+    for (let fy = 0.12; fy < 0.95; fy += 0.08)
+      for (let fx = 0.04; fx < 0.98; fx += 0.04) {
+        const x = a.left + a.width * fx,
+          y = a.top + a.height * fy;
+        if (
+          !document
+            .elementsFromPoint(x, y)
+            .some((n) => n.closest?.("#battle [data-uid]"))
+        )
+          return { x, y };
+      }
+    throw new Error("no empty arena point");
+  });
+}
+
+async function centerOfUnit(page, uid) {
+  const box = await page.locator(`.minion[data-uid="${uid}"]`).boundingBox();
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+}
+
+test.describe("friendly aiming follows the pointer · desktop", () => {
+  test.use({ viewport: { width: 1440, height: 820 } });
+
+  test("the aim line ends on whichever friendly minion the cursor is over", async ({
+    page,
+  }) => {
+    await startDemo(page);
+    const uids = await armFriendlyAim(page);
+    expect(uids.length).toBeGreaterThan(2);
+    for (const uid of uids) {
+      const c = await centerOfUnit(page, uid);
+      await page.mouse.move(c.x, c.y);
+      await page.waitForTimeout(60);
+      const tip = await reticleTip(page);
+      expect(Math.hypot(tip.x - c.x, tip.y - c.y)).toBeLessThanOrEqual(12);
+      expect(tip.focus).toEqual([uid]);
+    }
+    /* Empty ground: the tip follows the pointer and snaps to nobody. */
+    const empty = await emptyArenaPoint(page);
+    await page.mouse.move(empty.x, empty.y);
+    await page.waitForTimeout(60);
+    const tip = await reticleTip(page);
+    expect(Math.hypot(tip.x - empty.x, tip.y - empty.y)).toBeLessThanOrEqual(
+      12,
+    );
+    expect(tip.focus).toEqual([]);
+  });
+});
+
+test.describe("friendly aiming follows the finger · touch", () => {
+  test.use({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+  });
+
+  test("the aim line ends on whichever friendly minion the finger is over", async ({
+    page,
+  }) => {
+    await startDemo(page);
+    const uids = await armFriendlyAim(page);
+    expect(uids.length).toBeGreaterThan(2);
+    const cdp = await page.context().newCDPSession(page);
+    /* Start the gesture on empty ground: a touchMove onto the exact point the
+     * finger already sits on is coalesced away by the browser. */
+    const start = await emptyArenaPoint(page);
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [{ x: start.x, y: start.y }],
+    });
+    for (const uid of uids) {
+      const c = await centerOfUnit(page, uid);
+      await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [{ x: c.x, y: c.y }],
+      });
+      await page.waitForTimeout(60);
+      const tip = await reticleTip(page);
+      expect(Math.hypot(tip.x - c.x, tip.y - c.y)).toBeLessThanOrEqual(12);
+      expect(tip.focus).toEqual([uid]);
+    }
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [],
+    });
+    await cdp.detach();
+  });
 });

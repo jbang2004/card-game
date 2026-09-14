@@ -1,3 +1,4 @@
+const { openCovenantPage } = require("./helpers/covenant.cjs");
 const { test, expect } = require("@playwright/test");
 const { openDeckTools } = require("./helpers/deck-tools.cjs");
 for (const [width, height] of [
@@ -60,7 +61,7 @@ for (const [width, height] of [
             Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)),
         ).toBe(0);
       }
-    await page.locator("#contract-open").click();
+    await openCovenantPage(page);
     // Awakening progress is readable at every width. Silverblue drew it as a
     // row of lit stones on compact layouts; slate uses the progress bar
     // everywhere (design system §5.3), so assert the progress element rather

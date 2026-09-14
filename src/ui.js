@@ -67,6 +67,10 @@
     showModal,
     closeModal,
     act,
+    cardHTML,
+    reduced: () =>
+      settings.reduced ||
+      matchMedia("(prefers-reduced-motion: reduce)").matches,
   });
   const deckStore = EmberDeckStore.create({
     data: D,
@@ -198,6 +202,7 @@
     clearActionCue();
   }
   function clearActionCue() {
+    hideLandingSlot();
     const svg = $("target-lines");
     if (!svg) return;
     svg.style.display = "none";
@@ -317,6 +322,42 @@
     const from = centerOf(sourceCard(selection.uid)),
       to = placementAnchor(pointerTarget);
     drawActionCue(from, to, "placement");
+    showLandingSlot(to);
+  }
+  /* Landing slot (design doc §13.3). The design asks for seven ground markers
+   * with the row opening a gap at the insertion point — that needs the `play`
+   * action to carry a board index. It does not: `engine.js` `play()` takes
+   * (side, uid, target) and `summon()` ends in `p.board.push(m)`, so a minion
+   * can only ever land at the END of the row. Drawing seven slots and a gap
+   * would promise a choice the rules cannot honour, so the fallback the design
+   * names is what is drawn: ONE marker, where the minion will actually go. */
+  function showLandingSlot(at) {
+    let slot = $("landing-slot");
+    if (!at) return hideLandingSlot();
+    if (!slot) {
+      slot = document.createElement("div");
+      slot.id = "landing-slot";
+      slot.className = "landing-slot";
+      slot.setAttribute("aria-hidden", "true");
+      $("minions").append(slot);
+    }
+    const board = game.s?.p?.board || [],
+      size = EmberViewport.minion(
+        "p",
+        Math.max(0, board.length - 1),
+        Math.max(1, board.length),
+      );
+    Object.assign(slot.style, {
+      left: Math.round(at.x - size.w / 2) + "px",
+      top: Math.round(at.y - size.h / 2) + "px",
+      width: size.w + "px",
+      height: size.h + "px",
+    });
+    slot.hidden = false;
+  }
+  function hideLandingSlot() {
+    const slot = $("landing-slot");
+    if (slot) slot.hidden = true;
   }
   function sourceCard(uid) {
     return uid
@@ -660,7 +701,68 @@
     return snapshot.point ? snapshot : { ...snapshot, point: null };
   }
   let pendingCardOrigin = null;
+  /* Hero chips (design doc §13.4). `render()` rebuilds the console markup, so
+   * the previous value cannot be read back off the DOM — it is remembered here
+   * and the new node is rewound to it and tweened forward over `--m-fast`.
+   * Health also flashes red when it fell and green when it rose, armour pops
+   * in when it appears, and the enemy's hand chip nudges when it changes. */
+  function syncHeroChips(s) {
+    const calm =
+      settings.reduced ||
+      matchMedia("(prefers-reduced-motion: reduce)").matches;
+    for (const side of ["p", "e"]) {
+      const el = $(side === "p" ? "player-hero" : "enemy-hero");
+      const seen = (key, value, node, onChange) => {
+        const id = side + ":" + key,
+          had = chipValues.has(id),
+          was = chipValues.get(id);
+        chipValues.set(id, value);
+        if (!node || !had || was === value) return;
+        onChange?.(was, value);
+      };
+      const roll = (node, from, to) => {
+        const box = node.closest(".hero-stat, .hero-chip");
+        if (calm) return;
+        let start = 0;
+        const step = (t) => {
+          if (!start) start = t;
+          const k = Math.min(1, (t - start) / 120);
+          node.textContent = String(Math.round(from + (to - from) * k));
+          if (k < 1 && node.isConnected) requestAnimationFrame(step);
+          else node.textContent = String(to);
+        };
+        requestAnimationFrame(step);
+        if (box) {
+          box.classList.remove("chip-up", "chip-down");
+          void box.offsetWidth;
+          box.classList.add(to < from ? "chip-down" : "chip-up");
+        }
+      };
+      const hp = el.querySelector(".hero-health .stat-value");
+      seen("hp", Math.max(0, s[side].hp), hp, (from, to) => roll(hp, from, to));
+      const atk = el.querySelector(".hero-attack .stat-value");
+      seen("atk", s[side].weapon?.atk ?? 0, atk, (from, to) =>
+        roll(atk, from, to),
+      );
+      const armour = el.querySelector(".hero-armor");
+      seen("armor", s[side].armor, armour, (from) => {
+        if (!calm && !from) armour.classList.add("chip-pop");
+      });
+      const hand = el.querySelector(".hero-hand");
+      seen("hand", s[side].hand.length, hand, () => {
+        if (!calm) hand.classList.add("chip-nudge");
+      });
+    }
+  }
   let displayedState = null;
+  /* Last turn whose mana refresh has already been played, so the pip cascade
+   * fires once per turn instead of on every render inside it. */
+  let manaTurn = 0;
+  /* Which hand cards were playable at the previous render, so the turn-start
+   * flash can single out the ones the fresh mana just unlocked. */
+  let playableUids = new Set();
+  /* Last displayed value per hero chip, for the rolling-number tween. */
+  const chipValues = new Map();
   function changed(s, events) {
     const cardOrigin = pendingCardOrigin;
     pendingCardOrigin = null;
@@ -699,6 +801,11 @@
     // of trying to measure a detached element after this render completes.
     EmberFX.captureCardTargets?.();
     displayedState = s;
+    /* "The turn just refreshed our resources" is needed by both the mana pips
+     * and the hand, and the hand renders first — so it is decided once, here,
+     * and consumed by both (design doc §13.3 / §13.5). */
+    const manaRefreshed = s.active === "p" && s.turn !== manaTurn;
+    if (manaRefreshed) manaTurn = s.turn;
     contractUI.render(s);
     const handScroll = $("hand").scrollLeft;
     EmberFX.setTheme(s.bossIndex, s.phase2);
@@ -734,10 +841,26 @@
         data = side === "p" ? hero : boss,
         el = $(side === "p" ? "player-hero" : "enemy-hero"),
         attack = p.weapon?.atk ?? 0,
-        hasMana = p.maxMana > 0,
         health = Math.max(0, p.hp),
-        stats = `<div class="hero-stat hero-mana"${hasMana ? ` title="法力 ${p.mana}/${p.maxMana}"` : " hidden"}>${A.badgeFrame("mana")}<span class="stat-value">${p.mana}</span></div><div class="hero-stat hero-attack" title="攻击 ${attack}">${A.badgeFrame("blade")}<span class="stat-value">${attack}</span></div><div class="hero-stat hero-health ${health < p.maxHp ? "damaged" : ""}">${A.badgeFrame("heart")}<span class="stat-value">${health}</span></div>${p.armor ? `<div class="hero-stat hero-armor" title="护甲 ${p.armor}">${A.badgeFrame("ward")}<span class="stat-value">${p.armor}</span></div>` : ""}`;
-      el.innerHTML = `<div class="hero-card-inner"><div class="portrait-frame"><img src="${A.character(data)}" data-art-key="${data.portraitId}" data-art-version="wanxiang-v4" data-portrait-mode="hero" data-portrait-instance="${side}:hero" data-portrait-state="${p.frozen ? "frozen" : "idle"}" alt="${data.name}" draggable="false" style="${artStyleForHero(data, "hero")}"></div><span class="hero-card-plaque" aria-hidden="true"></span><div class="hero-name">${data.name}</div></div>${stats}${p.secrets.length ? '<div class="secret-indicator" title="奥秘已布置">?</div>' : ""}${side === "e" && s.mode !== "practice" ? `<div class="hero-phase">${s.phase2 ? "阶段 II" : "阶段 I"}</div>` : ""}`;
+        /* The hero card never shows mana: the mana crystal badge reads as a
+         * card cost. The player's mana lives in the console pips, the enemy's
+         * public ritual progress in the covenant chip. */
+        stats = `<div class="hero-stat hero-attack${attack ? "" : " is-zero"}" title="攻击 ${attack}">${A.badgeFrame("blade")}<span class="stat-value">${attack}</span></div><div class="hero-stat hero-health ${health < p.maxHp ? "damaged" : ""}">${A.badgeFrame("heart")}<span class="stat-value">${health}</span></div>${p.armor ? `<div class="hero-stat hero-armor" title="护甲 ${p.armor}">${A.badgeFrame("ward")}<span class="stat-value">${p.armor}</span></div>` : ""}`,
+        god =
+          side === "e" &&
+          p.contracts.map((id) => D.byId[id]).find((c) => c.contract.divine),
+        gate =
+          god &&
+          EmberContracts.progress(p, god).find((g) => g.current < g.required),
+        covenant =
+          side === "e" && p.contracts.length
+            ? `<div class="hero-chip hero-covenant ${god && p.usedContracts.includes(god.id) ? "spent" : gate ? "" : "ready"}" title="敌方契约进度">${A.icon("star")}<span>${god && p.usedContracts.includes(god.id) ? "已降临" : gate ? Math.min(gate.current, gate.required) + "/" + gate.required : "已达成"}</span></div>`
+            : "",
+        handChip =
+          side === "e"
+            ? `<div class="hero-chip hero-hand" title="敌方手牌"><i aria-hidden="true"></i><span>${p.hand.length}</span></div>`
+            : "";
+      el.innerHTML = `<div class="hero-card-inner"><div class="portrait-frame"><img src="${A.character(data)}" data-art-key="${data.portraitId}" data-art-version="wanxiang-v4" data-portrait-mode="hero" data-portrait-instance="${side}:hero" data-portrait-state="${p.frozen ? "frozen" : "idle"}" alt="${data.name}" draggable="false" style="${artStyleForHero(data, "hero")}"></div><span class="hero-card-plaque" aria-hidden="true"></span><div class="hero-name">${data.name}</div></div><div class="hero-chips">${stats}${covenant}${handChip}</div>${p.secrets.length ? '<div class="secret-indicator" title="奥秘已布置">?</div>' : ""}${side === "e" && s.mode !== "practice" ? `<div class="hero-phase">${s.phase2 ? "阶段 II" : "阶段 I"}</div>` : ""}`;
       el.dataset.heroClass = data.classId || "boss";
       el.classList.toggle("frozen", p.frozen);
       el.classList.toggle("ready", game.canAttack(side, "hero"));
@@ -750,7 +873,6 @@
           attack +
           "，护甲 " +
           p.armor +
-          (hasMana ? `，法力 ${p.mana}/${p.maxMana}` : "") +
           (p.frozen ? "，已冻结" : ""),
       );
       el.title =
@@ -763,6 +885,7 @@
         attack +
         (p.armor ? " · 护甲 " + p.armor : "");
     }
+    syncHeroChips(s);
     $("power-btn").innerHTML =
       A.icon(hero.powerIcon) +
       "<b>" +
@@ -772,7 +895,12 @@
       "</span>";
     $("power-btn").dataset.heroClass = hero.classId;
     $("power-btn").title = hero.powerText;
-    $("power-btn").disabled = !!game.legalPower("p");
+    const powerBlock = game.legalPower("p");
+    $("power-btn").disabled = !!powerBlock;
+    /* Only the cost badge greys out when mana is the problem, so the node's
+     * icon stays identifiable (design doc §13.4). */
+    $("power-btn").dataset.block =
+      powerBlock === "法力不足" ? "mana" : powerBlock ? "other" : "";
     $("enemy-hand").innerHTML = s.e.hand
       .map(
         (c, i) =>
@@ -785,6 +913,11 @@
     );
     $("enemy-deck-count").textContent = s.e.deck.length;
     $("player-deck-count").textContent = s.p.deck.length;
+    /* §13.7: the deck count reads as a chip beside the hero rather than as a
+     * third block of chrome competing for the top bar. The element keeps its
+     * id and title — this is presentation, not a new control. */
+    $("enemy-deck-count").title = "敌方牌库剩余 " + s.e.deck.length + " 张";
+    $("player-deck-count").title = "你的牌库剩余 " + s.p.deck.length + " 张";
     if (s.p.weapon) {
       const c = D.byId[s.p.weapon.cid];
       $("weapon-slot").style.display = "flex";
@@ -828,7 +961,7 @@
                   })[t],
               )
               .join("");
-            return `<button class="minion ${side === "e" ? "enemy" : "friendly"} ${m.tags.join(" ")} ${ready ? "ready" : ""} ${m.frozen ? "frozen" : ""} ${c.rarity}" style="left:${x}px;top:${y}px;width:${geo.w}px;height:${geo.h}px;--unit-w:${geo.w}px" data-compact="${geo.w < 50}" data-side="${side}" data-uid="${m.uid}" data-cardid="${c.id}" data-class="${c.class}" aria-label="${c.name}，攻击 ${m.atk}，生命 ${m.hp}，${m.tags.map((t) => D.kw[t]).join("、")}${m.frozen ? "，被冻结" : ""}"><div class="minion-art"><img src="${A.card(c)}" alt="" draggable="false" data-art-key="${artKeyForCard(c)}" data-art-version="wanxiang-v4" data-portrait-mode="board" data-portrait-instance="${side}:${m.uid}" data-portrait-state="${m.frozen ? "frozen" : "idle"}" style="${artStyleForCard(c, "minion")}"></div><span class="unit-aura" aria-hidden="true"></span><div class="minion-band"><span>${bandLabel(c)}</span></div><span class="stat atk">${A.statGem("blade")}<span class="stat-value">${m.atk}</span></span><span class="stat hp ${m.hp < m.maxHp ? "hurt" : ""}">${A.statGem("heart")}<span class="stat-value">${Math.max(0, m.hp)}</span></span><span class="minion-status">${m.frozen ? "❄" : specials ? '<span class="special">' + specials + "</span>" : m.sick && !ready ? '<span class="sleep">z z</span>' : ""}</span>${ready ? '<span class="ready-dot"></span>' : ""}</button>`;
+            return `<button class="minion ${side === "e" ? "enemy" : "friendly"} ${m.tags.join(" ")} ${ready ? "ready" : ""} ${m.frozen ? "frozen" : ""} ${c.rarity}" style="left:${x}px;top:${y}px;width:${geo.w}px;height:${geo.h}px;--unit-w:${geo.w}px" data-compact="${geo.w < 50}" data-stacked="${!!geo.stacked}" data-side="${side}" data-uid="${m.uid}" data-cardid="${c.id}" data-class="${c.class}" aria-label="${c.name}，攻击 ${m.atk}，生命 ${m.hp}，${m.tags.map((t) => D.kw[t]).join("、")}${m.frozen ? "，被冻结" : ""}"><div class="minion-art"><img src="${A.card(c)}" alt="" draggable="false" data-art-key="${artKeyForCard(c)}" data-art-version="wanxiang-v4" data-portrait-mode="board" data-portrait-instance="${side}:${m.uid}" data-portrait-state="${m.frozen ? "frozen" : "idle"}" style="${artStyleForCard(c, "minion")}"></div><span class="unit-aura" aria-hidden="true"></span><div class="minion-band"><span>${bandLabel(c)}</span></div><span class="stat atk">${A.statGem("blade")}<span class="stat-value">${m.atk}</span></span><span class="stat hp ${m.hp < m.maxHp ? "hurt" : ""}">${A.statGem("heart")}<span class="stat-value">${Math.max(0, m.hp)}</span></span><span class="minion-status">${m.frozen ? "❄" : specials ? '<span class="special">' + specials + "</span>" : m.sick && !ready ? '<span class="sleep">z z</span>' : ""}</span>${ready ? '<span class="ready-dot"></span>' : ""}</button>`;
           })
           .join(""),
       )
@@ -844,15 +977,56 @@
       app.style.setProperty("--battle-card-h", metrics.height + "px");
     }
     const gap = metrics.step;
+    /* A dock that fits its hand lays the cards out as a real fan (§13.5); a
+     * panning dock stays flat, because a rotated card is harder to scroll. */
+    let fanned = false;
+    if (EmberViewport.mobile) {
+      /* Touch dock: cards overlap into a fan instead of scrolling as soon as
+       * they stop fitting side by side; only below a 24px step does the dock
+       * fall back to the native horizontal rail. Six cards at 390/360 land
+       * just under 28px, and the rail would cost them the riffle gesture. */
+      const dock = EmberViewport.layout,
+        n = s.p.hand.length,
+        inner = (dock.hand?.w || 0) - 16,
+        cardW = dock.cardW || 112,
+        natural = n > 1 ? (inner - cardW) / (n - 1) : cardW + 12,
+        step = Math.min(cardW + 12, natural),
+        pan = step < 24;
+      fanned = !pan;
+      $("hand").style.setProperty(
+        "--hand-step",
+        Math.round(pan ? 24 : step) + "px",
+      );
+      $("hand").classList.toggle("hand-pan", pan);
+      $("hand").classList.toggle("hand-fits", !pan);
+    } else {
+      $("hand").style.removeProperty("--hand-step");
+      $("hand").classList.remove("hand-pan", "hand-fits");
+    }
+    const wasPlayable = playableUids;
+    playableUids = new Set();
     $("hand").innerHTML = s.p.hand
       .map((card, i) => {
         const c = D.byId[card.cid],
-          offset = i - (s.p.hand.length - 1) / 2,
+          n = s.p.hand.length,
+          offset = i - (n - 1) / 2,
           playable = !game.legalCard("p", card.uid);
-        return `<button class="hand-card ${playable ? "playable" : ""} ${game.cost(card) > s.p.mana ? "unaffordable" : ""}" style="--x:${offset * gap}px;--y:${0}px;--r:${0}deg;--i:${i + 1}" data-hand="${card.uid}" data-cardid="${c.id}" aria-label="${c.name}，${game.cost(card)} 法力。点按选中，拖动出牌。${c.text}">${cardHTML(c, { cost: game.cost(card) })}</button>`;
+        if (playable) playableUids.add(card.uid);
+        /* Physical fan: ±3° of roll and a 2px arc, both driven off the card's
+         * normalised position in the hand (design doc §13.5). */
+        const spread = n > 1 && fanned ? offset / ((n - 1) / 2) : 0,
+          roll = (spread * 3).toFixed(2),
+          arc = (Math.abs(spread) * 2).toFixed(2);
+        /* A card that only became playable because the turn refreshed mana
+         * flashes once, so "what can I do now" needs no re-scan. */
+        const woke = playable && manaRefreshed && !wasPlayable.has(card.uid);
+        return `<button class="hand-card ${playable ? "playable" : ""} ${woke ? "just-playable" : ""} ${game.cost(card) > s.p.mana ? "unaffordable" : ""}" style="--x:${offset * gap}px;--y:${arc}px;--r:${roll}deg;--i:${i + 1}" data-hand="${card.uid}" data-cardid="${c.id}" aria-label="${c.name}，${game.cost(card)} 法力。点按选中，拖动出牌。${c.text}">${cardHTML(c, { cost: game.cost(card) })}</button>`;
       })
       .join("");
     const ours = s.active === "p";
+    /* Whose turn it is is a whole-screen state, not just a button label: the
+     * arena grows a red hairline on the enemy's turn (design doc §13.3). */
+    app.classList.toggle("enemy-turn", !ours && s.phase === "battle");
     $("turn-number").textContent =
       "第 " + s.turn + " 回合" + " · " + (ours ? "你的回合" : "敌方回合");
     syncEndTurn(s);
@@ -867,11 +1041,17 @@
       ? "SPACE · 结束回合"
       : "正在选择行动…";
     $("mana-value").textContent = s.p.mana + " / " + s.p.maxMana;
+    /* On the first render of our own turn the pips light left to right, 40ms
+     * apart, so the refreshed resource is noticed without a banner (§13.3). */
     $("mana-gems").innerHTML = Array.from(
       { length: 10 },
       (_, i) =>
-        `<span class="mana-gem ${i < s.p.mana ? "available" : i < s.p.maxMana ? "used" : ""}">${A.badgeFrame("mana")}</span>`,
+        `<span class="mana-gem ${i < s.p.mana ? "available" : i < s.p.maxMana ? "used" : ""}" style="--pip:${i}">${A.badgeFrame("mana")}</span>`,
     ).join("");
+    $("mana-gems").classList.toggle(
+      "mana-refresh",
+      manaRefreshed && !settings.reduced,
+    );
     $("battle-log").innerHTML = s.log
       .slice(-8)
       .map(
@@ -1085,17 +1265,35 @@
     true,
   );
   /* The unit under a screen point, ignoring overlay chrome such as the pinned
-   * detail veil, which must never swallow a release or a reticle hit test. */
+   * detail veil and the HUD chips, which must never swallow a release or a
+   * reticle hit test. */
+  const HIT_IGNORE =
+    "#card-preview,#touch-target-bar,.hero-chips,.hero-covenant";
   function unitAt(x, y) {
     return (
       document
         .elementsFromPoint(x, y)
+        .filter((n) => !n.closest?.(HIT_IGNORE))
         .map((n) => n.closest?.("[data-uid]"))
         .find((n) => n && n.closest("#battle")) || null
     );
   }
+  /* `pointer` lives in the app's 1600x940 design space, but elementsFromPoint
+   * wants client pixels. #app is centred and scaled, so hit testing the design
+   * coordinates directly probes the wrong spot and the reticle snaps onto a
+   * neighbour (or the enemy hero). Map back through the app rect first. */
+  function clientPoint(p) {
+    /* Aiming calls this on every pointer move, so the frame comes from the
+     * viewport's cached rect instead of forcing a layout per move. */
+    const r = EmberViewport.appRect;
+    return {
+      x: r.left + (p.x * r.width) / EmberViewport.width,
+      y: r.top + (p.y * r.height) / EmberViewport.height,
+    };
+  }
   function hitUnit() {
-    return unitAt(pointer.x, pointer.y);
+    const c = clientPoint(pointer);
+    return unitAt(c.x, c.y);
   }
   /* Aim cue: retarget the line to what is actually under the finger, and give
    * a short tick when the aim crosses onto a valid target. */
@@ -1228,7 +1426,12 @@
     if (!c.target || !targets.length) return false;
     selection = { type: "card", uid, cid: card.cid };
     pointer = targetAnchor(targets) || pointer;
-    setGuide("选择" + targetLabel(c.target) + " · 右键或 ESC 取消", "target");
+    setGuide(
+      "选择" +
+        targetLabel(c.target) +
+        (EmberViewport.mobile ? " · 点「取消」退出" : " · 右键或 ESC 取消"),
+      "target",
+    );
     updateSelection(targets);
     hidePreview();
     return true;
@@ -1326,7 +1529,11 @@
         selection = { type: "attack", uid };
         const targets = game.attackTargets("p", uid);
         pointer = targetAnchor(targets) || pointer;
-        setGuide("选择攻击目标 · 嘲讽随从优先 · ESC 取消", "target");
+        setGuide(
+          "选择攻击目标 · 嘲讽随从优先" +
+            (EmberViewport.mobile ? "" : " · ESC 取消"),
+          "target",
+        );
         updateSelection(targets);
         hidePreview();
         EmberAudio.fx("ui");
@@ -1414,10 +1621,11 @@
     targets.forEach((t) =>
       findUnit(t.side, t.uid)?.classList.add("valid-target"),
     );
-    if (EmberViewport.mobile) {
-      app.classList.add("is-targeting");
-      window.EmberMobile?.selectionChanged();
-    }
+    /* `is-targeting` is what dims the illegal half of the board (design doc
+     * §13.3). It used to be touch-only because it only drove the mobile action
+     * bar; the dimming is just as useful with a mouse. */
+    app.classList.add("is-targeting");
+    if (EmberViewport.mobile) window.EmberMobile?.selectionChanged();
     setGuide(
       actionGuide.text ||
         (selection.type === "card-play" ? "点击战场空位确认" : "选择目标"),
@@ -1567,6 +1775,7 @@
       uid = el?.dataset?.uid,
       side = el?.dataset?.side;
     if (landing?.kind === "target") {
+      buzz(12);
       act(
         () =>
           game.dispatch({
@@ -1594,11 +1803,13 @@
         !(c.type === "minion" && !game.targets(c.target, "p").length)
       )
         armCard(d.uid);
-      else
+      else {
+        buzz(12);
         act(
           () => game.dispatch({ type: "play", side: "p", uid: d.uid }),
           origin,
         );
+      }
     } else if (EmberViewport.mobile) {
       EmberAudio.fx("ui");
       toast("已取消：「" + c.name + "」回到手牌", {
@@ -1705,6 +1916,106 @@
     suppressNextClick(80);
   });
   document.addEventListener("pointercancel", () => cancelDrag(false));
+
+  /* Haptics (design doc §13.5). There is no dedicated haptics preference, so
+   * this follows "减少动态效果": a player who has asked for less motion is not
+   * asking for more buzzing. It is also silent on anything but a real touch
+   * device, where `navigator.vibrate` is either absent or a no-op. */
+  function buzz(ms) {
+    if (settings.reduced || !EmberViewport.mobile) return;
+    try {
+      navigator.vibrate?.(ms);
+    } catch {
+      /* Some browsers throw when the page has never been interacted with. */
+    }
+  }
+  /* Touch "riffle" (docs/design/HAND_GESTURES.md): while the dock fits its
+   * cards (`.hand-fits`), a sideways finger sweeps the fan instead of doing
+   * nothing — the card under the finger peeks up, and releasing selects it
+   * through the normal `handClick` path. Upward drags still play the card and
+   * a stationary long press still inspects it; the panning dock
+   * (`.hand-pan`) keeps the browser's native rail. */
+  let riffle = null;
+  function riffleCardAt(clientX) {
+    const cards = [...document.querySelectorAll("#hand .hand-card")];
+    if (!cards.length) return null;
+    let hit = null;
+    for (const el of cards) {
+      const r = el.getBoundingClientRect();
+      if (clientX >= r.left && clientX <= r.right) hit = el;
+    }
+    if (hit) return hit;
+    return clientX < cards[0].getBoundingClientRect().left
+      ? cards[0]
+      : cards[cards.length - 1];
+  }
+  function endRiffle(commit) {
+    const r = riffle;
+    riffle = null;
+    if (!r) return;
+    r.el?.classList.remove("peek");
+    if (!commit || !r.swiping || !r.el?.isConnected) return;
+    const uid = r.el.dataset.hand;
+    suppressNextClick(320);
+    if (window.EmberMobile) EmberMobile.handClick(uid);
+    else selectCard(uid);
+  }
+  document.addEventListener(
+    "pointerdown",
+    (e) => {
+      if (
+        !EmberViewport.mobile ||
+        e.pointerType !== "touch" ||
+        e.isPrimary === false ||
+        modalType ||
+        EmberFX.busy ||
+        !$("hand").classList.contains("hand-fits") ||
+        !e.target.closest?.("#hand")
+      )
+        return;
+      riffle = {
+        x: e.clientX,
+        y: e.clientY,
+        id: e.pointerId,
+        swiping: false,
+        el: null,
+      };
+    },
+    { capture: true, passive: true },
+  );
+  document.addEventListener(
+    "pointermove",
+    (e) => {
+      if (!riffle || e.pointerId !== riffle.id) return;
+      if (!riffle.swiping) {
+        const dx = e.clientX - riffle.x,
+          dy = e.clientY - riffle.y;
+        if (Math.abs(dx) < 10 || Math.abs(dx) <= Math.abs(dy) + 4) return;
+        riffle.swiping = true;
+      }
+      /* Leaving the dock drops the raised card back into the fan: the lifted
+       * card stands `--hand-lift` above the dock line, so the live band is the
+       * dock rect grown upwards by that much (design doc §12.2). */
+      const dock = $("hand").getBoundingClientRect(),
+        lift = dock.height,
+        inside = e.clientY >= dock.top - lift && e.clientY <= dock.bottom;
+      const el = inside ? riffleCardAt(e.clientX) : null;
+      if (el === riffle.el) return;
+      riffle.el?.classList.remove("peek");
+      riffle.el = el;
+      el?.classList.add("peek");
+      if (el) buzz(5);
+    },
+    { capture: true, passive: true },
+  );
+  document.addEventListener("pointerup", () => endRiffle(true), {
+    capture: true,
+    passive: true,
+  });
+  document.addEventListener("pointercancel", () => endRiffle(false), {
+    capture: true,
+    passive: true,
+  });
   function scheduleAI() {
     clearTimeout(aiTimer);
     if (
@@ -1809,7 +2120,9 @@
           ? "结算中…"
           : s.active === "p"
             ? "结束回合"
-            : "敌方回合";
+            : /* Naming what the opponent is doing reads as progress; naming
+               * the turn reads as a disabled control (design doc §13.3). */
+              "对方思考中";
   }
   document.addEventListener("ember:fx-busy", () => syncEndTurn());
   $("end-turn").onclick = () =>
@@ -1931,6 +2244,8 @@
     closeModal,
     cardHTML,
     settings,
+    showContracts: () => contractUI.show(),
+    showGodStage: () => contractUI.stage(),
     get selection() {
       return selection;
     },

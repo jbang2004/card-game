@@ -97,8 +97,10 @@ async function touchDrag(page, from, to, steps = 14) {
 }
 
 async function boxOf(page, uid) {
+  /* Dock cards fan with overlap and peek above the screen edge: the exposed
+   * strip is the top-left of each card, so gestures start there. */
   const b = await page.locator(`#hand [data-hand="${uid}"]`).boundingBox();
-  return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+  return { x: b.x + Math.min(16, b.width / 2), y: b.y + 30 };
 }
 
 /* Lower half of the arena, on a screen point that has no unit under it, so the
@@ -142,12 +144,15 @@ async function prepareSingleMinion(page) {
 async function releaseArcherWithPose(page, settleMs) {
   const uid = await prepareSingleMinion(page),
     box = await page.locator(`#hand [data-hand="${uid}"]`).boundingBox(),
-    from = { x: box.x + box.width / 2, y: box.y + box.height / 2 },
+    from = { x: box.x + Math.min(16, box.width / 2), y: box.y + 30 },
     to = await page.evaluate((fromPoint) => {
       const a = EmberViewport.layout.arena;
+      /* The fan's first card sits at the dock's left edge now, so a drop
+       * straight above the finger would hug the arena border; prefer the
+       * centre of the row like a player would. */
       const candidates = [
-        { x: fromPoint.x, y: a.y + a.h * 0.54 },
         { x: a.x + a.w * 0.5, y: a.y + a.h * 0.54 },
+        { x: fromPoint.x, y: a.y + a.h * 0.54 },
         { x: a.x + a.w * 0.35, y: a.y + a.h * 0.54 },
         { x: a.x + a.w * 0.65, y: a.y + a.h * 0.54 },
       ];
@@ -475,6 +480,44 @@ async function firstPlayProxyPose(page) {
   );
 }
 
+/* The geometry the play proxy is CREATED with, before the flight animation has
+ * moved it. `firstPlayProxyPose` reads `getBoundingClientRect()`, which also
+ * samples the WAAPI clock: the proxy is created with `delay: -elapsed`, so by
+ * its first observable frame it is already 6-40ms into a 300ms flight and its
+ * rect has legitimately travelled tens of pixels down the path. That is motion
+ * timing (owned by card-motion.spec.cjs), not source continuity. The box below
+ * is exactly what `captureCardOrigin` handed the proxy, which is what this
+ * test is named after. */
+async function firstPlayProxyGeometry(page) {
+  return page.evaluate(
+    () =>
+      new Promise((resolve) => {
+        const deadline = performance.now() + 2000;
+        const read = () => {
+          const el = document.querySelector(
+            '.card-motion-proxy[data-motion-kind="play"]',
+          );
+          if (el) {
+            const w = Number.parseFloat(el.style.width),
+              h = Number.parseFloat(el.style.height);
+            resolve({
+              x: Number.parseFloat(el.style.left) + w / 2,
+              y: Number.parseFloat(el.style.top) + h / 2,
+              w,
+              h,
+            });
+            return;
+          }
+          if (performance.now() >= deadline) {
+            resolve(null);
+            return;
+          }
+          requestAnimationFrame(read);
+        };
+        read();
+      }),
+  );
+}
 function assertPoseContinuity(source, proxy, tolerance = 14) {
   expect(proxy).toBeTruthy();
   expect(
@@ -725,7 +768,9 @@ for (const [label, viewport] of VIEWPORTS) {
       const targeted = await pick(page, "targeted");
       expect(plain).toBeTruthy();
       const before = await handState(page);
-      await page.locator(`#hand [data-hand="${plain.uid}"]`).tap();
+      await page
+        .locator(`#hand [data-hand="${plain.uid}"]`)
+        .tap({ position: { x: 14, y: 30 } });
       await page.waitForTimeout(300);
       const prepared = await handState(page);
       expect(
@@ -739,14 +784,18 @@ for (const [label, viewport] of VIEWPORTS) {
       expect(prepared.mana).toBe(before.mana);
       expect(prepared.detail).toBe(null);
 
-      await page.locator(`#hand [data-hand="${plain.uid}"]`).tap();
+      await page
+        .locator(`#hand [data-hand="${plain.uid}"]`)
+        .tap({ position: { x: 14, y: 30 } });
       await page.waitForTimeout(200);
       const cancelled = await handState(page);
       expect(cancelled.selected).toBe(0);
       expect(cancelled.targeting).toBe(false);
       expect(cancelled.mana).toBe(before.mana);
 
-      await page.locator(`#hand [data-hand="${plain.uid}"]`).tap();
+      await page
+        .locator(`#hand [data-hand="${plain.uid}"]`)
+        .tap({ position: { x: 14, y: 30 } });
       const point = await emptyDropPoint(page);
       await page.mouse.click(point.x, point.y);
       await page.waitForTimeout(700);
@@ -760,7 +809,9 @@ for (const [label, viewport] of VIEWPORTS) {
       expect(afterPlain.detail).toBe(null);
       expect(afterPlain.targeting).toBe(false);
       if (targeted) {
-        await page.locator(`#hand [data-hand="${targeted.uid}"]`).tap();
+        await page
+          .locator(`#hand [data-hand="${targeted.uid}"]`)
+          .tap({ position: { x: 14, y: 30 } });
         await page.waitForTimeout(400);
         const afterAim = await handState(page);
         await page.screenshot({
@@ -843,7 +894,7 @@ for (const [label, viewport] of VIEWPORTS) {
       const box = await page
         .locator(`#hand [data-hand="${card.uid}"]`)
         .boundingBox();
-      const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+      const from = { x: box.x + 14, y: box.y + 30 };
       const cdp = await page.context().newCDPSession(page);
       await cdp.send("Input.dispatchTouchEvent", {
         type: "touchStart",
@@ -901,7 +952,7 @@ for (const [label, viewport] of VIEWPORTS) {
       const box = await page
         .locator(`#hand [data-hand="${card.uid}"]`)
         .boundingBox();
-      const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+      const from = { x: box.x + 14, y: box.y + 30 };
       const cdp = await page.context().newCDPSession(page);
       await cdp.send("Input.dispatchTouchEvent", {
         type: "touchStart",
@@ -979,17 +1030,33 @@ for (const [label, viewport] of VIEWPORTS) {
       await page.waitForTimeout(200);
       const rail = await page.evaluate(() => {
         const h = document.getElementById("hand");
-        return { scrollWidth: h.scrollWidth, clientWidth: h.clientWidth };
+        return {
+          scrollWidth: h.scrollWidth,
+          clientWidth: h.clientWidth,
+          fits: h.classList.contains("hand-fits"),
+        };
       });
-      expect(rail.scrollWidth).toBeGreaterThan(rail.clientWidth);
+      /* The dock only becomes a scrolling rail when the fan step would drop
+       * below 24px (`.hand-pan`); a fan that fits never scrolls, and a
+       * horizontal swipe across it must not play a card either. */
+      /* A fitting dock is `overflow: visible`, so it is not a scroll
+       * container at all — but round 3 fans the cards by up to 3° (design doc
+       * §13.5) and a rotated outer card reports a few px of overflow past the
+       * dock edge. That overflow is unscrollable paint, not a rail, so the
+       * assertion allows the roll while still rejecting a real scroller. */
+      if (rail.fits)
+        expect(rail.scrollWidth - rail.clientWidth).toBeLessThanOrEqual(8);
+      else expect(rail.scrollWidth).toBeGreaterThan(rail.clientWidth);
       const box = await page.locator("#hand .hand-card").first().boundingBox();
-      const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+      const before = await handState(page);
+      const from = { x: box.x + 14, y: box.y + 30 };
       await touchDrag(page, from, { x: from.x - 240, y: from.y + 4 }, 12);
       const after = await handState(page);
       await page.screenshot({
         path: path.join(out, `touch-hand-pan-${label}.png`),
       });
-      expect(after.scrollLeft).toBeGreaterThan(0);
+      if (rail.fits) expect(after.handCount).toBe(before.handCount);
+      else expect(after.scrollLeft).toBeGreaterThan(0);
     });
 
     test("horizontal panning also starts from the card rules well", async ({
@@ -998,20 +1065,27 @@ for (const [label, viewport] of VIEWPORTS) {
       await startTouch(page);
       const filled = await fillHand(page);
       expect(filled.n).toBeGreaterThan(6);
+      /* The rules well sits in the part of the card that peeks below the
+       * screen edge now; start the swipe from the lowest visible band. */
       const start = await page
-        .locator("#hand .hand-card .card-text")
+        .locator("#hand .hand-card")
         .first()
         .boundingBox();
       expect(start).toBeTruthy();
       const before = await handState(page);
+      const pan = await page.evaluate(() =>
+        document.getElementById("hand").classList.contains("hand-pan"),
+      );
+      const y = Math.min(start.y + start.height - 8, viewport.height - 12);
       await touchDrag(
         page,
-        { x: start.x + start.width / 2, y: start.y + start.height / 2 },
-        { x: start.x - 240, y: start.y + 3 },
+        { x: start.x + 14, y },
+        { x: start.x - 240, y: y + 3 },
         12,
       );
       const after = await handState(page);
-      expect(after.scrollLeft).toBeGreaterThan(before.scrollLeft);
+      if (pan) expect(after.scrollLeft).toBeGreaterThan(before.scrollLeft);
+      else expect(after.handCount).toBe(before.handCount);
     });
   });
 }
@@ -1028,15 +1102,18 @@ for (const [label, viewport] of [
     }) => {
       await startTouch(page);
       const uid = await prepareSingleMinion(page),
-        card = page.locator(`#hand [data-hand="${uid}"]`),
-        source = await card.boundingBox();
+        card = page.locator(`#hand [data-hand="${uid}"]`);
+      // Selecting the card lifts it. The flight has to start from where the
+      // card actually IS at commit time, so the source is measured after the
+      // selection pose is applied, not before it.
       await card.click();
+      const source = await card.boundingBox();
       const arena = await page.locator("#arena").boundingBox();
       await page.mouse.click(
         arena.x + arena.width / 2,
         arena.y + arena.height / 2,
       );
-      assertPoseContinuity(source, await firstPlayProxyPose(page));
+      assertPoseContinuity(source, await firstPlayProxyGeometry(page));
       await page.waitForFunction(() => !EmberFX.busy);
     });
 

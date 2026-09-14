@@ -77,5 +77,6 @@
   "SKIN_SLATE_SETTINGS": "presentation/skins/slate/settings.css",
   "SKIN_SLATE_GUIDE": "presentation/skins/slate/guide.css",
   "SKIN_SLATE_MOBILE": "presentation/skins/slate/mobile.css",
-  "SKIN_SLATE_CARD_FACE": "presentation/skins/slate/card-face.css"
+  "SKIN_SLATE_CARD_FACE": "presentation/skins/slate/card-face.css",
+  "SKIN_SLATE_CONSOLE": "presentation/skins/slate/console.css"
 }

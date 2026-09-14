@@ -1,3 +1,4 @@
+const { openCovenantPage } = require("./helpers/covenant.cjs");
 const { test, expect } = require("@playwright/test");
 const path = require("node:path");
 const out = path.resolve(
@@ -103,7 +104,7 @@ test("reference pages: live settings, guide chapters, hero modes and public cont
   await shot(page, "mulligan");
   await page.locator("#mulligan-confirm").click();
   await page.waitForFunction(() => !EmberFX.busy);
-  await page.locator("#contract-open").click();
+  await openCovenantPage(page);
   await shot(page, "contracts");
   const chooser = page.locator(".reference-active-side [data-contract-select]");
   await chooser.nth(1).click();
@@ -183,7 +184,13 @@ for (const [w, h, touch] of [
       expect(r.x).toBeGreaterThanOrEqual(0);
       expect(r.y).toBeGreaterThanOrEqual(0);
       expect(r.x + r.width).toBeLessThanOrEqual(w + 1);
-      expect(r.y + r.height).toBeLessThanOrEqual(h + 1);
+      /* The god slot is a hand card parked at the end of the dock: like the
+         rest of the fan its lower third deliberately hangs off the screen
+         (docs/design/BATTLE_REDESIGN_20260914.md §11), so only its visible
+         band has to be on screen. */
+      if (touch && s === "#contract-open")
+        expect(r.y + 44).toBeLessThanOrEqual(h + 1);
+      else expect(r.y + r.height).toBeLessThanOrEqual(h + 1);
     }
     await shot(p, `battle-${w}`);
     if (touch) {

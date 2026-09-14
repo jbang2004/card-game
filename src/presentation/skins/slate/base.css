@@ -43,6 +43,8 @@
  *   geometry    --slate-page-x  --slate-rail  --slate-list  --slate-col-gap
  *               --slate-card-w  --slate-card-h  --slate-thumb-w --slate-thumb-h
  *               --covenant-col
+ *   motion      --m-fast  --m-base  --m-stage  --m-cine
+ *               --e-std  --e-spring  --e-exit
  *   hit areas   --slate-hud-hit  (declared on `#app`, NOT on the root — see the
  *               note at that rule)
  * The `@media (max-width: 1500px)` block at the bottom of this file retunes the
@@ -107,6 +109,17 @@ html[data-skin="slate"] {
   /* contracts page: the tab row and the panel live in different subtrees and
    * have to share one column edge */
   --covenant-col: clamp(400px, 42vw, 600px);
+  /* motion (design doc §13.2). One vocabulary for the whole battlefield, so a
+   * chip, a card and an overlay never disagree about how fast "fast" is.
+   * Rule: an exit runs at 60% of its entrance, and elements that arrive as a
+   * group share one timeline. */
+  --m-fast: 120ms;
+  --m-base: 180ms;
+  --m-stage: 320ms;
+  --m-cine: 550ms;
+  --e-std: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --e-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --e-exit: cubic-bezier(0.4, 0, 1, 1);
   --slate-material:
     radial-gradient(70% 55% at 12% 6%, #6f7d95 0%, #6f7d9500 62%),
     radial-gradient(45% 40% at 92% 96%, #3d4a5f 0%, #3d4a5f00 65%),

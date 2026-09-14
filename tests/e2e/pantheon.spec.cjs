@@ -1,3 +1,4 @@
+const { openCovenantPage } = require("./helpers/covenant.cjs");
 const { openDeckTools, finishDeckTools } = require("./helpers/deck-tools.cjs");
 const { test, expect } = require("@playwright/test");
 const gods = [
@@ -38,7 +39,7 @@ for (const [width, height, touch] of [
       await page.locator("#hero-confirm").click();
       await page.locator("#mulligan-confirm").click();
       await page.waitForFunction(() => !EmberFX.busy);
-      await page.locator("#contract-open").click();
+      await openCovenantPage(page);
       await expect(page.locator(`[data-invoke="${id}"]`)).toBeDisabled();
       await page.keyboard.press("Escape");
       await page.evaluate((id) => {
@@ -55,7 +56,7 @@ for (const [width, height, touch] of [
             : r.amount;
         g.emit();
       }, id);
-      await page.locator("#contract-open").click();
+      await openCovenantPage(page);
       const invoke = page.locator(`[data-invoke="${id}"]`);
       await expect(invoke).toBeEnabled();
       await invoke.scrollIntoViewIfNeeded();

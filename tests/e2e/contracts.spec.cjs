@@ -1,3 +1,4 @@
+const { openCovenantPage } = require("./helpers/covenant.cjs");
 const { openDeckTools, finishDeckTools } = require("./helpers/deck-tools.cjs");
 const { test, expect } = require("@playwright/test");
 async function open(page) {
@@ -49,7 +50,7 @@ for (const [width, height, touch] of [
       g.s.p.souls = ["wolf", "moonfox", "duskstag", "soulguide"];
       g.emit();
     });
-    await page.locator("#contract-open").click();
+    await openCovenantPage(page);
     await expect(page.locator('[data-invoke="selmyra"]')).toBeEnabled();
     const poster = await page
       .locator(".covenant-card")
@@ -171,7 +172,7 @@ for (const [width, height, touch] of [
     expect(await page.evaluate(() => Emberfall.game.s.p.usedContracts)).toEqual(
       ["selmyra"],
     );
-    await page.locator("#contract-open").click();
+    await openCovenantPage(page);
     await expect(page.locator('[data-invoke="selmyra"]')).toBeDisabled();
     expect(errors).toEqual([]);
     await ctx.close();
@@ -199,7 +200,7 @@ for (const [width, height] of [
       g.s.p.souls = ["wolf", "moonfox", "duskstag", "soulguide"];
       g.emit();
     });
-    await page.locator("#contract-open").click();
+    await openCovenantPage(page);
     const buttons = page.locator(".covenant-card [data-invoke]");
     await expect(buttons).toHaveCount(3);
     const portraits = page.locator(
@@ -293,7 +294,7 @@ test("reduced motion omits divine overlay while committing the same summon", asy
     g.s.p.souls = ["wolf", "moonfox", "duskstag", "soulguide"];
     g.emit();
   });
-  await page.locator("#contract-open").click();
+  await openCovenantPage(page);
   await page.locator('[data-invoke="selmyra"]').click();
   await page.waitForFunction(() => !EmberFX.busy);
   await expect(page.locator(".divine-arrival")).toHaveCount(0);

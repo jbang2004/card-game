@@ -16,7 +16,7 @@ test("short landscape dialogs keep actual play and return actions reachable", as
   await page.locator("#quick-btn").tap();
   await page.waitForFunction(() => !EmberFX.busy);
   // Tap aims directly: no detail sheet between the tap and the target.
-  await page.locator('#hand [data-cardid="frostbolt"]').tap();
+  await page.locator('#hand [data-cardid="frostbolt"]').tap({ position: { x: 14, y: 30 } });
   // The only toast allowed here is the demo entry hint; a rejected play would
   // leave a different message.
   if (await page.locator("#toast").isVisible())

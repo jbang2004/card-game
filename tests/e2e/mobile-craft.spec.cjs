@@ -83,9 +83,19 @@ test("short landscape keeps both unit stats separate and heroes apart", async ({
         e.querySelector(".stat.atk").getBoundingClientRect().right <=
         e.querySelector(".stat.hp").getBoundingClientRect().left + 1,
     })),
-    heroes:
-      document.querySelector(".hero.enemy").getBoundingClientRect().bottom <=
-      document.querySelector(".hero.player").getBoundingClientRect().top,
+    /* Short landscape seats the two hero cards SIDE BY SIDE on purpose
+     * (`EmberViewport` layout, mobile-view.js `shortLandscape`): 320px of
+     * height cannot stack two 128px hero cards above the board and the hand.
+     * "Apart" is therefore a non-overlap check on both axes, not a claim that
+     * the enemy sits above the player. */
+    heroes: (() => {
+      const a = document.querySelector(".hero.enemy").getBoundingClientRect(),
+        b = document.querySelector(".hero.player").getBoundingClientRect();
+      return (
+        Math.min(a.right, b.right) <= Math.max(a.left, b.left) ||
+        Math.min(a.bottom, b.bottom) <= Math.max(a.top, b.top)
+      );
+    })(),
   }));
   expect(fits.heroes).toBe(true);
   for (const u of fits.units) {

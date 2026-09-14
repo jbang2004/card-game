@@ -16,11 +16,9 @@ body:not(.touch-layout) #battle .hero.player {
   top: calc(753px - var(--battle-card-h, 231px) - 18px);
 }
 body:not(.touch-layout) .hand-zone {
-  left: 200px;
+  /* Geometry lives in the single desktop block below (§"desktop court");
+     these two only undo the shared `.hand-zone` rail defaults. */
   right: auto;
-  top: 753px;
-  width: 1200px;
-  height: 184px;
   perspective: none;
 }
 body:not(.touch-layout) .hand-card {
@@ -37,43 +35,6 @@ body:not(.touch-layout) .hand-card:focus-visible {
 }
 body:not(.touch-layout) .hand-card.selected {
   transform: translateX(calc(-50% + var(--x))) translateY(-4px);
-}
-body:not(.touch-layout) .hand-card .card .stat {
-  width: 25%;
-  height: 18%;
-  bottom: 1%;
-  font-size: 25px;
-}
-body:not(.touch-layout) .hand-card .stat.atk {
-  left: 0;
-}
-body:not(.touch-layout) .hand-card .stat.hp {
-  right: 0;
-}
-body:not(.touch-layout) .hand-card .card-cost {
-  left: 0;
-  top: 0;
-  font-size: 27px;
-}
-body:not(.touch-layout) .hand-card .card-title {
-  font-size: 12px;
-}
-body:not(.touch-layout) .hand-card .card-text {
-  font-size: 10px;
-  line-height: 1.35;
-}
-body:not(.touch-layout) .hand-label {
-  left: 227px;
-  top: 722px;
-}
-
-body:not(.touch-layout) .player-deck {
-  left: 1315px;
-  top: 663px;
-}
-body:not(.touch-layout) .enemy-deck {
-  left: 1430px;
-  top: 302px;
 }
 body:not(.touch-layout) .chapter-name {
   text-shadow: none;
@@ -331,19 +292,9 @@ body .battle-view #action-status {
 }
 
 /* The desktop court has a central play area and a single command rail.
-   These coordinates also anchor the rule-neutral viewport hit geometry. */
-body:not(.touch-layout) .hero.enemy {
-  left: 48px;
-  top: 154px;
-  width: 168px;
-  height: 208px;
-}
-body:not(.touch-layout) .hero.player {
-  left: 48px;
-  top: 706px;
-  width: 168px;
-  height: 208px;
-}
+   These coordinates also anchor the rule-neutral viewport hit geometry.
+   The hero cards are placed at the top of this file; the skin fixes their
+   size (`console.css` §6) so they no longer follow the hand card width. */
 body:not(.touch-layout) .arena {
   left: 270px;
   top: 212px;

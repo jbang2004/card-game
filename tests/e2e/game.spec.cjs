@@ -21,9 +21,7 @@ async function materialsSettled(page) {
       () =>
         !document
           .getAnimations()
-          .some(
-            (a) => a instanceof CSSTransition && a.playState === "running",
-          ),
+          .some((a) => a instanceof CSSTransition && a.playState === "running"),
       null,
       { timeout: 5000 },
     )
@@ -58,7 +56,9 @@ test("web build: all assets decode, no external dependencies, actual spells, mel
     await page.evaluate(async () => {
       for (const src of [
         ...Object.values(AnimeAssets),
-        ...Object.keys(EmberThemeDefinition.art).map(key => EmberTheme.art(key)),
+        ...Object.keys(EmberThemeDefinition.art).map((key) =>
+          EmberTheme.art(key),
+        ),
       ]) {
         const image = new Image();
         image.src = src;
@@ -68,7 +68,9 @@ test("web build: all assets decode, no external dependencies, actual spells, mel
     }),
   ).toBe(79);
   await page.screenshot({ path: path.join(out, "desktop.png") });
-  await page.locator('#hand [data-cardid="frostbolt"]').click();
+  await page
+    .locator('#hand [data-cardid="frostbolt"]')
+    .click({ position: { x: 14, y: 30 } });
   const line = await page.locator("#target-path").getAttribute("d");
   expect(line).toMatch(/^M/);
   // Notification boxes must not cover any live target.
@@ -256,6 +258,10 @@ for (const [width, height, touch] of screens) {
         if (!a.width) continue;
         for (const target of items) {
           const b = target.getBoundingClientRect();
+          /* On touch the mana pips are part of the player's console strip,
+           * which is the hero button itself. */
+          if (EmberViewport.mobile && overlay.classList.contains("mana-panel"))
+            continue;
           if (
             Math.min(a.right, b.right) > Math.max(a.left, b.left) + 1 &&
             Math.min(a.bottom, b.bottom) > Math.max(a.top, b.top) + 1
@@ -268,34 +274,58 @@ for (const [width, height, touch] of screens) {
         for (let j = i + 1; j < units.length; j++) {
           const a = units[i].getBoundingClientRect(),
             b = units[j].getBoundingClientRect();
+          /* A row that cannot fit seven tokens side by side stacks them by
+           * design (`data-stacked`, mobile-view.js minion()). */
           if (
+            units[i].dataset.stacked !== "true" &&
             Math.min(a.right, b.right) > Math.max(a.left, b.left) + 1 &&
             Math.min(a.bottom, b.bottom) > Math.max(a.top, b.top) + 1
           )
             faults.push("overlap:units");
         }
       if (!EmberViewport.mobile) {
+        /* The desktop hand is a dock now (BATTLE_REDESIGN §11): a resting card
+           peeks ~66% above the canvas edge and cards overlap instead of
+           shrinking, so neither a hidden lower half nor a covered stat badge
+           is a fault at rest. What must hold is that the top strip of every
+           card is on screen, and that hovering a card shows all of it. */
         const cards = [...document.querySelectorAll(".hand-card")];
-        for (let i = 0; i < cards.length; i++) {
-          const r = cards[i].getBoundingClientRect();
-          if (r.left < 0 || r.right > innerWidth || r.bottom > innerHeight + 1)
+        for (const card of cards) {
+          const r = card.getBoundingClientRect();
+          if (r.left < 0 || r.right > innerWidth || r.top < 0)
             faults.push("outside:hand");
-          if (i && cards[i - 1].getBoundingClientRect().right > r.left)
-            faults.push("overlap:hand");
-          for (const stat of cards[i].querySelectorAll(".stat,.card-cost")) {
-            const b = stat.getBoundingClientRect(),
-              top = document.elementFromPoint(
-                b.x + b.width / 2,
-                b.y + b.height / 2,
-              );
-            if (top?.closest(".hand-card") !== cards[i])
-              faults.push("covered:stat");
-          }
+          if (Math.min(r.bottom, innerHeight) - r.top < 100)
+            faults.push("peek:hand");
         }
       }
       return faults;
     });
     expect(faults).toEqual([]);
+    if (!touch) {
+      /* Hovering a docked card must lift it fully into view, badges and all —
+         that is what pays for the overlap allowed above. */
+      const last = page.locator("#hand .hand-card").last();
+      await last.hover();
+      await page.waitForTimeout(320);
+      expect(
+        await last.evaluate((card) => {
+          const bad = [];
+          const r = card.getBoundingClientRect();
+          if (r.top < 0 || r.bottom > innerHeight + 1) bad.push("clipped");
+          for (const stat of card.querySelectorAll(".stat,.card-cost")) {
+            const b = stat.getBoundingClientRect();
+            const top = document.elementFromPoint(
+              b.x + b.width / 2,
+              b.y + b.height / 2,
+            );
+            if (top?.closest(".hand-card") !== card) bad.push("covered:stat");
+          }
+          return bad;
+        }),
+      ).toEqual([]);
+      await page.mouse.move(4, 4);
+      await page.waitForTimeout(320);
+    }
     await page.screenshot({
       path: path.join(
         out,
@@ -347,7 +377,8 @@ test("touch: inspect, confirm, rotate during spell, same match and no stuck effe
   await expect(p.locator("#card-preview")).toBeHidden();
   // A plain tap aims the spell, and the target confirms it.
   const bolt = p.locator('#hand [data-cardid="frostbolt"]');
-  await bolt.tap();
+  const strip = { position: { x: 14, y: 30 } };
+  await bolt.tap(strip);
   await expect(p.locator("#touch-target-bar")).toBeVisible();
   await p.locator('.enemy[data-cardid="golem"]').tap();
   await p.setViewportSize({ width: 844, height: 390 });
@@ -513,7 +544,9 @@ test("live-play fix: end turn exposes resolving state and restores readiness", a
   page,
 }) => {
   await demo(page);
-  await page.locator('.hand-card[data-cardid="frostbolt"]').click();
+  await page
+    .locator('.hand-card[data-cardid="frostbolt"]')
+    .click({ position: { x: 14, y: 30 } });
   await page.locator('.minion.enemy[data-cardid="golem"]').click();
   await expect(page.locator("#end-turn")).toBeDisabled();
   await expect(page.locator("#end-turn")).toHaveText("结算中…");
@@ -595,7 +628,9 @@ test("portable build starts without retired globals and plays a spell", async ({
   await ready(page);
   await page.locator("#quick-btn").click();
   await idle(page);
-  await page.locator('#hand [data-cardid="frostbolt"]').click();
+  await page
+    .locator('#hand [data-cardid="frostbolt"]')
+    .click({ position: { x: 14, y: 30 } });
   await page.locator('.enemy[data-cardid="golem"]').click();
   await idle(page);
   expect(await page.evaluate(() => Emberfall.game.s.p.mana)).toBe(4);
