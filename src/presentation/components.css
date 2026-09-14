@@ -463,27 +463,6 @@ body .card.epic {
 body .card.legendary {
   --card-rim: #d1bd8a;
 }
-body .card-inner {
-  position: absolute;
-  inset: 4px;
-  background: var(--card-surface);
-  border: 0;
-  border-radius: 9px 9px 4px 4px;
-  overflow: hidden;
-  box-shadow: none;
-}
-body .card .card-art {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  width: 100%;
-  height: 61%;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  background: var(--surface);
-}
 body .card .card-art img {
   width: 100%;
   height: 100%;
@@ -491,92 +470,11 @@ body .card .card-art img {
   filter: var(--art-grade);
   opacity: 1;
 }
-body .card .card-title {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 57%;
-  height: 12%;
-  padding: 2px 3px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(#152136dd, #111b2d);
-  border: 0;
-  border-block: 1px solid var(--card-rim);
-  border-radius: 0;
-  color: var(--ink);
-  font: 600 clamp(10px, 7.7cqw, 20px) / 1.15 var(--ui-display);
-  text-shadow: 0 1px 2px #000;
-  white-space: normal;
-  text-align: center;
-  z-index: 2;
-}
-body .card .card-title.long {
-  font-size: clamp(9px, 6.3cqw, 17px);
-}
-body .card .card-text {
-  position: absolute;
-  inset: 69% 0 9%;
-  height: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3px 6%;
-  background: var(--card-rule-fill);
-  color: var(--card-rule-ink);
-  font: 400 clamp(9px, 6.3cqw, 15px) / 1.35 var(--ui-font);
-  border: 0;
-  text-shadow: none;
-  overflow: hidden;
-  text-align: center;
-}
 body .card .card-text b {
   color: inherit;
   font-weight: 700;
 }
-body .card .card-copy {
-  max-width: 100%;
-  max-height: 100%;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
-}
-body .card .card-type {
-  position: absolute;
-  inset: auto 0 0;
-  height: 9%;
-  background: var(--card-rule-fill);
-  color: var(--ink-secondary);
-  font-size: clamp(7px, 4.5cqw, 10px);
-  line-height: 1.1;
-  padding: 3px 12%;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-}
 /* Faceted mana, blade medallion and heart/ward silhouettes; values remain DOM. */
-body .card .card-cost {
-  position: absolute;
-  left: -7%;
-  top: 1.5%;
-  width: 31%;
-  height: auto;
-  aspect-ratio: 1;
-  border: 0;
-  border-radius: 0;
-  clip-path: none;
-  background: none;
-  box-shadow: none;
-  color: var(--ink);
-  font: 600 clamp(15px, 18cqw, 36px) / 1 var(--ui-font);
-  display: grid;
-  place-items: center;
-  z-index: 5;
-}
 body :is(.card, .minion) :is(.card-cost, .stat) > .badge-frame {
   display: block;
   position: absolute;
@@ -601,39 +499,8 @@ body :is(.card, .minion) :is(.badge-value, .stat-value) {
   transform: none;
   font-variant-numeric: tabular-nums;
 }
-body .card .stat {
-  position: absolute;
-  bottom: -4%;
-  width: 31%;
-  height: auto;
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-  border: 0;
-  border-radius: 0;
-  clip-path: none;
-  background: none;
-  box-shadow: none;
-  color: var(--ink);
-  font: 600 clamp(14px, 16cqw, 32px) / 1 var(--ui-font);
-  z-index: 5;
-}
-body .card .stat.atk {
-  left: -6%;
-}
-body .card .stat.hp {
-  right: -6%;
-  left: auto;
-}
 body :is(.card, .minion) .stat.hp .stat-value {
   transform: translateY(-0.06em);
-}
-body .minion .stat {
-  background: none;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  clip-path: none;
 }
 body .card::before,
 body .card::after {
@@ -654,18 +521,6 @@ body .hand-card.selected .card {
     0 0 0 2px var(--accent),
     0 0 24px #85c5f166;
 }
-body .card-back {
-  background: radial-gradient(ellipse, var(--surface-raised), var(--surface));
-  border: 1px solid var(--line-bright);
-  border-radius: 4px;
-  box-shadow:
-    inset 0 0 0 3px var(--surface),
-    inset 0 0 0 4px var(--line);
-}
-body .card-back::after {
-  color: var(--line-bright);
-}
-
 /* Battlefield pieces remain live targetable DOM on top of the scene. */
 body .arena {
   background: transparent;
@@ -697,34 +552,12 @@ body .minion::after {
 body .minion .minion-portrait {
   border-radius: 5px;
 }
-body .minion .minion-art,
-body.touch-layout .minion .minion-art {
-  inset: 2px;
-  border: 0;
-  border-radius: 5px;
-  outline: 0;
-  box-shadow: none;
-  overflow: hidden;
-}
-body .minion .minion-art::before,
-body .minion .minion-art::after {
-  display: none;
-}
-body .minion .unit-aura {
-  inset: -2px;
-  border-radius: 7px;
-}
 body .minion.taunt {
   border-width: 2px;
   border-color: #c5d9e8;
 }
 body .minion :is(.minion-art, img) {
   filter: var(--art-grade);
-}
-body .minion-name {
-  color: var(--ink);
-  background: linear-gradient(transparent, var(--surface));
-  text-shadow: 0 1px 3px #000;
 }
 body .minion.can-attack {
   border-color: var(--positive);
@@ -1321,25 +1154,6 @@ body .atlas-dossier-rule {
   border-block: 1px solid var(--line);
   padding: 18px 0;
 }
-body .card .card-text {
-  -webkit-line-clamp: unset;
-  line-height: 1.25;
-}
-body .card .card-copy {
-  display: block;
-  -webkit-line-clamp: unset;
-  overflow: visible;
-  max-height: none;
-}
-body .card[data-rule-size="short"] .card-text {
-  font-size: clamp(9px, 8.5cqw, 16px);
-}
-body .card[data-rule-size="standard"] .card-text {
-  font-size: clamp(8px, 7.2cqw, 14px);
-}
-body .card[data-rule-size="long"] .card-text {
-  font-size: clamp(7.2px, 6.4cqw, 13px);
-}
 body #modal.folio-host .help-toc {
   background: transparent;
   border: 0;
@@ -1423,21 +1237,6 @@ body .covenant-heading::after {
   height: 1px;
   background: var(--line);
 }
-body .card .card-title {
-  top: 57%;
-  bottom: auto;
-  height: 10%;
-}
-body .card .card-text {
-  inset: 67% 0 6%;
-  padding: 2px 4%;
-  line-height: 1.18;
-}
-body .card .card-type {
-  bottom: 0.5%;
-  height: 5%;
-  padding: 0 3%;
-}
 /* Semantic visibility takes precedence over every responsive display rule. */
 body [hidden] {
   display: none !important;
@@ -1466,31 +1265,12 @@ body #modal.folio-host .relic-choice p {
   font-size: 16px;
   line-height: 1.65;
 }
-body .card .card-art {
-  overflow: hidden;
-}
 body .card .card-art img {
   position: absolute;
   inset: 0;
   transform: none;
   max-width: none;
   max-height: none;
-}
-body .card .card-cost {
-  font-size: clamp(14px, 14cqw, 36px);
-  line-height: 1;
-}
-body .card .stat {
-  font-size: clamp(13px, 13.5cqw, 34px);
-}
-body .minion .stat {
-  width: max(26px, 37%);
-  height: max(26px, 31%);
-  min-width: 26px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  font: 700 clamp(14px, calc(var(--unit-w) * 0.26), 28px) / 1 var(--ui-font);
 }
 /* Badge scale: hand cards and touch layouts grow with the rest so the gems
    read at a glance; geometry only, the badge art and numerals are shared. */
@@ -1501,52 +1281,6 @@ body:not(.touch-layout) .hand-card .card-cost {
   left: -5%;
   top: 0;
   font-size: 30px;
-}
-body:not(.touch-layout) .hand-card .card .stat {
-  width: 30%;
-  height: auto;
-  aspect-ratio: 1;
-  bottom: -3%;
-  font-size: 28px;
-}
-body:not(.touch-layout) .hand-card .stat.atk {
-  left: -4%;
-}
-body:not(.touch-layout) .hand-card .stat.hp {
-  right: -4%;
-}
-body.touch-layout .hand-card .card-cost {
-  width: 32%;
-  height: auto;
-  aspect-ratio: 1;
-  font-size: 28px;
-}
-body.touch-layout .hand-card .card .stat {
-  width: 29%;
-  height: auto;
-  aspect-ratio: 1;
-  font-size: 26px;
-}
-body.touch-layout .minion .stat {
-  width: clamp(26px, calc(var(--unit-w) * 0.44), 37px);
-  height: clamp(26px, calc(var(--unit-w) * 0.44), 37px);
-  font-size: clamp(19px, calc(var(--unit-w) * 0.38), 29px);
-}
-body .minion .stat-value {
-  font: inherit;
-}
-body .card .card-title {
-  height: 8%;
-}
-body .card .card-text {
-  inset: 65% 0 11%;
-  line-height: 1.18;
-}
-body .card[data-rule-size="standard"] .card-text {
-  font-size: clamp(7.5px, 6.6cqw, 14px);
-}
-body .card[data-rule-size="long"] .card-text {
-  font-size: clamp(7px, 6cqw, 13px);
 }
 body .lobby-copy {
   color: var(--ink);
@@ -1915,20 +1649,6 @@ body #modal.folio-host .covenant-side > :is(h3, p) {
     0 0 10px var(--surface);
 }
 /* Narrow battlefield tokens retain distinct left/right numeric silhouettes. */
-body.mobile-landscape .minion[data-compact="true"] .stat {
-  width: min(20px, calc(var(--unit-w) * 0.45));
-  min-width: 0;
-  height: 20px;
-  font-size: 12px;
-  bottom: -2px;
-}
-body.mobile-landscape .minion[data-compact="true"] .stat.atk {
-  left: 0;
-}
-body.mobile-landscape .minion[data-compact="true"] .stat.hp {
-  right: 0;
-}
-
 /* Reference tavern home. Artwork is a skin; labels and intents stay live DOM.
  * This scope never changes the battle plane or modal controls. */
 :root {

@@ -203,14 +203,6 @@ body.touch-layout .minion:hover,
 body.touch-layout .minion.selected {
   transform: none;
 }
-body.touch-layout .minion .minion-art {
-  inset: 1px 3px 5px;
-  padding: 0;
-  border-width: 3px;
-  box-shadow:
-    0 0 0 1px #554832,
-    0 2px 3px #30201555;
-}
 body.touch-layout .minion-art img {
   display: block;
   width: 100%;
@@ -219,38 +211,9 @@ body.touch-layout .minion-art img {
   transform: scale(var(--art-scale, 1.1));
   clip-path: none;
 }
-body.touch-layout .minion.taunt .minion-art {
-  border-width: 4px;
-}
-body.touch-layout .minion .stat {
-  width: clamp(22px, calc(var(--unit-w) * 0.38), 32px);
-  height: clamp(25px, calc(var(--unit-w) * 0.43), 35px);
-  font-size: clamp(18px, calc(var(--unit-w) * 0.36), 27px);
-  bottom: -2px;
-}
-body.touch-layout .minion .stat.atk {
-  left: -2px;
-}
-body.touch-layout .minion .stat.hp {
-  right: -2px;
-}
-body.touch-layout .minion .stat:before {
-  border-width: 1px;
-}
-body.touch-layout .minion .minion-status {
-  top: 2px;
-  left: auto;
-  right: 4px;
-  bottom: auto;
-  font-size: 10px;
-}
 body.touch-layout .minion .minion-status .special {
   font-size: 11px;
   text-shadow: 0 1px 3px #000;
-}
-body.touch-layout .minion .minion-name,
-body.touch-layout .minion .ready-dot {
-  display: none;
 }
 body.touch-layout .minion.shield:before {
   inset: -3px -1px 0;
@@ -260,20 +223,6 @@ body.touch-layout .minion.legendary:after {
   left: calc(50% - 6px);
   top: -10px;
   font-size: 13px;
-}
-body.touch-layout .minion.ready .minion-art {
-  outline: 2px solid #6cb355;
-  outline-offset: 1px;
-}
-body.touch-layout .minion.valid-target .minion-art {
-  outline: 2px solid #ca7737;
-  outline-offset: 2px;
-  box-shadow: 0 0 9px #ffcf6777;
-}
-body.touch-layout .minion.selected .minion-art {
-  outline: 2px solid #fff2a2;
-  outline-offset: 2px;
-  box-shadow: 0 0 11px #ffd378;
 }
 body.touch-layout .board-empty {
   font-size: 11px;
@@ -375,43 +324,6 @@ body.touch-layout .hand-card.selected .card {
 body.touch-layout .hand-card:before {
   display: none;
 }
-body.touch-layout .hand-card .card-title {
-  font-size: 11px;
-  height: 15%;
-  min-height: 0;
-  top: 53%;
-  white-space: nowrap;
-  letter-spacing: 0;
-  line-height: 1;
-}
-body.touch-layout .hand-card .card-title.long {
-  font-size: 9px;
-}
-body.touch-layout .hand-card .card-cost {
-  font-size: 25px;
-  left: -4%;
-  width: 28%;
-  height: 23%;
-  top: -1%;
-}
-body.touch-layout .hand-card .card-text {
-  font: 8px/1.35 var(--sans);
-  top: 72%;
-  left: 6%;
-  right: 6%;
-  max-height: 23%;
-  overflow: hidden;
-  letter-spacing: 0;
-}
-body.touch-layout .hand-card .card .stat {
-  width: 25%;
-  height: 20%;
-  font-size: 23px;
-  bottom: 0;
-}
-body.touch-layout .hand-card .card-type {
-  display: none;
-}
 body.touch-layout .hand-zone:empty:after {
   content: "手牌暂时为空 · 回合开始时抽牌";
   font-size: 13px;
@@ -465,13 +377,6 @@ body.touch-layout .cast-card {
 body.touch-layout .cast-card .card {
   width: 108px;
   height: 147px;
-}
-body.touch-layout .cast-card .card-title {
-  font-size: 10px;
-  min-height: 0;
-}
-body.touch-layout .cast-card .card-text {
-  font-size: 8px;
 }
 .touch-layout .cast-caption {
   font-size: 8px;
@@ -902,34 +807,6 @@ body.touch-layout .mulligan-card.replace:after {
   letter-spacing: 3px;
   border-radius: 10px;
 }
-body.touch-layout .mulligan-card .card-title,
-body.touch-layout .discover-card .card-title {
-  font-size: 12px;
-  min-height: 0;
-}
-body.touch-layout .mulligan-card .card-text,
-body.touch-layout .discover-card .card-text {
-  font-size: 10px;
-  line-height: 1.35;
-}
-body.touch-layout .mulligan-card .card-cost,
-body.touch-layout .discover-card .card-cost {
-  font-size: 28px;
-  width: 28%;
-  height: 21%;
-  left: -5%;
-  top: 0;
-}
-body.touch-layout .mulligan-card .card .stat,
-body.touch-layout .discover-card .card .stat {
-  font-size: 27px;
-  width: 26%;
-  height: 18%;
-}
-body.touch-layout .mulligan-card .card-type,
-body.touch-layout .discover-card .card-type {
-  font-size: 8px;
-}
 body.touch-layout .relic-options {
   display: flex;
   flex-direction: column;
@@ -1131,28 +1008,6 @@ body.touch-layout .library-item:hover {
   transform: none;
   filter: none;
 }
-body.touch-layout .library-item .card-title {
-  font-size: 12px;
-  min-height: 0;
-}
-body.touch-layout .library-item .card-title.long {
-  font-size: 10px;
-}
-body.touch-layout .library-item .card-text {
-  font-size: 10px;
-  line-height: 1.4;
-}
-body.touch-layout .library-item .card-cost {
-  font-size: 31px;
-}
-body.touch-layout .library-item .card .stat {
-  font-size: 29px;
-  width: 26%;
-  height: 18%;
-}
-body.touch-layout .library-item .card-type {
-  font-size: 8px;
-}
 body.touch-layout .library-item .owned-count,
 body.touch-layout .library-item .add-label {
   bottom: 2px;
@@ -1281,22 +1136,6 @@ body.touch-layout .touch-inspect-art .card {
   width: 100%;
   height: 100%;
 }
-body.touch-layout .touch-inspect-art .card-title {
-  font-size: 12px;
-  min-height: 0;
-}
-body.touch-layout .touch-inspect-art .card-text {
-  font-size: 9px;
-}
-body.touch-layout .touch-inspect-art .card-cost {
-  font-size: 29px;
-}
-body.touch-layout .touch-inspect-art .card .stat {
-  font-size: 28px;
-}
-body.touch-layout .touch-inspect-art .card-type {
-  font-size: 8px;
-}
 body.touch-layout .touch-inspect-detail {
   font: 14px/1.8 var(--sans);
   color: #5a3d25;
@@ -1374,19 +1213,6 @@ body.touch-layout .touch-hand-grid .card {
   width: 100%;
   height: auto;
   aspect-ratio: var(--card-face-ratio, 5 / 7.4);
-}
-body.touch-layout .touch-hand-grid .card-cost {
-  font-size: 32px;
-}
-body.touch-layout .touch-hand-grid .card .stat {
-  font-size: 28px;
-}
-body.touch-layout .touch-hand-grid .card-title {
-  font-size: 13px;
-  min-height: 0;
-}
-body.touch-layout .touch-hand-grid .card-text {
-  font-size: 10px;
 }
 body.touch-layout .touch-menu-grid {
   display: grid;
@@ -1734,12 +1560,6 @@ body.mobile-landscape .touch-hand-grid {
     padding-left: 7px;
     padding-right: 7px;
   }
-  body.touch-layout .library-item .card-text {
-    font-size: 9px;
-  }
-  body.touch-layout .library-item .card-title {
-    font-size: 11px;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   body.touch-layout .hand-zone {
@@ -1781,22 +1601,6 @@ body.touch-layout .hand-card:first-child {
 body.touch-layout .hand-card:last-child {
   margin-right: auto;
 }
-body.touch-layout
-  #app.is-targe
-  body.touch-layout
-  .minion[data-compact="true"]
-  .stat {
-  width: calc(var(--unit-w) * 0.49);
-  height: 24px;
-  font-size: clamp(16px, calc(var(--unit-w) * 0.39), 19px);
-}
-body.touch-layout .minion[data-compact="true"] .stat.atk {
-  left: 0;
-}
-body.touch-layout .minion[data-compact="true"] .stat.hp {
-  right: 0;
-}
-
 /* On narrow portraits the skill caption would share the resource row. The icon
  * and cost remain visible; long-press exposes the full skill explanation. */
 

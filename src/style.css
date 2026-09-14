@@ -937,29 +937,6 @@ button {
   justify-content: center;
   gap: 2px;
 }
-.card-back {
-  width: 41px;
-  height: 60px;
-  flex-shrink: 0;
-  border: 2px solid #736346;
-  background: repeating-conic-gradient(from 45deg, #263941 0 25%, #1c2b33 0 50%)
-    50% / 9px 9px;
-  box-shadow: 0 2px 4px #000;
-  transform: rotate(var(--r, 0deg)) translateY(var(--y, 0px));
-  border-radius: 3px;
-  position: relative;
-}
-.card-back:after {
-  content: "✦";
-  position: absolute;
-  inset: 4px;
-  border: 1px solid #bba37266;
-  display: grid;
-  place-items: center;
-  font-size: 25px;
-  color: #ac9667;
-  background: radial-gradient(#173342, #13232ae0);
-}
 .minion {
   position: absolute;
   width: 105px;
@@ -974,28 +951,6 @@ button {
     transform 0.2s;
   touch-action: none;
 }
-.minion-art {
-  position: absolute;
-  left: 5px;
-  right: 5px;
-  top: 3px;
-  bottom: 14px;
-  overflow: hidden;
-  border-radius: 48% 48% 43% 43% / 42% 42% 48% 48%;
-  padding: 4px;
-  background: linear-gradient(
-    140deg,
-    #9c9b8a,
-    #464c49 36%,
-    #bbb29b 54%,
-    #5a5548 74%,
-    #333e3e
-  );
-  box-shadow:
-    0 8px 10px #0009,
-    0 0 0 2px #141e23,
-    0 0 0 3px #6256388c;
-}
 .minion-art img {
   width: 100%;
   height: 100%;
@@ -1004,31 +959,6 @@ button {
   transform: scale(var(--art-scale, 1));
   border-radius: inherit;
   filter: saturate(0.7);
-}
-.minion-art:after {
-  content: "";
-  position: absolute;
-  inset: 5px;
-  border-radius: inherit;
-  background: linear-gradient(transparent 60%, #070e18aa);
-  pointer-events: none;
-}
-.minion.enemy .minion-art {
-  background: linear-gradient(
-    140deg,
-    #a1897d,
-    #51413f 36%,
-    #c5ae90 54%,
-    #655243 74%,
-    #3f2d2e
-  );
-}
-.minion.taunt .minion-art {
-  border-radius: 15px 15px 40% 40%;
-  box-shadow:
-    0 0 0 2px #88999888,
-    0 0 0 5px #243239,
-    0 8px 12px #0008;
 }
 .minion.shield:before {
   content: "";
@@ -1052,24 +982,6 @@ button {
   opacity: 0.55;
   filter: drop-shadow(0 0 7px #ac96d9);
 }
-.minion.frozen .minion-art:after {
-  background: linear-gradient(
-    120deg,
-    #cafaff80,
-    #60c4e346 20%,
-    #89e8fc88 22%,
-    #54c4eb11 45%,
-    #b1ebff87 46%,
-    #3e6b9d44 80%
-  );
-  border: 2px solid #a7e2f1;
-}
-.minion.ready .minion-art {
-  box-shadow:
-    0 0 0 2px #749890,
-    0 0 12px #87b6a177,
-    0 8px 11px #0008;
-}
 .minion.selected {
   filter: drop-shadow(0 0 10px #eac783);
   transform: translateY(-5px);
@@ -1078,62 +990,9 @@ button {
   filter: drop-shadow(0 0 8px #da9a73);
   cursor: crosshair;
 }
-.minion.valid-target .minion-art {
-  box-shadow:
-    0 0 0 3px #d99a7399,
-    0 0 17px #dd9c7477;
-}
 .minion:hover {
   z-index: 8;
   transform: translateY(-4px);
-}
-.minion-name {
-  position: absolute;
-  left: 5px;
-  right: 5px;
-  bottom: 30px;
-  font-size: 9px;
-  text-align: center;
-  color: #e8e1d2;
-  text-shadow: 0 2px 4px #000;
-  letter-spacing: 0.3px;
-  white-space: nowrap;
-}
-.stat {
-  position: absolute;
-  bottom: 0;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font: bold 24px var(--serif);
-  text-shadow: 0 2px 3px #000;
-  color: #fff4db;
-  border: 1px solid #c2a977;
-  box-shadow: 0 3px 5px #0006;
-}
-.stat.atk {
-  left: -2px;
-  background: radial-gradient(at 30% 20%, #b5a16b, #6b5732 66%);
-  clip-path: polygon(50% 0, 90% 10%, 100% 75%, 70% 100%, 15% 96%, 0 52%);
-}
-.stat.hp {
-  right: -2px;
-  background: radial-gradient(at 30% 20%, #bc7465, #772f38 75%);
-  clip-path: polygon(50% 0, 91% 14%, 100% 70%, 50% 100%, 0 70%, 9% 14%);
-}
-.stat.hp.hurt {
-  color: #ffb19e;
-}
-.minion-status {
-  position: absolute;
-  left: 26px;
-  right: 26px;
-  bottom: 1px;
-  text-align: center;
-  font-size: 10px;
-  color: #ccb88e;
 }
 .minion-status .sleep {
   color: #b8cbd2;
@@ -1144,16 +1003,6 @@ button {
   font-size: 13px;
   color: #b4d09f;
 }
-.minion .ready-dot {
-  position: absolute;
-  top: -8px;
-  left: 49px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #a9d6ae;
-  box-shadow: 0 0 10px #8ddeae;
-}
 .minion.legendary:after {
   content: "✦";
   position: absolute;
@@ -1163,10 +1012,6 @@ button {
   font-size: 16px;
   text-shadow: 0 0 10px #d68940;
 }
-.minion.windfury .minion-status {
-  letter-spacing: 2px;
-}
-
 .hand-label {
   position: absolute;
   left: 326px;
@@ -1296,20 +1141,6 @@ button {
 .card.rare:after {
   border-color: #9abaaf69;
 }
-.card-inner {
-  width: 100%;
-  height: 100%;
-  background: #171f26;
-  border-radius: 3px;
-  overflow: hidden;
-  position: relative;
-}
-.card-art {
-  position: absolute;
-  inset: 0 0 auto;
-  height: 64%;
-  overflow: hidden;
-}
 .card-art img {
   width: 100%;
   height: 100%;
@@ -1318,94 +1149,9 @@ button {
   transform: scale(var(--art-scale, 1));
   filter: saturate(0.72);
 }
-.card-art:after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(transparent 70%, #152028);
-  box-shadow: inset 0 0 15px #08101955;
-}
-.card-cost {
-  position: absolute;
-  left: -3px;
-  top: 2px;
-  z-index: 3;
-  width: 32px;
-  height: 35px;
-  display: grid;
-  place-items: center;
-  background: radial-gradient(at 30% 25%, #8bc4d9, #24526f 64%, #183d56);
-  clip-path: polygon(50% 0, 96% 22%, 100% 75%, 50% 100%, 0 76%, 5% 24%);
-  font: bold 25px var(--serif);
-  text-shadow: 0 2px 3px #000;
-  color: #edf7ef;
-}
-.card-title {
-  position: absolute;
-  top: 55%;
-  left: 3px;
-  right: 3px;
-  min-height: 25px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 1px;
-  background: linear-gradient(90deg, #17212bf0, #273039f0, #17212bf0);
-  border-top: 1px solid #b59b693b;
-  border-bottom: 1px solid #b59b692e;
-  font: 12px var(--serif);
-  font-weight: 600;
-  letter-spacing: 0.2px;
-  color: #e2d3b5;
-  z-index: 2;
-  text-shadow: 0 2px 2px #000;
-}
-.card-title.long {
-  font-size: 10px;
-}
-.card-text {
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  top: 72%;
-  font-size: 9px;
-  line-height: 1.65;
-  color: #b8bbae;
-  font-family: var(--serif);
-  text-wrap: pretty;
-}
 .card-text b {
   color: #e1d1ad;
   font-weight: 500;
-}
-.card-type {
-  position: absolute;
-  bottom: 5px;
-  left: 15px;
-  right: 15px;
-  font-size: 7px;
-  letter-spacing: 2px;
-  color: #6d827f;
-}
-.card .stat {
-  width: 29px;
-  height: 29px;
-  bottom: -2px;
-  font-size: 22px;
-  border-width: 1px;
-  z-index: 4;
-}
-.card .stat.atk {
-  left: -1px;
-}
-.card .stat.hp {
-  right: -1px;
-}
-.card.spell .card-art {
-  height: 63%;
-}
-.card.spell .card-type {
-  bottom: 4px;
 }
 .card-preview {
   position: absolute;
@@ -1421,33 +1167,6 @@ button {
 .card-preview .card {
   width: 230px;
   height: 330px;
-}
-.card-preview .card-title {
-  font-size: 18px;
-  min-height: 36px;
-}
-.card-preview .card-title.long {
-  font-size: 16px;
-}
-.card-preview .card-text {
-  font-size: 14px;
-  line-height: 1.6;
-  left: 14px;
-  right: 14px;
-}
-.card-preview .card-cost {
-  width: 47px;
-  height: 53px;
-  font-size: 35px;
-}
-.card-preview .card .stat {
-  width: 42px;
-  height: 43px;
-  font-size: 30px;
-}
-.card-preview .card-type {
-  font-size: 10px;
-  bottom: 8px;
 }
 .keyword-notes {
   position: absolute;
@@ -1728,28 +1447,6 @@ button {
   width: 201px;
   height: 288px;
 }
-.mulligan-card .card-title {
-  font-size: 16px;
-  min-height: 32px;
-}
-.mulligan-card .card-text {
-  font-size: 12px;
-  line-height: 1.6;
-}
-.mulligan-card .card-cost {
-  width: 40px;
-  height: 46px;
-  font-size: 30px;
-}
-.mulligan-card .card .stat {
-  width: 37px;
-  height: 37px;
-  font-size: 28px;
-}
-.mulligan-card .card-type {
-  font-size: 9px;
-}
-
 .mulligan-card.replace:after {
   content: "替 换";
   position: absolute;
@@ -2120,12 +1817,6 @@ button {
 .discover-card .card {
   width: 201px;
   height: 288px;
-}
-.discover-card .card-title {
-  font-size: 16px;
-}
-.discover-card .card-text {
-  font-size: 12px;
 }
 .confirm-box {
   width: 530px;

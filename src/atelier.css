@@ -127,53 +127,6 @@
   z-index: 5;
   pointer-events: none;
 }
-.card-inner {
-  position: absolute;
-  inset: 3.5% 5%;
-  width: auto;
-  height: auto;
-  border: 0;
-  border-radius: 6%;
-  background: linear-gradient(105deg, #eadab5, #f2e3bd 55%, #ddc592);
-  overflow: visible;
-  box-shadow: inset 0 0 15px #6b4a3077;
-}
-.card-inner:before {
-  inset: 63% 1% 2%;
-  /* the retired parchment texture used to paint here */
-  background: none;
-  border: 1px solid #89694077;
-  box-shadow:
-    inset 0 1px #fff4d4,
-    inset 0 0 14px #75503222;
-  border-radius: 3px;
-}
-.card-art,
-.card.spell .card-art,
-.card.weapon .card-art {
-  left: 4%;
-  right: 4%;
-  top: 4%;
-  width: 92%;
-  height: 52%;
-  border: 2px solid #3b342b;
-  box-shadow:
-    0 0 0 2px #cfaf75,
-    0 0 0 4px #514333,
-    0 3px 8px #211a1777;
-  z-index: 1;
-  background: #244657;
-  overflow: hidden;
-}
-.card-art {
-  border-radius: 49% 49% 35% 35% / 33% 33% 18% 18%;
-}
-.card.spell .card-art {
-  border-radius: 8px 8px 4px 4px;
-}
-.card.weapon .card-art {
-  border-radius: 49% 49% 20% 20% / 35% 35% 13% 13%;
-}
 .card-art img {
   object-fit: cover;
   object-position: var(--art-pos, center 39%);
@@ -183,211 +136,9 @@
 .card.art-painted .card-art img {
   filter: saturate(1.05);
 }
-.card-art:after {
-  background: linear-gradient(140deg, #fff2bd10, transparent 45%, #0e192535);
-  box-shadow: inset 0 0 9px #16232877;
-}
-.card-title,
-.card-preview .card-title,
-.library-item .card-title {
-  left: -2.5%;
-  right: -2.5%;
-  top: 55.6%;
-  height: 11.7%;
-  padding: 0 3%;
-  border: 1px solid #4c311f;
-  border-radius: 11% 11% 28% 28% / 20% 20% 55% 55%;
-  background: linear-gradient(
-    #f2d694 0%,
-    #bc935a 18%,
-    #8c683e 42%,
-    #725030 50%,
-    #b58c52 82%,
-    #d5b478 100%
-  );
-  box-shadow:
-    inset 0 1px #fff2c0,
-    inset 0 -2px #442e1f,
-    0 2px 1px #38261d66;
-  color: #fff2d3;
-  font: 800 12px/1.1 var(--serif);
-  letter-spacing: 0.3px;
-  text-shadow:
-    0 2px 1px #281a18,
-    -1px 0 #38251b,
-    1px 0 #38251b;
-  z-index: 8;
-}
-.card-title:before,
-.card-title:after {
-  width: 3px;
-  height: 3px;
-  top: 40%;
-  background: #ecce87;
-}
-.card-title:before {
-  left: 4px;
-}
-.card-title:after {
-  right: 4px;
-}
-.card-title.long {
-  font-size: 10px;
-}
-.card-text,
-.library-item .card-text,
-.card-preview .card-text {
-  top: 71.4%;
-  left: 8%;
-  right: 8%;
-  font: 10px/1.4 var(--sans);
-  font-weight: 500;
-  color: #3c2a1d;
-  z-index: 6;
-  letter-spacing: 0;
-  text-wrap: pretty;
-}
 .card-text b {
   font-weight: 800;
   color: #241d17;
-}
-.card-type {
-  position: absolute;
-  bottom: 3%;
-  left: 22%;
-  right: 22%;
-  font: 8px var(--serif);
-  color: #fff0c5;
-  background: linear-gradient(#9e8154, #6b5033);
-  border: 1px solid #66472c;
-  border-radius: 8px;
-  text-shadow: 0 1px #231d19;
-  letter-spacing: 1px;
-  padding: 1px;
-  z-index: 8;
-}
-.card-cost,
-.card-preview .card-cost,
-.library-item .card-cost {
-  position: absolute;
-  left: -6%;
-  top: -0.5%;
-  width: 28%;
-  height: 21%;
-  border: 0;
-  border-radius: 0;
-  clip-path: polygon(
-    48% 0,
-    83% 7%,
-    99% 43%,
-    89% 77%,
-    55% 100%,
-    13% 85%,
-    0 50%,
-    15% 17%
-  );
-  background: conic-gradient(
-    from 25deg at 45% 43%,
-    #cbf4ff,
-    #608fc4 14%,
-    #1a4f91 25%,
-    #122c58 40%,
-    #88d4f3 51%,
-    #e4fdff 62%,
-    #469ada 76%,
-    #204d8a 92%,
-    #cbf4ff
-  );
-  color: #fff9e1;
-  box-shadow: inset 0 0 0 3px #14273d;
-  text-shadow:
-    0 2px 1px #142338,
-    -1px -1px #142338,
-    1px -1px #142338;
-  filter: drop-shadow(0 2px 1px #191820);
-  font:
-    800 30px/1 Georgia,
-    serif;
-  z-index: 12;
-  padding-top: 1px;
-}
-.card-cost:before {
-  content: "";
-  position: absolute;
-  inset: 13%;
-  border: 1px solid #bfeeff88;
-  clip-path: inherit;
-  pointer-events: none;
-}
-.stat,
-.card .stat {
-  clip-path: none;
-  background: none;
-  border: 0;
-  border-radius: 0;
-  filter: drop-shadow(0 2px 1px #201e19);
-  font:
-    700 27px/1 Georgia,
-    serif;
-  color: #fff8d6;
-  text-shadow:
-    -1px -1px #2e241d,
-    1px -1px #2e241d,
-    -1px 1px #2e241d,
-    1px 2px #2e241d;
-  z-index: 12;
-}
-.stat:before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: 50%;
-  border: 2px solid #4b3526;
-  box-shadow:
-    inset 0 0 0 1px #f6dfa4,
-    inset 0 0 5px #593920,
-    0 1px #f1c886;
-}
-.stat.atk:before {
-  background: radial-gradient(
-    ellipse at 30% 24%,
-    #fff5b4,
-    #d9ac54 40%,
-    #80652c 71%,
-    #d9ba71
-  );
-  border-radius: 48% 48% 40% 40%;
-}
-.stat.hp:before {
-  background: radial-gradient(
-    ellipse at 32% 22%,
-    #ffb993,
-    #c54638 37%,
-    #852a2c 72%,
-    #d1714e
-  );
-  border-color: #443733;
-  border-radius: 45% 45% 50% 50%;
-  transform: rotate(-6deg);
-  box-shadow:
-    inset 0 0 0 1px #dbc094,
-    inset 0 1px #fff0b5;
-}
-.card .stat {
-  width: 26%;
-  height: 18%;
-  bottom: -1%;
-  font-size: 29px;
-}
-.card .stat.atk {
-  left: -5%;
-}
-.card .stat.hp {
-  right: -5%;
-}
-.card.weapon .stat.hp:before {
-  background: linear-gradient(135deg, #e2e1d2, #758792, #394452 65%, #bdc9c9);
 }
 .card-preview {
   width: 250px;
@@ -396,25 +147,6 @@
 .card-preview .card {
   width: 250px;
   height: 350px;
-}
-.card-preview .card-title {
-  font-size: 20px;
-}
-.card-preview .card-title.long {
-  font-size: 16px;
-}
-.card-preview .card-text {
-  font-size: 14px;
-  line-height: 1.55;
-}
-.card-preview .card-cost {
-  font-size: 44px;
-}
-.card-preview .card .stat {
-  font-size: 43px;
-}
-.card-preview .card-type {
-  font-size: 11px;
 }
 .keyword-notes {
   font-size: 11px;
@@ -433,25 +165,6 @@
 }
 .library-item .card {
   height: 255px;
-}
-.library-item .card-title {
-  font-size: 14px;
-}
-.library-item .card-title.long {
-  font-size: 11px;
-}
-.library-item .card-text {
-  font-size: 11px;
-  line-height: 1.46;
-}
-.library-item .card-cost {
-  font-size: 36px;
-}
-.library-item .card .stat {
-  font-size: 34px;
-}
-.library-item .card-type {
-  font-size: 9px;
 }
 .library-item .owned-count {
   bottom: 0;
@@ -577,56 +290,11 @@
   height: 134px;
   filter: drop-shadow(1px 8px 4px #50382866);
 }
-.minion .minion-art {
-  inset: 1px 3px 5px;
-  border: 6px solid transparent;
-  background:
-    linear-gradient(#34384a, #5b4544) padding-box,
-    linear-gradient(
-        126deg,
-        #efe6c6,
-        #778387 19%,
-        #d7d8bf 39%,
-        #645e4a 53%,
-        #b4bbae 74%,
-        #494e56 88%,
-        #d9c997
-      )
-      border-box;
-  border-radius: 50%;
-  box-shadow:
-    0 0 0 1px #3c3c34,
-    0 2px 0 2px #655743,
-    inset 0 0 0 2px #291e1c;
-  overflow: hidden;
-}
 .minion-art img {
   border-radius: 50%;
   transform: scale(var(--art-scale, 1.1));
   object-position: var(--art-pos, center 43%);
   filter: saturate(1.09);
-}
-.minion-art:after {
-  border: 1px solid #e1d4b64d;
-  background: linear-gradient(transparent 60%, #21233340);
-  box-shadow: inset 0 0 6px #231a2488;
-}
-.minion.taunt .minion-art {
-  border-radius: 46% 46% 22% 22% / 34% 34% 15% 15%;
-  border-width: 7px;
-  background:
-    linear-gradient(#343e4a, #44505a) padding-box,
-    linear-gradient(
-        126deg,
-        #ebdfb7,
-        #748696 19%,
-        #c7d2d0 39%,
-        #4e5660 53%,
-        #a8b9b8 74%,
-        #465268 88%,
-        #aebcac
-      )
-      border-box;
 }
 .minion.taunt:after {
   content: "";
@@ -654,47 +322,12 @@
     6% 50%
   );
 }
-.minion .stat {
-  width: 35px;
-  height: 38px;
-  bottom: 1px;
-  font-size: 29px;
-}
-.minion .stat.atk {
-  left: -2px;
-}
-.minion .stat.hp {
-  right: -2px;
-}
-.minion-status {
-  top: 7px;
-  right: 8px;
-}
-.minion .ready-dot {
-  bottom: 0;
-}
 .minion.ready {
   filter: drop-shadow(0 0 3px #90da5555) drop-shadow(0 7px 3px #52391d77);
-}
-.minion.ready .minion-art {
-  outline: 2px solid #8bbc5988;
-  outline-offset: 2px;
-}
-.minion.shield .minion-art {
-  box-shadow:
-    0 0 0 3px #edca69,
-    0 0 10px #ffcd4e77,
-    inset 0 0 0 2px #ffeb9e;
 }
 .minion.shield:before {
   border-color: #ffeec48f;
   box-shadow: 0 0 12px #ffda7d66;
-}
-.minion.frozen .minion-art {
-  filter: hue-rotate(8deg) saturate(0.65);
-  box-shadow:
-    0 0 0 3px #bcecff,
-    0 0 15px #80c7ff8c;
 }
 .enemy-hand {
   left: 569px;
@@ -703,25 +336,6 @@
   height: 52px;
   gap: 7px;
 }
-.card-back {
-  height: 49px;
-  width: 36px;
-  border-width: 2px;
-  border-color: #af8c52;
-  box-shadow:
-    inset 0 0 0 1px #192b43,
-    0 3px 0 #372923;
-  transform: translateY(var(--y)) rotate(var(--r));
-}
-.card-back:after {
-  font-size: 20px;
-  border-width: 1px;
-  inset: 7px 5px;
-}
-.card-back:before {
-  inset: 3px;
-}
-
 .hand-zone {
   top: 744px;
   left: 280px;
@@ -951,21 +565,6 @@
   width: 174px;
   height: 248px;
 }
-.lobby-card .card-text {
-  font-size: 11px;
-}
-.lobby-card .card-title {
-  font-size: 13px;
-}
-.lobby-card .card-title.long {
-  font-size: 11px;
-}
-.lobby-card .card-cost {
-  font-size: 34px;
-}
-.lobby-card .card .stat {
-  font-size: 32px;
-}
 .lobby-collection > button {
   top: 300px;
   left: 37px;
@@ -1032,33 +631,6 @@
 }
 .hero-deck-note {
   font-size: 11px;
-}
-.discover-card .card-title {
-  font-size: 16px;
-}
-.discover-card .card-text {
-  font-size: 12px;
-}
-.discover-card .card-cost {
-  font-size: 39px;
-}
-.discover-card .card .stat {
-  font-size: 39px;
-}
-.mulligan-card .card-title {
-  font-size: 17px;
-}
-.mulligan-card .card-title.long {
-  font-size: 13px;
-}
-.mulligan-card .card-text {
-  font-size: 12px;
-}
-.mulligan-card .card-cost {
-  font-size: 40px;
-}
-.mulligan-card .card .stat {
-  font-size: 37px;
 }
 .map-stop img {
   object-position: center 35%;
@@ -1145,21 +717,6 @@
   width: 169px;
   height: 239px;
 }
-.atelier-specimens .card-title {
-  font-size: 14px;
-}
-.atelier-specimens .card-title.long {
-  font-size: 11px;
-}
-.atelier-specimens .card-text {
-  font-size: 11px;
-}
-.atelier-specimens .card-cost {
-  font-size: 34px;
-}
-.atelier-specimens .card .stat {
-  font-size: 32px;
-}
 .atelier-foot {
   display: flex;
   align-items: center;
@@ -1193,23 +750,6 @@
   background: transparent;
   box-shadow: none;
   filter: drop-shadow(0 5px 3px #19141b80);
-}
-.card-inner {
-  background: transparent;
-  box-shadow: none;
-}
-.card-inner:after {
-  content: "";
-  position: absolute;
-  inset: 14% 0 -1%;
-  background: linear-gradient(105deg, #eadab5, #f2e3bd 55%, #ddc592);
-  border: 2px solid #8b7550;
-  border-radius: 5px;
-  z-index: 0;
-  box-shadow: inset 0 0 14px #80613055;
-}
-.card-inner:before {
-  z-index: 1;
 }
 .hand-card.playable .card {
   box-shadow: none;

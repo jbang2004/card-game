@@ -535,50 +535,6 @@ button:not(:disabled) {
   z-index: 3;
   box-shadow: inset 0 1px 0 #e8cfa48a;
 }
-.card-inner {
-  background: linear-gradient(
-    #a89272 0 61%,
-    #e8d4a8 66%,
-    #eeddb8 87%,
-    #b59767 100%
-  );
-  border-radius: 22px 22px 6px 6px;
-  overflow: visible;
-  border: 1px solid #897553;
-  height: 100%;
-  width: 100%;
-}
-.card-inner:before {
-  content: "";
-  position: absolute;
-  left: 4%;
-  right: 4%;
-  top: 64%;
-  bottom: 5%;
-  /* the retired parchment texture used to paint here */
-  background: none;
-  border-radius: 3px;
-  box-shadow: inset 0 0 16px #805b3233;
-  z-index: 0;
-}
-.card-art,
-.card.spell .card-art {
-  position: absolute;
-  left: 6%;
-  right: 6%;
-  top: 3%;
-  bottom: auto;
-  height: 56%;
-  width: 88%;
-  border-radius: 50% 50% 43% 43% / 39% 39% 30% 30%;
-  border: 4px solid #736244;
-  box-shadow:
-    0 0 0 2px #d9c8a3,
-    inset 0 0 7px #000;
-  overflow: hidden;
-  z-index: 1;
-  background: #3b4b57;
-}
 .card-art img {
   width: 100%;
   height: 100%;
@@ -587,209 +543,9 @@ button:not(:disabled) {
   filter: saturate(1.12) contrast(1.03);
   transform: scale(1.05);
 }
-.card-art:after,
-.card.epic .card-art:after,
-.card.legendary .card-art:after {
-  inset: 0;
-  background: linear-gradient(#06142310, transparent 38%, #2633231a);
-  box-shadow: inset 0 0 15px #17162444;
-  border-radius: inherit;
-}
-.card.spell .card-art {
-  border-radius: 13px 13px 7px 7px;
-  height: 56%;
-  top: 4%;
-  border-color: #69777d;
-  box-shadow: 0 0 0 2px #d6c8a2;
-}
-.card.weapon .card-art {
-  border-radius: 50%;
-  border-color: #748381;
-  box-shadow: 0 0 0 2px #ddc69a;
-}
-.card-title {
-  position: absolute;
-  top: 56.8%;
-  left: -3%;
-  right: -3%;
-  height: 12%;
-  min-height: 0;
-  padding: 0 5%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(#b89969, var(--ribbon) 47%, #79593c 55%, #a58557);
-  border: 2px solid #5f432c;
-  border-radius: 6px 6px 12px 12px;
-  font: 700 12px var(--serif);
-  letter-spacing: 0;
-  color: #fff0ca;
-  text-shadow:
-    0 1px 1px #251b20,
-    0 -1px #513b2b;
-  box-shadow:
-    inset 0 1px 0 #e9c991,
-    0 3px 3px #442e2555;
-  z-index: 4;
-  text-align: center;
-  white-space: nowrap;
-}
-.card-title.long {
-  font-size: 10px;
-}
-.card-title:before,
-.card-title:after {
-  content: "";
-  position: absolute;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  top: calc(50% - 2px);
-  background: #e6c17b;
-  border: 1px solid #70502f;
-  box-shadow: 0 1px #4d3726;
-}
-.card-title:before {
-  left: 4px;
-}
-.card-title:after {
-  right: 4px;
-}
-.card-text {
-  position: absolute;
-  top: 72.8%;
-  left: 8%;
-  right: 8%;
-  font: 10px/1.37 var(--serif);
-  color: #3c3026;
-  text-align: center;
-  text-wrap: pretty;
-  z-index: 4;
-}
 .card-text b {
   color: #29251f;
   font-weight: 800;
-}
-.card-type {
-  bottom: 2.5%;
-  left: 21%;
-  right: 21%;
-  font: 8px var(--serif);
-  letter-spacing: 0.5px;
-  color: #685133;
-  z-index: 4;
-}
-.card-cost {
-  left: -8px;
-  top: -5px;
-  width: 37px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  background: radial-gradient(
-    at 28% 22%,
-    #ddffff,
-    #6fcbf7 23%,
-    #387ac2 58%,
-    #294274 84%
-  );
-  border: 2px solid #324866;
-  border-radius: 50% 50% 45% 45%;
-  clip-path: polygon(
-    50% 0,
-    86% 13%,
-    100% 53%,
-    81% 91%,
-    47% 100%,
-    10% 81%,
-    0 38%,
-    17% 11%
-  );
-  box-shadow:
-    inset 0 2px 1px #e7ffff,
-    0 3px 4px #191824;
-  filter: drop-shadow(0 2px 1px #302925);
-  font:
-    700 30px/1 Georgia,
-    serif;
-  color: #fff5df;
-  text-shadow:
-    0 2px #142c4b,
-    -1px 0 #142c4b,
-    1px 0 #142c4b;
-  z-index: 9;
-  padding: 0 0 3px;
-}
-.stat,
-.card .stat {
-  width: 33px;
-  height: 36px;
-  display: grid;
-  place-items: center;
-  position: absolute;
-  bottom: -5px;
-  font:
-    700 26px/1 Georgia,
-    serif;
-  color: #fff3cb;
-  border: 0;
-  text-shadow:
-    0 2px #332920,
-    -1px -1px #332920,
-    1px -1px #332920,
-    -1px 1px #332920,
-    1px 1px #332920;
-  box-shadow: none;
-  z-index: 8;
-  filter: drop-shadow(0 2px 1px #3b3025);
-}
-.stat.atk,
-.card .stat.atk {
-  left: -7px;
-  right: auto;
-  background: radial-gradient(at 34% 24%, #ffefa2, #e5b243 42%, #b17c20 80%);
-  clip-path: polygon(
-    50% 0,
-    62% 13%,
-    81% 9%,
-    84% 28%,
-    100% 41%,
-    89% 58%,
-    97% 78%,
-    75% 81%,
-    63% 100%,
-    48% 90%,
-    29% 98%,
-    25% 80%,
-    4% 73%,
-    13% 52%,
-    0 33%,
-    22% 27%,
-    25% 7%,
-    42% 12%
-  );
-  border-radius: 0;
-}
-.stat.hp,
-.card .stat.hp {
-  right: -7px;
-  left: auto;
-  background: radial-gradient(at 27% 22%, #ffb99a, #d34839 43%, #8d292b 84%);
-  border-radius: 48% 48% 44% 44%;
-  clip-path: polygon(
-    50% 0,
-    88% 17%,
-    100% 55%,
-    84% 86%,
-    50% 100%,
-    15% 87%,
-    0 58%,
-    12% 18%
-  );
-}
-.stat.hp.hurt,
-.card .stat.hp.hurt {
-  color: #ffd97e;
 }
 /* Match HUD and fixed targeting positions. */
 #battle {
@@ -948,47 +704,6 @@ button:not(:disabled) {
   gap: 5px;
   z-index: 9;
 }
-.card-back {
-  width: 42px;
-  height: 64px;
-  border-radius: 9px 9px 5px 5px;
-  border: 3px solid #bc955c;
-  background: linear-gradient(130deg, #5a737f, #334251 54%, #232e3d);
-  box-shadow:
-    inset 0 0 0 2px #243647,
-    2px 3px 0 #433a2e,
-    0 4px 6px #25252666;
-  opacity: 1;
-}
-.card-back:before {
-  content: "";
-  position: absolute;
-  inset: 4px;
-  border: 1px solid #c5a773;
-  border-radius: 3px;
-  background: repeating-linear-gradient(
-    45deg,
-    transparent 0 5px,
-    #f3d88a0f 5px 6px,
-    transparent 6px 11px
-  );
-}
-.card-back:after {
-  content: "◈";
-  position: absolute;
-  inset: 9px 5px;
-  border: 2px solid #b8965d;
-  border-radius: 50%;
-  background: radial-gradient(#b1e9f1, #3771a1 55%, #293e5b);
-  color: #dcffff;
-  font:
-    27px Georgia,
-    serif;
-  text-shadow: 0 1px 2px #273749;
-  display: grid;
-  place-items: center;
-}
-
 .weapon-slot {
   position: absolute;
   left: 614px;
@@ -1081,19 +796,6 @@ button:not(:disabled) {
   z-index: 11;
   overflow: visible;
 }
-.minion .minion-art {
-  position: absolute;
-  inset: 0 5px 7px;
-  border-radius: 50%;
-  border: 5px solid #b5a587;
-  background: linear-gradient(120deg, #eee0b8, #998568);
-  overflow: hidden;
-  box-shadow:
-    0 0 0 2px #5f4c37,
-    inset 0 0 0 2px #665340,
-    0 2px 0 3px #67543d;
-  clip-path: none;
-}
 .minion-art img {
   width: 100%;
   height: 100%;
@@ -1104,81 +806,9 @@ button:not(:disabled) {
   clip-path: none;
   border-radius: inherit;
 }
-.minion-art:after {
-  inset: 0;
-  border-radius: inherit;
-  border: 2px solid #483b3155;
-  background: linear-gradient(transparent 50%, #13151d22 73%, #17202b88);
-  box-shadow: inset 0 3px 9px #281b3266;
-}
-.minion.taunt .minion-art {
-  border-radius: 31% 31% 25% 25% / 22% 22% 26% 26%;
-  border-width: 7px;
-  border-color: #aaad98;
-  box-shadow:
-    0 0 0 2px #526268,
-    inset 0 0 0 2px #293b45,
-    0 3px 0 3px #646e65;
-}
-.minion.taunt .minion-art:before {
-  inset: 1px;
-  border: 1px solid #e1ebca88;
-  border-radius: inherit;
-}
-.minion-name {
-  position: absolute;
-  bottom: 24px;
-  left: 0;
-  right: 0;
-  font: 700 10px var(--serif);
-  letter-spacing: 0;
-  color: #fff4d1;
-  text-shadow:
-    0 1px 3px #111,
-    0 1px #111;
-  z-index: 3;
-}
-.minion .stat {
-  bottom: -1px;
-  width: 36px;
-  height: 39px;
-  font-size: 28px;
-}
-.minion .stat.atk {
-  left: -2px;
-}
-.minion .stat.hp {
-  right: -2px;
-}
-.minion-status {
-  bottom: 1px;
-  left: 34px;
-  right: 34px;
-  font-size: 11px;
-  color: #d9eac8;
-  text-shadow: 0 1px 2px #3b3024;
-  z-index: 9;
-}
 .minion-status .special {
   font-size: 13px;
   color: #e1efab;
-}
-.minion .ready-dot {
-  display: none;
-}
-.minion.ready .minion-art {
-  box-shadow:
-    0 0 0 3px #77b641,
-    0 0 0 5px #d0f29266,
-    0 0 16px #9fd75544,
-    inset 0 0 0 1px #304622;
-}
-.minion.ready .minion-art:after {
-  background: linear-gradient(transparent 60%, #47622740);
-  border: 1px solid #d2f79a55;
-}
-.minion.ready .minion-art::before {
-  display: none;
 }
 .minion.ready:not(.shield):not(.taunt):before {
   display: none;
@@ -1205,11 +835,6 @@ button:not(:disabled) {
   z-index: 23;
   filter: drop-shadow(0 0 10px #f5d35a77);
 }
-.minion.valid-target .minion-art {
-  box-shadow:
-    0 0 0 3px #d27649,
-    0 0 13px #e59b6455;
-}
 .minion.valid-target:hover {
   transform: translateY(-4px) scale(1.06);
   filter: brightness(1.13);
@@ -1229,28 +854,6 @@ button:not(:disabled) {
 .minion.stealth {
   opacity: 0.68;
   filter: drop-shadow(0 0 9px #825bcc99);
-}
-.minion.frozen .minion-art {
-  border-color: #aadeee;
-  box-shadow:
-    0 0 0 2px #649bbc,
-    0 0 13px #8fcfff55;
-}
-.minion.frozen .minion-art:after {
-  background: linear-gradient(
-    125deg,
-    #f1ffff3a,
-    transparent 18%,
-    #befaff80 19%,
-    transparent 23%,
-    transparent 46%,
-    #e1ffff77 47%,
-    #63aac739 51%,
-    transparent 77%,
-    #8fdcfa88
-  );
-  border: 1px solid #e3feff;
-  box-shadow: inset 0 0 16px #8fd8fc77;
 }
 .minion.frozen:after {
   font-size: 22px;
@@ -1447,39 +1050,6 @@ button:not(:disabled) {
   width: 222px;
   height: 306px;
 }
-.card-preview .card-title {
-  font-size: 18px;
-  min-height: 0;
-  top: 56.8%;
-  left: -3%;
-  right: -3%;
-}
-.card-preview .card-title.long {
-  font-size: 14px;
-}
-.card-preview .card-text {
-  top: 73%;
-  left: 8%;
-  right: 8%;
-  font: 13px/1.42 var(--serif);
-}
-.card-preview .card-cost {
-  width: 48px;
-  height: 50px;
-  left: -9px;
-  top: -5px;
-  font-size: 39px;
-}
-.card-preview .card .stat {
-  width: 43px;
-  height: 45px;
-  bottom: -6px;
-  font-size: 34px;
-}
-.card-preview .card-type {
-  font-size: 10px;
-  bottom: 3%;
-}
 .keyword-notes {
   background: #ead6acf5;
   color: #654d31;
@@ -1506,12 +1076,6 @@ button:not(:disabled) {
 }
 
 /* Combat number styling is owned by presentation/components.css. */
-.cast-card .card-title {
-  font-size: 14px;
-}
-.cast-card .card-text {
-  font-size: 11px;
-}
 #cinematic {
   background: linear-gradient(
     transparent,
@@ -1685,44 +1249,6 @@ button:not(:disabled) {
 .discover-card .card {
   width: 203px;
   height: 287px;
-}
-.mulligan-card .card-title,
-.discover-card .card-title {
-  top: 56.8%;
-  left: -3%;
-  right: -3%;
-  height: 12%;
-  min-height: 0;
-  font-size: 16px;
-}
-.mulligan-card .card-title.long,
-.discover-card .card-title.long {
-  font-size: 12px;
-}
-.mulligan-card .card-text,
-.discover-card .card-text {
-  top: 73%;
-  left: 8%;
-  right: 8%;
-  font: 12px/1.42 var(--serif);
-}
-.mulligan-card .card-cost,
-.discover-card .card-cost {
-  width: 44px;
-  height: 48px;
-  left: -8px;
-  top: -5px;
-  font-size: 37px;
-}
-.mulligan-card .card .stat,
-.discover-card .card .stat {
-  width: 39px;
-  height: 43px;
-  font-size: 31px;
-}
-.mulligan-card .card-type,
-.discover-card .card-type {
-  font-size: 9px;
 }
 .mulligan-card.replace:after {
   background: #6e302b80;
@@ -1938,38 +1464,6 @@ button:not(:disabled) {
 .library-item .card {
   width: 180px;
   height: 255px;
-}
-.library-item .card-title {
-  font-size: 14px;
-  left: -3%;
-  right: -3%;
-  top: 56.8%;
-  min-height: 0;
-}
-.library-item .card-title.long {
-  font-size: 11px;
-}
-.library-item .card-text {
-  top: 73%;
-  left: 8%;
-  right: 8%;
-  font: 11px/1.36 var(--serif);
-}
-.library-item .card-cost {
-  width: 41px;
-  height: 44px;
-  font-size: 33px;
-  left: -8px;
-  top: -5px;
-}
-.library-item .card .stat {
-  width: 36px;
-  height: 38px;
-  bottom: -4px;
-  font-size: 28px;
-}
-.library-item .card-type {
-  font-size: 8px;
 }
 .library-item .add-label {
   font-size: 10px;
@@ -2307,50 +1801,12 @@ body.reduced-motion .minion.shield:before {
 .minion {
   height: 126px;
 }
-.minion-name {
-  display: none;
-}
-.minion-art {
-  bottom: 5px;
-}
-.minion .stat {
-  bottom: -2px;
-}
-.minion-status {
-  top: 8px;
-  right: 8px;
-}
 .hand-zone {
   top: 736px;
   height: 193px;
 }
 .hand-card {
   height: 183px;
-}
-.hand-card .card-text {
-  font-size: 9px;
-  line-height: 1.22;
-  top: 73%;
-}
-.hand-card .card-type {
-  bottom: 2%;
-  font-size: 7px;
-}
-.hand-card .card-title {
-  font-size: 11px;
-}
-.hand-card .card-title.long {
-  font-size: 9px;
-}
-.hand-card .card-cost {
-  width: 33px;
-  height: 36px;
-  font-size: 27px;
-}
-.hand-card .card .stat {
-  width: 31px;
-  height: 33px;
-  font-size: 25px;
 }
 .hand-label {
   top: 708px;

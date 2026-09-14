@@ -10,15 +10,6 @@
   height: 60%;
   border-radius: 49% 49% 12% 12% / 31% 31% 8% 8%;
 }
-.card.spell .card-art,
-.card.weapon .card-art {
-  left: 1%;
-  right: 1%;
-  top: 1%;
-  width: 98%;
-  height: 57%;
-  border-radius: 9% 9% 5% 5%;
-}
 .card-art img,
 .card.art-painted .card-art img {
   display: block;
@@ -29,14 +20,6 @@
   transform: scale(var(--art-scale, 1.025));
   border-radius: 0;
   filter: none;
-}
-.card-art:after {
-  background: linear-gradient(transparent 75%, #201c2024);
-  box-shadow: inset 0 0 5px #2c221a38;
-}
-.card.epic .card-art:after,
-.card.legendary .card-art:after {
-  background: linear-gradient(transparent 78%, #211d2729);
 }
 .minion-art img,
 .portrait-frame img {

@@ -246,27 +246,6 @@ body #modal.folio-host .card {
   padding: 0;
   transform: none;
 }
-body #modal.folio-host .card .card-text {
-  font-size: clamp(10px, 6cqw, 15px);
-  line-height: 1.4;
-}
-body #modal.folio-host .card[data-rule-size="short"] .card-text {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding-inline: 8%;
-  text-align: center;
-  font-size: clamp(14px, 7.2cqw, 20px);
-  line-height: 1.35;
-}
-body #modal.folio-host .card[data-rule-size="standard"] .card-text {
-  font-size: clamp(10px, 6cqw, 15px);
-  line-height: 1.3;
-}
-body #modal.folio-host .card[data-rule-size="long"] .card-text {
-  font-size: clamp(9px, 4.8cqw, 13px);
-  line-height: 1.2;
-}
 body #modal.folio-host :is(.discover-options, .touch-hand-grid) {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));

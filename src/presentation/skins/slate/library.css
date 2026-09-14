@@ -1833,3 +1833,36 @@ html[data-skin="slate"]
   }
 }
 
+/* ==========================================================================
+   短横屏（landscape, 高 <= 500）— 「调整套牌」面板必须留在视口里
+   --------------------------------------------------------------------------
+   `components` 层的 screens.css 早就写了这条：面板展开时，牌组列只留
+   `#deck-tools` 与 `#deck-warning`，其余兄弟节点隐藏。但皮肤层排在它后面，
+   本文件与 base.css 里那些给 `.deck-identity` / `.deck-list` / `.deck-row`
+   重新声明 `display` 的规则会把它们一起复活（设计系统 §6 规则 7：
+   「隐藏要重说一遍」）。于是 568x320 上整列高 1389px，面板落在滚动区之外，
+   玩家要盲滚才能改套牌。这里把隐藏重说一遍，并给面板自己的高度上限与滚动条。
+
+   面板不能靠 flex 撑满滚动区：`<details>` 的内容在 Chrome 里包在自己的
+   slot 盒里，`.deck-tools-body` 并不是 `<details>` 的 flex 子项（计算值里
+   的 flex-grow 是"声明值"，不代表参与了 flex 布局），所以这里用显式的
+   `max-height`，下限 88px 保证面板不会被压成一条缝。
+   ========================================================================== */
+@media (orientation: landscape) and (max-height: 500px) {
+  html[data-skin="slate"]
+    body
+    #modal.folio-host[data-type="library"]
+    .deck-content:has(.deck-tools[open])
+    > :not(#deck-tools):not(#deck-warning) {
+    display: none;
+  }
+  html[data-skin="slate"]
+    body
+    #modal.folio-host[data-type="library"]
+    .deck-tools[open]
+    > .deck-tools-body {
+    max-height: max(88px, calc(100dvh - 230px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}

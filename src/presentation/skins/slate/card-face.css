@@ -65,8 +65,12 @@ html[data-skin="slate"] body .card {
   container-type: inline-size;
   overflow: visible;
   border: 0;
-  /* 3.6% of the width; the vertical half keeps the corner circular on 5/7.4 */
-  border-radius: 3.6% / 5.328%;
+  /* ONE radius for the whole card stack: a CIRCULAR corner of 3.6% of the
+   * width. The vertical half of a `/` radius is a share of the HEIGHT, so it
+   * is the horizontal share DIVIDED by the aspect ratio (3.6 / 1.48 = 2.432),
+   * not multiplied by it — multiplying stretches every corner into a tall
+   * ellipse, which is what made these corners read as "not perfect". */
+  border-radius: 3.6% / 2.432%;
   background: none;
   box-shadow: none;
   outline: 0;
@@ -104,9 +108,23 @@ html[data-skin="slate"] body .card-motion-content > .card {
   --w: var(--desktop-card-w, 131px);
 }
 
-/* the plate. The face IS the edge: art and panel run to the rounded boundary,
- * and a 1px inner light hairline gives that edge a cut. */
+/* The plate, and the ONLY painted edge in the whole card stack.
+ *
+ * The edge is the house card-container line from the design system §3 and the
+ * hero-select preview card (`heroes.css .scene-showcase`): one light hairline
+ * seated on one dark line, nothing else. 1.5px at that card's 300px is
+ * 0.5cqw, so the card scales the same line and never lets it fall under 1px.
+ * Every wrapper is transparent (§10) and every selection ring rides
+ * `--card-ring` on THIS element, so each ring shares this radius and is
+ * concentric with the corner by construction. */
 html[data-skin="slate"] body .card > .card-inner {
+  /* The edge must be an OUTER ring, not an inset one: `.card-art` is a
+   * positioned child filling the plate, and children paint over their
+   * parent's inset shadows — an inset hairline would simply disappear under
+   * the artwork. Outside the border box nothing can cover it. */
+  --card-edge: max(1px, 0.5cqw);
+  --card-edge-color: #d6dfe9aa;
+  --card-ring: 0 0 0 0 #0000;
   position: absolute;
   inset: 0;
   display: block;
@@ -119,23 +137,15 @@ html[data-skin="slate"] body .card > .card-inner {
   overflow: hidden;
   background: var(--panel);
   box-shadow:
-    0 0 0 1px #05091099,
+    0 0 0 var(--card-edge) var(--card-edge-color),
+    0 0 0 calc(var(--card-edge) + 1px) #030a16cc,
+    var(--card-ring),
     0 0 3cqw 0.6cqw var(--rim-glow),
     0 0.8cqw 2cqw #030a16b0;
 }
-html[data-skin="slate"] body .card > .card-inner::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 9;
-  pointer-events: none;
-  border: 0;
-  border-radius: inherit;
-  background: none;
-  box-shadow:
-    inset 0 0 0 1px #ffffff2e,
-    inset 0 1px 0 #ffffff3a;
-}
+/* The legacy layers own `.card-inner::before` / `::after` and hide both
+ * (legacy-components.css). Nothing here revives them: the edge is one
+ * hairline on the element itself. */
 
 /* rarity = metal band + (legendary only) rim glow */
 html[data-skin="slate"] body .card.common {
@@ -262,7 +272,12 @@ html[data-skin="slate"] body .card > .card-cost {
   left: 3.6%;
   right: auto;
   bottom: auto;
-  width: 16cqw;
+  /* The disc must hold TWO digits: a 10-cost card exists, and on a 320px
+   * phone the hand card is ~104px, where a proportional 16cqw disc is 16.6px
+   * and the 9px floor of the numeral no longer fits inside it. The floor here
+   * is the two-digit minimum, so the disc stops shrinking before the number
+   * does. */
+  width: max(18px, 16cqw);
   height: auto;
   aspect-ratio: 1;
   display: grid;
@@ -274,7 +289,12 @@ html[data-skin="slate"] body .card > .card-cost {
   background: none;
   box-shadow: none;
   filter: none;
-  font: inherit;
+  /* The numeral font belongs on the seal itself, not only on the value span:
+   * the value is the seal's own text content as far as layout is concerned,
+   * and `font: inherit` here let it fall back to the 16px body face. */
+  font: 700 clamp(9px, 10cqw, 26px) / 1 var(--ui-font);
+  letter-spacing: 0;
+  text-shadow: none;
 }
 html[data-skin="slate"] body .card > .card-cost > .gem {
   position: absolute;
@@ -318,10 +338,7 @@ html[data-skin="slate"] body .card > .card-cost > .badge-value {
   display: block;
   width: auto;
   height: auto;
-  font-family: var(--ui-font);
-  font-weight: 700;
-  font-size: clamp(9px, 10cqw, 26px);
-  line-height: 1;
+  font: inherit;
   color: #fff;
   -webkit-text-stroke: 0;
   text-shadow:
@@ -351,7 +368,9 @@ html[data-skin="slate"] body .card > .stat {
   background: none;
   box-shadow: none;
   filter: none;
-  font: inherit;
+  font: 700 clamp(9px, 12.5cqw, 30px) / 1 var(--ui-font);
+  letter-spacing: 0;
+  text-shadow: none;
 }
 html[data-skin="slate"] body .card > .stat.atk {
   left: -4.2%;
@@ -375,10 +394,7 @@ html[data-skin="slate"] body .card > .stat > .stat-value {
   display: block;
   width: auto;
   height: auto;
-  font-family: var(--ui-font);
-  font-weight: 700;
-  font-size: clamp(9px, 12.5cqw, 30px);
-  line-height: 1;
+  font: inherit;
   color: #fff;
   -webkit-text-stroke: 0;
   text-shadow:
@@ -496,6 +512,12 @@ html[data-skin="slate"] body .card .card-copy {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
+  /* The copy is the flex item inside `.card-text`; without an explicit width
+   * a `-webkit-box` flex item sizes to its content and wraps early, so the
+   * rule box has to be claimed here (the legacy sheets used to do it). */
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
   max-width: 100%;
   max-height: 100%;
   overflow: hidden;
@@ -744,26 +766,81 @@ html[data-skin="slate"] body .card.is-board .card-art::after {
   }
 }
 
-/* ===== 10. wrapper affordances ===========================================
- * `.card` now paints nothing of its own, so every wrapper glow that used to
- * ride on the old plate has to be restated here or it disappears. */
-html[data-skin="slate"] body .hand-card.playable > .card {
-  box-shadow:
-    0 0 0 1px var(--positive),
-    0 0 calc(var(--u) * 9) #90d8db4d;
+/* ===== 10. wrappers: transparent positioning boxes =======================
+ * ONE edge, ONE radius. Every container that holds a `.card` is a hit area and
+ * a place to stand, never a second rounded rectangle: a wrapper border or
+ * radius can never be concentric with the card's own corner, because the two
+ * boxes are the same size but only one of them is the card. So each wrapper
+ * drops its border, outline, radius, background and box-shadow here and keeps
+ * `overflow: visible` so the cost seal and the stat gems can overhang.
+ * Positioning, size, transform, transition and opacity stay with the wrapper's
+ * own page file — this block only removes paint. */
+html[data-skin="slate"] body :is(.hand-card, .drag-ghost, .card-preview),
+html[data-skin="slate"] body :is(.library-item, .mulligan-card, .discover-card),
+html[data-skin="slate"] body :is(.card-detail-art, .help-card-diagram),
+html[data-skin="slate"] body .touch-hand-grid > button,
+html[data-skin="slate"]
+  body
+  :is(.card-motion-proxy, .card-motion-content, .card-motion-face) {
+  border: 0;
+  outline: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
 }
-html[data-skin="slate"] body .hand-card.selected > .card {
-  box-shadow:
-    0 0 0 2px var(--accent),
-    0 0 calc(var(--u) * 16) #85c5f166;
+/* `.card-preview` is the one wrapper that still carries a lift shadow, and it
+ * has to follow the card's alpha rather than a box, or it prints a rectangle
+ * behind the rounded corners. */
+html[data-skin="slate"] body .card-preview {
+  filter: drop-shadow(0 14px 26px #000b);
 }
-html[data-skin="slate"] body .mulligan-card.replace > .card {
-  box-shadow: 0 0 calc(var(--u) * 9) #8dd2ff88;
-}
+/* The hand rail's old "playable" cue was a 2px bar floating above the card
+ * (refinement.css `.hand-card.playable::before`) — a second edge fragment that
+ * cannot line up with a rounded corner. The ring below replaces it. */
+html[data-skin="slate"] body .hand-card::before,
+html[data-skin="slate"] body .hand-card::after,
 html[data-skin="slate"] body .card::before,
 html[data-skin="slate"] body .card::after {
   content: none;
 }
+
+/* --- state rings -----------------------------------------------------------
+ * A state does not ADD a second outline: it recolours and thickens the card's
+ * ONE edge and adds a soft glow behind it. Both live on `.card-inner`, so both
+ * share the card's radius and stay concentric with the corner at any zoom.
+ * The colours are the ones these states already had. */
+html[data-skin="slate"] body .hand-card.playable > .card > .card-inner {
+  --card-edge-color: var(--positive);
+  --card-ring: 0 0 calc(var(--u) * 9) #90d8db66;
+}
+/* NOTE: `--accent` is redefined ON `.card` as the FACTION colour, so a
+ * selection ring written as `var(--accent)` would come out gold on a paladin
+ * card. Selection states name the UI accent literally. */
+html[data-skin="slate"] body .hand-card.selected > .card > .card-inner {
+  --card-edge: max(2px, 1cqw);
+  --card-edge-color: #bbdff9;
+  --card-ring: 0 0 calc(var(--u) * 16) #85c5f177;
+}
+html[data-skin="slate"] body .mulligan-card.replace > .card > .card-inner {
+  --card-edge: max(2px, 0.9cqw);
+  --card-edge-color: #8cc4ff;
+  --card-ring: 0 0 calc(var(--u) * 10) #8dd2ff99;
+}
+/* The legacy hand rail also hung a GOLD halo behind a selected card
+ * (`refinement.css .hand-card.selected`, and `mobile.css` on the card itself).
+ * That halo is a second, blurry outline in a colour selection never uses here,
+ * and a blur cannot follow a rounded corner cleanly — the blue edge and glow
+ * above are the whole affordance now. */
+html[data-skin="slate"] body .hand-card.selected,
+html[data-skin="slate"] body .hand-card.selected > .card {
+  filter: none;
+}
+/* Left deliberately without a ring, because these states never had one and a
+ * ring would invent an affordance: `.library-item:hover` and `.hand-card:hover`
+ * lift and brighten, and `.discover-card:is(:hover,:focus-visible)` already
+ * glows with a `drop-shadow` on the card's own alpha (dialogs.css) — which
+ * follows the rounded corner exactly, so it needs nothing from here. */
 /* The stat gems overhang the plate by 3.2%; the desktop hand rail was laid out
  * for a card that ended at its own edge, so the bottom row of gems landed
  * exactly on the app boundary. Lift the rail by the overhang, keeping the
@@ -945,6 +1022,9 @@ html[data-skin="slate"] body .minion > .stat {
   box-shadow: none;
   filter: none;
   max-width: none;
+  font: 700 clamp(9px, 14cqw, 30px) / 1 var(--ui-font);
+  letter-spacing: 0;
+  text-shadow: none;
 }
 html[data-skin="slate"] body .minion > .stat.atk {
   left: -5%;
@@ -960,10 +1040,7 @@ html[data-skin="slate"] body .minion > .stat > .stat-value {
   display: block;
   width: auto;
   height: auto;
-  font-family: var(--ui-font);
-  font-weight: 700;
-  font-size: clamp(9px, 14cqw, 30px);
-  line-height: 1;
+  font: inherit;
   color: #fff;
   -webkit-text-stroke: 0;
   text-shadow:
@@ -986,6 +1063,23 @@ html[data-skin="slate"] body .minion > .stat.hp.hurt > .stat-gem {
 }
 /* the band and both gems own the bottom edge, so the status glyph moves to
  * the top of the art where nothing else is competing for the space */
+/* A 320px phone can only afford a ~23px board token (the portrait arena is
+ * ~82px tall and `EmberViewport.minion` sizes the unit from that height), and
+ * 32cqw of 23px is a 7px gem — smaller than the 9px floor of its own numeral,
+ * so the attack/health values spilled out of their gems. Below 40px the gems
+ * stop scaling with the token and hang further off its sides instead, which
+ * keeps both numbers legible AND keeps the pair from meeting in the middle. */
+@container (max-width: 40px) {
+  html[data-skin="slate"] body .minion > .stat {
+    width: 15px;
+  }
+  html[data-skin="slate"] body .minion > .stat.atk {
+    left: -22%;
+  }
+  html[data-skin="slate"] body .minion > .stat.hp {
+    right: -22%;
+  }
+}
 html[data-skin="slate"] body .minion .minion-status {
   position: absolute;
   z-index: 9;
@@ -1149,6 +1243,22 @@ html[data-skin="slate"] body .minion .ready-dot {
  * plate is correct at 42x64 in the enemy hand and stretched to 100%/100%
  * inside the draw-flight proxy. `.card-back` is its own query container, so
  * the two pseudo-elements can size themselves in `cqw`. */
+/* Geometry. The legacy sheets used to own this (`refinement.css` sized the
+ * enemy-hand fan and applied its `--r` / `--y` rotation, `legacy-components`
+ * made the draw-flight proxy copy fill its box); those rules are gone with the
+ * rest of the dead card CSS, so the size lives here with the paint. */
+html[data-skin="slate"] body .card-back {
+  width: 36px;
+  height: 49px;
+  transform: translateY(var(--y, 0)) rotate(var(--r, 0deg));
+}
+html[data-skin="slate"] body .card-motion-content > .card-back {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: block;
+  transform: none;
+}
 html[data-skin="slate"] body .card-back {
   position: relative;
   container-type: inline-size;

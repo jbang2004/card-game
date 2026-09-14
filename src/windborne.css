@@ -328,140 +328,12 @@ body:not(.touch-layout) .lobby-collection {
   background: none;
   box-shadow: none;
 }
-.card-inner {
-  inset: 3.5% 4%;
-  border-radius: inherit;
-  background: none;
-  box-shadow: none;
-}
-.card-inner:after {
-  display: none;
-}
-.card-inner:before {
-  inset: 58% -1% 0;
-
-  border: 0;
-  border-radius: 0 0 4px 4px;
-  box-shadow: none;
-  z-index: 0;
-}
-.card .card-art,
-.card.type-minion .card-art,
-.card.legendary .card-art {
-  left: 0;
-  right: 0;
-  top: -2%;
-  width: 100%;
-  height: 60%;
-  border: 1px solid #797c60;
-  border-radius: 48% 48% 9% 9% / 29% 29% 6% 6%;
-  box-shadow: 0 0 0 2px #dbccaa;
-  overflow: hidden;
-}
-.card.spell .card-art,
-.card.weapon .card-art {
-  left: 0;
-  right: 0;
-  top: 0;
-  width: 100%;
-  height: 58%;
-  border-radius: 5px;
-  box-shadow: 0 0 0 2px #d4c6a5;
-}
 .card .card-art img {
   filter: none;
-}
-.card .card-art:after {
-  background: linear-gradient(transparent 85%, #49452d19);
-  box-shadow: none;
-}
-.card .card-title,
-.library-item .card-title,
-.card-preview .card-title {
-  top: 55.8%;
-  height: 12%;
-  min-height: 0;
-  left: -3%;
-  right: -3%;
-  border: 1px solid #8e8763;
-  border-radius: 5px 4px 10px 7px;
-  background: linear-gradient(110deg, #f2e4bd, #ede1bf 55%, #dfd1ad);
-  color: #3f4834;
-  text-shadow: none;
-  box-shadow:
-    inset 0 1px #fff5d6,
-    0 2px 1px #776a4326;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-}
-.card-title:before,
-.card-title:after {
-  background: #8d986a;
-  width: 2px;
-  height: 2px;
-}
-.card-text,
-.library-item .card-text,
-.card-preview .card-text {
-  color: #4c523d;
 }
 .card-text b {
   color: #374c38;
   font-weight: 700;
-}
-.card-type {
-  color: #8a9271;
-  background: none;
-  border: 0;
-  border-top: 1px solid #b7b28a5c;
-  border-radius: 0;
-  text-shadow: none;
-  bottom: 2%;
-  font-weight: 400;
-  letter-spacing: 1px;
-}
-.card-cost,
-.card-preview .card-cost,
-.library-item .card-cost {
-  background: linear-gradient(
-    140deg,
-    #d7eef0,
-    #70a8bf 34%,
-    #3c697e 74%,
-    #689fa9
-  );
-  clip-path: polygon(
-    50% 0,
-    86% 13%,
-    100% 44%,
-    84% 88%,
-    48% 100%,
-    10% 78%,
-    0 45%,
-    17% 14%
-  );
-  text-shadow:
-    0 1px 2px #25424e,
-    -1px -1px #31586a;
-  color: #fffdf0;
-  filter: drop-shadow(0 2px 1px #47635c55);
-}
-.stat {
-  color: #fff9e6;
-  text-shadow:
-    -1px -1px #4f523d,
-    1px 1px #414532,
-    0 2px #414532;
-}
-.stat.atk:before {
-  background: linear-gradient(145deg, #e2ca8d, #b79c5c);
-  border-color: #747252;
-  box-shadow: inset 0 0 0 1px #f5e5bd;
-}
-.stat.hp:before {
-  background: linear-gradient(145deg, #d28d70, #a85847);
-  border-color: #765345;
-  box-shadow: inset 0 0 0 1px #edd0aa;
 }
 .hand-card.playable .card {
   filter: drop-shadow(0 0 2px #aaca8a) drop-shadow(0 3px 2px #35533c55);
@@ -505,54 +377,12 @@ body:not(.touch-layout) .lobby-collection {
   outline: 2px solid #a6bb7d;
   outline-offset: 2px;
 }
-.minion .minion-art,
-.minion.enemy .minion-art {
-  border-color: #9f9f82;
-  background: #d6d2b4;
-  box-shadow:
-    0 0 0 1px #64745a,
-    0 2px 0 2px #7c866a,
-    inset 0 0 0 2px #f1e7c7;
-  padding: 0;
-}
-.minion.taunt .minion-art {
-  border-color: #8e9e8c;
-  background: #d3dbcd;
-  box-shadow:
-    0 0 0 1px #5f7367,
-    0 2px 0 2px #728278;
-}
 .minion-art img {
   border-radius: 0;
-}
-.minion-art:after {
-  background: linear-gradient(transparent 85%, #485b3529);
-  box-shadow: none;
-  border-color: #e6e9c833;
-}
-.minion.ready .minion-art {
-  outline: 2px solid #90af71;
-  outline-offset: 2px;
-  box-shadow:
-    0 0 0 1px #586e4f,
-    0 3px 5px #3c5b4930;
-}
-.minion.shield .minion-art {
-  box-shadow:
-    0 0 0 3px #d9bd71,
-    0 0 10px #eed4935f;
 }
 .minion.shield:before {
   border-color: #ead28c88;
   box-shadow: 0 0 9px #f9e4a650;
-}
-.minion.frozen .minion-art {
-  box-shadow: 0 0 0 2px #a2d0db;
-}
-.minion.valid-target .minion-art {
-  outline: 2px solid #d89663;
-  outline-offset: 3px;
-  box-shadow: 0 0 9px #ffcd9777;
 }
 .minion.selected {
   filter: drop-shadow(0 0 5px #e6d7a6);
@@ -588,24 +418,6 @@ body:not(.touch-layout) .lobby-collection {
 }
 .log-line.log-turn {
   color: #4b7356;
-}
-.card-back {
-  border-color: #b0b692;
-  background: #557563;
-  box-shadow:
-    inset 0 0 0 2px #d7cea766,
-    0 2px 0 #53624a;
-}
-.card-back:before {
-  background: none;
-  border-color: #c5cfa075;
-}
-.card-back:after {
-  content: "";
-  /* the retired leaf-seal bitmap used to paint here; the surface stays blank */
-  background: none;
-  border: 0;
-  inset: 4px;
 }
 .enemy-deck,
 .player-deck {
@@ -991,20 +803,6 @@ body.touch-layout .hero .portrait-frame {
   box-shadow: none;
   text-shadow: none;
 }
-body.touch-layout .minion .minion-art {
-  background: #c9d2b7;
-  border-color: #9faa8b;
-  box-shadow:
-    0 0 0 1px #617c5b,
-    0 2px 3px #2c513848;
-}
-.touch-layout .minion.taunt .minion-art {
-  border-color: #8d9d8b;
-}
-.touch-layout .minion.ready .minion-art {
-  outline-color: #97b47b;
-}
-
 body.touch-layout #modal {
   background: #304d427a;
 }
@@ -1057,9 +855,6 @@ body.touch-layout .library-search {
 .touch-layout .touch-library-tabs button.active {
   background: #7f9c6a;
   color: #f9f5d5;
-}
-.touch-layout .library-item .card-text {
-  color: #526044;
 }
 .touch-layout .deck-actions {
   background: #ebe8cdf5;
@@ -1198,7 +993,4 @@ body.touch-layout .touch-menu-note {
 }
 .touch-layout .lobby-desc {
   color: #76855f;
-}
-.card-type {
-  color: #7f8664;
 }
