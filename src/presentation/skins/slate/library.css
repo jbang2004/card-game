@@ -1682,3 +1682,154 @@ html[data-skin="slate"]
   .library-entry {
   --entry-action-height: 44px;
 }
+
+/* --- very short AND narrow landscape (568×320): `.library-box` scrolls as a
+   single block (base layer's `display:block; overflow-y:auto` from
+   `polish-mobile.css` — the slate page shell never overrides it), so the test
+   only sees the first, unscrolled screenful. At 390px tall the wide-window
+   header above (`@media (min-width:700px)`) already reads fine, and at
+   844×390 the same header clears the first card row; only the 568×320
+   corner — narrow AND under ~400px tall — still buries the first card under
+   a ~147px title/tabs/filter stack. Collapse that stack to one compact title
+   row (chevron + 20px title + 36px search pill, already a single grid row)
+   plus a 32px tab row, drop the filter summary to match, and narrow the grid
+   to 2 columns so the first card + its 44px 「加入牌组 / 详情」 pill still
+   fits above the fold; anything past the first row scrolls with the rest of
+   the box exactly as it already does at every other touch size. */
+@media (max-width: 699px) and (max-height: 400px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="library"]
+    .library-box
+    > .library-heading {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 168px);
+    gap: 8px;
+    /* beats base.css's `:is([data-dialog-size="library"],…) :is(.modal-heading,
+     * .library-heading)` (5.7's shared 44/36px chevron-row rule) — that
+     * selector's two `:is()` groups add two more specificity classes than
+     * `.library-box > .library-heading` alone, so it otherwise wins the tie
+     * despite this file loading after base.css. The `.library-box` qualifier
+     * on every declaration below restores that lost class of specificity. */
+    min-height: 32px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="library"]
+    .library-heading
+    > div {
+    min-height: 32px;
+    gap: 6px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="library"]
+    .library-box
+    .library-heading
+    h2 {
+    font-size: 18px;
+    line-height: 24px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="library"]
+    .library-heading
+    p {
+    display: none;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="library"]
+    .library-heading
+    #library-search {
+    min-height: 32px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="library"]
+    .touch-library-tabs {
+    margin: 2px 0 0;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="library"]
+    .touch-library-tabs
+    button {
+    /* `screens.css` (components layer) pins this button to a literal
+     * `height: 34px` — a lower layer, but the skin layer only ever restated
+     * `min-height` here, so with a smaller min-height that fixed `height`
+     * became the winning value for the property skin never contested.
+     * Setting `height` here (skin still wins on layer alone) is what
+     * actually shrinks the row; line-height matches it to center the label
+     * without vertical padding. */
+    height: 30px;
+    min-height: 30px;
+    padding: 0 6px;
+    font-size: 13px;
+    line-height: 30px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="library"]
+    .library-layout {
+    margin: 2px 0 0;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="library"]
+    .library-filters
+    > summary {
+    min-height: 26px;
+    padding: 1px 0;
+    font-size: 13px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="library"]
+    .library-filters
+    > summary
+    small {
+    font-size: 11px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="library"]
+    #library-grid {
+    grid-template-columns: repeat(2, minmax(0, 104px));
+    justify-content: start;
+    gap: 10px 10px;
+    padding: 2px 12px 10px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="library"]
+    .library-inspect {
+    padding: 0 6px;
+    font-size: 11px;
+  }
+  /* a 104px column only leaves ~48px for the label+count pair before the
+   * 44px 详情 pill — `.add-label` has no `overflow:hidden` of its own (the
+   * shared dialog-layout.css rule is only `white-space:nowrap`), so past
+   * `.owned-count` it would visibly run text over the pill instead of
+   * clipping. Drop the count (still visible everywhere else) and let the
+   * label use the freed column with an ellipsis instead of an overlap. */
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="library"]
+    .library-item
+    > .owned-count {
+    display: none;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="library"]
+    .library-item
+    > .add-label {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 11px;
+  }
+}
+
