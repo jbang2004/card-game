@@ -62,9 +62,17 @@ test("a replacement theme binds semantic art without gameplay or storage service
     title: "Test theme",
     art: { backdrop: "local/background.webp", home: "local/home.webp" },
   };
-  const { theme, document } = runtime(definition);
+  const { theme, document, events } = runtime(definition);
   assert.equal(document.documentElement.dataset.theme, "replacement");
   assert.equal(document.title, "Test theme");
+  // `data-skin` is the slate skin's CSS namespace, not a switch: it is written
+  // unconditionally, with no URL parsing, for every theme definition.
+  assert.equal(document.documentElement.dataset.skin, "slate");
+  // The retired silverblue bitmap skins are gone: the backdrop is the only
+  // custom property a definition without a victory seal publishes.
+  assert.deepEqual(events, [
+    ["--scene-backdrop", 'url("local/background.webp")'],
+  ]);
   const bound = [];
   const nodes = [
     {

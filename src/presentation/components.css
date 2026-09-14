@@ -4862,7 +4862,7 @@ body
   #modal.folio-host[data-type]
   .result-box[data-outcome="win"]
   .result-sigil {
-  background: var(--reference-victory-sigil) center/contain no-repeat;
+  background: var(--victory-sigil) center/contain no-repeat;
 }
 body
   #modal.folio-host[data-type]

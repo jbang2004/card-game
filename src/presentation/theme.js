@@ -33,60 +33,23 @@ const EmberTheme = (() => {
     }
   }
   document.documentElement.dataset.theme = definition.id;
-  // The matte slate skin (磨砂青岩) is the default presentation layer.
-  // `?skin=silverblue` (and `?skin=off`) leave `data-skin` unset so the earlier
-  // 星海银蓝 theme renders unchanged; any other explicit value is passed through
-  // for skin experiments. Parsed with a regex off `globalThis.location` so
-  // `tests/theme-presentation.test.cjs` can run this file in a bare Node vm.
-  const skin = /[?&]skin=([\w-]+)/.exec(globalThis.location?.search || "")?.[1];
-  if (skin !== "silverblue" && skin !== "off")
-    document.documentElement.dataset.skin = skin || "slate";
+  // The matte slate skin (磨砂青岩) is the only presentation layer. `data-skin`
+  // is NOT a switch any more: it is the namespace the whole skin is written
+  // against (`html[data-skin="slate"] …`), so it is written unconditionally and
+  // must stay on the root element.
+  document.documentElement.dataset.skin = "slate";
   document.title = definition.title;
   document.documentElement.style.setProperty(
     "--scene-backdrop",
     `url("${art("backdrop")}")`,
   );
-  for (const name of [
-    "mulligan",
-    "rewards",
-    "result",
-    "settings",
-    "guide",
-    "detail",
-    "discover",
-    "confirm",
-  ])
-    if (definition.art["reference" + name[0].toUpperCase() + name.slice(1)])
-      document.documentElement.style.setProperty(
-        `--reference-${name}`,
-        `url("${art("reference" + name[0].toUpperCase() + name.slice(1))}")`,
-      );
-  for (const [name, role] of [
-    ["victory-sigil", "victorySigil"],
-    ["defeat", "defeatBackground"],
-  ])
-    if (definition.art[role])
-      document.documentElement.style.setProperty(
-        `--reference-${name}`,
-        `url("${art(role)}")`,
-      );
-  if (definition.art.homePrimary)
+  // The only bitmap the dialog layer still consumes through a custom property:
+  // the victory result seal, laid over a hidden SVG fallback.
+  if (definition.art.victorySigil)
     document.documentElement.style.setProperty(
-      "--reference-primary",
-      `url("${art("homePrimary")}")`,
+      "--victory-sigil",
+      `url("${art("victorySigil")}")`,
     );
-  for (const [name, role] of Object.entries({
-    "card-frame": "polishCardFrame",
-    "button-capsule": "polishButtonCapsule",
-    "button-night": "polishButtonNight",
-    "selection-panel": "polishSelectionPanel",
-  })) {
-    if (definition.art[role])
-      document.documentElement.style.setProperty(
-        `--polish-${name}`,
-        `url("${art(role)}")`,
-      );
-  }
   return Object.freeze({
     art,
     image,
