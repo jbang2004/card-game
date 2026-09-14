@@ -446,20 +446,6 @@ body:not(.touch-layout) .lobby-collection {
   color: #fffdf0;
   filter: drop-shadow(0 2px 1px #47635c55);
 }
-.card-rarity {
-  opacity: 0.9;
-  filter: saturate(0.6);
-}
-.card.rare .card-rarity {
-  background: #739fac;
-}
-.card.epic .card-rarity {
-  background: #ac8fae;
-}
-.card.legendary .card-rarity {
-  background: #c5a563;
-  box-shadow: none;
-}
 .stat {
   color: #fff9e6;
   text-shadow:
@@ -1215,7 +1201,4 @@ body.touch-layout .touch-menu-note {
 }
 .card-type {
   color: #7f8664;
-}
-.card-rarity {
-  opacity: 1;
 }

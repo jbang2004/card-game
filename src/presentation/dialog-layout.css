@@ -267,9 +267,6 @@ body #modal.folio-host .card[data-rule-size="long"] .card-text {
   font-size: clamp(9px, 4.8cqw, 13px);
   line-height: 1.2;
 }
-body #modal.folio-host .card .card-class-seal {
-  top: 42%;
-}
 body #modal.folio-host :is(.discover-options, .touch-hand-grid) {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));

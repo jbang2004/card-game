@@ -1401,27 +1401,6 @@ button {
 .card .stat.hp {
   right: -1px;
 }
-.card-rarity {
-  position: absolute;
-  top: 66%;
-  left: calc(50% - 4px);
-  width: 7px;
-  height: 7px;
-  transform: rotate(45deg);
-  background: #a19d89;
-  border: 1px solid #e1d3b450;
-  z-index: 5;
-}
-.card.rare .card-rarity {
-  background: #719cae;
-}
-.card.epic .card-rarity {
-  background: #ac88c5;
-}
-.card.legendary .card-rarity {
-  background: #eab778;
-  box-shadow: 0 0 7px #dfb26766;
-}
 .card.spell .card-art {
   height: 63%;
 }
@@ -1469,10 +1448,6 @@ button {
 .card-preview .card-type {
   font-size: 10px;
   bottom: 8px;
-}
-.card-preview .card-rarity {
-  width: 10px;
-  height: 10px;
 }
 .keyword-notes {
   position: absolute;

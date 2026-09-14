@@ -1,0 +1,1269 @@
+/* Skin "slate" — THE CARD FACE (v7) and the card back.
+ *
+ * This file is the ONE definition of the collectible card face. Every other
+ * layer's card-face geometry has been deleted; nothing here is an override of
+ * a surviving block. It is loaded LAST in the `skin` layer so a page file can
+ * still position a card, but never repaints one.
+ *
+ * ---------------------------------------------------------------------------
+ * STRUCTURE
+ *   .card        no rim, no background of its own. It is only the positioning
+ *                box + the container, so `.card-cost` and the two stat gems
+ *                can overhang the plate. `overflow: visible`.
+ *   .card-inner  the plate: art, fade, name pill, rules, index and the rarity
+ *                band. `inset: 0`, `overflow: hidden`, so nothing escapes the
+ *                rounded boundary. It also carries the plate's shadows.
+ *   .card-cost / .stat.atk / .stat.hp are DIRECT children of `.card`.
+ *
+ * One card, two states: default (hand / preview / collection) and the board
+ * state — art edge to edge, gems and the rarity band only. The board state is
+ * `.card.is-board`, and is entered automatically under 110px.
+ *
+ * ---------------------------------------------------------------------------
+ * UNITS — the one rule that matters here
+ *   `cqw` inside a DESCENDANT of `.card` resolves against `.card` (it declares
+ *   `container-type: inline-size`), so every internal dimension is exact at
+ *   any card width. But `cqw` in `.card`'s OWN properties resolves against the
+ *   nearest ANCESTOR container — the viewport in most of this app — which is
+ *   why a `cqw` radius collapsed small cards into pills during prototyping.
+ *   Therefore, on `.card` itself:
+ *     - `border-radius` uses PERCENTAGES (3.6% of width, matched vertically
+ *       against the 5 / 7.4 ratio), which are always exact;
+ *     - lengths that cannot take a percentage (shadow spread/blur) use
+ *       `--u`, i.e. 1% of the width declared by the context.
+ *   `--w` is therefore set per context below. Getting it wrong only softens a
+ *   glow; it can no longer deform the card.
+ *
+ * The rim stays neutral at every rarity; RARITY is carried by the bottom metal
+ * band, FACTION by the name-pill border and the keyword tint.
+ * ------------------------------------------------------------------------ */
+
+/* keyword glyphs — 16x16 masks, tinted by the faction colour */
+html[data-skin="slate"] body {
+  --ic-spell: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 .7l1.9 4.6L14.9 7l-5 1.7L8 13.3 6.1 8.7 1.1 7l5-1.7z'/%3E%3C/svg%3E");
+  --ic-horn: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M1.6 6h2.6L10 1.7v12.6L4.2 10H1.6z'/%3E%3Cpath d='M11.6 4.6a5 5 0 0 1 0 6.8l1.2 1.2a6.7 6.7 0 0 0 0-9.2z'/%3E%3C/svg%3E");
+  --ic-shield: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 .8l6.2 2.1v5.3c0 3.9-3 6.4-6.2 7-3.2-.6-6.2-3.1-6.2-7V2.9z'/%3E%3C/svg%3E");
+  --ic-bubble: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M8 .9a7.1 7.1 0 1 0 0 14.2A7.1 7.1 0 0 0 8 .9zm0 2.4a4.7 4.7 0 1 1 0 9.4 4.7 4.7 0 0 1 0-9.4z'/%3E%3Cpath d='M4.6 4.1a5.6 5.6 0 0 1 2.6-1.5l.4 1.4a4.1 4.1 0 0 0-1.9 1.1z'/%3E%3C/svg%3E");
+  --ic-skull: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M8 .9C4.5.9 1.8 3.6 1.8 7c0 2 .9 3.6 2.4 4.6v1.3h1.9v1.2h1.2v-1.2h1.4v1.2h1.2v-1.2h1.9v-1.3C13.3 10.6 14.2 9 14.2 7 14.2 3.6 11.5.9 8 .9zM5.5 5.6a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2zm5 0a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2z'/%3E%3C/svg%3E");
+  --ic-drop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 .8s5.2 5.8 5.2 8.8a5.2 5.2 0 1 1-10.4 0C2.8 6.6 8 .8 8 .8z'/%3E%3C/svg%3E");
+}
+
+/* ===== 1. the card box ==================================================== */
+html[data-skin="slate"] body .card {
+  --w: 140px;
+  --u: calc(var(--w) / 100);
+  --panel: #0a1119;
+  --accent: #9eb4c8;
+  --rim-glow: #0000;
+  --band-hi: #dbe4ee;
+  --band-mid: #a9b8c8;
+  --band-lo: #6c7f95;
+  --band-ink: #1f2c3a;
+  position: relative;
+  box-sizing: border-box;
+  aspect-ratio: var(--card-face-ratio, 5 / 7.4);
+  container-type: inline-size;
+  overflow: visible;
+  border: 0;
+  /* 3.6% of the width; the vertical half keeps the corner circular on 5/7.4 */
+  border-radius: 3.6% / 5.328%;
+  background: none;
+  box-shadow: none;
+  outline: 0;
+  color: #f3f6fa;
+}
+/* Width per context. Only shadow softness depends on this being right. */
+html[data-skin="slate"] body .hand-card > .card {
+  --w: var(--desktop-card-w, 131px);
+}
+html[data-skin="slate"] body .card-preview .card {
+  --w: var(--detail-w, 230px);
+}
+html[data-skin="slate"] body .drag-ghost > .card {
+  --w: 158px;
+}
+html[data-skin="slate"] body.touch-layout .drag-ghost > .card {
+  --w: 142px;
+}
+html[data-skin="slate"] body .library-item > .card {
+  --w: 186px;
+}
+html[data-skin="slate"] body .mulligan-card > .card {
+  --w: 245px;
+}
+html[data-skin="slate"] body .discover-card > .card {
+  --w: 230px;
+}
+html[data-skin="slate"] body .card-detail-art > .card {
+  --w: 260px;
+}
+html[data-skin="slate"] body.touch-layout .card-detail-art > .card {
+  --w: 168px;
+}
+html[data-skin="slate"] body .card-motion-content > .card {
+  --w: var(--desktop-card-w, 131px);
+}
+
+/* the plate. The face IS the edge: art and panel run to the rounded boundary,
+ * and a 1px inner light hairline gives that edge a cut. */
+html[data-skin="slate"] body .card > .card-inner {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  background: var(--panel);
+  box-shadow:
+    0 0 0 1px #05091099,
+    0 0 3cqw 0.6cqw var(--rim-glow),
+    0 0.8cqw 2cqw #030a16b0;
+}
+html[data-skin="slate"] body .card > .card-inner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  box-shadow:
+    inset 0 0 0 1px #ffffff2e,
+    inset 0 1px 0 #ffffff3a;
+}
+
+/* rarity = metal band + (legendary only) rim glow */
+html[data-skin="slate"] body .card.common {
+  --band-hi: #dbe4ee;
+  --band-mid: #a9b8c8;
+  --band-lo: #6c7f95;
+  --band-ink: #1f2c3a;
+}
+html[data-skin="slate"] body .card.rare {
+  --band-hi: #e9f6ff;
+  --band-mid: #93c9ef;
+  --band-lo: #3f86c2;
+  --band-ink: #0f3557;
+}
+html[data-skin="slate"] body .card.epic {
+  --band-hi: #f1e9ff;
+  --band-mid: #bca8e8;
+  --band-lo: #6d55b0;
+  --band-ink: #2a1d57;
+}
+html[data-skin="slate"] body .card.legendary {
+  --band-hi: #fff4d2;
+  --band-mid: #e4c27c;
+  --band-lo: #a47727;
+  --band-ink: #47300a;
+  --rim-glow: #e0b25a4d;
+}
+
+/* faction tint */
+html[data-skin="slate"] body .card.school-arcane,
+html[data-skin="slate"] body .card[data-class="mage"] {
+  --accent: #5b8dea;
+}
+html[data-skin="slate"] body .card.school-gold,
+html[data-skin="slate"] body .card[data-class="paladin"] {
+  --accent: #e9c46a;
+}
+html[data-skin="slate"] body .card.school-nature,
+html[data-skin="slate"] body .card[data-class="ranger"] {
+  --accent: #6fcf97;
+}
+html[data-skin="slate"] body .card.school-moon,
+html[data-skin="slate"] body .card[data-class="moon"] {
+  --accent: #9aa8ff;
+}
+html[data-skin="slate"] body .card.school-steel,
+html[data-skin="slate"] body .card[data-class="neutral"] {
+  --accent: #9eb4c8;
+}
+html[data-skin="slate"] body .card.school-ember {
+  --accent: #f08a4b;
+}
+
+/* ===== 2. art ============================================================= */
+html[data-skin="slate"] body .card .card-art {
+  position: absolute;
+  z-index: 1;
+  inset: 0 0 auto;
+  left: 0;
+  right: 0;
+  top: 0;
+  width: 100%;
+  height: 60%;
+  border: 0;
+  border-radius: 0;
+  background: var(--panel);
+  box-shadow: none;
+  overflow: hidden;
+}
+html[data-skin="slate"] body .card .card-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  object-position: var(--art-pos, 50% 22%);
+  transform: none;
+  border-radius: 0;
+  opacity: 1;
+  filter: saturate(0.88) contrast(1.02);
+}
+html[data-skin="slate"] body .card .card-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 0;
+  box-shadow: none;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      46% 32% at 6% 2%,
+      #04090fc7 0%,
+      #04090f66 46%,
+      #04090f00 78%
+    ),
+    radial-gradient(
+      40% 26% at 96% 2%,
+      #04090f8f 0%,
+      #04090f42 46%,
+      #04090f00 78%
+    ),
+    linear-gradient(
+      180deg,
+      #0a111900 66%,
+      #0a111917 73%,
+      #0a11193d 78%,
+      #0a11196b 83%,
+      #0a11199e 88%,
+      #0a1119c9 92%,
+      #0a1119e8 96%,
+      #0a1119 100%
+    );
+}
+html[data-skin="slate"] body .card .card-art::before {
+  content: none;
+}
+
+/* ===== 3. cost seal: smoked-glass disc in a thin steel ring =============== */
+html[data-skin="slate"] body .card > .card-cost {
+  position: absolute;
+  z-index: 6;
+  top: 3.2%;
+  left: 3.6%;
+  right: auto;
+  bottom: auto;
+  width: 16cqw;
+  height: auto;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  clip-path: none;
+  background: none;
+  box-shadow: none;
+  filter: none;
+  font: inherit;
+}
+html[data-skin="slate"] body .card > .card-cost > .gem {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 215deg,
+    #e3edf6 0deg,
+    #8ea3b8 55deg,
+    #eef5fb 120deg,
+    #6a8098 190deg,
+    #d5e2ee 250deg,
+    #8ea3b8 300deg,
+    #e3edf6 360deg
+  );
+  box-shadow:
+    0 0 0 1px #05091acc,
+    0 0.5cqw 1cqw #000000c4;
+}
+html[data-skin="slate"] body .card > .card-cost > .gem::before {
+  content: "";
+  position: absolute;
+  inset: 9%;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      58% 40% at 50% 20%,
+      #ffffffa6 0%,
+      #ffffff33 42%,
+      #ffffff00 72%
+    ),
+    radial-gradient(48% 48% at 50% 64%, #2a3d55 0%, #131f2e 62%, #06090f 100%);
+  box-shadow:
+    inset 0 0 0 1px #00000073,
+    inset 0 -0.8cqw 1.2cqw #00000099,
+    0 0 0 0.3cqw #04091a;
+}
+html[data-skin="slate"] body .card > .card-cost > .badge-value {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: auto;
+  height: auto;
+  font-family: var(--ui-font);
+  font-weight: 700;
+  font-size: clamp(9px, 10cqw, 26px);
+  line-height: 1;
+  color: #fff;
+  -webkit-text-stroke: 0;
+  text-shadow:
+    0 1px 2px #000000e0,
+    0 0 0.9cqw #000000a6;
+  transform: none;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== 4. stat gems: shape == meaning ====================================
+ * attack = crossed swords over an amber diamond, health = ruby heart,
+ * weapon durability = cyan shield. EmberArt.statGem draws each one. */
+html[data-skin="slate"] body .card > .stat {
+  position: absolute;
+  z-index: 7;
+  width: 28cqw;
+  height: auto;
+  aspect-ratio: 1;
+  bottom: -3.2%;
+  top: auto;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  clip-path: none;
+  background: none;
+  box-shadow: none;
+  filter: none;
+  font: inherit;
+}
+html[data-skin="slate"] body .card > .stat.atk {
+  left: -4.2%;
+  right: auto;
+}
+html[data-skin="slate"] body .card > .stat.hp {
+  right: -4.2%;
+  left: auto;
+}
+html[data-skin="slate"] body :is(.card, .minion) .stat > .stat-gem {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 0.55cqw 1cqw #000000c4);
+}
+html[data-skin="slate"] body .card > .stat > .stat-value {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: auto;
+  height: auto;
+  font-family: var(--ui-font);
+  font-weight: 700;
+  font-size: clamp(9px, 12.5cqw, 30px);
+  line-height: 1;
+  color: #fff;
+  -webkit-text-stroke: 0;
+  text-shadow:
+    0 1px 2px #000000e6,
+    0 0 1cqw #000000a6;
+  transform: none;
+  font-variant-numeric: tabular-nums;
+}
+html[data-skin="slate"] body .card > .stat.hp > .stat-value {
+  transform: translateY(-6%);
+}
+html[data-skin="slate"] body .card > .stat.hp.ward > .stat-value {
+  transform: translateY(-4%);
+}
+html[data-skin="slate"] body .card > .stat.hp.hurt > .stat-value {
+  color: #ffd3d3;
+  text-shadow:
+    0 1px 2px #000,
+    0 0 1.2cqw #ff2a4a99;
+}
+html[data-skin="slate"] body .card > .stat.hp.hurt > .stat-gem {
+  filter: drop-shadow(0 0.55cqw 1cqw #000000c4) saturate(0.55) brightness(0.75);
+}
+
+/* ===== 5. name pill, straddling art / panel =============================== */
+html[data-skin="slate"] body .card .card-title {
+  position: absolute;
+  z-index: 5;
+  top: 56.8%;
+  bottom: auto;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  width: auto;
+  height: 8%;
+  min-height: 0;
+  max-width: 80%;
+  padding: 0 5cqw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  clip-path: none;
+  background:
+    linear-gradient(#111a26f2, #111a26f2) padding-box,
+    linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--accent) 88%, #ffffff),
+        color-mix(in srgb, var(--accent) 52%, #050c15)
+      )
+      border-box;
+  box-shadow:
+    0 0.5cqw 1.2cqw #030a12b8,
+    inset 0 1px 0 #ffffff1f;
+  font:
+    600 clamp(8px, 7.2cqw, 19px) / 1 "Songti SC",
+    "STSong",
+    "SimSun",
+    Georgia,
+    serif;
+  letter-spacing: 0.08em;
+  color: #f3f6fa;
+  text-shadow: 0 1px 2px #000a;
+}
+html[data-skin="slate"] body .card .card-title.long {
+  font-size: clamp(6.5px, 5.6cqw, 15px);
+  letter-spacing: 0.03em;
+  padding: 0 3.4cqw;
+}
+
+/* ===== 6. rule panel ===================================================== */
+html[data-skin="slate"] body .card .card-text {
+  position: absolute;
+  z-index: 4;
+  inset: 65% 5% 24cqw;
+  height: auto;
+  max-height: none;
+  display: flex;
+  align-items: safe center;
+  justify-content: flex-start;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font:
+    400 clamp(9px, 6.3cqw, 15px) / 1.4 "PingFang SC",
+    system-ui,
+    sans-serif;
+  color: #dfe9f3;
+  text-shadow: none;
+  letter-spacing: 0;
+}
+html[data-skin="slate"] body .card[data-rule-size="standard"] .card-text {
+  font-size: clamp(9px, 6.3cqw, 15px);
+  line-height: 1.4;
+}
+/* v7 floors the long-rule ramp at 8px, which is authored for its 230px demo
+ * card. The game's desktop hand card is 156px, where 8px is below this
+ * project's readability floor (tests/e2e/card-reading.spec.cjs), so the ramp
+ * keeps v7's slope and its 12px ceiling but floors at 9px. */
+html[data-skin="slate"] body .card[data-rule-size="long"] .card-text {
+  font-size: clamp(9px, 5.2cqw, 12px);
+  line-height: 1.4;
+}
+/* The rule box is a fixed share of the face, so the number of lines that fit
+ * falls with the card width. Clamping to the lines that actually fit is what
+ * keeps `.card-text` from overflowing its own box at hand and rail sizes. */
+html[data-skin="slate"] body .card .card-copy {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+@container (max-width: 200px) {
+  html[data-skin="slate"] body .card .card-copy {
+    -webkit-line-clamp: 3;
+  }
+}
+@container (max-width: 128px) {
+  html[data-skin="slate"] body .card .card-copy {
+    -webkit-line-clamp: 2;
+  }
+}
+html[data-skin="slate"] body .card .card-text b.kw {
+  font-family: inherit;
+  font-weight: 700;
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+}
+html[data-skin="slate"] body .card .card-text b.kw::before {
+  content: "";
+  flex: none;
+  width: 1em;
+  height: 1em;
+  margin-right: 0.18em;
+  background: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+/* a keyword without a glyph must not reserve the mask box */
+html[data-skin="slate"] body .card .card-text b.kw:not([data-kw])::before {
+  content: none;
+}
+html[data-skin="slate"] body .card .card-text b.kw[data-kw="spell"]::before {
+  -webkit-mask-image: var(--ic-spell);
+  mask-image: var(--ic-spell);
+}
+html[data-skin="slate"]
+  body
+  .card
+  .card-text
+  b.kw[data-kw="battlecry"]::before {
+  -webkit-mask-image: var(--ic-horn);
+  mask-image: var(--ic-horn);
+}
+html[data-skin="slate"] body .card .card-text b.kw[data-kw="taunt"]::before {
+  -webkit-mask-image: var(--ic-shield);
+  mask-image: var(--ic-shield);
+}
+html[data-skin="slate"] body .card .card-text b.kw[data-kw="divine"]::before {
+  -webkit-mask-image: var(--ic-bubble);
+  mask-image: var(--ic-bubble);
+}
+html[data-skin="slate"]
+  body
+  .card
+  .card-text
+  b.kw[data-kw="deathrattle"]::before {
+  -webkit-mask-image: var(--ic-skull);
+  mask-image: var(--ic-skull);
+}
+html[data-skin="slate"]
+  body
+  .card
+  .card-text
+  b.kw[data-kw="lifesteal"]::before {
+  -webkit-mask-image: var(--ic-drop);
+  mask-image: var(--ic-drop);
+}
+
+/* ===== 7. collection number ============================================== */
+html[data-skin="slate"] body .card .card-index {
+  position: absolute;
+  z-index: 5;
+  right: 23cqw;
+  bottom: 12.4cqw;
+  left: auto;
+  top: auto;
+  display: block;
+  font:
+    500 clamp(5px, 3.2cqw, 7.5px) / 1 ui-monospace,
+    "SF Mono",
+    Menlo,
+    monospace;
+  letter-spacing: 0.1em;
+  color: #4f6076;
+  white-space: nowrap;
+}
+html[data-skin="slate"] body .card.spell .card-index {
+  right: 5%;
+}
+
+/* ===== 8. the rarity band — a polished metal strip inlaid into the face === */
+html[data-skin="slate"] body .card .card-type {
+  position: absolute;
+  z-index: 4;
+  inset: auto 0 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: auto;
+  height: 9.6cqw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24cqw;
+  border: 0;
+  border-radius: 0;
+  background:
+    /* vertical bevel: lit lip on top, shadow toward the bottom */
+    linear-gradient(
+      180deg,
+      #ffffff73 0%,
+      #ffffff2e 22%,
+      #ffffff00 48%,
+      #00000030 78%,
+      #0000005c 100%
+    ),
+    /* horizontal polish: brightest at centre, falling off to the ends */
+      linear-gradient(
+        90deg,
+        var(--band-lo) 0%,
+        var(--band-mid) 24%,
+        var(--band-hi) 47%,
+        var(--band-hi) 53%,
+        var(--band-mid) 76%,
+        var(--band-lo) 100%
+      );
+  box-shadow:
+    inset 0 1px 0 #ffffffb0,
+    inset 0 2px 0 #ffffff2a,
+    inset 0 -1px 0 #08101ad9,
+    0 -1px 0 #04090f,
+    0 -0.6cqw 1.4cqw #04090f8c;
+  font-family: var(--ui-font);
+  font-size: clamp(6.5px, 4.3cqw, 9.5px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.2em;
+  color: var(--band-ink);
+  text-shadow: 0 1px 0 #ffffff8a;
+  white-space: nowrap;
+  overflow: hidden;
+}
+html[data-skin="slate"] body .card .card-type > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html[data-skin="slate"] body .card.spell .card-type {
+  padding: 0 4cqw;
+}
+
+/* ===== 9. board state ==================================================== */
+html[data-skin="slate"] body .card.is-board :is(.card-cost, .stat) {
+  display: none;
+}
+html[data-skin="slate"]
+  body
+  .card.is-board
+  :is(.card-title, .card-text, .card-index) {
+  display: none;
+}
+html[data-skin="slate"] body .card.is-board .card-art {
+  height: 100%;
+}
+html[data-skin="slate"] body .card.is-board .card-art::after {
+  background:
+    radial-gradient(52% 34% at 50% 4%, #04090f7a 0%, #04090f00 76%),
+    linear-gradient(180deg, #0a111900 76%, #0a11192e 88%, #0a11197a 100%);
+}
+@container (max-width: 130px) {
+  html[data-skin="slate"] body .card .card-type {
+    letter-spacing: 0.06em;
+    padding: 0 23.5cqw;
+  }
+  html[data-skin="slate"] body .card.spell .card-type {
+    padding: 0 3cqw;
+  }
+}
+/* Auto board state under 110px. It must NOT reach a card the player still has
+ * to READ: a short-landscape hand rail draws cards below 110px and the rules
+ * have to stay (tests/e2e/hand-drag.spec.cjs drags from `.card-text`), so the
+ * collapse is excluded from every reading wrapper and only catches a loose
+ * thumbnail or an explicit `.is-board`. */
+@container (max-width: 110px) {
+  html[data-skin="slate"]
+    body
+    :not(
+      .hand-card,
+      .card-preview,
+      .library-item,
+      .mulligan-card,
+      .discover-card,
+      .card-detail-art,
+      .drag-ghost,
+      .card-motion-content
+    )
+    > .card
+    :is(.card-cost, .card-title, .card-text, .card-index) {
+    display: none;
+  }
+  html[data-skin="slate"]
+    body
+    :not(
+      .hand-card,
+      .card-preview,
+      .library-item,
+      .mulligan-card,
+      .discover-card,
+      .card-detail-art,
+      .drag-ghost,
+      .card-motion-content
+    )
+    > .card
+    .card-art {
+    height: 100%;
+  }
+  html[data-skin="slate"]
+    body
+    :not(
+      .hand-card,
+      .card-preview,
+      .library-item,
+      .mulligan-card,
+      .discover-card,
+      .card-detail-art,
+      .drag-ghost,
+      .card-motion-content
+    )
+    > .card
+    .card-art::after {
+    background:
+      radial-gradient(52% 34% at 50% 4%, #04090f7a 0%, #04090f00 76%),
+      linear-gradient(180deg, #0a111900 76%, #0a11192e 88%, #0a11197a 100%);
+  }
+  html[data-skin="slate"] body .card .card-type {
+    letter-spacing: 0.02em;
+    word-spacing: -0.22em;
+  }
+}
+
+/* ===== 10. wrapper affordances ===========================================
+ * `.card` now paints nothing of its own, so every wrapper glow that used to
+ * ride on the old plate has to be restated here or it disappears. */
+html[data-skin="slate"] body .hand-card.playable > .card {
+  box-shadow:
+    0 0 0 1px var(--positive),
+    0 0 calc(var(--u) * 9) #90d8db4d;
+}
+html[data-skin="slate"] body .hand-card.selected > .card {
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 0 calc(var(--u) * 16) #85c5f166;
+}
+html[data-skin="slate"] body .mulligan-card.replace > .card {
+  box-shadow: 0 0 calc(var(--u) * 9) #8dd2ff88;
+}
+html[data-skin="slate"] body .card::before,
+html[data-skin="slate"] body .card::after {
+  content: none;
+}
+/* The stat gems overhang the plate by 3.2%; the desktop hand rail was laid out
+ * for a card that ended at its own edge, so the bottom row of gems landed
+ * exactly on the app boundary. Lift the rail by the overhang, keeping the
+ * zone's lower edge (and its gradient) where it was. */
+html[data-skin="slate"] body:not(.touch-layout) .hand-zone {
+  top: 691px;
+  height: 248px;
+}
+html[data-skin="slate"] body:not(.touch-layout) .hand-label {
+  top: 664px;
+}
+
+/* ===== 11. battlefield minions ===========================================
+ * Same visual grammar as `.card.is-board`, on the board's own element: full
+ * bleed art, rarity band, two stat gems, no rim. Every state affordance is
+ * restated on the new geometry. */
+html[data-skin="slate"] body .minion {
+  --w: var(--unit-w, 116px);
+  --u: calc(var(--w) / 100);
+  --band-hi: #dbe4ee;
+  --band-mid: #a9b8c8;
+  --band-lo: #6c7f95;
+  --band-ink: #1f2c3a;
+  --accent: #9eb4c8;
+  container-type: inline-size;
+  overflow: visible;
+  padding: 0;
+  border: 0;
+  border-radius: 4.2% / 3.4%;
+  background: none;
+  box-shadow: none;
+  filter: drop-shadow(0 calc(var(--u) * 3) calc(var(--u) * 3) #030a16a6);
+}
+html[data-skin="slate"] body .minion.common {
+  --band-hi: #dbe4ee;
+  --band-mid: #a9b8c8;
+  --band-lo: #6c7f95;
+  --band-ink: #1f2c3a;
+}
+html[data-skin="slate"] body .minion.rare {
+  --band-hi: #e9f6ff;
+  --band-mid: #93c9ef;
+  --band-lo: #3f86c2;
+  --band-ink: #0f3557;
+}
+html[data-skin="slate"] body .minion.epic {
+  --band-hi: #f1e9ff;
+  --band-mid: #bca8e8;
+  --band-lo: #6d55b0;
+  --band-ink: #2a1d57;
+}
+html[data-skin="slate"] body .minion.legendary {
+  --band-hi: #fff4d2;
+  --band-mid: #e4c27c;
+  --band-lo: #a47727;
+  --band-ink: #47300a;
+}
+html[data-skin="slate"] body .minion[data-class="mage"] {
+  --accent: #5b8dea;
+}
+html[data-skin="slate"] body .minion[data-class="paladin"] {
+  --accent: #e9c46a;
+}
+html[data-skin="slate"] body .minion[data-class="ranger"] {
+  --accent: #6fcf97;
+}
+html[data-skin="slate"] body .minion[data-class="moon"] {
+  --accent: #9aa8ff;
+}
+html[data-skin="slate"] body .minion .minion-art,
+html[data-skin="slate"] body.touch-layout .minion .minion-art {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border: 0;
+  border-radius: inherit;
+  outline: 0;
+  overflow: hidden;
+  background: #0a1119;
+  /* Ring, glow and inset are three independent custom properties so that the
+   * states can stack: a `ready` minion that also has `taunt` must show BOTH,
+   * which a single `box-shadow` per state cannot do (the later rule would
+   * simply replace the earlier one). */
+  --unit-ring: 0 0 0 1px #05091099;
+  --unit-glow: 0 0 0 #0000;
+  --unit-inset: inset 0 0 0 1px #ffffff24;
+  box-shadow: var(--unit-ring), var(--unit-glow), var(--unit-inset);
+  clip-path: none;
+}
+html[data-skin="slate"] body .minion .minion-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--art-pos, 50% 22%);
+  transform: none;
+  border-radius: 0;
+  clip-path: none;
+  filter: saturate(0.88) contrast(1.02);
+}
+html[data-skin="slate"] body .minion .minion-art::before {
+  content: none;
+}
+html[data-skin="slate"] body .minion .minion-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border: 0;
+  border-radius: inherit;
+  box-shadow: none;
+  background:
+    radial-gradient(52% 34% at 50% 4%, #04090f7a 0%, #04090f00 76%),
+    linear-gradient(180deg, #0a111900 62%, #0a11193d 80%, #0a1119a6 100%);
+}
+html[data-skin="slate"] body .minion .minion-band {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 11cqw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 26cqw;
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff73 0%,
+      #ffffff2e 22%,
+      #ffffff00 48%,
+      #00000030 78%,
+      #0000005c 100%
+    ),
+    linear-gradient(
+      90deg,
+      var(--band-lo) 0%,
+      var(--band-mid) 24%,
+      var(--band-hi) 47%,
+      var(--band-hi) 53%,
+      var(--band-mid) 76%,
+      var(--band-lo) 100%
+    );
+  box-shadow:
+    inset 0 1px 0 #ffffffb0,
+    inset 0 -1px 0 #08101ad9,
+    0 -1px 0 #04090f,
+    0 -0.6cqw 1.4cqw #04090f8c;
+  font-family: var(--ui-font);
+  font-size: clamp(6px, 4.6cqw, 10px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  color: var(--band-ink);
+  text-shadow: 0 1px 0 #ffffff8a;
+  white-space: nowrap;
+  overflow: hidden;
+}
+html[data-skin="slate"] body .minion .minion-band > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html[data-skin="slate"] body .minion > .stat {
+  position: absolute;
+  z-index: 7;
+  width: 32cqw;
+  height: auto;
+  aspect-ratio: 1;
+  bottom: -4%;
+  top: auto;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  clip-path: none;
+  background: none;
+  box-shadow: none;
+  filter: none;
+  max-width: none;
+}
+html[data-skin="slate"] body .minion > .stat.atk {
+  left: -5%;
+  right: auto;
+}
+html[data-skin="slate"] body .minion > .stat.hp {
+  right: -5%;
+  left: auto;
+}
+html[data-skin="slate"] body .minion > .stat > .stat-value {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: auto;
+  height: auto;
+  font-family: var(--ui-font);
+  font-weight: 700;
+  font-size: clamp(9px, 14cqw, 30px);
+  line-height: 1;
+  color: #fff;
+  -webkit-text-stroke: 0;
+  text-shadow:
+    0 1px 2px #000000e6,
+    0 0 1cqw #000000a6;
+  transform: none;
+  font-variant-numeric: tabular-nums;
+}
+html[data-skin="slate"] body .minion > .stat.hp > .stat-value {
+  transform: translateY(-6%);
+}
+html[data-skin="slate"] body .minion > .stat.hp.hurt > .stat-value {
+  color: #ffd3d3;
+  text-shadow:
+    0 1px 2px #000,
+    0 0 1.2cqw #ff2a4a99;
+}
+html[data-skin="slate"] body .minion > .stat.hp.hurt > .stat-gem {
+  filter: drop-shadow(0 0.55cqw 1cqw #000000c4) saturate(0.55) brightness(0.75);
+}
+/* the band and both gems own the bottom edge, so the status glyph moves to
+ * the top of the art where nothing else is competing for the space */
+html[data-skin="slate"] body .minion .minion-status {
+  position: absolute;
+  z-index: 9;
+  top: 4cqw;
+  bottom: auto;
+  left: 6cqw;
+  right: 6cqw;
+  font-size: clamp(8px, 9cqw, 15px);
+  line-height: 1;
+  color: #e6f3ff;
+  text-shadow:
+    0 1px 2px #030a16,
+    0 0 4px #030a16;
+}
+html[data-skin="slate"] body .minion .minion-status .special {
+  font-size: inherit;
+  color: #dff0b8;
+}
+/* small boards: the type/class line cannot be read under ~70px, so the band
+ * keeps its rarity metal and drops the text rather than printing an ellipsis */
+@container (max-width: 88px) {
+  html[data-skin="slate"] body .minion .minion-band {
+    padding: 0 22cqw;
+    letter-spacing: 0;
+    word-spacing: -0.16em;
+  }
+}
+@container (max-width: 70px) {
+  html[data-skin="slate"] body .minion .minion-band > span {
+    display: none;
+  }
+}
+
+/* --- minion states, restated on the rimless geometry --------------------- */
+html[data-skin="slate"] body .minion .unit-aura {
+  position: absolute;
+  inset: -2%;
+  z-index: 3;
+  border: 0;
+  border-radius: 5% / 4%;
+  background: none;
+  box-shadow: none;
+  pointer-events: none;
+}
+html[data-skin="slate"] body .minion.taunt .minion-art {
+  --unit-ring:
+    0 0 0 max(4px, 3.6cqw) #e6f2ff,
+    0 0 0 calc(max(4px, 3.6cqw) + 1.5px) #030a16e6;
+  --unit-inset: inset 0 0 0 1px #ffffff3d;
+}
+html[data-skin="slate"] body .minion.taunt .minion-art::after {
+  box-shadow: inset 0 0 0 max(1px, 0.9cqw) #9fc0dd66;
+}
+/* divine shield: a lit gold bezel plus the diagonal sheen across the art */
+html[data-skin="slate"] body .minion.shield .minion-art {
+  --unit-ring:
+    0 0 0 max(4px, 3.4cqw) #f8dd96,
+    0 0 0 calc(max(4px, 3.4cqw) + 1.5px) #2a1c05d9;
+  --unit-glow: 0 0 3cqw #f5ce7e99;
+}
+html[data-skin="slate"] body .minion.shield .unit-aura {
+  inset: 0;
+  border: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    125deg,
+    #fff4ce3d,
+    transparent 34%,
+    #fff8bb47 40%,
+    transparent 48% 100%
+  );
+  box-shadow: inset 0 0 2.4cqw #f5ce7e5c;
+}
+html[data-skin="slate"] body .minion.ready .unit-aura {
+  border: 0;
+  border-bottom: max(2px, 2.4cqw) solid var(--combat-ready, #9fd755);
+  border-radius: 5% / 4%;
+  box-shadow: 0 0.6cqw 1.4cqw #b9efb655;
+}
+html[data-skin="slate"] body .minion.ready .minion-art {
+  --unit-glow: 0 0 1.8cqw #9fd75566;
+  --unit-inset: inset 0 0 0 1px #d0f29266;
+}
+html[data-skin="slate"] body .minion.frozen .unit-aura {
+  border: max(2px, 1.4cqw) solid var(--combat-ice, #a5e8ff);
+  border-radius: 5% / 4%;
+  background: repeating-conic-gradient(
+    from 20deg at 30% 15%,
+    #a5e8ff28 0deg 18deg,
+    transparent 18deg 70deg
+  );
+  box-shadow:
+    inset 0 0 1.6cqw #a5e8ff66,
+    0 0 1cqw #a5e8ff66;
+}
+html[data-skin="slate"] body .minion.frozen .minion-art::after {
+  background: linear-gradient(
+    125deg,
+    #f1ffff3a,
+    transparent 18%,
+    #befaff80 19%,
+    transparent 23%,
+    transparent 46%,
+    #e1ffff77 47%,
+    #63aac739 51%,
+    transparent 77%,
+    #8fdcfa88
+  );
+  box-shadow: inset 0 0 1.8cqw #8fd8fc77;
+}
+html[data-skin="slate"] body .minion.frozen .minion-art {
+  --unit-ring:
+    0 0 0 max(2px, 1.8cqw) #a5e8ff, 0 0 0 calc(max(2px, 1.8cqw) + 1px) #050910d9;
+}
+html[data-skin="slate"] body .minion.valid-target .minion-art {
+  --unit-ring:
+    0 0 0 max(3px, 2.4cqw) #e0895c, 0 0 0 calc(max(3px, 2.4cqw) + 1px) #050910d9;
+  --unit-glow: 0 0 2.4cqw #e59b6499;
+}
+/* `.minion` is the container, so its OWN filter lengths must use --u, not cqw */
+html[data-skin="slate"] body .minion.selected {
+  filter: drop-shadow(0 0 calc(var(--u) * 8) #f5d35aaa);
+}
+html[data-skin="slate"] body .minion:hover {
+  filter: drop-shadow(0 calc(var(--u) * 5) calc(var(--u) * 4) #030a16cc);
+}
+html[data-skin="slate"] body .minion.valid-target:hover {
+  filter: brightness(1.13)
+    drop-shadow(0 calc(var(--u) * 5) calc(var(--u) * 4) #030a16cc);
+}
+html[data-skin="slate"] body .minion.stealth {
+  opacity: 0.68;
+}
+html[data-skin="slate"] body .minion.legendary:not(.frozen)::after {
+  display: block;
+  content: "✦";
+  position: absolute;
+  z-index: 8;
+  top: -9cqw;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  width: auto;
+  font-size: clamp(9px, 11cqw, 20px);
+  line-height: 1;
+  color: #ffda78;
+  text-shadow: 0 1px 3px #030a16;
+  background: none;
+  border: 0;
+}
+html[data-skin="slate"] body .minion.shield::before,
+html[data-skin="slate"] body .minion.frozen::after {
+  display: none;
+}
+html[data-skin="slate"] body .minion .ready-dot {
+  display: none;
+}
+
+/* ===== 12. the card back — polished mirror steel-blue ====================
+ * No texture, no emblem, no text. All layers are percentages, so the same
+ * plate is correct at 42x64 in the enemy hand and stretched to 100%/100%
+ * inside the draw-flight proxy. `.card-back` is its own query container, so
+ * the two pseudo-elements can size themselves in `cqw`. */
+html[data-skin="slate"] body .card-back {
+  position: relative;
+  container-type: inline-size;
+  isolation: isolate;
+  overflow: hidden;
+  border: 0;
+  border-radius: 3.6% / 2.4%;
+  --r-hi: #eaf3fb;
+  --r-lit: #bcd6ec;
+  --r-mid: #54769a;
+  --r-low: #32506f;
+  --r-deep: #223a53;
+  background:
+    linear-gradient(
+      126deg,
+      #ffffff00 0%,
+      #ffffff22 13%,
+      #f8fcff70 22%,
+      #ffffff20 31%,
+      #ffffff00 45%,
+      #0a121c2b 70%,
+      #050a1152 100%
+    ),
+    radial-gradient(
+      62% 42% at 33% 25%,
+      #f4fbff9e 0%,
+      #dcecfb44 45%,
+      #ffffff00 100%
+    ),
+    radial-gradient(
+      26% 18% at 50% 42%,
+      #eef7ffcc 0%,
+      #cfe3f68c 38%,
+      #a9c6e03d 68%,
+      #ffffff00 100%
+    ),
+    radial-gradient(
+      104% 86% at 74% 92%,
+      #0b1727a8 0%,
+      #12243866 40%,
+      #0000 82%
+    ),
+    conic-gradient(
+      from 8deg at 50% 42%,
+      var(--r-mid) 0deg,
+      var(--r-lit) 30deg,
+      var(--r-low) 64deg,
+      #9fbdd8 100deg,
+      var(--r-deep) 134deg,
+      var(--r-hi) 172deg,
+      var(--r-low) 206deg,
+      #8fb0cd 242deg,
+      var(--r-deep) 276deg,
+      #adc8de 306deg,
+      #3d5e80 334deg,
+      var(--r-mid) 360deg
+    ),
+    #3f5f80;
+  box-shadow:
+    0 0 0 1px #cfe2f322,
+    inset 1px 1px 2px #f0f8ff5c,
+    inset -1px -1px 2px #060c1499,
+    inset 0 0 0 1px #0a1119a8,
+    0 2px 5px #030a1690;
+  opacity: 1;
+}
+/* second, offset conic at low opacity + blur: softens the ray edges and adds
+ * a broken secondary reflection, the way a real polished plate picks up more
+ * than one light source. Inset negative so the blur never shows its own edge. */
+html[data-skin="slate"] body .card-back::before {
+  content: "";
+  position: absolute;
+  inset: -14cqw;
+  z-index: 1;
+  pointer-events: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: conic-gradient(
+    from -26deg at 50% 44%,
+    #ffffff00 0deg,
+    #eef6ff66 22deg,
+    #14243800 58deg,
+    #ffffff00 92deg,
+    #dceaf75e 124deg,
+    #16273c00 158deg,
+    #ffffff00 196deg,
+    #e7f2ff70 224deg,
+    #12223600 262deg,
+    #ffffff00 300deg,
+    #d6e6f556 326deg,
+    #ffffff00 360deg
+  );
+  filter: blur(4.6cqw);
+  opacity: 0.46;
+  mix-blend-mode: screen;
+}
+/* bevelled hairline inner frame */
+html[data-skin="slate"] body .card-back::after {
+  content: "";
+  position: absolute;
+  inset: 3.4cqw;
+  z-index: 2;
+  pointer-events: none;
+  display: block;
+  background: none;
+  color: transparent;
+  font-size: 0;
+  border: 0.34cqw solid #e7f2fd2b;
+  border-top-color: #f4faff59;
+  border-left-color: #eef7ff42;
+  border-bottom-color: #06101a4d;
+  border-right-color: #08121d3d;
+  border-radius: 2.4cqw;
+  box-shadow:
+    inset 0 0 0 0.3cqw #0a121b30,
+    0 0 1.4cqw #9fc7ef1a;
+}

@@ -76,5 +76,6 @@
   "SKIN_SLATE_DIALOGS": "presentation/skins/slate/dialogs.css",
   "SKIN_SLATE_SETTINGS": "presentation/skins/slate/settings.css",
   "SKIN_SLATE_GUIDE": "presentation/skins/slate/guide.css",
-  "SKIN_SLATE_MOBILE": "presentation/skins/slate/mobile.css"
+  "SKIN_SLATE_MOBILE": "presentation/skins/slate/mobile.css",
+  "SKIN_SLATE_CARD_FACE": "presentation/skins/slate/card-face.css"
 }

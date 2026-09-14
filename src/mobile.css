@@ -403,12 +403,6 @@ body.touch-layout .hand-card .card-text {
   overflow: hidden;
   letter-spacing: 0;
 }
-body.touch-layout .hand-card .card-rarity {
-  width: 7px;
-  height: 9px;
-  left: calc(50% - 3.5px);
-  top: 65%;
-}
 body.touch-layout .hand-card .card .stat {
   width: 25%;
   height: 20%;

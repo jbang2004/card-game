@@ -266,63 +266,6 @@
   padding: 1px;
   z-index: 8;
 }
-.card-rarity,
-.card-preview .card-rarity,
-.library-item .card-rarity {
-  position: absolute;
-  left: calc(50% - 5px);
-  top: 64.8%;
-  width: 10px;
-  height: 13px;
-  transform: none;
-  clip-path: polygon(50% 0, 92% 21%, 100% 58%, 50% 100%, 0 58%, 8% 21%);
-  background: linear-gradient(
-    135deg,
-    #f8f7df,
-    #a9b4b0 40%,
-    #657c7d 48%,
-    #e4e9da
-  );
-  border: 1px solid #3c352e;
-  box-shadow: inset 0 1px #fff;
-  z-index: 10;
-}
-.card.rare .card-rarity {
-  background: conic-gradient(
-    from 20deg,
-    #91f3ff,
-    #2c72bb,
-    #5cb9eb,
-    #cefaff,
-    #5eaeed,
-    #2069a7,
-    #b0eefa
-  );
-}
-.card.epic .card-rarity {
-  background: conic-gradient(
-    from 30deg,
-    #e2bcff,
-    #7e368e,
-    #b47cd5,
-    #f3d4ff,
-    #8b489f,
-    #553278,
-    #e8beff
-  );
-}
-.card.legendary .card-rarity {
-  background: conic-gradient(
-    from 15deg,
-    #fff4b9,
-    #b97919,
-    #e6a441,
-    #fff5c6,
-    #e5a736,
-    #835217,
-    #ffe5a2
-  );
-}
 .card-cost,
 .card-preview .card-cost,
 .library-item .card-cost {
@@ -472,11 +415,6 @@
 }
 .card-preview .card-type {
   font-size: 11px;
-}
-.card-preview .card-rarity {
-  width: 13px;
-  height: 17px;
-  left: calc(50% - 6.5px);
 }
 .keyword-notes {
   font-size: 11px;

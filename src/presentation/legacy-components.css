@@ -219,12 +219,6 @@ body .card .card-type {
   letter-spacing: 0;
   text-shadow: none;
 }
-body .card-rarity {
-  top: 68%;
-  width: 5px;
-  height: 5px;
-  box-shadow: none;
-}
 body .card-cost,
 body .stat {
   font-family: Arial, sans-serif;
@@ -380,34 +374,6 @@ body .card .card-type {
 .minion.frozen:after {
   display: none;
 }
-.card-decoration {
-  display: none;
-}
-.card-decoration:before,
-.card-decoration:after {
-  display: none;
-}
-.hand-card.playable .card-decoration {
-  display: block;
-  border-radius: inherit;
-  background: linear-gradient(
-    115deg,
-    transparent 35%,
-    #fff2cb55 48%,
-    transparent 61%
-  );
-  background-size: 260% 100%;
-  animation: card-sheen 4.5s ease-in-out infinite;
-}
-@keyframes card-sheen {
-  0%,
-  65% {
-    background-position: 160% 0;
-  }
-  100% {
-    background-position: -80% 0;
-  }
-}
 body.touch-layout .turn-cue {
   width: 230px;
   height: 44px;
@@ -425,18 +391,6 @@ body.touch-layout .summon-seal {
   padding: 3px 8px;
   letter-spacing: 1px;
 }
-.reduced-motion .hand-card.playable .card-decoration,
-.fx-low .hand-card.playable .card-decoration {
-  animation: none;
-  background: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .hand-card.playable .card-decoration {
-    animation: none;
-    background: none;
-  }
-}
-
 .turn-cue.compact {
   height: 18px;
   gap: 18px;
@@ -531,12 +485,6 @@ body.reduced-motion .motion-ready > img[data-art-key] {
   body .motion-ready > img[data-art-key] {
     opacity: 1;
   }
-}
-
-/* No perpetual sheen competing with the animated subject. */
-.hand-card.playable .card-decoration {
-  animation: none;
-  background: none;
 }
 /* FLIP / combat owns movement. CSS filter/transform transitions must not trail it. */
 body .minion {
@@ -1542,40 +1490,6 @@ body .card .card-type {
   font-size: 8px;
   bottom: 5%;
 }
-body .card-class-seal {
-  position: absolute;
-  z-index: 5;
-  right: 4%;
-  top: 48%;
-  width: 15%;
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--class-metal, #b8a281);
-  border-radius: 50%;
-  color: var(--class-metal, #d6c7a5);
-  background: var(--class-deep, #3e3329);
-  box-shadow:
-    0 2px 3px #0008,
-    inset 0 1px #fff3;
-  pointer-events: none;
-}
-.card-class-seal svg {
-  width: 70%;
-  height: 70%;
-}
-body .card-rarity {
-  display: block;
-  top: auto;
-  bottom: 2.5%;
-  left: 50%;
-  width: 7px;
-  height: 7px;
-  border: 1px solid #59432b;
-  background: var(--rarity-metal);
-  box-shadow: inset 1px 1px #fff7;
-  transform: translateX(-50%) rotate(45deg);
-}
 body .card .card-cost {
   border-radius: 30% 30% 40% 40%;
   border: 2px solid #c8e2df;
@@ -1616,27 +1530,6 @@ body .card.weapon .card-title {
 }
 body .card.spell {
   border-radius: 13px 13px 6px 6px;
-}
-body .card.legendary .card-decoration {
-  display: block;
-  position: absolute;
-  z-index: 4;
-  top: -3px;
-  left: 35%;
-  width: 30%;
-  height: 12px;
-  background: linear-gradient(#ffedb7, #aa6d29);
-  clip-path: polygon(
-    0 10%,
-    25% 40%,
-    50% 0,
-    75% 40%,
-    100% 10%,
-    88% 85%,
-    50% 100%,
-    12% 85%
-  );
-  pointer-events: none;
 }
 body .hand-card.playable .card {
   box-shadow:
@@ -1797,9 +1690,6 @@ body.touch-layout .hand-card .card-title {
   padding-left: 4%;
   padding-right: 8%;
 }
-body.touch-layout .hand-card .card-rarity {
-  top: 58%;
-}
 body.touch-layout .hand-card .card .card-text {
   top: 59.5%;
   bottom: 20%;
@@ -1814,10 +1704,6 @@ body.touch-layout .hand-card .card .stat {
   height: 19%;
   font-size: clamp(13px, 15cqw, 24px);
 }
-body.touch-layout .hand-card .card-class-seal {
-  display: none;
-}
-
 body.touch-layout .lobby-copy {
   padding: 20px 24px;
 }

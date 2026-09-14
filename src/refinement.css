@@ -1437,23 +1437,6 @@
   color: #ecf5e9;
   text-shadow: 0 2px 3px #091625;
 }
-.card-rarity {
-  top: 10px;
-  left: auto;
-  right: 11px;
-  width: 5px;
-  height: 5px;
-  border: none;
-  background: #b9b9a6;
-  box-shadow: 0 0 0 3px #07121e70;
-  z-index: 6;
-}
-.card.legendary .card-rarity {
-  background: #ffe0a2;
-  box-shadow:
-    0 0 8px #e9b87580,
-    0 0 0 3px #07121e70;
-}
 .card .stat {
   width: 26px;
   height: 29px;
@@ -1641,12 +1624,6 @@ body.has-card-detail:after {
 .card-preview .card-type {
   font-size: 9px;
   bottom: 10px;
-}
-.card-preview .card-rarity {
-  top: 16px;
-  right: 16px;
-  width: 7px;
-  height: 7px;
 }
 .drag-ghost {
   width: 158px;

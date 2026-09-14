@@ -98,6 +98,61 @@ const EmberArt = (() => {
     const id = "badge-" + ++badgeSerial;
     return `<svg class="badge-frame badge-${key}" viewBox="0 0 100 100" aria-hidden="true" focusable="false">${badgeArt[key](id)}</svg>`;
   }
+  // Card and board stat gems: shape IS meaning. Attack is an amber diamond
+  // behind crossed swords, health a ruby heart, weapon durability a cyan
+  // shield. Each gem is a steel bezel stroke over a faceted fill with one top
+  // specular sweep; the live numeral stays DOM text laid over the centre.
+  const GEM_SHAPE = {
+    blade: "M50 5 L95 50 L50 95 L5 50 Z",
+    heart:
+      "M50 91 C22 68 8 52 8 33 C8 19 19 9 31 9 C40 9 46 13 50 20 C54 13 60 9 69 9 C81 9 92 19 92 33 C92 52 78 68 50 91 Z",
+    shield: "M50 6 L88 24 V58 Q88 66 82 71 L50 94 L18 71 Q12 66 12 58 V24 Z",
+  };
+  // Equal optical area: the diamond fills its box, the heart and shield do not.
+  const GEM_SCALE = { blade: 1, heart: 0.94, shield: 0.96 };
+  const GEM_TINT = {
+    blade: ["#ffd27a", "#e8862a", "#6a2f06"],
+    heart: ["#ff8a9c", "#c81a3c", "#4c0716"],
+    shield: ["#a8f4ff", "#1d9ab8", "#063a4a"],
+  };
+  let gemSerial = 0;
+  function statGem(kind) {
+    const key = GEM_SHAPE[kind] ? kind : "blade";
+    const [core, body, edge] = GEM_TINT[key];
+    // Gradients are referenced by id, so every instance needs its own set.
+    const id = "gem-" + ++gemSerial;
+    const d = GEM_SHAPE[key];
+    const T = `transform="translate(50 50) scale(${GEM_SCALE[key]}) translate(-50 -50)"`;
+    const swords =
+      key === "blade"
+        ? `<defs><g id="${id}w"><path d="M50 -2 L56 10 V58 H44 V10 Z" fill="url(#${id}b)" stroke="#04091a" stroke-width="1.6" stroke-linejoin="round"/><rect x="35" y="58" width="30" height="6" rx="2" fill="#c9a24a" stroke="#04091a" stroke-width="1.4"/><rect x="45.5" y="64" width="9" height="16" rx="2" fill="#3a2a16" stroke="#04091a" stroke-width="1.2"/><circle cx="50" cy="85" r="4.6" fill="#c9a24a" stroke="#04091a" stroke-width="1.2"/><path d="M50 2 L52.5 10 V56 H50 Z" fill="#fff" opacity=".45"/></g></defs>
+  <use href="#${id}w" transform="translate(50 50) scale(1.16) rotate(-40) translate(-50 -50)"/><use href="#${id}w" transform="translate(50 50) scale(1.16) rotate(40) translate(-50 -50)"/>`
+        : "";
+    return `<svg class="stat-gem stat-gem-${key}" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="${id}b" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eef5fb"/><stop offset=".35" stop-color="#8ea3b8"/>
+      <stop offset=".6" stop-color="#e3edf6"/><stop offset="1" stop-color="#5f7590"/>
+    </linearGradient>
+    <radialGradient id="${id}g" cx=".5" cy=".62" r=".62">
+      <stop offset="0" stop-color="${core}"/><stop offset=".55" stop-color="${body}"/><stop offset="1" stop-color="${edge}"/>
+    </radialGradient>
+    <linearGradient id="${id}s" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".75"/><stop offset=".45" stop-color="#fff" stop-opacity=".12"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="${id}c"><path d="${d}" ${T}/></clipPath>
+  </defs>
+  ${swords}
+  <g ${T}><path d="${d}" fill="#04091a"/>
+  <path d="${d}" fill="url(#${id}g)" stroke="url(#${id}b)" stroke-width="5" stroke-linejoin="round"/>
+  <path d="${d}" fill="none" stroke="#04091a" stroke-width="1.4" stroke-linejoin="round" transform="translate(50 50) scale(.9) translate(-50 -50)"/></g>
+  <g clip-path="url(#${id}c)">
+    <ellipse cx="46" cy="24" rx="34" ry="16" fill="url(#${id}s)"/>
+    <path d="M12 60 Q50 74 88 60 V100 H12 Z" fill="#000" opacity=".28"/>
+  </g>
+</svg>`;
+  }
   // Hero power emblems: layered, tinted marks that read at 26px on the battle
   // button and at 46px inside the hero chooser medallion. Each one keeps the
   // `ui-icon-<powerIcon>` class so hero bindings stay verifiable in tests.
@@ -560,5 +615,5 @@ const EmberArt = (() => {
   for (const c of EmberData.cards) card(c);
   for (const h of [...EmberData.heroes, ...EmberData.bosses]) character(h);
   for (const r of EmberData.relics) relic(r.id);
-  return Object.freeze({ card, character, relic, icon, badgeFrame });
+  return Object.freeze({ card, character, relic, icon, badgeFrame, statGem });
 })();
