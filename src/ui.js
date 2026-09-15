@@ -1108,7 +1108,10 @@
   const detail = { source: null, pinned: false };
   let lastHit = null;
   function pointerPoint(e) {
-    const r = app.getBoundingClientRect();
+    /* Pointer moves arrive many times per frame while aiming or dragging, and
+     * #app's box only changes on a viewport event. Read the memoised rect
+     * (invalidated by `ember:viewport`) instead of forcing a layout per move. */
+    const r = EmberViewport.appRect;
     return {
       x: ((e.clientX - r.left) * EmberViewport.width) / r.width,
       y: ((e.clientY - r.top) * EmberViewport.height) / r.height,
@@ -1324,11 +1327,29 @@
     unit?.classList.add("aim-focus");
     updateTargetLine();
   }
+  /* A pointer move can fire several times per displayed frame, and every
+   * `targetCue` costs an `elementsFromPoint` hit test plus the reticle's
+   * geometry reads — all of which flush layout. The screen can only show one
+   * result per frame, so coalesce the moves and run the cue once, from the
+   * newest `pointer`. Callers that need the cue now still call `targetCue()`
+   * directly. */
+  let cueFrame = 0,
+    cueRun = null;
+  function queueTargetCue(fn = targetCue) {
+    cueRun = fn;
+    if (cueFrame) return;
+    cueFrame = requestAnimationFrame(() => {
+      cueFrame = 0;
+      const run = cueRun;
+      cueRun = null;
+      run?.();
+    });
+  }
   document.addEventListener(
     "mousemove",
     (e) => {
       pointer = localPoint(e);
-      if (selection) targetCue();
+      if (selection) queueTargetCue();
     },
     { passive: true },
   );
@@ -1338,7 +1359,7 @@
       const t = e.touches?.[0];
       if (!t) return;
       pointer = pointerPoint(t);
-      if (selection) targetCue();
+      if (selection) queueTargetCue();
     },
     { passive: true },
   );
@@ -1862,8 +1883,8 @@
       const touch = EmberViewport.mobile && e.pointerType === "touch";
       if (!touch) {
         pointer = localPoint(e);
-        if (selection && !drag?.started) targetCue();
-        else if (selection) updateTargetLine();
+        if (selection)
+          queueTargetCue(drag?.started ? updateTargetLine : targetCue);
       }
       if (!drag) return;
       const p = localPoint(e);
