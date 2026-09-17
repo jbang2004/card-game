@@ -11,7 +11,7 @@ description: 为烬域 Emberfall / card-game 项目制作或修复角色静态�
 
 以用户提供的仓库为目标。先读仓库 `AGENTS.md`、`README.md`、`docs/ASSETS.md`，再读 **`docs/CHARACTER_AUTHORING.md`**，它是字段、命令、模板和绑定的维护入口。若当前仓库不是此项目，不把示例路径当成授权去改另一产品。
 
-当前完整目录在 `assets/characters.json`；静态图片来源仍在 `assets/anime/manifest.json`。先运行：
+当前完整目录在 `config/characters.json`；静态图片来源仍在 `assets/anime/manifest.json`。先运行：
 
 ```bash
 python3 tools/characters.py --check
@@ -31,7 +31,7 @@ python3 tools/characters.py --list
 
 ## 接入与验证
 
-唯一手工配置源是 `assets/characters.json`。`src/character-catalog.js` 为生成输出，不直接编辑。字段说明、素材路径规则和命令均见仓库 `docs/CHARACTER_AUTHORING.md`。
+唯一手工配置源是 `config/characters.json`。`src/character-catalog.js` 为生成输出，不直接编辑。字段说明、素材路径规则和命令均见仓库 `docs/CHARACTER_AUTHORING.md`。
 
 ```bash
 python3 build.py

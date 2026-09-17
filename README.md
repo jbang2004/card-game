@@ -23,6 +23,21 @@ npm run test:release
 
 默认使用本机 Chrome，也可通过 `CHROMIUM_PATH` 指定浏览器。测试模式只在 `localhost` / `127.0.0.1` 且带 `?debug=1` 时开放 `EmberDebug.game`；正常页面的 `Emberfall.game` 只有只读快照和查询接口。
 
+## 素材源
+
+**克隆仓库后不需要 `assets/` 也能构建和运行。** 只改代码时不必准备任何素材。
+
+- `assets/`（卡面插画、场景、UI 材质、特效贴图、Foley 原件与各类中间物，约 300 MB）自 2026-09-18 起不再入库，`.gitignore` 已整体忽略。
+- 运行时真正需要的数据已经在仓库里：`src/anime-assets.js`、`src/cutin-assets.js`、`src/relic-assets.js`、`src/premium-assets.js`、`src/audio-assets.js`、`src/ui-assets.js`、`src/fx2-shaders.js`、`src/character-catalog.js` 是内联 base64 / 文本的生成物；`art/` 是源码里 `asset:` 协议引用的 30 张图片的版本化副本（约 10 MB），构建时被内联成 data URI。
+- `config/characters.json` 是角色配置（数据，不是素材），始终入库。
+- 缺素材时 `python3 build.py` 会打印每个跳过的生成器并复用既有生成物，产物与有素材时逐字节一致；素材与生成物都缺失才报错。依赖素材的单元测试会以 `skip` 跳过，其余照常运行。
+
+需要重新生成素材时：
+
+1. 本机备份在 `../card-game-sources-20260918/`，把其中的 `assets/` 拷回仓库根目录即可恢复完整素材树。
+2. 生成脚本仍在 `tools/`：`characters.py`（角色目录校验）、`audio_assets.py`（Foley 打包）、`fx_shaders.py`（GLSL 打包）、`cutin_assets.py`（切入立绘，`convert()` 需要 `.venv` 的 Pillow）、`ui_assets.py`（界面材质）、`fx2_atlas.py` / `fx2_gradients.py`（特效贴图）、`pack_card_assets.py` / `build_anime_assets.py`（卡面插画）。
+3. 素材更新后重新 `python3 build.py`：生成物和 `art/` 会一并刷新，把它们的改动一起提交。
+
 ## 修改卡牌
 
 - **卡牌定义：** `src/content/cards.js`。具名字段、参数化 `onPlay` / `onDeath`，规则文字自动生成。
@@ -94,7 +109,7 @@ npm run test:release
 
 ## 角色制作
 
-统一清单为 `assets/characters.json`（每项只有 `staticKey` 与 `focus`）；制作与接入见 [角色制作规范](docs/CHARACTER_AUTHORING.md)。79 张卡图全部为静态插画，4 位英雄和 6 位首领按既有 portraitId 复用。运行 `python3 tools/characters.py --list` 查看完整清单；`tools/animation-demo.html` 可逐项观看战斗演出。2026-09-18 起分层立绘动画已整体移除，移除清单见 [ASSETS.md](docs/ASSETS.md#角色静态插画登记)。其他模型可直接读取项目内 [角色制作 Skill](.agents/skills/character-creation/SKILL.md)。
+统一清单为 `config/characters.json`（每项只有 `staticKey` 与 `focus`）；制作与接入见 [角色制作规范](docs/CHARACTER_AUTHORING.md)。79 张卡图全部为静态插画，4 位英雄和 6 位首领按既有 portraitId 复用。运行 `python3 tools/characters.py --list` 查看完整清单；`tools/animation-demo.html` 可逐项观看战斗演出。2026-09-18 起分层立绘动画已整体移除，移除清单见 [ASSETS.md](docs/ASSETS.md#角色静态插画登记)。其他模型可直接读取项目内 [角色制作 Skill](.agents/skills/character-creation/SKILL.md)。
 
 ## 自适应页面布局
 

@@ -19,6 +19,7 @@ from tools.ui_assets import generate as generate_ui
 
 ROOT = Path(__file__).resolve().parent
 SRC = ROOT / 'src'
+ART = ROOT / 'art'
 TOKEN = re.compile(r'/\*([A-Z_]+)\*/')
 MEDIA = re.compile(r'data:(?:image|audio)/(png|webp|jpeg|gif|mpeg);base64,([A-Za-z0-9+/=]+)')
 
@@ -35,11 +36,26 @@ def build():
     if len(tokens) != len(set(tokens)) or set(tokens) != set(registry):
         raise ValueError('Template tokens must match build registry exactly')
     def embed_asset(match):
-        path = (ROOT / 'assets' / match[1]).resolve()
-        if (ROOT / 'assets').resolve() not in path.parents:
-            raise ValueError('Asset must be inside assets/')
+        # art/ carries the runtime copy of every inlined image and is version
+        # controlled, so a clone without the art sources still builds. When
+        # assets/ is present it stays authoritative and refreshes that copy.
+        path = (ART / match[1]).resolve()
+        if ART.resolve() not in path.parents:
+            raise ValueError('Asset must be inside art/')
+        source = ROOT / 'assets' / match[1]
+        if source.is_file():
+            data = source.read_bytes()
+            if not path.is_file() or path.read_bytes() != data:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(data)
+        elif path.is_file():
+            data = path.read_bytes()
+        else:
+            raise FileNotFoundError(
+                f'Missing inlined asset {match[1]}: neither art/{match[1]} nor '
+                f'assets/{match[1]} exists. 素材源不在仓库中，见 README 的「素材源」一节。')
         mime = {'.png': 'png', '.webp': 'webp', '.jpg': 'jpeg'}[path.suffix]
-        return 'data:image/' + mime + ';base64,' + base64.b64encode(path.read_bytes()).decode()
+        return 'data:image/' + mime + ';base64,' + base64.b64encode(data).decode()
 
     sources = {k: re.sub(r'asset:([\w/.-]+)', embed_asset, (SRC / v).read_text())
                for k, v in registry.items()}

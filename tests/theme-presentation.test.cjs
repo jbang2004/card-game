@@ -5,6 +5,11 @@ const path = require("node:path");
 const vm = require("node:vm");
 const crypto = require("node:crypto");
 const root = path.resolve(__dirname, "..");
+// The theme and scene sources are not in the repository; the runtime copies the
+// build inlines (art/) are, so provenance checks skip and binding checks stay.
+const sources = fs.existsSync(path.join(root, "assets/themes/silverblue"))
+  ? {}
+  : { skip: "assets/themes is not in the repository (see README 素材源)" };
 function runtime(definition) {
   const events = [];
   const document = {
@@ -39,7 +44,7 @@ function runtime(definition) {
   );
   return { theme: context.theme, document, events };
 }
-test("theme artwork has independent roles, verified local payloads and provenance", () => {
+test("theme artwork has independent roles, verified local payloads and provenance", sources, () => {
   const dir = path.join(root, "assets/themes/silverblue");
   const manifest = JSON.parse(fs.readFileSync(path.join(dir, "manifest.json")));
   assert.equal(manifest.assets.length, 8);
@@ -91,24 +96,27 @@ test("a replacement theme binds semantic art without gameplay or storage service
 });
 
 // Boss identity owns scenery; responsive layouts may only crop the same asset.
-test("all six map bosses bind distinct packaged battle scenes", () => {
+test("all six map bosses bind distinct packaged battle scenes", sources, () => {
   const context = {};
   vm.runInNewContext(fs.readFileSync(path.join(root, "src/presentation/themes/silverblue.js"), "utf8") + ";this.definition=EmberThemeDefinition", context);
   const { definition } = context;
   const manifest = JSON.parse(fs.readFileSync(path.join(root, "assets/scenes/boss-topdown-v1/generation.json")));
   const ids = ["warden", "queen", "oracle", "frost", "dragon", "moonkeeper"];
   assert.equal(manifest.records.length, ids.length);
-  const sources = new Set();
+  const files = new Set();
   for (const id of ids) {
     const entry = manifest.records.find(r => r.id === id);
-    const file = definition.art[definition.encounters[id]].replace("asset:", "assets/");
+    const reference = definition.art[definition.encounters[id]];
+    const file = reference.replace("asset:", "assets/");
     assert.equal(file, entry.runtime);
-    sources.add(file);
+    files.add(file);
     const bytes = fs.readFileSync(path.join(root, file));
     assert.equal(bytes.toString("ascii", 8, 12), "WEBP");
     assert.equal(crypto.createHash("sha256").update(bytes).digest("hex"), entry.sha256);
+    // art/ is the version-controlled copy the build inlines; it must not drift.
+    assert.deepEqual(fs.readFileSync(path.join(root, reference.replace("asset:", "art/"))), bytes);
   }
-  assert.equal(sources.size, 6);
+  assert.equal(files.size, 6);
   assert.equal(definition.art.battlePortrait, undefined);
   assert.equal(definition.art.battleLandscape, undefined);
 });

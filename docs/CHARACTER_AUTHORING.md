@@ -6,7 +6,7 @@
 
 ## 唯一编辑入口
 
-`assets/characters.json` 的 `cards` 覆盖所有游戏卡牌，包括法术、武器与衍生牌。以 `python3 tools/characters.py --list` 的输出确认全部登记项。角色名、玩法与类型仍来自 `src/content/cards.js`，美术来源和静态文件哈希仍由 `assets/anime/manifest.json` 管理。
+`config/characters.json` 的 `cards` 覆盖所有游戏卡牌，包括法术、武器与衍生牌。以 `python3 tools/characters.py --list` 的输出确认全部登记项。角色名、玩法与类型仍来自 `src/content/cards.js`，美术来源和静态文件哈希仍由 `assets/anime/manifest.json` 管理。
 
 每项只有两个字段：
 
@@ -17,13 +17,13 @@
 - `staticKey` 必须等于该项 ID，不允许用别人的插画补缺。
 - `focus` 为纵向裁切焦点百分比 0–100；手牌/场上裁切规则共用 `AtelierArt`。
 
-`assets/characters.json` 的 ID 集合必须与 `assets/anime/manifest.json` 完全相等，多一个少一个都构建失败。
+`config/characters.json` 的 ID 集合必须与 `assets/anime/manifest.json` 完全相等，多一个少一个都构建失败。
 
 ## 制作与接入顺序
 
 1. 从当前清单选定用户要求的 ID，核对原图、卡名、卡牌类型和英雄/首领的 `portraitId`。只增加插画不修改规则。新玩法角色须另按 `CARD_AUTHORING.md` 注册规则和静态素材，不能只插一张图片就声称可玩。
 2. 生成或替换 `assets/anime/` 下的运行 WebP，并在 `assets/anime/manifest.json` 登记来源与哈希。原画、提示词与 provenance 留在对应的 `*-sources/` 目录。
-3. 在 `assets/characters.json` 为该 ID 填写 `staticKey` 与 `focus`。
+3. 在 `config/characters.json` 为该 ID 填写 `staticKey` 与 `focus`。
 4. 执行 `python3 build.py`；仅 Python 标准库。构建自动验证清单并生成 `src/character-catalog.js`，它不是手工编辑入口。
 5. 执行 `python3 tools/characters.py --check`，再用 `python3 tools/characters.py --list` 输出全部 ID、中文名与焦点。不要只交付本次新增 ID 而漏掉既有清单。
 6. 单测 `node --test tests/*.test.cjs`。插画或绑定结构大改运行 `npm run test:release`。只用项目声明的 Playwright 与已有 Chromium。

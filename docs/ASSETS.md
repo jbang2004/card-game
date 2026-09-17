@@ -2,9 +2,11 @@
 
 > 素材清理更新：旧版 moon-sources 已按用户要求删除。当前只保留 moon-anime-v2 原画、分层制作源及其运行 WebP。下文旧路径属于历史制作记录。
 
-> 当前统一角色配置与制作契约见 [CHARACTER_AUTHORING.md](CHARACTER_AUTHORING.md)。下文涉及独立 motion manifest / portrait-profiles 的描述是早期阶段记录，已由 `assets/characters.json` 取代。
+> 当前统一角色配置与制作契约见 [CHARACTER_AUTHORING.md](CHARACTER_AUTHORING.md)。下文涉及独立 motion manifest / portrait-profiles 的描述是早期阶段记录，已由 `config/characters.json` 取代。
 
-> 2026-09-18：分层立绘动画整体移除，`assets/characters.json` 只剩 `staticKey` / `focus`。下文所有关于分层、rig、图集与 alpha 处理的段落均为历史制作记录，对应素材与工具已不在仓库中，详见[角色静态插画登记](#角色静态插画登记)。
+> 2026-09-18：分层立绘动画整体移除，`config/characters.json` 只剩 `staticKey` / `focus`。下文所有关于分层、rig、图集与 alpha 处理的段落均为历史制作记录，对应素材与工具已不在仓库中，详见[角色静态插画登记](#角色静态插画登记)。
+
+> 2026-09-18：`assets/` 整体移出版本库（本机备份 `../card-game-sources-20260918/`）。运行时数据仍在 `src/*-assets.js` 等生成物与 `art/`（`asset:` 协议引用的 30 张运行图）中，克隆后无需素材即可构建；下文所有 `assets/` 路径指的是恢复素材后的本地目录。说明见 [README 的「素材源」](../README.md#素材源)。
 
 # v0.12 素材与加工
 
@@ -116,14 +118,14 @@
 
 ## 角色静态插画登记
 
-`assets/characters.json` 是唯一正式角色配置源，每项只有 `staticKey`（必须等于自身 ID）和 `focus`（纵向裁切焦点 0–100）。ID 集合必须与 `assets/anime/manifest.json` 完全相等。运行图为 `assets/anime/` 顶层 WebP，由 `EmberArt.card()` / `EmberArt.character()` 读取，`AtelierArt` 只负责裁切焦点。`tools/characters.py` 在构建时校验清单并生成 `src/character-catalog.js`；`python3 tools/characters.py --list` 输出完整登记清单。制作与验收命令见 [角色制作规范](CHARACTER_AUTHORING.md)。
+`config/characters.json` 是唯一正式角色配置源，每项只有 `staticKey`（必须等于自身 ID）和 `focus`（纵向裁切焦点 0–100）。ID 集合必须与 `assets/anime/manifest.json` 完全相等。运行图为 `assets/anime/` 顶层 WebP，由 `EmberArt.card()` / `EmberArt.character()` 读取，`AtelierArt` 只负责裁切焦点。`tools/characters.py` 在构建时校验清单并生成 `src/character-catalog.js`；`python3 tools/characters.py --list` 输出完整登记清单。制作与验收命令见 [角色制作规范](CHARACTER_AUTHORING.md)。
 
 > 2026-09-18 立绘动画移除。按用户决定，卡面与英雄头像上的分层立绘动画端到端删除，只保留静态插画：
 >
 > - 删除 `src/presentation/portraits.js`（`EmberPortraits`，18,855 字节）与生成物 `src/motion-assets.js`（7,579,378 字节），以及 `config/build.json` / `src/template.html` 中的 `PORTRAITS`、`MOTION_ASSETS` 注册。
 > - 删除 `assets/motion/`（191 个文件，170,840,057 字节；含 102 张分层 WebP、`sources/`、`moon-anime-v2/`、`pantheon-sources/` 与 `PROMPTS.md` / `PROMPTS-v2.json` / `BATCH_A.md` / `BATCH_B.md` / `BATCH_TOKENS.md` 等制作记录）。制作过程只在本文与 git 历史中留痕。
 > - 删除打包链路 `tools/pack_motion_assets.cjs`、`tools/chroma_motion_atlas.cjs` 与 `tests/art/motion-packing.test.cjs`（`tests/art/` 随之清空，`npm run test:art` 一并取消）。
-> - `assets/characters.json` 删掉 `motion` 字段并保留 `staticKey` / `focus`（它仍是 `AtelierArt` 焦点与 `art.js` 路由的唯一来源，因此不整体删除）。`tools/characters.py` 相应删去图层、rig、哈希校验与 `motion-assets.js` 生成。
+> - `config/characters.json` 删掉 `motion` 字段并保留 `staticKey` / `focus`（它仍是 `AtelierArt` 焦点与 `art.js` 路由的唯一来源，因此不整体删除）。`tools/characters.py` 相应删去图层、rig、哈希校验与 `motion-assets.js` 生成。
 > - 运行时删掉 `.portrait-motion` 画布、`motion-ready` / `motion-arriving` / `motion-entering` 类、`data-portrait-*` 与 `data-art-version` 属性，以及 `effects.js` 的 `copyPortraits` 与召唤预载。冲撞克隆改为直接克隆表现快照元素。`data-art-key` 保留作调试与端到端定位。
 > - 构建体积：`index.html` 31,675,676 → 24,067,789 字节；`dist/` 24,278,693 → 18,563,612 字节，文件数 299 → 204。
 >
@@ -135,7 +137,7 @@
 
 新增 `counterspell`、`icebarrier`、`muster`、`absolution`、`tracking`、`sabotage` 六张独立法术插画，总计 62 张卡图（54 可组牌 + 8 衍生）。源图及提示词保存在 `assets/anime/expansion-sources/`。每张图片使用内置 image_gen 独立生成并检查，tracking 对右下角伪文字做过一次局部修正。源文件和运行文件哈希均记录在原统一 manifest 中；原有 56 个图像文件没有替换。
 
-六张新法术在 `assets/characters.json` 中注册；当时的 35 个动态随从分层已于 2026-09-18 随立绘动画整体移除。
+六张新法术在 `config/characters.json` 中注册；当时的 35 个动态随从分层已于 2026-09-18 随立绘动画整体移除。
 
 ## v0.12.1 遗物图标
 
@@ -151,7 +153,7 @@
 >
 > 2026-09-18：切入只给英雄与传奇随从（契约 §2.8 / `cutinPolicy`），`assets/cutin/` 从 44 张裁到 17 张（10 个英雄 `portraitId` + 10 张传奇随从，四个 id 重合）。没有专用立绘的 id 一律不弹切入，**不再回退卡插画**（卡插画是 336×448 竖版，塞进 512² 切入取景会错位）。`src/cutin-assets.js` 3,209,955 → 1,303,031 字节。这张清单由 `tests/cutin-coverage.test.cjs` 守住：素材键集合必须与"传奇随从 + 英雄 portraitId"完全相等，多一个少一个都失败。原图保留在 `output/cutin-gen-20260916/raw`，是重做立绘的唯一来源。
 >
-> 2026-09-18：`assets/motion/sources/` 清掉 28 张无人引用的中间物（chroma / rejected / 被 v2 取代的旧版，65,358,590 字节），保留 54 张。**注意它不是纯中间物目录**：`assets/characters.json` 的 `motion.atlas` / `motion.mask` 直接指向其中 53 个文件，`tools/characters.py` 的 `local_file()` 会在每次 `python3 build.py` 时校验它们存在，缺一个就构建失败；另有 `sources/pup-atlas-chroma.png` 是 `tests/art/motion-packing.test.cjs` 的夹具。`assets/motion/PROMPTS-v2.json` 里 wolf 的两条路径已成历史记录。同日删除 `assets/anime/generated/`（371 MB，168 个文件，全仓零引用，构建产物逐字节不变）与未跟踪的 `tools/.scratch/`（29 MB）。
+> 2026-09-18：`assets/motion/sources/` 清掉 28 张无人引用的中间物（chroma / rejected / 被 v2 取代的旧版，65,358,590 字节），保留 54 张。**注意它不是纯中间物目录**：`config/characters.json` 的 `motion.atlas` / `motion.mask` 直接指向其中 53 个文件，`tools/characters.py` 的 `local_file()` 会在每次 `python3 build.py` 时校验它们存在，缺一个就构建失败；另有 `sources/pup-atlas-chroma.png` 是 `tests/art/motion-packing.test.cjs` 的夹具。`assets/motion/PROMPTS-v2.json` 里 wolf 的两条路径已成历史记录。同日删除 `assets/anime/generated/`（371 MB，168 个文件，全仓零引用，构建产物逐字节不变）与未跟踪的 `tools/.scratch/`（29 MB）。
 
 历史记录：2026-09-08 起曾内嵌 13 张 CC0 无损 WebP 纹理/图集（Kenney 8 张、Mikodrak 5 套），由 EmberVFX 在 Canvas 上绘制；`presentation/fx-profiles.js` 的攻击 / 施法 / 传说登场注册仍在使用，但现在由导演层交给 EmberFx2 渲染。当时的体积与加载验证见 [战斗特效记录](VFX_FEEDBACK.md) 与 [清理记录](MEDIA_CLEANUP.md)。
 

@@ -4,8 +4,13 @@ import argparse
 import json
 from pathlib import Path
 
+try:  # build.py imports tools.*; running this file directly puts tools/ on the path.
+    from tools import sources
+except ImportError:
+    import sources
+
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST = ROOT / 'assets/characters.json'
+CATALOG = 'config/characters.json'
 
 def need(condition, message):
     if not condition:
@@ -31,10 +36,16 @@ def validate(document, root=ROOT):
 def outputs(cards):
     freeze = 'const freeze = o => { if (o && typeof o === "object") { Object.values(o).forEach(freeze); Object.freeze(o); } return o; };'
     return {
-        'src/character-catalog.js': '/* Generated from assets/characters.json by tools/characters.py. */\nconst CharacterCatalog = (() => {' + freeze + 'return freeze(' + json.dumps(cards,ensure_ascii=False,separators=(',',':')) + ');})();\n'}
+        'src/character-catalog.js': '/* Generated from config/characters.json by tools/characters.py. */\nconst CharacterCatalog = (() => {' + freeze + 'return freeze(' + json.dumps(cards,ensure_ascii=False,separators=(',',':')) + ');})();\n'}
 
 def generate(root=ROOT, check=False):
-    cards = validate(json.loads((root/'assets/characters.json').read_text()),root)
+    document = json.loads((root/CATALOG).read_text())
+    # The catalog is configuration and stays in the repository; the artwork it
+    # points at does not, so a clone without assets/ keeps the generated file.
+    if sources.skip('tools/characters.py', ['assets/anime/manifest.json'],
+                    ['src/character-catalog.js']):
+        return document['cards']
+    cards = validate(document,root)
     for name, content in outputs(cards).items():
         path = root/name
         if check:
@@ -44,7 +55,9 @@ def generate(root=ROOT, check=False):
     return cards
 
 def inventory(cards):
-    names = json.loads((ROOT/'assets/anime/manifest.json').read_text())['items']
+    manifest = ROOT/'assets/anime/manifest.json'
+    need(manifest.is_file(), f'--list needs the artwork names in {manifest.name}; {sources.HINT}')
+    names = json.loads(manifest.read_text())['items']
     return [{'id':cid,'name':names[cid]['name'],'focus':card['focus']} for cid,card in cards.items()]
 
 if __name__ == '__main__':

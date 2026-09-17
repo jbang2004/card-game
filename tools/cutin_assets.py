@@ -21,6 +21,11 @@ import base64
 import struct
 import sys
 
+try:  # build.py imports tools.*; running this file directly puts tools/ on the path.
+    from tools import sources
+except ImportError:
+    import sources
+
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / 'assets/cutin'
 SIZE = 448
@@ -61,16 +66,18 @@ def dimensions(data):
 
 def generate():
     """Pack assets/cutin/*.webp into src/cutin-assets.js. Standard library only."""
+    if sources.skip('tools/cutin_assets.py', ['assets/cutin'],
+                    ['src/cutin-assets.js']):
+        return None
     bank = {}
-    if ASSETS.is_dir():
-        for path in sorted(ASSETS.glob('*.webp')):
-            data = path.read_bytes()
-            width, height = dimensions(data)
-            if (width, height) != (SIZE, SIZE):
-                raise ValueError('Cut-in art must be %dx%d: %s (%dx%d)'
-                                 % (SIZE, SIZE, path.name, width, height))
-            bank[path.stem] = ('data:image/webp;base64,'
-                               + base64.b64encode(data).decode())
+    for path in sorted(ASSETS.glob('*.webp')):
+        data = path.read_bytes()
+        width, height = dimensions(data)
+        if (width, height) != (SIZE, SIZE):
+            raise ValueError('Cut-in art must be %dx%d: %s (%dx%d)'
+                             % (SIZE, SIZE, path.name, width, height))
+        bank[path.stem] = ('data:image/webp;base64,'
+                           + base64.b64encode(data).decode())
     lines = ',\n'.join(' %s: "%s"' % (k, v) for k, v in bank.items())
     (ROOT / 'src/cutin-assets.js').write_text(
         '/* Generated from assets/cutin/*.webp by tools/cutin_assets.py.\n'
@@ -108,4 +115,6 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         for name, size, mode in convert(sys.argv[1]):
             print('%-24s %8d B  %s' % (name, size, mode))
-    print(len(generate()), 'cut-in stills packed')
+    bank = generate()
+    if bank is not None:
+        print(len(bank), 'cut-in stills packed')

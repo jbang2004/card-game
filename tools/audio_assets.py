@@ -4,10 +4,18 @@ import base64
 import hashlib
 import json
 
+try:  # build.py imports tools.*; running this file directly puts tools/ on the path.
+    from tools import sources
+except ImportError:
+    import sources
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def generate():
+    if sources.skip('tools/audio_assets.py', ['assets/audio/manifest.json'],
+                    ['src/audio-assets.js']):
+        return
     folder = ROOT / 'assets/audio'
     manifest = json.loads((folder / 'manifest.json').read_text())
     bank = {}

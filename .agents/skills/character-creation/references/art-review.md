@@ -18,6 +18,6 @@
 1. **场上真实尺寸**：随从卡窗很小，主体必须仍可辨认；检查 `focus` 是否把脸切出画面。
 2. **放大尺度**：在卡牌详情与图鉴里检查白边、透明孔洞、伪文字和压缩噪点。
 3. **交互**：手牌 hover/click、出牌、变形、死亡与视口旋转没有残留或空白画面。
-4. **资源**：`assets/anime/manifest.json` 的哈希与运行 WebP 一致，`assets/characters.json` 的 ID 集合与它完全相等；实际测试工具在仓库，不另造一份 skill 专用渲染器。
+4. **资源**：`assets/anime/manifest.json` 的哈希与运行 WebP 一致，`config/characters.json` 的 ID 集合与它完全相等；实际测试工具在仓库，不另造一份 skill 专用渲染器。
 
 不合格时修复具体素材或 `focus`。取景要通过游戏尺寸观察确定，不能只看放大图就宣称“已可见”。

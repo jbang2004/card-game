@@ -8,8 +8,6 @@ tests/*-run.log
 # Developer handoff: generated output and local-only dependencies.
 /index.html
 /dist/
-/src/audio-assets.js
-/src/ui-assets.js
 /.venv/
 /venv/
 /.pytest_cache/
@@ -22,7 +20,6 @@ tests/*-run.log
 /vendor/
 /playwright-report/
 /test-results/
-/assets/anime/Contact_Sheet_small.jpg
 
 # Imported archive and generated validation screenshots.
 /*.zip
@@ -30,7 +27,11 @@ tests/*-run.log
 
 # Only the current release snapshot is kept under version control.
 /output/*
-!/output/slate-release-20260914/
 
 # Agent-local worktrees are not part of the tracked source tree.
 /.claude/worktrees/
+
+# 素材源不再入库（2026-09-18）：卡面插画、场景、UI、特效贴图等只保留本地。
+# 本机备份：../card-game-sources-20260918/
+# 运行时真正需要的那部分已经在 src/*-assets.js 与 art/ 里，两者都入库。
+/assets/

@@ -2,10 +2,18 @@
 from pathlib import Path
 import json
 
+try:  # build.py imports tools.*; running this file directly puts tools/ on the path.
+    from tools import sources
+except ImportError:
+    import sources
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def generate():
+    if sources.skip('tools/fx_shaders.py', ['assets/fx2/shaders'],
+                    ['src/fx2-shaders.js']):
+        return None
     folder = ROOT / 'assets/fx2/shaders'
     bank = {}
     for path in sorted(folder.glob('*.glsl')):
@@ -26,4 +34,6 @@ def generate():
 
 
 if __name__ == '__main__':
-    print(len(generate()), 'shaders packed')
+    bank = generate()
+    if bank is not None:
+        print(len(bank), 'shaders packed')

@@ -4,11 +4,15 @@ const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
 const folder = path.resolve(__dirname, "../assets/audio");
-const manifest = JSON.parse(
-  fs.readFileSync(path.join(folder, "manifest.json")),
-);
+// The Foley originals are not in the repository; src/audio-assets.js is.
+const sources = fs.existsSync(path.join(folder, "manifest.json"))
+  ? {}
+  : { skip: "assets/audio is not in the repository (see README 素材源)" };
+const manifest = sources.skip
+  ? { assets: [] }
+  : JSON.parse(fs.readFileSync(path.join(folder, "manifest.json")));
 
-test("bundled Foley has retained CC0 originals and measured, bounded contact transients", () => {
+test("bundled Foley has retained CC0 originals and measured, bounded contact transients", sources, () => {
   assert.equal(manifest.assets.length, 12);
   let totalBytes = 0;
   for (const asset of manifest.assets) {
