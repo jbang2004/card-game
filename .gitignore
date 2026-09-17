@@ -35,3 +35,4 @@ tests/*-run.log
 # 本机备份：../card-game-sources-20260918/
 # 运行时真正需要的那部分已经在 src/*-assets.js 与 art/ 里，两者都入库。
 /assets/
+/.git.pre-rewrite/
