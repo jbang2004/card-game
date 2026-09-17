@@ -59,7 +59,7 @@ for (const mobile of [false, true]) {
         EmberFX.pendingTimers === 0 &&
         EmberFX.activeAnimations === 0 &&
         EmberFX.transientNodes === 0 &&
-        EmberFX.particles === 0,
+        (EmberFx2.stats ? EmberFx2.stats.effects + EmberFx2.stats.particles : 0) === 0,
     );
     expect(await page.evaluate(() => JSON.stringify(EmberDebug.game.s))).toBe(
       settled,
@@ -95,9 +95,8 @@ for (const mobile of [false, true]) {
         EmberFX.pendingTimers,
         EmberFX.activeAnimations,
         EmberFX.transientNodes,
-        EmberFX.particles,
       ]),
-    ).toEqual([false, 0, 0, 0, 0]);
+    ).toEqual([false, 0, 0, 0]);
     expect(errors).toEqual([]);
     await context.close();
   });
@@ -122,15 +121,11 @@ test("reduced motion during cast preserves the single commit and removes decorat
   expect(
     await page.evaluate(() => [
       EmberFX.activeAnimations,
-      EmberFX.particles,
       EmberFX.transientNodes,
     ]),
-  ).toEqual([0, 0, 0]);
-  await page.evaluate(() => {
-    EmberFX.configure(false, true);
-    for (let i = 0; i < 15; i++) EmberFX.impact(500, 400, "fire", 2);
-  });
-  expect(await page.evaluate(() => EmberFX.particles)).toBeLessThanOrEqual(220);
+  ).toEqual([0, 0]);
+  // (V2: the EmberFX particle budget this test used to stress no longer
+  // exists; the only effect backend is EmberFx2.)
   await page.evaluate(() => EmberFX.reflow());
   expect(
     await page.evaluate(() => [
@@ -138,9 +133,8 @@ test("reduced motion during cast preserves the single commit and removes decorat
       EmberFX.pendingTimers,
       EmberFX.activeAnimations,
       EmberFX.transientNodes,
-      EmberFX.particles,
     ]),
-  ).toEqual([false, 0, 0, 0, 0]);
+  ).toEqual([false, 0, 0, 0]);
 });
 
 test("reduced render cancellation does not emit post-cancellation work", async ({
@@ -176,7 +170,6 @@ test("reduced render cancellation does not emit post-cancellation work", async (
       busy: EmberFX.busy,
       timers: EmberFX.pendingTimers,
       animations: EmberFX.activeAnimations,
-      particles: EmberFX.particles,
     };
   });
   expect(result).toEqual({
@@ -187,35 +180,37 @@ test("reduced render cancellation does not emit post-cancellation work", async (
     busy: false,
     timers: 0,
     animations: 0,
-    particles: 0,
   });
 });
 
-test("a synchronous reduced replacement supersedes the old presentation", async ({
+test("a reduced replacement started inside a render supersedes the old presentation", async ({
   page,
 }) => {
   await demo(page);
-  const result = await page.evaluate(() => {
+  // V2 §2.7: reduced motion runs the same (50%) sequence, so the first render
+  // is on the sequence clock rather than synchronous inside present().
+  const result = await page.evaluate(async () => {
     EmberFX.configure(true, true);
     const event = [{ id: "sync-replacement", type: "turn", side: "p" }],
       state = Emberfall.game.s,
       started = performance.now();
     let replaced = false,
-      renders = 0,
+      oldRenders = 0,
+      newRenders = 0,
       oldDone = 0,
       replacementDone = 0;
     EmberFX.present(
       event,
       state,
       () => {
-        renders++;
+        oldRenders++;
         if (replaced) return;
         replaced = true;
         EmberFX.present(
           event,
           state,
           () => {
-            renders++;
+            newRenders++;
           },
           () => {
             replacementDone++;
@@ -226,9 +221,15 @@ test("a synchronous reduced replacement supersedes the old presentation", async 
         oldDone++;
       },
     );
+    await new Promise((resolve) => {
+      const f = () => (EmberFX.busy || !replaced ? setTimeout(f, 10) : resolve());
+      f();
+    });
     return {
       replaced,
-      renders,
+      // the old beat render + its single commit when the replacement cancels it
+      oldRenders,
+      newRenders: newRenders >= 1,
       oldDone,
       replacementDone,
       cue: document.querySelectorAll(".turn-cue").length,
@@ -239,7 +240,8 @@ test("a synchronous reduced replacement supersedes the old presentation", async 
   });
   expect(result).toEqual({
     replaced: true,
-    renders: 2,
+    oldRenders: 2,
+    newRenders: true,
     oldDone: 0,
     replacementDone: 1,
     cue: 1,
@@ -269,7 +271,7 @@ test("cancel commit re-entry cannot let the old sequence clean the replacement",
       EmberFX.pendingTimers === 0 &&
       EmberFX.activeAnimations === 0 &&
       EmberFX.transientNodes === 0 &&
-      EmberFX.particles === 0,
+      (EmberFx2.stats ? EmberFx2.stats.effects + EmberFx2.stats.particles : 0) === 0,
   );
   expect(await page.locator(".turn-cue")).toHaveCount(0);
 });
@@ -335,7 +337,6 @@ test("a render cancellation stops the executing attack beat before it owns work"
       ).length,
       timers: EmberFX.pendingTimers,
       animations: EmberFX.activeAnimations,
-      particles: EmberFX.particles,
     };
   });
   expect(result).toEqual({
@@ -345,7 +346,6 @@ test("a render cancellation stops the executing attack beat before it owns work"
     lateSounds: 0,
     timers: 0,
     animations: 0,
-    particles: 0,
   });
 });
 

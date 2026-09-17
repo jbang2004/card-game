@@ -13,7 +13,8 @@ import json
 import re
 from tools.characters import generate as generate_characters
 from tools.audio_assets import generate as generate_audio
-from tools.vfx_assets import generate as generate_vfx
+from tools.fx_shaders import generate as generate_fx_shaders
+from tools.cutin_assets import generate as generate_cutin_assets
 from tools.ui_assets import generate as generate_ui
 
 ROOT = Path(__file__).resolve().parent
@@ -25,7 +26,8 @@ MEDIA = re.compile(r'data:(?:image|audio)/(png|webp|jpeg|gif|mpeg);base64,([A-Za
 def build():
     generate_characters()
     generate_audio()
-    generate_vfx()
+    generate_fx_shaders()
+    generate_cutin_assets()
     generate_ui()
     registry = json.loads((ROOT / 'config/build.json').read_text())
     template = (SRC / 'template.html').read_text()

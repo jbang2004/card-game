@@ -585,3 +585,178 @@ body.mobile-portrait .mana-caption > span {
     height: 44px;
   }
 }
+
+/* ---------------------------------------------------------------- fx2 图层
+   写实特效管线的两层。#battle 的 z-index 是 6（refinement.css），#world-canvas 是 0：
+     #fx-gl    11 —— WebGL 特效层（预乘 alpha 叠加层）。**在 #battle 之上**：接触画面
+                      按目标卡包围盒约束尺寸，边缘闪只亮卡片边缘一圈，不遮卡面。
+                      仍然在 #target-lines(35) 与 .card-preview(45) 之下。
+     #fx-cutin 13 —— 切入立绘（仅传奇与英雄），永远在最上面。
+   V2（2026-09-17）删掉了 #fx-top（2D 画布的天降剑气与命中描边）：剑气移进引擎，
+   描边改成 impulse 的边缘闪。两层都不接收指针事件；"减少动态效果"时由 JS 加 hidden。
+   #fx-gl 的尺寸跟着 #app 走（桌面 1600×940，手机是视口），引擎按舞台尺寸配画布。 */
+/* 推镜把画布与随从放大 1.04 倍，元素会超出舞台边界并给页面造出可滚动溢出。
+   #app 就是舞台本身，在它这里裁掉。 */
+#app {
+  overflow: hidden;
+}
+
+#fx-gl {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 11;
+}
+#fx-gl[hidden] {
+  display: none;
+}
+
+/* 切入立绘：一侧出血 + 一条斜切线。裁切、渐变遮罩、擦入与速度线都在这里，
+   立绘本身是专用特技画面（448×448）或这张卡的插画（336×448），不抠像。
+
+   两个方向：己方（data-side="p"）从**右侧**擦入，敌方（"e"）镜像到**左侧**，
+   立绘再 scaleX(-1) 翻转，两边都面向场地中央。
+
+   三个由 JS 推的自定义属性（见 fx-stage.js 的 applyCutin）：
+     --wipe  0 = 全裁掉 / 1 = 全露出。入场 70ms 推 0→1，出场 80ms 推回 0。
+     --par   停留期的视差位移，立绘走 +、速度线层走 −。
+     --flash 入场那一格白闪条的不透明度。
+
+   尺寸：舞台 1600×940，容器 32%×50% = 512×470px。专用特技画面是 448×448，
+   object-fit: cover 的放大比 = max(512/448, 470/448) = **1.143**，在 1:1.15
+   以内，不会发软（第 8 轮的 34%×62% = 544×583 要放到 1.30，是糊的主因）。
+   没有专用画面、回退到卡插画（336×448）时横向放大比仍有 1.52 —— 那条回退
+   路径要靠补素材解决，不是版式能救的。
+   top 30% 让整条带子落在敌方随从行之下、玩家手牌（y ≳ 780）之上，所以
+   敌方从左侧切入时也不会压到手牌。 */
+#fx-cutin {
+  position: absolute;
+  right: -2%;
+  top: 30%;
+  width: 32%;
+  height: 50%;
+  z-index: 13;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  will-change: transform, opacity, clip-path;
+  --wipe: 1;
+  --par: 0%;
+  --flash: 0;
+  /* 斜切线：全露出时上缘在 22%、下缘在 3%，与第 8 轮的静态版式一致；
+     --wipe 把这条线整体往外推 78%，就是"擦入 / 擦出"。 */
+  clip-path: polygon(
+    calc(100% - var(--wipe) * 78%) 0%,
+    100% 0%,
+    100% 100%,
+    calc(81% - var(--wipe) * 78%) 100%
+  );
+  /* 渐变遮罩：斜切线那一侧淡出，立绘不会读成"贴了一张矩形图片" */
+  -webkit-mask-image: linear-gradient(
+    100deg,
+    transparent 2%,
+    #000 26%,
+    #000 100%
+  );
+  mask-image: linear-gradient(100deg, transparent 2%, #000 26%, #000 100%);
+}
+#fx-cutin[data-side="e"] {
+  right: auto;
+  left: -2%;
+  clip-path: polygon(
+    0% 0%,
+    calc(var(--wipe) * 78%) 0%,
+    calc(19% + var(--wipe) * 78%) 100%,
+    0% 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    260deg,
+    transparent 2%,
+    #000 26%,
+    #000 100%
+  );
+  mask-image: linear-gradient(260deg, transparent 2%, #000 26%, #000 100%);
+}
+#fx-cutin .fx-cutin-lines {
+  position: absolute;
+  inset: -4%;
+  background:
+    radial-gradient(
+      ellipse at 70% 44%,
+      rgba(255, 186, 104, 0.3),
+      rgba(16, 9, 6, 0.86) 62%
+    ),
+    repeating-conic-gradient(
+      from 0deg at 70% 44%,
+      rgba(255, 220, 168, 0.28) 0deg 0.55deg,
+      rgba(255, 220, 168, 0) 0.55deg 2.6deg
+    );
+  /* 视差：速度线层与立绘反向漂移，停留那 190ms 才不是一张静止贴图 */
+  transform: translate3d(calc(var(--par) * -1), 0, 0);
+  mix-blend-mode: screen;
+}
+#fx-cutin[data-side="e"] .fx-cutin-lines {
+  background:
+    radial-gradient(
+      ellipse at 30% 44%,
+      rgba(255, 186, 104, 0.3),
+      rgba(16, 9, 6, 0.86) 62%
+    ),
+    repeating-conic-gradient(
+      from 0deg at 30% 44%,
+      rgba(255, 220, 168, 0.28) 0deg 0.55deg,
+      rgba(255, 220, 168, 0) 0.55deg 2.6deg
+    );
+}
+#fx-cutin .fx-cutin-art,
+#fx-cutin .fx-cutin-ghost {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--cutin-x, 50% 32%);
+  transform: translate3d(var(--par), 0, 0);
+}
+#fx-cutin[data-side="e"] .fx-cutin-art,
+#fx-cutin[data-side="e"] .fx-cutin-ghost {
+  /* 翻转使其面向场地中央。scaleX 在 translate 之后应用，位移方向不受影响 */
+  transform: translate3d(var(--par), 0, 0) scaleX(-1);
+}
+/* 残影：同一张插画往里偏、发暖、模糊、低透明 */
+#fx-cutin .fx-cutin-ghost {
+  transform: translate3d(calc(var(--par) - 3.5%), 0, 0) scale(1.035);
+  filter: blur(5px) saturate(1.5) brightness(1.25);
+  opacity: 0.42;
+  mix-blend-mode: screen;
+}
+#fx-cutin[data-side="e"] .fx-cutin-ghost {
+  transform: translate3d(calc(var(--par) + 3.5%), 0, 0) scale(1.035) scaleX(-1);
+}
+/* 白闪条：擦入的前沿上骑着的一条 40ms 亮带，只在入场那一格出现 */
+#fx-cutin .fx-cutin-flash {
+  position: absolute;
+  inset: -8% -14%;
+  opacity: var(--flash, 0);
+  background: linear-gradient(
+    100deg,
+    transparent 36%,
+    rgba(255, 246, 232, 0.95) 46%,
+    rgba(255, 246, 232, 0.95) 54%,
+    transparent 64%
+  );
+  transform: translate3d(calc(60% - var(--wipe) * 120%), 0, 0);
+  mix-blend-mode: screen;
+}
+#fx-cutin[data-side="e"] .fx-cutin-flash {
+  background: linear-gradient(
+    260deg,
+    transparent 36%,
+    rgba(255, 246, 232, 0.95) 46%,
+    rgba(255, 246, 232, 0.95) 54%,
+    transparent 64%
+  );
+  transform: translate3d(calc(var(--wipe) * 120% - 60%), 0, 0);
+}

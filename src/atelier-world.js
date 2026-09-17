@@ -80,8 +80,14 @@ const AtelierWorld = (() => {
         ctx.fillStyle = veil;
         ctx.fillRect(0, 0, W, H);
       }
-      dirty = false;
-      key = next;
+      // 底图还没解码完就别记账：否则缓存里只剩一层底色，而 dirty/key 已经
+      // 宣称"这一帧画好了"，首次进战场就一直是纯色背景。解码好了（onload 会
+      // 再置 dirty）或者彻底失败了（complete 且仍是 0）才收下这一帧 —— 后者
+      // 不收的话缓存会逐帧重画。
+      if (activeImage.naturalWidth || activeImage.complete) {
+        dirty = false;
+        key = next;
+      }
     }
     c.drawImage(cache, 0, 0);
     if (role === "home" && !V.mobile && !low)

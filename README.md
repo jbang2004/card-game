@@ -39,7 +39,7 @@ npm run test:release
 
 卡牌飞行与落桌音、按接触时刻对齐的攻击和反击、分层轻重撞击、护甲与圣盾反馈、死亡与胜负音色，以及可分别调整的音效/氛围音量。12 段本地 CC0 音效同样支持单文件离线运行。实现与验收见 [音画反馈记录](docs/AUDIO_FEEDBACK.md)。
 
-刀剑、利爪、重击、弓箭、投矛、能量弹和吐息具有不同攻击语言；陨火、火焰风暴、冰封领域、暗影湮灭与四张传说牌具有具名演出。13 张本地 CC0 无损 WebP 纹理/动画图集与事件结算同步。详见 [战斗特效记录](docs/VFX_FEEDBACK.md) 与 [资源清理记录](docs/MEDIA_CLEANUP.md)。
+刀剑、利爪、重击、弓箭、投矛、能量弹和吐息具有不同攻击语言；陨火、火焰风暴、冰封领域、暗影湮灭与四张传说牌具有具名演出。战斗表现由 `effects.js` 导演层统一调度，唯一特效后端为 WebGL 的 EmberFx2（`fx2-engine.js`，素材在 `assets/fx2/`），时序与分量档见 `presentation/timing.js`；契约见 [战斗表现层 V2](docs/design/BATTLE_PRESENTATION_V2.md)。2026-09-08 的 Canvas 贴图特效（EmberVFX 与 `assets/vfx/` 素材）已于 2026-09-17 删除，[战斗特效记录](docs/VFX_FEEDBACK.md) 与 [资源清理记录](docs/MEDIA_CLEANUP.md) 仅作历史参考。
 
 ## 界面美术与细节精修
 

@@ -134,7 +134,9 @@ for (const mobile of [false, true]) {
         requestAnimationFrame(sample);
       });
     });
-    expect(report.audioDelta).toBeLessThan(70);
+    // V2 §4.2：数字、受击与冲击音都在接触帧（plan 的 hitAt）同一拍出现，顿帧
+    // 只拉长接触后的停留，不再把数字推到顿帧之后。采样在数字出现后的下一帧。
+    expect(report.audioDelta).toBeLessThan(60);
     expect(report.motionDelta).toBeLessThan(80);
     await page.screenshot({
       path: path.resolve(
@@ -151,7 +153,7 @@ for (const mobile of [false, true]) {
   });
 }
 
-test("AOE uses one weighted impact, and full armor absorption has no flesh hit", async ({
+test("AOE plays one impact per staggered contact, and full armor absorption has no flesh hit", async ({
   page,
 }) => {
   await demo(page);
@@ -169,8 +171,10 @@ test("AOE uses one weighted impact, and full armor absorption has no flesh hit",
     );
   });
   await page.waitForFunction(() => !EmberFX.busy);
+  // V2 §3.3/§4.2: each AOE target gets its own number, reaction and impact
+  // cue at its own hitAt (45ms apart), weighted by its own tier.
   expect(await page.evaluate(() => EmberAudio.played["impact-fire"])).toBe(
-    before + 1,
+    before + 3,
   );
   await prepare(page, { hand: ["bolt"] });
   const state = await page.evaluate(() => {
@@ -253,9 +257,10 @@ test("late delivery drops a missed swing instead of replaying it after contact",
         target: { side: "e", uid: g.s.e.board[0].uid },
       }),
     );
-    // Simulate a delayed render/timer delivery beyond the compiled 220 ms
-    // launch-to-contact window without changing the authoritative state.
-    const end = performance.now() + 360;
+    // Simulate a delayed render/timer delivery beyond the compiled
+    // launch-to-contact window (lift 110 + lunge 150; a common minion never
+    // gets the 340ms cut-in lead) without changing the authoritative state.
+    const end = performance.now() + 680;
     while (performance.now() < end) {}
     return at;
   });
@@ -376,7 +381,7 @@ test("portable build decodes embedded audio without asset requests", async ({
   expect(requests).toEqual([]);
 });
 
-test("touch settings fit and reduced motion keeps feedback without moving actors", async ({
+test("touch settings fit and reduced motion keeps feedback without the effect layer", async ({
   browser,
 }) => {
   const context = await browser.newContext({
@@ -401,8 +406,14 @@ test("touch settings fit and reduced motion keeps feedback without moving actors
     );
   });
   await expect(page.locator('#minions [data-cardid="solaris"]')).toBeVisible();
+  // V2 §2.7: reduced motion keeps a 50% version of the motion (so animations
+  // may run while it resolves) but never draws the effect layer.
+  await page.waitForFunction(() => !EmberFX.busy);
   expect(
-    await page.evaluate(() => [EmberFX.activeAnimations, EmberFX.particles]),
+    await page.evaluate(() => [
+      EmberFX.activeAnimations,
+      EmberFx2.diagnostics?.spawned?.holy || 0,
+    ]),
   ).toEqual([0, 0]);
   expect(await page.evaluate(() => EmberAudio.played.summon)).toBeGreaterThan(
     0,

@@ -85,9 +85,8 @@ test("actual deathrattle shows hit, death and token in order; cancellation commi
       EmberFX.pendingTimers,
       EmberFX.activeAnimations,
       EmberFX.transientNodes,
-      EmberFX.particles,
     ]),
-  ).toEqual([0, 0, 0, 0]);
+  ).toEqual([0, 0, 0]);
 });
 
 test("multi-draw reveals one actual card per beat, and statuses have named feedback", async ({
@@ -268,7 +267,8 @@ test("attack owner keeps one causal clock, live stats and status classes until r
       requestAnimationFrame(sample);
     });
   });
-  expect(report.contact).toBeLessThan(report.release);
+  // Hit-stop is tier-based (§4.1): a tier-1 contact releases immediately.
+  expect(report.contact).toBeLessThanOrEqual(report.release);
   expect(report.release).toBeLessThanOrEqual(report.recoveryEnd);
   expect(report.recoveryEnd).toBe(report.end);
   expect(report.actorAttack).toBe(report.liveAttack);
@@ -280,7 +280,7 @@ test("attack owner keeps one causal clock, live stats and status classes until r
       EmberFX.pendingTimers === 0 &&
       EmberFX.activeAnimations === 0 &&
       EmberFX.transientNodes === 0 &&
-      EmberFX.particles === 0,
+      (EmberFx2.stats ? EmberFx2.stats.effects + EmberFx2.stats.particles : 0) === 0,
     null,
     { timeout: 3000 },
   );
@@ -543,7 +543,7 @@ test("freeze settles without lingering ice particles or delayed filter transitio
   await cast(page, "frostbolt", "e");
   await expect(page.locator(".cue-freeze")).toBeVisible();
   await page.waitForTimeout(450);
-  expect(await page.evaluate(() => EmberFX.particles)).toBe(0);
+  // V2 §2.5: freeze is the card's CSS state only — no ice shell, no residue.
   await expect(page.locator(".freeze-lock")).toHaveCount(0);
   const transition = await page
     .locator("#minions .frozen")

@@ -1,0 +1,172 @@
+{
+  "identical": 31,
+  "missing": [
+    "landscape-short-library.png"
+  ],
+  "extra": [],
+  "differs": [
+    {
+      "name": "desktop-battle-aiming.png",
+      "size": [
+        1672,
+        941
+      ],
+      "count": 0,
+      "ratio": 0,
+      "bbox": null,
+      "blocks": 0,
+      "totalBlocks": 405,
+      "hottest": []
+    },
+    {
+      "name": "desktop-battle-idle.png",
+      "size": [
+        1672,
+        941
+      ],
+      "count": 0,
+      "ratio": 0,
+      "bbox": null,
+      "blocks": 0,
+      "totalBlocks": 405,
+      "hottest": []
+    },
+    {
+      "name": "desktop-discover.png",
+      "size": [
+        1672,
+        941
+      ],
+      "count": 0,
+      "ratio": 0,
+      "bbox": null,
+      "blocks": 0,
+      "totalBlocks": 405,
+      "hottest": []
+    },
+    {
+      "name": "desktop-hand-overview.png",
+      "size": [
+        1672,
+        941
+      ],
+      "count": 0,
+      "ratio": 0,
+      "bbox": null,
+      "blocks": 0,
+      "totalBlocks": 405,
+      "hottest": []
+    },
+    {
+      "name": "desktop-result.png",
+      "size": [
+        1672,
+        941
+      ],
+      "count": 0,
+      "ratio": 0,
+      "bbox": null,
+      "blocks": 0,
+      "totalBlocks": 405,
+      "hottest": []
+    },
+    {
+      "name": "landscape-library.png",
+      "size": [
+        844,
+        390
+      ],
+      "count": 8021,
+      "ratio": 0.024368,
+      "bbox": [
+        418,
+        149,
+        131,
+        175
+      ],
+      "blocks": 12,
+      "totalBlocks": 98,
+      "hottest": [
+        [
+          448,
+          192,
+          3273
+        ],
+        [
+          448,
+          256,
+          989
+        ],
+        [
+          512,
+          192,
+          857
+        ],
+        [
+          384,
+          128,
+          851
+        ],
+        [
+          512,
+          256,
+          700
+        ],
+        [
+          448,
+          128,
+          570
+        ]
+      ]
+    },
+    {
+      "name": "portrait-library.png",
+      "size": [
+        390,
+        844
+      ],
+      "count": 12970,
+      "ratio": 0.039403,
+      "bbox": [
+        191,
+        536,
+        168,
+        235
+      ],
+      "blocks": 14,
+      "totalBlocks": 98,
+      "hottest": [
+        [
+          256,
+          640,
+          2653
+        ],
+        [
+          256,
+          576,
+          2301
+        ],
+        [
+          192,
+          576,
+          2235
+        ],
+        [
+          320,
+          640,
+          1623
+        ],
+        [
+          192,
+          512,
+          1607
+        ],
+        [
+          192,
+          640,
+          1274
+        ]
+      ]
+    }
+  ]
+}

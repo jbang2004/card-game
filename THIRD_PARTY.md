@@ -53,7 +53,6 @@ The sections above describe historical editions. The current game uses Canvas/DO
 ## Bundled combat Foley and VFX · 2026-09-08
 
 - Kenney: Casino Audio, Impact Sounds and RPG Audio — CC0 1.0. Twelve processed MP3 files plus retained originals and license evidence in `assets/audio/`. See `assets/audio/CREDITS.md`.
-- Kenney: Particle Pack — https://kenney.nl/assets/particle-pack — CC0 1.0. Eight adapted RGBA masks (the unused smoke mask was removed during cleanup); original license at `assets/vfx/KENNEY-LICENSE.txt`.
-- Mikodrak: 2D Spell Effects — https://opengameart.org/content/2d-spell-effects — author's CC0 1.0 submission. Five adapted animation atlases. Original frames and the author's license declaration are retained under `assets/vfx/sources/`.
+- Removed 2026-09-17: Kenney Particle Pack (https://kenney.nl/assets/particle-pack, CC0 1.0) masks and Mikodrak 2D Spell Effects (https://opengameart.org/content/2d-spell-effects, CC0 1.0) atlases. They were only used by the retired EmberVFX canvas renderer; `assets/vfx/` and its retained originals are no longer in the repository or the build. Combat effects now use the single EmberFx2 backend described in `docs/design/BATTLE_PRESENTATION_V2.md`.
 
 CC0 terms: https://creativecommons.org/publicdomain/zero/1.0/. Manifests record source URLs, original/derived hashes, author and processing. The game loads these locally, including the portable build. Elemental sound design also uses Web Audio synthesis. No Blizzard/Hearthstone audio or effect assets are redistributed.

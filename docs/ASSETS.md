@@ -138,11 +138,13 @@
 
 ## 本地攻击与法术特效（2026-09-08）
 
-清理后保留 13 张有透明通道的 CC0 无损 WebP 纹理/图集：Kenney Particle Pack 的 8 张刀光、爪痕、烟尘与光纹；Mikodrak 2D Spell Effects 的 5 套火焰斩、爆破、电光及能量动画。作者页面、许可快照、选用原件、逐文件/逐帧 SHA-256、处理尺寸与落点锚点都保留在 [assets/vfx](../assets/vfx/README.md)。这些素材通过合法公开来源引入，不包含炉石游戏文件。
+> 2026-09-17 起本节素材已删除。战斗表现层 V2 只保留一个特效后端 EmberFx2（WebGL，`src/fx2-engine.js` / `src/fx2-shaders.js`，素材在 `assets/fx2/`），切入立绘在 `assets/cutin/`（`tools/cutin_assets.py` 生成 `src/cutin-assets.js`）。原 Kenney Particle Pack / Mikodrak 2D Spell Effects 的 13 张 WebP、`assets/vfx/` 目录、`tools/vfx_assets.py`、`tools/repack_vfx.py` 与 `presentation/vfx.js`（EmberVFX）均不再存在。契约见 [战斗表现层 V2](design/BATTLE_PRESENTATION_V2.md)。
+>
+> 2026-09-18：切入只给英雄与传奇随从（契约 §2.8 / `cutinPolicy`），`assets/cutin/` 从 44 张裁到 17 张（10 个英雄 `portraitId` + 10 张传奇随从，四个 id 重合）。没有专用立绘的 id 一律不弹切入，**不再回退卡插画**（卡插画是 336×448 竖版，塞进 512² 切入取景会错位）。`src/cutin-assets.js` 3,209,955 → 1,303,031 字节。这张清单由 `tests/cutin-coverage.test.cjs` 守住：素材键集合必须与"传奇随从 + 英雄 portraitId"完全相等，多一个少一个都失败。原图保留在 `output/cutin-gen-20260916/raw`，是重做立绘的唯一来源。
+>
+> 2026-09-18：`assets/motion/sources/` 清掉 28 张无人引用的中间物（chroma / rejected / 被 v2 取代的旧版，65,358,590 字节），保留 54 张。**注意它不是纯中间物目录**：`assets/characters.json` 的 `motion.atlas` / `motion.mask` 直接指向其中 53 个文件，`tools/characters.py` 的 `local_file()` 会在每次 `python3 build.py` 时校验它们存在，缺一个就构建失败；另有 `sources/pup-atlas-chroma.png` 是 `tests/art/motion-packing.test.cjs` 的夹具。`assets/motion/PROMPTS-v2.json` 里 wolf 的两条路径已成历史记录。同日删除 `assets/anime/generated/`（371 MB，168 个文件，全仓零引用，构建产物逐字节不变）与未跟踪的 `tools/.scratch/`（29 MB）。
 
-`tools/vfx_assets.py` 使用标准库校验并内嵌素材，网页构建提取为本地内容哈希 WebP；`tools/repack_vfx.py` 可使用已声明的 Pillow 从原件重建。运行时的七类攻击、具名施法与四张传说签名由 `presentation/fx-profiles.js` 注册，`presentation/vfx.js` 使用现有 Canvas 时钟。详见 [战斗特效记录](VFX_FEEDBACK.md)。
-
-2026-09-08 的资源清理将特效下载量减少至 879,870 字节，删除闲置 smoke，保留所有使用中图片的精确 RGBA。体积与加载隔离验证见 [清理记录](MEDIA_CLEANUP.md)。
+历史记录：2026-09-08 起曾内嵌 13 张 CC0 无损 WebP 纹理/图集（Kenney 8 张、Mikodrak 5 套），由 EmberVFX 在 Canvas 上绘制；`presentation/fx-profiles.js` 的攻击 / 施法 / 传说登场注册仍在使用，但现在由导演层交给 EmberFx2 渲染。当时的体积与加载验证见 [战斗特效记录](VFX_FEEDBACK.md) 与 [清理记录](MEDIA_CLEANUP.md)。
 
 ## 月影神契（v0.13）
 

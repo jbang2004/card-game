@@ -1,40 +1,35 @@
-/* REKINDLED — independent, bounded Canvas combat compositor.
- * All effects are driven by immutable event payloads. Rules never depend on an
- * animation clock. Save data remains version 1. Cancelled scenes clean up timers,
- * particles, animation clones, and the input lock. No network assets are used.
+/* EmberFX — the battle presentation director (docs/design/BATTLE_PRESENTATION_V2.md §3).
+ *
+ *   engine events ─► EmberCombat.compile (pure beats: actor / targets / tier / blockId / rule)
+ *                 ─► recipes[beat.kind]   one recipe per event kind
+ *                 ─► timeline.at(ms, fn)  one ordered clock per sequence (sequence.origin)
+ *                 ─► DOM (card motion, reactions, numbers, cues) + EmberFx2 (the only effect backend)
+ *
+ * anchors.resolve is the only place that turns a {side, uid} into a box; every
+ * presentation writes one EmberFX.trace record for causal assertions. Rules
+ * never depend on an animation clock; cancelled scenes clean up timers, clones
+ * and the input lock. No network assets are used.
  */
 const EmberFX = (() => {
   "use strict";
+  const T = EmberTiming;
   let W = EmberViewport.width,
     H = EmberViewport.height;
-  const TAU = Math.PI * 2,
-    canvas = document.getElementById("fx-canvas"),
-    ctx = canvas.getContext("2d"),
-    app = document.getElementById("app");
+  const app = document.getElementById("app");
   const world = document.getElementById("world-canvas"),
     wc = world.getContext("2d");
-  const colors = {
-    steel: ["#e9ede3", "#aab5b1", "#728988"],
-    fire: ["#ffe7b2", "#f1a35c", "#bd5439"],
-    frost: ["#e1ffff", "#86dcec", "#5a8eb2"],
-    arcane: ["#f1e9ff", "#b3a3e8", "#746fba"],
-    nature: ["#e4f5ad", "#a6d6a2", "#558e7e"],
-    holy: ["#fff2ce", "#eac992", "#b79153"],
-    shadow: ["#e3bffa", "#a77dc8", "#574477"],
-    blood: ["#ffd7c2", "#d98c88", "#8c4d6b"],
+  // Accent colour per school: death-edge line and the phase cinematic.
+  const accents = {
+    steel: "#aab5b1",
+    fire: "#f1a35c",
+    frost: "#86dcec",
+    arcane: "#b3a3e8",
+    nature: "#a6d6a2",
+    holy: "#eac992",
+    shadow: "#a77dc8",
+    blood: "#d98c88",
   };
-  const schoolNames = {
-    steel: "钢铁",
-    fire: "烈焰",
-    frost: "寒霜",
-    arcane: "奥术",
-    nature: "自然",
-    holy: "圣光",
-    shadow: "暗影",
-    blood: "鲜血",
-  };
-  let items = [],
-    timers = new Set(),
+  let timers = new Set(),
     animations = new Set(),
     nodes = new Set(),
     layoutOwners = new Map(),
@@ -45,20 +40,62 @@ const EmberFX = (() => {
     pendingCommit = null,
     doneCallback = null,
     activeSequence = null;
-  let last = 0,
-    view = "lobby",
+  let view = "lobby",
     theme = 0,
     phase = false,
     quality = { reduced: false, low: false },
-    worldDirty = true,
-    readableStats = [];
-  let counts = { actions: 0, school: {}, maxParticles: 0 };
-  const rnd = (a, b) => a + Math.random() * (b - a),
-    clamp = (n, a = 0, b = 1) => Math.max(a, Math.min(b, n)),
-    lerp = (a, b, t) => a + (b - a) * t;
-  function ease(t) {
-    return 1 - Math.pow(1 - clamp(t), 3);
+    worldDirty = true;
+  const clamp = (n, a = 0, b = 1) => Math.max(a, Math.min(b, n));
+  const refKey = (ref) => (ref ? ref.side + ref.uid : "");
+
+  /* ------------------------------------------------------------------ trace
+   * One record per presentation. Bounded to the latest TRACE_LIMIT entries so
+   * it can stay on outside ?debug=1 without growing. Times are
+   * performance.now() values. */
+  const TRACE_LIMIT = 200;
+  const trace = [];
+  let traceSeq = 0;
+  const point = (box) =>
+    box ? { x: round(box.x), y: round(box.y) } : null;
+  const round = (n) => Math.round(n * 10) / 10;
+  const plainBox = (box) =>
+    box
+      ? {
+          x: round(box.x),
+          y: round(box.y),
+          w: round(box.w),
+          h: round(box.h),
+          left: round(box.left ?? box.x - box.w / 2),
+          top: round(box.top ?? box.y - box.h / 2),
+        }
+      : null;
+  const traced = (ref, box) =>
+    ref ? { side: ref.side, uid: ref.uid, box: plainBox(box) } : null;
+  function tracePush(entry) {
+    const rec = { seq: ++traceSeq, ...entry };
+    trace.push(rec);
+    if (trace.length > TRACE_LIMIT) trace.splice(0, trace.length - TRACE_LIMIT);
+    return rec;
   }
+  function traceWarn(sequence, beat, message, ref = null) {
+    return tracePush({
+      beat,
+      type: "warn",
+      kind: message,
+      sequence: sequence?.id ?? null,
+      actor: null,
+      targets: ref ? [traced(ref, null)] : [],
+      from: null,
+      to: [],
+      tier: 0,
+      at: performance.now(),
+      hitAt: [],
+      contactBox: [],
+      numberAt: [],
+    });
+  }
+
+  /* ----------------------------------------------------------------- clocks */
   function schedule(fn, ms) {
     const gen = generation;
     const callback = () => {
@@ -71,8 +108,10 @@ const EmberFX = (() => {
     timers.add(id);
     return id;
   }
+  let sequenceIds = 0;
   function createSequence(plan, version = presentationVersion) {
     const sequence = {
+      id: ++sequenceIds,
       generation,
       version,
       origin: performance.now(),
@@ -80,6 +119,13 @@ const EmberFX = (() => {
       closed: false,
       reactions: new Map(),
       cards: new Map(),
+      records: new Map(),
+      anchors: new Map(),
+      queue: [],
+      queueOrder: 0,
+      timer: null,
+      timerAt: Infinity,
+      pumping: false,
       cardLandingIds: new Set(
         (plan.cardTracks || [])
           .filter((track) => track.kind === "play")
@@ -92,15 +138,19 @@ const EmberFX = (() => {
   function closeSequence(sequence = activeSequence) {
     if (!sequence) return;
     sequence.closed = true;
+    sequence.queue.length = 0;
     if (activeSequence === sequence) activeSequence = null;
   }
   function isCurrentSequence(sequence) {
-    return !!sequence &&
+    return (
+      !!sequence &&
       !sequence.closed &&
       sequence.generation === generation &&
       sequence.version === presentationVersion &&
-      activeSequence === sequence;
+      activeSequence === sequence
+    );
   }
+  /** Card tracks keep one real timer per marker (their tests observe them). */
   function scheduleAt(sequence, at, fn) {
     if (!sequence) return schedule(fn, at);
     const delay = Math.max(0, sequence.origin + at - performance.now());
@@ -112,6 +162,191 @@ const EmberFX = (() => {
       callback.__emberCardTimerMeta = fn.__emberCardTimerMeta;
     return schedule(callback, delay);
   }
+  /* timeline.at — the director's single clock. Entries run strictly in
+   * (at, registration) order from one pending timer, so two steps due in the
+   * same millisecond can never swap because of timer rounding. */
+  const timeline = {
+    at(sequence, at, fn) {
+      const entry = { at: Math.max(0, at), order: sequence.queueOrder++, fn };
+      const queue = sequence.queue;
+      let lo = 0,
+        hi = queue.length;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        const q = queue[mid];
+        if (q.at < entry.at || (q.at === entry.at && q.order < entry.order))
+          lo = mid + 1;
+        else hi = mid;
+      }
+      queue.splice(lo, 0, entry);
+      if (!sequence.pumping) arm(sequence);
+    },
+  };
+  function arm(sequence) {
+    if (!isCurrentSequence(sequence)) return;
+    const next = sequence.queue[0];
+    if (!next) return;
+    if (sequence.timer !== null && sequence.timerAt <= next.at) return;
+    if (sequence.timer !== null) {
+      clearTimeout(sequence.timer);
+      timers.delete(sequence.timer);
+    }
+    sequence.timerAt = next.at;
+    sequence.timer = schedule(() => {
+      sequence.timer = null;
+      sequence.timerAt = Infinity;
+      pump(sequence);
+    }, Math.max(0, sequence.origin + next.at - performance.now()));
+  }
+  function pump(sequence) {
+    if (!isCurrentSequence(sequence)) return;
+    sequence.pumping = true;
+    try {
+      while (isCurrentSequence(sequence) && sequence.queue.length) {
+        const elapsed = performance.now() - sequence.origin;
+        if (sequence.queue[0].at > elapsed + 1) break;
+        sequence.queue.shift().fn();
+      }
+    } finally {
+      sequence.pumping = false;
+    }
+    arm(sequence);
+  }
+  const scaled = (sequence, ms) => ms * (sequence?.plan?.scale ?? 1);
+
+  /* ------------------------------------------------------------ fx backend
+   * EmberFx2 is the only effect backend (§2.7). Reduced motion or an
+   * unavailable backend leaves DOM motion and numbers only. The calls are
+   * guarded until the V2 engine interface (§3.3) is present. */
+  const fx2 = () => (typeof EmberFx2 !== "undefined" ? EmberFx2 : null);
+  const fxReady = () =>
+    !quality.reduced && !!fx2()?.available && typeof fx2().attack === "function";
+  function fxCall(name, ...args) {
+    if (!fxReady() || typeof EmberFx2[name] !== "function") return false;
+    try {
+      EmberFx2[name](...args);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+  const fxBox = (box) =>
+    box
+      ? {
+          x: box.x,
+          y: box.y,
+          w: box.w,
+          h: box.h,
+          left: box.left ?? box.x - box.w / 2,
+          top: box.top ?? box.y - box.h / 2,
+        }
+      : null;
+  /** §2.3: a single target's contact never exceeds its box × contactScale
+   * (≤ 1.25); an AOE contact stays inside the union of its targets + 24px. */
+  function contactBoxes(boxes, tiers, aoe) {
+    if (aoe && boxes.some(Boolean)) {
+      const valid = boxes.filter(Boolean),
+        left = Math.min(...valid.map((b) => b.x - b.w / 2)) - T.aoePad,
+        right = Math.max(...valid.map((b) => b.x + b.w / 2)) + T.aoePad,
+        top = Math.min(...valid.map((b) => b.y - b.h / 2)) - T.aoePad,
+        bottom = Math.max(...valid.map((b) => b.y + b.h / 2)) + T.aoePad,
+        union = plainBox({
+          x: (left + right) / 2,
+          y: (top + bottom) / 2,
+          w: right - left,
+          h: bottom - top,
+        });
+      return boxes.map((b) => (b ? union : null));
+    }
+    return boxes.map((b, i) => {
+      if (!b) return null;
+      const s = Math.min(T.contactBoxMax, T.tiers[tiers[i] || 1].contactScale);
+      return plainBox({ x: b.x, y: b.y, w: b.w * s, h: b.h * s });
+    });
+  }
+
+  /* --------------------------------------------------------------- anchors
+   * §3.2: the hero anchor is the hero CARD, never the #player-hero /
+   * #enemy-hero host (on phones that host is the whole console strip). */
+  const HERO_CARD = ".hero-card-inner";
+  function pos(el) {
+    return EmberViewport.pos(el);
+  }
+  function heroHost(side) {
+    return document.getElementById(side === "p" ? "player-hero" : "enemy-hero");
+  }
+  /** Rule host of a unit: the minion element, or the hero button. */
+  function unit(side, uid) {
+    return uid === "hero"
+      ? heroHost(side)
+      : document.querySelector(`#battle .minion[data-uid="${uid}"]`);
+  }
+  /** Visible card face of a unit. */
+  function anchorEl(ref) {
+    if (!ref) return null;
+    return ref.uid === "hero"
+      ? heroHost(ref.side)?.querySelector(HERO_CARD) || null
+      : unit(ref.side, ref.uid);
+  }
+  function measure(ref) {
+    const el = anchorEl(ref),
+      box = el && pos(el);
+    return box ? { ...box, el } : null;
+  }
+  function captureAnchors() {
+    const map = new Map();
+    for (const el of document.querySelectorAll("#battle .minion[data-uid]")) {
+      const box = pos(el);
+      if (box && el.dataset.side)
+        map.set(el.dataset.side + el.dataset.uid, box);
+    }
+    for (const side of ["p", "e"]) {
+      const box = measure({ side, uid: "hero" });
+      if (box) map.set(side + "hero", { ...box, el: undefined });
+    }
+    return map;
+  }
+  function recordAnchors(sequence, refs = null) {
+    if (!sequence?.anchors) return;
+    if (!refs) {
+      for (const [key, box] of captureAnchors()) sequence.anchors.set(key, box);
+      return;
+    }
+    for (const ref of refs) {
+      const box = measure(ref);
+      if (box) sequence.anchors.set(refKey(ref), { ...box, el: undefined });
+    }
+  }
+  const anchors = {
+    /** The only anchor function. A lunging attacker resolves to its clone's
+     * live position; everything else to the sequence snapshot. */
+    resolve(ref, snapshot) {
+      if (!ref) return null;
+      const owner = attackOwners.get(refKey(ref));
+      if (owner && !owner.dead && owner.anchorEl?.isConnected) {
+        const live = pos(owner.anchorEl);
+        if (live) return live;
+      }
+      const box = snapshot?.get(refKey(ref));
+      return box
+        ? {
+            x: box.x,
+            y: box.y,
+            w: box.w,
+            h: box.h,
+            left: box.left,
+            top: box.top,
+          }
+        : null;
+    },
+  };
+  function resolveOrWarn(sequence, beat, ref, what) {
+    const box = anchors.resolve(ref, sequence.anchors);
+    if (!box && ref) traceWarn(sequence, beat, "missing-anchor:" + what, ref);
+    return box;
+  }
+
+  /* ---------------------------------------------------------------- DOM kit */
   function animate(el, frames, options, onFinish = null) {
     const animation = el.animate(frames, options);
     animations.add(animation);
@@ -135,7 +370,35 @@ const EmberFX = (() => {
     }, duration);
     return el;
   }
-  // Event cues are decorative; they never delay dispatch or own rule state.
+  function setBusy(v) {
+    busy = v;
+    app.classList.toggle("fx-busy", v);
+    document.dispatchEvent(new CustomEvent("ember:fx-busy", { detail: v }));
+    const el = document.getElementById("action-status");
+    if (el) el.textContent = v ? "RESOLVING · 战斗结算" : "";
+  }
+  function sound(type, p, options = {}) {
+    EmberAudio.fx(type, { pan: p ? (p.x / W - 0.5) * 1.1 : 0, ...options });
+  }
+  function schoolOf(card, attack = false) {
+    if (!card) return attack ? "steel" : "fire";
+    if (attack) {
+      if (["knight", "golem", "archer", "rogue", "wolf", "reaper"].includes(card.art))
+        return "steel";
+      if (card.art === "dragon" || card.art === "phoenix") return "fire";
+      if (card.art === "spider" || card.art === "treant") return "nature";
+    }
+    return EmberFXProfiles.fromPalette(card.palette);
+  }
+  function powerSchool(side, s) {
+    return side === "e" && s?.mode !== "practice"
+      ? EmberFXProfiles.fromPalette(EmberData.bosses[s?.bossIndex]?.palette)
+      : { mage: "fire", paladin: "holy", ranger: "steel" }[
+          side === "e" ? s?.opponentHero : s?.heroId
+        ] || "arcane";
+  }
+
+  /* ------------------------------------------------------------------ cues */
   function clearTurnCue() {
     for (const node of [...nodes]) {
       if (!node.matches(".turn-cue")) continue;
@@ -146,10 +409,8 @@ const EmberFX = (() => {
   }
   function turnCue(side, turn) {
     clearTurnCue();
-    const el = transient(
-      "turn-cue " + (side === "p" ? "ours" : "theirs"),
-      1250,
-    );
+    const life = T.turnCue;
+    const el = transient("turn-cue " + (side === "p" ? "ours" : "theirs"), life);
     const laneP = EmberViewport.lane("p"),
       laneE = EmberViewport.lane("e");
     el.style.left = (laneP.x + laneE.x) / 2 + "px";
@@ -170,74 +431,140 @@ const EmberFX = (() => {
           { opacity: 1, scale: "1", offset: 0.72 },
           { opacity: 0, translate: "0 -8px", scale: "1" },
         ],
-        { duration: 1250, easing: "ease-out" },
+        { duration: life, easing: "ease-out" },
       );
   }
-  function arrival(p, card) {
-    if (quality.reduced) return;
-    const school = classification(card),
-      legendary = card?.rarity === "legendary";
-    add(
-      "portal",
-      {
-        x: p.x,
-        y: p.y + p.h * 0.3,
-        school,
-        radius: legendary ? 125 : 70,
-        legendary,
-      },
-      legendary ? 1250 : 700,
-    );
-    if (legendary) {
-      spark(p.x, p.y, school, 56, {
-        up: 100,
-        speed: 130,
-        gravity: -30,
-        life: 1200,
-      });
-      const seal = transient("summon-seal", 1250);
-      seal.textContent = "✦ 传说降临 ✦";
-      seal.style.left = p.x + "px";
-      seal.style.top = p.y - p.h / 2 - 20 + "px";
+  function cue(p, text, kind = "status") {
+    if (!p || !Number.isFinite(p.x) || !Number.isFinite(p.y)) return;
+    const el = transient("combat-cue cue-" + kind, quality.reduced ? 700 : 950);
+    el.textContent = text;
+    el.style.left = p.x + "px";
+    el.style.top = p.y - (Number(p.h) || 0) * 0.35 + "px";
+    if (!quality.reduced)
       animate(
-        seal,
+        el,
         [
-          { opacity: 0, translate: "0 8px" },
-          { opacity: 1, translate: "0 0", offset: 0.2 },
+          { opacity: 0, translate: "0 7px", scale: ".9" },
+          { opacity: 1, translate: "0 0", scale: "1", offset: 0.18 },
           { opacity: 1, offset: 0.7 },
-          { opacity: 0, translate: "0 -12px" },
+          { opacity: 0, translate: "0 -10px" },
         ],
-        { duration: 1250 },
+        { duration: 940 },
       );
-      shake(3);
-    }
   }
-  function setBusy(v) {
-    busy = v;
-    app.classList.toggle("fx-busy", v);
-    document.dispatchEvent(new CustomEvent("ember:fx-busy", { detail: v }));
-    const el = document.getElementById("action-status");
-    if (el) el.textContent = v ? "RESOLVING · 战斗结算" : "";
+
+  /* --------------------------------------------------------- damage numbers
+   * An irregular splat (inline SVG) behind a bold white number. The shape is
+   * stable per unit. 120ms pop + hold + fade, one CSS animation for all. */
+  const SPLAT_SHAPES = Object.freeze([
+    "M15 47c-2-11 5-21 16-26 7-3 10-12 19-13 9-1 13 8 21 10 11 3 21 9 22 20 1 9-7 14-7 22 0 9 3 19-5 23-9 5-17-4-26-2-9 1-15 9-23 5-9-4-9-15-13-21-3-6-3-11-4-18Z",
+    "M11 53c0-13 10-20 18-27 6-5 5-15 14-17 10-2 17 7 26 9 10 2 22 6 23 17 1 10-10 15-11 24-1 8 5 18-4 23-9 5-18-5-28-3-9 2-14 11-23 7-9-4-8-16-11-22-3-6-4-7-4-11Z",
+    "M17 41c2-10 12-16 20-21 7-4 10-14 19-12 10 2 13 13 21 18 9 5 18 13 15 23-3 10-15 11-19 19-4 8-1 20-10 22-10 2-16-9-25-12-9-3-19-1-21-11-2-9 1-17 0-26Z",
+  ]);
+  const SPLAT_DROPS = Object.freeze([
+    "<circle cx='12' cy='22' r='4.6'/><circle cx='88' cy='72' r='3.4'/><circle cx='70' cy='11' r='2.6'/>",
+    "<circle cx='90' cy='30' r='4.2'/><circle cx='9' cy='70' r='3.6'/><circle cx='34' cy='7' r='2.4'/>",
+    "<circle cx='7' cy='47' r='4'/><circle cx='80' cy='90' r='3.2'/><circle cx='93' cy='18' r='2.8'/>",
+  ]);
+  function splatIndex(seed) {
+    const key = String(seed || "");
+    let hash = 0;
+    for (let i = 0; i < key.length; i++)
+      hash = (hash * 31 + key.charCodeAt(i)) | 0;
+    return Math.abs(hash) % SPLAT_SHAPES.length;
   }
-  function pos(el) {
-    return EmberViewport.pos(el);
+  /** A removed unit takes its numbers with it instead of leaving them on air. */
+  function dropNumbers(key, delay = 0) {
+    if (!key) return;
+    const found = [
+      ...app.querySelectorAll(`.damage-number[data-hit-key="${key}"]`),
+    ];
+    if (!found.length) return;
+    const drop = () =>
+      found.forEach((el) => {
+        el.remove();
+        nodes.delete(el);
+      });
+    if (delay > 0) schedule(drop, delay);
+    else drop();
   }
-  function unit(side, uid) {
-    return uid === "hero"
-      ? document.getElementById(side === "p" ? "player-hero" : "enemy-hero")
-      : document.querySelector(`#battle .minion[data-uid="${uid}"]`);
+  const NUMBER_LIFE = 620;
+  /** Returns the performance.now() at which the number entered the DOM. */
+  function number(p, n, type = "damage", options = null) {
+    const heavy = options?.tier === 3 && type === "damage";
+    const el = document.createElement("div");
+    el.setAttribute("aria-hidden", "true");
+    el.className =
+      "damage-number " +
+      (type === "heal"
+        ? "heal"
+        : type === "shield"
+          ? "block"
+          : heavy
+            ? "crit"
+            : "");
+    const shape = splatIndex(options?.key || type + n);
+    el.innerHTML =
+      `<svg class="dmg-splat" viewBox="0 0 100 100" aria-hidden="true" focusable="false">` +
+      `<path vector-effect="non-scaling-stroke" d="${SPLAT_SHAPES[shape]}"/>` +
+      `<g vector-effect="non-scaling-stroke">${SPLAT_DROPS[shape]}</g></svg>` +
+      `<span class="dmg-value">` +
+      (type === "shield"
+        ? "格挡"
+        : `${type === "heal" ? "+" : "−"}${n}${heavy ? "<small>重击</small>" : ""}`) +
+      `</span>`;
+    if (options?.key) el.dataset.hitKey = options.key;
+    el.style.left = clamp(p.x, 40, W - 40) + "px";
+    el.style.top = p.y - (p.h || 100) * 0.2 + "px";
+    app.appendChild(el);
+    nodes.add(el);
+    schedule(() => {
+      el.remove();
+      nodes.delete(el);
+    }, NUMBER_LIFE + 20);
+    return performance.now();
   }
-  const refKey = (ref) => (ref ? ref.side + ref.uid : "");
+
+  /* ------------------------------------------------------------ attack owners
+   * A lunging minion is a clone (minions are rebuilt on every render); a hero
+   * lunges its own card (cloning a hero out of #battle loses its scoped
+   * layout — the "giant heart" bug). */
+  function copyPortraits(source, clone) {
+    const originals = source?.querySelectorAll(".portrait-motion") || [];
+    clone.querySelectorAll(".portrait-motion").forEach((canvas, i) => {
+      const original = originals[i];
+      if (original?.width && original?.height) {
+        canvas.width = original.width;
+        canvas.height = original.height;
+        canvas.getContext("2d").drawImage(original, 0, 0);
+      } else canvas.parentElement.classList.remove("motion-ready");
+    });
+  }
+  const STATE_CLASSES = [
+    "shield",
+    "frozen",
+    "stealth",
+    "taunt",
+    "poison",
+    "lifesteal",
+    "reborn",
+    "windfury",
+    "spellpower",
+    "charge",
+    "rush",
+    "sick",
+    "ready",
+  ];
   function syncAttackOwner(owner) {
-    if (!owner || owner.dead || !owner.el?.isConnected) return;
+    if (!owner || owner.dead) return;
+    if (owner.live) {
+      rebindLiveActor(owner);
+      return;
+    }
+    if (!owner.el?.isConnected) return;
     const current = unit(owner.side, owner.uid);
     if (!current) return;
-    for (const selector of [
-      ".stat.atk",
-      ".stat.hp",
-      ".hero-health",
-      ".hero-armor",
-    ]) {
+    for (const selector of [".stat.atk", ".stat.hp"]) {
       const live = current.querySelector(selector),
         copy = owner.el.querySelector(selector);
       if (live && copy) {
@@ -246,36 +573,53 @@ const EmberFX = (() => {
         if (liveValue && copyValue) copyValue.textContent = liveValue.textContent;
         else copy.textContent = live.textContent;
         copy.className = live.className;
-      } else if (live && !copy && selector === ".hero-armor") {
-        owner.el.appendChild(live.cloneNode(true));
       } else if (!live && copy) copy.remove();
     }
-    const stateClasses = [
-      "shield",
-      "frozen",
-      "stealth",
-      "taunt",
-      "poison",
-      "lifesteal",
-      "reborn",
-      "windfury",
-      "spellpower",
-      "charge",
-      "rush",
-      "sick",
-      "ready",
-    ];
-    for (const className of stateClasses)
+    for (const className of STATE_CLASSES)
       owner.el.classList.toggle(className, current.classList.contains(className));
     const liveStatus = current.querySelector(".minion-status"),
       copyStatus = owner.el.querySelector(".minion-status");
     if (liveStatus && copyStatus) copyStatus.innerHTML = liveStatus.innerHTML;
     current.style.visibility = "hidden";
   }
+  /* A render replaces the hero card's inner markup, so the lunge moves to the
+   * fresh card element at the same point of its timeline. */
+  function rebindLiveActor(owner) {
+    const current = heroHost(owner.side)?.querySelector(HERO_CARD);
+    if (!current || current === owner.el) return;
+    const elapsed = performance.now() - owner.startedAt;
+    owner.animation?.cancel();
+    owner.el = owner.anchorEl = current;
+    current.classList.add("attack-actor", "attack-family-" + owner.family);
+    if (elapsed >= owner.duration) return;
+    owner.animation = animate(current, owner.frames, {
+      duration: owner.duration,
+      delay: -elapsed,
+      fill: "forwards",
+    });
+  }
+  function restoreLiveActor(owner) {
+    owner.animation?.cancel();
+    owner.host?.classList.remove("attack-host");
+    // The card element may have been replaced by a render; clear both.
+    for (const el of [owner.el, heroHost(owner.side)?.querySelector(HERO_CARD)]) {
+      if (!el) continue;
+      el.classList.remove("attack-actor");
+      for (const name of [...el.classList])
+        if (name.startsWith("attack-family-")) el.classList.remove(name);
+      for (const key of ["attackFamily", "contactMs", "releaseMs", "recoveryEndMs", "motionEndMs"])
+        delete el.dataset[key];
+      el.style.transform = "";
+    }
+  }
   function releaseAttackOwner(key, restore = true, expected = null) {
     const owner = attackOwners.get(key);
     if (!owner || (expected && owner !== expected)) return false;
     attackOwners.delete(key);
+    if (owner.live) {
+      restoreLiveActor(owner);
+      return true;
+    }
     owner.el?.getAnimations?.().forEach((a) => a.cancel());
     owner.el?.remove();
     if (owner.el) nodes.delete(owner.el);
@@ -285,18 +629,15 @@ const EmberFX = (() => {
     }
     return true;
   }
-  function retireExpiredAttackOwners(
-    now = performance.now(),
-    force = false,
-    sequence = null,
-  ) {
+  function retireExpiredAttackOwners(now = performance.now(), force = false, sequence = null) {
     for (const [key, owner] of attackOwners)
-      if (
-        (!sequence || owner.sequence === sequence) &&
-        (force || now >= owner.deadline)
-      )
+      if ((!sequence || owner.sequence === sequence) && (force || now >= owner.deadline))
         releaseAttackOwner(key);
   }
+
+  /* -------------------------------------------------------------- reactions
+   * Target recoil: hold through the hit-stop, recoil by the tier's recoilPx,
+   * return. Rebound onto a fresh element when a render replaces the target. */
   function stopReaction(sequence, key, expected = null) {
     const record = sequence?.reactions?.get(key);
     if (!record || (expected && record !== expected)) return false;
@@ -311,57 +652,57 @@ const EmberFX = (() => {
   }
   function reactionTarget(ref) {
     const owner = attackOwners.get(refKey(ref));
-    return owner?.el?.isConnected ? owner.el : unit(ref.side, ref.uid);
+    if (owner && !owner.dead && owner.el?.isConnected) return owner.anchorEl;
+    return anchorEl(ref);
   }
-  function reactionSource(record) {
-    if (!record.sourceRef) return record.from;
-    const owner = attackOwners.get(refKey(record.sourceRef));
-    if (owner?.el?.isConnected) return owner.impact || pos(owner.el);
-    const live = unit(record.sourceRef.side, record.sourceRef.uid);
-    return (live && pos(live)) || record.from;
+  function recoil(el, from, contact, elapsed = 0) {
+    if (!el) return null;
+    const box = pos(el);
+    if (!box) return null;
+    const duration = contact.recoveryEnd - contact.contact,
+      at = Math.max(0, Math.min(duration, elapsed));
+    if (!(duration > 0) || at >= duration) return null;
+    const dx = from ? box.x - from.x : 0,
+      dy = from ? box.y - from.y : -1,
+      length = Math.hypot(dx, dy) || 1,
+      amount = contact.recoilPx || 6,
+      hold = clamp((contact.release - contact.contact) / duration, 0, 0.9),
+      peak = hold + (1 - hold) * 0.3,
+      frames = [{ translate: "0 0", offset: 0 }];
+    if (hold > 0) frames.push({ translate: "0 0", offset: hold, easing: "linear" });
+    frames.push({
+      translate: `${(dx / length) * amount}px ${(dy / length) * amount}px`,
+      offset: peak,
+      easing: "cubic-bezier(.16,.8,.3,1)",
+    });
+    frames.push({ translate: "0 0", offset: 1 });
+    if (contact.family === "slam") {
+      frames[0].scale = "1 0.94";
+      frames[frames.length - 1].scale = "1 1";
+    }
+    return animate(el, frames, { duration, delay: -at, fill: "forwards" });
   }
-  function startTimedReaction(sequence, targetRef, el, heavy, from, timing) {
-    if (
-      !isCurrentSequence(sequence) ||
-      !timing ||
-      timing.recoveryEnd <= timing.contact
-    )
+  function startReaction(sequence, ref, from, timing) {
+    if (!isCurrentSequence(sequence) || !timing || timing.recoveryEnd <= timing.contact)
       return null;
-    const key = refKey(targetRef);
+    const key = refKey(ref);
     stopReaction(sequence, key);
     const record = {
-      sequence,
       key,
-      targetRef,
-      sourceRef: timing.sourceRef,
+      ref,
       from,
-      heavy,
       timing,
       el: null,
       animation: null,
       deadline: sequence.origin + timing.recoveryEnd,
     };
+    const target = reactionTarget(ref),
+      elapsed = performance.now() - (sequence.origin + timing.contact);
+    if (!target) return null;
     sequence.reactions.set(key, record);
-    const target = el || reactionTarget(targetRef),
-      elapsed = Math.max(
-        0,
-        performance.now() - (sequence.origin + timing.contact),
-      );
-    if (!target || elapsed >= timing.recoveryEnd - timing.contact) {
-      stopReaction(sequence, key, record);
-      return null;
-    }
     record.el = target;
     cancelLayoutTranslation(target, key);
-    record.animation = hitReaction(
-      target,
-      heavy,
-      from,
-      { ...timing, elapsed },
-      {
-        onFinish: () => stopReaction(sequence, key, record),
-      },
-    );
+    record.animation = recoil(target, from, timing, elapsed);
     if (!record.animation) stopReaction(sequence, key, record);
     return record;
   }
@@ -373,41 +714,34 @@ const EmberFX = (() => {
         stopReaction(sequence, key, record);
         continue;
       }
-      const target = reactionTarget(record.targetRef);
+      const target = reactionTarget(record.ref);
       if (!target) {
         stopReaction(sequence, key, record);
         continue;
       }
       if (target === record.el && record.el.isConnected) continue;
       record.animation?.cancel();
-      const elapsed = Math.max(
-          0,
-          now - (sequence.origin + record.timing.contact),
-        ),
-        source = reactionSource(record);
       record.el = target;
-      record.from = source || record.from;
       cancelLayoutTranslation(target, key);
-      record.animation = hitReaction(
+      record.animation = recoil(
         target,
-        record.heavy,
         record.from,
-        { ...record.timing, elapsed },
-        { onFinish: () => stopReaction(sequence, key, record) },
+        record.timing,
+        now - (sequence.origin + record.timing.contact),
       );
       if (!record.animation) stopReaction(sequence, key, record);
     }
   }
-  function fallback(s, side, uid) {
-    return EmberViewport.fallback(s, side, uid);
-  }
+
+  /* ----------------------------------------------------------------- layout */
   function capture() {
     const m = {};
     document
       .querySelectorAll("#battle .hero,#battle .minion[data-uid]")
       .forEach((el) => {
+        const face = el.matches(".hero") ? el.querySelector(HERO_CARD) || el : el;
         m[el.dataset.side + el.dataset.uid] = {
-          ...pos(el),
+          ...pos(face),
           el,
           cid: el.dataset.cardid,
           html: el.outerHTML,
@@ -443,8 +777,12 @@ const EmberFX = (() => {
     animation.addEventListener?.("cancel", release, { once: true });
     return animation;
   }
-  function settleLayout(old, excludedKeys = new Set()) {
-    if (quality.reduced) return;
+  /** FLIP survivors from their previous boxes. `hold` keeps them in place
+   * first (a death reflows only after the dissolve). */
+  function settleLayout(old, excludedKeys = new Set(), timing = null) {
+    const duration = timing?.duration ?? 420,
+      hold = timing?.hold ?? 0;
+    if (duration <= 0) return;
     document
       .querySelectorAll("#battle .minion[data-uid],#hand .hand-card")
       .forEach((el) => {
@@ -461,7 +799,13 @@ const EmberFX = (() => {
           const dx = prev.x - p.x,
             dy = prev.y - p.y;
           if (Math.abs(dx) + Math.abs(dy) < 3) return;
-          frames = [{ translate: `${dx}px ${dy}px` }, { translate: "0px 0px" }];
+          frames = [{ translate: `${dx}px ${dy}px` }];
+          if (hold > 0)
+            frames.push({
+              translate: `${dx}px ${dy}px`,
+              offset: hold / (hold + duration),
+            });
+          frames.push({ translate: "0px 0px" });
         } else if (el.dataset.hand) {
           frames = [
             { opacity: 0, translate: "22px 16px" },
@@ -472,7 +816,7 @@ const EmberFX = (() => {
           key,
           el,
           animate(el, frames, {
-            duration: 420,
+            duration: hold + duration,
             easing: "cubic-bezier(.18,.72,.24,1)",
           }),
         );
@@ -486,412 +830,9 @@ const EmberFX = (() => {
     for (const owner of layoutOwners.values())
       if (owner.el === el) owner.animation.cancel();
   }
-  function add(kind, data, d = 800, delay = 0) {
-    if (quality.reduced) return;
-    if (EmberViewport.mobile) {
-      data = { ...data };
-      for (const k of ["radius", "size", "wide", "vx", "vy", "gravity"])
-        if (typeof data[k] === "number") data[k] *= EmberViewport.effectScale;
-    }
-    const budget = quality.low ? 196 : EmberViewport.mobile ? 312 : 704;
-    if (items.length >= budget) items.splice(0, items.length - budget + 1);
-    items.push({ kind, ...data, start: performance.now() + delay, d });
-    counts.maxParticles = Math.max(counts.maxParticles, items.length);
-  }
-  function spark(x, y, school = "fire", n = 36, options = {}) {
-    if (quality.reduced) return;
-    const scale = quality.low ? 0.5 : 1;
-    for (let i = 0; i < n * scale; i++) {
-      let a = rnd(0, TAU),
-        v = rnd(45, options.speed || 190);
-      add(
-        "particle",
-        {
-          x,
-          y,
-          vx: Math.cos(a) * v,
-          vy: Math.sin(a) * v - (options.up || 0),
-          size: rnd(0.9, options.size || 3.8),
-          rot: rnd(0, TAU),
-          spin: rnd(-6, 6),
-          gravity: options.gravity ?? 110,
-          color: colors[school][i % 3],
-          school,
-          shape: options.shape || "spark",
-          ...options,
-        },
-        rnd(Math.min(430, options.life || 1150), options.life || 1150),
-      );
-    }
-  }
-  function rune(
-    x,
-    y,
-    school = "arcane",
-    radius = 70,
-    d = 850,
-    reverse = false,
-  ) {
-    if (quality.reduced) return;
-    add("rune", { x, y, school, radius, reverse, rot: rnd(0, TAU) }, d);
-  }
-  function ring(x, y, school = "fire", radius = 110, d = 620, ry = 1) {
-    if (quality.reduced) return;
-    add("ring", { x, y, school, radius, ry }, d);
-  }
-  function glow(x, y, school = "fire", radius = 85, d = 500) {
-    if (quality.reduced) return;
-    add("glow", { x, y, school, radius }, d);
-  }
-  let lastShake = -1000;
-  function shake(amount = 3) {
-    if (quality.reduced || performance.now() - lastShake < 100) return;
-    lastShake = performance.now();
-    amount = Math.min(amount, EmberViewport.mobile ? 2 : 4);
-    for (const el of [world, document.getElementById("scene")]) {
-      if (!el?.animate) continue;
-      animate(
-        el,
-        [
-          { transform: "translate(0,0)" },
-          { transform: `translate(${amount}px,${amount * 0.45}px)` },
-          { transform: `translate(${-amount * 0.65}px,${-amount * 0.25}px)` },
-          { transform: `translate(${amount * 0.3}px,0)` },
-          { transform: "translate(0,0)" },
-        ],
-        { duration: 260, easing: "ease-out" },
-      );
-    }
-  }
-  function vignette(school = "fire", d = 600, x = 800, y = 430) {
-    if (quality.reduced) return;
-    const v = document.getElementById("fx-vignette");
-    v.style.setProperty("--vcolor", colors[school][2]);
-    v.style.setProperty("--vx", (x / W) * 100 + "%");
-    v.style.setProperty("--vy", (y / H) * 100 + "%");
-    animate(
-      v,
-      [{ opacity: 0 }, { opacity: 0.7, offset: 0.22 }, { opacity: 0 }],
-      { duration: d, easing: "ease-out" },
-    );
-  }
-  function number(p, n, type = "damage") {
-    const el = document.createElement("div");
-    el.setAttribute("aria-hidden", "true");
-    el.className =
-      "damage-number " +
-      (type === "heal"
-        ? "heal"
-        : type === "shield"
-          ? "block"
-          : n >= 6
-            ? "crit"
-            : "");
-    el.innerHTML =
-      type === "shield"
-        ? "格挡"
-        : `${type === "heal" ? "+" : "−"}${n}${n >= 6 && type === "damage" ? "<small>重击</small>" : ""}`;
-    el.style.left = p.x + "px";
-    el.style.top = p.y - 20 + "px";
-    app.appendChild(el);
-    nodes.add(el);
-    schedule(() => {
-      el.remove();
-      nodes.delete(el);
-    }, 1150);
-  }
-  function sound(type, p, options = {}) {
-    EmberAudio.fx(type, { pan: p ? (p.x / W - 0.5) * 1.1 : 0, ...options });
-  }
-  function impact(
-    x,
-    y,
-    school = "fire",
-    strength = 1,
-    kind = "element",
-    from = null,
-    timing = null,
-  ) {
-    if (quality.reduced) {
-      return;
-    }
-    const s = clamp(strength, 0.6, 2.2);
-    if (EmberVFX.hit({ x, y }, school, s, kind, from, timing)) {
-      if (s > 1.25) shake(2.5 * s);
-      return;
-    }
-    glow(x, y, school, 80 * s, school === "frost" ? 150 : 510);
-    if (school === "steel") {
-      add("slash", { x, y, school, a: rnd(-1, 1), radius: 85 * s }, 360);
-      add(
-        "slash",
-        { x: x + 5, y: y - 7, school, a: rnd(1.3, 2.3), radius: 60 * s },
-        260,
-        80,
-      );
-      spark(x, y, school, 34 * s, { speed: 260, size: 2.5, gravity: 240 });
-      ring(x, y, school, 90 * s, 380, 0.7);
-    } else if (school === "fire") {
-      for (let i = 0; i < 7; i++)
-        add(
-          "smoke",
-          {
-            x: x + rnd(-30, 30),
-            y: y + rnd(-25, 15),
-            school,
-            radius: rnd(18, 35) * s,
-            vx: rnd(-25, 25),
-            vy: rnd(-55, -20),
-          },
-          900 + i * 55,
-        );
-      add("explosion", { x, y, school, radius: 105 * s }, 680);
-      ring(x, y, school, 120 * s, 640, 0.7);
-      spark(x, y, school, 70 * s, {
-        speed: 245,
-        gravity: 170,
-        up: 45,
-        size: 4.5,
-        life: 1100,
-      });
-      add("scorch", { x, y, school, radius: 50 * s }, 1900);
-    } else if (school === "frost") {
-      ring(x, y, school, 40 * s, 180, 0.75);
-      spark(x, y, school, 10, {
-        shape: "shard",
-        speed: 65,
-        gravity: 90,
-        life: 280,
-        size: 2,
-      });
-    } else if (school === "arcane") {
-      rune(x, y, school, 90 * s, 950);
-      ring(x, y, school, 125 * s, 650);
-      add("starburst", { x, y, school, radius: 115 * s }, 570);
-      spark(x, y, school, 45 * s, {
-        shape: "diamond",
-        gravity: -20,
-        speed: 155,
-        size: 4.4,
-      });
-    } else if (school === "nature") {
-      rune(x, y, school, 78 * s, 950);
-      add("bloom", { x, y, school, radius: 98 * s }, 1100);
-      spark(x, y, school, 38 * s, {
-        shape: "leaf",
-        gravity: -58,
-        speed: 105,
-        size: 7,
-        life: 1600,
-      });
-    } else if (school === "holy") {
-      add("pillar", { x, y, school, radius: 62 * s }, 870);
-      rune(x, y, school, 93 * s, 1080);
-      spark(x, y, school, 42 * s, {
-        shape: "cross",
-        up: 40,
-        gravity: -75,
-        speed: 110,
-        size: 4.5,
-        life: 1400,
-      });
-      ring(x, y, school, 113 * s, 820, 0.65);
-    } else {
-      add("vortex", { x, y, school, radius: 100 * s }, 870);
-      rune(x, y, school, 95 * s, 770, true);
-      spark(x, y, school, 42 * s, {
-        shape: "smoke",
-        speed: 115,
-        gravity: -15,
-        life: 1250,
-        size: 6.5,
-      });
-      ring(x, y, school, 110 * s, 740, 0.7);
-    }
-    if (s > 1.25) shake(2.5 * s);
-  }
-  function projectile(from, to, school = "fire", duration = 510) {
-    if (quality.reduced) return;
-    const bend =
-      school === "frost"
-        ? 40
-        : school === "nature"
-          ? -75
-          : -Math.min(135, Math.hypot(to.x - from.x, to.y - from.y) * 0.22);
-    add(
-      "projectile",
-      { from, to, school, bend, radius: school === "fire" ? 14 : 10 },
-      duration,
-    );
-    rune(from.x, from.y, school, 37, 440);
-    glow(from.x, from.y, school, 55, 420);
-    if (school === "arcane")
-      add(
-        "lightning",
-        { from, to, school, seed: Math.random() * 900 },
-        duration + 70,
-      );
-  }
-  function heal(p, amount) {
-    if (!quality.reduced) {
-      add("heal", { ...p, school: "nature", radius: 56 }, 1100);
-      spark(p.x, p.y, "nature", 26, {
-        shape: "leaf",
-        up: 80,
-        gravity: -20,
-        speed: 65,
-        size: 5,
-        life: 1200,
-      });
-    }
-    number(p, amount, "heal");
-  }
-  function shieldBreak(p) {
-    if (!quality.reduced) {
-      for (let i = 0; i < 17; i++) {
-        let a = (i / 17) * TAU;
-        add(
-          "particle",
-          {
-            x: p.x + Math.cos(a) * 48,
-            y: p.y + Math.sin(a) * 58,
-            vx: Math.cos(a) * rnd(65, 170),
-            vy: Math.sin(a) * rnd(65, 150),
-            size: rnd(8, 18),
-            rot: a,
-            spin: rnd(-3, 3),
-            gravity: 150,
-            color: colors.holy[i % 3],
-            shape: "glass",
-          },
-          rnd(560, 1000),
-        );
-      }
-      ring(p.x, p.y, "holy", 85, 480);
-    }
-    number(p, 0, "shield");
-  }
-  function copyPortraits(source, clone) {
-    const originals = source?.querySelectorAll(".portrait-motion") || [];
-    clone.querySelectorAll(".portrait-motion").forEach((canvas, i) => {
-      const original = originals[i];
-      if (original?.width && original?.height) {
-        canvas.width = original.width;
-        canvas.height = original.height;
-        canvas.getContext("2d").drawImage(original, 0, 0);
-      } else canvas.parentElement.classList.remove("motion-ready");
-    });
-  }
-  function death(old, school) {
-    if (!old) return;
-    spark(old.x, old.y, school, 30, {
-      shape: "ash",
-      gravity: -28,
-      up: 25,
-      speed: 70,
-      life: 1400,
-      size: 3,
-    });
-    if (quality.reduced) return;
-    const ghost = document.createElement("div");
-    ghost.innerHTML = old.html;
-    const el = ghost.firstElementChild;
-    if (!el) return;
-    copyPortraits(old.el, el);
-    el.removeAttribute("id");
-    el.classList.add("death-ghost");
-    el.style.left = old.left + "px";
-    el.style.top = old.top + "px";
-    el.style.width = old.w + "px";
-    el.style.height = old.h + "px";
-    el.style.visibility = "visible";
-    el.setAttribute("aria-hidden", "true");
-    el.tabIndex = -1;
-    app.appendChild(el);
-    nodes.add(el);
-    animate(
-      el,
-      [
-        {
-          opacity: 0.9,
-          filter: "brightness(1.7) grayscale(.4)",
-          transform: "translateY(0) scale(1)",
-        },
-        {
-          opacity: 0.35,
-          filter: "brightness(.55) grayscale(1)",
-          transform: "translateY(12px) scale(.96)",
-          offset: 0.4,
-        },
-        {
-          opacity: 0,
-          filter: "brightness(.2) blur(4px)",
-          transform: "translateY(-24px) scale(.88)",
-        },
-      ],
-      { duration: 650, easing: "ease-out", fill: "forwards" },
-    );
-    schedule(() => {
-      el.remove();
-      nodes.delete(el);
-    }, 660);
-  }
-  function lunge(from, to, motion, startedAt = performance.now()) {
-    if (!from?.el || quality.reduced) return;
-    if (!motion) motion = EmberFXProfiles.motionFor("blade");
-    const duration = Math.max(0, motion.duration);
-    if (!duration) return;
-    const el = from.el.cloneNode(true);
-    copyPortraits(from.el, el);
-    const offset = Math.max(
-      0,
-      Math.min(duration, performance.now() - startedAt),
-    );
-    if (offset >= duration) return;
-    el.removeAttribute("id");
-    el.classList.add("death-ghost", "attack-actor", "attack-family-" + motion.family);
-    el.style.cssText += `;left:${from.left}px;top:${from.top}px;width:${from.w}px;height:${from.h}px;margin:0;visibility:visible`;
-    el.tabIndex = -1;
-    el.setAttribute("aria-hidden", "true");
-    el.dataset.attackFamily = motion.family;
-    el.dataset.contactMs = String(motion.contact);
-    el.dataset.releaseMs = String(motion.release);
-    el.dataset.recoveryEndMs = String(motion.recoveryEnd);
-    el.dataset.motionEndMs = String(motion.duration);
-    if (motion.heavy) el.dataset.attackHeavy = "true";
-    app.appendChild(el);
-    nodes.add(el);
-    from.el.style.visibility = "hidden";
-    const dx = (to.x - from.x) * 0.77,
-      dy = (to.y - from.y) * 0.77;
-    const hit = motion.contact / duration,
-      anticipation = motion.anticipation / duration,
-      release = motion.release / duration,
-      recoveryEnd = motion.recoveryEnd / duration;
-    animate(
-      el,
-      [
-        { transform: "translate(0,0) scale(1)", offset: 0, easing: "ease-out" },
-        {
-          transform: `translate(${-dx * 0.065}px,${-dy * 0.065}px) scale(1.055)`,
-          offset: anticipation,
-          easing: "cubic-bezier(.6,0,.9,.5)",
-        },
-        { transform: `translate(${dx}px,${dy}px) scale(1.045)`, offset: hit },
-        // A short contact hold, then one controlled return. The death beat owns
-        // deaths, so a lethal attacker cannot dissolve twice in two places.
-        {
-          transform: `translate(${dx}px,${dy}px) scale(1.045)`,
-          offset: release,
-          easing: "cubic-bezier(.16,.8,.3,1)",
-        },
-        { transform: "translate(0,0) scale(1)", offset: recoveryEnd },
-        { transform: "translate(0,0) scale(1)", offset: 1 },
-      ],
-      { duration, delay: -offset, fill: "forwards" },
-    );
-    return { el, duration, motion };
-  }
+
+  /* ------------------------------------------------------------ card motion
+   * Hand → board and deck → hand flights (unchanged from the previous director). */
   function cardMarkup(source, fallbackMarkup = "") {
     if (source?.html) {
       const template = document.createElement("template");
@@ -1719,7 +1660,8 @@ const EmberFX = (() => {
       card
         ? cardHTML(card)
         : null;
-    if (!captured || !validCardPoint(target) || (!captured.html && !fallbackMarkup))
+    // A hidden hand (the enemy's on phones) measures as NaN: no flight to start.
+    if (!validCardPoint(captured) || !validCardPoint(target) || (!captured.html && !fallbackMarkup))
       return;
     const track = {
       ...descriptor,
@@ -1888,31 +1830,85 @@ const EmberFX = (() => {
       "draw-handoff",
     );
   }
-  function reveal(c, side, cardHTML) {
-    if (!c || !cardHTML || quality.reduced) return;
+  /* ------------------------------------------------------ enemy card reveal
+   * Kept beside the enemy hero card, on whichever side does not cross the
+   * cast path (hero → targets). */
+  function segmentHitsRect(a, b, r) {
+    if (!a || !b) return false;
+    const inside = (p) => p.x >= r.left && p.x <= r.right && p.y >= r.top && p.y <= r.bottom;
+    if (inside(a) || inside(b)) return true;
+    const edges = [
+      [{ x: r.left, y: r.top }, { x: r.right, y: r.top }],
+      [{ x: r.right, y: r.top }, { x: r.right, y: r.bottom }],
+      [{ x: r.right, y: r.bottom }, { x: r.left, y: r.bottom }],
+      [{ x: r.left, y: r.bottom }, { x: r.left, y: r.top }],
+    ];
+    const cross = (p, q, s, t) => {
+      const d = (q.x - p.x) * (t.y - s.y) - (q.y - p.y) * (t.x - s.x);
+      if (!d) return false;
+      const u = ((s.x - p.x) * (t.y - s.y) - (s.y - p.y) * (t.x - s.x)) / d,
+        v = ((s.x - p.x) * (q.y - p.y) - (s.y - p.y) * (q.x - p.x)) / d;
+      return u >= 0 && u <= 1 && v >= 0 && v <= 1;
+    };
+    return edges.some(([s, t]) => cross(a, b, s, t));
+  }
+  /* Candidates hug the enemy hero card (right, below, left, above; full size
+   * first, then smaller). A spot must stay on stage, keep clear of every
+   * cast path and not cover another unit's card. */
+  const REVEAL_SCALES = [1, 0.8, 0.66];
+  function revealPlacement(hero, targets, obstacles, w, h) {
+    const gap = 10,
+      caption = 22,
+      overlaps = (r, b) =>
+        r.left < b.left + b.w && r.right > b.left && r.top < b.top + b.h && r.bottom > b.top;
+    const all = [];
+    for (const scale of REVEAL_SCALES) {
+      const cw = w * scale,
+        ch = h * scale + caption;
+      for (const c of [
+        { left: hero.left + hero.w + gap, top: hero.top },
+        { left: hero.left + hero.w + gap, top: hero.top + hero.h - ch },
+        { left: hero.left, top: hero.top + hero.h + gap },
+        { left: hero.left - cw - gap, top: hero.top },
+        { left: hero.left, top: hero.top - ch - gap },
+      ])
+        all.push({ ...c, scale, right: c.left + cw, bottom: c.top + ch });
+    }
+    const inBounds = (r) => r.left >= 4 && r.top >= 4 && r.right <= W - 4 && r.bottom <= H - 4;
+    const clear = (r) => targets.every((t) => !segmentHitsRect(hero, t, r));
+    const free = (r) => obstacles.every((b) => !overlaps(r, b));
+    return (
+      all.find((r) => inBounds(r) && clear(r) && free(r)) ||
+      all.find((r) => inBounds(r) && clear(r)) ||
+      all.find(inBounds) ||
+      all[0]
+    );
+  }
+  function reveal(card, cardHTML, heroBox, targetBoxes, obstacles = []) {
+    if (!card || !cardHTML || quality.reduced || !heroBox) return;
     const el = document.createElement("div");
     el.className = "cast-card";
-    el.style.left = (EmberViewport.mobile ? W - 146 : 1381) + "px";
-    el.style.top =
-      (EmberViewport.mobile ? EmberViewport.layout.header + 8 : 182) + "px";
     el.innerHTML =
-      cardHTML(c) +
-      '<div class="cast-caption">' +
-      (side === "e" ? "ENEMY CAST · 敌方出牌" : "JUST PLAYED · 打出的卡牌") +
-      "</div>";
+      cardHTML(card) + '<div class="cast-caption">ENEMY CAST · 敌方出牌</div>';
+    el.style.visibility = "hidden";
     app.appendChild(el);
     nodes.add(el);
+    const size = pos(el);
+    if (size) {
+      const spot = revealPlacement(heroBox, targetBoxes.filter(Boolean), obstacles, size.w, size.h);
+      el.style.left = spot.left + "px";
+      el.style.top = spot.top + "px";
+      el.style.transformOrigin = "0 0";
+      if (spot.scale !== 1) el.style.scale = String(spot.scale);
+    }
+    el.style.visibility = "";
     animate(
       el,
       [
-        { opacity: 0, transform: "translateX(24px) rotateY(30deg) scale(.9)" },
-        {
-          opacity: 1,
-          transform: "translateX(0) rotateY(0) scale(1)",
-          offset: 0.18,
-        },
-        { opacity: 1, transform: "translateX(0) scale(1)", offset: 0.78 },
-        { opacity: 0, transform: "translateY(-8px) scale(.97)" },
+        { opacity: 0, transform: "translateY(8px)" },
+        { opacity: 1, transform: "translateY(0)", offset: 0.18 },
+        { opacity: 1, transform: "translateY(0)", offset: 0.78 },
+        { opacity: 0, transform: "translateY(-8px)" },
       ],
       { duration: 1650, easing: "ease-out", fill: "forwards" },
     );
@@ -1921,12 +1917,871 @@ const EmberFX = (() => {
       nodes.delete(el);
     }, 1660);
   }
-  function phaseChange(s) {
-    const boss = EmberData.bosses[s.bossIndex],
-      school = paletteSchool(boss.palette),
+
+  /* ------------------------------------------------------------ death ghost */
+  function deathGhost(sequence, old, school) {
+    if (!old?.html || quality.reduced) return;
+    const freeze = scaled(sequence, T.death.freeze),
+      dissolve = scaled(sequence, T.death.dissolve),
+      total = freeze + dissolve;
+    if (total <= 0) return;
+    const ghost = document.createElement("div");
+    ghost.innerHTML = old.html;
+    const el = ghost.firstElementChild;
+    if (!el) return;
+    copyPortraits(old.el, el);
+    el.removeAttribute("id");
+    el.classList.remove("attack-actor");
+    el.classList.add("death-ghost");
+    el.style.left = old.left + "px";
+    el.style.top = old.top + "px";
+    el.style.width = old.w + "px";
+    el.style.height = old.h + "px";
+    el.style.visibility = "visible";
+    el.style.transform = "";
+    el.setAttribute("aria-hidden", "true");
+    el.tabIndex = -1;
+    app.appendChild(el);
+    nodes.add(el);
+    const edge = "linear-gradient(to top, transparent 0%, #000 13%, #000 100%)";
+    el.style.maskImage = edge;
+    el.style.webkitMaskImage = edge;
+    const f = freeze / total;
+    animate(
+      el,
+      [
+        { opacity: 1, filter: "brightness(1) saturate(1)", clipPath: "inset(0 0 0% 0)", transform: "translateY(0)", offset: 0 },
+        { opacity: 1, filter: "brightness(.45) saturate(.3)", clipPath: "inset(0 0 0% 0)", transform: "translateY(0)", offset: f, easing: "cubic-bezier(.35,0,.7,1)" },
+        { opacity: 0.12, filter: "brightness(.3) saturate(.2) blur(3px)", clipPath: "inset(0 0 100% 0)", transform: "translateY(-14px)", offset: 1 },
+      ],
+      { duration: total, fill: "forwards" },
+    );
+    const tint = accents[school] || accents.steel;
+    const line = document.createElement("div");
+    line.className = "death-ghost death-edge";
+    line.style.cssText =
+      `left:${old.left}px;top:${old.top + old.h - 2}px;width:${old.w}px;height:2px;` +
+      `background:linear-gradient(90deg,transparent,${tint} 16%,#fff4dc 50%,${tint} 84%,transparent);`;
+    app.appendChild(line);
+    nodes.add(line);
+    animate(
+      line,
+      [
+        { opacity: 0, transform: "translateY(0)", offset: 0 },
+        { opacity: 0.95, transform: "translateY(0)", offset: f, easing: "cubic-bezier(.35,0,.7,1)" },
+        { opacity: 0, transform: `translateY(${2 - old.h}px)`, offset: 1 },
+      ],
+      { duration: total, fill: "forwards" },
+    );
+    schedule(() => {
+      el.remove();
+      line.remove();
+      nodes.delete(el);
+      nodes.delete(line);
+    }, total + 20);
+  }
+
+  /* --------------------------------------------------------------- lunge
+   * §4.2 melee: lift (8px up, 1.06, long shadow) → lunge until the card edges
+   * meet and press PRESS_PX in → hold for the hit-stop → recover. The contact
+   * point and the travel distance come from the same contactOffset(). */
+  const PRESS_PX = 18;
+  function contactOffset(a, b) {
+    const dx = b.x - a.x,
+      dy = b.y - a.y,
+      len = Math.hypot(dx, dy) || 1,
+      ux = dx / len,
+      uy = dy / len,
+      sx = Math.abs(ux) > 1e-6 ? (a.w + b.w) / 2 / Math.abs(ux) : Infinity,
+      sy = Math.abs(uy) > 1e-6 ? (a.h + b.h) / 2 / Math.abs(uy) : Infinity,
+      touch = Math.max(0, len - Math.min(sx, sy)),
+      travel = Math.min(len, touch + PRESS_PX);
+    return { dx: ux * travel, dy: uy * travel, travel };
+  }
+  function shadowFilters(el) {
+    const base = typeof getComputedStyle === "function" ? getComputedStyle(el).filter : "";
+    const has = base && base !== "none";
+    const withShadow = (shadow) => (has ? `${base} ${shadow}` : shadow);
+    return {
+      flat: has ? base : "none",
+      lift: withShadow("drop-shadow(0 22px 16px rgba(0,0,0,.5))"),
+      drop: withShadow("drop-shadow(0 4px 6px rgba(0,0,0,.42))"),
+    };
+  }
+  function lunge(ctx, beat, beatIndex, actorRef, actorBox, targetBox, old) {
+    const { sequence } = ctx;
+    const m = beat.motion,
+      duration = m.duration;
+    if (!(duration > 0)) return null;
+    const hero = actorRef.uid === "hero";
+    let el, host = null;
+    if (hero) {
+      host = heroHost(actorRef.side);
+      el = host?.querySelector(HERO_CARD);
+      if (!el) return null;
+      host.classList.add("attack-host");
+      el.classList.add("attack-actor", "attack-family-" + m.family);
+    } else {
+      const source = old[refKey(actorRef)]?.el?.isConnected
+        ? old[refKey(actorRef)].el
+        : unit(actorRef.side, actorRef.uid);
+      const liveNow = unit(actorRef.side, actorRef.uid);
+      const origin = liveNow?.querySelector(".portrait-motion") ? liveNow : source;
+      if (!origin) return null;
+      el = origin.cloneNode(true);
+      copyPortraits(origin, el);
+      el.removeAttribute("id");
+      el.classList.add("death-ghost", "attack-actor", "attack-family-" + m.family);
+      el.style.cssText += `;left:${actorBox.left}px;top:${actorBox.top}px;width:${actorBox.w}px;height:${actorBox.h}px;margin:0;visibility:visible`;
+      el.tabIndex = -1;
+      el.setAttribute("aria-hidden", "true");
+      app.appendChild(el);
+      nodes.add(el);
+    }
+    el.dataset.attackFamily = m.family;
+    el.dataset.contactMs = String(m.contact);
+    el.dataset.releaseMs = String(m.release);
+    el.dataset.recoveryEndMs = String(m.recoveryEnd);
+    el.dataset.motionEndMs = String(duration);
+    const { dx, dy } = contactOffset(actorBox, targetBox),
+      shadow = shadowFilters(el),
+      k = (ms) => clamp(ms / duration),
+      frames = [
+        { transform: "translate(0px,0px) scale(1)", filter: shadow.flat, offset: 0, easing: "cubic-bezier(.2,.7,.3,1)" },
+        { transform: "translate(0px,-8px) scale(1.06)", filter: shadow.lift, offset: k(m.lift), easing: "cubic-bezier(.55,0,.9,.45)" },
+        { transform: `translate(${dx}px,${dy}px) scale(1)`, filter: shadow.drop, offset: k(m.contact) },
+      ];
+    if (m.release > m.contact)
+      frames.push({ transform: `translate(${dx}px,${dy}px) scale(1)`, filter: shadow.drop, offset: k(m.release), easing: "cubic-bezier(.16,.8,.3,1)" });
+    else frames[2].easing = "cubic-bezier(.16,.8,.3,1)";
+    frames.push({ transform: "translate(0px,0px) scale(1)", filter: shadow.flat, offset: 1 });
+    const elapsed = clamp(performance.now() - (sequence.origin + beat.at), 0, duration);
+    if (elapsed >= duration) {
+      if (!hero) {
+        el.remove();
+        nodes.delete(el);
+      } else {
+        host.classList.remove("attack-host");
+        el.classList.remove("attack-actor", "attack-family-" + m.family);
+      }
+      return null;
+    }
+    const animation = animate(el, frames, { duration, delay: -elapsed, fill: "forwards" });
+    const key = refKey(actorRef);
+    releaseAttackOwner(key, false);
+    const owner = {
+      el,
+      host,
+      anchorEl: el,
+      side: actorRef.side,
+      uid: actorRef.uid,
+      sequence,
+      dead: false,
+      live: hero,
+      animation,
+      deadline: sequence.origin + beat.at + duration + 2,
+      home: actorBox,
+      impact: { ...actorBox, x: actorBox.x + dx, y: actorBox.y + dy },
+      frames,
+      duration,
+      family: m.family,
+      startedAt: sequence.origin + beat.at,
+    };
+    attackOwners.set(key, owner);
+    syncAttackOwner(owner);
+    timeline.at(sequence, beat.at + duration + 2, () =>
+      releaseAttackOwner(key, true, owner),
+    );
+    return owner;
+  }
+  /** §4.2 ranged: a short recoil away from the target on the live card. */
+  function rangedRecoil(sequence, beat, ref, actorBox, targetBox) {
+    if (quality.reduced) return;
+    const el = anchorEl(ref),
+      duration = beat.motion.lift;
+    if (!el?.isConnected || !(duration > 0)) return;
+    const len = Math.hypot(targetBox.x - actorBox.x, targetBox.y - actorBox.y) || 1,
+      px = -((targetBox.x - actorBox.x) / len) * 6,
+      py = -((targetBox.y - actorBox.y) / len) * 6;
+    animate(
+      el,
+      [
+        { translate: "0 0", offset: 0 },
+        { translate: `${px}px ${py}px`, offset: 0.55, easing: "cubic-bezier(.16,.8,.3,1)" },
+        { translate: "0 0", offset: 1 },
+      ],
+      { duration },
+    );
+  }
+
+  /* ------------------------------------------------------------- cut-in
+   * Heroes and legendary minions only (§2.8), same policy for both sides. */
+  function cutinArt(ref, cid, s) {
+    const stage = fx2();
+    if (typeof stage?.cutinArt !== "function") return null;
+    try {
+      let id = ref?.uid === "hero" ? null : cid;
+      if (ref?.uid === "hero") {
+        const heroId =
+          ref.side === "e"
+            ? s?.mode !== "practice" && EmberData.bosses[s?.bossIndex]
+              ? EmberData.bosses[s.bossIndex].portraitId
+              : s?.opponentHero
+            : s?.heroId;
+        const hero =
+          EmberData.heroes.find((h) => h.id === heroId) ||
+          EmberData.bosses.find((h) => h.id === heroId);
+        id = hero?.portraitId || null;
+      }
+      return id ? stage.cutinArt(id) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /* ---------------------------------------------------------------- casts */
+  function castRecordFor(ctx, beatIndex, cast, type) {
+    const { sequence } = ctx;
+    const actorBox = resolveOrWarn(sequence, beatIndex, cast.actor, "actor");
+    const boxes = cast.targets.map((ref) =>
+      resolveOrWarn(sequence, beatIndex, ref, "target"),
+    );
+    return tracePush({
+      beat: beatIndex,
+      sequence: sequence.id,
+      blockId: sequence.plan.beats[beatIndex]?.blockId ?? null,
+      type,
+      kind: cast.kind,
+      actor: traced(cast.actor, actorBox),
+      targets: cast.targets.map((ref, i) => traced(ref, boxes[i])),
+      from: point(actorBox),
+      to: boxes.map(point),
+      tier: cast.tier,
+      aoe: cast.aoe,
+      at: sequence.origin + cast.flashAt,
+      hitAt: cast.contactAt.map((ms) => sequence.origin + ms),
+      contactBox: contactBoxes(boxes, cast.tiers, cast.aoe),
+      numberAt: cast.targets.map(() => null),
+    });
+  }
+  function castFlash(ctx, beatIndex, cast, type) {
+    const { sequence } = ctx;
+    // The caster flash itself is the first stage of EmberFx2.cast().
+    const rec = castRecordFor(ctx, beatIndex, cast, type);
+    sequence.records.set(beatIndex, rec);
+    return rec;
+  }
+  function castLaunch(ctx, beatIndex, cast) {
+    const { sequence } = ctx;
+    if (!cast.kind) return;
+    const from = anchors.resolve(cast.actor, sequence.anchors);
+    if (!from) return; // warned when the record was written
+    const targets = cast.targets
+      .map((ref) => anchors.resolve(ref, sequence.anchors))
+      .filter(Boolean);
+    if (cast.targets.length && !targets.length) return;
+    fxCall("cast", cast.kind, {
+      from: fxBox(from),
+      targets: targets.map(fxBox),
+      tier: cast.tier,
+      tint: cast.tint,
+      tintGrad: cast.tintGrad,
+      aoe: cast.aoe,
+      seed: sequence.id * 97 + beatIndex,
+      timeScale: sequence.plan.scale,
+    });
+  }
+
+  /* ------------------------------------------------------------- recipes
+   * Each recipe registers its steps on the sequence timeline up front. */
+  function enterFrame(ctx, beat, beatIndex, frame) {
+    const { sequence, plan } = ctx;
+    const now = performance.now();
+    retireExpiredAttackOwners(now, false, sequence);
+    retireExpiredReactions(sequence, now);
+    for (const track of [...sequence.cards.values()])
+      if (now >= sequence.origin + (track.markers?.endAt ?? Infinity))
+        disposeCardMotion(sequence, track);
+    const old = capture();
+    ctx.render(frame);
+    if (!isCurrentSequence(sequence)) return null;
+    rebindReactions(sequence);
+    rebindCardMotions(sequence);
+    for (const owner of attackOwners.values()) syncAttackOwner(owner);
+    const excluded = new Set(sequence.reactions.keys());
+    for (const trackId of [...(beat.cardStartIds || []), ...(beat.cardLandingIds || [])]) {
+      const descriptor = plan.cardTracks?.find((track) => track.id === trackId);
+      if (descriptor) excluded.add(cardLayoutKey(descriptor));
+    }
+    for (const track of sequence.cards.values())
+      if (!track.disposed && (track.startBeatIndex === beatIndex || track.landingBeatIndex === beatIndex))
+        excluded.add(cardLayoutKey(track));
+    for (const contact of beat.contacts || [])
+      if (contact.targetRef) excluded.add(refKey(contact.targetRef));
+    const death = beat.kind === "death";
+    settleLayout(old, excluded, {
+      hold: death ? scaled(sequence, T.death.freeze + T.death.dissolve) : 0,
+      duration: scaled(sequence, death ? T.death.reflow : 420),
+    });
+    return old;
+  }
+  const at = (ctx, ms, fn) => timeline.at(ctx.sequence, ms, fn);
+
+  function heroFace(ctx, side) {
+    return anchors.resolve({ side, uid: "hero" }, ctx.sequence.anchors);
+  }
+
+  const recipes = {
+    play(ctx, beat, i) {
+      const e = beat.events[0],
+        card = EmberData.byId[e.cid] || null;
+      if (card?.type === "minion") {
+        at(ctx, beat.at, () => {
+          const old = enterFrame(ctx, beat, i, beat.frame);
+          if (!old) return;
+          const captured =
+              ctx.cardOrigin?.uid === e.uid ? ctx.cardOrigin.point : old["hand" + e.uid],
+            // A hidden hand (the enemy's on phones) has no card to start from.
+            origin = Number.isFinite(captured?.x) && captured.w > 0 ? captured : null;
+          startPlayCardMotion(ctx.sequence, ctx.events, beat, old, ctx.cardOrigin, card, ctx.cardHTML);
+          sound("select", origin || heroFace(ctx, e.side));
+          const landing = beat.targets[0]
+            ? EmberViewport.minionLandingBox(
+                ctx.plan.beats[ctx.plan.cardTracks?.find((t) => t.sourceEventId === e.id)?.landingBeatIndex]?.frame,
+                beat.targets[0].side,
+                beat.targets[0].uid,
+              )
+            : null;
+          ctx.sequence.records.set(
+            i,
+            tracePush({
+              beat: i,
+              sequence: ctx.sequence.id,
+              blockId: beat.blockId,
+              type: "play",
+              kind: "minion",
+              actor: traced({ side: e.side, uid: e.uid }, origin),
+              targets: beat.targets.map((ref) => traced(ref, landing)),
+              from: point(origin),
+              to: [point(landing)],
+              tier: 1,
+              at: performance.now(),
+              hitAt: [],
+              contactBox: [],
+              numberAt: [],
+            }),
+          );
+        });
+        return;
+      }
+      recipes.cast(ctx, beat, i, card);
+    },
+    power(ctx, beat, i) {
+      recipes.cast(ctx, beat, i, null);
+    },
+    cast(ctx, beat, i, card) {
+      const e = beat.events[0],
+        cast = beat.cast;
+      at(ctx, beat.at, () => {
+        if (!enterFrame(ctx, beat, i, beat.frame)) return;
+        const rec = castFlash(ctx, i, cast, beat.kind === "power" ? "power" : "cast");
+        rec.countered = !!beat.countered;
+        const from = anchors.resolve(cast.actor, ctx.sequence.anchors);
+        const school = beat.kind === "power" ? powerSchool(e.side, ctx.s) : schoolOf(card);
+        rec.school = school;
+        sound("play", from);
+        sound(card?.type === "weapon" ? "equip" : "cast-" + school, from);
+        if (e.side === "e" && card)
+          reveal(
+            card,
+            ctx.cardHTML,
+            from,
+            cast.targets.map((ref) => anchors.resolve(ref, ctx.sequence.anchors)),
+            [...ctx.sequence.anchors.entries()]
+              .filter(([key]) => key !== refKey(cast.actor))
+              .map(([, box]) => box),
+          );
+      });
+      if (!beat.countered) at(ctx, cast.startAt, () => castLaunch(ctx, i, cast));
+    },
+    attack(ctx, beat, i) {
+      const e = beat.events[0],
+        m = beat.motion;
+      at(ctx, beat.at, () => {
+        const old = enterFrame(ctx, beat, i, beat.frame);
+        if (!old) return;
+        const { sequence } = ctx;
+        const actorBox = resolveOrWarn(sequence, i, e.from, "actor"),
+          targetBox = resolveOrWarn(sequence, i, e.to, "target");
+        const outgoing = beat.contacts[0];
+        const rec = tracePush({
+          beat: i,
+          sequence: sequence.id,
+          blockId: beat.blockId,
+          type: "attack",
+          kind: m.family,
+          ranged: m.ranged,
+          actor: traced(e.from, actorBox),
+          targets: [traced(e.to, targetBox)],
+          from: point(actorBox),
+          to: [point(targetBox)],
+          tier: outgoing?.tier || 1,
+          at: sequence.origin + beat.at,
+          hitAt: [sequence.origin + beat.at + m.contact],
+          contactBox: contactBoxes([targetBox], [outgoing?.tier || 1], false),
+          numberAt: [null],
+          counterAt: null,
+          school: schoolOf(EmberData.byId[beat.sourceCid], true),
+        });
+        sequence.records.set(i, rec);
+        if (!actorBox || !targetBox) return;
+        if (beat.cutin) {
+          const art = cutinArt(e.from, beat.sourceCid, ctx.s);
+          if (art && !quality.reduced && fx2()?.available)
+            fx2().cutin(art, { side: e.from.side });
+        }
+        if (m.ranged) rangedRecoil(sequence, beat, e.from, actorBox, targetBox);
+        else lunge(ctx, beat, i, e.from, actorBox, targetBox, old);
+      });
+      at(ctx, beat.at + m.lift, () => {
+        const { sequence } = ctx;
+        if (performance.now() >= sequence.origin + beat.at + m.contact) return;
+        const actorBox = anchors.resolve(e.from, sequence.anchors),
+          targetBox = anchors.resolve(e.to, sequence.anchors);
+        sound("swing", actorBox);
+        const spec = EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid], beat.sourceCid);
+        if (m.ranged && actorBox && targetBox && spec) {
+          fxCall("attack", spec.fx, {
+            from: fxBox(actorBox),
+            to: fxBox(targetBox),
+            tier: beat.contacts[0]?.tier || 1,
+            tint: spec?.tint || null,
+            tintGrad: spec?.tintGrad ?? null,
+            ranged: true,
+            seed: sequence.id * 97 + i,
+            timeScale: sequence.plan.scale,
+          });
+        }
+      });
+    },
+    contact(ctx, beat, i) {
+      // One impulse per beat (§4.1): at the first highest-tier contact, with
+      // every box touched in that same instant. It also owns the edge flash,
+      // so tier 1 calls it too. compile already moved later contacts back by
+      // its hit-stop.
+      for (const [n, bucket] of beat.buckets.entries())
+        at(ctx, bucket.at, () => {
+          const old = enterFrame(ctx, beat, i, bucket.frame);
+          if (!old) return;
+          if (n === 0 && beat.sourceId && !ctx.seenRattles.has(beat.sourceId)) {
+            ctx.seenRattles.add(beat.sourceId);
+            const source = Object.values(ctx.history).find(
+              (p) => p.el?.dataset.uid === beat.sourceId,
+            );
+            cue(source, "亡语", "deathrattle");
+          }
+          Object.assign(ctx.history, old);
+          let impactBox = null,
+            impactTier = 0;
+          const boxes = [];
+          for (const index of bucket.contacts) {
+            const box = contactStep(ctx, beat, i, index);
+            if (box) boxes.push(box);
+            const event = beat.events[index];
+            if (box && event.type === "damage" && (event.loss ?? event.amount) > 0 && beat.contacts[index].tier >= impactTier) {
+              impactBox = box;
+              impactTier = beat.contacts[index].tier;
+            }
+          }
+          if (Math.abs(bucket.at - beat.impulseAt) < 1e-6 && boxes.length) {
+            const causeIndex = beat.contacts[bucket.contacts[0]].castBeat,
+              cause = causeIndex !== null ? ctx.plan.beats[causeIndex] : null;
+            fxCall("impulse", {
+              at: boxes.map(fxBox),
+              tier: beat.tier,
+              cinematic: !!(cause?.cutin || (cause?.battlecry && cause.legendary)),
+            });
+          }
+          if (impactBox) {
+            const contact = beat.contacts[bucket.contacts[0]],
+              cause = contact.castBeat !== null ? ctx.sequence.records.get(contact.castBeat) : null;
+            sound(cause ? "impact-" + (cause.school || "steel") : "damage", impactBox, {
+              gain: T.tiers[impactTier].volume,
+              strength: T.tiers[impactTier].volume,
+              heavy: impactTier === 3,
+            });
+          }
+        });
+    },
+    summon(ctx, beat, i) {
+      const land = scaled(ctx.sequence, T.summon.land);
+      at(ctx, beat.at, () => {
+        const old = enterFrame(ctx, beat, i, beat.frame);
+        if (!old) return;
+        const { sequence } = ctx;
+        for (const landed of beat.events) {
+          const track = [...sequence.cards.values()].find((c) => c.landingEventId === landed.id);
+          const el = unit(landed.side, landed.uid);
+          if (track) handoffCardMotion(sequence, track, el);
+          const box = el && pos(el);
+          const card = EmberData.byId[landed.cid];
+          if (el && !quality.reduced && (!track || !sequence.cardLandingIds.has(landed.id)) && land > 0)
+            animate(
+              el,
+              [
+                { translate: "0 3px", scale: "1.09 .93" },
+                { translate: "0 -2px", scale: ".985 1.025", offset: 0.45 },
+                { translate: "0 0", scale: "1" },
+              ],
+              { duration: land, easing: "cubic-bezier(.16,.8,.24,1)" },
+            );
+          if (landed.id === ctx.primaryLandingEventId && !landed.rebornFrom)
+            sound("play", box, { gain: 0.8 });
+          sound("summon", box);
+          if (card?.rarity === "legendary") sound("legendary", box);
+          if (landed.rebornFrom) cue(box, "复生 · 1 生命", "reborn");
+          if (beat.legendary && box && !quality.reduced) {
+            const seal = transient("summon-seal", scaled(sequence, T.summon.land + T.summon.legendary));
+            seal.textContent = "✦ 传说降临 ✦";
+            seal.style.left = box.x + "px";
+            seal.style.top = box.y - box.h / 2 - 20 + "px";
+          }
+          tracePush({
+            beat: i,
+            sequence: sequence.id,
+            blockId: beat.blockId,
+            type: "summon",
+            kind: beat.legendary ? EmberFXProfiles.get(landed.cid).arrival || "legendary" : "land",
+            actor: null,
+            targets: [traced(landed, box)],
+            from: null,
+            to: [point(box)],
+            tier: 1,
+            at: performance.now(),
+            hitAt: [],
+            contactBox: contactBoxes([box], [1], false),
+            numberAt: [],
+          });
+        }
+      });
+      at(ctx, beat.at + land, () => {
+        recordAnchors(ctx.sequence, beat.targets);
+        if (!beat.legendary) return;
+        const landed = beat.events[0],
+          box = anchors.resolve(landed, ctx.sequence.anchors),
+          spec = EmberFXProfiles.fx2Arrival(
+            EmberFXProfiles.get(landed.cid).arrival,
+            EmberData.byId[landed.cid],
+          );
+        if (box && spec)
+          fxCall("cast", spec.fx, {
+            from: fxBox(box),
+            targets: [fxBox(box)],
+            tier: 1,
+            tint: spec.tint || null,
+            tintGrad: spec.tintGrad ?? null,
+            aoe: false,
+            seed: ctx.sequence.id * 97 + i,
+            timeScale: ctx.sequence.plan.scale,
+          });
+      });
+      if (beat.battlecry) {
+        const cast = beat.battlecry;
+        at(ctx, cast.flashAt, () => {
+          const rec = castFlash(ctx, i, cast, "battlecry");
+          rec.school = schoolOf(EmberData.byId[beat.events[0].cid]);
+        });
+        at(ctx, cast.startAt, () => castLaunch(ctx, i, cast));
+      }
+    },
+    death(ctx, beat, i) {
+      at(ctx, beat.at, () => {
+        const old = enterFrame(ctx, beat, i, beat.frame);
+        if (!old) return;
+        const { sequence } = ctx;
+        Object.assign(ctx.history, old);
+        let soundBox = null;
+        for (const e of beat.events) {
+          const key = refKey(e),
+            owner = attackOwners.get(key);
+          let visual = ctx.history[key];
+          if (owner && !owner.live && owner.el?.isConnected) {
+            owner.dead = true;
+            const copy = owner.el.cloneNode(true);
+            copy.classList.remove("attack-actor", "death-ghost");
+            copy.style.transform = "";
+            visual = { ...(pos(owner.el) || owner.impact), el: owner.el, html: copy.outerHTML };
+            releaseAttackOwner(key, false, owner);
+          } else if (owner) releaseAttackOwner(key, false, owner);
+          deathGhost(sequence, visual, schoolOf(EmberData.byId[e.cid]));
+          dropNumbers(key, scaled(sequence, T.death.freeze + T.death.dissolve));
+          sequence.anchors.delete(key);
+          soundBox ||= visual;
+          tracePush({
+            beat: i,
+            sequence: sequence.id,
+            blockId: beat.blockId,
+            type: "death",
+            kind: e.cid,
+            actor: null,
+            targets: [traced(e, visual)],
+            from: null,
+            to: [],
+            tier: 1,
+            at: performance.now(),
+            hitAt: [],
+            contactBox: [],
+            numberAt: [],
+          });
+        }
+        sound("death", soundBox);
+      });
+      at(ctx, beat.at + beat.hold, () => recordAnchors(ctx.sequence));
+    },
+    draw(ctx, beat, i) {
+      at(ctx, beat.at, () => {
+        if (!enterFrame(ctx, beat, i, beat.frame)) return;
+        for (const e of beat.events) {
+          sound("draw", e.side === "p" ? { x: W * 0.72 } : { x: W * 0.55 });
+          if (!quality.reduced) startDrawCardMotion(ctx.sequence, e, beat);
+        }
+      });
+    },
+    burn(ctx, beat, i) {
+      at(ctx, beat.at, () => {
+        if (!enterFrame(ctx, beat, i, beat.frame)) return;
+        for (const e of beat.events) {
+          const p = heroFace(ctx, e.side);
+          sound("burn", p);
+          cue(p, e.side === "p" && e.cid ? `${EmberData.byId[e.cid].name} · 手牌已满` : "手牌已满 · 焚毁", "burn");
+        }
+      });
+    },
+    turn(ctx, beat, i) {
+      at(ctx, beat.at, () => {
+        if (!enterFrame(ctx, beat, i, beat.frame)) return;
+        for (const e of beat.events) {
+          turnCue(e.side, beat.frame?.turn ?? ctx.s.turn);
+          sound(e.side === "p" ? "turn" : "turn-enemy");
+        }
+      });
+    },
+    over(ctx, beat, i) {
+      at(ctx, beat.at, () => {
+        if (!enterFrame(ctx, beat, i, beat.frame)) return;
+        for (const e of beat.events) {
+          sound(e.winner === "p" ? "victory" : e.winner === "draw" ? "draw-result" : "defeat");
+          if (e.winner !== "draw")
+            cue(heroFace(ctx, e.winner === "p" ? "e" : "p"), "英雄倒下", "defeat");
+        }
+      });
+    },
+    secret(ctx, beat, i) {
+      at(ctx, beat.at, () => {
+        if (!enterFrame(ctx, beat, i, beat.frame)) return;
+        const { sequence } = ctx;
+        for (const e of beat.events) {
+          const owner = { side: e.side, uid: "hero" },
+            box = heroFace(ctx, e.side);
+          cue(box, (EmberData.byId[e.cid]?.name || "奥秘") + " · 触发", "secret");
+          sound("cast-arcane", box);
+          const countered = ctx.plan.beats.find(
+            (b, n) => n < i && b.countered && b.actionId === beat.actionId,
+          );
+          const caster = countered ? countered.cast.actor : null,
+            casterBox = caster ? anchors.resolve(caster, sequence.anchors) : null;
+          if (casterBox) fxCall("contact", { at: fxBox(casterBox), tier: 1 });
+          tracePush({
+            beat: i,
+            sequence: sequence.id,
+            blockId: beat.blockId,
+            type: "secret",
+            kind: e.cid,
+            actor: traced(owner, box),
+            targets: caster ? [traced(caster, casterBox)] : [],
+            from: null,
+            to: casterBox ? [point(casterBox)] : [],
+            tier: 1,
+            at: performance.now(),
+            hitAt: [],
+            contactBox: contactBoxes([casterBox], [1], false),
+            numberAt: [],
+          });
+        }
+      });
+    },
+    weaponWear(ctx, beat, i) {
+      at(ctx, beat.at, () => {
+        if (!enterFrame(ctx, beat, i, beat.frame)) return;
+        for (const e of beat.events) {
+          const box = heroFace(ctx, e.side);
+          cue(box, e.broken ? "武器损坏" : "耐久 −1", "weapon");
+          if (e.broken) sound("weapon-break", box);
+        }
+      });
+    },
+    contract(ctx, beat, i) {
+      at(ctx, beat.at, () => {
+        if (!enterFrame(ctx, beat, i, beat.frame)) return;
+        const e = beat.events[0],
+          name = EmberData.byId[e.cid].name,
+          box = anchors.resolve(e, ctx.sequence.anchors) || measure(e) || heroFace(ctx, e.side);
+        if (e.divine && !quality.reduced) {
+          const seal = transient("divine-arrival", beat.hold);
+          const deity = EmberFXProfiles.get(e.cid).deity;
+          seal.dataset.deity = deity.theme;
+          seal.innerHTML = `<div class="divine-atmosphere"></div><div class="divine-halo"></div><div class="divine-orbit orbit-one"></div><div class="divine-orbit orbit-two"></div><div class="divine-rays"><i></i><i></i><i></i><i></i><i></i></div><img src="${EmberArt.card(EmberData.byId[e.cid])}" alt=""><div class="divine-caption"><small>${deity.english}</small><strong>${name}</strong><span>${deity.title}</span><em>${deity.sigil} 神祇降临 ${deity.sigil}</em></div>`;
+          sound("phase", box);
+        } else cue(measure(e) || box, name + " · 契约降临", "summon");
+      });
+    },
+    phase(ctx, beat, i) {
+      at(ctx, beat.at, () => {
+        if (!enterFrame(ctx, beat, i, beat.frame)) return;
+        phaseChange(ctx.s, beat.hold);
+      });
+    },
+  };
+  function contactStep(ctx, beat, beatIndex, index) {
+    const { sequence } = ctx;
+    const contact = beat.contacts[index],
+      event = beat.events[index],
+      ref = contact.targetRef,
+      box = resolveOrWarn(sequence, beatIndex, ref, "target");
+    if (!box) return null;
+    const cause = contact.castBeat !== null ? sequence.records.get(contact.castBeat) : null,
+      key = refKey(ref),
+      tier = contact.tier,
+      actorBox = contact.actor ? anchors.resolve(contact.actor, sequence.anchors) : null,
+      timing = {
+        contact: contact.contactAt,
+        release: contact.releaseAt,
+        recoveryEnd: contact.recoveryEndAt,
+        recoilPx: contact.recoilPx,
+        family: contact.family,
+      };
+    let numberAt = null;
+    const sourceless = contact.direction === "sourceless" || !cause;
+    if (event.type === "damage") {
+      const loss = event.loss ?? event.amount;
+      if (event.absorbed) {
+        cue({ ...box, y: box.y - 24 }, `护甲吸收 ${event.absorbed}`, "armor");
+        sound("armor", box);
+      }
+      if (loss > 0) {
+        startReaction(sequence, ref, actorBox, timing);
+        numberAt = number(numberSpot(contact, box, actorBox), loss, "damage", { key, tier });
+        if (contact.direction === "outgoing" && cause && !cause.ranged) {
+          const spec = EmberFXProfiles.fx2Attack(EmberData.byId[contact.sourceCid], contact.sourceCid);
+          if (spec) fxCall("attack", spec.fx, {
+            from: fxBox(actorBox),
+            to: fxBox(box),
+            tier,
+            tint: spec?.tint || null,
+            tintGrad: spec?.tintGrad ?? null,
+            ranged: false,
+            seed: sequence.id * 97 + beatIndex,
+            timeScale: sequence.plan.scale,
+          });
+        } else if (contact.direction === "retaliation" || sourceless)
+          fxCall("contact", { at: fxBox(box), tier });
+      }
+    } else if (event.type === "shield") {
+      startReaction(sequence, ref, actorBox, { ...timing, recoilPx: T.tiers[1].recoilPx });
+      numberAt = number(box, 0, "shield", { key });
+      sound("shield", box);
+      if (sourceless || contact.direction === "retaliation") fxCall("contact", { at: fxBox(box), tier: 1 });
+    } else if (event.type === "heal") {
+      numberAt = number(box, event.amount, "heal", { key });
+      sound("heal", box);
+      if (sourceless) fxCall("contact", { at: fxBox(box), tier: 1 });
+    } else if (event.type === "status") {
+      statusCue(ctx, event, box);
+    }
+    if (numberAt !== null) {
+      if (cause && contact.direction === "retaliation") cause.counterAt = numberAt;
+      else if (cause) cause.numberAt[contact.targetIndex] = numberAt;
+      else
+        tracePush({
+          beat: beatIndex,
+          sequence: sequence.id,
+          blockId: beat.blockId,
+          type: "contact",
+          kind: event.type,
+          actor: null,
+          targets: [traced(ref, box)],
+          from: null,
+          to: [point(box)],
+          tier,
+          at: sequence.origin + contact.contactAt,
+          hitAt: [sequence.origin + contact.contactAt],
+          contactBox: contactBoxes([box], [tier], false),
+          numberAt: [numberAt],
+        });
+    }
+    return box;
+  }
+  /** A melee pair shows its two numbers on the far halves of the two cards. */
+  function numberSpot(contact, box, actorBox) {
+    if (!actorBox || !["outgoing", "retaliation"].includes(contact.direction))
+      return box;
+    const dx = box.x - actorBox.x,
+      dy = box.y - actorBox.y,
+      len = Math.hypot(dx, dy) || 1;
+    return {
+      ...box,
+      x: box.x + (dx / len) * box.w * 0.12,
+      y: box.y + (dy / len) * box.h * 0.22,
+    };
+  }
+  const STATUS_LABELS = {
+    trigger: () => "能力触发",
+    freeze: () => "冻结",
+    thaw: () => "解冻",
+    silence: () => "沉默",
+    transform: () => "变形",
+    sacrifice: () => "献祭",
+    expire: (e) => `攻击 ${e.attack}`,
+    buff: (e) => `+${e.attack}${e.health ? " / +" + e.health : " 攻击"}`,
+    grant: (e) => EmberData.kw[e.tag],
+    armor: (e) => `护甲 +${e.amount}`,
+    mana: (e) => `法力 +${e.amount}`,
+  };
+  const STATUS_SOUNDS = {
+    freeze: "freeze",
+    silence: "silence",
+    transform: "cast-shadow",
+    armor: "armor",
+    buff: "buff",
+    mana: "buff",
+    grant: "buff",
+  };
+  /* §2.5: status visuals belong to the card's CSS state after render; the
+   * director only names the change. */
+  function statusCue(ctx, e, box) {
+    cue(box, STATUS_LABELS[e.kind]?.(e) || e.kind, e.kind);
+    if (STATUS_SOUNDS[e.kind]) sound(STATUS_SOUNDS[e.kind], box, { gain: 0.6 });
+    if (e.kind === "transform" && !quality.reduced) {
+      const el = unit(e.side, e.uid);
+      if (el)
+        animate(
+          el,
+          [
+            { opacity: 0, filter: "blur(9px)", scale: ".85" },
+            { opacity: 1, filter: "blur(0)", scale: "1" },
+          ],
+          { duration: scaled(ctx.sequence, 300) },
+        );
+    }
+  }
+  function phaseChange(s, hold) {
+    const boss = EmberData.bosses[s.bossIndex];
+    if (!boss) return;
+    const school = EmberFXProfiles.fromPalette(boss.palette),
       el = document.getElementById("cinematic");
-    el.innerHTML = `<div class="cinematic-inner" style="--theme:${colors[school][1]}"><div class="cinematic-kicker">PHASE II · ${boss.en}</div><div class="cinematic-title">${boss.name} · 觉醒</div><div class="cinematic-quote">「${boss.quote}」</div></div>`;
+    el.innerHTML = `<div class="cinematic-inner" style="--theme:${accents[school]}"><div class="cinematic-kicker">PHASE II · ${boss.en}</div><div class="cinematic-title">${boss.name} · 觉醒</div><div class="cinematic-quote">「${boss.quote}」</div></div>`;
     el.classList.add("visible");
+    const life = Math.max(0, hold - 50);
     if (!quality.reduced)
       animate(
         el,
@@ -1936,155 +2791,138 @@ const EmberFX = (() => {
           { opacity: 1, offset: 0.73 },
           { opacity: 0 },
         ],
-        { duration: 1750, fill: "forwards" },
+        { duration: life, fill: "forwards" },
       );
-    const ep = fallback(s, "e", "hero"),
-      lane = EmberViewport.lane("e");
-    vignette(school, 1550, ep.x, ep.y);
-    rune(lane.x, lane.y, school, 250, 1700);
-    ring(lane.x, lane.y, school, 420, 1600, 0.8);
-    spark(ep.x, ep.y, school, 95, {
-      speed: 250,
-      up: -90,
-      gravity: 0,
-      life: 2000,
-      size: 4,
-    });
-    EmberVFX.arrival(
-      {
-        fire: "dragon-wake",
-        frost: "frost-throne",
-        arcane: "astral-gate",
-        shadow: "astral-gate",
-        holy: "solar-crown",
-        nature: "solar-crown",
-        steel: "solar-crown",
-        blood: "dragon-wake",
-      }[school],
-      ep,
-      school,
-    );
     EmberAudio.fx("phase");
     schedule(() => {
       el.classList.remove("visible");
       el.innerHTML = "";
-    }, 1770);
+    }, life + 20);
   }
-  function paletteSchool(p) {
-    return EmberFXProfiles.fromPalette(p);
-  }
-  function classification(c, attack = false) {
-    if (!c) return attack ? "steel" : "fire";
-    if (attack) {
-      if (
-        ["knight", "golem", "archer", "rogue", "wolf", "reaper"].includes(c.art)
-      )
-        return "steel";
-      if (c.art === "dragon" || c.art === "phoenix") return "fire";
-      if (c.art === "spider" || c.art === "treant") return "nature";
-    }
-    return paletteSchool(c.palette);
-  }
-  function hitReaction(
-    el,
-    heavy = false,
-    from = null,
-    motion = null,
-    lifecycle = null,
-  ) {
-    if (!el || quality.reduced) return;
-    const p = pos(el);
-    if (!p) return;
-    const dx = from ? p.x - from.x : 0,
-      dy = from ? p.y - from.y : -1;
-    const length = Math.hypot(dx, dy) || 1,
-      amount = motion?.recoil || (heavy ? 8 : 4);
-    const baseFilter =
-      typeof getComputedStyle === "function"
-        ? getComputedStyle(el).filter
-        : "none";
-    const withBrightness = (value) =>
-      baseFilter && baseFilter !== "none"
-        ? `${baseFilter} brightness(${value})`
-        : `brightness(${value})`;
-    if (!motion) {
-      return animate(
-        el,
-        [
-          { filter: withBrightness(1.85), translate: "0 0" },
-          {
-            filter: withBrightness(1.15),
-            translate: `${(dx / length) * amount}px ${(dy / length) * amount}px`,
-            offset: 0.28,
-          },
-          { filter: withBrightness(1), translate: "0 0" },
-        ],
-        { duration: 320, easing: "ease-out" },
-        lifecycle?.onFinish,
+
+  /* ------------------------------------------------------------- present */
+  function cutinAllowed(s) {
+    return (ctx) => {
+      const spec = EmberFXProfiles.fx2Attack(
+        ctx.cid ? EmberData.byId[ctx.cid] || { id: ctx.cid } : null,
+        ctx.cid,
       );
+      return EmberFXProfiles.cutinPolicy({
+        cutin: !!spec?.cutin,
+        fx2: !quality.reduced && !!fx2()?.available,
+        art: !!cutinArt({ side: ctx.side, uid: ctx.uid }, ctx.cid, s),
+        hero: ctx.hero,
+        legendary: ctx.legendary,
+      });
+    };
+  }
+  function castSpecFor(s) {
+    return (ctx) => {
+      let spec = null;
+      if (ctx.kind === "play") spec = EmberFXProfiles.fx2(ctx.cid);
+      else if (ctx.kind === "power")
+        spec = EmberFXProfiles.fx2Power(powerSchool(ctx.side, s));
+      else if (ctx.kind === "battlecry")
+        spec = EmberFXProfiles.fx2Cast(ctx.battlecry, EmberData.byId[ctx.cid]);
+      return spec
+        ? { kind: spec.fx, tint: spec.tint || null, tintGrad: spec.tintGrad ?? null }
+        : null;
+    };
+  }
+  function present(events, s, render, after, cardHTML, before = null, options = null) {
+    const version = ++presentationVersion;
+    if (busy) {
+      const result = cancel(true);
+      if (result.reentered || presentationVersion !== version) return;
     }
-    const contact = Math.max(0, motion.contact ?? 0),
-      release = Math.max(contact, motion.release ?? contact),
-      recoveryEnd = Math.max(release, motion.recoveryEnd ?? release),
-      duration = recoveryEnd - contact,
-      elapsed = Math.max(0, Math.min(duration, motion.elapsed ?? 0));
-    if (!(duration > 0) || elapsed >= duration) return;
-    const releaseAt = Math.max(
-        0,
-        Math.min(1, (release - contact) / duration),
-      ),
-      peakAt = releaseAt + (1 - releaseAt) * 0.28,
-      frames = [
-        { filter: withBrightness(1.85), translate: "0 0", offset: 0 },
-      ];
-    if (releaseAt > 0 && releaseAt < 1)
-      frames.push({
-        filter: withBrightness(1.15),
-        translate: "0 0",
-        offset: releaseAt,
-        easing: "linear",
-      });
-    if (releaseAt < 1)
-      frames.push({
-        filter: withBrightness(1.15),
-        translate: `${(dx / length) * amount}px ${(dy / length) * amount}px`,
-        offset: Math.min(1, peakAt),
-        easing: "cubic-bezier(.16,.8,.3,1)",
-      });
-    frames.push({ filter: withBrightness(1), translate: "0 0", offset: 1 });
-    return animate(
-      el,
-      frames,
-      { duration, delay: -elapsed, fill: "forwards" },
-      lifecycle?.onFinish,
-    );
+    clearTurnCue();
+    const snapshot = captureAnchors();
+    const plan = EmberCombat.compile(events, before, s, quality.reduced, "blade", {
+      anchor: (ref, frame) =>
+        anchors.resolve(ref, snapshot) ||
+        (ref?.uid && ref.uid !== "hero"
+          ? EmberViewport.minionLandingBox(frame, ref.side, ref.uid)
+          : null),
+      castSpec: castSpecFor(s),
+      card: (cid) => EmberData.byId[cid] || null,
+      cutin: cutinAllowed(s),
+    });
+    if (!plan.beats.length) {
+      const startGeneration = generation;
+      render();
+      if (presentationVersion !== version || generation !== startGeneration || activeSequence)
+        return;
+      after?.();
+      return;
+    }
+    EmberPortraits.prepareSummons(events);
+    setBusy(true);
+    const sequence = createSequence(plan, version);
+    sequence.anchors = snapshot;
+    pendingCommit = () => render();
+    doneCallback = after;
+    const primary = events.find((e) => ["play", "attack", "power"].includes(e.type));
+    const ctx = {
+      sequence,
+      plan,
+      render,
+      cardHTML,
+      cardOrigin: options?.cardOrigin || null,
+      events,
+      s,
+      history: capture(),
+      seenRattles: new Set(),
+      primaryLandingEventId:
+        plan.cardTracks?.find((track) => track.sourceEventId === primary?.id)?.landingEventId || null,
+    };
+    for (const [index, beat] of plan.beats.entries()) {
+      const recipe =
+        recipes[beat.kind] ||
+        (beat.buckets ? recipes.contact : null);
+      recipe?.(ctx, beat, index);
+    }
+    timeline.at(sequence, plan.duration + 80, () => finish(sequence));
   }
-  function cacheReadableStats() {
-    readableStats = [
-      ...document.querySelectorAll(
-        "#battle .stat, #battle .hero-health, #battle .hero-armor, .attack-actor .stat, .attack-actor .hero-health, .attack-actor .hero-armor",
-      ),
-    ];
+  function finish(sequence) {
+    retireExpiredReactions(sequence, performance.now(), true);
+    retireExpiredAttackOwners(performance.now(), true, sequence);
+    for (const track of [...sequence.cards.values()]) disposeCardMotion(sequence, track);
+    closeSequence(sequence);
+    const commit = pendingCommit,
+      cb = doneCallback;
+    pendingCommit = doneCallback = null;
+    commit?.();
+    if (
+      generation !== sequence.generation ||
+      presentationVersion !== sequence.version ||
+      activeSequence
+    )
+      return;
+    setBusy(false);
+    cb?.();
   }
+
+  /* ------------------------------------------------------------ lifecycle */
   function cleanupVisuals(sequence = activeSequence) {
     if (sequence?.cards) {
-      for (const track of [...sequence.cards.values()])
-        disposeCardMotion(sequence, track);
+      for (const track of [...sequence.cards.values()]) disposeCardMotion(sequence, track);
       sequence.cards.clear();
     }
     timers.forEach(clearTimeout);
     timers.clear();
+    if (sequence) {
+      sequence.timer = null;
+      sequence.queue.length = 0;
+    }
     animations.forEach((a) => a.cancel());
     animations.clear();
     layoutOwners.clear();
     retireExpiredReactions(sequence, performance.now(), true);
-    retireExpiredAttackOwners(performance.now(), true, sequence);
+    for (const key of [...attackOwners.keys()]) releaseAttackOwner(key);
     nodes.forEach((el) => el.remove());
     nodes.clear();
-    items = [];
-    EmberVFX.clear();
-    readableStats = [];
-    ctx.clearRect(0, 0, W, H);
+    // In-flight effects of a cancelled scene must not outlive it.
+    fx2()?.clear?.();
     document.getElementById("cinematic").classList.remove("visible");
     document
       .querySelectorAll(".hero,.minion,#hand .hand-card")
@@ -2113,1321 +2951,6 @@ const EmberFX = (() => {
         activeSequence !== null,
     };
   }
-  function cue(p, text, kind = "status") {
-    if (!p) return;
-    const el = transient("combat-cue cue-" + kind, quality.reduced ? 700 : 950);
-    el.textContent = text;
-    el.style.left = p.x + "px";
-    el.style.top = p.y - p.h * 0.35 + "px";
-    if (!quality.reduced)
-      animate(
-        el,
-        [
-          { opacity: 0, translate: "0 7px", scale: ".9" },
-          { opacity: 1, translate: "0 0", scale: "1", offset: 0.18 },
-          { opacity: 1, offset: 0.7 },
-          { opacity: 0, translate: "0 -10px" },
-        ],
-        { duration: 940 },
-      );
-  }
-  function signatureCue(c, duration) {
-    if (!c || quality.reduced) return;
-    const d = Math.min(540, duration * 0.88),
-      laneP = EmberViewport.lane("p"),
-      laneE = EmberViewport.lane("e");
-    const el = transient("signature-cue", d);
-    el.innerHTML = `<small>${c.type === "minion" ? "传说降临" : "法术施放"}</small><strong>${c.name}</strong>`;
-    el.style.left = W / 2 + "px";
-    el.style.top = (laneP.y + laneE.y) / 2 + "px";
-    el.style.setProperty("--signature-color", colors[classification(c)][1]);
-    animate(
-      el,
-      [
-        { opacity: 0, scale: ".88", translate: "0 10px" },
-        { opacity: 1, scale: "1.02", translate: "0 0", offset: 0.23 },
-        { opacity: 1, scale: "1", offset: 0.62 },
-        { opacity: 0, scale: "1.07", translate: "0 -8px" },
-      ],
-      { duration: d },
-    );
-  }
-  function present(
-    events,
-    s,
-    render,
-    after,
-    cardHTML,
-    before = null,
-    options = null,
-  ) {
-    const version = ++presentationVersion;
-    if (busy) {
-      const result = cancel(true);
-      if (result.reentered || presentationVersion !== version) return;
-    }
-    clearTurnCue();
-    const cardOrigin = options?.cardOrigin || null;
-    const primary = events.find((e) =>
-      ["play", "attack", "power"].includes(e.type),
-    );
-    let c = primary?.cid ? EmberData.byId[primary.cid] : null;
-    const initial = capture();
-    if (primary?.type === "attack") {
-      const source =
-          primary.view?.[primary.from.side] || before?.[primary.from.side],
-        boardSource = source?.board?.find(
-          (m) => m.uid === primary.from.uid,
-        ),
-        sourceCid =
-          (primary.from.uid === "hero"
-            ? source?.weapon?.cid || s[primary.from.side].weapon?.cid
-            : boardSource?.cid ||
-              initial[primary.from.side + primary.from.uid]?.cid) || null;
-      c = sourceCid ? EmberData.byId[sourceCid] : null;
-    }
-    const visualProfile = EmberFXProfiles.get(c),
-      plan = EmberCombat.compile(
-        events,
-        before,
-        s,
-        quality.reduced,
-      );
-    if (!plan.beats.length || quality.reduced) {
-      const startGeneration = generation;
-      render();
-      if (
-        presentationVersion !== version ||
-        generation !== startGeneration ||
-        activeSequence
-      )
-        return;
-      postEvents(events, s, capture(), null, null);
-      if (
-        presentationVersion !== version ||
-        generation !== startGeneration ||
-        activeSequence
-      )
-        return;
-      after?.();
-      return;
-    }
-    EmberPortraits.prepareSummons(events);
-    EmberVFX.prepare();
-    const history = { ...initial };
-    let school = classification(c, primary?.type === "attack");
-    if (primary?.type === "power")
-      school =
-        primary.side === "e" && s.mode !== "practice"
-          ? paletteSchool(EmberData.bosses[s.bossIndex].palette)
-          : { mage: "fire", paladin: "holy", ranger: "steel" }[
-              primary.side === "e" ? s.opponentHero : s.heroId
-            ];
-    const countered = events.some(
-      (e) => e.type === "secret" && e.cid === "counterspell",
-    );
-    const affected = plan.beats
-      .filter((b) => !b.sourceId)
-      .flatMap((b) => b.events)
-      .filter(
-        (e) => ["damage", "heal", "status"].includes(e.type) && e.side && e.uid,
-      );
-    const effectTargets = (map, state, list = affected) => {
-      const seen = new Set();
-      return list
-        .filter((e) => {
-          const id = e.side + e.uid;
-          if (seen.has(id)) return false;
-          seen.add(id);
-          return true;
-        })
-        .map((e) => map[e.side + e.uid] || fallback(state, e.side, e.uid));
-    };
-    counts.actions++;
-    counts.school[school] = (counts.school[school] || 0) + 1;
-    setBusy(true);
-    const sequence = createSequence(plan, version);
-    pendingCommit = () => render();
-    doneCallback = after;
-    const seenRattles = new Set();
-    const locate = (map, t, state) =>
-      map[t.side + t.uid] || fallback(state, t.side, t.uid);
-    // Register launch cues with the sequence clock up front. A late beat
-    // callback must not enqueue a missed swing behind its already-due impact.
-    for (const beat of plan.beats) {
-      const event = beat.events[0];
-      if (event?.type !== "attack") continue;
-      const launchAt = beat.markers?.anticipation ?? beat.at,
-        contactAt = beat.markers?.contact;
-      scheduleAt(sequence, launchAt, () => {
-        if (
-          contactAt !== null &&
-          contactAt !== undefined &&
-          performance.now() >= sequence.origin + contactAt
-        )
-          return;
-        const current = capture();
-        sound("swing", locate(current, event.from, beat.frame));
-      });
-    }
-    for (const beat of plan.beats)
-      for (const e of beat.events) {
-        if (e.type === "heal" && e.from)
-          scheduleAt(
-            sequence,
-            Math.max(0, beat.at - 300),
-            () => {
-              const positions = { ...initial, ...capture() };
-              projectile(
-                locate(positions, e.from, beat.frame),
-                locate(positions, { side: e.side, uid: e.uid }, beat.frame),
-                "blood",
-                Math.min(300, beat.at),
-              );
-            },
-          );
-      }
-    for (const [beatIndex, beat] of plan.beats.entries())
-      scheduleAt(sequence, beat.at, () => {
-        const now = performance.now();
-        retireExpiredAttackOwners(now, false, sequence);
-        retireExpiredReactions(sequence, now);
-        for (const track of [...sequence.cards.values()])
-          if (now >= sequence.origin + (track.markers?.endAt ?? Infinity))
-            disposeCardMotion(sequence, track);
-        const old = capture(),
-          event = beat.events[0];
-        Object.assign(history, old);
-        render(beat.frame);
-        if (!isCurrentSequence(sequence)) return;
-        rebindReactions(sequence);
-        rebindCardMotions(sequence);
-        if (event.type === "summon") {
-          for (const landed of beat.events) {
-            const track = [...sequence.cards.values()].find(
-              (candidate) => candidate.landingEventId === landed.id,
-            );
-            if (track) handoffCardMotion(sequence, track, unit(landed.side, landed.uid));
-          }
-        }
-        const reactionTargets = new Set(sequence.reactions.keys());
-        for (const trackId of [
-          ...(beat.cardStartIds || []),
-          ...(beat.cardLandingIds || []),
-        ]) {
-          const descriptor = plan.cardTracks?.find(
-            (track) => track.id === trackId,
-          );
-          if (descriptor) reactionTargets.add(cardLayoutKey(descriptor));
-        }
-        for (const track of sequence.cards.values()) {
-          if (track.disposed) continue;
-          if (
-            track.startBeatIndex === beatIndex ||
-            track.landingBeatIndex === beatIndex
-          )
-            reactionTargets.add(cardLayoutKey(track));
-        }
-        for (const contact of beat.contacts || []) {
-          if (
-            contact.targetRef &&
-            contact.recoveryEndAt > contact.contactAt
-          )
-            reactionTargets.add(refKey(contact.targetRef));
-        }
-        settleLayout(old, reactionTargets);
-        if (beat.sourceId && !seenRattles.has(beat.sourceId)) {
-          seenRattles.add(beat.sourceId);
-          const p = Object.values(history).find(
-            (p) => p.el?.dataset.uid === beat.sourceId,
-          );
-          cue(p, "亡语", "deathrattle");
-        }
-        if (["play", "power"].includes(event.type)) {
-          if (c && event.side === "e") reveal(c, event.side, cardHTML);
-          if (visualProfile.signature) signatureCue(c, beat.hold);
-          const from = locate(
-            old,
-            { side: event.side, uid: "hero" },
-            beat.frame,
-          );
-          sound(
-            c?.type === "minion" ? "select" : "play",
-            old["hand" + event.uid] || from,
-          );
-          const cardTrack = plan.cardTracks?.find(
-            (track) => track.sourceEventId === event.id,
-          );
-          const target = event.target;
-          const profile = EmberRules.profile(c);
-          const summon = cardTrack
-            ? events.find((e) => e.id === cardTrack.landingEventId)
-            : events.find((e) => e.type === "summon");
-          const firstEffect = events.find(
-            (e) =>
-              ["damage", "heal", "status", "summon"].includes(e.type) && e.side,
-          );
-          const landingPoint = cardTrack
-            ? EmberViewport.minionLandingBox(
-                plan.beats[cardTrack.landingBeatIndex]?.frame,
-                cardTrack.targetRef.side,
-                cardTrack.targetRef.uid,
-              )
-            : null;
-          const to = landingPoint && c?.type === "minion"
-            ? landingPoint
-            : target
-            ? locate(old, target, beat.frame)
-            : summon
-              ? fallback(s, summon.side, summon.uid)
-              : firstEffect
-                ? locate(
-                    old,
-                    { side: firstEffect.side, uid: firstEffect.uid || "hero" },
-                    beat.frame,
-                  )
-                : EmberViewport.lane(
-                    profile.self ? event.side : event.side === "p" ? "e" : "p",
-                  );
-          if (c?.type === "minion") {
-            startPlayCardMotion(
-              sequence,
-              events,
-              beat,
-              old,
-              cardOrigin,
-              c,
-              cardHTML,
-            );
-            rune(to.x, to.y, school, 62, beat.hold);
-            add("pillar", { ...to, school, radius: 38 }, beat.hold);
-          } else {
-            let kind = visualProfile.cast;
-            if (event.type === "power")
-              kind =
-                {
-                  fire: "ember",
-                  frost: "ice-lance",
-                  nature: "wildgate",
-                  holy: "benediction",
-                  shadow: "siphon",
-                  blood: "dragon-breath",
-                  steel: "arrow",
-                }[school] || "ember";
-            if (countered) {
-              // An intercepted spell gathers at its source, then dissipates at
-              // the reveal; it must not depict damage that never happened.
-              EmberVFX.spell("starwell", from, from, [from], school, beat.hold);
-            } else
-              EmberVFX.spell(
-                kind,
-                from,
-                to,
-                effectTargets(old, beat.frame),
-                school,
-                beat.hold,
-              );
-            sound(c?.type === "weapon" ? "equip" : "cast-" + school, from);
-          }
-        }
-        if (event.type === "attack") {
-          const now = capture(),
-            from = locate(now, event.from, beat.frame),
-            to = locate(now, event.to, beat.frame);
-          const attackCard =
-              (beat.sourceCid && EmberData.byId[beat.sourceCid]) || c,
-            attackProfile = EmberFXProfiles.get(attackCard),
-            ranged = !!beat.motion?.ranged,
-            motion = beat.motion || EmberFXProfiles.motionFor("blade"),
-            attackStart = sequence.origin + beat.at;
-          EmberVFX.attack(
-            attackProfile.attack,
-            from,
-            to,
-            classification(attackCard, true),
-            { ...motion, startAt: attackStart },
-          );
-          if (!ranged) {
-            // render() has replaced the live DOM; its new canvas is not painted
-            // until the observer/frame runs. Copy the last painted source now.
-            const actor = lunge(
-              {
-                ...from,
-                el: from.el?.querySelector(".portrait-motion")
-                  ? from.el
-                  : old[event.from.side + event.from.uid]?.el || from.el,
-              },
-              to,
-              motion,
-              attackStart,
-            );
-            if (actor) {
-              const key = refKey(event.from),
-                owner = {
-                  ...actor,
-                  side: event.from.side,
-                  uid: event.from.uid,
-                  sequence,
-                  dead: false,
-                  deadline: attackStart + actor.duration + 2,
-                  motion,
-                  impact: {
-                    ...from,
-                    el: actor.el,
-                    x: from.x + (to.x - from.x) * 0.77,
-                    y: from.y + (to.y - from.y) * 0.77,
-                    left: from.left + (to.x - from.x) * 0.77,
-                    top: from.top + (to.y - from.y) * 0.77,
-                  },
-                };
-              releaseAttackOwner(key, false);
-              attackOwners.set(key, owner);
-              syncAttackOwner(owner);
-              scheduleAt(
-                sequence,
-                beat.at + actor.duration + 2,
-                () => {
-                  releaseAttackOwner(key, true, owner);
-                },
-              );
-            }
-          }
-        }
-        for (const owner of attackOwners.values()) syncAttackOwner(owner);
-        const positions = { ...history, ...old };
-        for (const owner of attackOwners.values())
-          if (performance.now() < owner.deadline)
-            positions[owner.side + owner.uid] = owner.impact;
-        if (
-          event.type === "summon" &&
-          c?.id === event.cid &&
-          visualProfile.battlecry &&
-          !countered
-        ) {
-          const source =
-            pos(unit(event.side, event.uid)) ||
-            fallback(beat.frame, event.side, event.uid);
-          const targets = effectTargets(
-            { ...positions, ...capture() },
-            beat.frame,
-          );
-          EmberVFX.spell(
-            visualProfile.battlecry,
-            source,
-            targets[0] || source,
-            targets,
-            classification(c),
-            beat.hold,
-          );
-        }
-        postEvents(beat.events, beat.frame, positions, primary, school, {
-          sequence,
-          contacts: beat.contacts || [],
-          beat,
-          startDraw: (drawEvent) => startDrawCardMotion(sequence, drawEvent, beat),
-          cardLanding: (summonEvent) =>
-            sequence.cardLandingIds.has(summonEvent.id),
-          primaryLandingEventId:
-            plan.cardTracks?.find((track) => track.sourceEventId === primary?.id)
-              ?.landingEventId || null,
-          ownerFor: (ref) => attackOwners.get(refKey(ref)),
-          retireAttack: (key) => {
-            const owner = attackOwners.get(key);
-            if (!owner) return null;
-            owner.dead = true;
-            const visual = {
-              ...(pos(owner.el) || owner.impact),
-              el: owner.el,
-              html: (() => {
-                const copy = owner.el.cloneNode(true);
-                copy.classList.remove("attack-actor", "death-ghost");
-                return copy.outerHTML;
-              })(),
-            };
-            releaseAttackOwner(key, false, owner);
-            return visual;
-          },
-          startReaction: (targetRef, el, heavy, from, timing) =>
-            startTimedReaction(
-              sequence,
-              targetRef,
-              el,
-              heavy,
-              from,
-              timing,
-            ),
-        });
-        cacheReadableStats();
-        if (event.type === "secret" && event.cid === "counterspell") {
-          EmberVFX.clear();
-          EmberVFX.interrupt(
-            fallback(beat.frame, primary?.side || "p", "hero"),
-          );
-        }
-        if (event.type === "contract") {
-          const name = EmberData.byId[event.cid].name;
-          if (event.divine && !quality.reduced) {
-            const seal = transient("divine-arrival", beat.hold);
-            const deity = EmberFXProfiles.get(event.cid).deity;
-            seal.dataset.deity = deity.theme;
-            seal.innerHTML = `<div class="divine-atmosphere"></div><div class="divine-halo"></div><div class="divine-orbit orbit-one"></div><div class="divine-orbit orbit-two"></div><div class="divine-rays"><i></i><i></i><i></i><i></i><i></i></div><img src="${EmberArt.card(EmberData.byId[event.cid])}" alt=""><div class="divine-caption"><small>${deity.english}</small><strong>${name}</strong><span>${deity.title}</span><em>${deity.sigil} 神祇降临 ${deity.sigil}</em></div>`;
-            sound(
-              "phase",
-              pos(unit(event.side, event.uid)) ||
-                fallback(beat.frame, event.side, "hero"),
-            );
-          } else
-            cue(
-              pos(unit(event.side, event.uid)),
-              name + " · 契约降临",
-              "summon",
-            );
-        }
-        if (event.type === "phase") phaseChange(s);
-      });
-    scheduleAt(sequence, plan.duration + 80, () => {
-      retireExpiredReactions(sequence, performance.now(), true);
-      retireExpiredAttackOwners(performance.now(), true, sequence);
-      for (const track of [...sequence.cards.values()])
-        disposeCardMotion(sequence, track);
-      closeSequence(sequence);
-      const commit = pendingCommit,
-        cb = doneCallback;
-      pendingCommit = doneCallback = null;
-      commit?.();
-      if (
-        generation !== sequence.generation ||
-        presentationVersion !== sequence.version ||
-        activeSequence
-      )
-        return;
-      if (!activeSequence) {
-        cacheReadableStats();
-        setBusy(false);
-      }
-      cb?.();
-    });
-  }
-  function postEvents(events, s, old, primary, school, context = {}) {
-    const at = (e) =>
-      pos(unit(e.side, e.uid)) ||
-      old[e.side + e.uid] ||
-      fallback(s, e.side, e.uid);
-    const hits = events.filter(
-      (e) => e.type === "damage" && (e.loss ?? e.amount) > 0,
-    );
-    if (hits.length) {
-      const amount = Math.max(...hits.map((e) => e.amount));
-      const positions = hits.map((e) => old[e.side + e.uid] || at(e));
-      const p = {
-        x: positions.reduce((n, p) => n + p.x, 0) / positions.length,
-      };
-      sound(primary ? "impact-" + (school || "steel") : "damage", p, {
-        strength: 0.78 + Math.min(amount, 10) * 0.045,
-        heavy: amount >= 6,
-      });
-    }
-    if (events.some((e) => e.type === "damage" && e.absorbed))
-      sound("armor", at(events.find((e) => e.absorbed)));
-    for (const [type, audio] of [
-      ["shield", "shield"],
-      ["heal", "heal"],
-      ["death", "death"],
-    ]) {
-      const event = events.find((e) => e.type === type);
-      if (event) sound(audio, old[event.side + event.uid] || at(event));
-    }
-    events.forEach((e) => {
-      if (e.type === "turn") {
-        turnCue(e.side, s.turn);
-        sound(e.side === "p" ? "turn" : "turn-enemy");
-      }
-      if (e.type === "over") {
-        sound(
-          e.winner === "p"
-            ? "victory"
-            : e.winner === "draw"
-              ? "draw-result"
-              : "defeat",
-        );
-        const p = fallback(s, e.winner === "p" ? "e" : "p", "hero");
-        if (e.winner !== "draw") {
-          cue(p, "英雄倒下", "defeat");
-          if (!quality.reduced) {
-            ring(p.x, p.y, e.winner === "p" ? "holy" : "shadow", 130, 700);
-            hitReaction(unit(e.winner === "p" ? "e" : "p", "hero"), true);
-          }
-        }
-      }
-      if (e.type === "damage") {
-        const p = old[e.side + e.uid] || at(e);
-        const loss = e.loss ?? e.amount,
-          linked = context.contacts?.find((contact) => contact.eventId === e.id),
-          timedContact =
-            linked &&
-            context.sequence &&
-            linked.contactAt !== undefined &&
-            linked.recoveryEndAt !== undefined
-              ? {
-                  contact: linked.contactAt,
-                  release: linked.releaseAt,
-                  recoveryEnd: linked.recoveryEndAt,
-                  elapsed: Math.max(
-                    0,
-                    performance.now() -
-                      (context.sequence.origin + linked.contactAt),
-                  ),
-                  contactAt:
-                    context.sequence.origin + linked.contactAt,
-                  releaseAt:
-                    context.sequence.origin + linked.releaseAt,
-                  recoveryEndAt:
-                    context.sequence.origin + linked.recoveryEndAt,
-                  scale: context.sequence.plan.scale ?? 1,
-                  sourceRef: e.from,
-                }
-              : null;
-        if (e.absorbed)
-          cue({ ...p, y: p.y - 24 }, `护甲吸收 ${e.absorbed}`, "armor");
-        if (loss > 0) {
-          const melee = primary?.type === "attack";
-          const retaliation =
-            melee && e.side === primary.from.side && e.uid === primary.from.uid;
-          const display = melee
-            ? {
-                ...p,
-                x: clamp(p.x + (retaliation ? -1 : 1) * p.w * 0.38, 30, W - 30),
-                y: p.y + (retaliation ? 1 : -1) * p.h * 0.1,
-              }
-            : p;
-          number(display, e.loss ?? e.amount);
-        }
-        const directAttack = timedContact && loss > 0;
-        if (loss > 0) {
-          const targetRef = { side: e.side, uid: e.uid },
-            owner = context.ownerFor?.(targetRef),
-            target =
-              owner?.el?.isConnected
-                ? owner.el
-                : p.el?.isConnected && p.el.matches(".death-ghost")
-                  ? p.el
-                  : unit(e.side, e.uid),
-            source =
-              e.from &&
-              (old[e.from.side + e.from.uid] ||
-                fallback(s, e.from.side, e.from.uid));
-          if (directAttack && target)
-            context.startReaction?.(
-              targetRef,
-              target,
-              linked?.heavy ?? (e.amount >= 6),
-              source,
-              timedContact,
-            );
-          else hitReaction(target, linked?.heavy ?? (e.amount >= 6), source);
-        }
-        if (loss > 0) {
-          const source = e.from && old[e.from.side + e.from.uid];
-          const attacker =
-            EmberData.byId[
-              linked?.sourceCid ||
-                source?.cid ||
-                (e.from?.uid === "hero" ? s[e.from.side].weapon?.cid : null)
-            ];
-          impact(
-            p.x,
-            p.y,
-            primary?.type === "attack" && attacker
-              ? classification(attacker, true)
-              : school || "steel",
-            0.7 + e.amount / 15,
-            primary?.type === "attack" && attacker
-              ? EmberFXProfiles.get(attacker).attack
-              : "element",
-            source,
-            directAttack ? timedContact : null,
-          );
-        } else ring(p.x, p.y, "steel", 48, 240);
-      }
-      if (e.type === "heal") {
-        // Health is revealed with this beat, at the end of the incoming flow.
-        heal(at(e), e.amount);
-      }
-      if (e.type === "shield") {
-        shieldBreak(old[e.side + e.uid] || at(e));
-      }
-      if (e.type === "summon") {
-        const p = at(e),
-          cl = classification(EmberData.byId[e.cid]);
-        rune(p.x, p.y, cl, 72, 850);
-        spark(p.x, p.y + 42, cl, 24, {
-          up: 95,
-          gravity: 0,
-          speed: 75,
-          life: 950,
-          shape: cl === "frost" ? "shard" : "spark",
-        });
-        const el = unit(e.side, e.uid);
-        if (el && !quality.reduced) {
-          arrival(p, EmberData.byId[e.cid]);
-          EmberVFX.arrival(EmberFXProfiles.get(e.cid).arrival, p, cl);
-          if (!context.cardLanding?.(e))
-            animate(
-              el,
-              [
-                { opacity: 1, translate: "0 3px", scale: "1.09 .93" },
-                {
-                  opacity: 1,
-                  translate: "0 -2px",
-                  scale: ".985 1.025",
-                  offset: 0.45,
-                },
-                { opacity: 1, translate: "0 0", scale: "1" },
-              ],
-              { duration: 280, easing: "cubic-bezier(.16,.8,.24,1)" },
-            );
-        }
-        if (
-          primary?.type === "play" &&
-          context.primaryLandingEventId === e.id &&
-          !e.rebornFrom
-        )
-          sound("play", p, { gain: 0.8 });
-        sound("summon", p);
-        if (EmberData.byId[e.cid]?.rarity === "legendary")
-          sound("legendary", p);
-        if (e.rebornFrom) cue(p, "复生 · 1 生命", "reborn");
-      }
-      if (e.type === "death") {
-        const visual = context.retireAttack?.(refKey(e));
-        death(
-          visual || old[e.side + e.uid],
-          classification(EmberData.byId[e.cid]),
-        );
-      }
-      if (e.type === "draw")
-        sound("draw", e.side === "p" ? { x: W * 0.72 } : { x: W * 0.55 });
-      if (e.type === "draw" && !quality.reduced)
-        context.startDraw?.(e);
-      if (e.type === "burn") {
-        const p = fallback(s, e.side, "hero");
-        sound("burn", p);
-        cue(
-          p,
-          e.side === "p" && e.cid
-            ? `${EmberData.byId[e.cid].name} · 手牌已满`
-            : "手牌已满 · 焚毁",
-          "burn",
-        );
-        spark(p.x, p.y, "fire", 24, { up: 100, gravity: 0 });
-      }
-      if (e.type === "secret") {
-        const p = fallback(s, e.side, "hero");
-        cue(p, (EmberData.byId[e.cid]?.name || "奥秘") + " · 触发", "secret");
-        rune(p.x, p.y, "arcane", 65, 550);
-        EmberAudio.fx("cast-arcane");
-      }
-      if (e.type === "weaponWear") {
-        cue(at(e), e.broken ? "武器损坏" : "耐久 −1", "weapon");
-        if (e.broken) sound("weapon-break", at(e));
-      }
-      if (e.type === "status") {
-        const p = at(e),
-          el = unit(e.side, e.uid);
-        const labels = {
-          trigger: "能力触发",
-          freeze: "冻结",
-          thaw: "解冻",
-          silence: "沉默",
-          transform: "变形",
-          expire: `攻击 ${e.attack}`,
-          buff: `+${e.attack}${e.health ? " / +" + e.health : " 攻击"}`,
-          grant: EmberData.kw[e.tag],
-          armor: `护甲 +${e.amount}`,
-          mana: `法力 +${e.amount}`,
-        };
-        cue(p, labels[e.kind] || e.kind, e.kind);
-        if (
-          [
-            "freeze",
-            "silence",
-            "buff",
-            "armor",
-            "mana",
-            "grant",
-            "transform",
-          ].includes(e.kind)
-        )
-          sound(
-            {
-              freeze: "freeze",
-              silence: "silence",
-              transform: "cast-shadow",
-              armor: "armor",
-            }[e.kind] || "buff",
-            p,
-            { gain: 0.6 },
-          );
-        const cl = ["freeze", "thaw"].includes(e.kind)
-          ? "frost"
-          : ["silence", "transform"].includes(e.kind)
-            ? "shadow"
-            : "holy";
-        if (e.kind === "freeze" && !quality.reduced) {
-          const shell = transient("freeze-lock", 245);
-          shell.style.left = p.left + "px";
-          shell.style.top = p.top + "px";
-          shell.style.width = p.w + "px";
-          shell.style.height = p.h + "px";
-          animate(
-            shell,
-            [
-              { opacity: 0, scale: "1.04" },
-              { opacity: 0.9, scale: "1", offset: 0.3 },
-              { opacity: 0, scale: "1" },
-            ],
-            { duration: 240, easing: "ease-out" },
-          );
-        } else if (e.kind === "thaw")
-          spark(p.x, p.y, cl, 22, { shape: "shard", speed: 85 });
-        else rune(p.x, p.y, cl, p.w * 0.55, 420, e.kind === "silence");
-        if (el && !quality.reduced && e.kind !== "freeze") {
-          const target =
-            e.kind === "buff" || e.kind === "expire"
-              ? el.querySelector(".stat.atk")
-              : el;
-          if (target)
-            animate(
-              target,
-              e.kind === "transform"
-                ? [
-                    { opacity: 0, filter: "blur(9px)", scale: ".85" },
-                    { opacity: 1, filter: "blur(0)", scale: "1" },
-                  ]
-                : [{ filter: "brightness(1.6)" }, { filter: "brightness(1)" }],
-              { duration: 300 },
-            );
-        }
-      }
-    });
-  }
-  // ---- Vector compositing primitives --------------------------------------------------
-  function radial(g, x, y, r, alpha = 1) {
-    const p = ctx.createRadialGradient(x, y, 0, x, y, Math.max(0.1, r));
-    p.addColorStop(0, colors[g][0]);
-    p.addColorStop(0.12, colors[g][1] + "df");
-    p.addColorStop(0.45, colors[g][2] + "50");
-    p.addColorStop(1, colors[g][2] + "00");
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = p;
-    ctx.fillRect(x - r, y - r, r * 2, r * 2);
-  }
-  function line(points, color, width = 1, alpha = 1) {
-    ctx.globalAlpha = alpha;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width;
-    ctx.beginPath();
-    points.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
-    ctx.stroke();
-  }
-  function poly(n, r, rot = 0) {
-    ctx.beginPath();
-    for (let i = 0; i <= n; i++) {
-      let a = (i / n) * TAU + rot;
-      i
-        ? ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r)
-        : ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
-    }
-  }
-  function bezier(e, t) {
-    const bx = (e.from.x + e.to.x) / 2,
-      by = (e.from.y + e.to.y) / 2 + (e.bend || 0);
-    return {
-      x: (1 - t) * (1 - t) * e.from.x + 2 * t * (1 - t) * bx + t * t * e.to.x,
-      y: (1 - t) * (1 - t) * e.from.y + 2 * t * (1 - t) * by + t * t * e.to.y,
-    };
-  }
-  function drawItem(e, t) {
-    const k = clamp(t),
-      a = 1 - k,
-      sec = (k * e.d) / 1000,
-      cc = colors[e.school] || colors.fire;
-    ctx.save();
-    ctx.globalCompositeOperation = "lighter";
-    switch (e.kind) {
-      case "portal": {
-        const reveal = Math.sin(Math.PI * k),
-          r = e.radius * (0.65 + ease(k) * 0.35);
-        ctx.translate(e.x, e.y);
-        ctx.scale(1, 0.36);
-        ctx.rotate(k * (e.legendary ? 1 : -0.6));
-        ctx.globalAlpha = reveal * 0.8;
-        ctx.strokeStyle = cc[1];
-        ctx.lineWidth = e.legendary ? 3 : 2;
-        for (const scale of [1, 0.83]) {
-          ctx.beginPath();
-          ctx.arc(0, 0, r * scale, 0, TAU);
-          ctx.stroke();
-        }
-        const segments = e.legendary ? 12 : 8;
-        for (let i = 0; i < segments; i++) {
-          ctx.save();
-          ctx.rotate((i * TAU) / segments);
-          ctx.fillStyle = cc[0];
-          ctx.beginPath();
-          ctx.moveTo(r * 0.92, -5);
-          ctx.lineTo(r * 1.07, 0);
-          ctx.lineTo(r * 0.92, 5);
-          ctx.lineTo(r * 0.87, 0);
-          ctx.closePath();
-          ctx.fill();
-          ctx.restore();
-        }
-        ctx.globalAlpha = reveal * 0.22;
-        ctx.fillStyle = cc[2];
-        ctx.beginPath();
-        ctx.arc(0, 0, r * 0.78, 0, TAU);
-        ctx.fill();
-        break;
-      }
-      case "particle": {
-        let x = e.x + e.vx * sec,
-          y = e.y + e.vy * sec + (e.gravity * sec * sec) / 2,
-          s = e.size * Math.pow(a, 0.35);
-        ctx.translate(x, y);
-        ctx.rotate(e.rot + e.spin * sec);
-        ctx.globalAlpha = Math.sin((Math.min(1, k * 6) * Math.PI) / 2) * a;
-        ctx.fillStyle = e.color;
-        if (e.shape === "leaf") {
-          ctx.beginPath();
-          ctx.moveTo(0, -s);
-          ctx.quadraticCurveTo(s * 1.3, -s * 0.2, 0, s * 2);
-          ctx.quadraticCurveTo(-s, s * 0.2, 0, -s);
-          ctx.fill();
-          ctx.globalAlpha *= 0.4;
-          ctx.strokeStyle = cc[0];
-          ctx.lineWidth = 0.6;
-          ctx.beginPath();
-          ctx.moveTo(0, -s);
-          ctx.lineTo(0, s * 2);
-          ctx.stroke();
-        } else if (["shard", "diamond", "glass"].includes(e.shape)) {
-          ctx.beginPath();
-          ctx.moveTo(0, -s * 2);
-          ctx.lineTo(s * 0.6, 0);
-          ctx.lineTo(0, s);
-          ctx.lineTo(-s * 0.7, 0);
-          ctx.closePath();
-          ctx.fill();
-        } else if (e.shape === "cross") {
-          ctx.fillRect(-s, -s * 0.19, s * 2, s * 0.38);
-          ctx.fillRect(-s * 0.19, -s, s * 0.38, s * 2);
-        } else if (e.shape === "smoke") {
-          radial(e.school, 0, 0, s * 4, a * 0.32);
-        } else if (e.shape === "ash") {
-          ctx.globalCompositeOperation = "source-over";
-          ctx.fillRect(-s / 2, -s / 2, s, s);
-        } else {
-          ctx.fillRect(-s / 2, -s * 0.6, s, s * 1.2);
-          ctx.globalAlpha *= 0.35;
-          ctx.fillRect(-s / 3, -s * 4, s * 0.7, s * 4);
-        }
-        break;
-      }
-      case "glow":
-        radial(
-          e.school,
-          e.x,
-          e.y,
-          e.radius * (0.4 + ease(k) * 0.6),
-          Math.sin(k * Math.PI) * 0.7,
-        );
-        break;
-      case "ring": {
-        const r = e.radius * ease(k);
-        ctx.translate(e.x, e.y);
-        ctx.scale(1, e.ry || 1);
-        ctx.strokeStyle = cc[1];
-        ctx.lineWidth = 2.3 * a + 0.3;
-        ctx.globalAlpha = a * 0.75;
-        ctx.beginPath();
-        ctx.arc(0, 0, Math.max(1, r), 0, TAU);
-        ctx.stroke();
-        ctx.lineWidth = 0.7;
-        ctx.globalAlpha = a * 0.4;
-        ctx.beginPath();
-        ctx.arc(0, 0, Math.max(1, r * 0.85), 0, TAU);
-        ctx.stroke();
-        break;
-      }
-      case "rune": {
-        ctx.translate(e.x, e.y);
-        ctx.scale(1, 0.67);
-        ctx.rotate(e.rot + k * (e.reverse ? -1 : 1) * 0.7);
-        let r = e.radius * (e.reverse ? 1 - 0.65 * k : 0.55 + 0.45 * ease(k));
-        ctx.globalAlpha = Math.sin(k * Math.PI) * 0.65;
-        ctx.strokeStyle = cc[1];
-        ctx.lineWidth = 1.4;
-        for (let s of [1, 0.87, 0.7]) {
-          ctx.beginPath();
-          ctx.arc(0, 0, r * s, 0, TAU);
-          ctx.stroke();
-        }
-        poly(e.school === "frost" ? 6 : 3, r * 0.86, k * 0.4);
-        ctx.stroke();
-        poly(3, r * 0.86, Math.PI - k * 0.4);
-        ctx.stroke();
-        ctx.lineWidth = 0.9;
-        for (let i = 0; i < 20; i++) {
-          ctx.save();
-          ctx.rotate((i * TAU) / 20);
-          ctx.beginPath();
-          ctx.moveTo(r * 0.9, -2);
-          ctx.lineTo(r * 0.95, 2);
-          ctx.lineTo(r * 0.98, -2);
-          ctx.stroke();
-          ctx.restore();
-        }
-        break;
-      }
-      case "projectile": {
-        const p = bezier(e, k),
-          segments = e.school === "frost" ? 6 : 22;
-        if (e.school === "steel") {
-          const prev = bezier(e, Math.max(0, k - 0.01));
-          ctx.translate(p.x, p.y);
-          ctx.rotate(Math.atan2(p.y - prev.y, p.x - prev.x));
-          const size = EmberViewport.mobile ? EmberViewport.effectScale : 1;
-          ctx.scale(size, size);
-          line(
-            [
-              { x: -28, y: 0 },
-              { x: 12, y: 0 },
-            ],
-            cc[1],
-            2,
-            0.95,
-          );
-          ctx.fillStyle = cc[0];
-          ctx.globalAlpha = 1;
-          ctx.beginPath();
-          ctx.moveTo(21, 0);
-          ctx.lineTo(8, -5);
-          ctx.lineTo(8, 5);
-          ctx.closePath();
-          ctx.fill();
-          line(
-            [
-              { x: -25, y: -5 },
-              { x: -18, y: 0 },
-              { x: -25, y: 5 },
-            ],
-            cc[0],
-            2,
-            0.85,
-          );
-          break;
-        }
-        for (let i = segments; i > 0; i--) {
-          let q = clamp(k - i * 0.009),
-            q2 = clamp(k - (i - 1) * 0.009),
-            p1 = bezier(e, q),
-            p2 = bezier(e, q2);
-          line(
-            [p1, p2],
-            cc[1],
-            Math.max(0.5, (1 - i / segments) * e.radius * 1.1),
-            (1 - i / segments) * 0.42,
-          );
-        }
-        if (e.school === "nature") {
-          ctx.strokeStyle = cc[1];
-          ctx.lineWidth = 3;
-          ctx.globalAlpha = 0.75;
-          ctx.beginPath();
-          for (let j = 0; j < 30; j++) {
-            const t = (k * j) / 29,
-              pp = bezier(e, t);
-            j
-              ? ctx.lineTo(
-                  pp.x + Math.sin(t * 24) * 9,
-                  pp.y + Math.cos(t * 24) * 9,
-                )
-              : ctx.moveTo(pp.x, pp.y);
-          }
-          ctx.stroke();
-        }
-        radial(e.school, p.x, p.y, e.radius * 3.1, 0.87);
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = cc[0];
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, e.radius * 0.35, 0, TAU);
-        ctx.fill();
-        if (e.school === "frost") {
-          ctx.translate(p.x, p.y);
-          const delta = bezier(e, Math.min(1, k + 0.005)),
-            prev = bezier(e, Math.max(0, k - 0.005));
-          ctx.rotate(Math.atan2(delta.y - prev.y, delta.x - prev.x));
-          if (EmberViewport.mobile)
-            ctx.scale(EmberViewport.effectScale, EmberViewport.effectScale);
-          ctx.fillStyle = cc[0];
-          ctx.beginPath();
-          ctx.moveTo(27, 0);
-          ctx.lineTo(-12, 6);
-          ctx.lineTo(-20, 0);
-          ctx.lineTo(-12, -6);
-          ctx.fill();
-        }
-        if (e.school === "arcane" || e.school === "shadow") {
-          for (let j = 0; j < 3; j++) {
-            const ang = k * 18 + (j * TAU) / 3;
-            radial(
-              e.school,
-              p.x + Math.cos(ang) * 17,
-              p.y + Math.sin(ang) * 17,
-              13,
-              0.75,
-            );
-          }
-        }
-        break;
-      }
-      case "lightning": {
-        if (k < 0.2 || k > 0.88) break;
-        let list = [e.from];
-        for (let i = 1; i < 12; i++) {
-          const p = bezier(e, i / 12);
-          list.push({
-            x: p.x + Math.sin(i * 29 + Math.floor(k * 16) + e.seed) * 14,
-            y: p.y + Math.cos(i * 12 + Math.floor(k * 16)) * 12,
-          });
-        }
-        list.push(e.to);
-        line(list, cc[2], 3, 0.16);
-        line(list, cc[0], 0.8, 0.33);
-        break;
-      }
-      case "slash": {
-        ctx.translate(e.x, e.y);
-        ctx.rotate(e.a);
-        let r = e.radius;
-        ctx.globalAlpha = Math.sin(k * Math.PI);
-        ctx.strokeStyle = cc[1];
-        ctx.lineWidth = 16 * Math.sin(k * Math.PI);
-        ctx.beginPath();
-        ctx.ellipse(0, 0, r, r * 0.5, 0, -2.6, -2.6 + 3.6 * ease(k));
-        ctx.stroke();
-        ctx.strokeStyle = cc[0];
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.ellipse(2, -1, r + 3, r * 0.53, 0, -2.6, -2.6 + 3.6 * ease(k));
-        ctx.stroke();
-        break;
-      }
-      case "windup": {
-        ctx.translate(e.x, e.y);
-        ctx.scale(1, 0.7);
-        ctx.rotate(-k * 2);
-        ctx.globalAlpha = Math.sin(k * Math.PI) * 0.6;
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = cc[1];
-        ctx.beginPath();
-        ctx.arc(0, 0, e.radius * (1 - k * 0.2), 0.4, 5.4);
-        ctx.stroke();
-        break;
-      }
-      case "explosion": {
-        radial(
-          e.school,
-          e.x,
-          e.y,
-          e.radius * (0.35 + 0.9 * ease(k)),
-          Math.pow(a, 1.6) * 0.85,
-        );
-        ctx.translate(e.x, e.y);
-        ctx.globalAlpha = a * 0.65;
-        ctx.strokeStyle = cc[1];
-        ctx.lineWidth = 4 * a;
-        ctx.beginPath();
-        for (let i = 0; i <= 60; i++) {
-          let an = (i / 60) * TAU,
-            r = e.radius * ease(k) * (1 + Math.sin(an * 7 + k * 6) * 0.055);
-          i
-            ? ctx.lineTo(Math.cos(an) * r, Math.sin(an) * r * 0.7)
-            : ctx.moveTo(Math.cos(an) * r, Math.sin(an) * r * 0.7);
-        }
-        ctx.stroke();
-        break;
-      }
-      case "smoke": {
-        ctx.globalCompositeOperation = "source-over";
-        const x = e.x + e.vx * sec,
-          y = e.y + e.vy * sec,
-          r = e.radius * (1 + ease(k) * 1.4),
-          g = ctx.createRadialGradient(x, y, 0, x, y, r);
-        g.addColorStop(0, "#25242866");
-        g.addColorStop(0.6, "#4a3c3030");
-        g.addColorStop(1, "#282a2900");
-        ctx.globalAlpha = Math.sin(k * Math.PI) * 0.7;
-        ctx.fillStyle = g;
-        ctx.fillRect(x - r, y - r, r * 2, r * 2);
-        break;
-      }
-      case "scorch": {
-        ctx.globalCompositeOperation = "source-over";
-        ctx.translate(e.x, e.y);
-        ctx.scale(1, 0.57);
-        ctx.globalAlpha =
-          Math.sin((Math.min(k * 6, 1) * Math.PI) / 2) * (1 - k) * 0.65;
-        let g = ctx.createRadialGradient(0, 0, 0, 0, 0, e.radius);
-        g.addColorStop(0, "#151315bc");
-        g.addColorStop(0.65, "#281d1744");
-        g.addColorStop(1, "#30252200");
-        ctx.fillStyle = g;
-        ctx.fillRect(-e.radius, -e.radius, e.radius * 2, e.radius * 2);
-        break;
-      }
-      case "ice": {
-        ctx.translate(e.x, e.y);
-        ctx.rotate(e.a);
-        let r = e.radius * ease(k);
-        ctx.globalAlpha = Math.sin(k * Math.PI) * 0.85;
-        ctx.fillStyle = cc[1] + "60";
-        ctx.strokeStyle = cc[0] + "b0";
-        ctx.lineWidth = 0.8;
-        ctx.beginPath();
-        ctx.moveTo(19, -e.wide / 2);
-        ctx.lineTo(r, -e.wide * 0.2);
-        ctx.lineTo(r + 12, 0);
-        ctx.lineTo(r - 10, e.wide / 2);
-        ctx.lineTo(20, e.wide / 3);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(20, 0);
-        ctx.lineTo(r + 10, 0);
-        ctx.stroke();
-        break;
-      }
-      case "mist": {
-        radial(
-          e.school,
-          e.x,
-          e.y,
-          e.radius * (0.65 + 0.5 * k),
-          Math.sin(k * Math.PI) * 0.21,
-        );
-        break;
-      }
-      case "starburst": {
-        ctx.translate(e.x, e.y);
-        ctx.rotate(k * 0.6);
-        ctx.globalAlpha = a * 0.8;
-        ctx.strokeStyle = cc[0];
-        for (let i = 0; i < 8; i++) {
-          ctx.rotate(TAU / 8);
-          ctx.lineWidth = i % 2 ? 0.7 : 1.2;
-          ctx.beginPath();
-          ctx.moveTo(e.radius * ease(k) * 0.25, 0);
-          ctx.lineTo(e.radius * ease(k), 0);
-          ctx.stroke();
-        }
-        break;
-      }
-      case "pillar": {
-        let width = e.radius * (0.2 + 0.8 * Math.sin(k * Math.PI)),
-          height = 220 * ease(k);
-        const g = ctx.createLinearGradient(e.x - width, e.y, e.x + width, e.y);
-        g.addColorStop(0, cc[2] + "00");
-        g.addColorStop(0.4, cc[1] + "66");
-        g.addColorStop(0.5, cc[0] + "bb");
-        g.addColorStop(0.6, cc[1] + "66");
-        g.addColorStop(1, cc[2] + "00");
-        ctx.fillStyle = g;
-        ctx.globalAlpha = Math.sin(k * Math.PI) * 0.65;
-        ctx.fillRect(e.x - width, e.y - height, width * 2, height + 15);
-        radial(e.school, e.x, e.y, width * 1.8, Math.sin(k * Math.PI) * 0.6);
-        break;
-      }
-      case "vortex": {
-        ctx.translate(e.x, e.y);
-        let r = e.radius * (0.2 + 0.8 * Math.sin(k * Math.PI));
-        ctx.globalCompositeOperation = "source-over";
-        ctx.globalAlpha = Math.sin(k * Math.PI) * 0.75;
-        let g = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
-        g.addColorStop(0, "#080815");
-        g.addColorStop(0.4, "#181129d0");
-        g.addColorStop(0.8, cc[2] + "50");
-        g.addColorStop(1, cc[2] + "00");
-        ctx.fillStyle = g;
-        ctx.fillRect(-r, -r, r * 2, r * 2);
-        ctx.globalCompositeOperation = "lighter";
-        ctx.rotate(k * 4);
-        ctx.strokeStyle = cc[1];
-        for (let i = 0; i < 5; i++) {
-          ctx.rotate(TAU / 5);
-          ctx.globalAlpha = a * 0.6;
-          ctx.lineWidth = 1.2;
-          ctx.beginPath();
-          ctx.arc(0, 0, r * (0.4 + i * 0.13), 0.1, 2.6);
-          ctx.stroke();
-        }
-        break;
-      }
-      case "bloom": {
-        ctx.translate(e.x, e.y);
-        ctx.rotate(k * 0.7);
-        ctx.strokeStyle = cc[1];
-        ctx.globalAlpha = Math.sin(k * Math.PI) * 0.6;
-        ctx.lineWidth = 1.5;
-        const r = e.radius * ease(k);
-        for (let i = 0; i < 7; i++) {
-          ctx.rotate(TAU / 7);
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.bezierCurveTo(r * 0.85, -r * 0.6, r, -r * 0.2, r, 0);
-          ctx.bezierCurveTo(r, r * 0.2, r * 0.8, r * 0.6, 0, 0);
-          ctx.stroke();
-        }
-        break;
-      }
-      case "heal": {
-        ctx.translate(e.x, e.y);
-        ctx.globalAlpha = Math.sin(k * Math.PI) * 0.7;
-        ctx.strokeStyle = cc[1];
-        ctx.lineWidth = 1.8;
-        for (let j = 0; j < 3; j++) {
-          ctx.beginPath();
-          for (let i = 0; i < 35; i++) {
-            let t = i / 34,
-              yy = 45 - t * 135 * k,
-              xx =
-                Math.sin(t * 9 + k * 7 + (j * TAU) / 3) *
-                e.radius *
-                (1 - t * 0.2);
-            i ? ctx.lineTo(xx, yy) : ctx.moveTo(xx, yy);
-          }
-          ctx.stroke();
-        }
-        break;
-      }
-      case "wave": {
-        let x = lerp(e.from.x, e.to.x, ease(k));
-        radial(e.school, x, e.from.y, 125, 0.48 * Math.sin(k * Math.PI));
-        ctx.globalAlpha = Math.sin(k * Math.PI) * 0.7;
-        ctx.strokeStyle = cc[1];
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.ellipse(x, e.from.y, 27, 110, 0, Math.PI / 2, Math.PI * 1.5);
-        ctx.stroke();
-        break;
-      }
-    }
-    ctx.restore();
-  }
-  // Original pre-rendered tavern diorama + lightweight real-time atmosphere.
-  // Desktop and touch share this single Canvas scene.
   function paintWorld(t) {
     wc.clearRect(0, 0, W, H);
     AtelierWorld.paint(wc, t, view, theme, phase, quality.reduced, quality.low);
@@ -3440,14 +2963,9 @@ const EmberFX = (() => {
     const d = EmberViewport.mobile
       ? Math.min(devicePixelRatio || 1, quality.low ? 1 : 2)
       : 1;
-    for (const [el, c] of [
-      [canvas, ctx],
-      [world, wc],
-    ]) {
-      el.width = Math.round(W * d);
-      el.height = Math.round(H * d);
-      c.setTransform(d, 0, 0, d, 0, 0);
-    }
+    world.width = Math.round(W * d);
+    world.height = Math.round(H * d);
+    wc.setTransform(d, 0, 0, d, 0, 0);
     worldDirty = true;
   }
   function reflow() {
@@ -3471,55 +2989,18 @@ const EmberFX = (() => {
   function tick(t) {
     requestAnimationFrame(tick);
     if (document.hidden) return;
-    const min = quality.low ? 40 : 0;
-    if (t - last < min) return;
-    last = t;
+    // Low quality throttles only the ambient world paint; effects and their
+    // contact frames run every display frame (§2.7: low only lowers resolution).
     if (
       worldDirty ||
       AtelierWorld.loading ||
-      (!quality.reduced && t - worldLast > 80)
+      (!quality.reduced && t - worldLast > (quality.low ? 120 : 80))
     ) {
       paintWorld(quality.reduced ? 0 : t / 1000);
       worldLast = t;
     }
-    ctx.clearRect(0, 0, W, H);
-    ctx.save();
-    let keep = [];
-    for (const e of items) {
-      let progress = (t - e.start) / e.d;
-      if (progress < 0) {
-        keep.push(e);
-        continue;
-      }
-      if (progress >= 1) continue;
-      drawItem(e, progress);
-      keep.push(e);
-    }
-    items = keep;
-    EmberVFX.draw(ctx, t);
-    ctx.restore();
-    // Live DOM numbers always win over decorative light and smoke. Cache the
-    // nodes per event; read their current position so hit reactions also track.
-    if (items.length || EmberVFX.active) {
-      for (const el of readableStats) {
-        if (
-          !el.isConnected ||
-          el.closest(".minion,.hero")?.style.visibility === "hidden"
-        )
-          continue;
-        const p = pos(el);
-        if (p) {
-          ctx.save();
-          ctx.globalAlpha = 1;
-          ctx.globalCompositeOperation = "destination-out";
-          ctx.fillStyle = "#000";
-          ctx.beginPath();
-          ctx.ellipse(p.x, p.y, p.w / 2 + 1, p.h / 2 + 1, 0, 0, TAU);
-          ctx.fill();
-          ctx.restore();
-        }
-      }
-    }
+    // The effect backend has no rAF of its own; idle frames draw nothing.
+    fx2()?.draw?.(t);
   }
   function setView(v) {
     view = v;
@@ -3536,14 +3017,14 @@ const EmberFX = (() => {
   }
   function configure(reduced, low) {
     quality = { reduced: !!reduced, low: !!low };
-    EmberVFX.configure(reduced, low);
+    fx2()?.setQuality?.(quality);
     if (typeof EmberPortraits !== "undefined")
       EmberPortraits.configure(reduced, low);
     app.classList.toggle("fx-low", quality.low);
     app.classList.toggle("fx-reduced", quality.reduced);
     worldDirty = true;
     // Turning accessibility on is immediate, even during an effect's tail.
-    // Keep the rule-commit timers and busy lifecycle; only remove decoration.
+    // Keep the rule commit and busy lifecycle; only remove decoration.
     if (quality.reduced) {
       if (busy && pendingCommit) {
         const cb = doneCallback;
@@ -3559,15 +3040,10 @@ const EmberFX = (() => {
         )
           return;
       }
-      items.length = 0;
       for (const a of animations) a.cancel();
       animations.clear();
       for (const el of [...nodes])
-        if (
-          el.matches(
-            ".death-ghost,.cast-card,.summon-seal,.card-motion-proxy,.signature-cue,.divine-arrival",
-          )
-        ) {
+        if (el.matches(".death-ghost,.cast-card,.summon-seal,.card-motion-proxy,.divine-arrival")) {
           el.remove();
           nodes.delete(el);
         }
@@ -3576,18 +3052,14 @@ const EmberFX = (() => {
         .forEach((el) => {
           el.style.visibility = "";
         });
-      for (const el of [
-        world,
-        document.getElementById("scene"),
-        document.getElementById("fx-vignette"),
-      ])
-        el?.getAnimations().forEach((a) => a.cancel());
     }
   }
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) worldDirty = true;
   });
   resizeCanvas();
+  fx2()?.init?.({ debug: new URLSearchParams(location.search).has("debug") });
+  fx2()?.setQuality?.(quality);
   requestAnimationFrame(tick);
   return {
     reflow,
@@ -3598,17 +3070,11 @@ const EmberFX = (() => {
     setView,
     setTheme,
     configure,
-    pos,
-    capture,
-    impact,
-    projectile,
-    number,
-    rune,
-    paletteSchool,
-    classification,
-    schoolNames,
-    colors,
-    counts,
+    /** Read-only anchor lookup against the live DOM (tests, tooling). */
+    anchor: (ref) => anchors.resolve(ref, activeSequence?.anchors || captureAnchors()),
+    get trace() {
+      return trace;
+    },
     get busy() {
       return busy;
     },
@@ -3617,9 +3083,6 @@ const EmberFX = (() => {
     },
     get transientNodes() {
       return nodes.size;
-    },
-    get particles() {
-      return items.length + EmberVFX.active;
     },
     get pendingTimers() {
       return timers.size;

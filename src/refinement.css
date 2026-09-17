@@ -55,14 +55,6 @@
   z-index: 0;
   pointer-events: none;
 }
-#fx-canvas {
-  position: absolute;
-  inset: 0;
-  width: 1600px;
-  height: 940px;
-  z-index: 49;
-  pointer-events: none;
-}
 #fx-vignette {
   position: absolute;
   inset: 0;
@@ -977,32 +969,6 @@
   color: #9aa9b4;
   font-size: 9px;
 }
-.minion.shield:before {
-  inset: -9px -7px -1px;
-  border: 1px solid #f3d798be;
-  border-radius: 50%;
-  background:
-    radial-gradient(at 24% 14%, #f3e7b523, transparent 50%),
-    linear-gradient(120deg, transparent 35%, #f5e6b41b 42%, transparent 49%);
-  box-shadow:
-    inset 0 0 18px #f7cf8033,
-    0 0 15px #e1b85f33;
-  animation: shield-breathe 4s ease-in-out infinite alternate;
-}
-.minion.frozen:after {
-  content: "❄";
-  position: absolute;
-  top: -15px;
-  right: -7px;
-  left: auto;
-  bottom: auto;
-  width: auto;
-  height: auto;
-  font-size: 24px;
-  color: #b7eff5;
-  text-shadow: 0 0 11px #97dfea;
-  background: none;
-}
 .minion.stealth {
   opacity: 0.62;
   filter: drop-shadow(0 0 7px #785fb855);
@@ -1048,15 +1014,6 @@
 }
 /* Primary action is one contained, unmistakable ember seal. */
 
-@keyframes seal-ready {
-  to {
-    box-shadow:
-      inset 0 0 0 1px #f1d7ad,
-      0 0 0 7px #1a2727,
-      0 0 0 8px #d3b48088,
-      0 0 25px #d0a25b40;
-  }
-}
 /* Foil-edged, full-art cards. Text is a quiet ivory strip rather than another ornate frame. */
 .hand-zone {
   position: absolute;
@@ -1385,6 +1342,16 @@ body.touch-layout .drag-ghost {
   fill: #e5b87813;
   filter: none;
 }
+/* The outline, the chevron rail and the two reticle ripples are created by
+ * `ui.js` on first aim; give them a harmless default so an unstyled skin gets
+ * nothing rather than four black shapes. The skin paints them (§9.1). */
+#target-under,
+#target-flow,
+#target-ripple-a,
+#target-ripple-b {
+  fill: none;
+  stroke: none;
+}
 @keyframes aim-flow {
   to {
     stroke-dashoffset: -24;
@@ -1395,67 +1362,6 @@ body.touch-layout .drag-ghost {
 #app.fx-busy .minion,
 #app.fx-busy .hero {
   pointer-events: none;
-}
-.damage-number {
-  font:
-    bold 36px Georgia,
-    serif;
-  color: #ffebd3;
-  text-shadow:
-    0 3px 0 #59362e,
-    0 0 16px #de99657a;
-  z-index: 53;
-  line-height: 1;
-  letter-spacing: -2px;
-  transform: translate(-50%, -50%);
-  animation: hit-number 1.05s cubic-bezier(0.13, 0.8, 0.3, 1) forwards;
-  pointer-events: none;
-}
-.damage-number.heal {
-  color: #c5f2c6;
-  text-shadow:
-    0 2px 0 #285348,
-    0 0 18px #b4f1b579;
-}
-.damage-number small {
-  font: 9px var(--sans);
-  letter-spacing: 2px;
-  display: block;
-  margin-top: 6px;
-  color: #dccaaa;
-}
-.damage-number.heal small {
-  color: #b2d4b4;
-}
-.damage-number.crit {
-  font-size: 49px;
-  color: #ffd6a0;
-}
-.damage-number.block {
-  font-size: 18px;
-  letter-spacing: 3px;
-  color: #f4dbaa;
-  text-shadow: 0 0 15px #eecb7399;
-}
-@keyframes hit-number {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -20%) scale(0.5);
-  }
-  17% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.25);
-  }
-  29% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-  73% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -155%) scale(0.9);
-  }
 }
 .cast-card {
   position: absolute;
@@ -1482,8 +1388,12 @@ body.touch-layout .drag-ghost {
 .death-ghost {
   position: absolute;
   pointer-events: none;
-  z-index: 43;
   transition: none;
+}
+/* 只有真正的死亡幽灵抬到特效层之上；突进克隆（也借 .death-ghost 做绝对
+   定位）留在 .attack-actor 的 z-index 10，不挡住接触点缀。 */
+.death-ghost:not(.attack-actor) {
+  z-index: 43;
 }
 .death-ghost * {
   pointer-events: none;
@@ -1493,12 +1403,6 @@ body.touch-layout .drag-ghost {
   display: none;
 }
 
-.screen-flash {
-  display: none;
-}
-.impact-ring {
-  display: none;
-}
 /* Modal surfaces: one line, one depth, ample breathing room. */
 #modal {
   background: #061014c9;
@@ -1982,9 +1886,6 @@ body.reduced-motion .lobby-eclipse,
 body.reduced-motion .lobby-art img,
 body.reduced-motion #target-path {
   animation: none;
-}
-body.reduced-motion .damage-number {
-  animation: staticDamage 0.9s forwards;
 }
 .portrait-orientation {
   background: #162422f2;

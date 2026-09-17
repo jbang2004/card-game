@@ -46,8 +46,13 @@ html[data-skin="slate"] body.touch-layout #battle .hero.valid-target {
     0 0 0 2px #ecae5566,
     0 10px 30px #0006;
 }
+/* The console strip is the hero on touch, so "can attack" lands on the strip
+ * itself — the same blue halo the board tokens get in §9.5b/§9.5c. */
 html[data-skin="slate"] body.touch-layout #battle .hero.ready {
-  border-color: #8cc4ff99;
+  border-color: #8cc4ff;
+  box-shadow:
+    0 0 0 2px #8cc4ff66,
+    0 0 14px #8cc4ff80;
 }
 /* avatar: a round aperture, no card plaque */
 html[data-skin="slate"] body.touch-layout #battle .hero-card-inner {
@@ -1361,20 +1366,52 @@ html[data-skin="slate"] body #battle :is(.hero-stat, .hero-chip) {
  * 9. Arena: aiming, turn handover and token noise (design doc §13.3)
  * ------------------------------------------------------------------------ */
 
-/* 9.1 The aim line is one confident stroke, not a marching dashed hint: 3px of
- * gradient with a glowing head that sits on the target. Gold, because §13.6
- * assigns gold to "target and divine". Placement keeps the blue of "mine". */
+/* 9.1 The aim line is one confident stroke, not a marching dashed hint: 6px of
+ * gradient (5px on touch) with a glowing head that sits on the target. Gold,
+ * because §13.6 assigns gold to "target and divine"; placement keeps the blue
+ * of "mine". A stroke that wide has to survive a lit backdrop, so it is drawn
+ * three times over the SAME path data, which `ui.js` writes once per aim
+ * frame: `#target-under` is the dark 1px-per-side outline, `#target-path` the
+ * line, `#target-flow` a rail of chevron dashes whose only animation is
+ * `stroke-dashoffset` over a fixed pattern — no path is recomputed to make it
+ * move. */
+html[data-skin="slate"] body #target-lines #target-under {
+  fill: none;
+  stroke: #0a0f18cc;
+  stroke-width: 8;
+  stroke-dasharray: none;
+  stroke-linecap: round;
+  filter: none;
+  animation: none;
+}
+/* The pattern itself is written inline by `ui.js` (one chevron per 28px of
+ * path), because `style.css` still dashes every path inside this svg and a
+ * sheet cannot know the spacing. Only the offset is animated here. */
+html[data-skin="slate"] body #target-lines #target-flow {
+  fill: none;
+  stroke: #fff6da;
+  stroke-width: 3;
+  stroke-linecap: butt;
+  opacity: 0.85;
+  filter: none;
+  animation: slate-aim-flow 0.9s linear infinite;
+}
 html[data-skin="slate"] body #target-lines[data-mode="target"] #target-path {
   stroke: url(#aim-gold);
-  stroke-width: 3;
+  stroke-width: 6;
   stroke-dasharray: none;
   stroke-linecap: round;
   animation: none;
   filter: drop-shadow(0 0 5px #e0b45599);
 }
+html[data-skin="slate"] body #target-lines #target-arrow {
+  stroke-dasharray: none;
+  animation: none;
+}
 html[data-skin="slate"] body #target-lines[data-mode="target"] #target-arrow {
   fill: #fff3cf;
-  stroke: #fff3cf;
+  stroke: #0a0f18;
+  stroke-width: 1;
 }
 html[data-skin="slate"] body #target-lines[data-mode="target"] #target-circle {
   fill: #e0b45526;
@@ -1384,6 +1421,88 @@ html[data-skin="slate"] body #target-lines[data-mode="target"] #target-circle {
 }
 html[data-skin="slate"] body #target-lines[data-mode="placement"] #target-path {
   stroke: url(#aim-gradient);
+  stroke-width: 6;
+}
+html[data-skin="slate"] body #target-lines[data-mode="placement"] #target-flow {
+  stroke: #e8f4ff;
+}
+html[data-skin="slate"]
+  body
+  #target-lines[data-mode="placement"]
+  #target-arrow {
+  stroke: #0a0f18;
+  stroke-width: 1;
+}
+@keyframes slate-aim-flow {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+/* 9.1b The reticle only rings twice when the aim is resting on something that
+ * can actually be chosen (`data-hit="1"`, written by `ui.js`). The ripples are
+ * copies of the reticle scaled about their own centre, so the expansion is a
+ * transform, not an animated `r`. */
+html[data-skin="slate"]
+  body
+  #target-lines
+  :is(#target-ripple-a, #target-ripple-b) {
+  fill: none;
+  stroke: #fff3cf;
+  stroke-width: 2;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+html[data-skin="slate"]
+  body
+  #target-lines[data-hit="1"]
+  :is(#target-ripple-a, #target-ripple-b) {
+  animation: slate-aim-ripple 1.4s ease-out infinite;
+}
+html[data-skin="slate"] body #target-lines[data-hit="1"] #target-ripple-b {
+  animation-delay: 0.7s;
+}
+@keyframes slate-aim-ripple {
+  0% {
+    opacity: 0.75;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="slate"] body #target-lines #target-flow,
+  html[data-skin="slate"]
+    body
+    #target-lines
+    :is(#target-ripple-a, #target-ripple-b) {
+    animation: none;
+  }
+}
+html[data-skin="slate"] body.reduced-motion #target-lines #target-flow,
+html[data-skin="slate"]
+  body.reduced-motion
+  #target-lines
+  :is(#target-ripple-a, #target-ripple-b) {
+  animation: none;
+}
+/* Touch keeps the same language one step narrower. */
+html[data-skin="slate"] body.touch-layout #target-lines #target-under {
+  stroke-width: 7;
+}
+html[data-skin="slate"] body.touch-layout #target-lines #target-path {
+  stroke-width: 5;
+}
+html[data-skin="slate"] body.touch-layout #target-lines #target-flow {
+  stroke-width: 2.5;
+  animation-name: slate-aim-flow-touch;
+}
+@keyframes slate-aim-flow-touch {
+  to {
+    stroke-dashoffset: -22;
+  }
 }
 
 /* 9.2 While aiming, everything that cannot be chosen steps back. Saying which
@@ -1509,16 +1628,111 @@ html[data-skin="slate"] body #battle .minion.ready .minion-art {
 /* Nothing of ours can act on the enemy's turn, and while aiming the breathing
  * would compete with the target highlight. */
 html[data-skin="slate"] body #app.enemy-turn #battle .minion.ready .unit-aura,
+html[data-skin="slate"] body #app.enemy-turn #battle .minion.ready .ready-dot,
+html[data-skin="slate"] body #app.is-targeting #battle .minion.ready .unit-aura,
 html[data-skin="slate"]
   body
   #app.is-targeting
   #battle
   .minion.ready
-  .unit-aura {
+  .ready-dot {
   animation: none;
 }
+
+/* 9.5b The bottom rim alone does not survive the distance: at half a screen
+ * away a token that can attack has to be findable without reading it. The
+ * `.ready-dot` span — emitted by `ui.js` only while the token can attack, and
+ * dark since the dot was retired — becomes that signal: a 2–3px blue halo
+ * around the whole card. It is a separate node on purpose, so the ring never
+ * has to fight `.unit-aura` for taunt, divine shield and freeze, and so the
+ * breathing stays a plain `opacity` animation on a static `box-shadow` (the
+ * geometry is resolved once — see the performance note above). */
 html[data-skin="slate"] body #battle .minion .ready-dot {
-  display: none;
+  position: absolute;
+  inset: -3px;
+  z-index: 5;
+  display: block;
+  width: auto;
+  height: auto;
+  border: 2px solid #8cc4ff;
+  border-radius: 8px;
+  background: none;
+  box-shadow:
+    0 0 10px 1px #8cc4ffb3,
+    inset 0 0 8px #8cc4ff4d;
+  pointer-events: none;
+  animation: slate-ready-breathe 1.6s ease-in-out infinite;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .minion .ready-dot {
+  inset: -4px;
+  border-width: 3px;
+  border-radius: 10px;
+  box-shadow:
+    0 0 16px 2px #8cc4ffcc,
+    inset 0 0 10px #8cc4ff59;
+}
+
+/* 9.5c The hero is a token too: with a weapon in hand and an attack left, the
+ * card carries the same blue halo, and the attack badge pulses so the reason
+ * ("you have a weapon") is next to the affordance. Only the player's hero
+ * breathes — the enemy's would compete for attention on its own turn. */
+html[data-skin="slate"] body #battle .hero.ready .hero-card-inner {
+  box-shadow:
+    0 0 0 2px #8cc4ff,
+    0 0 16px 2px #8cc4ff9e;
+}
+html[data-skin="slate"]
+  body
+  #battle
+  .hero.player.ready
+  .hero-card-inner::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: 6;
+  border: 2px solid #bcdcff;
+  border-radius: inherit;
+  box-shadow: 0 0 14px 2px #8cc4ffcc;
+  pointer-events: none;
+  animation: slate-ready-breathe 1.6s ease-in-out infinite;
+}
+html[data-skin="slate"] body #battle .hero.player.ready .hero-attack {
+  animation: slate-ready-pulse 1.6s ease-in-out infinite;
+}
+@keyframes slate-ready-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+}
+html[data-skin="slate"]
+  body
+  #app.enemy-turn
+  #battle
+  .hero.player.ready
+  .hero-card-inner::after,
+html[data-skin="slate"]
+  body
+  #app.enemy-turn
+  #battle
+  .hero.player.ready
+  .hero-attack,
+html[data-skin="slate"]
+  body
+  #app.is-targeting
+  #battle
+  .hero.player.ready
+  .hero-card-inner::after,
+html[data-skin="slate"]
+  body
+  #app.is-targeting
+  #battle
+  .hero.player.ready
+  .hero-attack {
+  animation: none;
 }
 
 /* 9.6 Below 90px a token cannot carry its class band and stay readable, so it
@@ -1536,12 +1750,30 @@ html[data-skin="slate"] body #battle .minion .ready-dot {
 }
 @media (prefers-reduced-motion: reduce) {
   html[data-skin="slate"] body #battle .minion.ready .unit-aura,
+  html[data-skin="slate"] body #battle .minion.ready .ready-dot,
+  html[data-skin="slate"]
+    body
+    #battle
+    .hero.player.ready
+    .hero-card-inner::after,
+  html[data-skin="slate"] body #battle .hero.player.ready .hero-attack,
   html[data-skin="slate"] body #battle .end-turn.thinking::after,
   html[data-skin="slate"] body #battle .mana-gems.mana-refresh .mana-gem {
     animation: none;
   }
 }
 html[data-skin="slate"] body.reduced-motion #battle .minion.ready .unit-aura,
+html[data-skin="slate"] body.reduced-motion #battle .minion.ready .ready-dot,
+html[data-skin="slate"]
+  body.reduced-motion
+  #battle
+  .hero.player.ready
+  .hero-card-inner::after,
+html[data-skin="slate"]
+  body.reduced-motion
+  #battle
+  .hero.player.ready
+  .hero-attack,
 html[data-skin="slate"] body.reduced-motion #battle .end-turn.thinking::after {
   animation: none;
 }

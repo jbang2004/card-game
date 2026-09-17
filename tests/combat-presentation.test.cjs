@@ -3,6 +3,8 @@ const test = require("node:test"),
 const { Game } = require("../src/engine.js");
 const { compile } = require("../src/presentation/combat.js");
 const EmberFXProfiles = require("../src/presentation/fx-profiles.js");
+const T = require("../src/presentation/timing.js");
+const near = (a, b, eps = 1e-9) => Math.abs(a - b) <= eps * Math.max(1, Math.abs(b));
 function setup() {
   const g = new Game();
   g.demo();
@@ -153,8 +155,12 @@ test("event views expose no deck identities or enemy hand identities, and compil
       assert.ok([...e.view.p.deck, ...e.view.e.deck].every((c) => c === null));
       assert.equal(e.view.rng, undefined);
     }
-  const reduced = compile(r.result.events, r.before, g.snapshot(), true);
-  assert.equal(reduced.duration, 0);
+  // V2 §2.7: reduced motion keeps a 50% version of the timeline (numbers and
+  // DOM motion stay), it no longer collapses to an instant commit.
+  const normal = compile(r.result.events, r.before, g.snapshot()),
+    reduced = compile(r.result.events, r.before, g.snapshot(), true);
+  assert.ok(near(reduced.duration, normal.duration * 0.5));
+  assert.equal(reduced.reduced, true);
   assert.equal(JSON.stringify(r.result.events), original);
   assert.equal(JSON.stringify(g.s), state);
 });
@@ -192,25 +198,23 @@ test("attack beats expose one causal contact marker and a single scaled motion d
     attack = plan.beats.find((beat) => beat.kind === "attack"),
     hit = plan.beats.find((beat) => beat.kind === "hit");
   assert.ok(attack?.motion);
+  // §4.2 melee: lift 110 → lunge 150 → contact (+ hit-stop) → recover 200.
+  assert.equal(attack.motion.contact, T.attack.lift + T.attack.lunge);
   assert.equal(attack.markers.contact, hit.at);
-  assert.equal(
-    attack.markers.end,
-    attack.markers.start + attack.motion.duration,
-  );
-  assert.equal(
-    attack.motion.duration,
-    attack.motion.recoveryEnd,
-  );
-  assert.equal(
-    attack.markers.recoveryEnd,
-    attack.markers.start + attack.motion.recoveryEnd,
-  );
+  assert.equal(attack.markers.end, attack.markers.start + attack.motion.duration);
+  assert.equal(attack.motion.duration, attack.motion.recoveryEnd);
+  assert.equal(attack.motion.release - attack.motion.contact, attack.motion.hitStop);
+  assert.equal(attack.motion.recoveryEnd - attack.motion.release, T.attack.recover);
+  assert.deepEqual(attack.actor, { side: "p", uid: attacker.uid });
+  assert.deepEqual(attack.targets, [{ side: "e", uid: target.uid }]);
+  assert.equal(attack.blockId, result.events[0].id);
   assert.ok(plan.duration <= 6500);
   assert.ok(Object.isFrozen(attack.motion));
-  assert.equal(EmberFXProfiles.motionFor("slam", 220, true).heavy, true);
-  const reduced = compile(result.events, before, g.snapshot(), true, "blade");
-  assert.equal(reduced.duration, 0);
-  assert.ok(reduced.beats.every((beat) => beat.markers.end === 0));
+  const reduced = compile(result.events, before, g.snapshot(), true, "blade"),
+    reducedAttack = reduced.beats.find((beat) => beat.kind === "attack");
+  // Reduced motion: half-length actions, no hit-stop.
+  assert.equal(reducedAttack.motion.hitStop, 0);
+  assert.ok(near(reducedAttack.motion.contact, attack.motion.contact * 0.5));
 });
 
 test("attack contact association is causal, exact and excludes nested or later hits", () => {
@@ -301,6 +305,7 @@ test("attack contact association is causal, exact and excludes nested or later h
   assert.deepEqual(firstAttack.contacts[0].targetRef, b);
   assert.equal(firstAttack.contacts[0].heavy, false);
   assert.equal(firstHit.contacts.length, 2);
+  assert.deepEqual(firstHit.targets, [b, a]);
   assert.deepEqual(
     firstHit.contacts.map((contact) => [contact.eventId, contact.direction]),
     [
@@ -315,21 +320,20 @@ test("attack contact association is causal, exact and excludes nested or later h
       Number.isFinite(contact[key]),
     ),
   ));
-  assert.equal(
-    firstHit.contacts[0].releaseAt,
-    firstHit.contacts[1].releaseAt,
-  );
-  assert.equal(
-    firstHit.contacts[0].recoveryEndAt,
-    firstHit.contacts[1].recoveryEndAt,
-  );
+  // V2: retaliation shares the outgoing contact frame; each side keeps its own
+  // tier (the 9-damage retaliation holds longer than the 2-damage hit).
+  assert.equal(firstHit.contacts[0].contactAt, firstHit.contacts[1].contactAt);
+  assert.equal(firstHit.contacts[0].tier, 1);
+  assert.equal(firstHit.contacts[1].tier, 3);
   assert.equal(secondAttack.contacts[0].eventId, "later-hit");
-  assert.ok(!plan.beats.some((beat) =>
-    beat.contacts?.some((contact) => contact.eventId === "nested-hit"),
-  ));
-  assert.ok(!plan.beats.some((beat) =>
-    beat.contacts?.some((contact) => contact.eventId === "late-action-1-hit"),
-  ));
+  // Nested or out-of-block hits are never linked to the attack: they become
+  // source-less contacts of their own.
+  for (const id of ["nested-hit", "late-action-1-hit"]) {
+    const linked = plan.beats
+      .flatMap((beat) => beat.contacts || [])
+      .filter((contact) => contact.eventId === id);
+    assert.ok(linked.every((contact) => contact.direction === "sourceless"));
+  }
 });
 
 test("attack source identity comes from the attack observation, including ranged and broken weapons", () => {
@@ -406,24 +410,20 @@ test("absorbed damage is not heavy and long timelines scale every motion marker 
   })).concat(absorbed);
   const longPlan = compile(longEvents, { p: {}, e: {} }, { p: {}, e: {} }),
     longAttack = longPlan.beats.find((beat) => beat.kind === "attack");
-  const expectedScale = 6500 / 7720;
-  assert.ok(Math.abs(longPlan.scale - expectedScale) < 1e-12);
-  assert.ok(longPlan.duration <= 6500);
-  assert.ok(Math.abs(longPlan.duration - 7720 * expectedScale) < 1e-9);
-  assert.ok(
-    Math.abs(
-      longAttack.markers.contact -
-        7420 * expectedScale,
-    ) < 1e-9,
-  );
-  assert.ok(
-    Math.abs(
-      longAttack.markers.recoveryEnd -
-        7670 * expectedScale,
-    ) < 1e-9,
-  );
-  assert.ok(Math.abs(longAttack.markers.release - 7450 * expectedScale) < 1e-9);
-  assert.ok(longAttack.markers.end <= longPlan.duration);
+  // 30 draws, then an absorbed (tier 1, no hit-stop) melee attack.
+  const lead = T.attack.lift + T.attack.lunge,
+    contact = 30 * T.draw + lead,
+    end = contact + T.attack.recover;
+  const expectedScale = 6500 / end;
+  assert.ok(near(longPlan.scale, expectedScale));
+  assert.ok(longPlan.duration <= 6500 + 1e-9);
+  assert.ok(near(longPlan.duration, end * expectedScale));
+  assert.ok(near(longAttack.markers.contact, contact * expectedScale));
+  assert.ok(near(longAttack.markers.release, contact * expectedScale));
+  assert.ok(near(longAttack.markers.recoveryEnd, end * expectedScale));
+  // One scale for every clock: the DOM motion descriptor shrinks with it.
+  assert.ok(near(longAttack.motion.contact, lead * expectedScale));
+  assert.ok(longAttack.markers.end <= longPlan.duration + 1e-9);
 });
 
 test("card tracks preserve UID causality, action boundaries and exclude nested summons", () => {
@@ -478,7 +478,11 @@ test("draw tracks have independent compressed timing and never appear for burn/f
       (candidate) => candidate.id === track.id,
     );
     assert.ok(reducedTrack);
-    assert.ok(Object.values(reducedTrack.markers).every((value) => value === null || value === 0));
+    // Reduced motion halves card tracks with the rest of the timeline.
+    for (const [key, value] of Object.entries(reducedTrack.markers))
+      assert.ok(
+        value === null ? track.markers[key] === null : near(value, track.markers[key] * 0.5),
+      );
   }
 });
 
@@ -495,17 +499,111 @@ test("compressed card markers remain tied to their scaled beat window", () => {
   assert.ok(plan.scale < 1);
   const track = plan.cardTracks[0],
     beat = plan.beats[track.startBeatIndex];
-  assert.equal(
-    track.markers.liftEndAt,
-    beat.at + beat.hold * 0.15,
-  );
-  assert.equal(
-    track.markers.handoffAt,
-    beat.at + beat.hold * (5 / 6),
-  );
-  assert.equal(
-    track.markers.endAt,
-    beat.at + beat.hold,
-  );
+  assert.ok(near(track.markers.liftEndAt, beat.at + beat.hold * 0.15));
+  assert.ok(near(track.markers.handoffAt, beat.at + beat.hold * (5 / 6)));
+  assert.ok(near(track.markers.endAt, beat.at + beat.hold));
   assert.ok(track.markers.endAt - track.markers.handoffAt > 0);
+});
+
+test("V2 beats carry actor, targets, tier, block and rule; spell numbers follow plan hitAt", () => {
+  const g = setup();
+  for (let i = 0; i < 3; i++) g.summon("e", "treant");
+  const storm = play(g, "storm").plan,
+    cast = storm.beats.find((b) => b.kind === "play"),
+    hit = storm.beats.find((b) => b.kind === "hit");
+  assert.deepEqual(cast.actor, { side: "p", uid: "hero" });
+  assert.equal(cast.targets.length, 3);
+  assert.equal(cast.rule.aoe, true);
+  // hitAt is measured from the cast() call, which opens with the caster flash:
+  // first AOE contact right after the flash, then 45ms steps (§4.2).
+  assert.equal(cast.cast.startAt, cast.at);
+  assert.deepEqual(cast.cast.hitAt, [120, 165, 210]);
+  // One impulse at the first highest-tier contact; its hit-stop (tier 2: 50ms)
+  // moves the later contacts back, and cast.contactAt records the result.
+  assert.equal(hit.impulseAt, cast.cast.startAt + 120);
+  assert.deepEqual(
+    hit.contacts.map((c) => c.contactAt - cast.cast.startAt),
+    [120, 165 + T.tiers[2].hitStopMs, 210 + T.tiers[2].hitStopMs],
+  );
+  assert.deepEqual(cast.cast.contactAt, hit.contacts.map((c) => c.contactAt));
+  assert.equal(hit.buckets.length, 3);
+  assert.ok(hit.contacts.every((c) => c.direction === "cast" && c.castBeat === 0));
+  // Each bucket reveals only what it touched: first bucket, one treant damaged.
+  const hp = (frame) => frame.e.board.map((m) => m.hp);
+  assert.equal(hp(hit.buckets[0].frame).filter((n, i) => n < hp(cast.frame)[i]).length, 1);
+  assert.deepEqual(hp(hit.buckets[2].frame), hp(hit.frame));
+
+  const h = setup(),
+    wolf = h.summon("e", "wolf");
+  const fireball = play(h, "fireball", { side: "e", uid: wolf.uid }).plan,
+    fcast = fireball.beats.find((b) => b.kind === "play"),
+    fhit = fireball.beats.find((b) => b.kind === "hit"),
+    death = fireball.beats.find((b) => b.kind === "death");
+  assert.equal(fcast.rule.aoe, false);
+  assert.equal(fcast.tier, 3); // lethal
+  assert.equal(fhit.at, fcast.cast.startAt + fcast.cast.hitAt[0]);
+  const flight = fcast.cast.hitAt[0] - T.spell.castFlash;
+  assert.ok(flight >= T.spell.projectileMin && flight <= T.spell.projectileMax);
+  // Death starts after the last contact + hit-stop + 120ms.
+  assert.equal(death.at, fhit.at + T.tiers[3].hitStopMs + T.death.delay);
+  assert.equal(death.hold, T.death.freeze + T.death.dissolve + T.death.reflow);
+  // Deathrattle summon is a separate, source-less cause.
+  const pup = fireball.beats.find((b) => b.kind === "summon");
+  assert.equal(pup.sourceId, wolf.uid);
+  assert.equal(pup.actor, null);
+});
+
+test("battlecry targets belong to the summoned minion and a plan() override drives contacts", () => {
+  const g = setup();
+  g.summon("e", "treant");
+  const calls = [];
+  const c = g.card("spark");
+  g.s.p.hand = [c];
+  g.events = [];
+  const before = g.snapshot(),
+    result = g.dispatch({ type: "play", side: "p", uid: c.uid, target: { side: "e", uid: g.s.e.board[0].uid } });
+  assert.ok(result.ok, result.error);
+  const plan = compile(result.events, before, g.snapshot(), false, "blade", {
+    plan(kind, args) {
+      calls.push({ kind, args });
+      return { hitAt: args.targets.map(() => 222), duration: 400 };
+    },
+    castSpec: ({ kind }) => (kind === "battlecry" ? { kind: "lightning" } : null),
+  });
+  const summon = plan.beats.find((b) => b.kind === "summon"),
+    hit = plan.beats.find((b) => b.kind === "hit" || b.kind.startsWith("status"));
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].kind, "lightning");
+  assert.ok(summon.battlecry);
+  assert.deepEqual(summon.battlecry.actor, summon.targets[0]);
+  assert.equal(summon.battlecry.startAt, summon.at + T.summon.land);
+  assert.equal(hit.contacts[0].contactAt, summon.battlecry.startAt + 222);
+  assert.deepEqual(hit.contacts[0].actor, summon.targets[0]);
+});
+
+test("countered spells cast nothing and cut-ins are reserved for heroes and legendaries", () => {
+  const g = setup();
+  g.s.e.secrets = ["counterspell"];
+  const { plan } = play(g, "fireball", { side: "e", uid: "hero" });
+  const cast = plan.beats.find((b) => b.kind === "play");
+  assert.equal(cast.countered, true);
+  assert.equal(cast.cast.kind, null);
+  assert.deepEqual(cast.targets, []);
+  assert.ok(plan.beats.some((b) => b.kind === "secret"));
+
+  const asked = [];
+  const h = setup(),
+    guard = h.summon("p", "guard", { sick: false }),
+    target = h.summon("e", "treant", { sick: false });
+  h.events = [];
+  const before = h.snapshot(),
+    result = h.dispatch({ type: "attack", side: "p", uid: guard.uid, target: { side: "e", uid: target.uid } }),
+    plan2 = compile(result.events, before, h.snapshot(), false, "blade", {
+      cutin: (ctx) => (asked.push(ctx), true),
+    });
+  assert.equal(asked.length, 0); // a common minion never asks
+  assert.equal(plan2.beats.find((b) => b.kind === "attack").cutin, false);
+  assert.equal(EmberFXProfiles.cutinPolicy({ cutin: true, fx2: true, art: true, hero: false, legendary: false }), false);
+  assert.equal(EmberFXProfiles.cutinPolicy({ cutin: true, fx2: true, art: true, legendary: true }), true);
+  assert.equal(EmberFXProfiles.cutinPolicy({ cutin: true, fx2: true, art: true, hero: true }), true);
 });

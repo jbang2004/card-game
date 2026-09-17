@@ -26,8 +26,7 @@ body.touch-layout #app {
   transform-origin: 0 0;
   overflow: hidden;
 }
-body.touch-layout #world-canvas,
-body.touch-layout #fx-canvas {
+body.touch-layout #world-canvas {
   width: 100%;
   height: 100%;
 }
@@ -215,10 +214,6 @@ body.touch-layout .minion .minion-status .special {
   font-size: 11px;
   text-shadow: 0 1px 3px #000;
 }
-body.touch-layout .minion.shield:before {
-  inset: -3px -1px 0;
-  border-width: 1px;
-}
 body.touch-layout .minion.legendary:after {
   left: calc(50% - 6px);
   top: -10px;
@@ -349,24 +344,36 @@ body.touch-layout #target-circle {
   stroke: #fff0b3;
   stroke-width: 2;
 }
+/* 泼溅底与数字按同一个比例缩（约 0.72），版式与桌面一致。 */
 body.touch-layout .damage-number {
-  font-size: 30px;
+  --splat-size: 62px;
+  --splat-font: 25px;
   z-index: 51;
-  text-shadow:
-    0 2px 0 #591e19,
-    1px 0 #211019,
-    -1px 0 #211019;
   pointer-events: none;
 }
 body.touch-layout .damage-number.crit {
-  font-size: 36px;
+  --splat-size: 85px;
+  --splat-font: 32px;
+}
+body.touch-layout .damage-number.block {
+  --splat-size: 54px;
+  --splat-font: 13px;
 }
 body.touch-layout .damage-number small {
-  font-size: 10px;
+  font-size: 8px;
+  letter-spacing: 1px;
 }
 body.touch-layout .death-ghost {
   pointer-events: none;
+}
+body.touch-layout .death-ghost:not(.attack-actor) {
   z-index: 50;
+}
+/* 突进克隆也是一张 .minion，会被上面 `body.touch-layout .minion { z-index: 7 }`
+   （同为 0,2,0 的特异度）压回随从行里。显式写回 10：仍在 #fx-gl(11) 之下，
+   但确实压在随从行之上，和桌面同一套层级。 */
+body.touch-layout .attack-actor {
+  z-index: 10;
 }
 body.touch-layout .cast-card {
   width: 108px;

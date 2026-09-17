@@ -352,6 +352,10 @@ const EmberViewport = (() => {
         h: 24,
       });
     } else {
+      /* Every id the phone branch boxes above has to be listed here, or a
+       * window that starts narrow and is then widened keeps phone coordinates
+       * as inline styles that no desktop rule can outrank — the aim prompt
+       * ends up over the brand mark in the top-left corner. */
       for (const id of [
         "arena",
         "enemy-hero",
@@ -362,6 +366,8 @@ const EmberViewport = (() => {
         "board-empty",
         "weapon-slot",
         "turn-number",
+        "touch-target-bar",
+        "touch-match-chip",
       ]) {
         const el = document.getElementById(id);
         if (el)
@@ -572,28 +578,6 @@ const EmberViewport = (() => {
       visible: true,
     };
   }
-  function fallback(s, side, uid) {
-    if (state.mobile && uid === "hero") {
-      const r = state.layout[side === "p" ? "player" : "enemy"];
-      return { x: r.x + r.w / 2, y: r.y + r.h / 2 };
-    }
-    if (uid === "hero") {
-      const el = document.getElementById(
-        side === "p" ? "player-hero" : "enemy-hero",
-      );
-      return {
-        x: el.offsetLeft + el.offsetWidth / 2,
-        y: el.offsetTop + el.offsetHeight / 2,
-      };
-    }
-    const arr = s[side].board,
-      i = Math.max(
-        0,
-        arr.findIndex((m) => m.uid === uid),
-      ),
-      r = minion(side, i, arr.length || 1);
-    return { x: r.x + r.w / 2, y: r.y + r.h / 2 };
-  }
   const lane = (side) =>
     state.mobile
       ? {
@@ -637,7 +621,6 @@ const EmberViewport = (() => {
     handCardAnchor,
     minion,
     minionLandingBox,
-    fallback,
     lane,
     get mobile() {
       return state.mobile;
@@ -656,11 +639,6 @@ const EmberViewport = (() => {
     },
     get safe() {
       return state.safe;
-    },
-    get effectScale() {
-      return state.mobile
-        ? clamp(Math.min(state.width, state.height) / 800, 0.4, 0.68)
-        : 1;
     },
   };
 })();

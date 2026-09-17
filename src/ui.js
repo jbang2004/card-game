@@ -207,8 +207,26 @@
     if (!svg) return;
     svg.style.display = "none";
     svg.removeAttribute("data-mode");
+    svg.removeAttribute("data-hit");
   }
-  function drawActionCue(from, to, mode = "target") {
+  /* The aim cue is a stack, not one line: a dark understroke that keeps the
+   * gold line readable over lit artwork, the line itself, a marker rail that
+   * flows along the same path through `stroke-dashoffset` (CSS owns the
+   * animation, so the geometry is written once per aim frame rather than per
+   * display frame), the head, and the reticle with its two ripples. Only
+   * `#target-path`, `#target-arrow` and `#target-circle` ship in the template;
+   * the rest are added here on first use so the markup stays one stream's. */
+  function cueNode(id, tag, before) {
+    let el = $(id);
+    if (el) return el;
+    const svg = $("target-lines");
+    if (!svg) return null;
+    el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    el.id = id;
+    svg.insertBefore(el, before ? $(before) : null);
+    return el;
+  }
+  function drawActionCue(from, to, mode = "target", locked = false) {
     const svg = $("target-lines");
     if (!svg || !from || !to) {
       clearActionCue();
@@ -236,20 +254,26 @@
         y: from.y + dy * 0.66 + ny * bend,
       };
     svg.dataset.mode = mode;
+    svg.dataset.hit = locked ? "1" : "0";
     svg.style.display = "block";
-    $("target-path").setAttribute(
-      "d",
-      `M${from.x},${from.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${to.x},${to.y}`,
-    );
+    const d = `M${from.x},${from.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${to.x},${to.y}`;
+    cueNode("target-under", "path", "target-path")?.setAttribute("d", d);
+    $("target-path").setAttribute("d", d);
+    /* One chevron every 28 path pixels. The dash pattern is a length, so it is
+     * written with the geometry; the flow is a CSS `stroke-dashoffset`
+     * animation over that fixed pattern. */
+    const flow = cueNode("target-flow", "path", "target-arrow");
+    if (flow) {
+      const step = EmberViewport.mobile ? 22 : 28;
+      flow.setAttribute("d", d);
+      // Inline, not an attribute: `style.css` dashes every path in this svg,
+      // and a stylesheet rule outranks a presentation attribute.
+      flow.style.strokeDasharray = `${step * 0.3} ${step * 0.7}`;
+    }
     const angle = Math.atan2(to.y - c2.y, to.x - c2.x),
-      tip =
-        mode === "placement"
-          ? EmberViewport.mobile
-            ? 10
-            : 15
-          : EmberViewport.mobile
-            ? 9
-            : 13,
+      // One head size for both modes: a placement arrow that reads smaller
+      // than an attack arrow only makes the quieter action harder to see.
+      tip = EmberViewport.mobile ? 16 : 22,
       wing = tip * 0.55,
       ux = Math.cos(angle),
       uy = Math.sin(angle);
@@ -257,18 +281,26 @@
       "d",
       `M${to.x},${to.y} L${to.x - tip * ux - wing * uy},${to.y - tip * uy + wing * ux} L${to.x - tip * ux + wing * uy},${to.y - tip * uy - wing * ux} Z`,
     );
-    $("target-circle").setAttribute("cx", to.x);
-    $("target-circle").setAttribute("cy", to.y);
-    $("target-circle").setAttribute(
-      "r",
+    const radius =
       mode === "placement"
         ? EmberViewport.mobile
-          ? "18"
-          : "24"
-        : EmberViewport.mobile
-          ? "10"
-          : "12",
-    );
+          ? 18
+          : 24
+        : locked
+          ? EmberViewport.mobile
+            ? 14
+            : 18
+          : EmberViewport.mobile
+            ? 10
+            : 12;
+    for (const id of ["target-circle", "target-ripple-a", "target-ripple-b"]) {
+      const el =
+        id === "target-circle" ? $(id) : cueNode(id, "circle", "target-circle");
+      if (!el) continue;
+      el.setAttribute("cx", to.x);
+      el.setAttribute("cy", to.y);
+      el.setAttribute("r", String(radius));
+    }
   }
   function placementAnchor(pointerTarget = null) {
     const arena = localRect($("arena"));
@@ -459,8 +491,31 @@
     $("quick-btn").title = s
       ? "开始新战役（确认后覆盖当前进度）"
       : "从第 6 回合开始的示范战斗，不影响战役存档";
+    // A saved run's next encounter is already decided while the player is
+    // still looking at the lobby: start that request now, not on the click.
+    if (s) preloadEncounter(s.bossIndex, s.mode);
+  }
+  /* The battle backdrop is a separate HTTP asset in the web build, and nothing
+   * asks for it until `render` reaches `AtelierWorld.setEncounter` — which
+   * happens after the board is already on screen. On a phone connection the
+   * first match of an encounter therefore opens over flat ambient colour and
+   * only paints once the image lands (the second one is instant, from cache).
+   * The boss is known well before that, so the request is started here; the
+   * decode then overlaps the mulligan instead of the match.
+   * Role resolution mirrors `AtelierWorld.paint`: an unknown encounter falls
+   * back to the generic battle scene, exactly as `setEncounter` does. */
+  function preloadEncounter(bossIndex, mode) {
+    const t = EmberTheme.definition,
+      id = mode === "practice" ? "practice" : D.bosses[bossIndex]?.id;
+    try {
+      EmberTheme.image(t.encounters[id] || t.scenes.battle.art);
+    } catch {
+      /* A content edit can name a boss before it names a backdrop; the scene
+       * still has to open, so a missing role is not worth failing a match. */
+    }
   }
   function startGame(hero, boss = 0, relics = [], deck = null, options = {}) {
+    preloadEncounter(boss, options.opponent ? "practice" : null);
     EmberFX.cancel();
     runToken++;
     clearTimeout(aiTimer);
@@ -485,6 +540,7 @@
       showHeroes();
       return;
     }
+    preloadEncounter(s.bossIndex, s.mode);
     runToken++;
     isDemo = false;
     inBattle = true;
@@ -551,6 +607,8 @@
     else showHeroes();
   }
   function demo() {
+    // `Game.demo` always stages the first boss.
+    preloadEncounter(0, null);
     EmberFX.cancel();
     runToken++;
     clearTimeout(aiTimer);
@@ -701,6 +759,28 @@
     return snapshot.point ? snapshot : { ...snapshot, point: null };
   }
   let pendingCardOrigin = null;
+  /* The phone hand keeps its scroll position across renders. The position is
+   * tracked by a passive scroll listener and restored on the next frame, so
+   * render() itself never reads or writes scroll geometry (either one forces a
+   * style recalc and layout in the middle of a battle beat). */
+  let handScrollLeft = 0,
+    handScrollFrame = 0;
+  $("hand")?.addEventListener(
+    "scroll",
+    (event) => {
+      handScrollLeft = event.currentTarget.scrollLeft;
+    },
+    { passive: true },
+  );
+  function restoreHandScroll() {
+    if (handScrollFrame || !handScrollLeft) return;
+    const wanted = handScrollLeft;
+    handScrollFrame = requestAnimationFrame(() => {
+      handScrollFrame = 0;
+      const hand = $("hand");
+      if (hand && hand.scrollLeft !== wanted) hand.scrollLeft = wanted;
+    });
+  }
   /* Hero chips (design doc §13.4). `render()` rebuilds the console markup, so
    * the previous value cannot be read back off the DOM — it is remembered here
    * and the new node is rewound to it and tweened forward over `--m-fast`.
@@ -733,9 +813,12 @@
         };
         requestAnimationFrame(step);
         if (box) {
+          // Restart the flash on the next frame instead of forcing a reflow
+          // (`void offsetWidth`) in the middle of a battle render.
           box.classList.remove("chip-up", "chip-down");
-          void box.offsetWidth;
-          box.classList.add(to < from ? "chip-down" : "chip-up");
+          requestAnimationFrame(() =>
+            box.classList.add(to < from ? "chip-down" : "chip-up"),
+          );
         }
       };
       const hp = el.querySelector(".hero-health .stat-value");
@@ -778,7 +861,6 @@
       (frame = s) => render(frame),
       () => {
         if (!inBattle || token !== runToken) return;
-        handleEvents(events || []);
         if (s.choice?.side === "p" && !modalType) showDiscover();
         if (s.phase === "over") {
           clearTimeout(aiTimer);
@@ -807,7 +889,6 @@
     const manaRefreshed = s.active === "p" && s.turn !== manaTurn;
     if (manaRefreshed) manaTurn = s.turn;
     contractUI.render(s);
-    const handScroll = $("hand").scrollLeft;
     EmberFX.setTheme(s.bossIndex, s.phase2);
     const hero = D.heroes.find((h) => h.id === s.heroId),
       boss =
@@ -1092,7 +1173,7 @@
       el.addEventListener("mouseenter", () => preview(el.dataset.cardid, el));
       el.addEventListener("mouseleave", hidePreview);
     });
-    if (EmberViewport.mobile) $("hand").scrollLeft = handScroll;
+    if (EmberViewport.mobile) restoreHandScroll();
     window.EmberMobile?.afterRender(s);
     updateSelection();
     EmberPortraits.sync();
@@ -1192,6 +1273,11 @@
     clearTimeout(previewTimer);
     if (EmberViewport.mobile || detail.pinned) return;
     if (drag?.started) return;
+    /* While aiming, the hovered card is the target — not something to read.
+     * The magnified card would cover the hero rail the aim is heading for, so
+     * hover preview stands down until the selection is resolved. Touch is
+     * unaffected: it has no hover and its own inspect gesture. */
+    if (app.classList.contains("is-targeting")) return;
     previewTimer = setTimeout(() => {
       if (!el.isConnected) return;
       let actual = null;
@@ -1646,6 +1732,9 @@
      * §13.3). It used to be touch-only because it only drove the mobile action
      * bar; the dimming is just as useful with a mouse. */
     app.classList.add("is-targeting");
+    // A preview opened just before the aim started would outlive it; retire it
+    // the moment targeting takes over (see `preview`).
+    if (!EmberViewport.mobile) hidePreview();
     if (EmberViewport.mobile) window.EmberMobile?.selectionChanged();
     setGuide(
       actionGuide.text ||
@@ -1672,7 +1761,14 @@
       clearActionCue();
       return;
     }
-    drawActionCue(from, pointer, "target");
+    /* The reticle only locks on when the aim is actually resting on something
+     * that can be chosen, so "big circle" reads as "release here". */
+    drawActionCue(
+      from,
+      pointer,
+      "target",
+      !!document.querySelector(".aim-focus.valid-target"),
+    );
   }
   function dropZone() {
     if (!EmberViewport.mobile) return { x0: 270, x1: 1330, y1: 730 };
@@ -2037,6 +2133,12 @@
     capture: true,
     passive: true,
   });
+  /* The enemy's turn reads as one thought followed by quick moves: the first
+   * beat waits long enough for the turn banner to be read, everything after it
+   * runs at the action interval. `turn` only advances on the player's turn, so
+   * the clock that identifies "this enemy turn" is turn + side. */
+  let aiTurnClock = null;
+  const AI_THINK = 600;
   function scheduleAI() {
     clearTimeout(aiTimer);
     if (
@@ -2047,7 +2149,9 @@
       game.s.active !== "e"
     )
       return;
-    const token = runToken;
+    const token = runToken,
+      clock = game.s.turn + ":e",
+      first = clock !== aiTurnClock;
     aiTimer = setTimeout(
       () => {
         if (
@@ -2057,6 +2161,9 @@
           game.s.active !== "e"
         )
           return;
+        // Only a beat that actually ran spends this turn's thinking pause; a
+        // reschedule (effects still busy, a dialog on top) must not skip it.
+        aiTurnClock = clock;
         const r = game.aiStep();
         if (!r.ok) {
           console.warn("AI action rejected", r.error);
@@ -2065,14 +2172,8 @@
           else game.dispatch({ type: "end", side: "e" });
         }
       },
-      settings.fast ? 240 : 720,
+      first ? AI_THINK : settings.fast ? 160 : 420,
     );
-  }
-  function handleEvents(events) {
-    for (const e of events) {
-      if (e.type === "secret")
-        toast((D.byId[e.cid]?.name || "奥秘") + "触发。");
-    }
   }
   function showDiscover(...args) {
     return screens.campaign.showDiscover(...args);
@@ -2285,10 +2386,17 @@
     new URLSearchParams(location.search).get("debug") === "1"
   )
     window.EmberDebug = Object.freeze({ game });
-  window.addEventListener("ember:viewport", () => {
+  window.addEventListener("ember:viewport", (event) => {
     cancelDrag(false);
     clearSelection();
     hidePreview();
+    /* Crossing the phone/desktop line changes what the effect layer is allowed
+     * to run: the realistic spell pipeline is gated on `EmberViewport.mobile`,
+     * and that gate is only re-evaluated inside `EmberFX.configure`. A window
+     * opened narrow and then dragged wide would otherwise keep the phone
+     * fallback — no cut-ins, no fx2 — for the rest of the match. */
+    if (event.detail?.before?.mobile !== event.detail?.after?.mobile)
+      EmberFX.configure(settings.reduced, settings.low);
     EmberFX.reflow();
     if (game.s) render(game.s);
   });

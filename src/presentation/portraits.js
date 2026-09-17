@@ -122,6 +122,10 @@ const EmberPortraits = (() => {
       assets.delete(id);
     }
   }
+  /* measure() reads layout and computed style, so it only runs inside the
+   * ResizeObserver callback, where layout is already clean. sync() runs in the
+   * middle of a battle render (between DOM writes); a read there forced a full
+   * style recalc per portrait and delayed contact numbers by ~50ms. */
   function measure(e) {
     // Layout dimensions exclude the summon/lunge transform: no reallocations mid-motion.
     const width = e.host.clientWidth,
@@ -146,12 +150,27 @@ const EmberPortraits = (() => {
     e.py = Number.isFinite(parseFloat(p[1])) ? parseFloat(p[1]) / 100 : 0.4;
   }
   const hosts = new Map();
+  // The summon beat has already laid out this unit. Paint a warm rig before
+  // its first visible frame instead of waiting for IntersectionObserver/RAF.
+  function warmPaint(e) {
+    const assetKey = e.staticMotion ? "static:" + e.id : e.id;
+    if (e.entering && !e.painted && e.sized && assets.get(assetKey)?.ready && !disabled()) {
+      e.art = assets.get(assetKey);
+      paint(e, performance.now());
+    }
+  }
   const resize = new ResizeObserver((records) => {
+    const measured = [];
     for (const record of records) {
       const e = hosts.get(record.target);
-      if (e) measure(e);
-      wake();
+      if (e) {
+        measure(e);
+        measured.push(e);
+      }
     }
+    // All reads first, then canvas writes: one layout for the whole batch.
+    measured.forEach(warmPaint);
+    wake();
   });
   const visibility = new IntersectionObserver((records) => {
     for (const record of records) {
@@ -233,14 +252,17 @@ const EmberPortraits = (() => {
       }
       entries.set(img, e);
       hosts.set(host, e);
-      measure(e);
-      // The summon beat has already laid out this unit. Paint a warm rig before
-      // its first visible frame instead of waiting for IntersectionObserver/RAF.
-      const assetKey = e.staticMotion ? "static:" + id : id;
-      if (e.entering && e.sized && assets.get(assetKey)?.ready && !disabled()) {
-        e.art = assets.get(assetKey);
-        paint(e, performance.now());
-      }
+      // No layout read here. A reused slot keeps its last measurement (the
+      // replacement host has the same layout box); new hosts are measured by
+      // the ResizeObserver's initial callback, before this frame is painted.
+      if (previous?.sized) {
+        e.sized = true;
+        e.width = previous.width;
+        e.height = previous.height;
+        e.px = previous.px;
+        e.py = previous.py;
+        warmPaint(e);
+      } else e.sized = false;
       resize.observe(host);
       visibility.observe(host);
       // Reuse the last completed bitmap before the browser paints the replacement DOM.

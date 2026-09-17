@@ -1,11 +1,17 @@
+/* Signature presentations, asserted through the director's trace and the one
+ * effect backend (EmberFx2). V2 removed EmberVFX, the EmberFX canvas particles
+ * and #fx-canvas, so nothing here reads a sprite atlas or a 2D canvas. */
 const { test, expect } = require("@playwright/test");
 const path = require("node:path");
+
 async function demo(page) {
   await page.goto("./?debug=1");
   await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
   await page.locator("#quick-btn").click();
   await page.waitForFunction(() => !EmberFX.busy);
-  await page.evaluate(() => EmberVFX.prepare());
+  await page.evaluate(() => {
+    EmberDebug.game.aiStep = () => ({ ok: true });
+  });
 }
 async function play(page, id) {
   return page.evaluate((id) => {
@@ -24,7 +30,8 @@ async function play(page, id) {
     g.events = [];
     g.emit();
     const c = EmberData.byId[id];
-    const before = { ...EmberVFX.diagnostics.spawned };
+    const lastSeq = EmberFX.trace.at(-1)?.seq ?? 0;
+    const spawned = { ...(EmberFx2.diagnostics?.spawned || {}) };
     Emberfall.act(() =>
       g.dispatch({
         type: "play",
@@ -33,17 +40,24 @@ async function play(page, id) {
         target: c.target ? { side: "e", uid: g.s.e.board[1].uid } : undefined,
       }),
     );
-    return { before, state: JSON.stringify(g.s) };
+    return { lastSeq, spawned, state: JSON.stringify(g.s) };
   }, id);
 }
+const settled = (page) =>
+  page.waitForFunction(
+    () =>
+      !EmberFX.busy &&
+      !document.querySelector(".attack-actor,.death-ghost"),
+  );
+const recordsSince = (page, seq) =>
+  page.evaluate((seq) => EmberFX.trace.filter((r) => r.seq > seq), seq);
+
 for (const mobile of [false, true])
-  test(`canonical spells and four legendary arrivals use distinct real-event effects ${mobile ? "touch" : "desktop"}`, async ({
+  test(`canonical spells and four legendary arrivals keep their own signature ${mobile ? "touch" : "desktop"}`, async ({
     browser,
   }) => {
     const context = await browser.newContext({
-      viewport: mobile
-        ? { width: 390, height: 844 }
-        : { width: 1600, height: 940 },
+      viewport: mobile ? { width: 390, height: 844 } : { width: 1600, height: 940 },
       isMobile: mobile,
       hasTouch: mobile,
     });
@@ -51,80 +65,59 @@ for (const mobile of [false, true])
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
     await demo(page);
-    for (const [id, kind] of [
-      ["fireball", "comet"],
-      ["storm", "comet"],
-      ["nova", "frost-field"],
-      ["execute", "void"],
-      ["solaris", "solar-crown"],
-      ["nyx", "astral-gate"],
-      ["ashdragon", "dragon-wake"],
-      ["frostking", "frost-throne"],
+    // [card, trace type, expected kind]. V2: one pipeline on every platform,
+    // so desktop and touch assert the same thing. Legendary battlecries only
+    // draw when they have targets; their arrival is the summon record.
+    for (const [id, type, kind] of [
+      ["fireball", "cast", "fireball"],
+      ["storm", "cast", "fireball"],
+      ["nova", "cast", "frost-field"],
+      ["execute", "cast", "bladeCross"],
+      ["solaris", "summon", "solar-crown"],
+      ["nyx", "summon", "astral-gate"],
+      ["ashdragon", "summon", "dragon-wake"],
+      ["frostking", "summon", "frost-throne"],
     ]) {
-      const { before, state } = await play(page, id);
+      const { lastSeq, state } = await play(page, id);
       await page.waitForFunction(
-        ({ kind, count }) => (EmberVFX.diagnostics.spawned[kind] || 0) > count,
-        { kind, count: before[kind] || 0 },
+        ({ lastSeq, type, kind }) =>
+          EmberFX.trace.some((r) => r.seq > lastSeq && r.type === type && r.kind === kind),
+        { lastSeq, type, kind },
       );
-      await page.waitForTimeout(kind === "comet" ? 250 : 120);
+      await page.waitForTimeout(160);
       await page.screenshot({
         path: path.resolve(
           `artifacts/qa/vfx-signatures/${id}-${mobile ? "touch" : "desktop"}.png`,
         ),
       });
+      expect(await page.evaluate(() => JSON.stringify(EmberDebug.game.s))).toBe(state);
+      await settled(page);
+      const records = await recordsSince(page, lastSeq);
+      expect(records.filter((r) => r.type === "warn"), id).toEqual([]);
       if (["solaris", "nyx", "ashdragon", "frostking"].includes(id)) {
-        const statAlpha = await page.evaluate((id) => {
-          const el = document.querySelector(
-            `.minion.friendly[data-cardid="${id}"] .stat.hp`,
-          );
-          const p = EmberFX.pos(el),
-            canvas = document.getElementById("fx-canvas"),
-            scale = canvas.width / EmberViewport.width;
-          return canvas
-            .getContext("2d")
-            .getImageData(
-              Math.floor(p.x * scale),
-              Math.floor(p.y * scale),
-              1,
-              1,
-            ).data[3];
-        }, id);
-        expect(statAlpha).toBe(0);
+        // The legendary arrival replaces the old arrival + battlecry double.
+        expect(records.filter((r) => r.type === "summon" && r.kind === kind)).toHaveLength(1);
+        await expect(page.locator(".summon-seal")).toHaveCount(0);
       }
-      expect(await page.evaluate(() => JSON.stringify(EmberDebug.game.s))).toBe(
-        state,
-      );
-      await page.waitForFunction(
-        () => !EmberFX.busy && EmberFX.particles === 0,
-      );
-      expect(await page.locator(".signature-cue").count()).toBe(0);
     }
-    const metrics = await page.evaluate(() => EmberVFX.diagnostics);
-    expect(metrics.loaded).toHaveLength(13);
-    expect(metrics.failed).toEqual([]);
-    expect(metrics.peak).toBeLessThanOrEqual(mobile ? 48 : 96);
-    expect(metrics.decodedBytes).toBeLessThanOrEqual(24 * 1024 * 1024);
     expect(errors).toEqual([]);
-    await test.info().attach(`vfx-${mobile ? "touch" : "desktop"}-metrics`, {
-      body: JSON.stringify(metrics, null, 2),
-      contentType: "application/json",
-    });
     await context.close();
   });
-test("weapons distinguish contact slashes, claws, slam and ranged trajectories", async ({
+
+test("attack families keep distinct contact language, ranged attackers never lunge", async ({
   page,
 }) => {
   await demo(page);
-  for (const [id, kind, ranged] of [
-    ["guard", "sprite", false],
-    ["wolf", "sprite", false],
-    ["titan", "fracture", false],
+  for (const [id, family, ranged] of [
+    ["guard", "blade", false],
+    ["wolf", "claw", false],
+    ["titan", "slam", false],
     ["archer", "arrow", true],
-    ["huntress", "arrow", true],
+    ["huntress", "spear", true],
     ["nyx", "bolt", true],
-    ["dragon", "beam", true],
+    ["dragon", "breath", true],
   ]) {
-    const before = await page.evaluate((id) => {
+    const lastSeq = await page.evaluate((id) => {
       EmberFX.cancel(true);
       const g = EmberDebug.game;
       g.s.p.board = [];
@@ -136,7 +129,7 @@ test("weapons distinguish contact slashes, claws, slam and ranged trajectories",
       const a = g.summon("p", id, { sick: false });
       g.events = [];
       g.emit();
-      const counts = { ...EmberVFX.diagnostics.spawned };
+      const lastSeq = EmberFX.trace.at(-1)?.seq ?? 0;
       Emberfall.act(() =>
         g.dispatch({
           type: "attack",
@@ -145,106 +138,87 @@ test("weapons distinguish contact slashes, claws, slam and ranged trajectories",
           target: { side: "e", uid: "hero" },
         }),
       );
-      return counts;
+      return lastSeq;
     }, id);
     await page.waitForFunction(
-      ({ kind, count }) => (EmberVFX.diagnostics.spawned[kind] || 0) > count,
-      { kind, count: before[kind] || 0 },
+      (lastSeq) => EmberFX.trace.some((r) => r.seq > lastSeq && r.type === "attack"),
+      lastSeq,
     );
     if (ranged) expect(await page.locator(".attack-actor").count()).toBe(0);
-    await page.waitForTimeout(ranged ? 100 : 45);
+    else await expect(page.locator(".attack-actor")).toHaveCount(1);
+    await page.waitForTimeout(ranged ? 100 : 60);
     await page.screenshot({
       path: path.resolve(`artifacts/qa/vfx-signatures/attack-${id}.png`),
     });
-    await page.waitForFunction(() => !EmberFX.busy && EmberFX.particles === 0);
+    await settled(page);
+    const attack = (await recordsSince(page, lastSeq)).find((r) => r.type === "attack");
+    expect(attack.kind, id).toBe(family);
+    expect(attack.ranged, id).toBe(ranged);
+    expect(attack.numberAt[0], id).not.toBeNull();
+    expect(Math.abs(attack.numberAt[0] - attack.hitAt[0]), id).toBeLessThanOrEqual(34);
   }
 });
 
-test("compressed zero-scale contact VFX never spawns a resurrected default tail", async ({
+test("a compressed sequence scales contact, hit-stop and DOM motion with one clock", async ({
   page,
 }) => {
   await demo(page);
-  const result = await page.evaluate(() => {
-    EmberVFX.clear();
-    const before = { ...EmberVFX.diagnostics.spawned },
-      now = performance.now();
-    EmberVFX.hit(
-      { x: 500, y: 400 },
-      "steel",
-      1,
-      "blade",
-      null,
-      {
-        contactAt: now,
-        releaseAt: now,
-        recoveryEndAt: now,
-        scale: 0,
-      },
-    );
-    EmberVFX.attack(
-      "arrow",
-      { x: 100, y: 300 },
-      { x: 500, y: 400 },
-      "steel",
-      { contact: 0, duration: 0, startAt: now },
-    );
-    return {
-      before,
-      after: EmberVFX.diagnostics.spawned,
-      active: EmberVFX.active,
+  const report = await page.evaluate(async () => {
+    EmberFX.cancel(true);
+    const g = EmberDebug.game;
+    g.s.active = "p";
+    g.s.phase = "battle";
+    g.s.p.board = [];
+    g.s.e.board = [];
+    const a = g.summon("p", "guard", { sick: false });
+    const t = g.summon("e", "treant", { sick: false });
+    g.events = [];
+    g.emit();
+    const original = EmberFX.present;
+    // 30 observations the player never sees force the 6500ms compression.
+    EmberFX.present = (events, ...rest) => {
+      EmberFX.present = original;
+      const burn = Array.from({ length: 30 }, (_, i) => ({
+        id: "pad-" + i,
+        type: "burn",
+        parentId: null,
+        side: "e",
+      }));
+      return original([...burn, ...events], ...rest);
     };
-  });
-  expect(result.active).toBe(0);
-  expect(result.after).toEqual(result.before);
-});
-
-test("positive compressed contact VFX follows the shared clock and releases debris after contact", async ({
-  page,
-}) => {
-  await demo(page);
-  await page.evaluate(() => EmberVFX.prepare());
-  const result = await page.evaluate(() => {
-    EmberVFX.clear();
-    const canvas = document.createElement("canvas"),
-      ctx = canvas.getContext("2d"),
-      start = performance.now(),
-      timing = {
-        contactAt: start + 90,
-        releaseAt: start + 240,
-        recoveryEndAt: start + 600,
-        scale: 0.5,
+    const lastSeq = EmberFX.trace.at(-1)?.seq ?? 0;
+    Emberfall.act(() =>
+      g.dispatch({ type: "attack", side: "p", uid: a.uid, target: { side: "e", uid: t.uid } }),
+    );
+    let actor = null;
+    await new Promise((resolve) => {
+      const f = () => {
+        actor ||= document.querySelector(".attack-actor");
+        EmberFX.busy ? setTimeout(f, 10) : resolve();
       };
-    const ok = EmberVFX.hit(
-      { x: 500, y: 400 },
-      "steel",
-      1,
-      "blade",
-      { x: 300, y: 400 },
-      timing,
-    );
-    const sample = (time) => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      EmberVFX.draw(ctx, time);
-      return EmberVFX.diagnostics.draws;
-    };
+      f();
+    });
+    const attack = EmberFX.trace.find((r) => r.seq > lastSeq && r.type === "attack");
     return {
-      ok,
-      before: sample(start + 30),
-      contact: sample(timing.contactAt + 20),
-      beforeRelease: sample(timing.releaseAt - 20),
-      afterRelease: sample(timing.releaseAt + 60),
-      expired: sample(timing.recoveryEndAt + 10),
+      contactMs: Number(actor?.dataset.contactMs),
+      releaseMs: Number(actor?.dataset.releaseMs),
+      motionEndMs: Number(actor?.dataset.motionEndMs),
+      numberDelta: Math.abs(attack.numberAt[0] - attack.hitAt[0]),
     };
   });
-  expect(result.ok).toBe(true);
-  expect(result.before).toBe(0);
-  expect(result.contact).toBeGreaterThan(0);
-  expect(result.beforeRelease).toBeGreaterThan(0);
-  expect(result.afterRelease).toBeGreaterThan(result.beforeRelease);
-  expect(result.expired).toBe(0);
+  // Uncompressed: contact 260, recovery ends 460. Compressed: both shrink by
+  // the same factor, and the number still lands on the scaled contact.
+  const scale = report.contactMs / 260;
+  expect(scale).toBeLessThan(1);
+  // Recovery (200) and the tier hit-stop (0 / 50 / 90) shrink by the same scale.
+  expect((report.motionEndMs - report.releaseMs) / scale).toBeCloseTo(200, 0);
+  expect(
+    [0, 50, 90].some((ms) => Math.abs((report.releaseMs - report.contactMs) / scale - ms) < 1),
+  ).toBe(true);
+  expect(report.numberDelta).toBeLessThanOrEqual(34);
 });
 
-test("countered major spell has no target meteor or damage, and resize drops every queued VFX", async ({
+test("countered major spell casts nothing and resize drops every queued presentation", async ({
   page,
 }) => {
   await demo(page);
@@ -255,7 +229,8 @@ test("countered major spell has no target meteor or damage, and resize drops eve
     g.s.p.hand = [g.card("fireball")];
     g.events = [];
     g.emit();
-    const before = { ...EmberVFX.diagnostics.spawned },
+    const lastSeq = EmberFX.trace.at(-1)?.seq ?? 0,
+      spawned = EmberFx2.diagnostics?.spawned?.fireball || 0,
       hp = g.s.e.hp;
     Emberfall.act(() =>
       g.dispatch({
@@ -265,83 +240,62 @@ test("countered major spell has no target meteor or damage, and resize drops eve
         target: { side: "e", uid: "hero" },
       }),
     );
-    return { before, hp };
+    return { lastSeq, spawned, hp };
   });
-  await page.waitForFunction(() => !EmberFX.busy && EmberFX.particles === 0);
+  await page.waitForFunction(() => !EmberFX.busy);
   expect(await page.evaluate(() => EmberDebug.game.s.e.hp)).toBe(result.hp);
   expect(
-    await page.evaluate(() => EmberVFX.diagnostics.spawned.comet || 0),
-  ).toBe(result.before.comet || 0);
+    await page.evaluate(() => EmberFx2.diagnostics?.spawned?.fireball || 0),
+  ).toBe(result.spawned);
+  const records = await recordsSince(page, result.lastSeq);
+  const cast = records.find((r) => r.type === "cast");
+  expect(cast.countered).toBe(true);
+  expect(cast.targets).toEqual([]);
+  expect(records.find((r) => r.type === "secret").kind).toBe("counterspell");
   const { state } = await play(page, "storm");
   await page.waitForTimeout(250);
   await page.setViewportSize({ width: 844, height: 390 });
   await page.waitForTimeout(300);
   expect(
-    await page.evaluate(() => [
-      EmberVFX.active,
-      EmberFX.pendingTimers,
-      EmberFX.transientNodes,
-    ]),
-  ).toEqual([0, 0, 0]);
-  expect(await page.evaluate(() => JSON.stringify(EmberDebug.game.s))).toBe(
-    state,
-  );
+    await page.evaluate(() => [EmberFX.busy, EmberFX.pendingTimers, EmberFX.transientNodes]),
+  ).toEqual([false, 0, 0]);
+  expect(await page.evaluate(() => JSON.stringify(EmberDebug.game.s))).toBe(state);
 });
-test("failed atlas keeps the fallback playable, while reduced motion skips all VFX decoding", async ({
+
+test("without WebGL the same director keeps DOM motion and numbers; reduced motion halves it", async ({
   browser,
 }) => {
   const context = await browser.newContext();
-  const page = await context.newPage();
-  const column = require("../../assets/vfx/manifest.json").assets.find(
-    (a) => a.id === "storm-column",
-  );
-  await page.route(`**/assets/${column.sha256.slice(0, 20)}.webp`, (r) =>
-    r.abort(),
-  );
-  await demo(page);
-  expect(await page.evaluate(() => EmberVFX.diagnostics.failed)).toContain(
-    "storm-column",
-  );
-  const fallback = await page.evaluate(() => {
-    EmberFX.cancel(true);
-    const p = { x: 500, y: 400 };
-    const result = {
-      fire: EmberVFX.hit(p, "fire"),
-      holy: EmberVFX.hit(p, "holy"),
-      blade: EmberVFX.hit(p, "steel", 1, "blade"),
-      nature: EmberVFX.hit(p, "nature"),
+  await context.addInitScript(() => {
+    const getContext = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (type, ...args) {
+      return /webgl/.test(type) ? null : getContext.call(this, type, ...args);
     };
-    EmberFX.cancel(true);
-    EmberFX.impact(500, 400, "holy");
-    result.legacyParticles = EmberFX.particles;
-    result.newParticles = EmberVFX.active;
-    EmberFX.cancel(true);
-    return result;
   });
-  expect(fallback).toMatchObject({
-    fire: true,
-    holy: false,
-    blade: true,
-    nature: true,
-    newParticles: 0,
-  });
-  expect(fallback.legacyParticles).toBeGreaterThan(0);
-  const { state } = await play(page, "fireball");
-  await page.waitForFunction(() => !EmberFX.busy && EmberFX.particles === 0);
-  expect(await page.evaluate(() => JSON.stringify(EmberDebug.game.s))).toBe(
-    state,
-  );
+  const page = await context.newPage();
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await demo(page);
+  expect(await page.evaluate(() => EmberFx2.available)).toBe(false);
+  const { lastSeq, state } = await play(page, "fireball");
+  await page.waitForFunction(() => !EmberFX.busy);
+  expect(await page.evaluate(() => JSON.stringify(EmberDebug.game.s))).toBe(state);
+  const cast = (await recordsSince(page, lastSeq)).find((r) => r.type === "cast");
+  expect(cast.kind).toBe("fireball");
+  expect(Math.abs(cast.numberAt[0] - cast.hitAt[0])).toBeLessThanOrEqual(34);
+  expect(await page.evaluate(() => EmberFx2.diagnostics.spawned.fireball || 0)).toBe(0);
+  expect(errors).toEqual([]);
   await context.close();
+
   const reduced = await browser.newContext({ reducedMotion: "reduce" });
   const p = await reduced.newPage();
   await demo(p);
-  await play(p, "ashdragon");
+  await p.evaluate(() => EmberFX.configure(true, false));
+  const before = await p.evaluate(() => ({ ...(EmberFx2.diagnostics?.spawned || {}) }));
+  const first = await play(p, "ashdragon");
   await p.waitForFunction(() => !EmberFX.busy);
-  expect(
-    await p.evaluate(() => [
-      EmberVFX.active,
-      EmberVFX.diagnostics.loaded.length,
-    ]),
-  ).toEqual([0, 0]);
+  const records = await recordsSince(p, first.lastSeq);
+  expect(records.some((r) => r.type === "summon")).toBe(true);
+  expect(await p.evaluate(() => ({ ...(EmberFx2.diagnostics?.spawned || {}) }))).toEqual(before);
   await reduced.close();
 });

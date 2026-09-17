@@ -14,7 +14,7 @@ ui.js（流程、输入、动画协调） ← 快照与因果事件
    ├─ application/library.js（收藏、组牌）
    ├─ platform/storage.js（浏览器存储）
    ├─ presentation/cards.js（卡牌 DOM）
-   ├─ effects.js（Canvas 演出）→ atelier-world.js（唯一场景）
+   ├─ effects.js（战斗导演层）→ EmberFx2（唯一特效后端，WebGL）；atelier-world.js（唯一场景）
    └─ mobile-ui.js / mobile-view.js（触屏与视口）
 ```
 
@@ -75,11 +75,11 @@ CSS 的四层约定继续有效。现有基础样式仍承载弹窗、触屏和�
 
 `effects.js` 继续作为唯一战斗演出所有者：读取结算事件与快照，按学派绘制召唤法阵，并为传说随从增加短暂铭牌和落场弹性。回合旗帜从 `turn` 事件创建，按实际两排随从之间的空间使用普通或紧凑尺寸；下一次表现更新即移除过时旗帜。已删除旧 UI 回合横幅入口、分散样式与 CSS 召唤动画，避免同一事件双重演出。
 
-所有 Web Animations API 动画通过统一 helper 登记，完成、取消、视口变化与退出时释放；临时 DOM 和 Canvas 效果仍使用同一生命周期。视觉尾段不延长原有输入锁，也不写入规则状态。减少动态模式在粒子入口直接拒绝装饰性绘制；低画质／触屏／桌面同时存活的 Canvas 项上限分别为 220／360／800。没有新增运行依赖、图像素材或存档字段。
+所有 Web Animations API 动画通过统一 helper 登记，完成、取消、视口变化与退出时释放；临时 DOM 与 EmberFx2 特效使用同一生命周期。视觉尾段不延长原有输入锁，也不写入规则状态。2026-09-17 起（[战斗表现层 V2](design/BATTLE_PRESENTATION_V2.md)）EmberFX 自有画布粒子、`#fx-canvas`、EmberVFX 与 EmberFxTop 已删除：全平台只有 EmberFx2 一个特效后端，WebGL 不可用时只保留 DOM 动作与数字，减少动态关闭震屏、顿帧、切入与特效层，低画质只降特效渲染分辨率。
 
 `presentation/components.css` 使用同一套配色，圣盾、冻结、可攻击边框仅由既有只读状态类决定。新增的 `unit-aura` 不接收输入；费用、攻血和文字仍为 DOM。可出牌的卡框有缓慢扫光，减少动态或低画质时关闭。
 
-`tests/e2e/effects.spec.cjs` 验证真实出牌的传说登场、桌面／触屏截图、视觉播放期间规则状态不变、动态设置中途切换，以及取消／重排后计时器、动画、节点和粒子归零。诊断值通过 `EmberFX.activeAnimations` / `transientNodes` 和既有计数器读取，不暴露新的规则写接口。
+`tests/e2e/effects.spec.cjs` 验证真实出牌的传说登场、桌面／触屏截图、视觉播放期间规则状态不变、动态设置中途切换，以及取消／重排后计时器、动画、节点和特效层归零。诊断值通过 `EmberFX.activeAnimations` / `transientNodes` / `pendingTimers`、`EmberFX.trace` 与 `EmberFx2.stats` 读取，不暴露新的规则写接口；因果断言见 `tests/e2e/presentation-causality.spec.cjs`。
 
 ## 因果演出与分层人物（2026-09-07）
 

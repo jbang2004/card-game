@@ -61,7 +61,7 @@
         box = $("combat-preview");
       if (!E.modal && !F.busy && target && E.selection) {
         const text = forecast(target),
-          p = F.pos(target);
+          p = EmberViewport.pos(target);
         if (text && p) {
           box.innerHTML = text;
           box.style.display = "block";

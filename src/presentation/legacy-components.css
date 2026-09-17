@@ -245,10 +245,6 @@ body .card {
   font-size: 12px;
   letter-spacing: 3px;
 }
-.minion.shield:before,
-.minion.frozen:after {
-  display: none;
-}
 body.touch-layout .turn-cue {
   width: 230px;
   height: 44px;
@@ -366,19 +362,6 @@ body .minion {
   transition:
     box-shadow 120ms ease,
     border-color 120ms ease;
-}
-.freeze-lock {
-  position: absolute;
-  pointer-events: none;
-  z-index: 84;
-  border: 3px solid var(--combat-ice);
-  border-radius: 35% 35% 28% 28%;
-  background: linear-gradient(
-    130deg,
-    #c5f4ff22,
-    transparent 40% 70%,
-    #c5f4ff22
-  );
 }
 
 /* Only a newly summoned portrait reveals; steady idle frames never crossfade. */
@@ -669,11 +652,18 @@ body.touch-layout .lobby-actions button {
 .fx-low .card-motion-face {
   transform: none;
 }
+/* 层级：#minions(7) < .attack-actor(10) < #fx-gl(11) < #fx-cutin(13)。
+   突进用的克隆卡走的是 .death-ghost 那条规则（z-index 43 / 手机 50），
+   它比 #fx-gl 高，于是近战的刀光、爪痕、冲击环全被攻击者自己的卡挡住了。
+   10 这个值同时满足两头：仍然压在其它随从之上（"谁在出手"读得出来），
+   又整个沉到特效层之下。死亡幽灵不受影响，见 refinement.css 里的
+   .death-ghost:not(.attack-actor)。 */
 .attack-actor {
   will-change: transform;
   pointer-events: none;
   user-select: none;
   transform-origin: 50% 68%;
+  z-index: 10;
   filter: drop-shadow(0 12px 10px #120a08a0);
 }
 .attack-actor.attack-family-blade {
@@ -685,124 +675,119 @@ body.touch-layout .lobby-actions button {
 .attack-actor.attack-family-slam {
   filter: drop-shadow(0 16px 12px #120a08b8) saturate(1.12);
 }
-.attack-actor[data-attack-heavy="true"] {
-  filter: drop-shadow(0 16px 13px #100806c4) brightness(1.08) saturate(1.2);
+.death-edge {
+  z-index: 51;
+  mix-blend-mode: screen;
+  border-radius: 2px;
 }
 .fx-reduced .attack-actor,
 body.reduced-motion .attack-actor {
   filter: none;
 }
+/* 英雄平砍推的是本体（effects.js 的 lunge）：克隆一旦离开 #battle 就丢掉整套
+   `#battle .hero…` 版式（含 container-type），卡面会散成一张巨幅徽章。推出去的
+   这一瞬要压过随从行，并且不能让 .hero 的 filter 过渡把受击红闪拖成糊的。 */
+#battle .hero.attack-host {
+  z-index: 10;
+  transition: none;
+}
+
+/* ------------------------------------------------------------ 伤害数字（泼溅）
+   一块不规则暗红泼溅底（内联 SVG，2px 深描边 + 几滴飞溅）加白色粗数字。
+   形状三选一由 JS 按受击方 uid 定，这里只管尺寸与配色。 */
 body .damage-number {
-  font:
-    800 36px Georgia,
-    serif;
-  color: #ffebca;
-  min-width: 38px;
+  --splat-fill: #7c1216;
+  --splat-edge: #240406;
+  --splat-size: 86px;
+  --splat-font: 34px;
+  display: grid;
+  place-items: center;
+  width: var(--splat-size);
+  height: var(--splat-size);
+  min-width: 0;
+  animation: splat-number 620ms cubic-bezier(0.18, 0.85, 0.3, 1) forwards;
   text-align: center;
-  font-variant-numeric: tabular-nums;
-  animation: contact-number 1.05s linear forwards;
-  paint-order: stroke fill;
-  -webkit-text-stroke: 3px #542818;
-  text-shadow:
-    0 3px 1px #1a100dd9,
-    0 0 12px #e6ac4e66;
 }
 body .damage-number.crit {
-  font-size: 46px;
-  color: #ffe29b;
+  --splat-size: 118px;
+  --splat-font: 44px;
 }
 body .damage-number.heal {
-  color: #c5f2c6;
-  -webkit-text-stroke-color: #204939;
+  --splat-fill: #1c6b30;
+  --splat-edge: #04200d;
 }
 body .damage-number.block {
-  font: 700 18px var(--serif);
-  -webkit-text-stroke-width: 0;
+  --splat-fill: #4b4231;
+  --splat-edge: #14100a;
+  --splat-size: 74px;
+  --splat-font: 17px;
+}
+body .damage-number .dmg-splat {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: var(--splat-fill);
+  stroke: var(--splat-edge);
+  stroke-width: 2;
+  opacity: 0.94;
+  filter: drop-shadow(0 3px 5px #00000096);
+}
+body .damage-number .dmg-splat > * {
+  vector-effect: non-scaling-stroke;
+}
+body .damage-number .dmg-value {
+  position: relative;
+  z-index: 1;
+  display: block;
+  font:
+    800 var(--splat-font) / 1 Georgia,
+    serif;
+  letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  paint-order: stroke fill;
+  -webkit-text-stroke: 2.5px var(--splat-edge);
+  text-shadow: 0 2px 2px #00000070;
 }
 body .damage-number small {
-  -webkit-text-stroke-width: 0;
+  display: block;
+  margin-top: 3px;
+  font: 700 10px/1 var(--sans);
+  letter-spacing: 2px;
+  color: #ffd9d9;
+  text-shadow: 0 1px 2px #0009;
 }
-@keyframes contact-number {
+body .damage-number.heal small {
+  color: #d7f5d8;
+}
+/* 120ms 弹入（1.4 → 1）、380ms 停留、120ms 淡出：总长 620ms。 */
+@keyframes splat-number {
   0% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.35);
+    opacity: 0.25;
+    transform: translate(-50%, -50%) scale(1.4);
   }
-  12% {
+  19% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(0.96);
+    transform: translate(-50%, -50%) scale(1);
   }
-  24%,
-  66% {
+  81% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, calc(-50% - 22px)) scale(0.94);
+    transform: translate(-50%, calc(-50% - 12px)) scale(0.96);
   }
 }
 body.reduced-motion .damage-number,
 .fx-reduced .damage-number {
   animation: none;
 }
-body.touch-layout .damage-number {
-  font-size: 29px;
-}
-body.touch-layout .damage-number.crit {
-  font-size: 36px;
-}
-body.touch-layout .damage-number.block {
-  font-size: 15px;
-}
 @media (prefers-reduced-motion: reduce) {
   body .damage-number {
     animation: none;
   }
-}
-
-/* Signature names occupy the preparation beat and leave before damage lands. */
-.signature-cue {
-  position: absolute;
-  z-index: 52;
-  transform: translate(-50%, -50%);
-  width: max-content;
-  max-width: min(440px, 82%);
-  padding: 12px 42px 15px;
-  text-align: center;
-  pointer-events: none;
-  color: #fff1ca;
-  background: linear-gradient(
-    90deg,
-    #22162500,
-    #20131fec 22%,
-    #261822ec 78%,
-    #22162500
-  );
-  border-block: 1px solid
-    color-mix(in srgb, var(--signature-color) 65%, transparent);
-  text-shadow: 0 3px 3px #160c12;
-}
-.signature-cue small {
-  display: block;
-  margin-bottom: 5px;
-  font: 10px var(--sans);
-  letter-spacing: 6px;
-  color: var(--signature-color);
-}
-.signature-cue strong {
-  font: 700 27px var(--serif);
-  letter-spacing: 3px;
-}
-body.touch-layout .signature-cue {
-  padding: 9px 22px 11px;
-}
-body.touch-layout .signature-cue strong {
-  font-size: 21px;
-  letter-spacing: 1px;
-}
-body.touch-layout .signature-cue small {
-  font-size: 9px;
-  letter-spacing: 4px;
 }
 
 /* Named deck preparation uses the same panel and ink tokens as the collection. */
@@ -3395,17 +3380,6 @@ body .hand-card.feedback-info .card {
   animation: feedback-card-info 420ms ease-out 1;
 }
 
-@keyframes action-badge-in {
-  from {
-    opacity: 0;
-    transform: translateY(5px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
 @keyframes feedback-card-error {
   0%,
   100% {
@@ -3426,19 +3400,6 @@ body .hand-card.feedback-info .card {
   }
   40% {
     filter: brightness(1.16) drop-shadow(0 0 9px #d4ae6d99);
-  }
-}
-
-@keyframes feedback-mana-error {
-  0%,
-  100% {
-    filter: none;
-  }
-  35% {
-    filter: brightness(1.2) saturate(1.2) drop-shadow(0 0 10px #e18a6a88);
-  }
-  60% {
-    filter: brightness(0.9) saturate(0.9);
   }
 }
 

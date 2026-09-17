@@ -204,6 +204,7 @@
     const b = $("touch-deck-tab");
     if (b) b.textContent = `我的牌组 · ${n}/${D.deckRules.size}`;
   }
+  let turnFit = null;
   function afterRender(s) {
     if (!V.mobile || !s) return;
     const b = D.bosses[s.bossIndex];
@@ -216,21 +217,33 @@
      * running under the volume button; 12px is the floor. */
     const turn = $("turn-number"),
       ours = s.active === "p";
-    turn.classList.remove("turn-tight");
     const wordings = [
       `第 ${s.turn} 回合 · ${ours ? "你的回合" : "敌方回合"}`,
       `第 ${s.turn} 回合 · ${ours ? "你的" : "敌方"}`,
       `回合 ${s.turn} · ${ours ? "你" : "敌"}`,
     ];
-    let fitted = false;
-    for (const wording of wordings) {
-      turn.textContent = wording;
-      if (turn.scrollWidth <= turn.clientWidth + 1) {
-        fitted = true;
-        break;
+    /* Fitting reads scrollWidth after each write, i.e. forced layouts. It runs
+     * after every battle render, so the result is cached per wording and
+     * viewport size and only re-measured when one of those changes. */
+    const fitKey = `${wordings[0]}|${V.width}x${V.height}`;
+    if (turnFit?.key === fitKey) {
+      turn.textContent = turnFit.wording;
+      turn.classList.toggle("turn-tight", turnFit.tight);
+    } else {
+      turn.classList.remove("turn-tight");
+      let fitted = false,
+        chosen = wordings.at(-1);
+      for (const wording of wordings) {
+        turn.textContent = wording;
+        if (turn.scrollWidth <= turn.clientWidth + 1) {
+          fitted = true;
+          chosen = wording;
+          break;
+        }
       }
+      if (!fitted) turn.classList.add("turn-tight");
+      turnFit = { key: fitKey, wording: chosen, tight: !fitted };
     }
-    if (!fitted) turn.classList.add("turn-tight");
     $("hand").setAttribute(
       "aria-label",
       `你的 ${s.p.hand.length} 张手牌，左右滑动，点按选中，拖动出牌，长按扶起拖动`,
