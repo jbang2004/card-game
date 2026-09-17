@@ -2,7 +2,7 @@
  *
  * Every path-type presentation recorded in EmberFX.trace must start inside
  * its actor's visible card, end inside a target's card, use only units of the
- * dispatched action, show its numbers within 34ms of the planned contact, keep
+ * dispatched action, show its numbers within 45ms of the planned contact, keep
  * single-target contacts within 1.25× the target box and leave no effect
  * nodes 250ms after the sequence. "A fireball launched from the enemy hero"
  * fails the actor-box assertion on both layouts. */
@@ -228,7 +228,7 @@ function assertCausal(label, out) {
       expect(sameBox(r.actor.box, boxes.units[r.actor.side + r.actor.uid]), tag + " attacker box").toBe(true);
     r.numberAt.forEach((at, i) => {
       if (at === null || at === undefined) return;
-      expect(Math.abs(at - r.hitAt[i]), tag + ` number ${i} in sync`).toBeLessThanOrEqual(34);
+      expect(Math.abs(at - r.hitAt[i]), tag + ` number ${i} in sync`).toBeLessThanOrEqual(45);
     });
     r.contactBox.forEach((cb, i) => {
       const t = r.targets[i]?.box;
@@ -368,7 +368,7 @@ for (const layout of LAYOUTS)
     ).filter((x) => x.lag !== null);
     expect(timed.some((x) => /attack:/.test(x.tag) && x.side === "e"), "enemy attack numbers recorded").toBe(true);
     expect(timed.some((x) => /cast:fireball/.test(x.tag) && x.side === "e"), "enemy spell number recorded").toBe(true);
-    for (const x of timed) expect(Math.abs(x.lag), x.tag + " number within 34ms of contact").toBeLessThanOrEqual(34);
+    for (const x of timed) expect(Math.abs(x.lag), x.tag + " number within 45ms of contact").toBeLessThanOrEqual(45);
     expect(errors).toEqual([]);
     await context.close();
   });

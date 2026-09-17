@@ -4,6 +4,8 @@
 
 > 当前统一角色配置与制作契约见 [CHARACTER_AUTHORING.md](CHARACTER_AUTHORING.md)。下文涉及独立 motion manifest / portrait-profiles 的描述是早期阶段记录，已由 `assets/characters.json` 取代。
 
+> 2026-09-18：分层立绘动画整体移除，`assets/characters.json` 只剩 `staticKey` / `focus`。下文所有关于分层、rig、图集与 alpha 处理的段落均为历史制作记录，对应素材与工具已不在仓库中，详见[角色静态插画登记](#角色静态插画登记)。
+
 # v0.12 素材与加工
 
 运行时保留原 56 张已确认卡图，并新增六张酒馆誓约扩展卡图、6 张遗物、当前完整酒馆图和山谷原画档案。角色明确复用卡图；不加载旧程序化人物、旧 Three.js 场景、旧卡框缓存或旧酒馆背景。
@@ -112,21 +114,28 @@
 
 代码许可和第三方说明见根目录`LICENSE`、`THIRD_PARTY.md`。素材来源说明不是额外的商业版权担保。不要将这些素材描述为原版炉石素材或独立手绘原画，也不要分发系统字体、未附许可的依赖二进制。
 
-## 角色动态素材
+## 角色静态插画登记
 
-`assets/characters.json` 是唯一正式角色配置源，`assets/motion/` 保存按 ID 命名的背景、主体与必要前景 WebP，`sources/` 保存可复现的生成输入。实际动态覆盖以 `python3 tools/characters.py --list` 为准；上场角色来自游戏的随从定义及英雄/首领 `portraitId`。
+`assets/characters.json` 是唯一正式角色配置源，每项只有 `staticKey`（必须等于自身 ID）和 `focus`（纵向裁切焦点 0–100）。ID 集合必须与 `assets/anime/manifest.json` 完全相等。运行图为 `assets/anime/` 顶层 WebP，由 `EmberArt.card()` / `EmberArt.character()` 读取，`AtelierArt` 只负责裁切焦点。`tools/characters.py` 在构建时校验清单并生成 `src/character-catalog.js`；`python3 tools/characters.py --list` 输出完整登记清单。制作与验收命令见 [角色制作规范](CHARACTER_AUTHORING.md)。
 
-原 56 张静态卡图保留，手牌、选卡与自动悬停预览使用原图；场上及显式检查窗口播放动态。网页版本按需加载、限额解码，离线单文件版内嵌压缩素材并按需解码。没有恢复 Three.js、视频播放器或独立角色时钟。
-
-制作与验收命令见 [角色制作规范](CHARACTER_AUTHORING.md)。共用打包器为 `tools/pack_motion_assets.cjs`；纯色底输入可用 `tools/chroma_motion_atlas.cjs` 转为真实 alpha，此素材制作步骤需要本机 FFmpeg 和项目已声明的 Playwright，普通构建与游戏运行均不需要 FFmpeg。
-
-初始素材来源见 [PROMPTS.md](../assets/motion/PROMPTS.md)，本轮逐角色请求与处理记录见 [BATCH_A.md](../assets/motion/BATCH_A.md)、[BATCH_B.md](../assets/motion/BATCH_B.md)、[BATCH_TOKENS.md](../assets/motion/BATCH_TOKENS.md)。它们记录制作过程；最终动作参数始终以正式清单为准。
+> 2026-09-18 立绘动画移除。按用户决定，卡面与英雄头像上的分层立绘动画端到端删除，只保留静态插画：
+>
+> - 删除 `src/presentation/portraits.js`（`EmberPortraits`，18,855 字节）与生成物 `src/motion-assets.js`（7,579,378 字节），以及 `config/build.json` / `src/template.html` 中的 `PORTRAITS`、`MOTION_ASSETS` 注册。
+> - 删除 `assets/motion/`（191 个文件，170,840,057 字节；含 102 张分层 WebP、`sources/`、`moon-anime-v2/`、`pantheon-sources/` 与 `PROMPTS.md` / `PROMPTS-v2.json` / `BATCH_A.md` / `BATCH_B.md` / `BATCH_TOKENS.md` 等制作记录）。制作过程只在本文与 git 历史中留痕。
+> - 删除打包链路 `tools/pack_motion_assets.cjs`、`tools/chroma_motion_atlas.cjs` 与 `tests/art/motion-packing.test.cjs`（`tests/art/` 随之清空，`npm run test:art` 一并取消）。
+> - `assets/characters.json` 删掉 `motion` 字段并保留 `staticKey` / `focus`（它仍是 `AtelierArt` 焦点与 `art.js` 路由的唯一来源，因此不整体删除）。`tools/characters.py` 相应删去图层、rig、哈希校验与 `motion-assets.js` 生成。
+> - 运行时删掉 `.portrait-motion` 画布、`motion-ready` / `motion-arriving` / `motion-entering` 类、`data-portrait-*` 与 `data-art-version` 属性，以及 `effects.js` 的 `copyPortraits` 与召唤预载。冲撞克隆改为直接克隆表现快照元素。`data-art-key` 保留作调试与端到端定位。
+> - 构建体积：`index.html` 31,675,676 → 24,067,789 字节；`dist/` 24,278,693 → 18,563,612 字节，文件数 299 → 204。
+>
+> **接触数字预算由 34ms 放宽到 45ms**。`EmberPortraits` 每帧都在画布上绘制，渲染器因此始终处在稳定的逐帧绘制节奏里；移除后页面在节拍之间基本空闲，接触数字的定时回调在帧内的相位平均后移约一帧。实测（同一台机器、同一时段交替测量，`tests/e2e/presentation-causality.spec.cjs:319` 的敌方回合场景）最大延迟：移除前 19.5–33.4ms（0/24 次超 34ms），移除后 20.5–38.8ms（7/24 次超 34ms）。
+>
+> 试过但无效、已全部回退的优化：把冲撞克隆体的 `filter: drop-shadow` 改成 `steps(1, end)` 阶跃轨道（桌面 37.7→35.2、手机 37.8→38.7，在噪声内，且会让抬起段的投影从渐变变成跳变）、`.minion-art{contain:paint}`、`.attack-actor{will-change:transform}`、卡面 `decoding="async"`。决定性的对照是把场上 `<img>` 整体设为 `opacity:0`：交替测量下与不改完全一致（36.0–37.6ms），说明代价不在插画光栅化，而在于失去了逐帧绘制带来的帧内相位——唯一能"修复"它的办法就是重新加回每帧画布绘制，与本次移除的目的相悖。上限改为 45ms（≈2.7 帧，实测上限 38.8ms，留约 6ms 余量）的理由写在 `docs/design/BATTLE_PRESENTATION_V2.md` §2 原则 4 与 §5.1；运行时常量为 `EmberTiming.numberSyncMs`（`src/presentation/timing.js`），同处改了 `tests/e2e/presentation-causality.spec.cjs` 与 `tests/e2e/vfx-signatures.spec.cjs` 共 5 处断言常量。§5.5 里"桌面与手机节拍时间差不超过 34ms"是另一条断言（跨设备节拍顺序），未改动。
 
 ## 酒馆誓约扩展
 
 新增 `counterspell`、`icebarrier`、`muster`、`absolution`、`tracking`、`sabotage` 六张独立法术插画，总计 62 张卡图（54 可组牌 + 8 衍生）。源图及提示词保存在 `assets/anime/expansion-sources/`。每张图片使用内置 image_gen 独立生成并检查，tracking 对右下角伪文字做过一次局部修正。源文件和运行文件哈希均记录在原统一 manifest 中；原有 56 个图像文件没有替换。
 
-六张新法术在 `assets/characters.json` 中注册为静态，不需要随从分层动作；原 35 个动态随从保持完整。
+六张新法术在 `assets/characters.json` 中注册；当时的 35 个动态随从分层已于 2026-09-18 随立绘动画整体移除。
 
 ## v0.12.1 遗物图标
 
@@ -150,9 +159,9 @@
 
 本轮新增十一张独立 AI 插画，总计 73 张严格 ID 映射卡图。`assets/anime/moon-sources/` 保存原画及提示词，`overrides.json` 注册来源，运行文件为同名 WebP。未使用《游戏王》的角色或素材；以庄严巨像、月蚀、祭坛和渺小朝圣者构成原创神祇。
 
-六个新随从（soulguide、moonfox、duskstag、eclipsewolf、moonguard、selmyra）都有背景与主体两层。源图集、参考静态原画和逐角色提示词位于 `assets/motion/moon-sources/`；完整技术参数及切分坐标见其中的 `processing.json`。本轮采用绿色键色、0.30 similarity、0.08 blend 与 green despill，消除透明边缘绿色污染。保留生成原图和真实 alpha 处理结果，最终 rig 仍以 `assets/characters.json` 为唯一来源。
+历史记录：六个新随从（soulguide、moonfox、duskstag、eclipsewolf、moonguard、selmyra）当时制作了背景与主体两层，源图集与处理参数位于已删除的 `assets/motion/moon-sources/`。
 
-莫菈复用 soulguide，断契监誓者复用 moonguard。全游戏 41 个随从均有分层待机，其余 32 张法术/武器保持静态。完整清单见 [CHARACTER_ROSTER.txt](CHARACTER_ROSTER.txt)。
+莫菈复用 soulguide，断契监誓者复用 moonguard。完整清单见 [CHARACTER_ROSTER.txt](CHARACTER_ROSTER.txt)。
 
 神祇、契兽与四位英雄的正式肖像卡图均保留 768×1024，以支持全屏契约档案及英雄选择底图；普通卡仍为 336×448。该尺寸由统一 packer 依据 contract 元数据和英雄 portraitId 派生，网页与离线单文件使用同一张图。
 
@@ -160,17 +169,15 @@
 
 按用户确认，对月影扩展全部十一张插画做 style-transfer 重绘。当前静态来源改为 `assets/anime/moon-anime-v2/`，逐卡提示词、身份/风格参考、哈希及美术方向均留档。原 `moon-sources/` 仅作为前版来源保留。原有其他卡牌不重画。
 
-六个随从对应分层改为 `assets/motion/moon-anime-v2/`，仍为背景/主体两层。新版 `green-edge` 去溢色仅处理透明轮廓附近的过量绿色，保留内部青色灯光、衣料和肤色；各卡实际 split 与处理参数见 `*-processing.json`。神祇 split 771、背景宽 767，其余 split 768，均按各自图集观察确认。
+历史记录：六个随从对应分层当时改为 `assets/motion/moon-anime-v2/`（已随立绘动画一并删除）。静态原画 `assets/anime/moon-anime-v2/` 保留并仍在使用。
 
-清单、静态与动态缓存已重新构建。验证见 [月影画风统一记录](QA_MOON_ART_RESTYLE.md)。
+验证见 [月影画风统一记录](QA_MOON_ART_RESTYLE.md)。
 
 ## 诸神同辉（v0.14）
 
 新增 jingchen、aurion、fenlos 三位神祇与 starweave、dawnvow、huntinghorn 三张法术，总计 79 张独立卡图。原画、完整提示和风格参考哈希在 `assets/anime/pantheon-sources/`，统一 overrides / manifest / packer 接入，神祇仍使用 768×1024、普通法术 336×448 的运行 WebP。
 
-三位神分别使用自己的原画生成背景/主体图集，输入、提示、alpha 处理参数保存在 `assets/motion/pantheon-sources/`。星焰和曙日用绿色键色与 green-edge，荒猎用洋红键色避免影响翠绿眼睛，并用新增 magenta-edge 去除轮廓粉边。处理只限制于透明轮廓附近，不改主体内部颜色。星焰背景残留冠冕经过定点重绘修复，修订前输入留档。
-
-全游戏 44 个上场随从都有真实 alpha 分层待机，35 张法术/武器静态。运行脚本使用现有角色渲染器；没有增加 Three.js、视频播放器或新动画时钟。检查记录见 [诸神验收](QA_PANTHEON.md)。
+历史记录：三位神当时各自生成了背景/主体图集，输入与 alpha 处理参数保存在已删除的 `assets/motion/pantheon-sources/`。静态原画 `assets/anime/pantheon-sources/` 保留并仍在使用。检查记录见 [诸神验收](QA_PANTHEON.md)。
 
 ## 2026-09-09 界面器物素材
 

@@ -75,7 +75,7 @@ for (const [width, height, touch] of [
       await page.waitForFunction(
         (id) =>
           document.querySelector(
-            `[data-art-key="${id}"][data-portrait-mode="board"]`,
+            `#minions [data-cardid="${id}"] .minion-art img`,
           )?.complete,
         id,
       );

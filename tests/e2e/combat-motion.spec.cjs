@@ -126,80 +126,16 @@ test("multi-draw reveals one actual card per beat, and statuses have named feedb
   await page.screenshot({ path: path.resolve("artifacts/qa/transform.png") });
 });
 
-for (const mobile of [false, true])
-  test(`layered portraits animate independently, freeze and fall back ${mobile ? "touch" : "desktop"}`, async ({
-    browser,
-  }) => {
-    const context = await browser.newContext({
-      viewport: mobile
-        ? { width: 390, height: 844 }
-        : { width: 1600, height: 940 },
-      isMobile: mobile,
-      hasTouch: mobile,
-    });
-    const page = await context.newPage(),
-      errors = [];
-    page.on("pageerror", (e) => errors.push(e.message));
-    await demo(page);
-    await prepare(page, {
-      friends: ["oracle", "phoenix", "frostking"],
-      hand: ["oracle", "phoenix", "frostking"],
-    });
-    await page.waitForFunction(
-      () => document.querySelectorAll("#minions .motion-ready").length === 3,
-    );
-    const canvas = page.locator('#minions [data-cardid="phoenix"] canvas');
-    const state = await page.evaluate(() => JSON.stringify(EmberDebug.game.s));
-    const first = await canvas.evaluate((c) => c.toDataURL());
-    await page.waitForTimeout(300);
-    expect(await canvas.evaluate((c) => c.toDataURL())).not.toBe(first);
-    expect(await page.evaluate(() => JSON.stringify(EmberDebug.game.s))).toBe(
-      state,
-    );
-    await page.screenshot({
-      path: path.resolve(
-        `artifacts/qa/portraits-${mobile ? "touch" : "desktop"}.png`,
-      ),
-    });
-    await page.evaluate(() => {
-      const g = EmberDebug.game;
-      g.s.p.board.find((m) => m.cid === "phoenix").frozen = true;
-      g.events = [];
-      g.emit();
-    });
-    await page.waitForTimeout(150);
-    const frozen = await canvas.evaluate((c) => c.toDataURL());
-    await page.waitForTimeout(300);
-    expect(await canvas.evaluate((c) => c.toDataURL())).toBe(frozen);
-    const dimensions = await canvas.evaluate((c) => [c.width, c.height]);
-    expect(dimensions[0]).toBeGreaterThan(10);
-    expect(
-      await page.evaluate(() => EmberPortraits.active),
-    ).toBeLessThanOrEqual(mobile ? 6 : 12);
-    await page.evaluate(() => {
-      for (let i = 0; i < 20; i++) EmberDebug.game.emit();
-    });
-    await page.waitForTimeout(100);
-    expect(
-      await page.evaluate(() => EmberPortraits.tracked),
-    ).toBeLessThanOrEqual(10);
-    await page.evaluate(() => EmberFX.configure(true, false));
-    await expect(
-      page.locator('#minions [data-cardid="phoenix"] img'),
-    ).toHaveCSS("opacity", "1");
-    expect(await page.evaluate(() => EmberPortraits.active)).toBe(0);
-    expect(errors).toEqual([]);
-    await context.close();
-  });
-
-test("a lunging layered character retains its painted canvas", async ({
+test("a lunging minion clone carries its static illustration", async ({
   page,
 }) => {
   await demo(page);
   await prepare(page, { friends: ["frostking"], enemies: ["treant"] });
-  await page.waitForFunction(() =>
-    document.querySelector('#minions [data-cardid="frostking"] .motion-ready'),
+  const art = page.locator(
+    '#minions [data-cardid="frostking"] .minion-art img',
   );
+  await expect(art).toHaveCount(1);
+  await expect(art).toHaveJSProperty("complete", true);
   await page.evaluate(() => {
     const g = EmberDebug.game;
     Emberfall.act(() =>
@@ -211,15 +147,15 @@ test("a lunging layered character retains its painted canvas", async ({
       }),
     );
   });
-  await expect(page.locator(".death-ghost .portrait-motion")).toHaveCount(1);
+  // The lunging clone is built from the live card markup: its illustration must
+  // arrive decoded and opaque, and nothing may paint over it.
+  const clone = page.locator(".attack-actor .minion-art img");
+  await expect(clone).toHaveCount(1);
   expect(
-    await page.locator(".death-ghost .portrait-motion").evaluate((c) => {
-      const data = c
-        .getContext("2d")
-        .getImageData(0, 0, c.width, c.height).data;
-      return data.some((v, i) => i % 4 === 3 && v > 0);
-    }),
+    await clone.evaluate((img) => img.complete && img.naturalWidth > 0),
   ).toBe(true);
+  await expect(clone).toHaveCSS("opacity", "1");
+  await expect(page.locator(".attack-actor canvas")).toHaveCount(0);
   await page.screenshot({
     path: path.resolve("artifacts/qa/layered-attack.png"),
   });
@@ -280,7 +216,9 @@ test("attack owner keeps one causal clock, live stats and status classes until r
       EmberFX.pendingTimers === 0 &&
       EmberFX.activeAnimations === 0 &&
       EmberFX.transientNodes === 0 &&
-      (EmberFx2.stats ? EmberFx2.stats.effects + EmberFx2.stats.particles : 0) === 0,
+      (EmberFx2.stats
+        ? EmberFx2.stats.effects + EmberFx2.stats.particles
+        : 0) === 0,
     null,
     { timeout: 3000 },
   );
@@ -311,7 +249,7 @@ test("contact rebind updates the visible proxy after retaliation without FLIP ta
     return await new Promise((resolve) => {
       function sample() {
         const actor = document.querySelector(".attack-actor"),
-          live = document.querySelector('#minions .friendly[data-uid]'),
+          live = document.querySelector("#minions .friendly[data-uid]"),
           number = document.querySelector(".damage-number");
         if (!actor || !live || !number) return requestAnimationFrame(sample);
         resolve({
@@ -456,11 +394,13 @@ test("a new contact reaction owns target translation when the contact render mov
       reactionDurations: activeTranslations
         .map((animation) => Number(animation.effect?.getTiming?.().duration))
         .filter((duration) => duration <= 250),
-      attackerHasMotion: !!attacker?.getAnimations().some((animation) =>
-        (animation.effect?.getKeyframes?.() || []).some(
-          (frame) => frame.transform != null,
+      attackerHasMotion: !!attacker
+        ?.getAnimations()
+        .some((animation) =>
+          (animation.effect?.getKeyframes?.() || []).some(
+            (frame) => frame.transform != null,
+          ),
         ),
-      ),
     };
   }, targetUid);
   expect(during.layoutState).toBe("idle");
@@ -472,13 +412,14 @@ test("a new contact reaction owns target translation when the contact render mov
   await page.waitForFunction(() => !EmberFX.busy);
   expect(
     await page.evaluate(() => {
-      const layoutRecord = window.contactAnimations.find(({ frames }) =>
-        frames.length > 1 &&
-        frames.every((frame) =>
-          Object.keys(frame).every((key) =>
-            ["translate", "offset", "easing"].includes(key),
+      const layoutRecord = window.contactAnimations.find(
+        ({ frames }) =>
+          frames.length > 1 &&
+          frames.every((frame) =>
+            Object.keys(frame).every((key) =>
+              ["translate", "offset", "easing"].includes(key),
+            ),
           ),
-        ),
       );
       window.independentAnimation?.cancel();
       Element.prototype.animate = window.__nativeAnimate;
@@ -486,53 +427,6 @@ test("a new contact reaction owns target translation when the contact render mov
       return layoutRecord?.animation.playState;
     }),
   ).toBe("idle");
-});
-
-test("portrait clock follows display frames and reuses surfaces without size churn", async ({
-  page,
-}) => {
-  await demo(page);
-  await prepare(page, { friends: ["oracle", "phoenix", "frostking"] });
-  await page.waitForFunction(
-    () => document.querySelectorAll("#minions .motion-ready").length === 3,
-  );
-  const report = await page.evaluate(async () => {
-    const selector = '#minions [data-cardid="phoenix"] canvas',
-      canvas = document.querySelector(selector);
-    const before = EmberPortraits.diagnostics,
-      frames = [];
-    let drawing = 0;
-    const ctx = canvas.getContext("2d"),
-      original = ctx.clearRect.bind(ctx);
-    ctx.clearRect = (...args) => {
-      drawing++;
-      return original(...args);
-    };
-    const start = performance.now();
-    await new Promise((resolve) => {
-      function step(t) {
-        frames.push(t);
-        if (t - start > 650) resolve();
-        else requestAnimationFrame(step);
-      }
-      requestAnimationFrame(step);
-    });
-    const after = EmberPortraits.diagnostics;
-    EmberDebug.game.emit();
-    return {
-      drawing,
-      displayFrames: frames.length,
-      resizes: after.resizes - before.resizes,
-      sameCanvas: document.querySelector(selector) === canvas,
-      ready: document
-        .querySelector(selector)
-        .parentElement.classList.contains("motion-ready"),
-    };
-  });
-  expect(report.drawing).toBeGreaterThanOrEqual(report.displayFrames - 2);
-  expect(report.resizes).toBe(0);
-  expect(report.sameCanvas).toBe(true);
-  expect(report.ready).toBe(true);
 });
 
 test("freeze settles without lingering ice particles or delayed filter transitions", async ({
@@ -555,264 +449,7 @@ test("freeze settles without lingering ice particles or delayed filter transitio
   });
 });
 
-for (const mobile of [false, true])
-  test(`full board shares six rigs within its budget ${mobile ? "touch" : "desktop"}`, async ({
-    browser,
-  }) => {
-    const context = await browser.newContext({
-      viewport: mobile
-        ? { width: 844, height: 390 }
-        : { width: 1600, height: 940 },
-      hasTouch: mobile,
-      isMobile: mobile,
-    });
-    const page = await context.newPage();
-    await demo(page);
-    const ids = [
-      "oracle",
-      "phoenix",
-      "frostking",
-      "wolf",
-      "golem",
-      "treant",
-      "oracle",
-    ];
-    await prepare(page, {
-      friends: ids,
-      enemies: ids,
-      hand: [...ids, "wolf", "golem", "treant"],
-    });
-    await page.mouse.move(0, 0);
-    await page.waitForFunction(
-      () =>
-        EmberPortraits.active > 0 &&
-        EmberPortraits.diagnostics.pendingLoads === 0,
-    );
-    await page.waitForTimeout(500);
-    const before = await page.evaluate(() => JSON.stringify(EmberDebug.game.s));
-    const report = await page.evaluate(async () => {
-      const start = EmberPortraits.diagnostics;
-      let frames = 0,
-        maxActive = 0;
-      await new Promise((resolve) => {
-        const begin = performance.now();
-        function step(t) {
-          frames++;
-          maxActive = Math.max(maxActive, EmberPortraits.active);
-          if (t - begin > 700) resolve();
-          else requestAnimationFrame(step);
-        }
-        requestAnimationFrame(step);
-      });
-      return { start, end: EmberPortraits.diagnostics, frames, maxActive };
-    });
-    expect(report.maxActive).toBeLessThanOrEqual(mobile ? 6 : 12);
-    expect(report.end.decodedBytes).toBeLessThanOrEqual(
-      report.end.cacheLimit * 3 * 384 * 512 * 4,
-    );
-    expect(report.end.resizes).toBe(report.start.resizes);
-    expect(report.end.frames - report.start.frames).toBeGreaterThan(0);
-    await expect(page.locator("#hand .motion-ready")).toHaveCount(0);
-    expect(await page.evaluate(() => JSON.stringify(EmberDebug.game.s))).toBe(
-      before,
-    );
-    await page.screenshot({
-      path: path.resolve(
-        `artifacts/qa/full-motion-${mobile ? "touch" : "desktop"}.png`,
-      ),
-    });
-    await context.close();
-  });
-
-test("gallery stays static on hover and selection; explicit inspection can animate", async ({
-  page,
-}) => {
-  await page.goto("./?debug=1");
-  await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
-  await page.mouse.move(0, 0);
-  await page.evaluate(() => {
-    document.getElementById("app").innerHTML =
-      '<div id="gallery" style="position:fixed;inset:100px;display:flex"></div>';
-    for (const id of Object.keys(CharacterCatalog).filter(
-      (id) => CharacterCatalog[id].motion,
-    )) {
-      const host = document.createElement("div");
-      host.className = "card-art";
-      host.dataset.fixture = id;
-      host.style.cssText = "width:140px;height:200px;position:relative";
-      host.innerHTML = `<img data-art-key="${id}" src="${EmberArt.card(EmberData.byId[id])}">`;
-      document.getElementById("gallery").append(host);
-    }
-    EmberPortraits.sync();
-  });
-  await page.waitForTimeout(350);
-  expect(
-    await page.evaluate(() => EmberPortraits.diagnostics.loadedIds),
-  ).toEqual([]);
-  expect(
-    await page
-      .locator("#gallery canvas")
-      .evaluateAll((cs) => cs.every((c) => c.width === 1 && c.height === 1)),
-  ).toBe(true);
-  await page.locator('[data-fixture="wolf"]').hover();
-  await page.locator('[data-fixture="wolf"]').click();
-  await page
-    .locator('[data-fixture="wolf"]')
-    .evaluate((el) => el.classList.add("selected"));
-  await page.waitForTimeout(200);
-  await expect(page.locator("#gallery .motion-ready")).toHaveCount(0);
-  expect(
-    await page.evaluate(() => EmberPortraits.diagnostics.loadedIds),
-  ).toEqual([]);
-  await page.locator('[data-fixture="wolf"]').evaluate((el) => {
-    el.querySelector("img").dataset.portraitMode = "detail";
-    EmberPortraits.sync();
-  });
-  await expect(page.locator('[data-fixture="wolf"]')).toHaveClass(
-    /motion-ready/,
-  );
-  expect(
-    await page.evaluate(() => EmberPortraits.diagnostics.loadedIds),
-  ).toEqual(["wolf"]);
-  await page.locator('[data-fixture="wolf"]').evaluate((el) => {
-    el.querySelector("img").dataset.portraitMode = "static";
-    EmberPortraits.sync();
-  });
-  await page.mouse.move(0, 0);
-  await expect(page.locator("#gallery .motion-ready")).toHaveCount(0);
-});
-
-test("frozen portrait performs zero redraws and resumes after reduced-motion toggles", async ({
-  page,
-}) => {
-  await demo(page);
-  await prepare(page, { friends: ["wolf"] });
-  await expect(
-    page.locator('#minions [data-cardid="wolf"] .minion-art'),
-  ).toHaveClass(/motion-ready/);
-  await page.evaluate(() => {
-    const g = EmberDebug.game;
-    g.s.p.board[0].frozen = true;
-    g.events = [];
-    g.emit();
-  });
-  const result = await page
-    .locator('#minions [data-cardid="wolf"] canvas')
-    .evaluate(async (canvas) => {
-      let count = 0;
-      const ctx = canvas.getContext("2d"),
-        original = ctx.clearRect.bind(ctx);
-      ctx.clearRect = (...args) => {
-        count++;
-        original(...args);
-      };
-      await new Promise((r) => setTimeout(r, 300));
-      return count;
-    });
-  expect(result).toBe(0);
-  expect(await page.evaluate(() => EmberPortraits.active)).toBeLessThanOrEqual(
-    await page.locator('img[data-portrait-mode="hero"]').count(),
-  );
-  await page.evaluate(() => EmberFX.configure(true, false));
-  await expect(page.locator("#minions .motion-ready")).toHaveCount(0);
-  await page.evaluate(() => EmberFX.configure(false, false));
-  await expect(
-    page.locator('#minions [data-cardid="wolf"] .minion-art'),
-  ).toHaveClass(/motion-ready/);
-});
-
-test("bounded cache evicts unused rigs and can reload an evicted rig", async ({
-  browser,
-}) => {
-  const context = await browser.newContext({
-    viewport: { width: 390, height: 844 },
-    isMobile: true,
-    hasTouch: true,
-  });
-  const page = await context.newPage();
-  // Synthetic IDs exist only in intercepted test scripts to exercise future scale.
-  await page.route("**/scripts/motion-assets.js", async (route) => {
-    const response = await route.fetch();
-    let body = await response.text();
-    body = body.replace("const MotionAssets =", "const FixtureSource =");
-    body +=
-      '\nconst MotionAssets=Object.freeze(Object.fromEntries(Array.from({length:20},(_,i)=>["fixture"+i,FixtureSource.wolf])));';
-    await route.fulfill({ response, body });
-  });
-  await page.route("**/scripts/character-catalog.js", async (route) => {
-    const response = await route.fetch();
-    let body = await response.text();
-    body = body.replace("const CharacterCatalog =", "const FixtureCatalog =");
-    body +=
-      '\nconst CharacterCatalog=Object.freeze({...FixtureCatalog,...Object.fromEntries(Array.from({length:20},(_,i)=>["fixture"+i,FixtureCatalog.wolf]))});';
-    await route.fulfill({ response, body });
-  });
-  await page.goto("./?debug=1");
-  await page.waitForFunction(() => window.Emberfall);
-  async function show(i) {
-    await page.evaluate((i) => {
-      document.getElementById("app").innerHTML =
-        `<div class="selected" data-motion-detail style="position:fixed;left:40px;top:160px"><div class="card-art" style="width:200px;height:270px"><img data-art-key="fixture${i}" data-portrait-mode="detail" data-portrait-instance="fixture:${i}" data-portrait-state="idle"></div></div>`;
-      EmberPortraits.sync();
-    }, i);
-    await page.waitForFunction(() => document.querySelector(".motion-ready"));
-  }
-  for (let i = 0; i < 20; i++) await show(i);
-  const cached = await page.evaluate(() => EmberPortraits.diagnostics);
-  expect(cached.cached).toBeLessThanOrEqual(8);
-  expect(cached.loadedIds).not.toContain("fixture0");
-  await show(0);
-  expect(
-    await page.evaluate(() => EmberPortraits.diagnostics.loadedIds),
-  ).toContain("fixture0");
-  await context.close();
-});
-
-test("same-art instances keep independent state and ignore decorative frozen classes", async ({
-  page,
-}) => {
-  await demo(page);
-  await prepare(page, { friends: ["wolf", "wolf"] });
-  await page.waitForFunction(
-    () =>
-      document.querySelectorAll('#minions [data-cardid="wolf"] .motion-ready')
-        .length === 2,
-  );
-  const canvases = page.locator('#minions [data-cardid="wolf"] canvas');
-  const bindings = await page
-    .locator('#minions [data-cardid="wolf"] img')
-    .evaluateAll((images) => images.map((i) => i.dataset.portraitInstance));
-  expect(new Set(bindings).size).toBe(2);
-  await page
-    .locator('#minions [data-cardid="wolf"]')
-    .first()
-    .evaluate((e) => e.classList.add("frozen"));
-  const beforeDecoration = await canvases
-    .first()
-    .evaluate((c) => c.toDataURL());
-  await page.waitForTimeout(300);
-  expect(await canvases.first().evaluate((c) => c.toDataURL())).not.toBe(
-    beforeDecoration,
-  );
-  await page.evaluate(() => {
-    const g = EmberDebug.game;
-    g.s.p.board[0].frozen = true;
-    g.events = [];
-    g.emit();
-  });
-  await page.waitForTimeout(100);
-  const before = await canvases.evaluateAll((cs) =>
-    cs.map((c) => c.toDataURL()),
-  );
-  await page.waitForTimeout(350);
-  const after = await canvases.evaluateAll((cs) =>
-    cs.map((c) => c.toDataURL()),
-  );
-  expect(after[0]).toBe(before[0]);
-  expect(after[1]).not.toBe(before[1]);
-});
-
-test("every on-board portrait paints, moves and freezes independently across roster pages", async ({
+test("every on-board minion shows its own decoded illustration across roster pages", async ({
   page,
 }) => {
   test.setTimeout(120000);
@@ -823,111 +460,55 @@ test("every on-board portrait paints, moves and freezes independently across ros
   for (let offset = 0; offset < ids.length; offset += 6) {
     const group = ids.slice(offset, offset + 6);
     await prepare(page, { friends: group, hand: group });
+    // A freshly rendered board starts its image loads: wait for the decode,
+    // not just for the nodes, or the first page of the roster races the network.
     await page.waitForFunction(
       (count) =>
-        document.querySelectorAll("#minions .motion-ready").length === count,
+        [...document.querySelectorAll("#minions .minion-art img")].filter(
+          (img) => img.complete && img.naturalWidth > 0,
+        ).length === count,
       group.length,
     );
-    const before = await page
-      .locator("#minions canvas")
-      .evaluateAll((cs) => cs.map((c) => c.toDataURL()));
-    await page.waitForTimeout(350);
-    const after = await page
-      .locator("#minions canvas")
-      .evaluateAll((cs) => cs.map((c) => c.toDataURL()));
-    expect(after.length).toBe(group.length);
-    after.forEach((frame, i) =>
-      expect(frame, group[i] + " should move").not.toBe(before[i]),
-    );
+    // Static art only: every board illustration must decode, and no renderer
+    // may add a surface on top of it.
+    const report = await page
+      .locator("#minions .minion-art img")
+      .evaluateAll((images) =>
+        images.map((img) => ({
+          key: img.dataset.artKey,
+          loaded: img.complete && img.naturalWidth > 0,
+          src: img.currentSrc || img.src,
+        })),
+      );
+    expect(report.length).toBe(group.length);
+    report.forEach((entry, i) => {
+      expect(entry.loaded, group[i] + " illustration should decode").toBe(true);
+      expect(entry.src.length).toBeGreaterThan(0);
+    });
+    await expect(page.locator("#minions canvas")).toHaveCount(0);
     await expect(page.locator("#hand canvas")).toHaveCount(0);
-    await page.evaluate(() => {
-      const g = EmberDebug.game;
-      g.s.p.board.forEach((m) => (m.frozen = true));
-      g.emit();
-    });
-    await page.waitForTimeout(80);
-    const frozen = await page
-      .locator("#minions canvas")
-      .evaluateAll((cs) => cs.map((c) => c.toDataURL()));
-    await page.waitForTimeout(200);
-    expect(
-      await page
-        .locator("#minions canvas")
-        .evaluateAll((cs) => cs.map((c) => c.toDataURL())),
-    ).toEqual(frozen);
-    await page.evaluate(() => {
-      const g = EmberDebug.game;
-      g.s.p.board.forEach((m) => (m.frozen = false));
-      g.emit();
-    });
-    await page.waitForTimeout(250);
-    const thawed = await page
-      .locator("#minions canvas")
-      .evaluateAll((cs) => cs.map((c) => c.toDataURL()));
-    thawed.forEach((frame, i) =>
-      expect(frame, group[i] + " should thaw").not.toBe(frozen[i]),
-    );
-    expect(
-      await page.evaluate(() => EmberPortraits.diagnostics.cached),
-    ).toBeLessThanOrEqual(16);
   }
 });
 
-test("summon uses the approved v4 portrait before landing without a hard swap", async ({ page }) => {
+test("a summoned minion lands with its illustration visible and unobscured", async ({
+  page,
+}) => {
   await demo(page);
   await prepare(page, { hand: ["solaris"] });
-  await page.evaluate(() => {
-    window.arrivalSamples = [];
-    window.captureArrival = true;
-    function sample() {
-      const art = document.querySelector('#minions [data-cardid="solaris"] .minion-art');
-      if (art)
-        arrivalSamples.push({
-          ready: art.classList.contains("motion-ready"),
-          opacity: Number(getComputedStyle(art.querySelector("img")).opacity),
-        });
-      if (captureArrival) requestAnimationFrame(sample);
-    }
-    requestAnimationFrame(sample);
-  });
   await cast(page, "solaris");
   const art = page.locator('#minions [data-cardid="solaris"] .minion-art');
   await expect(art).toHaveCount(1);
-  await expect(art).toHaveClass(/motion-ready/);
-  await expect(art.locator('img')).toHaveAttribute('data-art-version', 'wanxiang-v4');
-  await expect(art.locator('canvas')).toHaveCSS('opacity', '1');
-  await expect(art.locator('img')).toHaveCSS('opacity', '0');
-  expect(
-    await page.evaluate(() => EmberPortraits.diagnostics.loadedIds),
-  ).toContain("static:solaris");
-  expect(
-    await page.evaluate(() => EmberPortraits.diagnostics.loadedIds),
-  ).not.toContain("solaris");
-  await expect(page.locator('#hand canvas')).toHaveCount(0);
-  const samples = await page.evaluate(() => {
-    captureArrival = false;
-    return arrivalSamples;
-  });
-  expect(samples.length).toBeGreaterThan(0);
-  expect(samples.filter((s) => !s.ready && s.opacity > 0.05)).toEqual([]);
-  await page.screenshot({ path: path.resolve("artifacts/qa/arrival-v4.png") });
-});
-
-test("v4 portrait never falls back to the retired atlas and reduced motion skips its canvas", async ({ page }) => {
-  await demo(page);
-  await prepare(page, { hand: ["solaris", "nyx"] });
-  await cast(page, "solaris");
+  await expect(art.locator("img")).toHaveCSS("opacity", "1");
+  await expect
+    .poll(() =>
+      art
+        .locator("img")
+        .evaluate((img) => img.complete && img.naturalWidth > 0),
+    )
+    .toBe(true);
+  // Nothing is layered over the approved illustration any more, on board or in hand.
+  await expect(art.locator("canvas")).toHaveCount(0);
+  await expect(page.locator("#hand canvas")).toHaveCount(0);
   await page.waitForFunction(() => !EmberFX.busy);
-  const art = page.locator('#minions [data-cardid="solaris"] .minion-art');
-  await expect(art).toHaveClass(/motion-ready/);
-  expect(
-    await page.evaluate(() => EmberPortraits.diagnostics.loadedIds),
-  ).toContain("static:solaris");
-  expect(
-    await page.evaluate(() => EmberPortraits.diagnostics.loadedIds),
-  ).not.toContain("solaris");
-  await page.evaluate(() => { EmberFX.configure(true, false); EmberDebug.game.s.p.mana = 10; });
-  await cast(page, "nyx");
-  expect(await page.evaluate(() => EmberPortraits.diagnostics.loadedIds.includes('static:nyx'))).toBe(false);
-  await expect(page.locator('#minions [data-cardid="nyx"] .minion-art img')).toHaveCSS('opacity', '1');
+  await page.screenshot({ path: path.resolve("artifacts/qa/arrival-v4.png") });
 });

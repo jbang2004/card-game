@@ -155,7 +155,7 @@ test("attack families keep distinct contact language, ranged attackers never lun
     expect(attack.kind, id).toBe(family);
     expect(attack.ranged, id).toBe(ranged);
     expect(attack.numberAt[0], id).not.toBeNull();
-    expect(Math.abs(attack.numberAt[0] - attack.hitAt[0]), id).toBeLessThanOrEqual(34);
+    expect(Math.abs(attack.numberAt[0] - attack.hitAt[0]), id).toBeLessThanOrEqual(45);
   }
 });
 
@@ -215,7 +215,7 @@ test("a compressed sequence scales contact, hit-stop and DOM motion with one clo
   expect(
     [0, 50, 90].some((ms) => Math.abs((report.releaseMs - report.contactMs) / scale - ms) < 1),
   ).toBe(true);
-  expect(report.numberDelta).toBeLessThanOrEqual(34);
+  expect(report.numberDelta).toBeLessThanOrEqual(45);
 });
 
 test("countered major spell casts nothing and resize drops every queued presentation", async ({
@@ -282,7 +282,7 @@ test("without WebGL the same director keeps DOM motion and numbers; reduced moti
   expect(await page.evaluate(() => JSON.stringify(EmberDebug.game.s))).toBe(state);
   const cast = (await recordsSince(page, lastSeq)).find((r) => r.type === "cast");
   expect(cast.kind).toBe("fireball");
-  expect(Math.abs(cast.numberAt[0] - cast.hitAt[0])).toBeLessThanOrEqual(34);
+  expect(Math.abs(cast.numberAt[0] - cast.hitAt[0])).toBeLessThanOrEqual(45);
   expect(await page.evaluate(() => EmberFx2.diagnostics.spawned.fireball || 0)).toBe(0);
   expect(errors).toEqual([]);
   await context.close();

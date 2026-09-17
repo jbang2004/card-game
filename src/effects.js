@@ -529,17 +529,6 @@ const EmberFX = (() => {
    * A lunging minion is a clone (minions are rebuilt on every render); a hero
    * lunges its own card (cloning a hero out of #battle loses its scoped
    * layout — the "giant heart" bug). */
-  function copyPortraits(source, clone) {
-    const originals = source?.querySelectorAll(".portrait-motion") || [];
-    clone.querySelectorAll(".portrait-motion").forEach((canvas, i) => {
-      const original = originals[i];
-      if (original?.width && original?.height) {
-        canvas.width = original.width;
-        canvas.height = original.height;
-        canvas.getContext("2d").drawImage(original, 0, 0);
-      } else canvas.parentElement.classList.remove("motion-ready");
-    });
-  }
   const STATE_CLASSES = [
     "shield",
     "frozen",
@@ -1929,7 +1918,6 @@ const EmberFX = (() => {
     ghost.innerHTML = old.html;
     const el = ghost.firstElementChild;
     if (!el) return;
-    copyPortraits(old.el, el);
     el.removeAttribute("id");
     el.classList.remove("attack-actor");
     el.classList.add("death-ghost");
@@ -2022,14 +2010,11 @@ const EmberFX = (() => {
       host.classList.add("attack-host");
       el.classList.add("attack-actor", "attack-family-" + m.family);
     } else {
-      const source = old[refKey(actorRef)]?.el?.isConnected
+      const origin = old[refKey(actorRef)]?.el?.isConnected
         ? old[refKey(actorRef)].el
         : unit(actorRef.side, actorRef.uid);
-      const liveNow = unit(actorRef.side, actorRef.uid);
-      const origin = liveNow?.querySelector(".portrait-motion") ? liveNow : source;
       if (!origin) return null;
       el = origin.cloneNode(true);
-      copyPortraits(origin, el);
       el.removeAttribute("id");
       el.classList.add("death-ghost", "attack-actor", "attack-family-" + m.family);
       el.style.cssText += `;left:${actorBox.left}px;top:${actorBox.top}px;width:${actorBox.w}px;height:${actorBox.h}px;margin:0;visibility:visible`;
@@ -2855,7 +2840,6 @@ const EmberFX = (() => {
       after?.();
       return;
     }
-    EmberPortraits.prepareSummons(events);
     setBusy(true);
     const sequence = createSequence(plan, version);
     sequence.anchors = snapshot;
@@ -3018,8 +3002,6 @@ const EmberFX = (() => {
   function configure(reduced, low) {
     quality = { reduced: !!reduced, low: !!low };
     fx2()?.setQuality?.(quality);
-    if (typeof EmberPortraits !== "undefined")
-      EmberPortraits.configure(reduced, low);
     app.classList.toggle("fx-low", quality.low);
     app.classList.toggle("fx-reduced", quality.reduced);
     worldDirty = true;

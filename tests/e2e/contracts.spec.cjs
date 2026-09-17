@@ -162,7 +162,7 @@ for (const [width, height, touch] of [
     await page.waitForFunction(
       () =>
         document.querySelector(
-          '[data-art-key="selmyra"][data-portrait-mode="board"]',
+          '#minions [data-cardid="selmyra"] .minion-art img',
         )?.complete,
     );
     await page.screenshot({ path: `artifacts/qa/moon-board-${width}.png` });

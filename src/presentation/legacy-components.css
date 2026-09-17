@@ -324,64 +324,11 @@ body.touch-layout .combat-cue {
   padding: 3px 6px;
 }
 
-/* Layer canvases occupy only the illustration window; all card information stays DOM. */
-.portrait-motion {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  display: none;
-}
-.motion-ready > .portrait-motion {
-  display: block;
-}
-body .motion-ready > img[data-art-key] {
-  opacity: 0;
-}
-.fx-low .portrait-motion,
-.fx-reduced .portrait-motion,
-.reduced-motion .portrait-motion {
-  display: none;
-}
-body .fx-low .motion-ready > img[data-art-key],
-body .fx-reduced .motion-ready > img[data-art-key],
-body.reduced-motion .motion-ready > img[data-art-key] {
-  opacity: 1;
-}
-@media (prefers-reduced-motion: reduce) {
-  .portrait-motion {
-    display: none;
-  }
-  body .motion-ready > img[data-art-key] {
-    opacity: 1;
-  }
-}
 /* FLIP / combat owns movement. CSS filter/transform transitions must not trail it. */
 body .minion {
   transition:
     box-shadow 120ms ease,
     border-color 120ms ease;
-}
-
-/* Only a newly summoned portrait reveals; steady idle frames never crossfade. */
-.motion-entering > img[data-art-key] {
-  transition: opacity 160ms ease-out;
-}
-body .motion-arriving:not(.motion-ready) > img[data-art-key] {
-  transition: none;
-  opacity: 0;
-}
-.motion-entering.motion-ready > .portrait-motion {
-  animation: portrait-arrival 160ms ease-out both;
-}
-@keyframes portrait-arrival {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
 }
 
 /* Tavern Oaths deck planning and campaign refit share desktop/touch materials. */

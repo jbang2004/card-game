@@ -27,8 +27,6 @@
   "SPELL_STAGE": "presentation/fx-stage.js",
   "EFFECTS": "effects.js",
   "COMBAT_PLAN": "presentation/combat.js",
-  "MOTION_ASSETS": "motion-assets.js",
-  "PORTRAITS": "presentation/portraits.js",
   "ENHANCEMENTS": "enhancements.js",
   "CARD_VIEW": "presentation/cards.js",
   "HAND_LAYOUT": "presentation/hand.js",

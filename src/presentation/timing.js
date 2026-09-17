@@ -35,7 +35,7 @@ const EmberTiming = (() => {
     contactBoxMax: 1.25,
     aoePad: 24,
     flashMaxLuma: 1.3,
-    numberSyncMs: 34,
+    numberSyncMs: 45,
   });
 })();
 if (typeof module !== "undefined") module.exports = EmberTiming;

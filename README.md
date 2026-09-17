@@ -55,7 +55,7 @@ npm run test:release
 
 四位英雄现在各有默认神祇：星焰神·烬辰、曙日神·奥瑞恩、荒猎神·芬洛斯与冥月神·瑟弥拉。前三位分别通过不同法术、敌方破盾、野兽主动交换唤醒，配有三张新法术和三套预设。契约仍按职业共享、最多三张且至多一位神祇，旧预设仍可使用。
 
-六张独立动漫原画、三位神的真实透明分层、四种降临仪式与公开进度已接入桌面及手机。测试期对局仍为 version 3，但必须含当前 devotion 计数；缺字段的旧测试对局明确失效，不做迁移。命名卡组维持当前格式。
+六张独立动漫原画、四种降临仪式与公开进度已接入桌面及手机（当时随附的三位神分层立绘已于 2026-09-18 移除）。测试期对局仍为 version 3，但必须含当前 devotion 计数；缺字段的旧测试对局明确失效，不做迁移。命名卡组维持当前格式。
 
 设计见 [诸神同辉](docs/design/PANTHEON.md)，平衡数据和实际验收见 [v0.14 验证](docs/QA_PANTHEON.md)。自动筛查：`node tools/playtest-pantheon.cjs`。
 
@@ -65,7 +65,7 @@ npm run test:release
 
 非衍生随从的死亡积累不同名称的灵魂印记，唤醒契兽或冥月神需要法力、印记和累计阵亡门槛。每张契约每局一次，神祇不能复生且降临当回合不能攻击英雄。对手可以通过公开契约栏提前判断威胁；寂静封印提供中立沉默反制。
 
-十一张独立原画、六个分层角色与月蚀降临演出已接入桌面和手机，并已统一为原游戏动漫画风。详见 [设计与素材记录](docs/design/MOON_COVENANT.md)、[平衡与验收](docs/QA_MOON_COVENANT.md)。自动筛查命令：`node tools/playtest-contracts.cjs`。测试期对局及命名卡组升为 version 3，旧测试记录失效。
+十一张独立原画与月蚀降临演出已接入桌面和手机，并已统一为原游戏动漫画风（当时随附的六个分层立绘已于 2026-09-18 移除）。详见 [设计与素材记录](docs/design/MOON_COVENANT.md)、[平衡与验收](docs/QA_MOON_COVENANT.md)。自动筛查命令：`node tools/playtest-contracts.cjs`。测试期对局及命名卡组升为 version 3，旧测试记录失效。
 
 ## v0.12.1 界面改造
 
@@ -94,7 +94,7 @@ npm run test:release
 
 ## 角色制作
 
-统一清单为 `assets/characters.json`；制作与接入见 [角色制作规范](docs/CHARACTER_AUTHORING.md)。44 个上场随从（含 7 个普通衍生角色及 6 个契约角色）均有分层待机，4 位英雄和 6 位首领按既有 portraitId 复用。其余 35 张法术/武器保持静态。运行 `python3 tools/characters.py --list` 查看完整静态/动态清单；`tools/animation-demo.html?zoom=1` 可分页查看所有角色。其他模型可直接读取项目内 [角色制作 Skill](.agents/skills/character-creation/SKILL.md)。
+统一清单为 `assets/characters.json`（每项只有 `staticKey` 与 `focus`）；制作与接入见 [角色制作规范](docs/CHARACTER_AUTHORING.md)。79 张卡图全部为静态插画，4 位英雄和 6 位首领按既有 portraitId 复用。运行 `python3 tools/characters.py --list` 查看完整清单；`tools/animation-demo.html` 可逐项观看战斗演出。2026-09-18 起分层立绘动画已整体移除，移除清单见 [ASSETS.md](docs/ASSETS.md#角色静态插画登记)。其他模型可直接读取项目内 [角色制作 Skill](.agents/skills/character-creation/SKILL.md)。
 
 ## 自适应页面布局
 
