@@ -1,0 +1,63 @@
+name: One-shot verified original flame source transfer
+on:
+  push:
+    branches: [feat/3d-combat-vfx]
+    paths: ['.github/r4-source/**', '.github/workflows/r4-flame-transfer.yml']
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.repository == 'jbang2004/card-game' && github.ref == 'refs/heads/feat/3d-combat-vfx'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Verify baseline and restore exact locally tested sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = b0ec30d1f4de36ad9a99d7447d1585d7ed722280
+          python3 - <<'PY'
+          import base64, hashlib, json, lzma
+          from pathlib import Path
+          expected = {'DELIVERY_VFX3_R4.md', 'config/build.json', 'docs/design/BATTLE_PRESENTATION_V2.md', 'docs/design/REFERENCE_FLAME_PORT.md', 'src/template.html', 'src/vfx3/reference-flame.js', 'src/vfx3/renderer.js', 'src/vfx3/runtime.js', 'tests/fixtures/reference-flame.json', 'tests/vfx3-flow.test.cjs', 'tests/vfx3-reference-flame.test.cjs', 'tests/vfx3-refinement.test.cjs', 'tools/vfx3/lab.js', 'tools/vfx3/record_reference_flame.py', 'tools/vfx3/verify_reference_source.cjs'}
+          encoded = ''.join(Path('.github/r4-source/part-%d.b64' % i).read_text() for i in range(3))
+          raw = lzma.decompress(base64.b64decode(encoded, validate=True))
+          assert hashlib.sha256(raw).hexdigest() == '482c41e90e84328bb4ae2fa8f485b6a4c40bb075291d6f982d7cc83d6c480f8c', 'transport checksum mismatch'
+          delta = json.loads(raw)
+          assert set(delta) == expected, 'unexpected source paths'
+          outputs = {}
+          for name, change in delta.items():
+              path = Path(name)
+              before = path.read_bytes() if path.exists() else b''
+              actual = hashlib.sha256(before).hexdigest() if path.exists() else None
+              assert actual == change['before'], 'baseline changed: ' + name
+              lines = before.decode('utf-8').splitlines(keepends=True)
+              text = ''.join(part if isinstance(part, str) else ''.join(lines[part[0]:part[1]]) for part in change['parts'])
+              content = text.encode('utf-8')
+              assert hashlib.sha256(content).hexdigest() == change['after'], 'output checksum mismatch: ' + name
+              outputs[path] = content
+          for path, content in outputs.items():
+              path.parent.mkdir(parents=True, exist_ok=True)
+              path.write_bytes(content)
+          print('Verified and restored', len(outputs), 'files; no rule or card data changes.')
+          PY
+      - name: Build and run all Node tests
+        run: |
+          python3 build.py
+          python3 tools/vfx3/export_demo.py
+          node --test tests/*.test.cjs > /tmp/r4-node-tests.txt
+          tail -12 /tmp/r4-node-tests.txt
+      - name: Commit sources, remove transport, push feature branch only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add DELIVERY_VFX3_R4.md config/build.json docs/design/BATTLE_PRESENTATION_V2.md docs/design/REFERENCE_FLAME_PORT.md src/template.html src/vfx3/reference-flame.js src/vfx3/renderer.js src/vfx3/runtime.js tests/fixtures/reference-flame.json tests/vfx3-flow.test.cjs tests/vfx3-reference-flame.test.cjs tests/vfx3-refinement.test.cjs tools/vfx3/lab.js tools/vfx3/record_reference_flame.py tools/vfx3/verify_reference_source.cjs
+          git rm .github/r4-source/part-0.b64 .github/r4-source/part-1.b64 .github/r4-source/part-2.b64 .github/workflows/r4-flame-transfer.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat(vfx): transplant original flame implementation without dragon model (R4)'
+          git push origin HEAD:refs/heads/feat/3d-combat-vfx
+          git rev-parse HEAD >> "$GITHUB_STEP_SUMMARY"
