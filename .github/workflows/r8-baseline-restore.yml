@@ -1,0 +1,59 @@
+name: Restore approved R8 baseline once
+on:
+  push:
+    branches: [feat/full-vfx-remaster]
+    paths: ['.github/r8-baseline/**', '.github/workflows/r8-baseline-restore.yml']
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.repository == 'jbang2004/card-game' && github.ref == 'refs/heads/feat/full-vfx-remaster'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Verify exact upstream and approved R8 bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = 9aa2d9baa835307b958183337ef6dd4ceab583f2
+          python3 - <<'PY'
+          import base64, hashlib, json, lzma
+          from pathlib import Path
+          expected = {'docs/design/BENCHMARK_SWORD_ARTS_R8.md','docs/qa/benchmark-r8.json','src/presentation/benchmark-feedback.js','src/vfx3/benchmark-arts.js','src/vfx3/renderer.js','tests/benchmark-r8.test.cjs','tools/vfx3/assemble_alignment.py','tools/vfx3/lab.js','tools/vfx3/record_alignment.py','tools/vfx3/review_alignment.py'}
+          raw = lzma.decompress(base64.b64decode(''.join(Path('.github/r8-baseline/part-%d.b64'%i).read_text() for i in range(4)), validate=True))
+          assert hashlib.sha256(raw).hexdigest() == '63ad151474cccbf2e2ca5f9fd32523f659decbd36e5d36e83185a7bc787ed5cb'
+          delta = json.loads(raw)
+          assert set(delta) == expected
+          outputs = {}
+          for name, change in delta.items():
+              path = Path(name)
+              before = path.read_bytes() if path.exists() else b''
+              assert (hashlib.sha256(before).hexdigest() if path.exists() else None) == change['before'], name
+              lines = before.decode().splitlines(keepends=True)
+              data = ''.join(part if isinstance(part,str) else ''.join(lines[part[0]:part[1]]) for part in change['parts']).encode()
+              assert hashlib.sha256(data).hexdigest() == change['after'], name
+              outputs[path] = data
+          for path,data in outputs.items():
+              path.parent.mkdir(parents=True,exist_ok=True)
+              path.write_bytes(data)
+          Path('/tmp/r8-paths.txt').write_text('\n'.join(sorted(expected)))
+          print('Restored',len(outputs),'approved R8 files; rules and original flame untouched.')
+          PY
+      - name: Build and test approved baseline
+        run: |
+          python3 build.py
+          python3 tools/vfx3/export_demo.py
+          node --test tests/*.test.cjs
+      - name: Save R8 and remove one-shot write workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm -r .github/r8-baseline .github/workflows/r8-baseline-restore.yml
+          while IFS= read -r path || test -n "$path"; do git add -- "$path"; done < /tmp/r8-paths.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat: preserve user-approved R8 sword benchmark baseline'
+          git push origin HEAD:refs/heads/feat/full-vfx-remaster
