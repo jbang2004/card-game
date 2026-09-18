@@ -13,6 +13,7 @@ def main():
   b=launch(pw);p=b.new_page(viewport={'width':1440,'height':900});p.on('pageerror',lambda e:report['errors'].append(str(e)));load(p)
   for role,label in ROLES:
    assert p.evaluate('r=>VFXLab.cast(r)',role),role
+   p.mouse.move(1435,890);p.wait_for_timeout(120)
    group=p.evaluate('EmberFx2.mesh3d.lastGroup');d=p.evaluate('EmberFx2.mesh3d.lastUtility' if role=='demise' else 'EmberFx2.mesh3d.last')
    duration=p.evaluate('VFXLab.duration')/1000+.10;n=math.ceil(duration*30)
    folder=OUT/role;folder.mkdir(exist_ok=True)
