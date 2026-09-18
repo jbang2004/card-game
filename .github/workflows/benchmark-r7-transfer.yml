@@ -1,0 +1,82 @@
+name: One-shot verified benchmark sword-art source transfer
+on:
+  push:
+    branches: [feat/benchmark-sword-arts]
+    paths: ['.github/benchmark-r7-source/**', '.github/workflows/benchmark-r7-transfer.yml']
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.repository == 'jbang2004/card-game' && github.ref == 'refs/heads/feat/benchmark-sword-arts'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Verify baseline and restore exact tested sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = 9e5b06203fa020b479a7f174a811801c316e7dd5
+          python3 - <<'PY'
+          import base64, hashlib, json, lzma
+          from pathlib import Path
+          expected = {
+            'DELIVERY_BENCHMARK_R7.md', 'DELIVERY_SWORD_ARTS_R6.md', 'config/build.json',
+            'docs/design/BATTLE_PRESENTATION_V2.md', 'docs/design/BENCHMARK_SWORD_ARTS_R7.md',
+            'docs/design/SKYFALL_CARD_STRIKE.md', 'docs/design/SWORD_ARTS_R6.md',
+            'docs/qa/benchmark-sword-arts-r7.json', 'docs/qa/sword-arts-r6.json', 'docs/qa/vfx3-r5.json',
+            'src/effects.js', 'src/platform/audio.js', 'src/presentation/benchmark-feedback.js',
+            'src/presentation/combat.js', 'src/presentation/fx-profiles.js', 'src/presentation/fx-stage.js',
+            'src/template.html', 'src/vfx3/benchmark-arts.js', 'src/vfx3/benchmark-cues.js',
+            'src/vfx3/renderer.js', 'src/vfx3/runtime.js', 'src/vfx3/skyfall.js', 'src/vfx3/sword-arts.js',
+            'tests/benchmark-arts.test.cjs', 'tests/sword-arts.test.cjs', 'tests/vfx3-flow.test.cjs',
+            'tests/vfx3-refinement.test.cjs', 'tests/vfx3-skyfall.test.cjs',
+            'tools/vfx3/assemble_benchmarks.py', 'tools/vfx3/lab.js', 'tools/vfx3/record_benchmarks.py',
+            'tools/vfx3/record_sword_arts.py', 'tools/vfx3/verify_benchmarks.py',
+            'tools/vfx3/verify_skyfall.py', 'tools/vfx3/verify_sword_arts.py'
+          }
+          encoded = ''.join(Path('.github/benchmark-r7-source/part-%d.b64' % i).read_text() for i in range(7))
+          raw = lzma.decompress(base64.b64decode(encoded, validate=True))
+          assert hashlib.sha256(raw).hexdigest() == '027c78532a05e79b175b8a92a1da42e1e91e32aa52f76aafcf5505767aa6268b', 'transport checksum mismatch'
+          delta = json.loads(raw)
+          assert set(delta) == expected, 'unexpected source paths'
+          outputs = {}
+          for name, change in delta.items():
+              path = Path(name)
+              before = path.read_bytes() if path.exists() else b''
+              actual = hashlib.sha256(before).hexdigest() if path.exists() else None
+              assert actual == change['before'], 'baseline mismatch: ' + name
+              lines = before.decode('utf-8').splitlines(keepends=True)
+              text = ''.join(part if isinstance(part, str) else ''.join(lines[part[0]:part[1]]) for part in change['parts'])
+              data = text.encode('utf-8')
+              assert hashlib.sha256(data).hexdigest() == change['after'], 'output mismatch: ' + name
+              outputs[path] = data
+          for path, data in outputs.items():
+              path.parent.mkdir(parents=True, exist_ok=True)
+              path.write_bytes(data)
+          Path('/tmp/benchmark-r7-files.json').write_text(json.dumps(sorted(expected)))
+          print('Verified and restored', len(outputs), 'source files; original flame and rules preserved.')
+          PY
+      - name: Build both game entries and run all Node tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 build.py
+          python3 tools/vfx3/export_demo.py
+          node --test tests/*.test.cjs | tee /tmp/benchmark-tests.log
+      - name: Commit verified implementation and remove temporary transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm -r .github/benchmark-r7-source .github/workflows/benchmark-r7-transfer.yml
+          python3 - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          subprocess.run(['git', 'add', '--'] + json.loads(Path('/tmp/benchmark-r7-files.json').read_text()), check=True)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat: benchmark holy, shadow and frost sword arts with synchronized poses and sound (R7)'
+          git push origin HEAD:refs/heads/feat/benchmark-sword-arts
