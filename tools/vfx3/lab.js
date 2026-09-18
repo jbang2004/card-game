@@ -21,10 +21,12 @@ const css=document.createElement('style');css.textContent=`
 #vfxlab *{box-sizing:border-box}#vfxlab header{display:flex;gap:12px;justify-content:space-between;align-items:center;font-size:10px;letter-spacing:1px;color:#96b0bc;margin-bottom:10px}#vfxlab strong{font-weight:500;color:#e4dcc1;letter-spacing:1.3px}#vfxlab .skills{display:flex;gap:7px}#vfxlab button,#vfxlab select{border:1px solid #779ba63d;background:#263944;color:#dce8ef;border-radius:5px;padding:9px 10px;font:inherit;cursor:pointer;min-height:34px}#vfxlab button:hover{border-color:#bad3d9}#vfxlab .skills button{flex:1}#vfxlab button.active{background:#456273;border-color:#afc8cf;color:#fff}#vfxlab button:disabled{opacity:.4;cursor:wait}#vfxlab .row{display:flex;align-items:center;gap:9px;margin-top:9px}#vfxlab .row button{padding:5px 9px;min-width:35px}#vfxlab input[type=range]{flex:1;min-width:35px;accent-color:#adc4d5}#vfxlab .readout{font-variant-numeric:tabular-nums;min-width:44px;font-size:10px;color:#b2c9d6}#vfxlab .note{font-size:10px;color:#879da7;margin:8px 0 0;line-height:1.5}#vfxlab button.close{padding:2px 6px;min-height:22px;font-size:10px;background:transparent}#lab-title{position:fixed;right:27px;top:123px;z-index:8000;text-align:right;pointer-events:none;color:#dfebef;text-shadow:0 2px 6px #0008;font-family:Georgia,'Songti SC',serif;font-size:23px;letter-spacing:2px}#lab-title small{display:block;font:9px -apple-system,sans-serif;letter-spacing:2px;color:#9dbbce;margin-top:7px}@media(max-width:760px){#vfxlab{bottom:8px;padding:10px;width:calc(100vw - 18px)}#vfxlab header{font-size:9px;margin-bottom:7px}#vfxlab button{font-size:11px;padding:8px 6px}#vfxlab .note{font-size:9px}#lab-title{top:72px;right:15px;font-size:16px}}`;
 document.head.append(css);
 const title=document.createElement('div');title.id='lab-title';document.body.append(title);
-const bar=document.createElement('section');bar.id='vfxlab';bar.innerHTML=`<header><strong>EMBERFALL / R10 · IMPACT & CLARITY</strong><span id="lab-mode">真实对局 · 独立练习</span><button class="close" id="lab-close">收起 ×</button></header><div class="skills"><select id="lab-role" aria-label="选择角色与剑技" style="flex:2;min-width:0">${catalog.map(id=>`<option value="${id}">${titleFor(id)}</option>`).join('')}</select><button id="lab-cast">实际出招</button><button data-fx="breath">原版喷火</button><button id="lab-audio">声音：关</button></div><div class="row"><button id="lab-play" title="重播上一次的特效，不重复结算伤害">▶</button><button id="lab-step" title="逐帧">▸│</button><input id="lab-time" type="range" value="0" min="0" max="1000" step="1" aria-label="特效时间轴"><span class="readout" id="lab-readout">0.00s</span><select id="lab-speed" aria-label="慢放速度"><option value="1" selected>1×</option><option value=".5">½×</option><option value=".25">¼×</option></select><button id="lab-cycle">连播</button></div><p class="note">R10：实体轮廓 · 接触峰值 · 材质后果。实际攻击只结算一次；回看同步卡牌姿态与特效。</p>`;
+const bar=document.createElement('section');bar.id='vfxlab';bar.innerHTML=`<header><strong>EMBERFALL / R10.1 · CONTACT FIRST</strong><span id="lab-mode">真实对局 · 独立练习</span><button class="close" id="lab-close">收起 ×</button></header><div class="skills"><select id="lab-role" aria-label="选择角色与剑技" style="flex:2;min-width:0">${catalog.map(id=>`<option value="${id}">${titleFor(id)}</option>`).join('')}</select><button id="lab-cast">实际出招</button><button data-fx="breath">原版喷火</button><button id="lab-audio">声音：关</button></div><div class="row"><button id="lab-play" title="重播上一次的特效，不重复结算伤害">▶</button><button id="lab-step" title="逐帧">▸│</button><input id="lab-time" type="range" value="0" min="0" max="1000" step="1" aria-label="特效时间轴"><span class="readout" id="lab-readout">0.00s</span><select id="lab-speed" aria-label="慢放速度"><option value="1" selected>1×</option><option value=".5">½×</option><option value=".25">¼×</option></select><button id="lab-cycle">连播</button></div><p class="note">R10.1：先发射 → 命中 → 结霜。回看同步状态、血量、姿态与特效，不重新结算。</p>`;
 document.body.append(bar);
+const replayState=EmberReplayState.create(document);
 const $=id=>document.getElementById(id);let selected='archer',running=false,inspecting=false,t=0,lastFrame=0,duration=1000,generation=0,sequence=false;
 function fixture(kind){
+ replayState.clear();
  EmberFX.cancel(true);EmberFx2.mesh3d.resume();const g=EmberDebug.game;
  const id=kind==='slash'?'squire':kind;
  g.s.p.board=[];g.s.e.board=[];g.s.p.hand=[];g.s.p.mana=g.s.p.maxMana=10;g.s.active='p';g.s.phase='battle';g.s.e.secrets=[];g.s.p.weapon=null;g.s.p.attacks=0;g.s.p.hp=30;g.s.e.hp=30;
@@ -48,26 +50,27 @@ function actionFor(kind){const g=EmberDebug.game;
 function ui(){
  $('lab-time').max=duration;$('lab-time').value=t;$('lab-readout').textContent=(t/1000).toFixed(2)+'s';$('lab-play').textContent=running?'Ⅱ':'▶';
 }
-function stop(){generation++;running=false;sequence=false;inspecting=false;}
+function stop(){generation++;running=false;sequence=false;inspecting=false;replayState.restore();}
 async function cast(kind,cycle=false){
  const gen=++generation;running=false;inspecting=false;selected=kind;sequence=cycle;if(catalog.includes(kind))$('lab-role').value=kind;
  bar.querySelectorAll('[data-fx]').forEach(b=>b.classList.toggle('active',b.dataset.fx===kind));
  title.innerHTML=titleFor(kind)+`<small>LIVE GAME / REAL-TIME MESH VFX</small>`;$('lab-mode').textContent='真实攻击 · 规则结算';
- fixture(kind);const g=EmberDebug.game;const before=EmberFx2.mesh3d.trace.length;
+ fixture(kind);const g=EmberDebug.game;const before=EmberFx2.mesh3d.trace.length,viewBefore=replayState.capture();
  Emberfall.act(()=>g.dispatch(actionFor(kind)));
  for(let i=0;i<160;i++){await wait(25);if(gen!==generation)return false;if(EmberFx2.mesh3d.trace.length>before&&!EmberFX.busy)break;}
  if(gen!==generation)return false;
- const d=kind==='demise'?EmberFx2.mesh3d.lastUtility:EmberFx2.mesh3d.last;if(!d||EmberFx2.mesh3d.trace.length<=before){$('lab-mode').textContent='本次没有可回放的目标特效';return false;}duration=kind==='demise'?d.tail:Math.max(...EmberFx2.mesh3d.lastGroup.map(x=>x.impact-EmberFx2.mesh3d.lastGroup[0].start+x.tail));t=duration;ui();
+ const d=kind==='demise'?EmberFx2.mesh3d.lastUtility:EmberFx2.mesh3d.last;if(!d||EmberFx2.mesh3d.trace.length<=before){$('lab-mode').textContent='本次没有可回放的目标特效';return false;}duration=kind==='demise'?d.tail:Math.max(...EmberFx2.mesh3d.lastGroup.map(x=>x.impact-EmberFx2.mesh3d.lastGroup[0].start+x.tail));t=duration;replayState.set(viewBefore,replayState.capture(),kind==='demise'?[]:EmberFx2.mesh3d.lastGroup);ui();
  if(cycle){await wait(850);if(gen===generation){const ks=['archer','wolf','berserker','huntress','fireball','frostbolt','nova','lifedrain','renew','shield','wisdom','paladin','assassin','frostking'],n=ks.indexOf(kind)+1;if(n<ks.length)return cast(ks[n],true);sequence=false;}}
  return true;
 }
-function seek(ms){running=false;EmberFX.cancel(true);inspecting=true;t=Math.max(0,Math.min(duration,Number(ms)||0));(selected==='demise'?EmberFx2.mesh3d.replayUtility:EmberFx2.mesh3d.replay)(t);$('lab-mode').textContent='逐帧回看 · 不重复结算';ui();}
+function replayFrame(ms){replayState.seek(ms);return (selected==='demise'?EmberFx2.mesh3d.replayUtility:EmberFx2.mesh3d.replay)(ms);}
+function seek(ms){running=false;EmberFX.cancel(true);inspecting=true;t=Math.max(0,Math.min(duration,Number(ms)||0));replayFrame(t);$('lab-mode').textContent='逐帧回看 · 不重复结算';ui();}
 function play(){
  EmberFx2.benchmarkFeedback?.resetAudio();EmberFx2.remasterFeedback?.resetAudio();
  if(!EmberFx2.mesh3d.last)return cast(selected);if(running){running=false;EmberAudio.stop();ui();return;}
- generation++;sequence=false;EmberFX.cancel(true);inspecting=true;if(t>=duration)t=0;running=true;lastFrame=performance.now();$('lab-mode').textContent='完整姿态回看 · 不重复伤害';ui();
+ generation++;sequence=false;EmberFX.cancel(true);inspecting=true;if(t>=duration)t=0;replayFrame(t);running=true;lastFrame=performance.now();$('lab-mode').textContent='完整姿态回看 · 不重复伤害';ui();
 }
-function tick(now){if(running){const prev=t===0?-.001:t;t=Math.min(duration,t+Math.min(80,now-lastFrame)*Number($('lab-speed').value));(selected==='demise'?EmberFx2.mesh3d.replayUtility:EmberFx2.mesh3d.replay)(t);
+function tick(now){if(running){const prev=t===0?-.001:t;t=Math.min(duration,t+Math.min(80,now-lastFrame)*Number($('lab-speed').value));replayFrame(t);
 if(Number($('lab-speed').value)===1&&selected!=='demise'&&EmberFx2.mesh3d.last){
  const d=EmberFx2.mesh3d.last;
  EmberFx2.benchmarkFeedback?.play({...d,start:0,impact:d.impact-d.start},prev,t);
@@ -80,6 +83,6 @@ $('lab-close').onclick=()=>{stop();EmberFX.cancel(true);bar.remove();title.remov
 let audioOn=false;EmberAudio.toggle(false);
 $('lab-audio').onclick=async()=>{audioOn=!audioOn;EmberAudio.toggle(audioOn);if(audioOn)await EmberAudio.unlock();$('lab-audio').textContent=audioOn?'声音：开':'声音：关';};
 document.addEventListener('visibilitychange',()=>{if(document.hidden){running=false;ui();}});
-window.VFXLab={cast,seek,play,fixture,stop,catalog,actionFor,get duration(){return duration},get selected(){return selected},snapshot:()=>({selected,t,duration,running,inspecting,mesh:EmberFx2.mesh3d.diagnostics()}),hide:v=>{bar.hidden=!!v;title.hidden=!!v;}};
+window.VFXLab={cast,seek,play,fixture,stop,catalog,actionFor,get duration(){return duration},get selected(){return selected},snapshot:()=>({selected,t,duration,running,inspecting,replayState:{active:replayState.active,checkpoints:replayState.checkpoints},mesh:EmberFx2.mesh3d.diagnostics()}),hide:v=>{bar.hidden=!!v;title.hidden=!!v;}};
 fixture('archer');title.innerHTML='万象 · 战斗演武<small>R9 / IMPACT · MATTER · MOTION</small>';ui();
 })();
