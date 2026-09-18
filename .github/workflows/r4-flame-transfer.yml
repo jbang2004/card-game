@@ -18,7 +18,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD^)" = b0ec30d1f4de36ad9a99d7447d1585d7ed722280
+          test "$(git rev-parse HEAD^)" = 194ca2fdc60e6574dfef6f8e55b2f0c40921c4ed
           python3 - <<'PY'
           import base64, hashlib, json, lzma
           from pathlib import Path
@@ -39,17 +39,31 @@ jobs:
               content = text.encode('utf-8')
               assert hashlib.sha256(content).hexdigest() == change['after'], 'output checksum mismatch: ' + name
               outputs[path] = content
+          path = Path('src/template.html')
+          old = '<script>/*MESH_REFERENCE*/\n/*MESH_RENDERER*/</script>'
+          text = outputs[path].decode()
+          assert text.count(old) == 1
+          outputs[path] = text.replace(old, '<script>/*MESH_REFERENCE*/</script><script>/*MESH_RENDERER*/</script>').encode()
+          assert hashlib.sha256(outputs[path]).hexdigest() == '4d071083c792841b431b561c1d23824550ce8d15f4a4d22b619b7a6e29628f64'
+          path = Path('tests/vfx3-reference-flame.test.cjs')
+          old = " const host=fs.readFileSync('src/vfx3/runtime.js','utf8');assert.ok(host.includes('Ref.sample(clock.time'));assert.ok(host.includes('plumes.sort'));"
+          text = outputs[path].decode()
+          assert text.count(old) == 1
+          new = " for(const token of ['MESH_REFERENCE','MESH_RENDERER','MESH_RUNTIME'])assert.ok(t.includes('<script>/*'+token+'*/</script>'),'one script token per tag: '+token);\n" + old
+          outputs[path] = text.replace(old, new).encode()
+          assert hashlib.sha256(outputs[path]).hexdigest() == '54920a70f242e4053a25d46f8015b8dd1aea8a349815ddb54d0092e78e07a328'
           for path, content in outputs.items():
               path.parent.mkdir(parents=True, exist_ok=True)
               path.write_bytes(content)
           print('Verified and restored', len(outputs), 'files; no rule or card data changes.')
           PY
       - name: Build and run all Node tests
+        shell: bash
         run: |
+          set -euo pipefail
           python3 build.py
           python3 tools/vfx3/export_demo.py
-          node --test tests/*.test.cjs > /tmp/r4-node-tests.txt
-          tail -12 /tmp/r4-node-tests.txt
+          node --test tests/*.test.cjs | tee /tmp/r4-node-tests.txt
       - name: Commit sources, remove transport, push feature branch only
         shell: bash
         run: |
