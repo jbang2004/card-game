@@ -1,0 +1,63 @@
+name: One-shot verified swordfall source transfer
+on:
+  push:
+    branches: [feat/vertical-swordfall]
+    paths: ['.github/swordfall-source/**', '.github/workflows/swordfall-transfer.yml']
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.repository == 'jbang2004/card-game' && github.ref == 'refs/heads/feat/vertical-swordfall'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Restore exact tested sources with baseline and output checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = 9e5b06203fa020b479a7f174a811801c316e7dd5
+          python3 - <<'PY'
+          import base64, hashlib, json, zlib
+          from pathlib import Path
+          expected = {'src/effects.js', 'src/presentation/fx-stage.js', 'src/vfx3/runtime.js', 'tests/vfx3-flow.test.cjs', 'tests/vfx3-swordfall.test.cjs', 'tools/vfx3/lab.js', 'tools/vfx3/verify_swordfall.py', 'tools/vfx3/record_swordfall.py', 'docs/design/SWORDFALL_R5.md', 'docs/design/BATTLE_PRESENTATION_V2.md', 'docs/qa/swordfall-r5.json'}
+          encoded = ''.join(Path('.github/swordfall-source/part-%d.b64' % i).read_text() for i in range(5))
+          raw = zlib.decompress(base64.b64decode(encoded, validate=True))
+          assert hashlib.sha256(raw).hexdigest() == '2ffd77dc0bdb4825dc7aec3799631c91c877f72b0ed014fe1f303a2dd37210f1', 'transport checksum mismatch'
+          delta = json.loads(raw)
+          assert set(delta) == expected, 'unexpected file scope'
+          outputs = {}
+          for name, change in delta.items():
+              path = Path(name)
+              before = path.read_bytes() if path.exists() else b''
+              actual = hashlib.sha256(before).hexdigest() if path.exists() else None
+              assert actual == change['before'], 'baseline mismatch: ' + name
+              lines = before.decode('utf-8').splitlines(keepends=True)
+              text = ''.join(part if isinstance(part, str) else ''.join(lines[part[0]:part[1]]) for part in change['parts'])
+              data = text.encode('utf-8')
+              assert hashlib.sha256(data).hexdigest() == change['after'], 'output mismatch: ' + name
+              outputs[path] = data
+          for path, data in outputs.items():
+              path.parent.mkdir(parents=True, exist_ok=True)
+              path.write_bytes(data)
+          print('Verified and restored', len(outputs), 'files. Original flame and renderer unchanged.')
+          PY
+      - name: Build both entries and run all Node tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 build.py
+          python3 tools/vfx3/export_demo.py
+          node --test tests/*.test.cjs | tee /tmp/swordfall-tests.log
+      - name: Commit implementation and remove one-shot transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm -r .github/swordfall-source .github/workflows/swordfall-transfer.yml
+          git add src/effects.js src/presentation/fx-stage.js src/vfx3/runtime.js tests/vfx3-flow.test.cjs tests/vfx3-swordfall.test.cjs tools/vfx3/lab.js tools/vfx3/verify_swordfall.py tools/vfx3/record_swordfall.py docs/design/SWORDFALL_R5.md docs/design/BATTLE_PRESENTATION_V2.md docs/qa/swordfall-r5.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat: vertical offscreen swordfall with card-local fractures (R5)'
+          git push origin HEAD:refs/heads/feat/vertical-swordfall
