@@ -1,0 +1,624 @@
+{
+  "revision": "R8",
+  "baseline": "9aa2d9baa835307b958183337ef6dd4ceab583f2 (R7 source package)",
+  "node": {
+    "total": 370,
+    "passed": 362,
+    "skipped": 8,
+    "failed": 0,
+    "log": "node-tests-r8.txt"
+  },
+  "browser": {
+    "checks": [
+      {
+        "name": "user gesture enables existing audio mixer",
+        "passed": true
+      },
+      {
+        "name": "paladin: dispatch through real game rules",
+        "passed": true
+      },
+      {
+        "name": "paladin: identity and source/target references",
+        "passed": true
+      },
+      {
+        "name": "paladin: exactly one new visual instance",
+        "passed": true
+      },
+      {
+        "name": "paladin: original single damage amount",
+        "passed": true
+      },
+      {
+        "name": "paladin: four dedicated audio cues scheduled once",
+        "passed": true
+      },
+      {
+        "name": "paladin: audio deadline equals visual contact",
+        "passed": true
+      },
+      {
+        "name": "paladin:charge clean GL frame",
+        "passed": true
+      },
+      {
+        "name": "paladin:entry clean GL frame",
+        "passed": true
+      },
+      {
+        "name": "paladin:impact clean GL frame",
+        "passed": true
+      },
+      {
+        "name": "paladin:fracture clean GL frame",
+        "passed": true
+      },
+      {
+        "name": "paladin:residue clean GL frame",
+        "passed": true
+      },
+      {
+        "name": "paladin: scrubbing preserves complete rule state",
+        "passed": true
+      },
+      {
+        "name": "paladin: scrubbing emits no additional sound",
+        "passed": true
+      },
+      {
+        "name": "paladin: shared pose controller owns source and target",
+        "passed": true
+      },
+      {
+        "name": "paladin: source/target rigidity (no scale/squash)",
+        "passed": true
+      },
+      {
+        "name": "paladin: atomic draw/read repeats identical GPU pixels",
+        "passed": true
+      },
+      {
+        "name": "paladin: all effects and pose ownership end cleanly",
+        "passed": true
+      },
+      {
+        "name": "paladin: no mixer runtime failures",
+        "passed": true
+      },
+      {
+        "name": "assassin: dispatch through real game rules",
+        "passed": true
+      },
+      {
+        "name": "assassin: identity and source/target references",
+        "passed": true
+      },
+      {
+        "name": "assassin: exactly one new visual instance",
+        "passed": true
+      },
+      {
+        "name": "assassin: original single damage amount",
+        "passed": true
+      },
+      {
+        "name": "assassin: four dedicated audio cues scheduled once",
+        "passed": true
+      },
+      {
+        "name": "assassin: audio deadline equals visual contact",
+        "passed": true
+      },
+      {
+        "name": "assassin:charge clean GL frame",
+        "passed": true
+      },
+      {
+        "name": "assassin:entry clean GL frame",
+        "passed": true
+      },
+      {
+        "name": "assassin:impact clean GL frame",
+        "passed": true
+      },
+      {
+        "name": "assassin:fracture clean GL frame",
+        "passed": true
+      },
+      {
+        "name": "assassin:residue clean GL frame",
+        "passed": true
+      },
+      {
+        "name": "assassin: scrubbing preserves complete rule state",
+        "passed": true
+      },
+      {
+        "name": "assassin: scrubbing emits no additional sound",
+        "passed": true
+      },
+      {
+        "name": "assassin: shared pose controller owns source and target",
+        "passed": true
+      },
+      {
+        "name": "assassin: source/target rigidity (no scale/squash)",
+        "passed": true
+      },
+      {
+        "name": "assassin: atomic draw/read repeats identical GPU pixels",
+        "passed": true
+      },
+      {
+        "name": "assassin: all effects and pose ownership end cleanly",
+        "passed": true
+      },
+      {
+        "name": "assassin: no mixer runtime failures",
+        "passed": true
+      },
+      {
+        "name": "frostking: dispatch through real game rules",
+        "passed": true
+      },
+      {
+        "name": "frostking: identity and source/target references",
+        "passed": true
+      },
+      {
+        "name": "frostking: exactly one new visual instance",
+        "passed": true
+      },
+      {
+        "name": "frostking: original single damage amount",
+        "passed": true
+      },
+      {
+        "name": "frostking: four dedicated audio cues scheduled once",
+        "passed": true
+      },
+      {
+        "name": "frostking: audio deadline equals visual contact",
+        "passed": true
+      },
+      {
+        "name": "frostking:charge clean GL frame",
+        "passed": true
+      },
+      {
+        "name": "frostking:entry clean GL frame",
+        "passed": true
+      },
+      {
+        "name": "frostking:impact clean GL frame",
+        "passed": true
+      },
+      {
+        "name": "frostking:fracture clean GL frame",
+        "passed": true
+      },
+      {
+        "name": "frostking:residue clean GL frame",
+        "passed": true
+      },
+      {
+        "name": "frostking: scrubbing preserves complete rule state",
+        "passed": true
+      },
+      {
+        "name": "frostking: scrubbing emits no additional sound",
+        "passed": true
+      },
+      {
+        "name": "frostking: shared pose controller owns source and target",
+        "passed": true
+      },
+      {
+        "name": "frostking: source/target rigidity (no scale/squash)",
+        "passed": true
+      },
+      {
+        "name": "frostking: atomic draw/read repeats identical GPU pixels",
+        "passed": true
+      },
+      {
+        "name": "frostking: all effects and pose ownership end cleanly",
+        "passed": true
+      },
+      {
+        "name": "frostking: no mixer runtime failures",
+        "passed": true
+      },
+      {
+        "name": "pause stops all playback voices",
+        "passed": true
+      },
+      {
+        "name": "pause freezes pose time",
+        "passed": true
+      },
+      {
+        "name": "slow preview is silent",
+        "passed": true
+      },
+      {
+        "name": "pause and speed changes do not change damage",
+        "passed": true
+      },
+      {
+        "name": "cancel leaves no pending audio voice",
+        "passed": true
+      },
+      {
+        "name": "cancel releases poses and mesh instances",
+        "passed": true
+      },
+      {
+        "name": "breath: unchanged real attack still works",
+        "passed": true
+      },
+      {
+        "name": "breath: unchanged original damage",
+        "passed": true
+      },
+      {
+        "name": "breath: clean retained renderer path",
+        "passed": true
+      },
+      {
+        "name": "lightning: unchanged real attack still works",
+        "passed": true
+      },
+      {
+        "name": "lightning: unchanged original damage",
+        "passed": true
+      },
+      {
+        "name": "lightning: clean retained renderer path",
+        "passed": true
+      },
+      {
+        "name": "squire: unchanged real attack still works",
+        "passed": true
+      },
+      {
+        "name": "squire: unchanged original damage",
+        "passed": true
+      },
+      {
+        "name": "squire: clean retained renderer path",
+        "passed": true
+      },
+      {
+        "name": "low quality preserves benchmark identity",
+        "passed": true
+      },
+      {
+        "name": "low quality has valid output",
+        "passed": true
+      },
+      {
+        "name": "reduced motion clears both poses and new effects",
+        "passed": true
+      },
+      {
+        "name": "desktop has no uncaught JavaScript errors",
+        "passed": true
+      },
+      {
+        "name": "390 paladin: real dispatch",
+        "passed": true
+      },
+      {
+        "name": "390 paladin: correct identity and damage",
+        "passed": true
+      },
+      {
+        "name": "390 paladin: valid mesh output",
+        "passed": true
+      },
+      {
+        "name": "390 paladin: pose cleanup/no rule change",
+        "passed": true
+      },
+      {
+        "name": "390 assassin: real dispatch",
+        "passed": true
+      },
+      {
+        "name": "390 assassin: correct identity and damage",
+        "passed": true
+      },
+      {
+        "name": "390 assassin: valid mesh output",
+        "passed": true
+      },
+      {
+        "name": "390 assassin: pose cleanup/no rule change",
+        "passed": true
+      },
+      {
+        "name": "390 frostking: real dispatch",
+        "passed": true
+      },
+      {
+        "name": "390 frostking: correct identity and damage",
+        "passed": true
+      },
+      {
+        "name": "390 frostking: valid mesh output",
+        "passed": true
+      },
+      {
+        "name": "390 frostking: pose cleanup/no rule change",
+        "passed": true
+      },
+      {
+        "name": "390: no horizontal page overflow",
+        "passed": true
+      },
+      {
+        "name": "390: no JavaScript errors",
+        "passed": true
+      },
+      {
+        "name": "844 paladin: real dispatch",
+        "passed": true
+      },
+      {
+        "name": "844 paladin: correct identity and damage",
+        "passed": true
+      },
+      {
+        "name": "844 paladin: valid mesh output",
+        "passed": true
+      },
+      {
+        "name": "844 paladin: pose cleanup/no rule change",
+        "passed": true
+      },
+      {
+        "name": "844 assassin: real dispatch",
+        "passed": true
+      },
+      {
+        "name": "844 assassin: correct identity and damage",
+        "passed": true
+      },
+      {
+        "name": "844 assassin: valid mesh output",
+        "passed": true
+      },
+      {
+        "name": "844 assassin: pose cleanup/no rule change",
+        "passed": true
+      },
+      {
+        "name": "844 frostking: real dispatch",
+        "passed": true
+      },
+      {
+        "name": "844 frostking: correct identity and damage",
+        "passed": true
+      },
+      {
+        "name": "844 frostking: valid mesh output",
+        "passed": true
+      },
+      {
+        "name": "844 frostking: pose cleanup/no rule change",
+        "passed": true
+      },
+      {
+        "name": "844: no horizontal page overflow",
+        "passed": true
+      },
+      {
+        "name": "844: no JavaScript errors",
+        "passed": true
+      }
+    ],
+    "passed": 102,
+    "failed": 0,
+    "descriptors": {
+      "paladin": {
+        "swordStyle": "judgment",
+        "sourceCid": "paladin",
+        "sourceRef": {
+          "side": "p",
+          "uid": "u83"
+        },
+        "targetRef": {
+          "side": "e",
+          "uid": "u82"
+        },
+        "kind": "slash",
+        "sourceKind": "slash",
+        "from": {
+          "x": 667.999979654948,
+          "y": 458.999989827474,
+          "w": 115.99995930989584,
+          "h": 145.99999321831598,
+          "left": 610,
+          "top": 385.999993218316
+        },
+        "to": {
+          "x": 931.999986436632,
+          "y": 294.9999830457899,
+          "w": 116.00002712673611,
+          "h": 145.99999321831598,
+          "left": 873.9999728732639,
+          "top": 221.99998643663196
+        },
+        "start": 20859.600000000093,
+        "impact": 21119.600000000093,
+        "hold": 50,
+        "tail": 1440,
+        "seed": 388,
+        "tier": 2,
+        "scale": 1,
+        "tint": [
+          0.86,
+          0.93,
+          1
+        ],
+        "id": 1
+      },
+      "assassin": {
+        "swordStyle": "night",
+        "sourceCid": "assassin",
+        "sourceRef": {
+          "side": "p",
+          "uid": "u89"
+        },
+        "targetRef": {
+          "side": "e",
+          "uid": "u88"
+        },
+        "kind": "slash",
+        "sourceKind": "slash",
+        "from": {
+          "x": 667.999979654948,
+          "y": 458.999989827474,
+          "w": 115.99995930989584,
+          "h": 145.99999321831598,
+          "left": 610,
+          "top": 385.999993218316
+        },
+        "to": {
+          "x": 931.999986436632,
+          "y": 294.9999830457899,
+          "w": 116.00002712673611,
+          "h": 145.99999321831598,
+          "left": 873.9999728732639,
+          "top": 221.99998643663196
+        },
+        "start": 32600.600000000093,
+        "impact": 32860.60000000009,
+        "hold": 50,
+        "tail": 720,
+        "seed": 485,
+        "tier": 2,
+        "scale": 1,
+        "tint": [
+          0.86,
+          0.93,
+          1
+        ],
+        "id": 2
+      },
+      "frostking": {
+        "swordStyle": "frost",
+        "sourceCid": "frostking",
+        "sourceRef": {
+          "side": "p",
+          "uid": "u95"
+        },
+        "targetRef": {
+          "side": "e",
+          "uid": "u94"
+        },
+        "kind": "slash",
+        "sourceKind": "slash",
+        "from": {
+          "x": 667.999979654948,
+          "y": 458.999989827474,
+          "w": 115.99995930989584,
+          "h": 145.99999321831598,
+          "left": 610,
+          "top": 385.999993218316
+        },
+        "to": {
+          "x": 931.999986436632,
+          "y": 294.9999830457899,
+          "w": 116.00002712673611,
+          "h": 145.99999321831598,
+          "left": 873.9999728732639,
+          "top": 221.99998643663196
+        },
+        "start": 41355.70000000007,
+        "impact": 41695.70000000007,
+        "hold": 90,
+        "tail": 1710,
+        "seed": 582,
+        "tier": 3,
+        "scale": 1,
+        "tint": [
+          0.86,
+          0.93,
+          1
+        ],
+        "id": 3
+      }
+    },
+    "errors": [],
+    "environment": {
+      "origin": "in-memory inspection HTML; not HTTP/file storage validation",
+      "full_e2e": false,
+      "hardware_gpu_verified": false,
+      "real_mobile_verified": false,
+      "safari_verified": false,
+      "renderer": "ANGLE (Mesa, llvmpipe (LLVM 19.1.7 256 bits), OpenGL 4.5)",
+      "version": "WebGL 1.0 (OpenGL ES 2.0 Chromium)",
+      "drawCalls": 0,
+      "vertices": 0,
+      "particles": 0,
+      "hdr": true,
+      "mobile_layouts": "independent 390x844 and 844x390; not orientation-switch certification"
+    }
+  },
+  "unchanged": {
+    "flame": {
+      "identical": true,
+      "sha256": "6a08f6a19f9a3d042b4cf7d2fc125d3c73220e644b729bb055128c481eff84ad"
+    },
+    "smoke": {
+      "identical": true,
+      "sha256": "2d58684cd1343ffd26b3f9f881ae6f491a5fd934a3fae8ad18a4ee484dca4e8c"
+    },
+    "post": {
+      "identical": true,
+      "sha256": "a161782fd4a9596a15654afa05b4fda7ca48e45ccdf94d3f7e5127853b7700ee"
+    },
+    "src/vfx3/reference-flame.js": {
+      "identical": true,
+      "sha256": "13760d9670d88ec107a0e5830411f8f4c467ad1a9897853d6e576a27e32597e8"
+    },
+    "src/vfx3/benchmark-cues.js": {
+      "identical": true,
+      "sha256": "f1b7b3fbb753bd16692f7b138f8a732818cfaf3226df2e187bd6c6e755c66d37"
+    },
+    "src/vfx3/runtime.js": {
+      "identical": true,
+      "sha256": "9772043402b89b8282d82c547be5b3caee312c2a0412f4d81112e522fb4131b8"
+    },
+    "src/engine.js": {
+      "identical": true,
+      "sha256": "137f55810e5657c8aed232805821e42ba7aa1d7a1ddfd456b0982dee425c8c82"
+    },
+    "src/content/cards.js": {
+      "identical": true,
+      "sha256": "652aa68c033e08e9aab4198d27bfc75c08359828bffb36f3f555bdc87a36262f"
+    },
+    "src/content/campaign.js": {
+      "identical": true,
+      "sha256": "b5075d1f560b54d5ebb5f8bfc3a8b074540c146eb8e5a3fd5cbcdcdb389ed6bf"
+    },
+    "src/presentation/timing.js": {
+      "identical": true,
+      "sha256": "35405a98b161d7f89d97ba1ecea61ea8af246c49f1c71d60d981ed18d2347fb7"
+    }
+  },
+  "http_navigation": {
+    "attempted": true,
+    "result": "blocked by browser policy: ERR_BLOCKED_BY_ADMINISTRATOR; not certified"
+  },
+  "remote_write": false,
+  "limitations": [
+    "No full E2E suite",
+    "No real phone / Safari / hardware performance testing",
+    "Independent mobile viewport tests only; not continuous rotation",
+    "Procedural runtime replay, not an automated aesthetic quality score"
+  ]
+}

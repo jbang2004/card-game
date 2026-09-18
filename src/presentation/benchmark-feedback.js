@@ -1,4 +1,4 @@
-/* R7: DOM articulation sampled by the same host frame as mesh VFX.
+/* R8: DOM articulation sampled by the same host frame as mesh VFX.
  * Owns only inline transform/filter; layout translate, damage and state stay with
  * the existing director. No puppet/model replacement and no permanent frost state.
  */
@@ -40,7 +40,7 @@ const EmberBenchmarkFeedback=(()=>{
     for(const [ref,pose,light] of [[d.sourceRef,p.source,p.sourceLight],[d.targetRef,p.target,p.targetLight]]){
      const el=element(ref);if(!el)continue;used.add(el);
      const v=values.get(el)||{x:0,y:0,angle:0,light:0,target:false};
-     v.target ||= ref===d.targetRef;v.x+=pose[0];v.y+=pose[1];v.angle+=ref===d.targetRef?0:pose[2];v.light=Math.max(v.light,light);values.set(el,v);
+     v.target ||= ref===d.targetRef;v.x+=pose[0];v.y+=pose[1];v.angle+=pose[2];v.light=Math.max(v.light,light);values.set(el,v);
     }
     if(!manual)schedule(d);
    }
