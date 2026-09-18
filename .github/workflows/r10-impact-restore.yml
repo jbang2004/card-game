@@ -1,0 +1,63 @@
+name: Restore verified R10 impact sources once
+on:
+  push:
+    branches: [feat/full-vfx-remaster]
+    paths: ['.github/r10-source/**', '.github/workflows/r10-impact-restore.yml']
+permissions:
+  contents: write
+jobs:
+  restore:
+    if: github.repository == 'jbang2004/card-game' && github.ref == 'refs/heads/feat/full-vfx-remaster'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 2
+      - name: Verify immutable baseline and restore exact tested sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = 412e135da6645ece1c8ba31d56663b1099222fcf
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64, hashlib, json, zlib
+          expected = {'docs/design/IMPACT_CLARITY_R10.md', 'docs/qa/impact-r10.json', 'src/presentation/remaster-feedback.js', 'src/vfx3/remaster-arts.js', 'src/vfx3/runtime.js', 'tests/impact-r10.test.cjs', 'tools/vfx3/assemble_impact.py', 'tools/vfx3/capture_impact.py', 'tools/vfx3/lab.js'}
+          encoded = ''.join(Path('.github/r10-source/part-%d.b64' % i).read_text() for i in range(11))
+          raw = zlib.decompress(base64.b64decode(encoded, validate=True))
+          assert hashlib.sha256(raw).hexdigest() == 'cd350d96a12d048b8ca286222159b584535413b9af1eec55f6e04d9ac04cc02f'
+          delta = json.loads(raw)
+          assert set(delta) == expected
+          outputs = {}
+          for name, change in delta.items():
+              path = Path(name)
+              before = path.read_bytes() if path.exists() else b''
+              digest = hashlib.sha256(before).hexdigest() if path.exists() else None
+              assert digest == change['before'], 'Baseline differs: ' + name
+              lines = before.decode('utf-8').splitlines(keepends=True)
+              text = ''.join(part if isinstance(part, str) else ''.join(lines[part[0]:part[1]]) for part in change['parts'])
+              data = text.encode('utf-8')
+              assert hashlib.sha256(data).hexdigest() == change['after'], 'Output differs: ' + name
+              outputs[path] = data
+          for path, data in outputs.items():
+              path.parent.mkdir(parents=True, exist_ok=True)
+              path.write_bytes(data)
+          print('Verified', len(outputs), 'files; no rule, art, approved flame or renderer changes.')
+          PY
+      - name: Build both game entries and run all Node tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 build.py
+          python3 tools/vfx3/export_demo.py
+          node --test tests/*.test.cjs | tee /tmp/impact-r10-node.log
+      - name: Commit exact source and remove one-shot transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm -r .github/r10-source .github/workflows/r10-impact-restore.yml
+          git add docs/design/IMPACT_CLARITY_R10.md docs/qa/impact-r10.json src/presentation/remaster-feedback.js src/vfx3/remaster-arts.js src/vfx3/runtime.js tests/impact-r10.test.cjs tools/vfx3/assemble_impact.py tools/vfx3/capture_impact.py tools/vfx3/lab.js
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat: R10 readable impact silhouettes, directional contact and controlled crowd glow'
+          git push origin HEAD:refs/heads/feat/full-vfx-remaster
