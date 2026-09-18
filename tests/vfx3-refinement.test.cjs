@@ -6,9 +6,9 @@ function geometryRuntime(){
  const ctx={console,Math,Float32Array,performance:{now:()=>0}};ctx.window=ctx;vm.createContext(ctx);
  const core=fs.readFileSync('src/vfx3/renderer.js','utf8').split('(function(X)')[0];vm.runInContext(core,ctx);
  ctx.Ember3D.Renderer=class{constructor(){this.geo={plane:{}};this.dynamic={};}mesh(data){return{data,n:data.length/8}}resize(){}camera(){}};
- vm.runInContext(fs.readFileSync('src/vfx3/runtime.js','utf8'),ctx);return ctx.EmberVFX3.create({});
+ vm.runInContext(fs.readFileSync('src/vfx3/skyfall.js','utf8'),ctx);vm.runInContext(fs.readFileSync('src/vfx3/runtime.js','utf8'),ctx);return ctx.EmberVFX3.create({});
 }
-test('sky cleave accelerates down, holds contact, then damps into recovery',()=>{
+test('sky strike accelerates down, holds contact, then fades in place',()=>{
  const d=desc('slash'),a=E.cleaveMotion(d,.07),b=E.cleaveMotion(d,.13),c=E.cleaveMotion(d,.18);
  assert.ok(a.drop<b.drop&&b.drop<c.drop);assert.equal(c.drop,1);assert.equal(c.angle,Math.PI);
  for(const t of [.18,.20,.225]){const s=E.cleaveMotion(d,t);assert.equal(s.drop,1);assert.equal(s.angle,Math.PI);}

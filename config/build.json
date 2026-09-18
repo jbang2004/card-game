@@ -82,5 +82,6 @@
   "SKIN_SLATE_CONSOLE": "presentation/skins/slate/console.css",
   "MESH_RENDERER": "vfx3/renderer.js",
   "MESH_RUNTIME": "vfx3/runtime.js",
-  "MESH_REFERENCE": "vfx3/reference-flame.js"
+  "MESH_REFERENCE": "vfx3/reference-flame.js",
+  "MESH_SKYFALL": "vfx3/skyfall.js"
 }

@@ -1,0 +1,211 @@
+{
+  "checks": [
+    {
+      "name": "breath real rules emit exactly one 3D instance",
+      "passed": true
+    },
+    {
+      "name": "breath single authoritative damage",
+      "passed": true
+    },
+    {
+      "name": "breath frame -90 GL clean",
+      "passed": true
+    },
+    {
+      "name": "breath frame +0 GL clean",
+      "passed": true
+    },
+    {
+      "name": "breath frame +45 GL clean",
+      "passed": true
+    },
+    {
+      "name": "breath frame +160 GL clean",
+      "passed": true
+    },
+    {
+      "name": "breath frame +500 GL clean",
+      "passed": true
+    },
+    {
+      "name": "breath seek does not replay rules",
+      "passed": true
+    },
+    {
+      "name": "breath particles cleaned at end",
+      "passed": true
+    },
+    {
+      "name": "lightning real rules emit exactly one 3D instance",
+      "passed": true
+    },
+    {
+      "name": "lightning single authoritative damage",
+      "passed": true
+    },
+    {
+      "name": "lightning frame -90 GL clean",
+      "passed": true
+    },
+    {
+      "name": "lightning frame +0 GL clean",
+      "passed": true
+    },
+    {
+      "name": "lightning frame +45 GL clean",
+      "passed": true
+    },
+    {
+      "name": "lightning frame +160 GL clean",
+      "passed": true
+    },
+    {
+      "name": "lightning frame +500 GL clean",
+      "passed": true
+    },
+    {
+      "name": "lightning seek does not replay rules",
+      "passed": true
+    },
+    {
+      "name": "lightning particles cleaned at end",
+      "passed": true
+    },
+    {
+      "name": "slash real rules emit exactly one 3D instance",
+      "passed": true
+    },
+    {
+      "name": "slash single authoritative damage",
+      "passed": true
+    },
+    {
+      "name": "slash frame -90 GL clean",
+      "passed": true
+    },
+    {
+      "name": "slash frame +0 GL clean",
+      "passed": true
+    },
+    {
+      "name": "slash frame +45 GL clean",
+      "passed": true
+    },
+    {
+      "name": "slash frame +160 GL clean",
+      "passed": true
+    },
+    {
+      "name": "slash frame +500 GL clean",
+      "passed": true
+    },
+    {
+      "name": "slash seek does not replay rules",
+      "passed": true
+    },
+    {
+      "name": "slash particles cleaned at end",
+      "passed": true
+    },
+    {
+      "name": "screen-top entry: tip initially above viewport",
+      "passed": true
+    },
+    {
+      "name": "no horizontal drift through flight and hold",
+      "passed": true
+    },
+    {
+      "name": "rigid dimensions across all frames",
+      "passed": true
+    },
+    {
+      "name": "strictly downward orientation",
+      "passed": true
+    },
+    {
+      "name": "no in-screen anticipation sword",
+      "passed": true
+    },
+    {
+      "name": "sword lands in card artwork, not at feet",
+      "passed": true
+    },
+    {
+      "name": "3D layer replay PNG is byte-identical (ambient UI excluded)",
+      "passed": true
+    },
+    {
+      "name": "replay keeps battle state identical",
+      "passed": true
+    },
+    {
+      "name": "no old attacking-card lunge proxy on sky strike",
+      "passed": true
+    },
+    {
+      "name": "live strike ends without leaving input lock",
+      "passed": true
+    },
+    {
+      "name": "390x844: WebGL clean",
+      "passed": true
+    },
+    {
+      "name": "390x844: sword inside target x bounds",
+      "passed": true
+    },
+    {
+      "name": "844x390: WebGL clean",
+      "passed": true
+    },
+    {
+      "name": "844x390: sword inside target x bounds",
+      "passed": true
+    },
+    {
+      "name": "low quality retains 3D sword",
+      "passed": true
+    },
+    {
+      "name": "low quality GL clean",
+      "passed": true
+    },
+    {
+      "name": "reduced motion disables effect",
+      "passed": true
+    },
+    {
+      "name": "reduced motion clears live instances",
+      "passed": true
+    },
+    {
+      "name": "cancel cleans 3D runtime",
+      "passed": true
+    },
+    {
+      "name": "no uncaught browser errors",
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "passed": 47,
+  "frames": 108,
+  "renderer": {
+    "renderer": "ANGLE (Mesa, llvmpipe (LLVM 19.1.7 256 bits), OpenGL 4.5)",
+    "version": "WebGL 1.0 (OpenGL ES 2.0 Chromium)",
+    "drawCalls": 0,
+    "vertices": 0,
+    "particles": 0,
+    "hdr": true
+  },
+  "environment": "Chromium/Xvfb/Mesa software GPU, in-memory inspection build. Local HTTP navigation blocked by administrator; not an HTTP/file-origin, Safari or physical-device test.",
+  "base": "9e5b06203fa020b479a7f174a811801c316e7dd5",
+  "node": {
+    "total": 264,
+    "passed": 256,
+    "skipped": 8,
+    "failed": 0
+  }
+}

@@ -2327,7 +2327,10 @@ const EmberFX = (() => {
           if (art && !quality.reduced && fx2()?.available)
             fx2().cutin(art, { side: e.from.side });
         }
-        if (m.ranged) rangedRecoil(sequence, beat, e.from, actorBox, targetBox);
+        const skyStrike = fx2()?.renderer3dAvailable &&
+          EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid], beat.sourceCid)?.fx === "slash";
+        // Skyfall comes from offscreen, not a second body colliding with the card.
+        if (m.ranged || skyStrike) rangedRecoil(sequence, beat, e.from, actorBox, targetBox);
         else lunge(ctx, beat, i, e.from, actorBox, targetBox, old);
         // R3: a weapon needs its anticipation; a dragon needs an inhalation.
         // These are the SAME instance later consumed at contact, not extra casts.
