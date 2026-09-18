@@ -1,3 +1,5 @@
+> 3D pilot: see [MESH_VFX_PILOT.md](MESH_VFX_PILOT.md) for the explicitly authorized breath/lightning/sword renderer and residue exceptions. The remaining V2 causal/timing rules still apply.
+
 # 战斗表现层 V2：因果、克制、单管线
 
 2026-09-17 立项。取代此前"逐轮加特效"的做法。本文件是实施契约：两条实施线（导演层 / 特效引擎）都以此为准，改动数值先改本文件。

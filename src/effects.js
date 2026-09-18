@@ -2174,6 +2174,8 @@ const EmberFX = (() => {
       aoe: cast.aoe,
       seed: sequence.id * 97 + beatIndex,
       timeScale: sequence.plan.scale,
+      startedAt: sequence.origin + cast.startAt,
+      contactAt: cast.contactAt.map((ms) => sequence.origin + ms),
     });
   }
 
@@ -2335,17 +2337,26 @@ const EmberFX = (() => {
           targetBox = anchors.resolve(e.to, sequence.anchors);
         sound("swing", actorBox);
         const spec = EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid], beat.sourceCid);
-        if (m.ranged && actorBox && targetBox && spec) {
+        const meshMelee = !m.ranged && spec?.fx === "slash" && fx2()?.renderer3dAvailable;
+        if ((m.ranged || meshMelee) && actorBox && targetBox && spec) {
           fxCall("attack", spec.fx, {
             from: fxBox(actorBox),
             to: fxBox(targetBox),
             tier: beat.contacts[0]?.tier || 1,
             tint: spec?.tint || null,
             tintGrad: spec?.tintGrad ?? null,
-            ranged: true,
+            ranged: m.ranged,
+            startedAt: sequence.origin + beat.at + m.lift,
+            contactAt: sequence.origin + beat.at + m.contact,
+            leadMs: m.contact - m.lift,
+            hitStopMs: m.hitStop,
             seed: sequence.id * 97 + i,
             timeScale: sequence.plan.scale,
           });
+          if (meshMelee) {
+            const record = sequence.records.get(i);
+            if (record) record.meshMelee = true;
+          }
         }
       });
     },
@@ -2656,7 +2667,7 @@ const EmberFX = (() => {
       if (loss > 0) {
         startReaction(sequence, ref, actorBox, timing);
         numberAt = number(numberSpot(contact, box, actorBox), loss, "damage", { key, tier });
-        if (contact.direction === "outgoing" && cause && !cause.ranged) {
+        if (contact.direction === "outgoing" && cause && !cause.ranged && !cause.meshMelee) {
           const spec = EmberFXProfiles.fx2Attack(EmberData.byId[contact.sourceCid], contact.sourceCid);
           if (spec) fxCall("attack", spec.fx, {
             from: fxBox(actorBox),

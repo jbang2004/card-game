@@ -36,3 +36,6 @@ tests/*-run.log
 # 运行时真正需要的那部分已经在 src/*-assets.js 与 art/ 里，两者都入库。
 /assets/
 /.git.pre-rewrite/
+
+# Generated disposable 3D inspection edition
+/Card_Game_3D_VFX_Demo.html
