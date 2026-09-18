@@ -48,8 +48,8 @@ const EmberRemasterFeedback=(()=>{
    for(const [el,o] of owned)if(!used.has(el))release(el,o);
    for(const [el,v] of values){
     if(!owned.has(el))owned.set(el,{transform:el.style.transform,filter:el.style.filter});
-    const o=owned.get(el),len=Math.hypot(v.x,v.y),max=v.target?11:18;
-    if(len>max){v.x*=max/len;v.y*=max/len;}v.angle=Math.max(-2.4,Math.min(2.4,v.angle));
+    const o=owned.get(el),len=Math.hypot(v.x,v.y),max=v.target?14:18;
+    if(len>max){v.x*=max/len;v.y*=max/len;}v.angle=Math.max(-3.4,Math.min(3.4,v.angle));
     el.style.transform=`${o.transform||""} translate(${v.x.toFixed(3)}px,${v.y.toFixed(3)}px) rotate(${v.angle.toFixed(3)}deg)`;
     el.style.filter=`${o.filter&&o.filter!=="none"?o.filter:""} brightness(${(1+v.light).toFixed(3)})`;
    }

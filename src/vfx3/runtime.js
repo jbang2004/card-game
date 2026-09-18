@@ -121,7 +121,7 @@ function create(canvas,options={}){
    else if(d.attachment&&!d.visualOnly)return;
    if(d.attachment)visual={...d,to:d.attachment,visualAngle:r[2]};
   }else if(manual)visual={...d,to:{...d.to,x:d.to.x+r[0],y:d.to.y+r[1]},visualAngle:r[2]};
-  remaster.render(visual,s,W,H,quality.low);
+  remaster.render({...visual,crowd:Math.max(1,instances.filter(x=>!x.visualOnly&&sample(x,lastNow).alive&&Math.abs(x.impact-d.impact)<260).length)},s,W,H,quality.low);
  }
  function electricity(d,s){
   const F=xyz(d.from,22),T=xyz(d.to,23),delta=V.sub(T,F),dist=V.len(delta)||1,dir=V.scale(delta,1/dist),per=[-dir[1],dir[0],0];
