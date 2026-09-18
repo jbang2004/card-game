@@ -10,7 +10,7 @@ const mix=(a,b,t)=>a+(b-a)*t;
 const rnd=n=>{let x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);};
 const env=(t,a,b,i=.04,o=.1)=>ease((t-a)/i)*(1-ease((t-(b-o))/o));
 const KIND={breath:'breath',lightning:'lightning',bolt:'lightning',slash:'slash'};
-const TAIL={breath:470,lightning:320,slash:420};
+const TAIL={breath:1100,lightning:320,slash:1000};
 const valid=b=>b&&['x','y','w','h'].every(k=>Number.isFinite(b[k]))&&b.w>0&&b.h>0;
 function descriptor(kind,o,now=0){
  if(!KIND[kind]||!valid(o.from)||!valid(o.to))return null;
@@ -26,6 +26,27 @@ function sample(d,now){
  const t=(now-d.start)/1000,hit=(d.impact-d.start)/1000,after=t-hit;
  return {t,hit,after,alive:now>=d.start&&now<d.impact+d.tail,phase:t<0?'待机':after<0?'释放':after<.075?'命中':'余韵'};
 }
+
+// Natural-time envelopes: explicit impact deadlines remain authoritative.
+function cleaveMotion(d,t){
+ const hit=(d.impact-d.start)/1000,post=(t-hit)/d.scale;
+ const u=hit>0?clamp(t/hit):1,fall=clamp((u-.24)/.76),drop=fall*fall*fall;
+ const hold=clamp(d.hold/1000/d.scale,.045,.065);
+ return {u,drop,angle:Math.PI+.62*(1-drop),post,hold,
+   visibility:env(t,0,hit+.66*d.scale,.025*d.scale,.22*d.scale)};
+}
+function breathClock(d,t){
+ const hit=(d.impact-d.start)/1000;
+ const launch=Math.min(.055*d.scale,hit*.23),travel=Math.max(.001,hit-launch);
+ // Plumes keep flowing for 480ms after first contact. No repeated damage.
+ return {launch,travel,stop:hit+.48*d.scale,life:travel+.43*d.scale,hit};
+}
+// Partial double-slab separation, followed by monotonic settlement.
+function fractureAt(seconds){
+ const growth=1-Math.pow(1-clamp(seconds/.15),3),open=1-Math.pow(1-clamp(seconds/.095),3);
+ return {growth,open,fade:1-ease((seconds-.49)/.45)};
+}
+
 function create(canvas){
  const X=G.Ember3D,{M,V,Geo}=X,R=new X.Renderer(canvas);
  let W=1600,H=940,quality={low:false,reduced:false},instances=[],last=null,manual=null,uid=0,lastNow=0,dirty=true;
@@ -60,40 +81,106 @@ function create(canvas){
    const a=(1-t/life)**1.6;R.particle(q,(1+rnd(k+4)*2.4)*power,col,a*1.4,i%5?2:1);
   }
  }
+
  function swordPose(d,t){
-  const F=xyz(d.from,30),T=xyz(d.to,32),L=clamp(d.to.w*1.22,54,150);
-  const aim=Math.atan2(T[1]-F[1],T[0]-F[0]),hit=(d.impact-d.start)/1000;
-  const h=d.hold/1000,t2=t>hit?Math.max(hit,t-h):t;
-  const approach=hit>0?ease(t2/hit):1,follow=ease((t2-hit)/.2);
-  const a=aim-1.36*(1-approach)+.95*follow;
-  const pivot0=V.mix(F,T,.6),pivot1=[T[0]-Math.cos(aim)*L*.80,T[1]-Math.sin(aim)*L*.80,32];
-  const p=V.mix(pivot0,pivot1,approach);p[2]+=Math.sin(approach*Math.PI)*24;
-  const mat=M.mul(M.T(...p),M.mul(M.Rz(a-Math.PI/2),M.mul(M.Ry(-.7+approach*.45+follow*.9),M.S(L))));
-  return {mat,L,root:M.point(mat,[0,.14,0]),tip:M.point(mat,[0,.97,0]),contact:M.point(mat,[0,.80,0]),target:T};
+  const m=cleaveMotion(d,t),L=clamp(d.to.w*1.38,66,162);
+  const T=xyz({...d.to,y:d.to.y+d.to.h*.50},32);
+  const lift=Math.max(12,Math.min(d.to.h*.64,d.to.y+d.to.h*.50-L*1.23-26));
+  const tip=[T[0]-L*.15*(1-m.drop),T[1]+lift*(1-m.drop),T[2]+32*(1-m.drop)];
+  // All transforms are rigid/uniform. Local tip (0,.98,0) anchors the entire sword.
+  const rot=M.mul(M.Rz(m.angle),M.Ry(-.33));
+  const mat=M.mul(M.T(...tip),M.mul(rot,M.mul(M.S(L),M.T(0,-.98,0))));
+  return {mat,L,root:M.point(mat,[0,.14,0]),tip:M.point(mat,[0,.98,0]),
+   contact:M.point(mat,[0,.98,0]),target:T,motion:m};
+ }
+ function groundCleave(d,s,T){
+  const q=s.after/d.scale;if(q<0||q>=.96)return;
+  const f=fractureAt(q),g=clamp(d.to.w/116,.48,1.25),span=76*g;
+  // A shallow 3D ground patch, not two stretched halves of a card illustration.
+  // x/y are the stage plane; z is true elevation toward the fixed camera.
+  const base=[T[0],T[1],9];
+  const path=[];for(let i=0;i<11;i++){
+   const u=(i-5)/5;path.push([base[0]+u*span,base[1]+(rnd(d.seed+i*23)-.5)*9*g+u*12*g,base[2]]);
+  }
+  const seam=[],lip=[],firstFx=R.fxList.length;
+  for(let i=0;i<path.length-1;i++){
+   if(Math.abs((i+.5-5)/5)>f.growth)continue;
+   const a=path[i],b=path[i+1],w=(1.6+3.4*(1-Math.abs((i-5)/5)))*g*f.open;
+   const a0=[a[0],a[1]-w,a[2]],a1=[a[0],a[1]+w,a[2]],b0=[b[0],b[1]-w,b[2]],b1=[b[0],b[1]+w,b[2]];
+   Geo.tri(seam,a0,b0,b1);Geo.tri(seam,a0,b1,a1);
+   for(const sg of [-1,1]){
+    const innerA=[a[0],a[1]+sg*w,a[2]+1],innerB=[b[0],b[1]+sg*w,b[2]+1];
+    const outA=[a[0],a[1]+sg*(w+2.5*g),a[2]+1.2+f.open*g*2],outB=[b[0],b[1]+sg*(w+2.5*g),b[2]+1.2+f.open*g*2];
+    Geo.tri(lip,innerA,innerB,outB);Geo.tri(lip,innerA,outB,outA);
+   }
+   // Fine light only inside the fissure; dark opening stays readable.
+   R.line([a[0],a[1],a[2]+.2],[b[0],b[1],b[2]+.2],.75*g,'#b7dfff',{mode:6,alpha:f.fade*.72});
+   if(i%2===0){
+    const sg=i%4===0?1:-1,len=(14+rnd(i+23)*22)*g*f.growth;
+    const mid=[b[0]+sg*len*.4,b[1]+sg*len*.52,b[2]+.4],end=[mid[0]-len*.23,mid[1]+sg*len*.40,mid[2]];
+    R.line(b,mid,2.3*g,'#152531',{mode:6,alpha:f.fade,add:false,transparent:true});
+    R.line(mid,end,1.2*g,'#152531',{mode:6,alpha:f.fade,add:false,transparent:true});
+    R.line(b,mid,.45*g,'#a4d5fb',{mode:6,alpha:f.fade*.63});
+   }
+  }
+  // Ground is transient illusion only; geometry/data of the board never changes.
+  const fissureLines=R.fxList.splice(firstFx);
+  mesh(seam,'#09131c',{mode:6,alpha:f.fade*.96,add:false,transparent:true});
+  mesh(lip,'#49515a',{mode:6,alpha:f.fade*.70,add:false,transparent:true});
+  R.fxList.push(...fissureLines);
+  // Lifted angular fragments separate to either side, then settle. Fixed-size rocks.
+  for(let i=0;i<(quality.low?8:18);i++){
+   const seed=d.seed+i*43,sg=i%2?1:-1,delay=rnd(seed)*.045,age=q-delay;if(age<0)continue;
+   const sz=(3+rnd(seed+1)*5)*g,vel=40+rnd(seed+2)*55;
+   const h=Math.max(0,vel*age-230*age*age)*g;
+   const travel=(1-Math.exp(-age*7))*(12+rnd(seed+3)*13)*g;
+   const p=[T[0]+(rnd(seed+4)-.5)*span*1.65,T[1]+sg*travel,T[2]-20+h];
+   R.fx('rock',p,[sz,sz*.56,sz*.9],i%3?'#506b7d':'#92a0a1',[age*3+seed,sg*age*4,age],
+    {mode:0,alpha:f.fade,roughness:.85,metal:.03,transparent:true,add:false});
+  }
+  const expand=1-Math.pow(1-clamp(q/.32),3);
+  if(q<.32)ring([T[0],T[1],12],(11+expand*74)*g,'#adc7d7',(1-expand)*.56,1.03);
+  for(let i=0;i<(quality.low?4:9);i++){
+   const age=q-.035;if(age<0)continue;
+   const th=i/9*Math.PI*2,r=(8+Math.min(age,.35)*80)*g;
+   const p=[T[0]+Math.cos(th)*r,T[1]+Math.sin(th)*r*.30+age*11*g,21+i*.03];
+   const a=env(age,0,.78,.10,.39)*.26;
+   sprite(p,(28+age*35)*g,'#637c89',a,9,d.seed+i,.2*i);
+  }
  }
  function slash(d,s){
-  const pose=swordPose(d,s.t),{mat,L,target:T}=pose;
-  const alpha=env(s.t,0,s.hit+d.hold/1000+.36,.028,.13);
-  if(alpha>.005){
-   R.draw(blade,mat,'#889eb4',{roughness:.22,metal:.92,dissolve:1-alpha});
-   R.draw(R.geo.box,M.mul(mat,M.trs([0,.40,.027],[0,0,0],[.008,.58,.006])),'#245674',{roughness:.3,metal:.85,dissolve:1-alpha});
-   R.draw(R.geo.box,M.mul(mat,M.trs([0,-.025,0],[0,0,0],[.28,.043,.067])),'#b49962',{roughness:.28,metal:.8,dissolve:1-alpha});
-   R.draw(R.geo.cyl,M.mul(mat,M.trs([0,-.17,0],[0,0,0],[.057,.26,.057])),'#27394b',{roughness:.62,metal:.1,dissolve:1-alpha});
-   R.draw(R.geo.sphere,M.mul(mat,M.trs([0,-.315,0],[0,0,0],[.075,.075,.075])),'#9fd6fc',{roughness:.2,metal:.7,emission:.3,dissolve:1-alpha});
+  const pose=swordPose(d,s.t),{mat,L,target:T,motion:m}=pose;
+  // Crack pass beneath the blade, bloom and sparks. No foreground-wide shake.
+  if(s.after>=0)groundCleave(d,s,T);
+  if(m.visibility>.003){
+   const opt={roughness:.22,metal:.92,dissolve:1-m.visibility};
+   R.draw(blade,mat,'#acbecf',opt);
+   R.draw(R.geo.box,M.mul(mat,M.trs([0,.40,.027],[0,0,0],[.008,.58,.006])),'#284963',{...opt,emission:.25});
+   R.draw(R.geo.box,M.mul(mat,M.trs([0,-.025,0],[0,0,.045],[.28,.043,.067])),'#c6a76b',opt);
+   R.draw(R.geo.cyl,M.mul(mat,M.trs([0,-.17,0],[0,0,0],[.057,.26,.057])),'#213646',{...opt,roughness:.65,metal:.12});
+   R.draw(R.geo.sphere,M.mul(mat,M.trs([0,-.315,0],[0,0,0],[.075,.075,.075])),'#a4dcff',{...opt,emission:.5});
   }
-  // Sample the SAME rigid blade transforms. Never enlarge the weapon for a smear.
-  const rows=[];for(let i=0;i<15;i++){const tt=s.t-.105+i*.105/14;if(tt<0)continue;const p=swordPose(d,tt);rows.push([p.root,p.tip]);}
-  const verts=[];for(let i=0;i<rows.length-1;i++){
-   const [a,b]=rows[i],[c,e]=rows[i+1];if(V.len(V.sub(b,e))<.01)continue;
-   const u=i/(rows.length-1),v=(i+1)/(rows.length-1);
-   Geo.tri(verts,a,b,c,null,[u,0],[u,1],[v,0]);Geo.tri(verts,b,e,c,null,[u,1],[v,1],[v,0]);
+  // Only a blade-history smear, never a full-screen beam or stretched sword.
+  const rows=[],stop=Math.min(s.t,s.hit),begin=Math.max(s.hit*.22,s.t-.085*d.scale);
+  if(stop>begin&&m.visibility>.01){
+   for(let i=0;i<16;i++){const p=swordPose(d,mix(begin,stop,i/15));rows.push([p.root,p.tip]);}
+   const verts=[];for(let i=0;i<rows.length-1;i++){
+    const [a,b]=rows[i],[c,e]=rows[i+1];if(V.len(V.sub(b,e))<.01)continue;
+    const u=i/(rows.length-1),v=(i+1)/(rows.length-1);
+    Geo.tri(verts,a,b,c,null,[u,0],[u,1],[v,0]);Geo.tri(verts,b,e,c,null,[u,1],[v,1],[v,0]);
+   }
+   mesh(verts,[.10,.37,.90],{mode:5,alpha:m.visibility*.25});
+   if(rows.length>2)beam(rows.map(r=>r[1]),.7,[.6,1.3,2.4],m.visibility*.58);
   }
-  if(alpha>.003){mesh(verts,[.15,.65,1.75],{mode:5,alpha:alpha*.54});if(rows.length>2)beam(rows.map(r=>r[1]),.85,[1.15,1.8,2.6],alpha*.72);}
-  if(s.after>=0){
-   const a=Math.exp(-s.after*19),dir=Math.atan2(T[1]-xyz(d.from)[1],T[0]-xyz(d.from)[0]);
-   R.glow(T,d.to.w*.8,'#a9deff',a*.56);sparks(T,s.after,32,'#d6efff',d.seed,Math.min(1.1,d.to.w/116));
-   const a0=[T[0]-Math.cos(dir+.9)*L*.4,T[1]-Math.sin(dir+.9)*L*.4,35],b0=[T[0]+Math.cos(dir+.9)*L*.4,T[1]+Math.sin(dir+.9)*L*.4,35];
-   R.line(a0,b0,2.2,'#e2f6ff',{mode:6,alpha:a*.95});
+  if(s.after<0){
+   const a=Math.sin(m.u*Math.PI)*.36;
+   R.glow([T[0],T[1],9],d.to.w*.44,'#96c5e4',a);
+  }else{
+   const q=s.after/d.scale,a=Math.exp(-q*27),g=clamp(d.to.w/116,.48,1.25);
+   R.glow(T,68*g,'#e2eeec',a*.76);
+   sparks(T,q,42,'#dfedee',d.seed,g*1.05);
+   sparks(T,q,14,'#ffcf8a',d.seed+81,g*.83);
+   R.line([T[0]-26*g,T[1]+4*g,36],[T[0]+26*g,T[1]-4*g,36],1.5*g,'#eaf4ff',{mode:6,alpha:a});
   }
  }
  function electricity(d,s){
@@ -130,56 +217,67 @@ function create(canvas){
    }
   }
  }
+
  function fire(d,s){
+  const clock=breathClock(d,s.t),{launch,travel,stop}=clock;
   const origin={...d.from,x:d.from.x+d.from.w*.10,y:d.from.y-d.from.h*.10};
   const F=xyz(origin,28),T=xyz(d.to,28),D=V.sub(T,F),dist=V.len(D)||1,dir=V.scale(D,1/dist),side=[-dir[1],dir[0],0];
-  const hit=Math.max(.06,s.hit),charge=Math.min(.08,hit*.28),travel=Math.max(.02,hit-charge);
-  const gain=clamp(d.to.w/116,.48,1.2),end=s.hit+.135;
-  const neck=env(s.t,0,end+.06,.035,.10);
-  R.glow(F,48*gain,'#ff731d',neck*.62);ring(F,17*gain,'#ffbb63',neck*.65,.5,s.t*1.1,0);
-  // Birth-relative positions: released fire never stretches with the moving source.
-  const step=quality.low?.016:.007;
-  const smoke=[],flames=[];
-  for(let birth=charge,j=0;birth<=end;birth+=step,j++){
-   const age=s.t-birth;if(age<0||age>travel+.30)continue;
-   const progress=Math.min(1,age/travel),beyond=Math.max(0,age-travel),u=progress;
-   for(let k=0;k<(quality.low?2:3);k++){
-    const seed=d.seed+j*19+k*3,phase=rnd(seed)*6.283+age*6,spread=(3+u*18)*gain;
-    const curl=beyond*(28+rnd(seed+4)*44),offset=Math.sin(phase)*spread;
-    const p=[F[0]+D[0]*u+side[0]*(offset+Math.sin(phase)*curl),F[1]+D[1]*u+side[1]*(offset+Math.sin(phase)*curl)+beyond*20,F[2]+Math.cos(phase)*spread+u*7+beyond*18];
-    const alpha=ease(age/.020)*(1-ease(beyond/.27))*.87;
-    const size=(22+u*39+beyond*35)*gain;
-    if(alpha>.005){flames.push({p,size,alpha,seed});if(k===1&&beyond>.02)smoke.push({p:[p[0],p[1]+beyond*36,p[2]-9],size:size*1.40,alpha:alpha*.20,seed});}
-   }
+  const g=clamp(d.to.w/116,.48,1.20),aim=Math.atan2(D[1],D[0]),plumes=[];
+  const charge=env(s.t,0,launch+.05*d.scale,.025*d.scale,.035*d.scale);
+  const feeding=env(s.t,launch,stop,.04*d.scale,.12*d.scale);
+  R.glow(F,37*g,'#ff8c34',charge*.6+feeding*.45);
+  // Same advected billboard construction as the original Ember_Steel dragon demo:
+  // no solid cone, no tube silhouette, no stretching of the complete fire stream.
+  const interval=.0075*d.scale,first=Math.max(0,Math.floor((s.t-travel-.46*d.scale-launch)/interval));
+  const count=Math.min(160,Math.ceil((stop-launch)/interval));
+  for(let i=first;i<count;i++){
+   if(quality.low&&i%2)continue;
+   const seed=d.seed+i*19,birth=launch+i*interval,age=s.t-birth;
+   const life=travel+(.14+rnd(seed+99)*.06)*d.scale;
+   if(age<0||age>life||birth>stop)continue;
+   // Minimum velocity reaches the contact point exactly at the authoritative hit.
+   const speed=i===0?1:1+rnd(seed+8)*.20;
+   const parcelTravel=Math.max(travel/speed,clock.hit-birth);
+   const u=age/parcelTravel,beyond=Math.max(0,u-1),u0=Math.min(1,u),nat=age/d.scale;
+   const th=rnd(seed+1)*Math.PI*2+nat*2.0,rad=(2+Math.min(u,1.35)*19)*g;
+   const curl=(1-Math.exp(-beyond*.78))*31*g;
+   const pos=[F[0]+D[0]*u0+side[0]*(Math.sin(th)*rad*.57+Math.sin(th)*curl)+dir[0]*Math.min(9*g,beyond*7*g),
+    F[1]+D[1]*u0+side[1]*(Math.sin(th)*rad*.57+Math.sin(th)*curl)+dir[1]*Math.min(9*g,beyond*7*g)+Math.min(beyond,2)*11*g,
+    F[2]+Math.cos(th)*rad*.66+Math.min(u,1.5)*5*g];
+   const fade=ease(age/(.023*d.scale))*(1-ease((age-life*.60)/(life*.40)))*env(birth,launch-.012*d.scale,stop,.055*d.scale,.13*d.scale);
+   const growth=Math.min(u,1.4),w=(34+growth*65)*g,h=(23+growth*43)*g;
+   if(fade>.004)plumes.push({p:pos,w,h,alpha:fade*.85,mode:8,col:'#ff8e31',seed:rnd(seed*7)*30,angle:aim+(rnd(seed+41)-.5)*.9});
   }
-  // A real tapered 3D flow shell supplies a continuous silhouette between puffs.
-  // Rigid ring cross-sections move forward; this never deforms the source card.
-  const frontU=clamp((s.t-charge)/travel),backU=clamp((s.t-end)/travel);
-  if(frontU>backU+.005){
-   const shell=[];const slices=quality.low?19:35,sides=quality.low?7:10;
-   function at(i,j){const u=mix(backU,frontU,i/slices),angle=j/sides*Math.PI*2;
-    const radius=(3+23*u)*gain*(.85+.15*Math.sin(u*27-s.t*18+angle*3));
-    const off=Math.sin(u*Math.PI)*Math.sin(u*14-s.t*6)*4*gain;
-    return [F[0]+D[0]*u+side[0]*(Math.cos(angle)*radius+off),F[1]+D[1]*u+side[1]*(Math.cos(angle)*radius+off),F[2]+Math.sin(angle)*radius+u*7];}
-   for(let i=0;i<slices;i++)for(let j=0;j<sides;j++){
-    const a=at(i,j),b=at(i+1,j),c=at(i+1,j+1),e=at(i,j+1),u=mix(backU,frontU,i/slices),v=mix(backU,frontU,(i+1)/slices);
-    Geo.tri(shell,a,b,c,null,[u,j/sides],[v,j/sides],[v,(j+1)/sides]);Geo.tri(shell,a,c,e,null,[u,j/sides],[v,(j+1)/sides],[u,(j+1)/sides]);
-   }
-   mesh(shell,'#ff721b',{mode:10,alpha:.84*(1-ease(Math.max(0,s.t-end)/travel)),add:false,transparent:true,surface:d.seed});
+  // Low-energy smoke shares the same depth ordering, behind and above the flame.
+  for(let i=0;i<18;i++){
+   if(quality.low&&i%2)continue;
+   const birth=s.hit+i*.047*d.scale;if(birth>stop+.10*d.scale)break;
+   const age=(s.t-birth)/d.scale;if(age<0||age>.50)continue;
+   const th=rnd(i+d.seed)*Math.PI*2,a=env(age,0,.50,.10,.25)*.17;
+   plumes.push({p:[T[0]+Math.cos(th)*(9+age*22)*g,T[1]+age*49*g+Math.sin(th)*10*g,T[2]-12+Math.sin(th)*8],
+    w:(34+age*60)*g,h:(39+age*56)*g,col:'#5d5046',alpha:a,mode:9,seed:rnd(i+88)*13,angle:age*.1});
   }
-  smoke.sort((a,b)=>a.p[2]-b.p[2]);flames.sort((a,b)=>a.p[2]-b.p[2]);
-  for(const q of smoke)sprite(q.p,q.size,'#483025',q.alpha,9,q.seed);
-  for(const q of flames)sprite(q.p,q.size,'#ff8125',q.alpha,8,q.seed,q.seed*.41);
-  const front=clamp((s.t-charge)/travel);if(s.t>=charge&&s.t<hit+.20){
-   const p=V.mix(F,T,front);R.glow(p,36*gain,'#ffb758',.30*neck);
+  for(const q of plumes.slice())if(q.mode===8&&q.seed%3<1.4)plumes.push({...q,p:[q.p[0],q.p[1],q.p[2]+4*g],w:q.w*.84,h:q.h*.52,alpha:q.alpha*.67,mode:11});
+  plumes.sort((a,b)=>a.p[2]-b.p[2]);
+  for(const q of plumes)spriteOval(q.p,q.w,q.h,q.col,q.alpha,q.mode,q.seed,q.angle);
+  const burning=env(s.t,s.hit,stop+.44*d.scale,.035*d.scale,.32*d.scale);
+  R.glow(T,d.to.w*.79,'#ff8b2e',burning*.30);
+  R.glow([T[0],T[1]-d.to.h*.16,8],d.to.w*1.15,'#d95b21',burning*.12);
+  // Small continued embers rather than repeated large explosions / fake damage.
+  for(let i=0;i<28;i++){
+   const birth=s.hit+i*.024*d.scale;if(birth>stop)break;
+   const age=(s.t-birth)/d.scale;if(age<0||age>.41)continue;
+   const th=rnd(i+d.seed)*Math.PI*2,sp=(35+rnd(i+6)*85)*g;
+   const p=[T[0]+Math.cos(th)*sp*age,T[1]+Math.sin(th)*sp*age+36*age*g-65*age*age*g,T[2]+15+age*28];
+   R.particle(p,(1.0+rnd(i+2)*1.3)*g,i%4?'#ffc76d':'#ffebc0',(1-age/.41)*.8,i%7?2:1);
   }
-  for(let i=0;i<(quality.low?22:66);i++){
-   const birth=charge+rnd(d.seed+i*7)*(end-charge),age=s.t-birth;if(age<0||age>.45)continue;
-   const u=clamp(age/travel),spread=Math.sin(i*2.4+age*9)*(4+u*25)*gain;
-   const p=[F[0]+D[0]*u+side[0]*spread+dir[0]*Math.max(0,age-travel)*40,F[1]+D[1]*u+side[1]*spread+age*25,F[2]+rnd(i+70)*22];
-   R.particle(p,(1+rnd(i+2)*1.5)*gain,i%4?'#ffb556':'#ffe5af',(1-age/.45)*.8,i%5?2:1);
-  }
-  if(s.after>=0){const a=Math.exp(-s.after*8);R.glow(T,d.to.w*.95,'#ff7319',a*.24);sparks(T,s.after,26,'#ffbd66',d.seed, gain);}
+  if(s.after>=0)sparks(T,s.after/d.scale,14,'#ffc580',d.seed,g*.7);
+ }
+ function spriteOval(pos,w,h,col,alpha,mode=8,seed=0,angle=0){
+  if(alpha<.004)return;
+  const ca=Math.cos(angle),sa=Math.sin(angle);
+  R.fxList.push({geo:R.geo.plane,model:new Float32Array([ca*w,sa*w,0,0,0,0,1,0,-sa*h,ca*h,0,0,...pos,1]),
+   color:col,opt:{mode,alpha,transparent:true,add:false,surface:seed,emission:mode===8?.4:0}});
  }
  function draw(now){
   lastNow=now;if(quality.reduced){if(dirty)R.clear();dirty=false;return;}
@@ -202,7 +300,7 @@ function create(canvas){
   diagnostics(){return{...stats,webgl:R.info(),error:R.gl.getError()};},
   destroy(){clear();R.gl.deleteBuffer(blade.b);R.destroy();},_sample:sample,_swordPose:swordPose};
  function makeBlade(){
-  const out=[],outline=[[-.062,0],[-.064,.72],[0,.98],[.064,.72],[.062,0]];
+  const out=[],outline=[[-.080,0],[-.084,.72],[0,.98],[.084,.72],[.080,0]];
   for(let side of [-1,1])for(let i=0;i<outline.length;i++){
    const a=outline[i],b=outline[(i+1)%outline.length];const av=[a[0],a[1],0],bv=[b[0],b[1],0];Geo.tri(out,[0,.46,.025*side],side>0?bv:av,side>0?av:bv);
   }return out;
@@ -220,6 +318,6 @@ function create(canvas){
   }return out;
  }
 }
-const api={create,supports:kind=>!!KIND[kind],descriptor,sample,TAIL};
+const api={create,supports:kind=>!!KIND[kind],descriptor,sample,TAIL,cleaveMotion,breathClock,fractureAt};
 G.EmberVFX3=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

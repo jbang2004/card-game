@@ -19,21 +19,24 @@ The old impulse/cutin/camera director remains authoritative. There is no new
 independent animation loop in either new runtime module.
 
 It also replaces the old universal 250ms residue limit **only for these new
-recipes**: breath has a 470ms tail, lightning 320ms, sword 420ms, multiplied by
+recipes**: breath has a 1100ms tail, lightning 320ms, sword 1000ms, multiplied by
 presentation timeScale. Tails do not block later actions and never represent
 persistent status or additional damage. The rule engine and its data files are
 unchanged. Existing contact deadlines, HP updates and sound events are retained.
 
 ## Rendering and constraints
 
-- Breath: a tapered 3D flow mesh plus birth-relative flame/smoke billboards and
-  deterministic embers. This is not a fluid simulation. The portrait-relative
+- Breath (R2): depth-sorted, birth-relative flame/smoke billboards, bright inner
+  flame parcels and deterministic embers. The continuous cone mesh was removed.
+  There is a 480ms feeding stage after first contact, followed by natural cleanup. This is not a fluid simulation. The portrait-relative
   emitter is an authored default, not a recovered per-character mouth rig.
 - Lightning / bolt: branching 3D tube meshes with stable endpoints, bounded
   topology changes, a bright core, secondary branches and contact sparks.
-- Sword: a rigid faceted metal blade, hilt and guard. The luminous trail samples
-  the SAME blade transforms. The 0.80 local blade point meets the target at the
-  director's absolute contact deadline. The blade is not stretched to fill a path.
+- Sword (R2): a rigid metal blade falls from an elevated, slightly tilted pose
+  with cubic acceleration. The local tip at 0.98 meets the target's foot plane
+  at the director's exact contact deadline. It stays planted; no rebound or stretch.
+  Centre-out fissures, separated lips, branching seams, fixed-size rubble and dust
+  are transient geometry only, not a destroyed card or a changed board state.
 - The old illustrated board and cards remain Canvas/DOM. No claim is made that
   DOM artwork becomes a full 3D scene or receives physically correct shadows.
   The borrowed renderer retains shadow machinery, but the pilot does not cast

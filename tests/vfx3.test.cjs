@@ -14,7 +14,7 @@ test('invalid and non-supported input cannot start a scene',()=>{
 });
 test('descriptor copies input boxes and tint',()=>{let tint=[1,.5,.2],o={from:{...A},to:{...B},tint};let d=E.descriptor('breath',o);o.from.x=-7;tint[0]=0;assert.equal(d.from.x,A.x);assert.equal(d.tint[0],1);});
 test('a supplied absolute contact deadline wins over an estimated lead',()=>{let d=E.descriptor('slash',{from:A,to:B,startedAt:100,contactAt:240,leadMs:400});assert.equal(d.impact,240);});
-test('quality scale shortens tails without changing explicit contact events',()=>{let d=E.descriptor('breath',{from:A,to:B,contactAt:300,timeScale:.5});assert.equal(d.tail,235);assert.equal(d.impact,300);});
+test('quality scale shortens tails without changing explicit contact events',()=>{let d=E.descriptor('breath',{from:A,to:B,contactAt:300,timeScale:.5});assert.equal(d.tail,E.TAIL.breath*.5);assert.equal(d.impact,300);});
 test('renderer really uses 3D vertices, normals, camera matrices and depth',()=>{let s=fs.readFileSync('src/vfx3/renderer.js','utf8');for(let text of ['attribute vec3 aPos','attribute vec3 aNormal','gl.DEPTH_TEST','uVP','uModel'])assert.ok(s.includes(text));});
 test('clear frame is transparent and alpha accumulation is separate from RGB',()=>{let s=fs.readFileSync('src/vfx3/renderer.js','utf8');assert.ok(s.includes('gl.clearColor(0,0,0,0)'));assert.ok(s.includes('blendFuncSeparate'));assert.ok(s.includes('premultipliedAlpha:false'));});
 test('new renderers do not own an animation loop or change rule state',()=>{for(const path of ['src/vfx3/renderer.js','src/vfx3/runtime.js']){let s=fs.readFileSync(path,'utf8');assert.ok(!s.includes('requestAnimationFrame('));assert.ok(!s.includes('EmberDebug'));assert.ok(!s.includes('game.dispatch'));}});
