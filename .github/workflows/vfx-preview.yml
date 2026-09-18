@@ -2,54 +2,31 @@ name: VFX preview build
 on:
   push:
     branches: [feat/3d-combat-vfx]
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'config/build.json'
+      - 'tests/**'
+      - 'tools/vfx3/**'
+      - '.github/workflows/vfx-preview.yml'
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
 concurrency:
-  group: vfx-preview-feature
-  cancel-in-progress: false
+  group: vfx-preview-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   preview:
-    if: github.ref == 'refs/heads/feat/3d-combat-vfx'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Apply checksum-verified implementation transport
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          import base64, hashlib, lzma, subprocess
-          from pathlib import Path
-          parts=sorted(Path('.vfx-transport').glob('part-*.txt'))
-          if parts:
-              if len(parts)!=4: raise SystemExit('Incomplete source transport')
-              patch=lzma.decompress(base64.b64decode(''.join(p.read_text() for p in parts)))
-              if hashlib.sha256(patch).hexdigest()!='364195265daa0701b5b228c36669e1a421c66a00b45e637a777867ca6b2cfa6d':
-                  raise SystemExit('Source checksum mismatch')
-              dest=Path('/tmp/vfx3-implementation.patch');dest.write_bytes(patch)
-              allowed={'.gitignore','config/build.json','src/effects.js','src/presentation/battle.css','src/presentation/fx-stage.js','src/template.html','src/vfx3/renderer.js','src/vfx3/runtime.js','tests/vfx3.test.cjs','tools/vfx3/check.py','tools/vfx3/verify.py','tools/vfx3/record.py','tools/vfx3/export_demo.py','tools/vfx3/lab.js','docs/design/MESH_VFX_PILOT.md','docs/design/BATTLE_PRESENTATION_V2.md'}
-              paths={l.split('\t',2)[-1] for l in subprocess.check_output(['git','apply','--numstat',str(dest)],text=True).splitlines()}
-              if not paths<=allowed: raise SystemExit('Unexpected patch paths: '+str(paths-allowed))
-              subprocess.run(['git','apply','--check','--index',str(dest)],check=True)
-              subprocess.run(['git','apply','--index',str(dest)],check=True)
-              subprocess.run(['git','rm','--',*[str(p) for p in parts]],check=True)
-          PY
       - name: Build offline game and inspection edition
         run: |
           python3 build.py
           python3 tools/vfx3/export_demo.py
       - name: Test rules and presentation
         run: node --test tests/*.test.cjs > node-tests.txt 2>&1
-      - name: Commit verified source on the isolated feature branch
-        shell: bash
-        run: |
-          if ! git diff --cached --quiet; then
-            git config user.name 'github-actions[bot]'
-            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git commit -m 'feat: integrate mesh breath lightning and sword [skip ci]'
-            git push origin HEAD:feat/3d-combat-vfx
-          fi
       - name: Archive exact source
         if: always()
         run: git archive --format=zip --output=card-game-source.zip HEAD
