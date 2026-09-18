@@ -601,7 +601,7 @@ body.mobile-portrait .mana-caption > span {
   overflow: hidden;
 }
 
-#fx-gl {
+#fx-gl, #fx-3d {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -609,7 +609,7 @@ body.mobile-portrait .mana-caption > span {
   pointer-events: none;
   z-index: 11;
 }
-#fx-gl[hidden] {
+#fx-gl[hidden], #fx-3d[hidden] {
   display: none;
 }
 

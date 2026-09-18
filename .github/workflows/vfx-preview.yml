@@ -1,0 +1,44 @@
+name: VFX preview build
+on:
+  push:
+    branches: [feat/3d-combat-vfx]
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'config/build.json'
+      - 'tests/**'
+      - 'tools/vfx3/**'
+      - '.github/workflows/vfx-preview.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: vfx-preview-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build offline game and inspection edition
+        run: |
+          python3 build.py
+          python3 tools/vfx3/export_demo.py
+      - name: Test rules and presentation
+        run: node --test tests/*.test.cjs > node-tests.txt 2>&1
+      - name: Archive exact source
+        if: always()
+        run: git archive --format=zip --output=card-game-source.zip HEAD
+      - name: Upload review package
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: card-game-vfx-preview
+          path: |
+            card-game-source.zip
+            index.html
+            Card_Game_3D_VFX_Demo.html
+            dist/
+            node-tests.txt
+          retention-days: 7

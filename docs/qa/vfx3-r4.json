@@ -1,0 +1,21 @@
+{
+  "version": "R4 flame-only original implementation port",
+  "implementationCommit": "a96d3675a33f555b55f72c4f78b67765c8d51495",
+  "scope": "Keep 2D dragon card; preserve R3 sword and lightning; no dragon geometry imported",
+  "sourceParity": {
+    "reference": "Ember_Steel_VFX/src/effects.js, core.js, timeline.js, scene.js",
+    "frames": 32,
+    "times": 16,
+    "densitySettings": [1, 0.45],
+    "allPassed": true,
+    "method": "Execute original source in Node VM; compare all emitted fields after 1e-6 quantization using SHA-256 fixtures",
+    "flameShaderUnchanged": true,
+    "smokeShaderUnchanged": true,
+    "pixelIdentityClaimed": false
+  },
+  "node": {"total": 249, "passed": 241, "skippedMissingSourceAssets": 8, "failed": 0},
+  "browser": {"directedChecks": 35, "passed": 35, "fullE2ERun": false, "environment": "Xvfb/Chromium/ANGLE/Mesa llvmpipe, in-memory build loading"},
+  "build": {"portable": true, "web": true, "scriptTokenRegistrationChecked": true},
+  "video": {"fps": 24, "durationSeconds": 9, "audio": false, "method": "Actual rule dispatch followed by deterministic VFX replay; second half pairs original and ported flame time"},
+  "limits": ["No physical device, Safari or hardware GPU performance validation", "file:// navigation blocked by execution-environment policy; real file-origin storage not validated", "Original flame motion and shading preserved; coordinate, contact timing and transparent compositing adapted"]
+}

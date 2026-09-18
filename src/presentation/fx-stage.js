@@ -25,6 +25,7 @@ const EmberFx2 = (() => {
   const SCENE_UPLOAD_MIN_MS = 120;
 
   let engine = null;
+  let meshEngine = null, meshCanvas = null, meshError = null;
   let glCanvas = null;
   let cutinEl = null;
   let ready = false;
@@ -80,7 +81,7 @@ const EmberFx2 = (() => {
    * 40% 振幅做同相位的位移（不缩放，贴着舞台边缘的卡不会被推出去）。
    * 顶栏、手牌、HUD 不在其中。ox/oy = 元素左上角在舞台坐标里的偏移，引擎用它把
    * transform-origin 换算进元素自己的盒子，所有层围绕同一个冲击点缩放。 */
-  const CAMERA_IDS = ["world-canvas", "fx-gl", "minions"];
+  const CAMERA_IDS = ["world-canvas", "fx-gl", "fx-3d", "minions"];
   const SHAKE_IDS = ["player-hero", "enemy-hero"];
   const HERO_SHAKE = 0.4;
   let cameraList = [];
@@ -126,6 +127,7 @@ const EmberFx2 = (() => {
     hostWorld = world;
     // #fx-gl 插在世界画布之后；z-index 由 battle.css 给
     glCanvas = makeCanvas("fx-gl", world);
+    if (typeof EmberVFX3 !== "undefined") meshCanvas = makeCanvas("fx-3d", glCanvas);
     cutinEl = makeCutin();
     if (!glCanvas) {
       failed = true;
@@ -149,6 +151,22 @@ const EmberFx2 = (() => {
     return engine.ready
       .then(() => {
         ready = true;
+        if (typeof EmberVFX3 !== "undefined") {
+          try {
+            meshEngine = EmberVFX3.create(meshCanvas);
+            meshEngine.stage(stage.w, stage.h);
+            meshEngine.setQuality(quality);
+            meshCanvas.addEventListener("webglcontextlost", (event) => {
+              event.preventDefault(); meshError = "3D WebGL context lost; reload to restore";
+              meshEngine = null; meshCanvas.hidden = true;
+            });
+          } catch (error) {
+            meshError = String(error.message || error);
+            meshEngine?.destroy(); meshEngine = null;
+            if (meshCanvas) meshCanvas.hidden = true;
+            console.warn("EmberVFX3 unavailable; retaining legacy effect backend", error);
+          }
+        }
         return true;
       })
       .catch(() => {
@@ -166,6 +184,8 @@ const EmberFx2 = (() => {
     enabled = !quality.reduced && !failed;
     if (glCanvas) glCanvas.hidden = !enabled;
     if (engine) engine.setQuality(quality);
+    meshEngine?.setQuality(quality);
+    if (meshCanvas) meshCanvas.hidden = !enabled || !meshEngine;
     if (!enabled) stopCutin();
   }
 
@@ -175,6 +195,7 @@ const EmberFx2 = (() => {
     if (!engine) return;
     const s = stageSize();
     engine.setStage(s.w, s.h);
+    meshEngine?.stage(s.w, s.h);
   }
 
   /** 施法开始时把宿主世界画布上传一次，供折射采样。低画质不折射，不传。 */
@@ -306,6 +327,7 @@ const EmberFx2 = (() => {
     if (!available()) return;
     syncStage();
     engine.draw(now);
+    meshEngine?.draw(now);
   }
 
   const api = {
@@ -332,6 +354,17 @@ const EmberFx2 = (() => {
     cast(kind, o) {
       if (!available()) return false;
       prepare(kind);
+      if (meshEngine && EmberVFX3.supports(kind)) {
+        const p = engine.plan ? engine.plan(kind, o) : EmberFx2Engine.plan(kind, o);
+        const targets = o.targets || (o.to ? [o.to] : []);
+        const start = Number.isFinite(o.startedAt) ? o.startedAt : performance.now();
+        targets.forEach((to, i) => meshEngine.emit(kind, {
+          ...o, to, startedAt: start,
+          contactAt: o.contactAt?.[i] ?? start + p.hitAt[i],
+          hitStopMs: (EmberTiming.tiers[o.tier || 1]?.hitStopMs || 0) * (o.timeScale || 1),
+        }));
+        return p;
+      }
       return engine.cast(kind, o);
     },
 
@@ -339,6 +372,11 @@ const EmberFx2 = (() => {
     attack(family, o) {
       if (!available()) return false;
       prepare(family);
+      if (meshEngine && EmberVFX3.supports(family)) {
+        const p = EmberFx2Engine.plan(family, { ...o, attack: true });
+        meshEngine.emit(family, { ...o, leadMs: o.leadMs ?? p.hitAt[0] });
+        return p;
+      }
       return engine.attack(family, o);
     },
 
@@ -359,6 +397,7 @@ const EmberFx2 = (() => {
     /** 取消：丢掉所有在飞的特效与切入（导演层 cancel 时调）。 */
     clear() {
       if (engine) engine.clear();
+      meshEngine?.clear();
       stopCutin();
     },
 
@@ -371,6 +410,8 @@ const EmberFx2 = (() => {
       return cutinFor(id);
     },
 
+    get renderer3dAvailable() { return !!meshEngine && available(); },
+    get mesh3d() { return meshEngine; },
     get diagnostics() {
       return {
         available: available(),
@@ -378,6 +419,8 @@ const EmberFx2 = (() => {
         failed,
         enabled,
         low: quality.low,
+        mesh3d: meshEngine?.stats || null,
+        meshError,
         spawned: Object.assign({}, spawned),
       };
     },
