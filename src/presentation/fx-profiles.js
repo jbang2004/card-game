@@ -123,7 +123,7 @@ const EmberFXProfiles = (() => {
     storm: { fx: "fireball", perTarget: true, stagger: [60, 90], scale: 0.8 },
     // 星火箭：结构不变，配色换成白芯 + 暖金橙辉光，贴 ember 调色板
     bolt: { fx: "lightning", tint: [1.0, 0.72, 0.3], tintGrad: 0 },
-    sabotage: { fx: "slash", tint: SILVER },
+    sabotage: { fx: "slash", tint: SILVER, swordStyle: "shatter" },
     // 奥秘两张：镜像伏击从暗处扑出（虚空触须），破法之镜是一面奥术镜。
     ambush: { fx: "void", tint: [0.72, 0.5, 1.0], tintGrad: 2 },
     counterspell: { fx: "arcane", tint: [0.78, 0.62, 1.0], tintGrad: 2 },
@@ -171,8 +171,8 @@ const EmberFXProfiles = (() => {
   });
   // 英雄装备后的平砍：剑风，sunblade 金色、dagger 银白
   const fx2Weapons = Object.freeze({
-    dagger: { fx: "slash", cutin: true, tint: SILVER },
-    sunblade: { fx: "slash", cutin: true, tint: GOLD },
+    dagger: { fx: "slash", cutin: true, tint: SILVER, swordStyle: "twins" },
+    sunblade: { fx: "slash", cutin: true, tint: GOLD, swordStyle: "daybreak" },
   });
   /* 学派配色：byPalette 的动作族按攻击方卡牌的 palette 取主色与渐变表行号。
    *
@@ -201,7 +201,7 @@ const EmberFXProfiles = (() => {
     holy: { fx: "holy" },
     shadow: { fx: "void" },
     blood: { fx: "siphon" },
-    steel: { fx: "slash", tint: SILVER },
+    steel: { fx: "arrow", tint: SILVER },
   });
   // 随从平砍的动作族。byPalette = 主色随攻击方卡牌的学派走。
   // cutin: true 只表示"这一族有切入画面"，真正弹不弹由 cutinPolicy 决定。
@@ -246,7 +246,7 @@ const EmberFXProfiles = (() => {
     "dragon-breath": { fx: "breath", tint: [1.0, 0.55, 0.16], tintGrad: 0 },
     dispel: { fx: "void" },
     siphon: { fx: "siphon" },
-    shatter: { fx: "slash", tint: SILVER },
+    shatter: { fx: "slash", tint: SILVER, swordStyle: "shatter" },
   });
   const fx2Arrivals = Object.freeze({
     "solar-crown": { fx: "holy", field: true },
@@ -357,6 +357,13 @@ const EmberFXProfiles = (() => {
   function fx2Power(school) {
     return (school && fx2Powers[school]) || null;
   }
+  // R6: visual identities only. Every blade unit has an authored silhouette.
+  // Damage, targeting, attack family and authoritative contact times stay intact.
+  const swordIdentities = Object.freeze({
+    squire: "dawn", guard: "bastion", assassin: "night", leech: "blood",
+    paladin: "judgment", reaper: "crescent", solaris: "sunfall",
+    frostking: "frost", skeleton: "bone", recruit: "thrust",
+  });
   /** 平砍走不走 fx2：先看武器，再看动作族。 */
   function fx2Attack(card, weaponId) {
     if (weaponId && fx2Weapons[weaponId]) return fx2Weapons[weaponId];
@@ -364,7 +371,8 @@ const EmberFXProfiles = (() => {
     const family = id && records[id] ? records[id].attack : null;
     // 学派着色：combat.js 只拿 spec 读 cutin，传进来的是没有 palette 的存根，
     // 落到 steel 就行 —— 那条路径不看颜色。
-    return tinted((family && fx2AttackFamilies[family]) || null, card);
+    const spec = tinted((family && fx2AttackFamilies[family]) || null, card);
+    return spec?.fx === "slash" ? { ...spec, swordStyle: swordIdentities[id] || "dawn" } : spec;
   }
 
   return Object.freeze({
@@ -379,6 +387,7 @@ const EmberFXProfiles = (() => {
     fx2Casts,
     fx2Arrivals,
     fx2Weapons,
+    swordIdentities,
     fx2Powers,
     records: Object.freeze(records),
     cardMotion,

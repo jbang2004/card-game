@@ -2168,6 +2168,7 @@ const EmberFX = (() => {
     fxCall("cast", cast.kind, {
       from: fxBox(from),
       targets: targets.map(fxBox),
+      targetRefs: cast.targets, swordStyle: cast.swordStyle,
       tier: cast.tier,
       tint: cast.tint,
       tintGrad: cast.tintGrad,
@@ -2327,7 +2328,13 @@ const EmberFX = (() => {
           if (art && !quality.reduced && fx2()?.available)
             fx2().cutin(art, { side: e.from.side });
         }
-        if (m.ranged) rangedRecoil(sequence, beat, e.from, actorBox, targetBox);
+        const skyStrike = fx2()?.renderer3dAvailable &&
+          EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid], beat.sourceCid)?.fx === "slash";
+        // Skyfall comes from offscreen, not a second body colliding with the card.
+        const swordStyle=EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid],beat.sourceCid)?.swordStyle;
+        const benchmark=skyStrike&&typeof EmberBenchmarkArts!=="undefined"&&EmberBenchmarkArts.supports(swordStyle);
+        if(benchmark) rec.benchmarkStyle=swordStyle;
+        else if (m.ranged || skyStrike) rangedRecoil(sequence, beat, e.from, actorBox, targetBox);
         else lunge(ctx, beat, i, e.from, actorBox, targetBox, old);
         // R3: a weapon needs its anticipation; a dragon needs an inhalation.
         // These are the SAME instance later consumed at contact, not extra casts.
@@ -2335,6 +2342,7 @@ const EmberFX = (() => {
         if (fx2()?.renderer3dAvailable && ["slash", "breath"].includes(preSpec?.fx)) {
           const started = fxCall("attack", preSpec.fx, {
             from: fxBox(actorBox), to: fxBox(targetBox),
+            swordStyle: preSpec.swordStyle, sourceCid: beat.sourceCid, sourceRef: e.from, targetRef: e.to,
             tier: outgoing?.tier || 1, tint: preSpec.tint || null,
             tintGrad: preSpec.tintGrad ?? null, ranged: m.ranged,
             startedAt: sequence.origin + beat.at,
@@ -2349,7 +2357,7 @@ const EmberFX = (() => {
         const { sequence } = ctx;
         if (performance.now() >= sequence.origin + beat.at + m.contact) return;
         if (sequence.records.get(i)?.meshPrelude) {
-          sound("swing", anchors.resolve(e.from, sequence.anchors));
+          if(!sequence.records.get(i)?.benchmarkStyle) sound("swing", anchors.resolve(e.from, sequence.anchors));
           return;
         }
         const actorBox = anchors.resolve(e.from, sequence.anchors),
@@ -2362,6 +2370,7 @@ const EmberFX = (() => {
             from: fxBox(actorBox),
             to: fxBox(targetBox),
             tier: beat.contacts[0]?.tier || 1,
+            swordStyle: spec?.swordStyle, sourceCid: beat.sourceCid,
             tint: spec?.tint || null,
             tintGrad: spec?.tintGrad ?? null,
             ranged: m.ranged,
@@ -2411,7 +2420,7 @@ const EmberFX = (() => {
           if (Math.abs(bucket.at - beat.impulseAt) < 1e-6 && boxes.length) {
             const causeIndex = beat.contacts[bucket.contacts[0]].castBeat,
               cause = causeIndex !== null ? ctx.plan.beats[causeIndex] : null;
-            fxCall("impulse", {
+            if(!ctx.sequence.records.get(causeIndex)?.benchmarkStyle) fxCall("impulse", {
               at: boxes.map(fxBox),
               tier: beat.tier,
               cinematic: !!(cause?.cutin || (cause?.battlecry && cause.legendary)),
@@ -2420,7 +2429,7 @@ const EmberFX = (() => {
           if (impactBox) {
             const contact = beat.contacts[bucket.contacts[0]],
               cause = contact.castBeat !== null ? ctx.sequence.records.get(contact.castBeat) : null;
-            sound(cause ? "impact-" + (cause.school || "steel") : "damage", impactBox, {
+            if(!cause?.benchmarkStyle) sound(cause ? "impact-" + (cause.school || "steel") : "damage", impactBox, {
               gain: T.tiers[impactTier].volume,
               strength: T.tiers[impactTier].volume,
               heavy: impactTier === 3,
@@ -2684,7 +2693,8 @@ const EmberFX = (() => {
         sound("armor", box);
       }
       if (loss > 0) {
-        startReaction(sequence, ref, actorBox, timing);
+        if(!(cause?.benchmarkStyle && contact.direction === "outgoing"))
+          startReaction(sequence, ref, actorBox, timing);
         numberAt = number(numberSpot(contact, box, actorBox), loss, "damage", { key, tier });
         if (contact.direction === "outgoing" && cause && !cause.ranged && !cause.meshMelee) {
           const spec = EmberFXProfiles.fx2Attack(EmberData.byId[contact.sourceCid], contact.sourceCid);
@@ -2692,6 +2702,7 @@ const EmberFX = (() => {
             from: fxBox(actorBox),
             to: fxBox(box),
             tier,
+            swordStyle: spec?.swordStyle, sourceCid: contact.sourceCid, targetRef: ref,
             tint: spec?.tint || null,
             tintGrad: spec?.tintGrad ?? null,
             ranged: false,
@@ -2840,7 +2851,7 @@ const EmberFX = (() => {
       else if (ctx.kind === "battlecry")
         spec = EmberFXProfiles.fx2Cast(ctx.battlecry, EmberData.byId[ctx.cid]);
       return spec
-        ? { kind: spec.fx, tint: spec.tint || null, tintGrad: spec.tintGrad ?? null }
+        ? { kind: spec.fx, tint: spec.tint || null, tintGrad: spec.tintGrad ?? null, swordStyle: spec.swordStyle || null }
         : null;
     };
   }

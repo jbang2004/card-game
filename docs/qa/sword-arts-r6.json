@@ -1,0 +1,133 @@
+{
+  "version": "sword-arts-r6",
+  "baseline": "bb3de7859073a8a9037f57dd20a739dc2d8a1844",
+  "main_at_read": "9e5b06203fa020b479a7f174a811801c316e7dd5",
+  "remote_pushed": false,
+  "node": {
+    "tests": 316,
+    "pass": 308,
+    "skipped": 8,
+    "fail": 0,
+    "source": "output/sword-arts-r6/node-final.log"
+  },
+  "browser": {
+    "tests": 167,
+    "pass": 167,
+    "fail": 0,
+    "environment": {
+      "browser": "Chromium ANGLE/OpenGL",
+      "origin": "in-memory inspection export",
+      "rendering": "software Mesa; not hardware performance certification",
+      "independent_mobile_layouts": [
+        [
+          390,
+          844
+        ],
+        [
+          844,
+          390
+        ]
+      ],
+      "full_e2e": false
+    }
+  },
+  "role_count": 10,
+  "weapon_count": 2,
+  "roles": [
+    {
+      "name": "晨曦侍从",
+      "id": "squire",
+      "style": "dawn",
+      "visual_name": "曦锋·一闪",
+      "design": "短促斜斩，细亮刃缘与短尾"
+    },
+    {
+      "name": "铁誓卫士",
+      "id": "guard",
+      "style": "bastion",
+      "visual_name": "铁誓·破阵",
+      "design": "两道交叉弧，统一接触时刻"
+    },
+    {
+      "name": "夜幕刺客",
+      "id": "assassin",
+      "style": "night",
+      "visual_name": "夜幕·无声刺",
+      "design": "狭长紫色突刺，极短余迹"
+    },
+    {
+      "name": "血月行者",
+      "id": "leech",
+      "style": "blood",
+      "visual_name": "血月·回刃",
+      "design": "血色弧刃，收束光点向内回旋"
+    },
+    {
+      "name": "圣光裁决者",
+      "id": "paladin",
+      "style": "judgment",
+      "visual_name": "圣裁·天剑",
+      "design": "从屏外直落的金色剑气，卡面短裂纹"
+    },
+    {
+      "name": "黯月收割者",
+      "id": "reaper",
+      "style": "crescent",
+      "visual_name": "黯月·弦刈",
+      "design": "横扫紫月弧，弧背光丝"
+    },
+    {
+      "name": "逐日者·索拉",
+      "id": "solaris",
+      "style": "sunfall",
+      "visual_name": "逐日·三曜",
+      "design": "三道金光汇入同一个目标，同一次伤害"
+    },
+    {
+      "name": "白霜之王",
+      "id": "frostking",
+      "style": "frost",
+      "visual_name": "白霜·王敕",
+      "design": "冰蓝竖刃，霜晶与冰裂"
+    },
+    {
+      "name": "骸骨",
+      "id": "skeleton",
+      "style": "bone",
+      "visual_name": "骸骨·残锋",
+      "design": "克制短斩，不完整刃痕"
+    },
+    {
+      "name": "曙光新兵",
+      "id": "recruit",
+      "style": "thrust",
+      "visual_name": "新兵·直进",
+      "design": "从来源飞向目标的短促直刺"
+    },
+    {
+      "name": "银月双刃",
+      "id": "dagger",
+      "style": "twins",
+      "visual_name": "银月·双弦",
+      "design": "武器攻击的镜像双月弧"
+    },
+    {
+      "name": "日耀圣剑",
+      "id": "sunblade",
+      "style": "daybreak",
+      "visual_name": "日耀·开天",
+      "design": "武器攻击的宽金色剑波与细副锋"
+    }
+  ],
+  "flame_file_sha256": "13760d9670d88ec107a0e5830411f8f4c467ad1a9897853d6e576a27e32597e8",
+  "renderer_change": "Only isolated mode12 shader addition; removing it yields original bytes",
+  "claims_not_made": [
+    "Full E2E",
+    "Real device compatibility",
+    "Safari validation",
+    "Real HTTP/file origin saves",
+    "Orientation switching",
+    "Hardware performance",
+    "CI or remote branch push"
+  ]
+}

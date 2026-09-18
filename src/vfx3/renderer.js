@@ -98,6 +98,58 @@ if(uMode>10.5&&uMode<11.5){
  a*=(1.-smoothstep(.18+n*.35,.70+n*.31,d))*(.40+n*.55);
  c=mix(vec3(2.5,.38,.015),vec3(4.1,2.15,.38),smoothstep(.23,.68,n+(1.-d)*.25));
 }
+// R6 sword-light material: striated energy, a fine bright lip, soft exterior.
+// Separate mode; original flame/smoke branches and post-processing are untouched.
+if(uMode>11.5&&uMode<12.5){
+ float u=vUV.x,v=vUV.y;
+ float feather=pow(max(0.,sin(v*3.14159265)),.70);
+ float endMask=smoothstep(0.,.025,u)*(1.-smoothstep(.955,1.,u));
+ float wave=sin(u*19.-uTime*8.+uSurface)*.035;
+ float striation=.5+.5*sin(v*79.+sin(u*13.+uTime*4.)*2.2);
+ float grain=fbm(vec2(u*21.-uTime*2.2,v*13.+uSurface));
+ float lip=exp(-pow((v-.78-wave)*31.,2.));
+ float spine=exp(-pow((v-.53+wave*.5)*52.,2.));
+ c=c*(.56+grain*.34+striation*.12)+vec3(1.8,1.94,2.08)*lip*.84+vec3(.42,.60,.70)*spine;
+ a*=feather*endMask*(.70+grain*.30);
+}
+
+// R7 independent spectral materials. Modes 8/9 (reference flame/smoke) untouched.
+if(uMode>12.5&&uMode<13.5){
+ float u=vUV.x,v=vUV.y,edge=abs(v-.5)*2.;
+ float flow=fbm(vec2(u*17.-uTime*2.8,v*7.0+uSurface));
+ float ray=.5+.5*sin(v*43.+flow*2.+u*9.-uTime*3.5);
+ float rim=pow(edge,13.),core=exp(-pow((v-.5)*17.,2.));
+ c=uColor.rgb*(.66+flow*.26+ray*.16)+vec3(1.95,1.55,.77)*rim*.80+vec3(.7,.47,.14)*core;
+ a*=smoothstep(0.,.025,u)*(1.-smoothstep(.97,1.,u))*(1.-smoothstep(.965,1.,edge));
+}
+if(uMode>13.5&&uMode<14.5){
+ float u=vUV.x,v=vUV.y;
+ float facet=step(fract(u*6.2+v*.62),.53);
+ float veins=pow(1.-abs(sin(u*47.+v*13.)),18.);
+ float fleck=fbm(vec2(u*38.,v*15.));
+ float edge=pow(abs(v-.5)*2.,16.);
+ c=mix(vec3(.09,.29,.48),vec3(.35,.76,.94),facet)*(.87+fleck*.33);
+ c+=vec3(.94,1.4,1.65)*(edge*.80+veins*.28)+vec3(.30,.72,.91)*exp(-pow((v-.52)*24.,2.));
+ a*=.88*(1.-smoothstep(.975,1.,abs(v-.5)*2.))*smoothstep(0.,.012,u);
+}
+if(uMode>14.5&&uMode<15.5){
+ float u=vUV.x,v=vUV.y;
+ float n=fbm(vec2(u*21.-uTime*4.,v*5.+uSurface));
+ float edge=pow(max(0.,sin(v*3.14159265)),.38);
+ c*=.68+n*.56;
+ a*=edge*smoothstep(0.,.02,u)*(1.-smoothstep(.985,1.,u))*(.68+.32*n);
+}
+if(uMode>15.5&&uMode<16.5){
+ vec2 q=(vUV-.5)*2.;
+ float border=max(abs(q.x),abs(q.y));
+ float frost=fbm(vUV*43.)*.63+fbm(vUV*93.)*.37;
+ float growth=smoothstep(length(q)*.70-.07,length(q)*.70+.12,uSurface);
+ float filigree=pow(max(0.,.5+.5*sin(vUV.x*153.+sin(vUV.y*81.)*2.0)),16.);
+ float edge=smoothstep(.64,.96,border)*pow(frost,2.5)*2.0;
+ c=mix(vec3(.20,.38,.54),vec3(.83,1.08,1.18),frost);
+ a*=growth*(1.-smoothstep(.84+frost*.06,.93+frost*.065,border))*(.09+pow(frost,1.15)*.48+edge*.22+filigree*.11);
+}
+
 if(a<.004)discard;gl_FragColor=vec4(c,a);}`;
 const pvs=`attribute vec3 aPos;attribute vec4 aColor;attribute vec2 aInfo;uniform mat4 uVP;uniform float uScale;varying vec4 vC;varying float vType;void main(){vec4 p=uVP*vec4(aPos,1.);gl_Position=p;gl_PointSize=clamp(aInfo.x*uScale,1.,120.);vC=aColor;vType=aInfo.y;}`;
 const pfs=`precision mediump float;varying vec4 vC;varying float vType;void main(){vec2 q=gl_PointCoord*2.-1.;float d=length(q),a=0.;if(vType<.5)a=pow(max(0.,1.-d),2.);else if(vType<1.5){a=pow(max(0.,1.-abs(q.x)),6.)*pow(max(0.,1.-abs(q.y)),.5)+pow(max(0.,1.-abs(q.x)),.5)*pow(max(0.,1.-abs(q.y)),6.);}else a=step(abs(q.x)+abs(q.y),.9);gl_FragColor=vec4(vC.rgb,vC.a*a);}`;
