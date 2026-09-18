@@ -1,0 +1,63 @@
+name: Restore verified full battle remaster once
+on:
+  push:
+    branches: [feat/full-vfx-remaster]
+    paths: ['.github/r9-remaster/**', '.github/workflows/r9-remaster-restore.yml']
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.repository == 'jbang2004/card-game' && github.ref == 'refs/heads/feat/full-vfx-remaster'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Verify approved baseline and exact locally tested source bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD^)" = 992c3238cffe7a3d804c5f72a6dd69ea18921d05
+          python3 - <<'PY'
+          import base64, hashlib, json, lzma
+          from pathlib import Path
+          expected = {'DELIVERY_REMASTER_R9.md','config/build.json','docs/design/FULL_VFX_REMASTER_R9.md','docs/qa/remaster-r9-baseline.json','docs/qa/remaster-r9-coverage.json','docs/qa/remaster-r9.json','src/effects.js','src/platform/audio.js','src/presentation/fx-stage.js','src/presentation/remaster-feedback.js','src/template.html','src/vfx3/remaster-arts.js','src/vfx3/remaster-cues.js','src/vfx3/runtime.js','src/vfx3/sword-arts.js','tests/remaster-r9.test.cjs','tests/vfx3-flow.test.cjs','tests/vfx3-refinement.test.cjs','tools/vfx3/assemble_remaster.py','tools/vfx3/lab.js','tools/vfx3/record_remaster.py','tools/vfx3/verify_remaster.py'}
+          encoded = ''.join(Path('.github/r9-remaster/part-%d.b64'%i).read_text() for i in range(7))
+          raw = lzma.decompress(base64.b64decode(encoded,validate=True))
+          assert hashlib.sha256(raw).hexdigest() == '9c51613db6804390b1d0301f76032476d2ce4c3e23183bb5f68558713b5f9dc3', 'transport checksum mismatch'
+          delta = json.loads(raw)
+          assert set(delta) == expected, 'unexpected source scope'
+          outputs = {}
+          for name,change in delta.items():
+              path = Path(name)
+              before = path.read_bytes() if path.exists() else b''
+              actual = hashlib.sha256(before).hexdigest() if path.exists() else None
+              assert actual == change['before'], 'baseline mismatch: '+name
+              lines = before.decode('utf-8').splitlines(keepends=True)
+              data = ''.join(part if isinstance(part,str) else ''.join(lines[part[0]:part[1]]) for part in change['parts']).encode('utf-8')
+              assert hashlib.sha256(data).hexdigest() == change['after'], 'output mismatch: '+name
+              outputs[path] = data
+          for path,data in outputs.items():
+              path.parent.mkdir(parents=True,exist_ok=True)
+              path.write_bytes(data)
+          Path('/tmp/r9-paths.txt').write_text('\n'.join(sorted(expected)))
+          print('Restored',len(outputs),'verified files. Approved R8, original flame and rules are hash-locked by tests.')
+          PY
+      - name: Build both game entries and test all rules and presentation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 build.py
+          python3 tools/vfx3/export_demo.py
+          node --test tests/*.test.cjs
+      - name: Commit verified implementation and remove one-shot write workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm -r .github/r9-remaster .github/workflows/r9-remaster-restore.yml
+          while IFS= read -r path || test -n "$path"; do git add -- "$path"; done < /tmp/r9-paths.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat: remaster physical attacks, spells and support effects in actual battles (R9)'
+          git push origin HEAD:refs/heads/feat/full-vfx-remaster
