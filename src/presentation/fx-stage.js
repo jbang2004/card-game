@@ -153,7 +153,7 @@ const EmberFx2 = (() => {
         ready = true;
         if (typeof EmberVFX3 !== "undefined") {
           try {
-            meshEngine = EmberVFX3.create(meshCanvas);
+            meshEngine = EmberVFX3.create(meshCanvas, {resolveTarget: resolveMeshTarget});
             meshEngine.stage(stage.w, stage.h);
             meshEngine.setQuality(quality);
             meshCanvas.addEventListener("webglcontextlost", (event) => {
@@ -321,6 +321,21 @@ const EmberFx2 = (() => {
     return dedicated ? { art: dedicated, pos: CUTIN_ART_POS } : null;
   }
 
+  // Convert the measured card through the effect canvas's current camera
+  // transform so common shake/zoom is not applied twice to attached cracks.
+  function resolveMeshTarget(ref) {
+    if (typeof EmberFX === "undefined" || !meshCanvas) return null;
+    const box = EmberFX.liveAnchor?.(ref);
+    if (!box) return null;
+    const app = document.getElementById("app").getBoundingClientRect();
+    const c = meshCanvas.getBoundingClientRect(), size = stageSize();
+    if (!(c.width > 0 && c.height > 0)) return null;
+    const sx = app.width / size.w, sy = app.height / size.h;
+    return {x:(app.left+box.x*sx-c.left)*size.w/c.width,
+      y:(app.top+box.y*sy-c.top)*size.h/c.height,
+      w:box.w*sx*size.w/c.width, h:box.h*sy*size.h/c.height};
+  }
+
   function draw(now) {
     if (!engine) return;
     stepCutin(now);
@@ -359,7 +374,7 @@ const EmberFx2 = (() => {
         const targets = o.targets || (o.to ? [o.to] : []);
         const start = Number.isFinite(o.startedAt) ? o.startedAt : performance.now();
         targets.forEach((to, i) => meshEngine.emit(kind, {
-          ...o, to, startedAt: start,
+          ...o, to, targetRef: o.targetRefs?.[i] || null, startedAt: start,
           contactAt: o.contactAt?.[i] ?? start + p.hitAt[i],
           hitStopMs: (EmberTiming.tiers[o.tier || 1]?.hitStopMs || 0) * (o.timeScale || 1),
         }));

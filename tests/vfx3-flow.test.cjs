@@ -5,9 +5,16 @@ const from={x:668,y:459,w:116,h:146},to={x:932,y:295,w:116,h:146};
 const d=(kind='breath',scale=1,seed=388)=>E.descriptor(kind,{from,to,startedAt:0,contactAt:260*scale,timeScale:scale,hitStopMs:50*scale,seed});
 function geom(){const c={console,Math,Float32Array,performance:{now:()=>0}};c.window=c;vm.createContext(c);vm.runInContext(fs.readFileSync('src/vfx3/renderer.js','utf8').split('(function(X)')[0],c);c.Ember3D.Renderer=class{constructor(){this.geo={plane:{}};this.dynamic={}}mesh(data){return{data,n:data.length/8}}resize(){}camera(){}};vm.runInContext(fs.readFileSync('src/vfx3/runtime.js','utf8'),c);return c.EmberVFX3.create({});}
 const near=(a,b,t=1e-6)=>assert.ok(Math.abs(a-b)<=t,`${a} ≠ ${b}`);
-test('R3 sword has a readable back-cock followed by a faster downward sweep',()=>{const a=d('slash'),m0=E.cleaveMotion(a,.01),m1=E.cleaveMotion(a,.065),m2=E.cleaveMotion(a,.23),m3=E.cleaveMotion(a,.26);assert.ok(m1.angle>m0.angle);assert.ok(m2.angle<m1.angle);near(m3.angle,Math.PI);assert.ok(m2.drop<1);});
+test('R5 sword waits offscreen, descends quickly and stays screen-vertical',()=>{const a=d('slash');
+ const wait=E.cleaveMotion(a,.02),entry=E.cleaveMotion(a,.10),mid=E.cleaveMotion(a,.20),hit=E.cleaveMotion(a,.26);
+ assert.equal(wait.visibility,0);assert.equal(entry.drop,0);assert.ok(mid.drop>entry.drop&&mid.drop<hit.drop);
+ for(const t of [0,.1,.2,.26,.5,.8])near(E.cleaveMotion(a,t).angle,Math.PI);
+});
 test('R3 blade stays rigid for mirrored attackers, tiny and large cards',()=>{const r=geom();for(const w of [52,116,220])for(const side of [-1,1]){const a=E.descriptor('slash',{from:{...from,x:to.x+side*260},to:{...to,w},contactAt:260,hitStopMs:50});let min=Infinity,max=0;for(let t=0;t<.95;t+=.004){const p=r._swordPose(a,t),l=Math.hypot(...p.tip.map((x,i)=>x-p.root[i]));min=Math.min(min,l);max=Math.max(max,l);}assert.ok(max-min<.001);}});
-test('R3 actual sword tip remains planted throughout impact hold and only then withdraws',()=>{const r=geom(),a=d('slash'),hit=r._swordPose(a,.26);for(const t of [.26,.275,.295,.31,.42]){const p=r._swordPose(a,t);assert.ok(Math.hypot(...p.tip.map((x,i)=>x-hit.tip[i]))<.001);}assert.ok(r._swordPose(a,.80).tip[1]>hit.tip[1]);});
+test('R5 sword remains embedded and dissolves without withdrawing or bouncing',()=>{const r=geom(),a=d('slash'),hit=r._swordPose(a,.26);
+ for(const t of [.26,.275,.295,.31,.42,.80]){const p=r._swordPose(a,t);assert.ok(Math.hypot(...p.tip.map((x,i)=>x-hit.tip[i]))<.001);}
+ assert.equal(E.cleaveMotion(a,1.0).visibility,0);
+});
 test('R3 sword position is continuous at phase boundaries',()=>{const r=geom(),a=d('slash');for(const t of [.26*.29,.26,.31,.54,.82]){const l=r._swordPose(a,t-1e-6),q=r._swordPose(a,t+1e-6);assert.ok(Math.hypot(...l.tip.map((x,i)=>x-q.tip[i]))<.02);}});
 test('R3 frame sampling cannot write to damage or game state',()=>{const s=fs.readFileSync('src/vfx3/runtime.js','utf8');for(const x of ['.dispatch(','.hp=','game.s','setTimeout('])assert.ok(!s.includes(x));});
 test('R3 prelude owns the same attack instance; old lift launch is skipped',()=>{const s=fs.readFileSync('src/effects.js','utf8');assert.ok(s.includes('rec.meshPrelude = true'));assert.ok(s.includes('sequence.records.get(i)?.meshPrelude'));assert.ok(s.includes('contactAt: sequence.origin + beat.at + m.contact'));});

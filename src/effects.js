@@ -2168,6 +2168,7 @@ const EmberFX = (() => {
     fxCall("cast", cast.kind, {
       from: fxBox(from),
       targets: targets.map(fxBox),
+      targetRefs: cast.targets,
       tier: cast.tier,
       tint: cast.tint,
       tintGrad: cast.tintGrad,
@@ -2327,14 +2328,14 @@ const EmberFX = (() => {
           if (art && !quality.reduced && fx2()?.available)
             fx2().cutin(art, { side: e.from.side });
         }
-        if (m.ranged) rangedRecoil(sequence, beat, e.from, actorBox, targetBox);
-        else lunge(ctx, beat, i, e.from, actorBox, targetBox, old);
+        // R5 sky sword is summoned from above, not accompanied by a second
+        // card collision. Keep the legacy lunge when the 3D route is unavailable.
         // R3: a weapon needs its anticipation; a dragon needs an inhalation.
         // These are the SAME instance later consumed at contact, not extra casts.
         const preSpec = EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid], beat.sourceCid);
         if (fx2()?.renderer3dAvailable && ["slash", "breath"].includes(preSpec?.fx)) {
           const started = fxCall("attack", preSpec.fx, {
-            from: fxBox(actorBox), to: fxBox(targetBox),
+            from: fxBox(actorBox), to: fxBox(targetBox), targetRef: e.to,
             tier: outgoing?.tier || 1, tint: preSpec.tint || null,
             tintGrad: preSpec.tintGrad ?? null, ranged: m.ranged,
             startedAt: sequence.origin + beat.at,
@@ -2344,6 +2345,13 @@ const EmberFX = (() => {
           });
           if (started) { rec.meshPrelude = true; if (!m.ranged) rec.meshMelee = true; }
         }
+        if (preSpec?.fx === "slash" && rec.meshPrelude) {
+          const actorEl = anchorEl(e.from);
+          if (actorEl && !quality.reduced) animate(actorEl,
+            [{scale:"1"},{scale:"1.025",offset:.35},{scale:"1"}],
+            {duration:Math.max(90,m.contact),easing:"ease-out"});
+        } else if (m.ranged) rangedRecoil(sequence, beat, e.from, actorBox, targetBox);
+        else lunge(ctx, beat, i, e.from, actorBox, targetBox, old);
       });
       at(ctx, beat.at + m.lift, () => {
         const { sequence } = ctx;
@@ -3082,6 +3090,11 @@ const EmberFX = (() => {
     setView,
     setTheme,
     configure,
+    /** Current visible target, including reaction/rebind. No rule reads. */
+    liveAnchor: (ref) => {
+      const el = reactionTarget(ref), box = el?.isConnected && pos(el);
+      return box ? fxBox(box) : null;
+    },
     /** Read-only anchor lookup against the live DOM (tests, tooling). */
     anchor: (ref) => anchors.resolve(ref, activeSequence?.anchors || captureAnchors()),
     get trace() {
