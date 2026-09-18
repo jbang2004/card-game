@@ -13,6 +13,7 @@ const KIND={breath:'breath',lightning:'lightning',bolt:'lightning',slash:'slash'
 const TAIL={breath:4100,lightning:320,slash:1120};
 const valid=b=>b&&['x','y','w','h'].every(k=>Number.isFinite(b[k]))&&b.w>0&&b.h>0;
 function descriptor(kind,o,now=0){
+ o=o||{};
  if(!KIND[kind]||!valid(o.from)||!valid(o.to))return null;
  const start=Number.isFinite(o.startedAt)?o.startedAt:now;
  const lead=Math.max(0,Number(o.leadMs)||0);
@@ -20,25 +21,48 @@ function descriptor(kind,o,now=0){
  const scale=clamp(Number(o.timeScale)||1,.1,1);
  return {kind:KIND[kind],sourceKind:kind,from:{...o.from},to:{...o.to},start,impact:Math.max(start,impact),
    hold:Math.max(0,Number(o.hitStopMs)||0),tail:TAIL[KIND[kind]]*scale,seed:Number(o.seed)||7,
-   tier:clamp(o.tier||2,1,3),scale,tint:Array.isArray(o.tint)?o.tint.slice():null};
+   tier:clamp(o.tier||2,1,3),scale,tint:Array.isArray(o.tint)?o.tint.slice():null,
+   targetRef:o.targetRef?{side:o.targetRef.side,uid:o.targetRef.uid}:null};
 }
 function sample(d,now){
  const t=(now-d.start)/1000,hit=(d.impact-d.start)/1000,after=t-hit;
  return {t,hit,after,alive:now>=d.start&&now<d.impact+d.tail,phase:t<0?'待机':after<0?'释放':after<.075?'命中':'余韵'};
 }
 
-// R3: one authored motion, sampled by the mesh and by its blade-history trail.
-// Warm-up uses the existing actor anticipation (no new damage event or rule delay).
+// R5: a straight, screen-top strike. The deadline is supplied by the rules
+// director; a short visible descent uses its last 160ms, not the whole windup.
+const SWORDFALL = Object.freeze({fallMs:160, holdMs:65, dissolveAt:.34,
+  dissolveEnd:.68, crackEnd:.94, offscreenMargin:38});
 function cleaveMotion(d,t){
  const hit=(d.impact-d.start)/1000,post=(t-hit)/d.scale;
- const u=hit>0?clamp(t/hit):1,wind=ease(u/.29),v=clamp((u-.29)/.71);
- const drop=v*v*v,sign=d.to.x>=d.from.x?1:-1;
- const hold=clamp(d.hold/1000/d.scale,.045,.070);
- const settle=Math.max(0,post-hold),recover=ease((post-.28)/.28);
- const tilt=post<0?(.93+.25*wind)*(1-drop):.095*Math.sin(settle*26)*Math.exp(-settle*15);
- return {u,wind,drop,sign,angle:Math.PI+sign*tilt,post,hold,recover,
-   yaw:post<0?mix(-.48,.14,drop):.14+.18*recover,
-   visibility:t<0?0:ease(t/(.04*d.scale))*(1-ease((post-.36)/.32))};
+ const flight=Math.min(hit,SWORDFALL.fallMs/1000*d.scale);
+ const enter=hit-flight,u=flight>0?clamp((t-enter)/flight):1;
+ // Nonzero entry velocity, increasing throughout; no slow elevator arrival.
+ const drop=.32*u+.68*u*u;
+ const visibility=t<enter?0:1-ease((post-SWORDFALL.dissolveAt)/(SWORDFALL.dissolveEnd-SWORDFALL.dissolveAt));
+ return {u,wind:0,drop,sign:1,angle:Math.PI,yaw:.22,post,
+  hold:Math.max(SWORDFALL.holdMs/1000,Math.min(.09,(d.hold||0)/1000/d.scale)),
+  recover:0,flight,enter,visibility:t<0?0:visibility};
+}
+// Deterministic cracks in card-local coordinates. Leave title/stat margins.
+function cardFracturePaths(seed=7){
+ const rays=[[-.43,.30],[-.44,-.16],[-.25,-.40],[.13,-.41],[.43,-.25],[.44,.18],[.22,.43],[-.12,.43]];
+ const paths=[];
+ for(let i=0;i<rays.length;i++){
+  const end=rays[i],len=Math.hypot(...end),per=[-end[1]/len,end[0]/len],pts=[[0,0]];
+  for(let j=1;j<=5;j++){
+   const f=j/5,jitter=j===5?0:(rnd(seed+i*29+j*7)-.5)*.055;
+   pts.push([end[0]*f+per[0]*jitter,end[1]*f+per[1]*jitter]);
+  }
+  paths.push({points:pts,width:i%3===0?1.30:.88,delay:i*.003,branch:false});
+  for(let j of [2,4]){
+   const a=pts[j],side=(i+j)%2?1:-1,q=.060+rnd(seed+i*43+j)*.035;
+   const b=[clamp(a[0]+end[0]*.11+per[0]*q*side,-.445,.445),clamp(a[1]+end[1]*.11+per[1]*q*side,-.42,.43)];
+   const c=[clamp(b[0]+end[0]*.10-per[0]*q*.25*side,-.445,.445),clamp(b[1]+end[1]*.10-per[1]*q*.25*side,-.42,.43)];
+   paths.push({points:[a,b,c],width:.42,delay:.018+j*.010,branch:true});
+  }
+ }
+ return paths;
 }
 // Original flame time/coordinates remain isolated from the game clock.
 const Ref=G.EmberReferenceFlame||(typeof require==='function'?require('./reference-flame.js'):null);
@@ -66,13 +90,15 @@ function fractureAt(seconds){
  return {growth,open,fade:1-ease((seconds-.49)/.45)};
 }
 
-function create(canvas){
+function create(canvas,options={}){
  const X=G.Ember3D,{M,V,Geo}=X,R=new X.Renderer(canvas);
  let W=1600,H=940,quality={low:false,reduced:false},instances=[],last=null,manual=null,uid=0,lastNow=0,dirty=true;
  let stats={active:0,drawCalls:0,particles:0,renderer:'mesh3d',frames:0};
  const trace=[];
+ let swordFrame=null;
  const blade=R.mesh(makeBlade());
  const tmp=R.dynamic;
+ const bladeParts=makeSwordParts();
  function emit(kind,o,now=performance.now()){
   const d=descriptor(kind,o,now);if(!d||quality.reduced)return false;
   d.id=++uid;instances.push(d);if(instances.length>12)instances.shift();last={...d,from:{...d.from},to:{...d.to}};
@@ -102,110 +128,167 @@ function create(canvas){
  }
 
  function swordPose(d,t){
-  const m=cleaveMotion(d,t),L=clamp(d.to.w*1.46,66,168);
-  const T=xyz({...d.to,y:d.to.y+d.to.h*.50},32);
-  const lift=Math.max(12,Math.min(d.to.h*.78,d.to.y+d.to.h*.50-L*1.23-22));
-  const back=(-.46-.19*m.wind)*m.sign*L;
-  const k=m.drop;
-  // The point follows a curved sweep, not a lift/elevator translation. Recover
-  // releases the sword only AFTER the rigid planted-contact interval.
-  const tip=[T[0]+back*(1-k)+m.sign*Math.sin(k*Math.PI)*L*.17+m.sign*m.recover*L*.06,
-   T[1]+lift*(.80+.20*m.wind)*(1-k)+m.recover*L*.16,
-   T[2]+(1-k)*(28+Math.sin(k*Math.PI)*20)+m.recover*10];
-  const rot=M.mul(M.Rz(m.angle),M.Ry(m.yaw));
+  const m=cleaveMotion(d,t),L=clamp(d.to.w*1.26,67,172);
+  // Entry targets the portrait, not the floor or the numeric badges below it.
+  const T=xyz({...d.to,y:d.to.y-d.to.h*.055},36);
+  const startY=H/2+SWORDFALL.offscreenMargin;
+  const tip=[T[0],mix(startY,T[1],m.drop),T[2]];
+  const rot=M.mul(M.Rz(Math.PI),M.Ry(m.yaw));
   const mat=M.mul(M.T(...tip),M.mul(rot,M.mul(M.S(L),M.T(0,-.98,0))));
   return {mat,L,root:M.point(mat,[0,.14,0]),tip:M.point(mat,[0,.98,0]),
    contact:M.point(mat,[0,.98,0]),target:T,motion:m};
  }
- function groundCleave(d,s,T){
-  const q=s.after/d.scale;if(q<0||q>=.96)return;
-  const f=fractureAt(q),g=clamp(d.to.w/116,.48,1.25),span=76*g;
-  // A shallow 3D ground patch, not two stretched halves of a card illustration.
-  // x/y are the stage plane; z is true elevation toward the fixed camera.
-  const base=[T[0],T[1],9];
-  const path=[];for(let i=0;i<11;i++){
-   const u=(i-5)/5;path.push([base[0]+u*span,base[1]+(rnd(d.seed+i*23)-.5)*9*g+u*12*g,base[2]]);
-  }
-  const seam=[],lip=[],firstFx=R.fxList.length;
-  for(let i=0;i<path.length-1;i++){
-   const progress=clamp((f.growth-Math.abs((i+.5-5)/5))/.18);if(progress<=0)continue;
-   const a=path[i],b=path[i+1],w=(1.6+3.4*(1-Math.abs((i-5)/5)))*g*f.open*ease(progress);
-   const a0=[a[0],a[1]-w,a[2]],a1=[a[0],a[1]+w,a[2]],b0=[b[0],b[1]-w,b[2]],b1=[b[0],b[1]+w,b[2]];
-   Geo.tri(seam,a0,b0,b1);Geo.tri(seam,a0,b1,a1);
-   for(const sg of [-1,1]){
-    const innerA=[a[0],a[1]+sg*w,a[2]+1],innerB=[b[0],b[1]+sg*w,b[2]+1];
-    const outA=[a[0],a[1]+sg*(w+2.5*g),a[2]+1.2+f.open*g*2],outB=[b[0],b[1]+sg*(w+2.5*g),b[2]+1.2+f.open*g*2];
-    Geo.tri(lip,innerA,innerB,outB);Geo.tri(lip,innerA,outB,outA);
-   }
-   // Fine light only inside the fissure; dark opening stays readable.
-   R.line([a[0],a[1],a[2]+.2],[b[0],b[1],b[2]+.2],.75*g,'#b7dfff',{mode:6,alpha:f.fade*.72});
-   if(i%2===0){
-    const sg=i%4===0?1:-1,len=(14+rnd(i+23)*22)*g*f.growth;
-    const mid=[b[0]+sg*len*.4,b[1]+sg*len*.52,b[2]+.4],end=[mid[0]-len*.23,mid[1]+sg*len*.40,mid[2]];
-    R.line(b,mid,2.3*g,'#152531',{mode:6,alpha:f.fade,add:false,transparent:true});
-    R.line(mid,end,1.2*g,'#152531',{mode:6,alpha:f.fade,add:false,transparent:true});
-    R.line(b,mid,.45*g,'#a4d5fb',{mode:6,alpha:f.fade*.63});
+ function flatStrip(verts,a,b,width){
+  const dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy);if(len<.0001)return;
+  const x=-dy/len*width*.5,y=dx/len*width*.5;
+  const p=[a[0]+x,a[1]+y,a[2]],q=[a[0]-x,a[1]-y,a[2]],r=[b[0]-x,b[1]-y,b[2]],v=[b[0]+x,b[1]+y,b[2]];
+  Geo.tri(verts,p,q,r,[0,0,1]);Geo.tri(verts,p,r,v,[0,0,1]);
+ }
+ function cardCracks(d,s,T){
+  const q=s.after/d.scale;if(q<0||q>=SWORDFALL.crackEnd)return;
+  const f=fractureAt(q),g=clamp(d.to.w/116,.43,1.5);
+  const dark=[],rim=[],light=[],tips=[];
+  const paths=d.cracks||(d.cracks=cardFracturePaths(d.seed));
+  for(const path of paths){
+   const growth=clamp((q-path.delay)/.145),pts=path.points;
+   for(let j=0;j<pts.length-1;j++){
+    const p=pts[j],v=pts[j+1],r0=Math.hypot(...p)/.60,r1=Math.hypot(...v)/.60;
+    const progress=clamp((growth-r0)/Math.max(.025,r1-r0));if(progress<=0)continue;
+    const end=[mix(p[0],v[0],progress),mix(p[1],v[1],progress)];
+    const a=[T[0]+p[0]*d.to.w,T[1]+p[1]*d.to.h,18],b=[T[0]+end[0]*d.to.w,T[1]+end[1]*d.to.h,18];
+    const w=(1.6+2.1*(1-r0))*g*path.width*f.open;
+    flatStrip(dark,a,b,w);
+    flatStrip(rim,[a[0]+.75*g,a[1]-.8*g,18.1],[b[0]+.75*g,b[1]-.8*g,18.1],Math.max(.45,w*.28));
+    flatStrip(light,[a[0],a[1],18.2],[b[0],b[1],18.2],Math.max(.36,.64*g*path.width));
+    if(progress<1&&!path.branch)tips.push(b);
    }
   }
-  // Ground is transient illusion only; geometry/data of the board never changes.
-  const fissureLines=R.fxList.splice(firstFx);
-  mesh(seam,'#09131c',{mode:6,alpha:f.fade*.96,add:false,transparent:true});
-  mesh(lip,'#49515a',{mode:6,alpha:f.fade*.70,add:false,transparent:true});
-  R.fxList.push(...fissureLines);
-  // Lifted angular fragments separate to either side, then settle. Fixed-size rocks.
-  for(let i=0;i<(quality.low?8:18);i++){
-   const seed=d.seed+i*43,sg=i%2?1:-1,delay=rnd(seed)*.045,age=q-delay;if(age<0)continue;
-   const sz=(3+rnd(seed+1)*5)*g,vel=40+rnd(seed+2)*55;
-   const h=Math.max(0,vel*age-230*age*age)*g;
-   const travel=(1-Math.exp(-age*7))*(12+rnd(seed+3)*13)*g;
-   const p=[T[0]+(rnd(seed+4)-.5)*span*1.65,T[1]+sg*travel,T[2]-20+h];
-   R.fx('rock',p,[sz,sz*.56,sz*.9],i%3?'#506b7d':'#92a0a1',[age*3+seed,sg*age*4,age],
-    {mode:0,alpha:f.fade,roughness:.85,metal:.03,transparent:true,add:false});
+  // Dark recess + one lit broken edge, not glowing spokes pasted over the card.
+  mesh(dark,'#02050a',{mode:6,alpha:f.fade*.98,add:false,transparent:true});
+  mesh(rim,'#bfd3dd',{mode:6,alpha:f.fade*.60,add:false,transparent:true});
+  mesh(light,[.30,.84,1.35],{mode:6,alpha:Math.exp(-q*5)*.86});
+  for(const p of tips)R.glow(p,7*g,'#c9eaff',Math.exp(-q*8)*.46);
+  // The puncture itself sits on the card. Its lower lip occludes the last
+  // pixels of the point, making insertion read without bending the blade.
+  const hole=[],lip=[],spread=clamp(q/.028),hw=(2.5+spread*4)*g,hh=(2+spread*3.2)*g;
+  for(let i=0;i<12;i++){
+   const a=i/12*Math.PI*2,b=(i+1)/12*Math.PI*2,ra=.80+rnd(i+d.seed)*.20,rb=.80+rnd(i+1+d.seed)*.20;
+   const p=[T[0]+Math.cos(a)*hw*ra,T[1]+Math.sin(a)*hh*ra,37],v=[T[0]+Math.cos(b)*hw*rb,T[1]+Math.sin(b)*hh*rb,37];
+   Geo.tri(hole,[T[0],T[1],37],p,v,[0,0,1]);
+   if(Math.sin(a)<0)flatStrip(lip,p,v,1.25*g);
   }
-  const expand=1-Math.pow(1-clamp(q/.32),3);
-  if(q<.32)ring([T[0],T[1],12],(11+expand*74)*g,'#adc7d7',(1-expand)*.56,1.03);
-  for(let i=0;i<(quality.low?4:9);i++){
-   const age=q-.035;if(age<0)continue;
-   const th=i/9*Math.PI*2,r=(8+Math.min(age,.35)*80)*g;
-   const p=[T[0]+Math.cos(th)*r,T[1]+Math.sin(th)*r*.30+age*11*g,21+i*.03];
-   const a=env(age,0,.78,.10,.39)*.26;
-   sprite(p,(28+age*35)*g,'#637c89',a,9,d.seed+i,.2*i);
+  mesh(hole,'#03080e',{mode:6,alpha:f.fade,add:false,transparent:true});
+  mesh(lip,'#e4dbc5',{mode:6,alpha:f.fade*.8,add:false,transparent:true});
+  // Tiny rigid chips, not oversized blocks or tearing the original artwork.
+  for(let i=0;i<(quality.low?8:19);i++){
+   const seed=d.seed+i*37,delay=rnd(seed)*.028,age=q-delay,life=.28+rnd(seed+1)*.28;
+   if(age<0||age>life)continue;
+   const angle=rnd(seed+2)*Math.PI*2,speed=(48+rnd(seed+3)*100)*g;
+   const p=[T[0]+Math.cos(angle)*speed*age,T[1]+Math.sin(angle)*speed*age-130*age*age*g,T[2]+age*(70+rnd(seed+4)*90)-190*age*age];
+   const sz=(1.6+rnd(seed+5)*2.5)*g,a=(1-ease((age-life*.4)/(life*.6)))*.92;
+   R.fx('rock',p,[sz,sz*.50,sz*.7],i%4?'#829bac':'#d1b889',[age*12+seed,age*7,age*5],
+    {mode:0,alpha:a,roughness:.54,metal:.38,transparent:true,add:false});
+  }
+  // Fine neutral dust. It dissipates before the last fissures, never a fog wall.
+  for(let i=0;i<(quality.low?3:7);i++){
+   const age=q-.025-rnd(i+d.seed)*.04;if(age<0||age>.47)continue;
+   const a=i/7*Math.PI*2,rad=(6+age*50)*g;
+   sprite([T[0]+Math.cos(a)*rad,T[1]+Math.sin(a)*rad*.58+age*24*g,20],
+    (12+age*35)*g,'#8ea3b0',env(age,0,.47,.045,.26)*.15,9,d.seed+i,a);
   }
  }
  function slash(d,s){
-  const pose=swordPose(d,s.t),{mat,L,target:T,motion:m}=pose;
-  // Crack pass beneath the blade, bloom and sparks. No foreground-wide shake.
-  if(s.after>=0)groundCleave(d,s,T);
-  if(m.visibility>.003){
-   const opt={roughness:.29,metal:.78,dissolve:1-m.visibility};
-   R.draw(blade,mat,'#7d94a8',opt);
-   R.draw(R.geo.box,M.mul(mat,M.trs([0,.40,.027],[0,0,0],[.008,.58,.006])),'#284963',{...opt,emission:.25});
-   R.draw(R.geo.box,M.mul(mat,M.trs([0,-.025,0],[0,0,.045],[.28,.043,.067])),'#c6a76b',opt);
-   R.draw(R.geo.cyl,M.mul(mat,M.trs([0,-.17,0],[0,0,0],[.057,.26,.057])),'#213646',{...opt,roughness:.65,metal:.12});
-   R.draw(R.geo.sphere,M.mul(mat,M.trs([0,-.315,0],[0,0,0],[.075,.075,.075])),'#a4dcff',{...opt,emission:.5});
-  }
-  // Only a blade-history smear, never a full-screen beam or stretched sword.
-  const rows=[],stop=Math.min(s.t,s.hit),begin=Math.max(s.hit*.27,s.t-.095*d.scale);
-  if(stop>begin&&m.visibility>.01){
-   for(let i=0;i<16;i++){const p=swordPose(d,mix(begin,stop,i/15));rows.push([p.root,p.tip]);}
-   const verts=[];for(let i=0;i<rows.length-1;i++){
-    const [a,b]=rows[i],[c,e]=rows[i+1];if(V.len(V.sub(b,e))<.01)continue;
-    const u=i/(rows.length-1),v=(i+1)/(rows.length-1);
-    Geo.tri(verts,a,b,c,null,[u,0],[u,1],[v,0]);Geo.tri(verts,b,e,c,null,[u,1],[v,1],[v,0]);
+  const pose=swordPose(d,s.t),{mat,L,target:T,motion:m}=pose,g=clamp(d.to.w/116,.43,1.5);
+  swordFrame={id:d.id,tip:pose.tip.slice(),target:T.slice(),length:L,time:s.t,visible:m.visibility,box:{...d.to}};
+  // One straight path; steel stays opaque and invariant, trail is independent.
+  if(m.visibility>.002){
+   const opt={roughness:.25,metal:.82,dissolve:1-m.visibility,emission:.09};
+   R.draw(blade,mat,'#adbdcc',opt);
+   for(const part of bladeParts)R.draw(part.geo,M.mul(mat,part.mat),part.color,{...opt,...part.opt});
+   const lineA=M.point(mat,[0,.18,.052]),lineB=M.point(mat,[0,.78,.019]);
+   R.line(lineA,lineB,.45*g,[.26,.68,1.05],{mode:6,alpha:.63*m.visibility});
+   if(s.after<.02){
+    const shine=Math.max(0,1-Math.abs((m.u-.82)/.18));
+    R.glow(M.point(mat,[0,.22,.075]),18*g,'#ecfaff',shine*.30);
    }
-   mesh(verts,[.22,.52,.90],{mode:5,alpha:m.visibility*.34,time:s.t/d.scale});
-   if(rows.length>2)beam(rows.map(r=>r[1]),.85,[.65,1.15,1.55],m.visibility*.66);
   }
-  if(s.after<0){
-   const a=Math.sin(m.u*Math.PI)*.36;
-   R.glow([T[0],T[1],9],d.to.w*.44,'#96c5e4',a);
-  }else{
-   const q=s.after/d.scale,a=Math.exp(-q*27),g=clamp(d.to.w/116,.48,1.25);
-   R.glow(T,68*g,'#e2eeec',a*.76);
-   sparks(T,q,42,'#dfedee',d.seed,g*1.05);
-   sparks(T,q,14,'#ffcf8a',d.seed+81,g*.83);
-   R.line([T[0]-26*g,T[1]+4*g,36],[T[0]+26*g,T[1]-4*g,36],1.5*g,'#eaf4ff',{mode:6,alpha:a});
+  // Two tapering edge wakes sampled from past blade positions. The sword is
+  // never scaled to make a streak; straight motion requires no curved ribbon.
+  if(s.t>=m.enter&&s.after<.065*d.scale){
+   const fade=s.after<0?1:1-s.after/(.065*d.scale);
+   const top=swordPose(d,Math.max(m.enter,Math.min(s.t,s.hit)-.055*d.scale));
+   const cur=swordPose(d,Math.min(s.t,s.hit));
+   for(const side of [-1,1]){
+    const a=M.point(top.mat,[side*.070,.06,.020]),b=M.point(cur.mat,[side*.048,.82,.020]);
+    const ps=[];for(let i=0;i<9;i++){
+     const u=i/8,base=V.mix(a,b,u),w=(.3+1.8*u)*g;
+     ps.push([base[0]-w,base[1],27],[base[0]+w,base[1],27]);
+    }
+    const v=[];for(let i=0;i<8;i++){
+     const u=i/8,z=(i+1)/8;Geo.tri(v,ps[i*2],ps[i*2+1],ps[i*2+2],null,[u,0],[u,1],[z,0]);
+     Geo.tri(v,ps[i*2+1],ps[i*2+3],ps[i*2+2],null,[u,1],[z,1],[z,0]);
+    }
+    mesh(v,[.25,.61,1.0],{mode:5,alpha:.42*fade,time:s.t/d.scale});
+   }
+   // Detached short air streaks remain parallel to screen Y.
+   for(let i=0;i<4;i++){
+    const x=T[0]+(i%2?-1:1)*(15+i*4)*g,y=pose.tip[1]+L*(.45+i*.17);
+    R.line([x,y+33*g,22],[x,y,22],.65*g,'#b1d8f4',{mode:6,alpha:.35*fade*Math.sin(m.u*Math.PI)});
+   }
   }
+  if(s.after>=0){
+   const q=s.after/d.scale,flash=Math.exp(-q*38);
+   cardCracks(d,s,T);
+   R.glow([T[0],T[1],40],40*g,'#deefff',flash*.85);
+   R.glow([T[0],T[1],40],16*g,[1.7,2.1,2.8],flash*.66);
+   // One asymmetric impact star; long sparks point away from the puncture.
+   if(q<.085){
+    const a=(1-q/.085)**1.6;
+    for(let i=0;i<7;i++){
+     const ang=i/7*Math.PI*2+.19,r=(13+rnd(d.seed+i)*22)*g*(.7+q*7);
+     R.line([T[0]+Math.cos(ang)*4*g,T[1]+Math.sin(ang)*4*g,41],
+      [T[0]+Math.cos(ang)*r,T[1]+Math.sin(ang)*r*.75,41],(i%2?1:1.55)*g,'#e8f2ef',{mode:6,alpha:a});
+    }
+   }
+   sparks([T[0],T[1],42],q,38,'#e9f4ff',d.seed,g*.82);
+   sparks([T[0],T[1],42],q,19,'#f6c780',d.seed+91,g*.90);
+   if(q<.20){
+    const k=clamp(q/.20),r=(4+Math.sin(k*Math.PI/2)*35)*g;
+    R.fx('ring',[T[0],T[1],19],[r,r*.48,r],'#97bace',[Math.PI/2,0,0],{mode:6,alpha:(1-k)**2*.30});
+   }
+  }
+ }
+ // Hand-authored faceted silver blade, champagne bevels, dark fuller and a
+ // gemstone hilt. These are static meshes, not generated anew each frame.
+ function makeSwordParts(){
+  const parts=[];
+  const add=(geo,mat,color,opt={})=>parts.push({geo,mat,color,opt});
+  const facet=(poly,depth=.020)=>{
+   const out=[],cx=poly.reduce((n,p)=>n+p[0],0)/poly.length,cy=poly.reduce((n,p)=>n+p[1],0)/poly.length;
+   for(let i=0;i<poly.length;i++){
+    const a=poly[i],b=poly[(i+1)%poly.length];
+    Geo.tri(out,[cx,cy,depth],[a[0],a[1],0],[b[0],b[1],0]);
+    Geo.tri(out,[cx,cy,-depth],[b[0],b[1],0],[a[0],a[1],0]);
+   }return R.mesh(out);
+  };
+  for(let sg of [-1,1]){
+   const edge=facet([[sg*.052,.02],[sg*.075,.02],[sg*.057,.75],[0,.98],[sg*.033,.73]],.007);
+   add(edge,M.T(0,0,.022),sg<0?'#e8f1f2':'#c5d4df',{roughness:.19,emission:.15});
+  }
+  const fuller=facet([[-.022,.065],[-.017,.60],[0,.80],[.017,.60],[.022,.065]],.006);
+  add(fuller,M.T(0,0,.042),'#263c58',{roughness:.36,metal:.52,emission:.05});
+  const guard=facet([[-.22,-.075],[-.20,-.004],[-.095,.055],[0,.027],[.095,.055],[.20,-.004],[.22,-.075],[.16,-.045],[.065,-.012],[0,-.05],[-.065,-.012],[-.16,-.045]],.030);
+  add(guard,M.T(0,0,.005),'#d4bc87',{roughness:.22,metal:.85,emission:.06});
+  add(R.geo.cyl,M.trs([0,-.18,0],[0,0,0],[.054,.25,.054]),'#162437',{metal:.15,roughness:.70});
+  for(let i=0;i<6;i++)add(R.geo.cyl,M.trs([0,-.084-i*.037,0],[0,0,0],[.059,.012,.059]),'#a99369',{metal:.76,roughness:.32});
+  const gem=facet([[0,.048],[-.043,0],[0,-.055],[.043,0]],.045);
+  add(gem,M.T(0,-.017,.040),'#9eddf0',{metal:.4,roughness:.15,emission:.22});
+  add(gem,M.mul(M.T(0,-.326,0),M.S(.65)),'#c7dce8',{metal:.7,roughness:.25});
+  for(let i=0;i<5;i++){
+   const mark=facet([[0,.012],[-.009,0],[0,-.012],[.009,0]],.001);
+   add(mark,M.T(0,.16+i*.083,.052),'#9fd4ed',{mode:6,emission:0});
+  }
+  return parts;
  }
  function electricity(d,s){
   const F=xyz(d.from,22),T=xyz(d.to,23),delta=V.sub(T,F),dist=V.len(delta)||1,dir=V.scale(delta,1/dist),per=[-dir[1],dir[0],0];
@@ -272,7 +355,15 @@ function create(canvas){
   if(!active.length){if(dirty)R.clear();dirty=false;stats.active=0;stats.particles=0;stats.drawCalls=0;return;}
   R.camera();R.lamp=[0,0,120];R.lampColor=[.15,.21,.27];R.begin((now-active[0].start)/1000);
   for(const d of active){const state=sample(d,now);if(!state.alive)continue;
-   if(d.kind==='breath')fire(d,state);else if(d.kind==='lightning')electricity(d,state);else slash(d,state);
+   if(d.kind==='breath')fire(d,state);else if(d.kind==='lightning')electricity(d,state);else {
+    let visual=d;
+    if(!manual&&state.after>=0&&d.targetRef&&options.resolveTarget){
+     const target=options.resolveTarget(d.targetRef);
+     if(!valid(target))continue; // Removed/dead card: no cracks left on its old slot.
+     visual={...d,to:{...target},cracks:d.cracks};
+    }
+    slash(visual,state);
+   }
   }
   const hasFire=active.some(d=>d.kind==='breath');
   R.flush();R.end({bloom:hasFire?.28:(quality.low?.34:.46),bloomThreshold:hasFire?.78:.28,referenceFlame:hasFire});dirty=true;
@@ -284,8 +375,8 @@ function create(canvas){
  function setQuality(q){quality={...quality,...q};if(quality.reduced)clear();else{stage(W,H);dirty=true;}}
  return {emit,draw:advance,stage,clear,setQuality,replay,resume(){manual=null;instances=[];dirty=true;},
   get available(){return !quality.reduced;},get stats(){return {...stats};},get last(){return last?{...last,from:{...last.from},to:{...last.to}}:null;},get trace(){return trace.slice();},
-  diagnostics(){return{...stats,webgl:R.info(),error:R.gl.getError()};},
-  destroy(){clear();R.gl.deleteBuffer(blade.b);R.destroy();},_sample:sample,_swordPose:swordPose};
+  diagnostics(){return{...stats,sword:swordFrame?{...swordFrame}:null,webgl:R.info(),error:R.gl.getError()};},
+  destroy(){clear();const owned=new Set([blade,...bladeParts.map(p=>p.geo)]);for(const geo of owned)if(!Object.values(R.geo).includes(geo))R.gl.deleteBuffer(geo.b);R.destroy();},_sample:sample,_swordPose:swordPose};
  function makeBlade(){
   const out=[],outline=[[-.076,0],[-.061,.74],[0,.98],[.061,.74],[.076,0]];
   for(let side of [-1,1])for(let i=0;i<outline.length;i++){
@@ -305,6 +396,6 @@ function create(canvas){
   }return out;
  }
 }
-const api={create,supports:kind=>!!KIND[kind],descriptor,sample,TAIL,cleaveMotion,breathClock,flameMapping,fractureAt};
+const api={create,supports:kind=>!!KIND[kind],descriptor,sample,TAIL,cleaveMotion,breathClock,flameMapping,fractureAt,SWORDFALL,cardFracturePaths};
 G.EmberVFX3=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
