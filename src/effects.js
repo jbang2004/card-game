@@ -2329,10 +2329,29 @@ const EmberFX = (() => {
         }
         if (m.ranged) rangedRecoil(sequence, beat, e.from, actorBox, targetBox);
         else lunge(ctx, beat, i, e.from, actorBox, targetBox, old);
+        // R3: a weapon needs its anticipation; a dragon needs an inhalation.
+        // These are the SAME instance later consumed at contact, not extra casts.
+        const preSpec = EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid], beat.sourceCid);
+        if (fx2()?.renderer3dAvailable && ["slash", "breath"].includes(preSpec?.fx)) {
+          const started = fxCall("attack", preSpec.fx, {
+            from: fxBox(actorBox), to: fxBox(targetBox),
+            tier: outgoing?.tier || 1, tint: preSpec.tint || null,
+            tintGrad: preSpec.tintGrad ?? null, ranged: m.ranged,
+            startedAt: sequence.origin + beat.at,
+            contactAt: sequence.origin + beat.at + m.contact,
+            leadMs: m.contact, hitStopMs: m.hitStop,
+            seed: sequence.id * 97 + i, timeScale: sequence.plan.scale,
+          });
+          if (started) { rec.meshPrelude = true; if (!m.ranged) rec.meshMelee = true; }
+        }
       });
       at(ctx, beat.at + m.lift, () => {
         const { sequence } = ctx;
         if (performance.now() >= sequence.origin + beat.at + m.contact) return;
+        if (sequence.records.get(i)?.meshPrelude) {
+          sound("swing", anchors.resolve(e.from, sequence.anchors));
+          return;
+        }
         const actorBox = anchors.resolve(e.from, sequence.anchors),
           targetBox = anchors.resolve(e.to, sequence.anchors);
         sound("swing", actorBox);

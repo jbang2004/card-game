@@ -8,10 +8,11 @@ function geometryRuntime(){
  ctx.Ember3D.Renderer=class{constructor(){this.geo={plane:{}};this.dynamic={};}mesh(data){return{data,n:data.length/8}}resize(){}camera(){}};
  vm.runInContext(fs.readFileSync('src/vfx3/runtime.js','utf8'),ctx);return ctx.EmberVFX3.create({});
 }
-test('sky cleave accelerates down, reaches contact, then stays planted',()=>{
+test('sky cleave accelerates down, holds contact, then damps into recovery',()=>{
  const d=desc('slash'),a=E.cleaveMotion(d,.07),b=E.cleaveMotion(d,.13),c=E.cleaveMotion(d,.18);
  assert.ok(a.drop<b.drop&&b.drop<c.drop);assert.equal(c.drop,1);assert.equal(c.angle,Math.PI);
- for(const t of [.18,.20,.24,.35,.55]){const s=E.cleaveMotion(d,t);assert.equal(s.drop,1);assert.equal(s.angle,Math.PI);}
+ for(const t of [.18,.20,.225]){const s=E.cleaveMotion(d,t);assert.equal(s.drop,1);assert.equal(s.angle,Math.PI);}
+ for(const t of [.24,.35,.55])assert.ok(Math.abs(E.cleaveMotion(d,t).angle-Math.PI)<.10);
 });
 test('rigid blade length remains invariant throughout descent and recovery',()=>{
  const rt=geometryRuntime(),d=desc('slash'),lengths=[];

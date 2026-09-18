@@ -10,7 +10,7 @@ const mix=(a,b,t)=>a+(b-a)*t;
 const rnd=n=>{let x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);};
 const env=(t,a,b,i=.04,o=.1)=>ease((t-a)/i)*(1-ease((t-(b-o))/o));
 const KIND={breath:'breath',lightning:'lightning',bolt:'lightning',slash:'slash'};
-const TAIL={breath:1100,lightning:320,slash:1000};
+const TAIL={breath:1450,lightning:320,slash:1120};
 const valid=b=>b&&['x','y','w','h'].every(k=>Number.isFinite(b[k]))&&b.w>0&&b.h>0;
 function descriptor(kind,o,now=0){
  if(!KIND[kind]||!valid(o.from)||!valid(o.to))return null;
@@ -27,19 +27,49 @@ function sample(d,now){
  return {t,hit,after,alive:now>=d.start&&now<d.impact+d.tail,phase:t<0?'待机':after<0?'释放':after<.075?'命中':'余韵'};
 }
 
-// Natural-time envelopes: explicit impact deadlines remain authoritative.
+// R3: one authored motion, sampled by the mesh and by its blade-history trail.
+// Warm-up uses the existing actor anticipation (no new damage event or rule delay).
 function cleaveMotion(d,t){
  const hit=(d.impact-d.start)/1000,post=(t-hit)/d.scale;
- const u=hit>0?clamp(t/hit):1,fall=clamp((u-.24)/.76),drop=fall*fall*fall;
- const hold=clamp(d.hold/1000/d.scale,.045,.065);
- return {u,drop,angle:Math.PI+.62*(1-drop),post,hold,
-   visibility:env(t,0,hit+.66*d.scale,.025*d.scale,.22*d.scale)};
+ const u=hit>0?clamp(t/hit):1,wind=ease(u/.29),v=clamp((u-.29)/.71);
+ const drop=v*v*v,sign=d.to.x>=d.from.x?1:-1;
+ const hold=clamp(d.hold/1000/d.scale,.045,.070);
+ const settle=Math.max(0,post-hold),recover=ease((post-.28)/.28);
+ const tilt=post<0?(.93+.25*wind)*(1-drop):.095*Math.sin(settle*26)*Math.exp(-settle*15);
+ return {u,wind,drop,sign,angle:Math.PI+sign*tilt,post,hold,recover,
+   yaw:post<0?mix(-.48,.14,drop):.14+.18*recover,
+   visibility:t<0?0:ease(t/(.04*d.scale))*(1-ease((post-.36)/.32))};
 }
 function breathClock(d,t){
  const hit=(d.impact-d.start)/1000;
- const launch=Math.min(.055*d.scale,hit*.23),travel=Math.max(.001,hit-launch);
- // Plumes keep flowing for 480ms after first contact. No repeated damage.
- return {launch,travel,stop:hit+.48*d.scale,life:travel+.43*d.scale,hit};
+ const launch=Math.min(.095*d.scale,hit*.32),travel=Math.max(.001,hit-launch);
+ return {launch,travel,hit,stop:hit+.68*d.scale,life:travel+.43*d.scale,interval:.0078*d.scale};
+}
+// A fire parcel is born once. Its trajectory depends on its own age, not on the
+// position of a shared front. Crossing contact remains C1-continuous: the axial
+// velocity decays while the jet turns out/up, rather than clamping every parcel.
+function flameParcel(d,index,t){
+ const c=breathClock(d,t),seed=d.seed+index*19,birth=c.launch+index*c.interval;
+ const age=(t-birth)/d.scale;
+ if(age<0||birth>c.stop)return null;
+ const speed=index===0?1:1+rnd(seed+8)*.20;
+ const flight=Math.max(.001,c.travel/d.scale/speed,(c.hit-birth)/d.scale);
+ const life=flight+.15+rnd(seed+99)*.06;
+ if(age>=life)return null;
+ const u=age/flight,after=Math.max(0,age-flight),excess=Math.max(0,u-1);
+ const along=u<=1?u:1+.11*(1-Math.exp(-excess/.11));
+ const angle=rnd(seed+1)*Math.PI*2+age*2.0;
+ const growthAge=Math.min(u,1)*.48+after*.48;
+ const spread=.035+growthAge*.55;
+ const swirl=(.4+Math.sin(birth/d.scale*8.3+1.7)*.20);
+ const lateral=Math.sin(angle)*spread*.57+(index%2?1:-1)*(1-Math.exp(-after*7))*swirl;
+ const depth=Math.cos(angle)*spread*.66;
+ const rise=after*after*2.2;
+ const alpha=ease(age/.045)*(1-ease((age-life*.60)/(life*.40)))*
+   env(birth,c.launch-.025*d.scale,c.stop,.11*d.scale,.18*d.scale)*.72*Math.exp(-after*7.0);
+ return {birth,age,life,flight,u,along,lateral,depth,rise,alpha,
+   w:.50+growthAge*2.5,h:.24+growthAge*1.15,seed:rnd(seed*7)*30,
+   angle:(rnd(seed+41)-.5)*.9+Math.sin(age*2.2+rnd(seed)*6)*.07};
 }
 // Partial double-slab separation, followed by monotonic settlement.
 function fractureAt(seconds){
@@ -83,12 +113,17 @@ function create(canvas){
  }
 
  function swordPose(d,t){
-  const m=cleaveMotion(d,t),L=clamp(d.to.w*1.38,66,162);
+  const m=cleaveMotion(d,t),L=clamp(d.to.w*1.46,66,168);
   const T=xyz({...d.to,y:d.to.y+d.to.h*.50},32);
-  const lift=Math.max(12,Math.min(d.to.h*.64,d.to.y+d.to.h*.50-L*1.23-26));
-  const tip=[T[0]-L*.15*(1-m.drop),T[1]+lift*(1-m.drop),T[2]+32*(1-m.drop)];
-  // All transforms are rigid/uniform. Local tip (0,.98,0) anchors the entire sword.
-  const rot=M.mul(M.Rz(m.angle),M.Ry(-.33));
+  const lift=Math.max(12,Math.min(d.to.h*.78,d.to.y+d.to.h*.50-L*1.23-22));
+  const back=(-.46-.19*m.wind)*m.sign*L;
+  const k=m.drop;
+  // The point follows a curved sweep, not a lift/elevator translation. Recover
+  // releases the sword only AFTER the rigid planted-contact interval.
+  const tip=[T[0]+back*(1-k)+m.sign*Math.sin(k*Math.PI)*L*.17+m.sign*m.recover*L*.06,
+   T[1]+lift*(.80+.20*m.wind)*(1-k)+m.recover*L*.16,
+   T[2]+(1-k)*(28+Math.sin(k*Math.PI)*20)+m.recover*10];
+  const rot=M.mul(M.Rz(m.angle),M.Ry(m.yaw));
   const mat=M.mul(M.T(...tip),M.mul(rot,M.mul(M.S(L),M.T(0,-.98,0))));
   return {mat,L,root:M.point(mat,[0,.14,0]),tip:M.point(mat,[0,.98,0]),
    contact:M.point(mat,[0,.98,0]),target:T,motion:m};
@@ -104,8 +139,8 @@ function create(canvas){
   }
   const seam=[],lip=[],firstFx=R.fxList.length;
   for(let i=0;i<path.length-1;i++){
-   if(Math.abs((i+.5-5)/5)>f.growth)continue;
-   const a=path[i],b=path[i+1],w=(1.6+3.4*(1-Math.abs((i-5)/5)))*g*f.open;
+   const progress=clamp((f.growth-Math.abs((i+.5-5)/5))/.18);if(progress<=0)continue;
+   const a=path[i],b=path[i+1],w=(1.6+3.4*(1-Math.abs((i-5)/5)))*g*f.open*ease(progress);
    const a0=[a[0],a[1]-w,a[2]],a1=[a[0],a[1]+w,a[2]],b0=[b[0],b[1]-w,b[2]],b1=[b[0],b[1]+w,b[2]];
    Geo.tri(seam,a0,b0,b1);Geo.tri(seam,a0,b1,a1);
    for(const sg of [-1,1]){
@@ -153,15 +188,15 @@ function create(canvas){
   // Crack pass beneath the blade, bloom and sparks. No foreground-wide shake.
   if(s.after>=0)groundCleave(d,s,T);
   if(m.visibility>.003){
-   const opt={roughness:.22,metal:.92,dissolve:1-m.visibility};
-   R.draw(blade,mat,'#acbecf',opt);
+   const opt={roughness:.29,metal:.78,dissolve:1-m.visibility};
+   R.draw(blade,mat,'#7d94a8',opt);
    R.draw(R.geo.box,M.mul(mat,M.trs([0,.40,.027],[0,0,0],[.008,.58,.006])),'#284963',{...opt,emission:.25});
    R.draw(R.geo.box,M.mul(mat,M.trs([0,-.025,0],[0,0,.045],[.28,.043,.067])),'#c6a76b',opt);
    R.draw(R.geo.cyl,M.mul(mat,M.trs([0,-.17,0],[0,0,0],[.057,.26,.057])),'#213646',{...opt,roughness:.65,metal:.12});
    R.draw(R.geo.sphere,M.mul(mat,M.trs([0,-.315,0],[0,0,0],[.075,.075,.075])),'#a4dcff',{...opt,emission:.5});
   }
   // Only a blade-history smear, never a full-screen beam or stretched sword.
-  const rows=[],stop=Math.min(s.t,s.hit),begin=Math.max(s.hit*.22,s.t-.085*d.scale);
+  const rows=[],stop=Math.min(s.t,s.hit),begin=Math.max(s.hit*.27,s.t-.095*d.scale);
   if(stop>begin&&m.visibility>.01){
    for(let i=0;i<16;i++){const p=swordPose(d,mix(begin,stop,i/15));rows.push([p.root,p.tip]);}
    const verts=[];for(let i=0;i<rows.length-1;i++){
@@ -169,8 +204,8 @@ function create(canvas){
     const u=i/(rows.length-1),v=(i+1)/(rows.length-1);
     Geo.tri(verts,a,b,c,null,[u,0],[u,1],[v,0]);Geo.tri(verts,b,e,c,null,[u,1],[v,1],[v,0]);
    }
-   mesh(verts,[.10,.37,.90],{mode:5,alpha:m.visibility*.25});
-   if(rows.length>2)beam(rows.map(r=>r[1]),.7,[.6,1.3,2.4],m.visibility*.58);
+   mesh(verts,[.22,.52,.90],{mode:5,alpha:m.visibility*.34,time:s.t/d.scale});
+   if(rows.length>2)beam(rows.map(r=>r[1]),.85,[.65,1.15,1.55],m.visibility*.66);
   }
   if(s.after<0){
    const a=Math.sin(m.u*Math.PI)*.36;
@@ -219,65 +254,59 @@ function create(canvas){
  }
 
  function fire(d,s){
-  const clock=breathClock(d,s.t),{launch,travel,stop}=clock;
+  const clock=breathClock(d,s.t),{launch,stop,interval}=clock;
   const origin={...d.from,x:d.from.x+d.from.w*.10,y:d.from.y-d.from.h*.10};
-  const F=xyz(origin,28),T=xyz(d.to,28),D=V.sub(T,F),dist=V.len(D)||1,dir=V.scale(D,1/dist),side=[-dir[1],dir[0],0];
-  const g=clamp(d.to.w/116,.48,1.20),aim=Math.atan2(D[1],D[0]),plumes=[];
-  const charge=env(s.t,0,launch+.05*d.scale,.025*d.scale,.035*d.scale);
-  const feeding=env(s.t,launch,stop,.04*d.scale,.12*d.scale);
-  R.glow(F,37*g,'#ff8c34',charge*.6+feeding*.45);
-  // Same advected billboard construction as the original Ember_Steel dragon demo:
-  // no solid cone, no tube silhouette, no stretching of the complete fire stream.
-  const interval=.0075*d.scale,first=Math.max(0,Math.floor((s.t-travel-.46*d.scale-launch)/interval));
-  const count=Math.min(160,Math.ceil((stop-launch)/interval));
+  const F=xyz(origin,28),T=xyz(d.to,28),D=V.sub(T,F),dist=V.len(D)||1;
+  const dir=V.scale(D,1/dist),side=[-dir[1],dir[0],0],g=clamp(d.to.w/116,.48,1.20);
+  const aim=Math.atan2(D[1],D[0]),unit=Math.min(dist/4.0,67*g),plumes=[];
+  // Reference-derived single fire material and age-driven parcels, tuned for
+  // the much shorter card-stage path. No duplicate hot coat or closed cone.
+  const charge=env(s.t,0,launch+.055*d.scale,.04*d.scale,.04*d.scale);
+  const feeding=env(s.t,launch,stop,.085*d.scale,.15*d.scale);
+  R.glow(F,38*g,'#ff8c34',charge*.60+feeding*.36);
+  const count=Math.ceil((stop-launch)/interval)+1;
+  const first=Math.max(0,Math.floor((s.t-clock.travel-.48*d.scale-launch)/interval));
   for(let i=first;i<count;i++){
    if(quality.low&&i%2)continue;
-   const seed=d.seed+i*19,birth=launch+i*interval,age=s.t-birth;
-   const life=travel+(.14+rnd(seed+99)*.06)*d.scale;
-   if(age<0||age>life||birth>stop)continue;
-   // Minimum velocity reaches the contact point exactly at the authoritative hit.
-   const speed=i===0?1:1+rnd(seed+8)*.20;
-   const parcelTravel=Math.max(travel/speed,clock.hit-birth);
-   const u=age/parcelTravel,beyond=Math.max(0,u-1),u0=Math.min(1,u),nat=age/d.scale;
-   const th=rnd(seed+1)*Math.PI*2+nat*2.0,rad=(2+Math.min(u,1.35)*19)*g;
-   const curl=(1-Math.exp(-beyond*.78))*31*g;
-   const pos=[F[0]+D[0]*u0+side[0]*(Math.sin(th)*rad*.57+Math.sin(th)*curl)+dir[0]*Math.min(9*g,beyond*7*g),
-    F[1]+D[1]*u0+side[1]*(Math.sin(th)*rad*.57+Math.sin(th)*curl)+dir[1]*Math.min(9*g,beyond*7*g)+Math.min(beyond,2)*11*g,
-    F[2]+Math.cos(th)*rad*.66+Math.min(u,1.5)*5*g];
-   const fade=ease(age/(.023*d.scale))*(1-ease((age-life*.60)/(life*.40)))*env(birth,launch-.012*d.scale,stop,.055*d.scale,.13*d.scale);
-   const growth=Math.min(u,1.4),w=(34+growth*65)*g,h=(23+growth*43)*g;
-   if(fade>.004)plumes.push({p:pos,w,h,alpha:fade*.85,mode:8,col:'#ff8e31',seed:rnd(seed*7)*30,angle:aim+(rnd(seed+41)-.5)*.9});
+   const p=flameParcel(d,i,s.t);if(!p||p.alpha<.004)continue;
+   const pos=[F[0]+D[0]*p.along+side[0]*p.lateral*unit,
+    F[1]+D[1]*p.along+side[1]*p.lateral*unit+p.rise*unit,
+    F[2]+p.depth*unit+Math.min(p.u,1.5)*5*g];
+   plumes.push({p:pos,w:p.w*unit,h:p.h*unit,alpha:p.alpha,
+    mode:8,col:'#ff8e31',seed:p.seed,angle:aim+p.angle,time:.96+s.t/d.scale});
   }
-  // Low-energy smoke shares the same depth ordering, behind and above the flame.
-  for(let i=0;i<18;i++){
+  // Smoke leaves contact and rises. It never becomes an opaque grey lid over
+  // the flame; smoke/fire share view-depth sorting and a per-instance clock.
+  for(let i=0;i<24;i++){
    if(quality.low&&i%2)continue;
-   const birth=s.hit+i*.047*d.scale;if(birth>stop+.10*d.scale)break;
-   const age=(s.t-birth)/d.scale;if(age<0||age>.50)continue;
-   const th=rnd(i+d.seed)*Math.PI*2,a=env(age,0,.50,.10,.25)*.17;
-   plumes.push({p:[T[0]+Math.cos(th)*(9+age*22)*g,T[1]+age*49*g+Math.sin(th)*10*g,T[2]-12+Math.sin(th)*8],
-    w:(34+age*60)*g,h:(39+age*56)*g,col:'#5d5046',alpha:a,mode:9,seed:rnd(i+88)*13,angle:age*.1});
+   const birth=clock.hit+.055*d.scale+i*.07*d.scale;
+   if(birth>stop+.05*d.scale)break;
+   const age=(s.t-birth)/d.scale;if(age<0||age>.66)continue;
+   const th=rnd(i+d.seed)*Math.PI*2,a=env(age,0,.66,.15,.32)*.15;
+   plumes.push({p:[T[0]+Math.cos(th)*(7+age*23)*g,T[1]+(age*61+Math.sin(th)*9)*g,T[2]-9+Math.sin(th)*12],
+    w:(31+age*48)*g,h:(37+age*54)*g,col:'#6c5a4c',alpha:a,mode:9,
+    seed:rnd(i+88)*13,angle:age*.14,time:.96+s.t/d.scale});
   }
-  for(const q of plumes.slice())if(q.mode===8&&q.seed%3<1.4)plumes.push({...q,p:[q.p[0],q.p[1],q.p[2]+4*g],w:q.w*.84,h:q.h*.52,alpha:q.alpha*.67,mode:11});
   plumes.sort((a,b)=>a.p[2]-b.p[2]);
-  for(const q of plumes)spriteOval(q.p,q.w,q.h,q.col,q.alpha,q.mode,q.seed,q.angle);
-  const burning=env(s.t,s.hit,stop+.44*d.scale,.035*d.scale,.32*d.scale);
-  R.glow(T,d.to.w*.79,'#ff8b2e',burning*.30);
-  R.glow([T[0],T[1]-d.to.h*.16,8],d.to.w*1.15,'#d95b21',burning*.12);
-  // Small continued embers rather than repeated large explosions / fake damage.
-  for(let i=0;i<28;i++){
-   const birth=s.hit+i*.024*d.scale;if(birth>stop)break;
-   const age=(s.t-birth)/d.scale;if(age<0||age>.41)continue;
-   const th=rnd(i+d.seed)*Math.PI*2,sp=(35+rnd(i+6)*85)*g;
-   const p=[T[0]+Math.cos(th)*sp*age,T[1]+Math.sin(th)*sp*age+36*age*g-65*age*age*g,T[2]+15+age*28];
-   R.particle(p,(1.0+rnd(i+2)*1.3)*g,i%4?'#ffc76d':'#ffebc0',(1-age/.41)*.8,i%7?2:1);
+  for(const q of plumes)spriteOval(q.p,q.w,q.h,q.col,q.alpha,q.mode,q.seed,q.angle,q.time);
+  const burning=env(s.t,clock.hit,stop+.41*d.scale,.05*d.scale,.32*d.scale);
+  R.glow(T,d.to.w*.85,'#ff8b2e',burning*.28);
+  R.glow([T[0],T[1]-d.to.h*.17,8],d.to.w*1.10,'#df6822',burning*.10);
+  // Continuous small jets of sparks; none execute or imitate damage events.
+  for(let i=0;i<40;i++){
+   const birth=clock.hit+i*.028*d.scale;if(birth>stop)break;
+   const age=(s.t-birth)/d.scale;if(age<0||age>.46)continue;
+   const th=rnd(i+d.seed)*Math.PI*2,sp=(30+rnd(i+6)*80)*g;
+   const p=[T[0]+Math.cos(th)*sp*age,T[1]+Math.sin(th)*sp*age+40*age*g-65*age*age*g,T[2]+18+age*24];
+   R.particle(p,(.9+rnd(i+2)*1.4)*g,i%4?'#ffc67b':'#ffe2a8',(1-age/.46)*.80,i%7?2:1);
   }
-  if(s.after>=0)sparks(T,s.after/d.scale,14,'#ffc580',d.seed,g*.7);
+  if(s.after>=0)sparks(T,s.after/d.scale,12,'#ffc580',d.seed,g*.60);
  }
- function spriteOval(pos,w,h,col,alpha,mode=8,seed=0,angle=0){
+ function spriteOval(pos,w,h,col,alpha,mode=8,seed=0,angle=0,time){
   if(alpha<.004)return;
   const ca=Math.cos(angle),sa=Math.sin(angle);
   R.fxList.push({geo:R.geo.plane,model:new Float32Array([ca*w,sa*w,0,0,0,0,1,0,-sa*h,ca*h,0,0,...pos,1]),
-   color:col,opt:{mode,alpha,transparent:true,add:false,surface:seed,emission:mode===8?.4:0}});
+   color:col,opt:{mode,alpha,transparent:true,add:false,surface:seed,emission:mode===8?.4:0,time}});
  }
  function draw(now){
   lastNow=now;if(quality.reduced){if(dirty)R.clear();dirty=false;return;}
@@ -288,7 +317,8 @@ function create(canvas){
   for(const d of active){const state=sample(d,now);if(!state.alive)continue;
    if(d.kind==='breath')fire(d,state);else if(d.kind==='lightning')electricity(d,state);else slash(d,state);
   }
-  R.flush();R.end({bloom:quality.low?.34:.46});dirty=true;
+  const hasFire=active.some(d=>d.kind==='breath');
+  R.flush();R.end({bloom:hasFire?(quality.low?.24:.29):(quality.low?.34:.46),bloomThreshold:hasFire?.78:.28});dirty=true;
   stats={...stats,active:active.length,drawCalls:R.count,particles:R.particles.length/9,frames:stats.frames+1,hdr:R.hdr};
  }
  function clear(){instances=[];manual=null;R.clear();dirty=false;stats.active=0;stats.particles=0;stats.drawCalls=0;}
@@ -300,9 +330,9 @@ function create(canvas){
   diagnostics(){return{...stats,webgl:R.info(),error:R.gl.getError()};},
   destroy(){clear();R.gl.deleteBuffer(blade.b);R.destroy();},_sample:sample,_swordPose:swordPose};
  function makeBlade(){
-  const out=[],outline=[[-.080,0],[-.084,.72],[0,.98],[.084,.72],[.080,0]];
+  const out=[],outline=[[-.076,0],[-.061,.74],[0,.98],[.061,.74],[.076,0]];
   for(let side of [-1,1])for(let i=0;i<outline.length;i++){
-   const a=outline[i],b=outline[(i+1)%outline.length];const av=[a[0],a[1],0],bv=[b[0],b[1],0];Geo.tri(out,[0,.46,.025*side],side>0?bv:av,side>0?av:bv);
+   const a=outline[i],b=outline[(i+1)%outline.length];const av=[a[0],a[1],0],bv=[b[0],b[1],0];Geo.tri(out,[0,.42,.040*side],side>0?bv:av,side>0?av:bv);
   }return out;
  }
  function tube(points,radius,sides=6){
@@ -318,6 +348,6 @@ function create(canvas){
   }return out;
  }
 }
-const api={create,supports:kind=>!!KIND[kind],descriptor,sample,TAIL,cleaveMotion,breathClock,fractureAt};
+const api={create,supports:kind=>!!KIND[kind],descriptor,sample,TAIL,cleaveMotion,breathClock,flameParcel,fractureAt};
 G.EmberVFX3=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
