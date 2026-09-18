@@ -1,0 +1,949 @@
+{
+  "base": "R8 (approved)",
+  "runtimeCoverage": [
+    {
+      "kind": "fireball",
+      "mesh": true
+    },
+    {
+      "kind": "lightning",
+      "mesh": true
+    },
+    {
+      "kind": "slash",
+      "mesh": true
+    },
+    {
+      "kind": "claw",
+      "mesh": true
+    },
+    {
+      "kind": "slam",
+      "mesh": true
+    },
+    {
+      "kind": "arrow",
+      "mesh": true
+    },
+    {
+      "kind": "spear",
+      "mesh": true
+    },
+    {
+      "kind": "bolt",
+      "mesh": true
+    },
+    {
+      "kind": "breath",
+      "mesh": true
+    },
+    {
+      "kind": "frost",
+      "mesh": true
+    },
+    {
+      "kind": "frost-field",
+      "mesh": true
+    },
+    {
+      "kind": "holy",
+      "mesh": true
+    },
+    {
+      "kind": "nature",
+      "mesh": true
+    },
+    {
+      "kind": "void",
+      "mesh": true
+    },
+    {
+      "kind": "siphon",
+      "mesh": true
+    },
+    {
+      "kind": "arcane",
+      "mesh": true
+    },
+    {
+      "kind": "bladeCross",
+      "mesh": true
+    },
+    {
+      "kind": "contact",
+      "mesh": true
+    }
+  ],
+  "newFamilyCount": 19,
+  "cards": [
+    {
+      "id": "spark",
+      "name": "引火学徒",
+      "type": "minion",
+      "attack": {
+        "fx": "bolt",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "squire",
+      "name": "晨曦侍从",
+      "type": "minion",
+      "attack": {
+        "fx": "slash",
+        "style": "dawn",
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "wolf",
+      "name": "月影幼狼",
+      "type": "minion",
+      "attack": {
+        "fx": "claw",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "archer",
+      "name": "边境游侠",
+      "type": "minion",
+      "attack": {
+        "fx": "arrow",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "guard",
+      "name": "铁誓卫士",
+      "type": "minion",
+      "attack": {
+        "fx": "slash",
+        "style": "bastion",
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "oracle",
+      "name": "星界观测者",
+      "type": "minion",
+      "attack": {
+        "fx": "bolt",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "wisp",
+      "name": "暮光精灵",
+      "type": "minion",
+      "attack": {
+        "fx": "bolt",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "spider",
+      "name": "幽谷蛛后",
+      "type": "minion",
+      "attack": {
+        "fx": "claw",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "sentinel",
+      "name": "烬翼斥候",
+      "type": "minion",
+      "attack": {
+        "fx": "claw",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "assassin",
+      "name": "夜幕刺客",
+      "type": "minion",
+      "attack": {
+        "fx": "slash",
+        "style": "night",
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "cleric",
+      "name": "曙光祭司",
+      "type": "minion",
+      "attack": {
+        "fx": "bolt",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "berserker",
+      "name": "赤岩狂战士",
+      "type": "minion",
+      "attack": {
+        "fx": "slam",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "golem",
+      "name": "符文石像",
+      "type": "minion",
+      "attack": {
+        "fx": "slam",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "leech",
+      "name": "血月行者",
+      "type": "minion",
+      "attack": {
+        "fx": "slash",
+        "style": "blood",
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "treant",
+      "name": "古木守护者",
+      "type": "minion",
+      "attack": {
+        "fx": "slam",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "phoenix",
+      "name": "不灭凤凰",
+      "type": "minion",
+      "attack": {
+        "fx": "breath",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "rider",
+      "name": "霜牙狼骑",
+      "type": "minion",
+      "attack": {
+        "fx": "claw",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "necromancer",
+      "name": "亡者织梦师",
+      "type": "minion",
+      "attack": {
+        "fx": "bolt",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "paladin",
+      "name": "圣光裁决者",
+      "type": "minion",
+      "attack": {
+        "fx": "slash",
+        "style": "judgment",
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "titan",
+      "name": "玄铁泰坦",
+      "type": "minion",
+      "attack": {
+        "fx": "slam",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "huntress",
+      "name": "荒野之矛",
+      "type": "minion",
+      "attack": {
+        "fx": "spear",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "dragon",
+      "name": "烬喉幼龙",
+      "type": "minion",
+      "attack": {
+        "fx": "breath",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "reaper",
+      "name": "黯月收割者",
+      "type": "minion",
+      "attack": {
+        "fx": "slash",
+        "style": "crescent",
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "colossus",
+      "name": "远古山岳",
+      "type": "minion",
+      "attack": {
+        "fx": "slam",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "solaris",
+      "name": "逐日者·索拉",
+      "type": "minion",
+      "attack": {
+        "fx": "slash",
+        "style": "sunfall",
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "nyx",
+      "name": "星陨女王·妮克丝",
+      "type": "minion",
+      "attack": {
+        "fx": "bolt",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "ashdragon",
+      "name": "终焰·阿什拉",
+      "type": "minion",
+      "attack": {
+        "fx": "breath",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "frostking",
+      "name": "白霜之王",
+      "type": "minion",
+      "attack": {
+        "fx": "slash",
+        "style": "frost",
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "bolt",
+      "name": "星火箭",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "lightning",
+        "semantic": "lightning",
+        "mesh": true
+      }
+    },
+    {
+      "id": "frostbolt",
+      "name": "寒霜之触",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "frost",
+        "semantic": "frost",
+        "mesh": true
+      }
+    },
+    {
+      "id": "fireball",
+      "name": "陨火术",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "fireball",
+        "semantic": "fireball",
+        "mesh": true
+      }
+    },
+    {
+      "id": "nova",
+      "name": "冰封领域",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "frost-field",
+        "semantic": "frost-field",
+        "mesh": true
+      }
+    },
+    {
+      "id": "storm",
+      "name": "烈焰风暴",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "fireball",
+        "semantic": "fireball",
+        "mesh": true
+      }
+    },
+    {
+      "id": "wisdom",
+      "name": "星界密卷",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "arcane",
+        "semantic": "arcane",
+        "mesh": true
+      }
+    },
+    {
+      "id": "blessing",
+      "name": "黎明祝福",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "holy",
+        "semantic": "buff",
+        "mesh": true
+      }
+    },
+    {
+      "id": "renew",
+      "name": "生命之泉",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "nature",
+        "semantic": "heal",
+        "mesh": true
+      }
+    },
+    {
+      "id": "execute",
+      "name": "暗影湮灭",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "bladeCross",
+        "semantic": "bladeCross",
+        "mesh": true
+      }
+    },
+    {
+      "id": "silence",
+      "name": "遗忘咒印",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "void",
+        "semantic": "void",
+        "mesh": true
+      }
+    },
+    {
+      "id": "rally",
+      "name": "王者号令",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "holy",
+        "semantic": "buff",
+        "mesh": true
+      }
+    },
+    {
+      "id": "wolves",
+      "name": "群狼呼唤",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "nature",
+        "semantic": "summon",
+        "mesh": true
+      }
+    },
+    {
+      "id": "shield",
+      "name": "圣光庇佑",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "holy",
+        "semantic": "ward",
+        "mesh": true
+      }
+    },
+    {
+      "id": "lifedrain",
+      "name": "灵魂虹吸",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "siphon",
+        "semantic": "siphon",
+        "mesh": true
+      }
+    },
+    {
+      "id": "dagger",
+      "name": "银月双刃",
+      "type": "weapon",
+      "attack": null,
+      "cast": {
+        "fx": "holy",
+        "semantic": "buff",
+        "mesh": true
+      }
+    },
+    {
+      "id": "sunblade",
+      "name": "日耀圣剑",
+      "type": "weapon",
+      "attack": null,
+      "cast": {
+        "fx": "holy",
+        "semantic": "buff",
+        "mesh": true
+      }
+    },
+    {
+      "id": "polymorph",
+      "name": "迷途化形",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "arcane",
+        "semantic": "arcane",
+        "mesh": true
+      }
+    },
+    {
+      "id": "discovery",
+      "name": "虚空洞见",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "arcane",
+        "semantic": "arcane",
+        "mesh": true
+      }
+    },
+    {
+      "id": "ambush",
+      "name": "镜像伏击",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "void",
+        "semantic": "void",
+        "mesh": true
+      }
+    },
+    {
+      "id": "battlecry",
+      "name": "战意沸腾",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "nature",
+        "semantic": "buff",
+        "mesh": true
+      }
+    },
+    {
+      "id": "coin",
+      "name": "以太硬币",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "holy",
+        "semantic": "buff",
+        "mesh": true
+      }
+    },
+    {
+      "id": "pup",
+      "name": "幽灵狼",
+      "type": "minion",
+      "attack": {
+        "fx": "claw",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "spiritwolf",
+      "name": "灵狼",
+      "type": "minion",
+      "attack": {
+        "fx": "claw",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "skeleton",
+      "name": "骸骨",
+      "type": "minion",
+      "attack": {
+        "fx": "slash",
+        "style": "bone",
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "stone",
+      "name": "石卫",
+      "type": "minion",
+      "attack": {
+        "fx": "slam",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "sheep",
+      "name": "绵羊",
+      "type": "minion",
+      "attack": {
+        "fx": "claw",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "recruit",
+      "name": "曙光新兵",
+      "type": "minion",
+      "attack": {
+        "fx": "slash",
+        "style": "thrust",
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "thorn",
+      "name": "荆棘树灵",
+      "type": "minion",
+      "attack": {
+        "fx": "slam",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "counterspell",
+      "name": "破法之镜",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "arcane",
+        "semantic": "arcane",
+        "mesh": true
+      }
+    },
+    {
+      "id": "icebarrier",
+      "name": "霜晶壁垒",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "holy",
+        "semantic": "ward",
+        "mesh": true
+      }
+    },
+    {
+      "id": "muster",
+      "name": "黎明集结",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "holy",
+        "semantic": "summon",
+        "mesh": true
+      }
+    },
+    {
+      "id": "absolution",
+      "name": "誓约祷言",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "holy",
+        "semantic": "ward",
+        "mesh": true
+      }
+    },
+    {
+      "id": "tracking",
+      "name": "月径追踪",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "nature",
+        "semantic": "arcane",
+        "mesh": true
+      }
+    },
+    {
+      "id": "sabotage",
+      "name": "断刃伏击",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "slash",
+        "semantic": "slash",
+        "mesh": true
+      }
+    },
+    {
+      "id": "soulguide",
+      "name": "渡魂引路人",
+      "type": "minion",
+      "attack": {
+        "fx": "bolt",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "moonfox",
+      "name": "银灯灵狐",
+      "type": "minion",
+      "attack": {
+        "fx": "claw",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "duskstag",
+      "name": "暮角契鹿",
+      "type": "minion",
+      "attack": {
+        "fx": "slam",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "graveoffering",
+      "name": "归月献仪",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "siphon",
+        "semantic": "siphon",
+        "mesh": true
+      }
+    },
+    {
+      "id": "mooncall",
+      "name": "月径结伴",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "nature",
+        "semantic": "summon",
+        "mesh": true
+      }
+    },
+    {
+      "id": "soultether",
+      "name": "系魂银线",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "siphon",
+        "semantic": "siphon",
+        "mesh": true
+      }
+    },
+    {
+      "id": "moonlance",
+      "name": "碎月长矛",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "frost",
+        "semantic": "frost",
+        "mesh": true
+      }
+    },
+    {
+      "id": "stillness",
+      "name": "寂静封印",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "void",
+        "semantic": "void",
+        "mesh": true
+      }
+    },
+    {
+      "id": "eclipsewolf",
+      "name": "蚀月狼王",
+      "type": "minion",
+      "attack": {
+        "fx": "claw",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "moonguard",
+      "name": "守灯巨兽",
+      "type": "minion",
+      "attack": {
+        "fx": "slam",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "selmyra",
+      "name": "冥月神·瑟弥拉",
+      "type": "minion",
+      "attack": {
+        "fx": "bolt",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "jingchen",
+      "name": "星焰神·烬辰",
+      "type": "minion",
+      "attack": {
+        "fx": "bolt",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "aurion",
+      "name": "曙日神·奥瑞恩",
+      "type": "minion",
+      "attack": {
+        "fx": "slam",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "fenlos",
+      "name": "荒猎神·芬洛斯",
+      "type": "minion",
+      "attack": {
+        "fx": "claw",
+        "style": null,
+        "mesh": true
+      },
+      "cast": null
+    },
+    {
+      "id": "starweave",
+      "name": "星轨织火",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "arcane",
+        "semantic": "arcane",
+        "mesh": true
+      }
+    },
+    {
+      "id": "dawnvow",
+      "name": "晨光守誓",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "holy",
+        "semantic": "ward",
+        "mesh": true
+      }
+    },
+    {
+      "id": "huntinghorn",
+      "name": "古林猎号",
+      "type": "spell",
+      "attack": null,
+      "cast": {
+        "fx": "nature",
+        "semantic": "buff",
+        "mesh": true
+      }
+    }
+  ]
+}

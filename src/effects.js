@@ -2160,23 +2160,34 @@ const EmberFX = (() => {
     const { sequence } = ctx;
     if (!cast.kind) return;
     const from = anchors.resolve(cast.actor, sequence.anchors);
-    if (!from) return; // warned when the record was written
-    const targets = cast.targets
-      .map((ref) => anchors.resolve(ref, sequence.anchors))
-      .filter(Boolean);
-    if (cast.targets.length && !targets.length) return;
+    if (!from) return;
+    const sourceEvent = ctx.plan.beats[beatIndex]?.events?.[0];
+    const sourceCid = sourceEvent?.cid || null;
+    const remastered = fx2()?.renderer3dAvailable && typeof EmberRemasterArts !== "undefined" && EmberRemasterArts.supports(cast.kind);
+    let targetRefs = cast.targets;
+    let contactAt = cast.contactAt;
+    // Destroy/transform or a redundant status can have an explicit rule target
+    // without a damage/status contact beat. Never turn that cast into a self-hit.
+    // Untargeted spells must NOT inherit an arbitrary UI/test action target.
+    if (remastered && !targetRefs.length && EmberData.byId[sourceCid]?.target && sourceEvent?.target) {
+      const ref = sourceEvent.target;
+      if ((ref.side === "p" || ref.side === "e") && ref.uid != null) {
+        targetRefs = [ref];
+        contactAt = [cast.startAt + cast.duration];
+      }
+    }
+    const resolved = targetRefs.map((ref, i) => ({ ref, box: anchors.resolve(ref, sequence.anchors), at: contactAt[i] })).filter(x => x.box);
+    if (targetRefs.length && !resolved.length) return;
+    if (remastered) { const rec = sequence.records.get(beatIndex); if (rec) rec.remasterKind = cast.kind; }
     fxCall("cast", cast.kind, {
-      from: fxBox(from),
-      targets: targets.map(fxBox),
-      targetRefs: cast.targets, swordStyle: cast.swordStyle,
-      tier: cast.tier,
-      tint: cast.tint,
-      tintGrad: cast.tintGrad,
-      aoe: cast.aoe,
-      seed: sequence.id * 97 + beatIndex,
+      sourceCid, sourceRef: cast.actor,
+      from: fxBox(from), targets: resolved.map(x => fxBox(x.box)),
+      targetRefs: resolved.map(x => x.ref), swordStyle: cast.swordStyle,
+      tier: cast.tier, tint: cast.tint, tintGrad: cast.tintGrad,
+      aoe: cast.aoe, seed: sequence.id * 97 + beatIndex,
       timeScale: sequence.plan.scale,
       startedAt: sequence.origin + cast.startAt,
-      contactAt: cast.contactAt.map((ms) => sequence.origin + ms),
+      contactAt: resolved.map(x => sequence.origin + x.at),
     });
   }
 
@@ -2278,7 +2289,7 @@ const EmberFX = (() => {
         const school = beat.kind === "power" ? powerSchool(e.side, ctx.s) : schoolOf(card);
         rec.school = school;
         sound("play", from);
-        sound(card?.type === "weapon" ? "equip" : "cast-" + school, from);
+        if(!(fx2()?.renderer3dAvailable&&typeof EmberRemasterArts!=="undefined"&&EmberRemasterArts.supports(cast.kind))) sound(card?.type === "weapon" ? "equip" : "cast-" + school, from);
         if (e.side === "e" && card)
           reveal(
             card,
@@ -2333,13 +2344,16 @@ const EmberFX = (() => {
         // Skyfall comes from offscreen, not a second body colliding with the card.
         const swordStyle=EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid],beat.sourceCid)?.swordStyle;
         const benchmark=skyStrike&&typeof EmberBenchmarkArts!=="undefined"&&EmberBenchmarkArts.supports(swordStyle);
+        const remasterKind=EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid],beat.sourceCid)?.fx;
+        const remastered=fx2()?.renderer3dAvailable&&typeof EmberRemasterArts!=="undefined"&&EmberRemasterArts.supports(remasterKind);
         if(benchmark) rec.benchmarkStyle=swordStyle;
+        else if(remastered)rec.remasterKind=remasterKind;
         else if (m.ranged || skyStrike) rangedRecoil(sequence, beat, e.from, actorBox, targetBox);
         else lunge(ctx, beat, i, e.from, actorBox, targetBox, old);
         // R3: a weapon needs its anticipation; a dragon needs an inhalation.
         // These are the SAME instance later consumed at contact, not extra casts.
         const preSpec = EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid], beat.sourceCid);
-        if (fx2()?.renderer3dAvailable && ["slash", "breath"].includes(preSpec?.fx)) {
+        if (fx2()?.renderer3dAvailable && (["slash", "breath"].includes(preSpec?.fx)||EmberRemasterArts.supports(preSpec?.fx))) {
           const started = fxCall("attack", preSpec.fx, {
             from: fxBox(actorBox), to: fxBox(targetBox),
             swordStyle: preSpec.swordStyle, sourceCid: beat.sourceCid, sourceRef: e.from, targetRef: e.to,
@@ -2357,7 +2371,7 @@ const EmberFX = (() => {
         const { sequence } = ctx;
         if (performance.now() >= sequence.origin + beat.at + m.contact) return;
         if (sequence.records.get(i)?.meshPrelude) {
-          if(!sequence.records.get(i)?.benchmarkStyle) sound("swing", anchors.resolve(e.from, sequence.anchors));
+          if(!sequence.records.get(i)?.benchmarkStyle&&!sequence.records.get(i)?.remasterKind) sound("swing", anchors.resolve(e.from, sequence.anchors));
           return;
         }
         const actorBox = anchors.resolve(e.from, sequence.anchors),
@@ -2420,7 +2434,7 @@ const EmberFX = (() => {
           if (Math.abs(bucket.at - beat.impulseAt) < 1e-6 && boxes.length) {
             const causeIndex = beat.contacts[bucket.contacts[0]].castBeat,
               cause = causeIndex !== null ? ctx.plan.beats[causeIndex] : null;
-            if(!ctx.sequence.records.get(causeIndex)?.benchmarkStyle) fxCall("impulse", {
+            if(!ctx.sequence.records.get(causeIndex)?.benchmarkStyle&&!ctx.sequence.records.get(causeIndex)?.remasterKind) fxCall("impulse", {
               at: boxes.map(fxBox),
               tier: beat.tier,
               cinematic: !!(cause?.cutin || (cause?.battlecry && cause.legendary)),
@@ -2429,7 +2443,7 @@ const EmberFX = (() => {
           if (impactBox) {
             const contact = beat.contacts[bucket.contacts[0]],
               cause = contact.castBeat !== null ? ctx.sequence.records.get(contact.castBeat) : null;
-            if(!cause?.benchmarkStyle) sound(cause ? "impact-" + (cause.school || "steel") : "damage", impactBox, {
+            if(!cause?.benchmarkStyle&&!cause?.remasterKind) sound(cause ? "impact-" + (cause.school || "steel") : "damage", impactBox, {
               gain: T.tiers[impactTier].volume,
               strength: T.tiers[impactTier].volume,
               heavy: impactTier === 3,
@@ -2462,6 +2476,7 @@ const EmberFX = (() => {
           if (landed.id === ctx.primaryLandingEventId && !landed.rebornFrom)
             sound("play", box, { gain: 0.8 });
           sound("summon", box);
+          if(box)fxCall("cue","summon",{at:fxBox(box),targetRef:{side:landed.side,uid:landed.uid},sourceCid:landed.cid,seed:sequence.id*71+i,timeScale:sequence.plan.scale});
           if (card?.rarity === "legendary") sound("legendary", box);
           if (landed.rebornFrom) cue(box, "复生 · 1 生命", "reborn");
           if (beat.legendary && box && !quality.reduced) {
@@ -2538,6 +2553,7 @@ const EmberFX = (() => {
             releaseAttackOwner(key, false, owner);
           } else if (owner) releaseAttackOwner(key, false, owner);
           deathGhost(sequence, visual, schoolOf(EmberData.byId[e.cid]));
+          if(visual)fxCall("cue","demise",{at:fxBox(visual),sourceCid:e.cid,seed:sequence.id*71+i,timeScale:sequence.plan.scale});
           dropNumbers(key, scaled(sequence, T.death.freeze + T.death.dissolve));
           sequence.anchors.delete(key);
           soundBox ||= visual;
@@ -2693,7 +2709,7 @@ const EmberFX = (() => {
         sound("armor", box);
       }
       if (loss > 0) {
-        if(!(cause?.benchmarkStyle && contact.direction === "outgoing"))
+        if(!((cause?.benchmarkStyle||cause?.remasterKind) && contact.direction === "outgoing"))
           startReaction(sequence, ref, actorBox, timing);
         numberAt = number(numberSpot(contact, box, actorBox), loss, "damage", { key, tier });
         if (contact.direction === "outgoing" && cause && !cause.ranged && !cause.meshMelee) {
@@ -2716,10 +2732,12 @@ const EmberFX = (() => {
       startReaction(sequence, ref, actorBox, { ...timing, recoilPx: T.tiers[1].recoilPx });
       numberAt = number(box, 0, "shield", { key });
       sound("shield", box);
+      fxCall("cue","ward",{at:fxBox(box),targetRef:ref,seed:sequence.id*71+index,timeScale:sequence.plan.scale});
       if (sourceless || contact.direction === "retaliation") fxCall("contact", { at: fxBox(box), tier: 1 });
     } else if (event.type === "heal") {
       numberAt = number(box, event.amount, "heal", { key });
       sound("heal", box);
+      if(!cause?.remasterKind)fxCall("cue","heal",{at:fxBox(box),targetRef:ref,seed:sequence.id*71+index,timeScale:sequence.plan.scale});
       if (sourceless) fxCall("contact", { at: fxBox(box), tier: 1 });
     } else if (event.type === "status") {
       statusCue(ctx, event, box);

@@ -1,0 +1,1811 @@
+{
+  "release": "R9",
+  "upstream_r7": "9aa2d9baa835307b958183337ef6dd4ceab583f2",
+  "approved_r8_remote_commit": "992c3238cffe7a3d804c5f72a6dd69ea18921d05",
+  "branch": "feat/full-vfx-remaster",
+  "node": {
+    "tests": 495,
+    "pass": 487,
+    "fail": 0,
+    "skipped": 8
+  },
+  "remaster_browser": {
+    "passed": 411,
+    "failed": 0,
+    "errors": [],
+    "elapsed_seconds": 109.28,
+    "cases": [
+      "archer",
+      "huntress",
+      "wolf",
+      "berserker",
+      "golem",
+      "fireball",
+      "frostbolt",
+      "nova",
+      "lifedrain",
+      "silence",
+      "renew",
+      "shield",
+      "blessing",
+      "wisdom",
+      "wolves",
+      "rally",
+      "absolution",
+      "muster",
+      "execute",
+      "polymorph",
+      "tracking",
+      "demise"
+    ],
+    "checks": [
+      {
+        "name": "desktop archer: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "desktop archer: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "desktop archer: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "desktop archer: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "desktop archer: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "desktop archer: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "desktop archer: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "desktop archer: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "desktop archer: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "desktop archer: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "desktop huntress: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "desktop huntress: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "desktop huntress: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "desktop huntress: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "desktop huntress: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "desktop huntress: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "desktop huntress: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "desktop huntress: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "desktop huntress: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "desktop huntress: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "desktop wolf: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "desktop wolf: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "desktop wolf: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "desktop wolf: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "desktop wolf: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "desktop wolf: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "desktop wolf: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "desktop wolf: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "desktop wolf: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "desktop wolf: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "desktop berserker: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "desktop berserker: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "desktop berserker: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "desktop berserker: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "desktop berserker: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "desktop berserker: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "desktop berserker: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "desktop berserker: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "desktop berserker: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "desktop berserker: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "desktop golem: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "desktop golem: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "desktop golem: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "desktop golem: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "desktop golem: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "desktop golem: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "desktop golem: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "desktop golem: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "desktop golem: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "desktop golem: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "desktop fireball: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "desktop fireball: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "desktop fireball: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "desktop fireball: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "desktop fireball: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "desktop fireball: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "desktop fireball: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "desktop fireball: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "desktop fireball: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "desktop fireball: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "desktop frostbolt: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "desktop frostbolt: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "desktop frostbolt: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "desktop frostbolt: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "desktop frostbolt: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "desktop frostbolt: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "desktop frostbolt: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "desktop frostbolt: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "desktop frostbolt: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "desktop frostbolt: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "desktop nova: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "desktop nova: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "desktop nova: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "desktop nova: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "desktop AoE keeps separate target instances",
+        "passed": true
+      },
+      {
+        "name": "desktop nova: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "desktop nova: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "desktop nova: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "desktop nova: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "desktop nova: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "desktop nova: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "desktop lifedrain: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "desktop lifedrain: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "desktop lifedrain: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "desktop lifedrain: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "desktop lifedrain: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "desktop lifedrain: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "desktop lifedrain: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "desktop lifedrain: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "desktop lifedrain: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "desktop lifedrain: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "desktop silence: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "desktop silence: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "desktop silence: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "desktop silence: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "desktop silence: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "desktop silence: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "desktop silence: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "desktop silence: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "desktop silence: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "desktop silence: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "desktop renew: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "desktop renew: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "desktop renew: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "desktop renew: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "desktop heal applies to hero only",
+        "passed": true
+      },
+      {
+        "name": "desktop renew: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "desktop renew: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "desktop renew: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "desktop renew: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "desktop renew: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "desktop renew: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "desktop shield: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "desktop shield: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "desktop shield: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "desktop shield: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "desktop shield preserves shield rule",
+        "passed": true
+      },
+      {
+        "name": "desktop shield visual follows actual allied target",
+        "passed": true
+      },
+      {
+        "name": "desktop shield: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "desktop shield: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "desktop shield: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "desktop shield: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "desktop shield: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "desktop shield: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "desktop blessing: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "desktop blessing: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "desktop blessing: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "desktop blessing: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "desktop blessing: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "desktop blessing: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "desktop blessing: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "desktop blessing: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "desktop blessing: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "desktop blessing: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "desktop wisdom: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "desktop wisdom: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "desktop wisdom: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "desktop wisdom: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "desktop wisdom: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "desktop wisdom: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "desktop wisdom: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "desktop wisdom: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "desktop wisdom: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "desktop wisdom: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "desktop wolves: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "desktop wolves: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "desktop wolves: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "desktop wolves: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "desktop wolves real summons present",
+        "passed": true
+      },
+      {
+        "name": "desktop wolves: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "desktop wolves: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "desktop wolves: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "desktop wolves: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "desktop wolves: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "desktop wolves: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "desktop rally: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "desktop rally: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "desktop rally: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "desktop rally: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "desktop rally: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "desktop rally: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "desktop rally: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "desktop rally: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "desktop rally: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "desktop rally: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "desktop absolution: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "desktop absolution: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "desktop absolution: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "desktop absolution: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "desktop absolution: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "desktop absolution: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "desktop absolution: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "desktop absolution: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "desktop absolution: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "desktop absolution: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "desktop muster: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "desktop muster: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "desktop muster: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "desktop muster: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "desktop muster real summons present",
+        "passed": true
+      },
+      {
+        "name": "desktop muster: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "desktop muster: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "desktop muster: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "desktop muster: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "desktop muster: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "desktop muster: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "desktop execute: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "desktop execute: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "desktop execute: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "desktop execute: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "desktop destroy visual retains enemy rather than self target",
+        "passed": true
+      },
+      {
+        "name": "desktop execute: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "desktop execute: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "desktop execute: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "desktop execute: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "desktop execute: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "desktop execute: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "desktop polymorph: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "desktop polymorph: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "desktop polymorph: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "desktop polymorph: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "desktop polymorph: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "desktop polymorph: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "desktop polymorph: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "desktop polymorph: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "desktop polymorph: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "desktop polymorph: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "desktop tracking: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "desktop tracking: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "desktop tracking: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "desktop tracking: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "desktop tracking: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "desktop tracking: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "desktop tracking: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "desktop tracking: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "desktop tracking: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "desktop tracking: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "desktop demise: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "desktop demise: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "desktop demise: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "desktop demise: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "desktop demise: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "desktop demise: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "desktop demise: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "desktop demise: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "desktop demise: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "desktop demise: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "pause freezes preview time",
+        "passed": true
+      },
+      {
+        "name": "pause stops mixer voices",
+        "passed": true
+      },
+      {
+        "name": "slow replay is silent",
+        "passed": true
+      },
+      {
+        "name": "low quality retains valid geometry",
+        "passed": true
+      },
+      {
+        "name": "reduced motion releases all presentation resources",
+        "passed": true
+      },
+      {
+        "name": "audio runtime has no exceptions",
+        "passed": true
+      },
+      {
+        "name": "desktop no JS exceptions",
+        "passed": true
+      },
+      {
+        "name": "390x844 archer: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "390x844 archer: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "390x844 archer: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "390x844 archer: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "390x844 archer: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "390x844 archer: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "390x844 archer: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "390x844 archer: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "390x844 archer: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "390x844 archer: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "390x844 wolf: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "390x844 wolf: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "390x844 wolf: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "390x844 wolf: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "390x844 wolf: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "390x844 wolf: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "390x844 wolf: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "390x844 wolf: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "390x844 wolf: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "390x844 wolf: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "390x844 berserker: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "390x844 berserker: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "390x844 berserker: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "390x844 berserker: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "390x844 berserker: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "390x844 berserker: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "390x844 berserker: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "390x844 berserker: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "390x844 berserker: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "390x844 berserker: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "390x844 fireball: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "390x844 fireball: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "390x844 fireball: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "390x844 fireball: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "390x844 fireball: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "390x844 fireball: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "390x844 fireball: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "390x844 fireball: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "390x844 fireball: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "390x844 fireball: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "390x844 nova: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "390x844 nova: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "390x844 nova: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "390x844 nova: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "390x844 AoE keeps separate target instances",
+        "passed": true
+      },
+      {
+        "name": "390x844 nova: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "390x844 nova: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "390x844 nova: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "390x844 nova: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "390x844 nova: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "390x844 nova: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "390x844 renew: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "390x844 renew: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "390x844 renew: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "390x844 renew: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "390x844 heal applies to hero only",
+        "passed": true
+      },
+      {
+        "name": "390x844 renew: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "390x844 renew: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "390x844 renew: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "390x844 renew: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "390x844 renew: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "390x844 renew: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "390x844 shield: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "390x844 shield: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "390x844 shield: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "390x844 shield: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "390x844 shield preserves shield rule",
+        "passed": true
+      },
+      {
+        "name": "390x844 shield visual follows actual allied target",
+        "passed": true
+      },
+      {
+        "name": "390x844 shield: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "390x844 shield: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "390x844 shield: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "390x844 shield: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "390x844 shield: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "390x844 shield: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "390x844 wolves: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "390x844 wolves: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "390x844 wolves: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "390x844 wolves: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "390x844 wolves real summons present",
+        "passed": true
+      },
+      {
+        "name": "390x844 wolves: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "390x844 wolves: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "390x844 wolves: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "390x844 wolves: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "390x844 wolves: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "390x844 wolves: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "390x844: no horizontal document overflow",
+        "passed": true
+      },
+      {
+        "name": "390x844: resize preserves current rule state",
+        "passed": true
+      },
+      {
+        "name": "390x844: resize emits no graphics error",
+        "passed": true
+      },
+      {
+        "name": "844x390 archer: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "844x390 archer: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "844x390 archer: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "844x390 archer: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "844x390 archer: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "844x390 archer: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "844x390 archer: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "844x390 archer: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "844x390 archer: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "844x390 archer: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "844x390 wolf: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "844x390 wolf: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "844x390 wolf: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "844x390 wolf: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "844x390 wolf: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "844x390 wolf: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "844x390 wolf: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "844x390 wolf: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "844x390 wolf: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "844x390 wolf: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "844x390 berserker: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "844x390 berserker: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "844x390 berserker: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "844x390 berserker: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "844x390 berserker: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "844x390 berserker: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "844x390 berserker: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "844x390 berserker: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "844x390 berserker: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "844x390 berserker: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "844x390 fireball: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "844x390 fireball: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "844x390 fireball: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "844x390 fireball: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "844x390 fireball: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "844x390 fireball: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "844x390 fireball: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "844x390 fireball: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "844x390 fireball: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "844x390 fireball: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "844x390 nova: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "844x390 nova: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "844x390 nova: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "844x390 nova: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "844x390 AoE keeps separate target instances",
+        "passed": true
+      },
+      {
+        "name": "844x390 nova: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "844x390 nova: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "844x390 nova: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "844x390 nova: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "844x390 nova: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "844x390 nova: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "844x390 renew: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "844x390 renew: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "844x390 renew: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "844x390 renew: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "844x390 heal applies to hero only",
+        "passed": true
+      },
+      {
+        "name": "844x390 renew: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "844x390 renew: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "844x390 renew: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "844x390 renew: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "844x390 renew: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "844x390 renew: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "844x390 shield: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "844x390 shield: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "844x390 shield: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "844x390 shield: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "844x390 shield preserves shield rule",
+        "passed": true
+      },
+      {
+        "name": "844x390 shield visual follows actual allied target",
+        "passed": true
+      },
+      {
+        "name": "844x390 shield: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "844x390 shield: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "844x390 shield: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "844x390 shield: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "844x390 shield: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "844x390 shield: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "844x390 wolves: actual rule dispatch",
+        "passed": true
+      },
+      {
+        "name": "844x390 wolves: identical result to isolated pure rules",
+        "passed": true
+      },
+      {
+        "name": "844x390 wolves: expected remastered identity",
+        "passed": true
+      },
+      {
+        "name": "844x390 wolves: correct rule result",
+        "passed": true
+      },
+      {
+        "name": "844x390 wolves real summons present",
+        "passed": true
+      },
+      {
+        "name": "844x390 wolves: no duplicated primary per target",
+        "passed": true
+      },
+      {
+        "name": "844x390 wolves: valid rendered draw calls",
+        "passed": true
+      },
+      {
+        "name": "844x390 wolves: seek changes no rule data",
+        "passed": true
+      },
+      {
+        "name": "844x390 wolves: seek schedules no audio",
+        "passed": true
+      },
+      {
+        "name": "844x390 wolves: repeated render deterministic",
+        "passed": true
+      },
+      {
+        "name": "844x390 wolves: all instances and owned poses clean up",
+        "passed": true
+      },
+      {
+        "name": "844x390: no horizontal document overflow",
+        "passed": true
+      },
+      {
+        "name": "844x390: resize preserves current rule state",
+        "passed": true
+      },
+      {
+        "name": "844x390: resize emits no graphics error",
+        "passed": true
+      },
+      {
+        "name": "all layouts no uncaught JavaScript errors",
+        "passed": true
+      }
+    ]
+  },
+  "approved_benchmark_browser": {
+    "passed": 102,
+    "failed": 0,
+    "note": "R8 3 skills, original flame/electricity and audio/replay regression; original files are hash-locked."
+  },
+  "baseline_sha256": {
+    "src/vfx3/reference-flame.js": "13760d9670d88ec107a0e5830411f8f4c467ad1a9897853d6e576a27e32597e8",
+    "src/vfx3/benchmark-arts.js": "87b1185b9534643224d2b034100e1df7a293bbdd0c4cb6921b86e29c37c1d9e8",
+    "src/vfx3/benchmark-cues.js": "f1b7b3fbb753bd16692f7b138f8a732818cfaf3226df2e187bd6c6e755c66d37",
+    "src/presentation/benchmark-feedback.js": "3e4f09d4094e405776accbd20416c03e6f2951df65505a127380ad4884857bfa",
+    "src/vfx3/renderer.js": "480ef9455041ed8dfd4e7bda746db1ca20c11e799e0bb256a9d449706fab9b57",
+    "src/engine.js": "137f55810e5657c8aed232805821e42ba7aa1d7a1ddfd456b0982dee425c8c82",
+    "src/content/cards.js": "652aa68c033e08e9aab4198d27bfc75c08359828bffb36f3f555bdc87a36262f",
+    "src/content/campaign.js": "b5075d1f560b54d5ebb5f8bfc3a8b074540c146eb8e5a3fd5cbcdcdb389ed6bf",
+    "src/presentation/timing.js": "35405a98b161d7f89d97ba1ecea61ea8af246c49f1c71d60d981ed18d2347fb7"
+  },
+  "runtime_coverage": [
+    {
+      "kind": "fireball",
+      "mesh": true
+    },
+    {
+      "kind": "lightning",
+      "mesh": true
+    },
+    {
+      "kind": "slash",
+      "mesh": true
+    },
+    {
+      "kind": "claw",
+      "mesh": true
+    },
+    {
+      "kind": "slam",
+      "mesh": true
+    },
+    {
+      "kind": "arrow",
+      "mesh": true
+    },
+    {
+      "kind": "spear",
+      "mesh": true
+    },
+    {
+      "kind": "bolt",
+      "mesh": true
+    },
+    {
+      "kind": "breath",
+      "mesh": true
+    },
+    {
+      "kind": "frost",
+      "mesh": true
+    },
+    {
+      "kind": "frost-field",
+      "mesh": true
+    },
+    {
+      "kind": "holy",
+      "mesh": true
+    },
+    {
+      "kind": "nature",
+      "mesh": true
+    },
+    {
+      "kind": "void",
+      "mesh": true
+    },
+    {
+      "kind": "siphon",
+      "mesh": true
+    },
+    {
+      "kind": "arcane",
+      "mesh": true
+    },
+    {
+      "kind": "bladeCross",
+      "mesh": true
+    },
+    {
+      "kind": "contact",
+      "mesh": true
+    }
+  ],
+  "environment": {
+    "origin": "in-memory HTML injection",
+    "browser": "Chromium headed Xvfb ANGLE/Mesa software",
+    "hardware_gpu": false,
+    "physical_mobile": false,
+    "full_e2e": false,
+    "website_deployment": false,
+    "webgl": {
+      "renderer": "ANGLE (Mesa, llvmpipe (LLVM 19.1.7 256 bits), OpenGL 4.5)",
+      "version": "WebGL 1.0 (OpenGL ES 2.0 Chromium)",
+      "drawCalls": 0,
+      "vertices": 0,
+      "particles": 0,
+      "hdr": true
+    }
+  },
+  "fixes_verified": [
+    "explicit-target destroy/status casts without damage contacts retain the declared target, never arbitrary self-hit",
+    "shield demonstration actually grants shield to unshielded archer",
+    "primary/group replay survives utility and summon/death accents",
+    "epsilon lifecycle normalization at exact final frame",
+    "real state matches independent pure-rule engine for each tested dispatch"
+  ],
+  "not_claimed": [
+    "all E2E suite",
+    "real HTTP/file-origin persistent saves",
+    "Safari",
+    "physical phone",
+    "hardware GPU FPS",
+    "commercial art-quality certification",
+    "entire scene converted to 3D"
+  ],
+  "artifact_note": "MP4 consists of actual deterministic runtime frames, then cropped half-speed physical attacks. Audio uses the exact same procedural PCM/event offsets mixed offline. See video-manifest.json."
+}

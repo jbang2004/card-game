@@ -87,5 +87,8 @@
   "MESH_SWORD_ARTS": "vfx3/sword-arts.js",
   "BENCHMARK_ARTS": "vfx3/benchmark-arts.js",
   "BENCHMARK_CUES": "vfx3/benchmark-cues.js",
-  "BENCHMARK_FEEDBACK": "presentation/benchmark-feedback.js"
+  "BENCHMARK_FEEDBACK": "presentation/benchmark-feedback.js",
+  "REMASTER_ARTS": "vfx3/remaster-arts.js",
+  "REMASTER_CUES": "vfx3/remaster-cues.js",
+  "REMASTER_FEEDBACK": "presentation/remaster-feedback.js"
 }

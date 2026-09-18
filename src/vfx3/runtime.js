@@ -10,23 +10,25 @@ const mix=(a,b,t)=>a+(b-a)*t;
 const rnd=n=>{let x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);};
 const env=(t,a,b,i=.04,o=.1)=>ease((t-a)/i)*(1-ease((t-(b-o))/o));
 const Arts=G.EmberSwordArts||(typeof require==='function'?require('./sword-arts.js'):null);
-const KIND={breath:'breath',lightning:'lightning',bolt:'lightning',slash:'slash'};
-const TAIL={breath:4100,lightning:320,slash:1120};
+const Rem=G.EmberRemasterArts||(typeof require==='function'?require('./remaster-arts.js'):null);
+const KIND={...Object.fromEntries(Object.keys(Rem.DEFINITIONS).map(k=>[k,k])),breath:'breath',lightning:'lightning',bolt:'lightning',slash:'slash'};
+const TAIL={...Object.fromEntries(Object.entries(Rem.DEFINITIONS).map(([k,v])=>[k,v.tail])),breath:4100,lightning:320,slash:1120};
 const valid=b=>b&&['x','y','w','h'].every(k=>Number.isFinite(b[k]))&&b.w>0&&b.h>0;
 function descriptor(kind,o,now=0){
  if(!KIND[kind]||!valid(o.from)||!valid(o.to))return null;
+ const resolved=Rem.supports(kind)?Rem.resolve(kind,o.sourceCid,o.visualKind):KIND[kind];
  const start=Number.isFinite(o.startedAt)?o.startedAt:now;
  const lead=Math.max(0,Number(o.leadMs)||0);
  const impact=Number.isFinite(o.contactAt)?o.contactAt:start+lead;
  const scale=clamp(Number(o.timeScale)||1,.1,1);
- return {swordStyle:kind==='slash'?Arts.resolve(o.swordStyle):null, sourceCid:o.sourceCid||null, sourceRef:o.sourceRef?{...o.sourceRef}:null, targetRef:o.targetRef?{...o.targetRef}:null,
-   kind:KIND[kind],sourceKind:kind,from:{...o.from},to:{...o.to},start,impact:Math.max(start,impact),
-   hold:Math.max(0,Number(o.hitStopMs)||0),tail:(kind==="slash"&&G.EmberBenchmarkArts?.supports(o.swordStyle)?G.EmberBenchmarkArts.STYLES[o.swordStyle].tail:TAIL[KIND[kind]])*scale,seed:Number(o.seed)||7,
+ return {visualOnly:!!o.visualOnly,silent:!!o.silent,groupId:o.groupId||null,aoe:!!o.aoe,swordStyle:kind==='slash'?Arts.resolve(o.swordStyle):null, sourceCid:o.sourceCid||null, sourceRef:o.sourceRef?{...o.sourceRef}:null, targetRef:o.targetRef?{...o.targetRef}:null,
+   kind:resolved,sourceKind:kind,from:{...o.from},to:{...o.to},start,impact:Math.max(start,impact),
+   hold:Math.max(0,Number(o.hitStopMs)||0),tail:(kind==="slash"&&G.EmberBenchmarkArts?.supports(o.swordStyle)?G.EmberBenchmarkArts.STYLES[o.swordStyle].tail:TAIL[resolved])*scale,seed:Number(o.seed)||7,
    tier:clamp(o.tier||2,1,3),scale,tint:Array.isArray(o.tint)?o.tint.slice():null};
 }
 function sample(d,now){
  const t=(now-d.start)/1000,hit=(d.impact-d.start)/1000,after=t-hit;
- return {t,hit,after,alive:now>=d.start&&now<d.impact+d.tail,phase:t<0?'待机':after<0?'释放':after<.075?'命中':'余韵'};
+ return {t,hit,after,alive:now>=d.start&&now<d.impact+d.tail-1e-6,phase:t<0?'待机':after<0?'释放':after<.075?'命中':'余韵'};
 }
 
 // R5: screen-top strike; model, trail and tests share one rigid pose.
@@ -56,15 +58,21 @@ const fractureAt=t=>Sky.fractureAt(t);
 
 function create(canvas,options={}){
  const X=G.Ember3D,{M,V,Geo}=X,R=new X.Renderer(canvas);
- let W=1600,H=940,quality={low:false,reduced:false},instances=[],last=null,manual=null,uid=0,lastNow=0,dirty=true;
+ let W=1600,H=940,quality={low:false,reduced:false},instances=[],last=null,lastUtility=null,lastGroup=[],manual=null,uid=0,lastNow=0,dirty=true;
  let stats={active:0,drawCalls:0,particles:0,renderer:'mesh3d',frames:0};
  const trace=[];
- const arts=Arts.create(R,X);
+ const arts=Arts.create(R,X),remaster=Rem.create(R,X);
  const tmp=R.dynamic;
  function emit(kind,o,now=performance.now()){
   const d=descriptor(kind,o,now);if(!d||quality.reduced)return false;
-  d.id=++uid;options.onEmit?.(d);instances.push(d);if(instances.length>12)instances.shift();last={...d,from:{...d.from},to:{...d.to}};
-  trace.push({id:d.id,kind:d.kind,start:d.start,impact:d.impact,backend:'mesh3d',swordStyle:d.swordStyle});if(trace.length>100)trace.shift();dirty=true;return d;
+  d.id=++uid;options.onEmit?.(d);instances.push(d);if(instances.length>24)instances.shift();
+  const copy={...d,from:{...d.from},to:{...d.to}};
+  if(d.visualOnly){lastUtility=copy;if(lastGroup.length&&d.start>=lastGroup[0].start&&d.start-lastGroup[0].start<1600)lastGroup.push(copy);}
+  else{
+   if(d.groupId&&lastGroup[0]?.groupId===d.groupId)lastGroup.push(copy);else lastGroup=[copy];
+   last=copy;
+   trace.push({id:d.id,kind:d.kind,start:d.start,impact:d.impact,backend:'mesh3d',swordStyle:d.swordStyle});if(trace.length>100)trace.shift();
+  }dirty=true;return d;
  }
  function stage(w,h){W=Math.max(1,w);H=Math.max(1,h);const dpr=Math.min(G.devicePixelRatio||1,quality.low?1:1.5);R.resize(W,H,dpr);R.camera();}
  function xyz(b,z=16){return[b.x-W/2,H/2-b.y,z];}
@@ -103,6 +111,17 @@ function create(canvas,options={}){
    visual={...d,to:{...d.to,x:d.to.x+r[0],y:d.to.y+r[1]}};
   }
   arts.render(visual,s,W,H,quality.low);
+ }
+ function remastered(d,s){
+  let visual=d;
+  const r=Rem.reaction(d,s.t).target;
+  if(!manual && s.after>=0 && d.targetRef && options.resolveTarget){
+   const live=options.resolveTarget(d.targetRef);
+   if(live)d.attachment={...d.to,x:live.x,y:live.y};
+   else if(d.attachment&&!d.visualOnly)return;
+   if(d.attachment)visual={...d,to:d.attachment,visualAngle:r[2]};
+  }else if(manual)visual={...d,to:{...d.to,x:d.to.x+r[0],y:d.to.y+r[1]},visualAngle:r[2]};
+  remaster.render(visual,s,W,H,quality.low);
  }
  function electricity(d,s){
   const F=xyz(d.from,22),T=xyz(d.to,23),delta=V.sub(T,F),dist=V.len(delta)||1,dir=V.scale(delta,1/dist),per=[-dir[1],dir[0],0];
@@ -164,26 +183,27 @@ function create(canvas,options={}){
  }
  function draw(now){
   lastNow=now;if(quality.reduced){if(dirty)R.clear();dirty=false;return;}
-  if(!manual)instances=instances.filter(d=>now<d.impact+d.tail);
+  if(!manual)instances=instances.filter(d=>now<d.impact+d.tail-1e-6);
   const active=instances.filter(d=>sample(d,now).alive);
   options.onFrame?.(active,now,!!manual);
   if(!active.length){if(dirty)R.clear();dirty=false;stats.active=0;stats.particles=0;stats.drawCalls=0;return;}
   R.camera();R.lamp=[0,0,120];R.lampColor=[.15,.21,.27];R.begin((now-active[0].start)/1000);
   for(const d of active){const state=sample(d,now);if(!state.alive)continue;
-   if(d.kind==='breath')fire(d,state);else if(d.kind==='lightning')electricity(d,state);else slash(d,state);
+   if(d.kind==='breath')fire(d,state);else if(d.kind==='lightning')electricity(d,state);else if(d.kind==='slash')slash(d,state);else remastered(d,state);
   }
   const hasFire=active.some(d=>d.kind==='breath');
   R.flush();R.end({bloom:hasFire?.28:(quality.low?.34:.46),bloomThreshold:hasFire?.78:.28,referenceFlame:hasFire});dirty=true;
   stats={...stats,active:active.length,drawCalls:R.count,particles:R.particles.length/9,frames:stats.frames+1,hdr:R.hdr};
  }
  function clear(){options.onClear?.();instances=[];manual=null;R.clear();dirty=false;stats.active=0;stats.particles=0;stats.drawCalls=0;}
- function replay(ms){if(!last)return false;manual=true;instances=[{...last,start:0,impact:last.impact-last.start}];draw(ms);return true;}
+ function replay(ms){if(!last)return false;manual=true;const origin=lastGroup[0]?.start??last.start;instances=lastGroup.map(d=>({...d,start:d.start-origin,impact:d.impact-origin}));draw(ms);return true;}
+ function replayUtility(ms){if(!lastUtility)return false;manual=true;instances=[{...lastUtility,start:0,impact:0}];draw(ms);return true;}
  function advance(now){if(!manual)draw(now);}
  function setQuality(q){quality={...quality,...q};if(quality.reduced)clear();else{stage(W,H);dirty=true;}}
- return {emit,draw:advance,stage,clear,setQuality,replay,resume(){options.onClear?.();manual=null;instances=[];dirty=true;},
+ return {emit,draw:advance,stage,clear,setQuality,replay,replayUtility,get lastUtility(){return lastUtility?{...lastUtility}:null;},get lastGroup(){return lastGroup.map(d=>({...d}));},resume(){options.onClear?.();manual=null;instances=[];dirty=true;},
   get available(){return !quality.reduced;},get stats(){return {...stats};},get last(){return last?{...last,from:{...last.from},to:{...last.to}}:null;},get trace(){return trace.slice();},
   diagnostics(){return{...stats,webgl:R.info(),error:R.gl.getError()};},
-  destroy(){clear();arts.destroy();R.destroy();},_sample:sample,_swordPose:swordPose,_swordArtFrame:(d,t)=>Arts.sample(d,t,W,H,quality.low)};
+  destroy(){clear();arts.destroy();remaster.destroy();R.destroy();},_remasterFrame:(d,t)=>Rem.sample(d,t,W,H,quality.low),_sample:sample,_swordPose:swordPose,_swordArtFrame:(d,t)=>Arts.sample(d,t,W,H,quality.low)};
  function tube(points,radius,sides=6){
   const out=[];for(let i=0;i<points.length-1;i++){
    const a=points[i],b=points[i+1],D=V.sub(b,a);if(V.len(D)<.001)continue;

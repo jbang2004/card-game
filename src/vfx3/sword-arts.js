@@ -224,8 +224,15 @@ function create(R,X){
   if(dark.length){R.dynamicFX(dark,'#080c1c',{mode:6,alpha:crackAlpha*.89,transparent:true,add:false,time:s.t});R.dynamicFX(edge,'#8299ad',{mode:6,alpha:crackAlpha*.30,transparent:true,add:false,time:s.t});R.dynamicFX(inner,get(d.swordStyle).color,{mode:6,alpha:crackAlpha*.18,time:s.t});}
   for(const b of f.ribbons){
    // Thin airy backing, not a huge white glow. One fine edge in material 12.
-   if(b.material===12)R.dynamicFX(strip(b.points,b.widths.map(x=>x*1.55)),b.color,{mode:5,alpha:b.alpha*.10,add:true,time:s.t});
-   R.dynamicFX(strip(b.points,b.widths),b.color,{mode:b.material,alpha:b.alpha,add:true,time:s.t,surface:b.seed});
+   if(b.material===12){
+    const style=d.swordStyle,shadow=['blood','crescent','bone'].includes(style),gold=['sunfall','daybreak'].includes(style);
+    const middle=shadow?b.color.map(x=>x*.19):b.color.map(x=>x*.50);
+    R.dynamicFX(strip(b.points,b.widths.map(x=>x*1.15)),middle,{mode:15,alpha:b.alpha*.78,add:false,transparent:true,time:s.t,surface:b.seed});
+    R.dynamicFX(strip(b.points,b.widths),b.color,{mode:gold?13:12,alpha:b.alpha*.86,add:!gold,transparent:gold,time:s.t,surface:b.seed,dissolve:Math.max(0,(q-.14)/.45)});
+    // Single lit leading edge, with a contrasting back face. No uniform white tube.
+    const edge=b.points.map((p,i)=>{const a=b.points[Math.max(0,i-1)],c=b.points[Math.min(b.points.length-1,i+1)],dx=c[0]-a[0],dy=c[1]-a[1],len=Math.hypot(dx,dy)||1;return [p[0]-dy/len*b.widths[i]*.76,p[1]+dx/len*b.widths[i]*.76,p[2]+.25];});
+    R.dynamicFX(strip(edge,b.widths.map(x=>Math.max(.10,x*.055))),b.color.map(x=>x*1.25+.26),{mode:6,alpha:b.alpha*.80,add:true,time:s.t});
+   }else R.dynamicFX(strip(b.points,b.widths),b.color,{mode:b.material,alpha:b.alpha,add:true,time:s.t,surface:b.seed});
   }
   for(const l of f.lines)R.line(l.a,l.b,l.width,l.color,{mode:6,alpha:l.alpha,time:s.t});
   for(const p of f.glows)R.glow(p.p,p.size,p.color,p.alpha);
