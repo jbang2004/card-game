@@ -10,7 +10,7 @@ const mix=(a,b,t)=>a+(b-a)*t;
 const rnd=n=>{let x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);};
 const env=(t,a,b,i=.04,o=.1)=>ease((t-a)/i)*(1-ease((t-(b-o))/o));
 const KIND={breath:'breath',lightning:'lightning',bolt:'lightning',slash:'slash'};
-const TAIL={breath:1450,lightning:320,slash:1120};
+const TAIL={breath:4100,lightning:320,slash:1120};
 const valid=b=>b&&['x','y','w','h'].every(k=>Number.isFinite(b[k]))&&b.w>0&&b.h>0;
 function descriptor(kind,o,now=0){
  if(!KIND[kind]||!valid(o.from)||!valid(o.to))return null;
@@ -40,36 +40,25 @@ function cleaveMotion(d,t){
    yaw:post<0?mix(-.48,.14,drop):.14+.18*recover,
    visibility:t<0?0:ease(t/(.04*d.scale))*(1-ease((post-.36)/.32))};
 }
+// Original flame time/coordinates remain isolated from the game clock.
+const Ref=G.EmberReferenceFlame||(typeof require==='function'?require('./reference-flame.js'):null);
 function breathClock(d,t){
- const hit=(d.impact-d.start)/1000;
- const launch=Math.min(.095*d.scale,hit*.32),travel=Math.max(.001,hit-launch);
- return {launch,travel,hit,stop:hit+.68*d.scale,life:travel+.43*d.scale,interval:.0078*d.scale};
+ const hit=(d.impact-d.start)/1000,refHit=1.46,begin=.72;
+ const time=t<0?-1:t<hit?begin+(refHit-begin)*t/Math.max(.000001,hit):refHit+(t-hit)/d.scale;
+ return {time,hit,refHit,begin,launch:hit*(.96-begin)/(refHit-begin),
+ travel:Math.max(.000001,hit*(refHit-.96)/(refHit-begin)),
+ stop:hit+(3.36-refHit)*d.scale,interval:.0124*d.scale};
 }
-// A fire parcel is born once. Its trajectory depends on its own age, not on the
-// position of a shared front. Crossing contact remains C1-continuous: the axial
-// velocity decays while the jet turns out/up, rather than clamping every parcel.
-function flameParcel(d,index,t){
- const c=breathClock(d,t),seed=d.seed+index*19,birth=c.launch+index*c.interval;
- const age=(t-birth)/d.scale;
- if(age<0||birth>c.stop)return null;
- const speed=index===0?1:1+rnd(seed+8)*.20;
- const flight=Math.max(.001,c.travel/d.scale/speed,(c.hit-birth)/d.scale);
- const life=flight+.15+rnd(seed+99)*.06;
- if(age>=life)return null;
- const u=age/flight,after=Math.max(0,age-flight),excess=Math.max(0,u-1);
- const along=u<=1?u:1+.11*(1-Math.exp(-excess/.11));
- const angle=rnd(seed+1)*Math.PI*2+age*2.0;
- const growthAge=Math.min(u,1)*.48+after*.48;
- const spread=.035+growthAge*.55;
- const swirl=(.4+Math.sin(birth/d.scale*8.3+1.7)*.20);
- const lateral=Math.sin(angle)*spread*.57+(index%2?1:-1)*(1-Math.exp(-after*7))*swirl;
- const depth=Math.cos(angle)*spread*.66;
- const rise=after*after*2.2;
- const alpha=ease(age/.045)*(1-ease((age-life*.60)/(life*.40)))*
-   env(birth,c.launch-.025*d.scale,c.stop,.11*d.scale,.18*d.scale)*.72*Math.exp(-after*7.0);
- return {birth,age,life,flight,u,along,lateral,depth,rise,alpha,
-   w:.50+growthAge*2.5,h:.24+growthAge*1.15,seed:rnd(seed*7)*30,
-   angle:(rnd(seed+41)-.5)*.9+Math.sin(age*2.2+rnd(seed)*6)*.07};
+function flameMapping(d,W,H){
+ const source=Ref.view(Ref.mouth(.96)),target=Ref.view([2.68,1.70,0]);
+ const F=[d.from.x+d.from.w*.10-W/2,H/2-(d.from.y-d.from.h*.10),28],
+ T=[d.to.x-W/2,H/2-d.to.y,28];
+ const A=[target[0]-source[0],target[1]-source[1]],B=[T[0]-F[0],T[1]-F[1]];
+ const angle=Math.atan2(B[1],B[0])-Math.atan2(A[1],A[0]);
+ const scale=Math.max(.001,Math.hypot(...B)/Math.hypot(...A)),c=Math.cos(angle),q=Math.sin(angle);
+ return {F,T,source,target,scale,angle,
+  point(p){const v=Ref.view(p),x=(v[0]-source[0])*scale,y=(v[1]-source[1])*scale;
+   return [F[0]+c*x-q*y,F[1]+q*x+c*y,F[2]+(v[2]-source[2])*scale];}};
 }
 // Partial double-slab separation, followed by monotonic settlement.
 function fractureAt(seconds){
@@ -254,53 +243,21 @@ function create(canvas){
  }
 
  function fire(d,s){
-  const clock=breathClock(d,s.t),{launch,stop,interval}=clock;
-  const origin={...d.from,x:d.from.x+d.from.w*.10,y:d.from.y-d.from.h*.10};
-  const F=xyz(origin,28),T=xyz(d.to,28),D=V.sub(T,F),dist=V.len(D)||1;
-  const dir=V.scale(D,1/dist),side=[-dir[1],dir[0],0],g=clamp(d.to.w/116,.48,1.20);
-  const aim=Math.atan2(D[1],D[0]),unit=Math.min(dist/4.0,67*g),plumes=[];
-  // Reference-derived single fire material and age-driven parcels, tuned for
-  // the much shorter card-stage path. No duplicate hot coat or closed cone.
-  const charge=env(s.t,0,launch+.055*d.scale,.04*d.scale,.04*d.scale);
-  const feeding=env(s.t,launch,stop,.085*d.scale,.15*d.scale);
-  R.glow(F,38*g,'#ff8c34',charge*.60+feeding*.36);
-  const count=Math.ceil((stop-launch)/interval)+1;
-  const first=Math.max(0,Math.floor((s.t-clock.travel-.48*d.scale-launch)/interval));
-  for(let i=first;i<count;i++){
-   if(quality.low&&i%2)continue;
-   const p=flameParcel(d,i,s.t);if(!p||p.alpha<.004)continue;
-   const pos=[F[0]+D[0]*p.along+side[0]*p.lateral*unit,
-    F[1]+D[1]*p.along+side[1]*p.lateral*unit+p.rise*unit,
-    F[2]+p.depth*unit+Math.min(p.u,1.5)*5*g];
-   plumes.push({p:pos,w:p.w*unit,h:p.h*unit,alpha:p.alpha,
-    mode:8,col:'#ff8e31',seed:p.seed,angle:aim+p.angle,time:.96+s.t/d.scale});
+  const clock=breathClock(d,s.t),frame=Ref.sample(clock.time,quality.low?.45:1),map=flameMapping(d,W,H);
+  const k=map.scale,plumes=frame.sprites.map(p=>({...p,pos:map.point(p.pos)}));
+  // Same flames, fade, speed, sizes and random seeds as the original. Only a
+  // rigid rotation + uniform scale maps reference space onto the card stage.
+  // No hot duplicate, target clamp, shortened parcel lifetime, or cone shell.
+  for(const p of frame.glows){
+   if(p.ground)continue; // Original practice-floor decoration is not a card status.
+   if(s.after<0&&p.pos[0]>2)continue; // Contact light cannot precede the rule hit.
+   const pt=map.point(p.pos);R.glow(pt,p.size*k,p.color,p.alpha);
   }
-  // Smoke leaves contact and rises. It never becomes an opaque grey lid over
-  // the flame; smoke/fire share view-depth sorting and a per-instance clock.
-  for(let i=0;i<24;i++){
-   if(quality.low&&i%2)continue;
-   const birth=clock.hit+.055*d.scale+i*.07*d.scale;
-   if(birth>stop+.05*d.scale)break;
-   const age=(s.t-birth)/d.scale;if(age<0||age>.66)continue;
-   const th=rnd(i+d.seed)*Math.PI*2,a=env(age,0,.66,.15,.32)*.15;
-   plumes.push({p:[T[0]+Math.cos(th)*(7+age*23)*g,T[1]+(age*61+Math.sin(th)*9)*g,T[2]-9+Math.sin(th)*12],
-    w:(31+age*48)*g,h:(37+age*54)*g,col:'#6c5a4c',alpha:a,mode:9,
-    seed:rnd(i+88)*13,angle:age*.14,time:.96+s.t/d.scale});
-  }
-  plumes.sort((a,b)=>a.p[2]-b.p[2]);
-  for(const q of plumes)spriteOval(q.p,q.w,q.h,q.col,q.alpha,q.mode,q.seed,q.angle,q.time);
-  const burning=env(s.t,clock.hit,stop+.41*d.scale,.05*d.scale,.32*d.scale);
-  R.glow(T,d.to.w*.85,'#ff8b2e',burning*.28);
-  R.glow([T[0],T[1]-d.to.h*.17,8],d.to.w*1.10,'#df6822',burning*.10);
-  // Continuous small jets of sparks; none execute or imitate damage events.
-  for(let i=0;i<40;i++){
-   const birth=clock.hit+i*.028*d.scale;if(birth>stop)break;
-   const age=(s.t-birth)/d.scale;if(age<0||age>.46)continue;
-   const th=rnd(i+d.seed)*Math.PI*2,sp=(30+rnd(i+6)*80)*g;
-   const p=[T[0]+Math.cos(th)*sp*age,T[1]+Math.sin(th)*sp*age+40*age*g-65*age*age*g,T[2]+18+age*24];
-   R.particle(p,(.9+rnd(i+2)*1.4)*g,i%4?'#ffc67b':'#ffe2a8',(1-age/.46)*.80,i%7?2:1);
-  }
-  if(s.after>=0)sparks(T,s.after/d.scale,12,'#ffc580',d.seed,g*.60);
+  // Painter depth, not generation order. Material time stays per instance.
+  plumes.sort((a,b)=>a.pos[2]-b.pos[2]);
+  for(const p of plumes)spriteOval(p.pos,p.w*k,p.h*k,p.color,p.alpha,p.mode,p.seed,p.angle+map.angle,clock.time);
+  for(const p of frame.particles)R.particle(map.point(p.pos),p.size*k,p.color,p.alpha,p.type);
+  for(const p of frame.lines)R.line(map.point(p.a),map.point(p.b),p.width*k,p.color,{...p.opt,time:clock.time});
  }
  function spriteOval(pos,w,h,col,alpha,mode=8,seed=0,angle=0,time){
   if(alpha<.004)return;
@@ -318,7 +275,7 @@ function create(canvas){
    if(d.kind==='breath')fire(d,state);else if(d.kind==='lightning')electricity(d,state);else slash(d,state);
   }
   const hasFire=active.some(d=>d.kind==='breath');
-  R.flush();R.end({bloom:hasFire?(quality.low?.24:.29):(quality.low?.34:.46),bloomThreshold:hasFire?.78:.28});dirty=true;
+  R.flush();R.end({bloom:hasFire?.28:(quality.low?.34:.46),bloomThreshold:hasFire?.78:.28,referenceFlame:hasFire});dirty=true;
   stats={...stats,active:active.length,drawCalls:R.count,particles:R.particles.length/9,frames:stats.frames+1,hdr:R.hdr};
  }
  function clear(){instances=[];manual=null;R.clear();dirty=false;stats.active=0;stats.particles=0;stats.drawCalls=0;}
@@ -348,6 +305,6 @@ function create(canvas){
   }return out;
  }
 }
-const api={create,supports:kind=>!!KIND[kind],descriptor,sample,TAIL,cleaveMotion,breathClock,flameParcel,fractureAt};
+const api={create,supports:kind=>!!KIND[kind],descriptor,sample,TAIL,cleaveMotion,breathClock,flameMapping,fractureAt};
 G.EmberVFX3=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

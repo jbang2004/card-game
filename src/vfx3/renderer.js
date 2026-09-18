@@ -71,18 +71,13 @@ if(uMode>6.5&&uMode<7.5){float q=vUV.y;float n=fbm(vec2(vUV.x*55.,q*4.-uTime*2.)
 
 if(uMode>7.5&&uMode<8.5){
  vec2 q=(vUV-.5)*2.;float ang=atan(q.y,q.x);
- // Reference palette + two-scale, advected curl. Thin warm ridges remain
- // visible inside the jet instead of every overlapping parcel becoming a disc.
- vec2 flow=vUV*vec2(4.6,5.8)+vec2(uSurface*3.1-uTime*1.9,uTime*.27);
- vec2 warp=vec2(fbm(flow*.81+vec2(0.,uTime*.55)),fbm(flow*.94-vec2(uTime*.24,1.7)));
- float n=fbm(flow+(warp-.5)*2.8);
- float detail=noise(flow*2.3+warp*2.0);
- float d=length(q+vec2((warp.y-.5)*.14,(warp.x-.5)*.26));
- float edge=1.-smoothstep(.27+n*.32,.69+n*.29,d);
- float hot=clamp((1.-d)*.30+n*1.18+detail*.13-.24,0.,1.);
+ vec2 flow=vUV*4.6+vec2(uSurface*3.1,-uTime*1.3);
+ float n=fbm(flow+fbm(flow*1.1+uTime*.45)*1.3);
+ float d=length(q);float edge=1.-smoothstep(.32+n*.32,.74+n*.28,d);
+ float hot=clamp((1.-d)*.70+n*.68-.25,0.,1.);
  vec3 red=vec3(.85,.035,.003),gold=vec3(2.7,.56,.018),white=vec3(3.7,1.7,.31);
- c=mix(red,gold,smoothstep(.24,.85,hot));c=mix(c,white,smoothstep(.82,1.,hot)*.52);
- a*=edge*smoothstep(.20,.54,n)*(.64+n*.44);c*=.83+uEmission*.28;
+ c=mix(red,gold,smoothstep(.12,.70,hot));c=mix(c,white,smoothstep(.68,1.,hot)*.52);
+ a*=edge*(.32+n*.58);c*=.83+uEmission*.28;
 }
 if(uMode>8.5&&uMode<9.5){
  vec2 q=(vUV-.5)*2.;float n=fbm(vUV*5.4+vec2(uSurface,-uTime*.14));
@@ -107,12 +102,20 @@ if(a<.004)discard;gl_FragColor=vec4(c,a);}`;
 const pvs=`attribute vec3 aPos;attribute vec4 aColor;attribute vec2 aInfo;uniform mat4 uVP;uniform float uScale;varying vec4 vC;varying float vType;void main(){vec4 p=uVP*vec4(aPos,1.);gl_Position=p;gl_PointSize=clamp(aInfo.x*uScale,1.,120.);vC=aColor;vType=aInfo.y;}`;
 const pfs=`precision mediump float;varying vec4 vC;varying float vType;void main(){vec2 q=gl_PointCoord*2.-1.;float d=length(q),a=0.;if(vType<.5)a=pow(max(0.,1.-d),2.);else if(vType<1.5){a=pow(max(0.,1.-abs(q.x)),6.)*pow(max(0.,1.-abs(q.y)),.5)+pow(max(0.,1.-abs(q.x)),.5)*pow(max(0.,1.-abs(q.y)),6.);}else a=step(abs(q.x)+abs(q.y),.9);gl_FragColor=vec4(vC.rgb,vC.a*a);}`;
 const qvs=`attribute vec2 aP;varying vec2 uv;void main(){uv=aP*.5+.5;gl_Position=vec4(aP,0,1);}`;
- const qfs=`precision highp float;varying vec2 uv;uniform sampler2D uImage,uBloom;uniform vec2 uStep,uInvResolution;uniform float uPass,uStrength,uThreshold;uniform vec4 uShock;
+ const qfs=`precision highp float;varying vec2 uv;uniform sampler2D uImage,uBloom;uniform vec2 uStep,uInvResolution;uniform float uPass,uStrength,uThreshold,uReferenceFlame;uniform vec4 uShock;
 vec3 tone(vec3 x){return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.,1.);}
 void main(){vec4 s=texture2D(uImage,uv);
- if(uPass<.5){float l=max(s.r,max(s.g,s.b));gl_FragColor=vec4(s.rgb*smoothstep(uThreshold,uThreshold+.67,l),1.);}
+ if(uPass<.5){float l=max(s.r,max(s.g,s.b));gl_FragColor=vec4(s.rgb*smoothstep(uThreshold,uThreshold+(uReferenceFlame>.5?.77:.67),l),1.);}
  else if(uPass<1.5){vec3 c=s.rgb*.227027;c+=(texture2D(uImage,uv+uStep*1.384615).rgb+texture2D(uImage,uv-uStep*1.384615).rgb)*.316216;c+=(texture2D(uImage,uv+uStep*3.230769).rgb+texture2D(uImage,uv-uStep*3.230769).rgb)*.07027;gl_FragColor=vec4(c,1.);}
- else {vec3 b=texture2D(uBloom,uv).rgb*uStrength;float glow=1.-exp(-max(b.r,max(b.g,b.b))*.8);float a=clamp(s.a+glow*(1.-s.a),0.,1.);if(a<.001){gl_FragColor=vec4(0.);return;}vec3 c=(s.rgb+b)/max(a,.001);gl_FragColor=vec4(pow(tone(c),vec3(1./2.2)),a);}}
+ else {vec3 b=texture2D(uBloom,uv).rgb*uStrength;
+  // Preserve the reference tone-mapped *premultiplied energy*. Unpremultiplying
+  // before the nonlinear curve turns its thin orange edges into pale yellow fog.
+  // The alpha floor keeps straight RGB in gamut when composited over DOM.
+  if(uReferenceFlame>.5){vec3 rgb=pow(tone((s.rgb+b)*.97),vec3(1./2.2));
+   float coverage=max(s.a,max(rgb.r,max(rgb.g,rgb.b)));
+   if(coverage<.001){gl_FragColor=vec4(0.);return;}
+   gl_FragColor=vec4(rgb/coverage,coverage);return;}
+  float glow=1.-exp(-max(b.r,max(b.g,b.b))*.8);float a=clamp(s.a+glow*(1.-s.a),0.,1.);if(a<.001){gl_FragColor=vec4(0.);return;}vec3 c=(s.rgb+b)/max(a,.001);gl_FragColor=vec4(pow(tone(c),vec3(1./2.2)),a);}}
 `;
 class Renderer{
  constructor(canvas){this.canvas=canvas;let gl=canvas.getContext('webgl',{antialias:true,alpha:true,premultipliedAlpha:false,preserveDrawingBuffer:false,powerPreference:'high-performance'});if(!gl)throw Error('当前浏览器没有可用的 WebGL。请开启浏览器硬件加速后重试。');this.gl=gl;const hf=gl.getExtension('OES_texture_half_float');const hfl=gl.getExtension('OES_texture_half_float_linear');gl.getExtension('EXT_color_buffer_half_float');this.halfType=hf&&hfl?hf.HALF_FLOAT_OES:null;this.hdr=!!this.halfType;this.program=this.makeProgram(vs,fs);this.pp=this.makeProgram(pvs,pfs);this.qp=this.makeProgram(qvs,qfs);this.quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,this.quad);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);this.pb=gl.createBuffer();this.white=this.texture(new Uint8Array([255,255,255,255]),1,1);this.geo={};this.geo.box=this.mesh(Geo.box());this.geo.plane=this.mesh(Geo.plane());this.geo.sphere=this.mesh(Geo.sphere());this.geo.cyl=this.mesh(Geo.cylinder());this.geo.cone=this.mesh(Geo.cylinder(0,.5,12));this.geo.rock=this.mesh(Geo.sphere(5,3));this.geo.ring=this.mesh(Geo.ring());this.geo.slash=this.mesh(Geo.ring(.56,1,64,Math.PI*1.3,true));this.geo.pillar=this.mesh(Geo.cylinder(.3,.5,6));this.dynamic=this.mesh([],true);this.count=0;this.vertexCount=0;this.empty=M.I();this.lamp=[0,8,0];this.lampColor=[0,0,0];this.fxList=[];this.particles=[];gl.disable(gl.CULL_FACE);this.ready=true;this.initShadow();this.beginShadow();this.endShadow();}
@@ -141,7 +144,7 @@ class Renderer{
  particle(p,size,c,a=1,type=0){if(a>.003)this.particles.push(...p,...(typeof c==='string'?X.hex(c):c),a,size,type);}
  dynamicFX(data,color,opt={}){this.fxList.push({data,color,opt:{mode:5,add:true,...opt}});}
  flush(){let gl=this.gl;for(let f of this.fxList){if(f.data){gl.bindBuffer(gl.ARRAY_BUFFER,this.dynamic.b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(f.data),gl.DYNAMIC_DRAW);this.dynamic.n=f.data.length/8;this.draw(this.dynamic,this.empty,f.color,f.opt);}else if(f.model)this.draw(f.geo,f.model,f.color,f.opt);else this.item(f.kind,f.pos,f.scale,f.color,f.rot,f.opt);}if(this.particles.length){let p=this.pp;gl.useProgram(p.p);gl.bindBuffer(gl.ARRAY_BUFFER, this.pb);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(this.particles),gl.DYNAMIC_DRAW);for(let [name,n,off] of [['aPos',3,0],['aColor',4,12],['aInfo',2,28]]){let a=this.attr(p,name);gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,n,gl.FLOAT,false,36,off);}gl.uniformMatrix4fv(this.loc(p,'uVP'),false,this.vp);gl.uniform1f(this.loc(p,'uScale'),this.worldScale*this.dpr);gl.enable(gl.BLEND);gl.blendFuncSeparate(gl.SRC_ALPHA,gl.ONE,gl.ONE,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);gl.drawArrays(gl.POINTS,0,this.particles.length/9);this.count++;}gl.depthMask(true);}
- quadPass(target,input,pass,step=[0,0],bloom,opts={}){let gl=this.gl,p=this.qp;gl.bindFramebuffer(gl.FRAMEBUFFER,target?target.f:null);gl.viewport(0,0,target?target.w:this.canvas.width,target?target.h:this.canvas.height);gl.useProgram(p.p);gl.bindBuffer(gl.ARRAY_BUFFER,this.quad);let a=this.attr(p,'aP');gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,2,gl.FLOAT,false,0,0);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,input);gl.uniform1i(this.loc(p,'uImage'),0);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,bloom||this.white);gl.uniform1i(this.loc(p,'uBloom'),1);gl.uniform1f(this.loc(p,'uPass'),pass);gl.uniform2fv(this.loc(p,'uStep'),step);gl.uniform2f(this.loc(p,'uInvResolution'),1/this.scene.w,1/this.scene.h);gl.uniform1f(this.loc(p,'uStrength'),opts.bloom??.55);gl.uniform1f(this.loc(p,'uThreshold'),opts.bloomThreshold??.28);gl.uniform4fv(this.loc(p,'uShock'),opts.shock||[0,0,0,0]);gl.drawArrays(gl.TRIANGLES,0,6);}
+ quadPass(target,input,pass,step=[0,0],bloom,opts={}){let gl=this.gl,p=this.qp;gl.bindFramebuffer(gl.FRAMEBUFFER,target?target.f:null);gl.viewport(0,0,target?target.w:this.canvas.width,target?target.h:this.canvas.height);gl.useProgram(p.p);gl.bindBuffer(gl.ARRAY_BUFFER,this.quad);let a=this.attr(p,'aP');gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,2,gl.FLOAT,false,0,0);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,input);gl.uniform1i(this.loc(p,'uImage'),0);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,bloom||this.white);gl.uniform1i(this.loc(p,'uBloom'),1);gl.uniform1f(this.loc(p,'uPass'),pass);gl.uniform2fv(this.loc(p,'uStep'),step);gl.uniform2f(this.loc(p,'uInvResolution'),1/this.scene.w,1/this.scene.h);gl.uniform1f(this.loc(p,'uStrength'),opts.bloom??.55);gl.uniform1f(this.loc(p,'uThreshold'),opts.bloomThreshold??.28);gl.uniform1f(this.loc(p,'uReferenceFlame'),opts.referenceFlame?1:0);gl.uniform4fv(this.loc(p,'uShock'),opts.shock||[0,0,0,0]);gl.drawArrays(gl.TRIANGLES,0,6);}
  end(opts={}){let gl=this.gl;gl.disable(gl.DEPTH_TEST);gl.disable(gl.BLEND);if(opts.bloom!==0){this.quadPass(this.b1,this.scene.t,0,[0,0],null,opts);this.quadPass(this.b2,this.b1.t,1,[2.6/this.b1.w,0]);this.quadPass(this.b1,this.b2.t,1,[0,2.6/this.b1.h]);}this.quadPass(null,this.scene.t,2,[0,0],this.b1.t,opts);gl.activeTexture(gl.TEXTURE0);}
  clear(){let g=this.gl;g.bindFramebuffer(g.FRAMEBUFFER,null);g.viewport(0,0,this.canvas.width,this.canvas.height);g.clearColor(0,0,0,0);g.clear(g.COLOR_BUFFER_BIT|g.DEPTH_BUFFER_BIT);}
  destroy(){const g=this.gl;for(const x of Object.values(this.geo))g.deleteBuffer(x.b);g.deleteBuffer(this.dynamic.b);g.deleteBuffer(this.quad);g.deleteBuffer(this.pb);for(const p of [this.program,this.pp,this.qp,this.shadowProgram]){for(const sh of g.getAttachedShaders(p.p)||[])g.deleteShader(sh);g.deleteProgram(p.p);}for(const t of [this.scene,this.b1,this.b2,this.shadowTarget])if(t){g.deleteTexture(t.t);g.deleteFramebuffer(t.f);if(t.d)g.deleteRenderbuffer(t.d);}g.deleteTexture(this.white);this.clear();}

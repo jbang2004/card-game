@@ -1,0 +1,389 @@
+{
+  "source": "Actual Ember_Steel_VFX/src/effects.js executed in Node VM; positions quantized to 1e-6 for numeric tolerance.",
+  "samples": [
+    {
+      "time": 0,
+      "density": 1,
+      "sha256": "1286e9595b997414c27fd961d8475b3f55f167c19644b28a6f9c6272cbf01362",
+      "counts": {
+        "sprites": 0,
+        "particles": 0,
+        "glows": 5,
+        "lines": 0,
+        "ground": 1
+      }
+    },
+    {
+      "time": 0.75,
+      "density": 1,
+      "sha256": "480e2090fd066a8397abafdb88478f6cee3ec5554b908b3cfb44eb8efee2e924",
+      "counts": {
+        "sprites": 0,
+        "particles": 26,
+        "glows": 5,
+        "lines": 0,
+        "ground": 1
+      }
+    },
+    {
+      "time": 0.96,
+      "density": 1,
+      "sha256": "ddddccc8bde80b3928e9f906d6225aa8a0aa6bd68a0487d651de086c0445c0c6",
+      "counts": {
+        "sprites": 0,
+        "particles": 25,
+        "glows": 5,
+        "lines": 0,
+        "ground": 1
+      }
+    },
+    {
+      "time": 1.12,
+      "density": 1,
+      "sha256": "4bb8d9c529932e7c1905725631e48a817d78349a6757fb7878d18ca92d226ff6",
+      "counts": {
+        "sprites": 13,
+        "particles": 0,
+        "glows": 5,
+        "lines": 0,
+        "ground": 1
+      }
+    },
+    {
+      "time": 1.28,
+      "density": 1,
+      "sha256": "bb4c1762ee377dc9edf0d9aaad5bb493ab2d635a46d93cd6feb26da96bc3e50c",
+      "counts": {
+        "sprites": 26,
+        "particles": 3,
+        "glows": 5,
+        "lines": 1,
+        "ground": 1
+      }
+    },
+    {
+      "time": 1.46,
+      "density": 1,
+      "sha256": "dbff1515fa2099bca253a84e5033902301eeb0e472477333ebf79ee088d408d5",
+      "counts": {
+        "sprites": 42,
+        "particles": 15,
+        "glows": 5,
+        "lines": 5,
+        "ground": 1
+      }
+    },
+    {
+      "time": 1.65,
+      "density": 1,
+      "sha256": "e2bca2a2e8ee39047862e7b25f8c991157c382c8e6f792cc4c2c93f099d40f6e",
+      "counts": {
+        "sprites": 58,
+        "particles": 27,
+        "glows": 5,
+        "lines": 8,
+        "ground": 1
+      }
+    },
+    {
+      "time": 2,
+      "density": 1,
+      "sha256": "b9c99a8dcf16586c0d56d34b194a874193073feecd913e0d20ed8419f85df5f2",
+      "counts": {
+        "sprites": 65,
+        "particles": 36,
+        "glows": 5,
+        "lines": 10,
+        "ground": 1
+      }
+    },
+    {
+      "time": 2.33,
+      "density": 1,
+      "sha256": "aa3ec2b6561d2533cf1d85629010ea5ef4b4852616494368d6c0f5b5390ef8c6",
+      "counts": {
+        "sprites": 67,
+        "particles": 40,
+        "glows": 5,
+        "lines": 14,
+        "ground": 1
+      }
+    },
+    {
+      "time": 2.75,
+      "density": 1,
+      "sha256": "8c97d6a9d45c927334a2802ef71a67d7dd7b2d594f10fcf18960d2beadaef82f",
+      "counts": {
+        "sprites": 73,
+        "particles": 48,
+        "glows": 5,
+        "lines": 12,
+        "ground": 1
+      }
+    },
+    {
+      "time": 3.1,
+      "density": 1,
+      "sha256": "4a577de0d8ec54d5feba3205761b0ebe9b48e7d98b48594e3a6e8dc162e1ae77",
+      "counts": {
+        "sprites": 71,
+        "particles": 51,
+        "glows": 5,
+        "lines": 14,
+        "ground": 1
+      }
+    },
+    {
+      "time": 3.36,
+      "density": 1,
+      "sha256": "da561bcd8da1ece6e437c17d0bc5ad15c15a8a8457861c8f19f8f1c721200bb7",
+      "counts": {
+        "sprites": 71,
+        "particles": 47,
+        "glows": 5,
+        "lines": 11,
+        "ground": 1
+      }
+    },
+    {
+      "time": 3.7,
+      "density": 1,
+      "sha256": "aa1f04cf750a110e0fcb61c4a85f02d28b489c7cc9f9b53de271be740944d96d",
+      "counts": {
+        "sprites": 43,
+        "particles": 27,
+        "glows": 5,
+        "lines": 6,
+        "ground": 1
+      }
+    },
+    {
+      "time": 4.12,
+      "density": 1,
+      "sha256": "4b170ce5507e816a41e4be4ac6f9400329c226f448daaf34a936b30aaec53a8e",
+      "counts": {
+        "sprites": 9,
+        "particles": 11,
+        "glows": 5,
+        "lines": 0,
+        "ground": 1
+      }
+    },
+    {
+      "time": 4.75,
+      "density": 1,
+      "sha256": "aa03ccdb3e92f9d12a9754cfd152a7cebda4bea52361427083b78377d872c9a5",
+      "counts": {
+        "sprites": 3,
+        "particles": 2,
+        "glows": 5,
+        "lines": 0,
+        "ground": 1
+      }
+    },
+    {
+      "time": 5.25,
+      "density": 1,
+      "sha256": "e195294f0dd8be94fcd19fd8af4f5d48cc3e5a85f5134c2559d427bf029f3369",
+      "counts": {
+        "sprites": 0,
+        "particles": 0,
+        "glows": 5,
+        "lines": 0,
+        "ground": 1
+      }
+    },
+    {
+      "time": 0,
+      "density": 0.45,
+      "sha256": "1286e9595b997414c27fd961d8475b3f55f167c19644b28a6f9c6272cbf01362",
+      "counts": {
+        "sprites": 0,
+        "particles": 0,
+        "glows": 5,
+        "lines": 0,
+        "ground": 1
+      }
+    },
+    {
+      "time": 0.75,
+      "density": 0.45,
+      "sha256": "2d2f611f60e9ea8ecbf9b184c31ae5aab58716dbfe29529f69042d47a9b551ac",
+      "counts": {
+        "sprites": 0,
+        "particles": 12,
+        "glows": 5,
+        "lines": 0,
+        "ground": 1
+      }
+    },
+    {
+      "time": 0.96,
+      "density": 0.45,
+      "sha256": "9bccb89f625fe686edff7ccd7caae4e3d4d71dae14b102ac237deaf12ba9b7b5",
+      "counts": {
+        "sprites": 0,
+        "particles": 12,
+        "glows": 5,
+        "lines": 0,
+        "ground": 1
+      }
+    },
+    {
+      "time": 1.12,
+      "density": 0.45,
+      "sha256": "715d038a3a2d71df9277bfc561ca4468e08086f07a68ea3ab2dfcbf61704fdee",
+      "counts": {
+        "sprites": 7,
+        "particles": 0,
+        "glows": 5,
+        "lines": 0,
+        "ground": 1
+      }
+    },
+    {
+      "time": 1.28,
+      "density": 0.45,
+      "sha256": "49f0130d50056784a5a8cd0ccc74d26c5d831fa621106db86753d7b30a082795",
+      "counts": {
+        "sprites": 13,
+        "particles": 2,
+        "glows": 5,
+        "lines": 1,
+        "ground": 1
+      }
+    },
+    {
+      "time": 1.46,
+      "density": 0.45,
+      "sha256": "eeeac1cda8d7daeae9265ff36bc2676b1445f3d060be61585d08fcbcebbda6d3",
+      "counts": {
+        "sprites": 22,
+        "particles": 10,
+        "glows": 5,
+        "lines": 5,
+        "ground": 1
+      }
+    },
+    {
+      "time": 1.65,
+      "density": 0.45,
+      "sha256": "91acf78a17e6e1a1613ced59bdad0bc16b34ff97e06a229ae08adf8e25febd11",
+      "counts": {
+        "sprites": 30,
+        "particles": 18,
+        "glows": 5,
+        "lines": 8,
+        "ground": 1
+      }
+    },
+    {
+      "time": 2,
+      "density": 0.45,
+      "sha256": "84b2cafba99ce3db79b8d0caa4a0de6882e1358eb65aa7760822f88211577f80",
+      "counts": {
+        "sprites": 35,
+        "particles": 22,
+        "glows": 5,
+        "lines": 10,
+        "ground": 1
+      }
+    },
+    {
+      "time": 2.33,
+      "density": 0.45,
+      "sha256": "71fa4d5986a2a6083c3c1f41ebd3f444e1d345d01c0529f8b95842947c3787a6",
+      "counts": {
+        "sprites": 38,
+        "particles": 29,
+        "glows": 5,
+        "lines": 14,
+        "ground": 1
+      }
+    },
+    {
+      "time": 2.75,
+      "density": 0.45,
+      "sha256": "1c52423e17917dbbf61af34066a2b5386555bc195ba61b8446193358079b1e34",
+      "counts": {
+        "sprites": 44,
+        "particles": 37,
+        "glows": 5,
+        "lines": 12,
+        "ground": 1
+      }
+    },
+    {
+      "time": 3.1,
+      "density": 0.45,
+      "sha256": "7e0f1b3a63d384168619ef5811c6cd8cc7214c4b404feb99537550414b0e8026",
+      "counts": {
+        "sprites": 41,
+        "particles": 36,
+        "glows": 5,
+        "lines": 14,
+        "ground": 1
+      }
+    },
+    {
+      "time": 3.36,
+      "density": 0.45,
+      "sha256": "a293640be72d6fbffb13e01ac74981590063850d728f98aa8a72abfd2b17cb73",
+      "counts": {
+        "sprites": 42,
+        "particles": 27,
+        "glows": 5,
+        "lines": 11,
+        "ground": 1
+      }
+    },
+    {
+      "time": 3.7,
+      "density": 0.45,
+      "sha256": "d5deb1268e04c02a43f157f1777eb43a78f62231da58928295a7b8ffca7d86a8",
+      "counts": {
+        "sprites": 28,
+        "particles": 10,
+        "glows": 5,
+        "lines": 6,
+        "ground": 1
+      }
+    },
+    {
+      "time": 4.12,
+      "density": 0.45,
+      "sha256": "a3d2b0679650c6183411ca74cf71d40e4cd16ca7b3900e0d02b880ddc5ff79c4",
+      "counts": {
+        "sprites": 9,
+        "particles": 0,
+        "glows": 5,
+        "lines": 0,
+        "ground": 1
+      }
+    },
+    {
+      "time": 4.75,
+      "density": 0.45,
+      "sha256": "64afcb90e3cf0ad8734e203f7c8c77de73b80553cded7a0c9be2ffe0d6a5b06b",
+      "counts": {
+        "sprites": 3,
+        "particles": 0,
+        "glows": 5,
+        "lines": 0,
+        "ground": 1
+      }
+    },
+    {
+      "time": 5.25,
+      "density": 0.45,
+      "sha256": "e195294f0dd8be94fcd19fd8af4f5d48cc3e5a85f5134c2559d427bf029f3369",
+      "counts": {
+        "sprites": 0,
+        "particles": 0,
+        "glows": 5,
+        "lines": 0,
+        "ground": 1
+      }
+    }
+  ]
+}

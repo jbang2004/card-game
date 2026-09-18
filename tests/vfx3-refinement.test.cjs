@@ -55,5 +55,5 @@ test('sky cleave and fracture queries are order independent',()=>{
 });
 test('flame source has no continuous closed cone shell',()=>{
  const src=fs.readFileSync('src/vfx3/runtime.js','utf8'),section=src.slice(src.indexOf(' function fire('),src.indexOf(' function draw(now)'));
- assert.ok(!section.includes('mesh(shell'));assert.ok(section.includes('plumes.sort'));assert.ok(section.includes('birth'));
+ assert.ok(!section.includes('mesh(shell'));assert.ok(section.includes('plumes.sort'));assert.ok(section.includes('Ref.sample')); 
 });
