@@ -90,5 +90,8 @@
   "BENCHMARK_FEEDBACK": "presentation/benchmark-feedback.js",
   "REMASTER_ARTS": "vfx3/remaster-arts.js",
   "REMASTER_CUES": "vfx3/remaster-cues.js",
-  "REMASTER_FEEDBACK": "presentation/remaster-feedback.js"
+  "REMASTER_FEEDBACK": "presentation/remaster-feedback.js",
+  "LIFECYCLE_ARTS": "vfx3/lifecycle-arts.js",
+  "LIFECYCLE_FEEDBACK": "presentation/lifecycle-feedback.js",
+  "LIFECYCLE_STYLE": "presentation/skins/slate/lifecycle.css"
 }

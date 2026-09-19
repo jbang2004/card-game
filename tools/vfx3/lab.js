@@ -59,7 +59,7 @@ async function cast(kind,cycle=false){
  Emberfall.act(()=>g.dispatch(actionFor(kind)));
  for(let i=0;i<160;i++){await wait(25);if(gen!==generation)return false;if(EmberFx2.mesh3d.trace.length>before&&!EmberFX.busy)break;}
  if(gen!==generation)return false;
- const d=kind==='demise'?EmberFx2.mesh3d.lastUtility:EmberFx2.mesh3d.last;if(!d||EmberFx2.mesh3d.trace.length<=before){$('lab-mode').textContent='本次没有可回放的目标特效';return false;}duration=kind==='demise'?d.tail:Math.max(...EmberFx2.mesh3d.lastGroup.map(x=>x.impact-EmberFx2.mesh3d.lastGroup[0].start+x.tail));t=duration;replayState.set(viewBefore,replayState.capture(),kind==='demise'?[]:EmberFx2.mesh3d.lastGroup);ui();
+ const d=kind==='demise'?EmberFx2.mesh3d.lastUtility:EmberFx2.mesh3d.last;if(!d||EmberFx2.mesh3d.trace.length<=before){$('lab-mode').textContent='本次没有可回放的目标特效';return false;}duration=kind==='demise'?d.tail:Math.max(...EmberFx2.mesh3d.replayGroup.map(x=>x.impact-EmberFx2.mesh3d.lastGroup[0].start+x.tail));t=duration;replayState.set(viewBefore,replayState.capture(),kind==='demise'?[]:EmberFx2.mesh3d.replayGroup);ui();
  if(cycle){await wait(850);if(gen===generation){const ks=['archer','wolf','berserker','huntress','fireball','frostbolt','nova','lifedrain','renew','shield','wisdom','paladin','assassin','frostking'],n=ks.indexOf(kind)+1;if(n<ks.length)return cast(ks[n],true);sequence=false;}}
  return true;
 }

@@ -11,8 +11,9 @@ const rnd=n=>{let x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);};
 const env=(t,a,b,i=.04,o=.1)=>ease((t-a)/i)*(1-ease((t-(b-o))/o));
 const Arts=G.EmberSwordArts||(typeof require==='function'?require('./sword-arts.js'):null);
 const Rem=G.EmberRemasterArts||(typeof require==='function'?require('./remaster-arts.js'):null);
-const KIND={...Object.fromEntries(Object.keys(Rem.DEFINITIONS).map(k=>[k,k])),breath:'breath',lightning:'lightning',bolt:'lightning',slash:'slash'};
-const TAIL={...Object.fromEntries(Object.entries(Rem.DEFINITIONS).map(([k,v])=>[k,v.tail])),breath:4100,lightning:320,slash:1120};
+const Life=G.EmberLifecycleArts||(typeof require==='function'?require('./lifecycle-arts.js'):null);
+const KIND={...Object.fromEntries(Object.keys(Life.DEFINITIONS).map(k=>[k,k])),...Object.fromEntries(Object.keys(Rem.DEFINITIONS).map(k=>[k,k])),breath:'breath',lightning:'lightning',bolt:'lightning',slash:'slash'};
+const TAIL={...Object.fromEntries(Object.entries(Life.DEFINITIONS).map(([k,v])=>[k,v.tail])),...Object.fromEntries(Object.entries(Rem.DEFINITIONS).map(([k,v])=>[k,v.tail])),breath:4100,lightning:320,slash:1120};
 const valid=b=>b&&['x','y','w','h'].every(k=>Number.isFinite(b[k]))&&b.w>0&&b.h>0;
 function descriptor(kind,o,now=0){
  if(!KIND[kind]||!valid(o.from)||!valid(o.to))return null;
@@ -21,7 +22,7 @@ function descriptor(kind,o,now=0){
  const lead=Math.max(0,Number(o.leadMs)||0);
  const impact=Number.isFinite(o.contactAt)?o.contactAt:start+lead;
  const scale=clamp(Number(o.timeScale)||1,.1,1);
- return {visualOnly:!!o.visualOnly,silent:!!o.silent,groupId:o.groupId||null,aoe:!!o.aoe,swordStyle:kind==='slash'?Arts.resolve(o.swordStyle):null, sourceCid:o.sourceCid||null, sourceRef:o.sourceRef?{...o.sourceRef}:null, targetRef:o.targetRef?{...o.targetRef}:null,
+ return {sequenceId:o.sequenceId??null,artPosition:o.artPosition||null,previousCid:o.previousCid||null,lifecycle:Life.supports(kind),visualOnly:!!o.visualOnly,silent:!!o.silent,groupId:o.groupId||null,aoe:!!o.aoe,swordStyle:kind==='slash'?Arts.resolve(o.swordStyle):null, sourceCid:o.sourceCid||null, sourceRef:o.sourceRef?{...o.sourceRef}:null, targetRef:o.targetRef?{...o.targetRef}:null,
    kind:resolved,sourceKind:kind,from:{...o.from},to:{...o.to},start,impact:Math.max(start,impact),
    hold:Math.max(0,Number(o.hitStopMs)||0),tail:(kind==="slash"&&G.EmberBenchmarkArts?.supports(o.swordStyle)?G.EmberBenchmarkArts.STYLES[o.swordStyle].tail:TAIL[resolved])*scale,seed:Number(o.seed)||7,
    tier:clamp(o.tier||2,1,3),scale,tint:Array.isArray(o.tint)?o.tint.slice():null};
@@ -60,14 +61,17 @@ function create(canvas,options={}){
  const X=G.Ember3D,{M,V,Geo}=X,R=new X.Renderer(canvas);
  let W=1600,H=940,quality={low:false,reduced:false},instances=[],last=null,lastUtility=null,lastGroup=[],manual=null,uid=0,lastNow=0,dirty=true;
  let stats={active:0,drawCalls:0,particles:0,renderer:'mesh3d',frames:0};
- const trace=[];
- const arts=Arts.create(R,X),remaster=Rem.create(R,X);
+ const trace=[],lifecycleTrace=[];let lastLifecycleGroup=[];
+ const arts=Arts.create(R,X),remaster=Rem.create(R,X),lifecycle=Life.create(R,X);
  const tmp=R.dynamic;
  function emit(kind,o,now=performance.now()){
   const d=descriptor(kind,o,now);if(!d||quality.reduced)return false;
   d.id=++uid;options.onEmit?.(d);instances.push(d);if(instances.length>24)instances.shift();
   const copy={...d,from:{...d.from},to:{...d.to}};
-  if(d.visualOnly){lastUtility=copy;if(lastGroup.length&&d.start>=lastGroup[0].start&&d.start-lastGroup[0].start<1600)lastGroup.push(copy);}
+  if(d.lifecycle){
+   if(d.groupId&&lastLifecycleGroup[0]?.groupId===d.groupId)lastLifecycleGroup.push(copy);else lastLifecycleGroup=[copy];
+   lifecycleTrace.push({...copy});if(lifecycleTrace.length>180)lifecycleTrace.shift();
+  }else if(d.visualOnly){lastUtility=copy;if(lastGroup.length&&d.start>=lastGroup[0].start&&d.start-lastGroup[0].start<1600)lastGroup.push(copy);}
   else{
    if(d.groupId&&lastGroup[0]?.groupId===d.groupId)lastGroup.push(copy);else lastGroup=[copy];
    last=copy;
@@ -189,21 +193,26 @@ function create(canvas,options={}){
   if(!active.length){if(dirty)R.clear();dirty=false;stats.active=0;stats.particles=0;stats.drawCalls=0;return;}
   R.camera();R.lamp=[0,0,120];R.lampColor=[.15,.21,.27];R.begin((now-active[0].start)/1000);
   for(const d of active){const state=sample(d,now);if(!state.alive)continue;
-   if(d.kind==='breath')fire(d,state);else if(d.kind==='lightning')electricity(d,state);else if(d.kind==='slash')slash(d,state);else remastered(d,state);
+   if(d.lifecycle){let v=d;if(!manual&&d.targetRef&&options.resolveTarget){const p=options.resolveTarget(d.targetRef);if(p)v={...d,to:{...d.to,x:p.x,y:p.y}};}lifecycle.render(v,state,W,H,quality.low);}else if(d.kind==='breath')fire(d,state);else if(d.kind==='lightning')electricity(d,state);else if(d.kind==='slash')slash(d,state);else remastered(d,state);
   }
   const hasFire=active.some(d=>d.kind==='breath');
   R.flush();R.end({bloom:hasFire?.28:(quality.low?.34:.46),bloomThreshold:hasFire?.78:.28,referenceFlame:hasFire});dirty=true;
   stats={...stats,active:active.length,drawCalls:R.count,particles:R.particles.length/9,frames:stats.frames+1,hdr:R.hdr};
  }
  function clear(){options.onClear?.();instances=[];manual=null;R.clear();dirty=false;stats.active=0;stats.particles=0;stats.drawCalls=0;}
- function replay(ms){if(!last)return false;manual=true;const origin=lastGroup[0]?.start??last.start;instances=lastGroup.map(d=>({...d,start:d.start-origin,impact:d.impact-origin}));draw(ms);return true;}
+ function replayGroup(){
+  const id=lastGroup[0]?.sequenceId;
+  return id==null?lastGroup:lastGroup.concat(lifecycleTrace.filter(d=>d.sequenceId===id));
+ }
+ function replay(ms){if(!last)return false;manual=true;const origin=lastGroup[0]?.start??last.start;instances=replayGroup().map(d=>({...d,start:d.start-origin,impact:d.impact-origin}));draw(ms);return true;}
  function replayUtility(ms){if(!lastUtility)return false;manual=true;instances=[{...lastUtility,start:0,impact:0}];draw(ms);return true;}
+ function replayLifecycle(ms){if(!lastLifecycleGroup.length)return false;manual=true;const o=lastLifecycleGroup[0].start;instances=lastLifecycleGroup.map(d=>({...d,start:d.start-o,impact:d.impact-o}));draw(ms);return true;}
  function advance(now){if(!manual)draw(now);}
  function setQuality(q){quality={...quality,...q};if(quality.reduced)clear();else{stage(W,H);dirty=true;}}
- return {emit,draw:advance,stage,clear,setQuality,replay,replayUtility,get lastUtility(){return lastUtility?{...lastUtility}:null;},get lastGroup(){return lastGroup.map(d=>({...d}));},resume(){options.onClear?.();manual=null;instances=[];dirty=true;},
+ return {emit,replayLifecycle,get lifecycleTrace(){return lifecycleTrace.slice();},get lastLifecycleGroup(){return lastLifecycleGroup.map(d=>({...d}));},draw:advance,stage,clear,setQuality,replay,replayUtility,get lastUtility(){return lastUtility?{...lastUtility}:null;},get lastGroup(){return lastGroup.map(d=>({...d}));},get replayGroup(){return replayGroup().map(d=>({...d}));},resume(){options.onClear?.();manual=null;instances=[];dirty=true;},
   get available(){return !quality.reduced;},get stats(){return {...stats};},get last(){return last?{...last,from:{...last.from},to:{...last.to}}:null;},get trace(){return trace.slice();},
   diagnostics(){return{...stats,webgl:R.info(),error:R.gl.getError()};},
-  destroy(){clear();arts.destroy();remaster.destroy();R.destroy();},_remasterFrame:(d,t)=>Rem.sample(d,t,W,H,quality.low),_sample:sample,_swordPose:swordPose,_swordArtFrame:(d,t)=>Arts.sample(d,t,W,H,quality.low)};
+  destroy(){clear();arts.destroy();remaster.destroy();lifecycle.destroy();R.destroy();},_remasterFrame:(d,t)=>Rem.sample(d,t,W,H,quality.low),_sample:sample,_swordPose:swordPose,_swordArtFrame:(d,t)=>Arts.sample(d,t,W,H,quality.low)};
  function tube(points,radius,sides=6){
   const out=[];for(let i=0;i<points.length-1;i++){
    const a=points[i],b=points[i+1],D=V.sub(b,a);if(V.len(D)<.001)continue;

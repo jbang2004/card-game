@@ -230,6 +230,17 @@ const EmberFX = (() => {
       return false;
     }
   }
+  function lifeCue(ctx,e,kind,box,options={}) {
+    if(!box||quality.reduced||!fx2()?.renderer3dAvailable||typeof EmberFx2.lifecycle!=="function")return false;
+    const ref=options.targetRef||{side:e.side,uid:e.uid||"hero"};
+    const key=[e.id||"event",kind,ref.side,ref.uid].join(":");
+    ctx.lifecycleSeen ||= new Set();if(ctx.lifecycleSeen.has(key))return false;
+    const previous=ctx.lifecycleBefore?.[refKey(ref)]||ctx.history?.[refKey(ref)];
+    const out=EmberFx2.lifecycle(kind,{at:fxBox(box),sourceCid:e.cid||previous?.cid||null,
+      previousCid:previous?.cid||null,artPosition:previous?.artPosition||null,targetRef:ref,sequenceId:ctx.sequence.id,groupId:"life-"+ctx.sequence.id,
+      seed:ctx.sequence.id*71+[...String(e.id||0)].reduce((n,c)=>(n*31+c.charCodeAt(0))%100003,0),timeScale:ctx.sequence.plan.scale,...options});
+    if(out)ctx.lifecycleSeen.add(key);return !!out;
+  }
   const fxBox = (box) =>
     box
       ? {
@@ -733,6 +744,7 @@ const EmberFX = (() => {
           ...pos(face),
           el,
           cid: el.dataset.cardid,
+          artPosition: el.querySelector(".minion-art img") ? getComputedStyle(el.querySelector(".minion-art img")).objectPosition : null,
           html: el.outerHTML,
         };
       });
@@ -2180,7 +2192,7 @@ const EmberFX = (() => {
     if (targetRefs.length && !resolved.length) return;
     if (remastered) { const rec = sequence.records.get(beatIndex); if (rec) rec.remasterKind = cast.kind; }
     fxCall("cast", cast.kind, {
-      sourceCid, sourceRef: cast.actor,
+      sourceCid, sourceRef: cast.actor,sequenceId:sequence.id,
       from: fxBox(from), targets: resolved.map(x => fxBox(x.box)),
       targetRefs: resolved.map(x => x.ref), swordStyle: cast.swordStyle,
       tier: cast.tier, tint: cast.tint, tintGrad: cast.tintGrad,
@@ -2202,6 +2214,7 @@ const EmberFX = (() => {
       if (now >= sequence.origin + (track.markers?.endAt ?? Infinity))
         disposeCardMotion(sequence, track);
     const old = capture();
+    ctx.lifecycleBefore=old;
     ctx.render(frame);
     if (!isCurrentSequence(sequence)) return null;
     rebindReactions(sequence);
@@ -2285,6 +2298,7 @@ const EmberFX = (() => {
         if (!enterFrame(ctx, beat, i, beat.frame)) return;
         const rec = castFlash(ctx, i, cast, beat.kind === "power" ? "power" : "cast");
         rec.countered = !!beat.countered;
+        if(!beat.countered&&card?.type==="weapon")lifeCue(ctx,e,"weapon-equip",heroFace(ctx,e.side));
         const from = anchors.resolve(cast.actor, ctx.sequence.anchors);
         const school = beat.kind === "power" ? powerSchool(e.side, ctx.s) : schoolOf(card);
         rec.school = school;
@@ -2334,6 +2348,8 @@ const EmberFX = (() => {
         });
         sequence.records.set(i, rec);
         if (!actorBox || !targetBox) return;
+        if(/class="[^"]*\bstealth\b/.test(old[refKey(e.from)]?.html||""))
+          lifeCue(ctx,e,"stealth-out",actorBox,{targetRef:e.from});
         if (beat.cutin) {
           const art = cutinArt(e.from, beat.sourceCid, ctx.s);
           if (art && !quality.reduced && fx2()?.available)
@@ -2362,7 +2378,7 @@ const EmberFX = (() => {
             startedAt: sequence.origin + beat.at,
             contactAt: sequence.origin + beat.at + m.contact,
             leadMs: m.contact, hitStopMs: m.hitStop,
-            seed: sequence.id * 97 + i, timeScale: sequence.plan.scale,
+            seed: sequence.id * 97 + i, timeScale: sequence.plan.scale,sequenceId:sequence.id,
           });
           if (started) { rec.meshPrelude = true; if (!m.ranged) rec.meshMelee = true; }
         }
@@ -2417,6 +2433,9 @@ const EmberFX = (() => {
               (p) => p.el?.dataset.uid === beat.sourceId,
             );
             cue(source, "亡语", "deathrattle");
+            const target=beat.contacts?.[bucket.contacts?.[0]]?.targetRef;
+            const to=target&&anchors.resolve(target,ctx.sequence.anchors);
+            if(source&&to)lifeCue(ctx,{id:"rattle-"+beat.sourceId},"trigger",to,{from:fxBox(source),targetRef:target});
           }
           Object.assign(ctx.history, old);
           let impactBox = null,
@@ -2476,7 +2495,11 @@ const EmberFX = (() => {
           if (landed.id === ctx.primaryLandingEventId && !landed.rebornFrom)
             sound("play", box, { gain: 0.8 });
           sound("summon", box);
-          if(box)fxCall("cue","summon",{at:fxBox(box),targetRef:{side:landed.side,uid:landed.uid},sourceCid:landed.cid,seed:sequence.id*71+i,timeScale:sequence.plan.scale});
+          if(box){
+            if(!landed.rebornFrom||!lifeCue(ctx,landed,"rebirth",box))
+              fxCall("cue","summon",{at:fxBox(box),targetRef:{side:landed.side,uid:landed.uid},sourceCid:landed.cid,seed:sequence.id*71+i,timeScale:sequence.plan.scale});
+            if(card?.tags?.includes("stealth"))lifeCue(ctx,landed,"stealth-in",box);
+          }
           if (card?.rarity === "legendary") sound("legendary", box);
           if (landed.rebornFrom) cue(box, "复生 · 1 生命", "reborn");
           if (beat.legendary && box && !quality.reduced) {
@@ -2584,6 +2607,11 @@ const EmberFX = (() => {
         for (const e of beat.events) {
           sound("draw", e.side === "p" ? { x: W * 0.72 } : { x: W * 0.55 });
           if (!quality.reduced) startDrawCardMotion(ctx.sequence, e, beat);
+          const tr=ctx.plan.cardTracks?.find(x=>x.sourceEventId===e.id);
+          if(e.side==="p")at(ctx,tr?.markers?.handoffAt??(beat.at+beat.hold*.78),()=>{
+            const el=document.querySelector(`#hand [data-hand="${e.uid}"]`),b=el&&pos(el);
+            if(b)lifeCue(ctx,e,"draw-arrive",b,{targetRef:{side:e.side,uid:"hand-"+e.uid}});
+          });
         }
       });
     },
@@ -2593,6 +2621,9 @@ const EmberFX = (() => {
         for (const e of beat.events) {
           const p = heroFace(ctx, e.side);
           sound("burn", p);
+          const anchor=EmberViewport.deckAnchor(e.side)||p;
+          const w=EmberViewport.mobile?72:104,drawBox={...anchor,w,h:w*1.40};
+          lifeCue(ctx,e,"overdraw",drawBox,{targetRef:{side:e.side,uid:"burn"},sourceCid:e.side==="p"?e.cid:null});
           cue(p, e.side === "p" && e.cid ? `${EmberData.byId[e.cid].name} · 手牌已满` : "手牌已满 · 焚毁", "burn");
         }
       });
@@ -2602,6 +2633,7 @@ const EmberFX = (() => {
         if (!enterFrame(ctx, beat, i, beat.frame)) return;
         for (const e of beat.events) {
           turnCue(e.side, beat.frame?.turn ?? ctx.s.turn);
+          lifeCue(ctx,e,"turn-ready",heroFace(ctx,e.side));
           sound(e.side === "p" ? "turn" : "turn-enemy");
         }
       });
@@ -2611,6 +2643,11 @@ const EmberFX = (() => {
         if (!enterFrame(ctx, beat, i, beat.frame)) return;
         for (const e of beat.events) {
           sound(e.winner === "p" ? "victory" : e.winner === "draw" ? "draw-result" : "defeat");
+          if(e.winner!=="draw"){
+            const loser=e.winner==="p"?"e":"p";
+            lifeCue(ctx,e,"hero-fall",heroFace(ctx,loser),{targetRef:{side:loser,uid:"hero"}});
+            lifeCue(ctx,e,e.winner==="p"?"victory":"defeat",heroFace(ctx,"p"),{targetRef:{side:"p",uid:"hero"}});
+          }
           if (e.winner !== "draw")
             cue(heroFace(ctx, e.winner === "p" ? "e" : "p"), "英雄倒下", "defeat");
         }
@@ -2630,7 +2667,11 @@ const EmberFX = (() => {
           );
           const caster = countered ? countered.cast.actor : null,
             casterBox = caster ? anchors.resolve(caster, sequence.anchors) : null;
-          if (casterBox) fxCall("contact", { at: fxBox(casterBox), tier: 1 });
+          lifeCue(ctx,e,"secret-reveal",box,{targetRef:owner});
+          if (casterBox) {
+            lifeCue(ctx,e,"counterspell",casterBox,{from:fxBox(box),targetRef:caster});
+            fxCall("contact", { at: fxBox(casterBox), tier: 1 });
+          }
           tracePush({
             beat: i,
             sequence: sequence.id,
@@ -2656,7 +2697,7 @@ const EmberFX = (() => {
         for (const e of beat.events) {
           const box = heroFace(ctx, e.side);
           cue(box, e.broken ? "武器损坏" : "耐久 −1", "weapon");
-          if (e.broken) sound("weapon-break", box);
+          if (e.broken) {sound("weapon-break", box);lifeCue(ctx,e,"weapon-break",box);}
         }
       });
     },
@@ -2679,6 +2720,7 @@ const EmberFX = (() => {
       at(ctx, beat.at, () => {
         if (!enterFrame(ctx, beat, i, beat.frame)) return;
         phaseChange(ctx.s, beat.hold);
+        lifeCue(ctx,beat.events[0]||{},"awaken",heroFace(ctx,"e"),{targetRef:{side:"e",uid:"hero"}});
       });
     },
   };
@@ -2704,7 +2746,14 @@ const EmberFX = (() => {
     const sourceless = contact.direction === "sourceless" || !cause;
     if (event.type === "damage") {
       const loss = event.loss ?? event.amount;
+      if(ref.uid==="hero"&&!event.from){
+        const current=ctx.s?.[ref.side]?.fatigue||0;
+        if(current>(ctx.lifecycleFatigue?.[ref.side]||0)){
+          lifeCue(ctx,event,"fatigue",box);ctx.lifecycleFatigue[ref.side]=(ctx.lifecycleFatigue[ref.side]||0)+1;
+        }
+      }
       if (event.absorbed) {
+        lifeCue(ctx,event,"armor-break",box);
         cue({ ...box, y: box.y - 24 }, `护甲吸收 ${event.absorbed}`, "armor");
         sound("armor", box);
       }
@@ -2718,7 +2767,7 @@ const EmberFX = (() => {
             from: fxBox(actorBox),
             to: fxBox(box),
             tier,
-            swordStyle: spec?.swordStyle, sourceCid: contact.sourceCid, targetRef: ref,
+            swordStyle: spec?.swordStyle, sourceCid: contact.sourceCid, targetRef: ref,sequenceId:sequence.id,
             tint: spec?.tint || null,
             tintGrad: spec?.tintGrad ?? null,
             ranged: false,
@@ -2732,7 +2781,8 @@ const EmberFX = (() => {
       startReaction(sequence, ref, actorBox, { ...timing, recoilPx: T.tiers[1].recoilPx });
       numberAt = number(box, 0, "shield", { key });
       sound("shield", box);
-      fxCall("cue","ward",{at:fxBox(box),targetRef:ref,seed:sequence.id*71+index,timeScale:sequence.plan.scale});
+      if(!lifeCue(ctx,event,"shield-break",box))
+        fxCall("cue","ward",{at:fxBox(box),targetRef:ref,seed:sequence.id*71+index,timeScale:sequence.plan.scale});
       if (sourceless || contact.direction === "retaliation") fxCall("contact", { at: fxBox(box), tier: 1 });
     } else if (event.type === "heal") {
       numberAt = number(box, event.amount, "heal", { key });
@@ -2805,7 +2855,10 @@ const EmberFX = (() => {
   function statusCue(ctx, e, box) {
     cue(box, STATUS_LABELS[e.kind]?.(e) || e.kind, e.kind);
     if (STATUS_SOUNDS[e.kind]) sound(STATUS_SOUNDS[e.kind], box, { gain: 0.6 });
-    if (e.kind === "transform" && !quality.reduced) {
+    const identity=typeof EmberLifecycleArts!=="undefined"?EmberLifecycleArts.kindFor(e):null;
+    const played=identity&&lifeCue(ctx,e,identity,box);
+    if(e.kind==="thaw"&&played)sound("freeze",box,{gain:.35});
+    if (e.kind === "transform" && !quality.reduced && !played) {
       const el = unit(e.side, e.uid);
       if (el)
         animate(
@@ -2914,6 +2967,7 @@ const EmberFX = (() => {
       events,
       s,
       history: capture(),
+      lifecycleFatigue:{p:before?.p?.fatigue||0,e:before?.e?.fatigue||0},
       seenRattles: new Set(),
       primaryLandingEventId:
         plan.cardTracks?.find((track) => track.sourceEventId === primary?.id)?.landingEventId || null,

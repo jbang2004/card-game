@@ -11,7 +11,7 @@
     const origin = group[0].start, deadlines = new Map();
     for (const d of group) {
       const k = key(d.targetRef), at = d.impact - origin;
-      if (!k || d.visualOnly || !Number.isFinite(at)) continue;
+      if (!k || (d.visualOnly && !d.lifecycle) || !Number.isFinite(at)) continue;
       deadlines.set(k, Math.min(deadlines.get(k) ?? Infinity, Math.max(0, at)));
     }
     return [...deadlines].filter(([k]) => before[k] && after[k]).map(([k, at]) => ({

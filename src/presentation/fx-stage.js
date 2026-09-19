@@ -27,6 +27,7 @@ const EmberFx2 = (() => {
   let engine = null;
   const benchmarkFeedback=typeof EmberBenchmarkFeedback!=="undefined"?EmberBenchmarkFeedback.create():null;
   const remasterFeedback=typeof EmberRemasterFeedback!=="undefined"?EmberRemasterFeedback.create():null;
+  const lifecycleFeedback=typeof EmberLifecycleFeedback!=="undefined"?EmberLifecycleFeedback.create():null;
   let castGroup=0;
   let meshEngine = null, meshCanvas = null, meshError = null;
   let glCanvas = null;
@@ -171,11 +172,12 @@ const EmberFx2 = (() => {
         ready = true;
         if (typeof EmberVFX3 !== "undefined") {
           try {
-            meshEngine = EmberVFX3.create(meshCanvas, { resolveTarget: resolveMeshTarget, onEmit: d => {benchmarkFeedback?.schedule(d);remasterFeedback?.schedule(d);}, onFrame:(a,t,m)=>{benchmarkFeedback?.frame(a,t,m);remasterFeedback?.frame(a,t,m);}, onClear:()=>{benchmarkFeedback?.clear();remasterFeedback?.clear();} });
+            meshEngine = EmberVFX3.create(meshCanvas, { resolveTarget: resolveMeshTarget, onEmit: d => {benchmarkFeedback?.schedule(d);remasterFeedback?.schedule(d);}, onFrame:(a,t,m)=>{benchmarkFeedback?.frame(a,t,m);remasterFeedback?.frame(a,t,m);lifecycleFeedback?.frame(a,t,m);}, onClear:()=>{benchmarkFeedback?.clear();remasterFeedback?.clear();lifecycleFeedback?.clear();} });
             meshEngine.stage(stage.w, stage.h);
             meshEngine.setQuality(quality);
             meshCanvas.addEventListener("webglcontextlost", (event) => {
               event.preventDefault(); meshError = "3D WebGL context lost; reload to restore";
+              lifecycleFeedback?.clear();benchmarkFeedback?.clear();remasterFeedback?.clear();
               meshEngine = null; meshCanvas.hidden = true;
             });
           } catch (error) {
@@ -399,6 +401,13 @@ const EmberFx2 = (() => {
       return engine.attack(family, o);
     },
 
+    lifecycle(kind,o) {
+      if(!available()||!meshEngine||!EmberLifecycleArts.supports(kind))return false;
+      const now=performance.now();
+      return meshEngine.emit(kind,{...o,from:o.from||o.at,to:o.to||o.at,
+        startedAt:now,contactAt:now,visualOnly:true,silent:true});
+    },
+    get lifecycleFeedback(){return lifecycleFeedback;},
     cue(kind,o) {
       if(!available()||!meshEngine||!EmberRemasterArts.supports(kind))return false;
       const now=performance.now();
