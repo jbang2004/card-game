@@ -970,11 +970,13 @@ html[data-skin="slate"] body.mobile-landscape .god-stage-flow .god-shell {
   align-items: center;
   gap: clamp(20px, 4vw, 48px);
 }
-/* Cover flow lets its neighbours hang past the focused card — and past the
- * screen edge, which is the look. They must NOT widen the shell, or the ritual
- * column gets pushed off with them. */
+/* Portrait neighbours may extend beyond the viewport. Landscape must also
+ * reserve their overhang before the adjacent ritual column. */
 html[data-skin="slate"] body .god-stage-flow .god-cards {
   overflow: visible;
+}
+html[data-skin="slate"] body.mobile-landscape .god-stage-flow .god-shell {
+  gap: calc(var(--god-card-w, 300px) * 0.43 + 30px);
 }
 html[data-skin="slate"] body .god-cards {
   position: relative;
@@ -2527,13 +2529,6 @@ html[data-skin="slate"] body.touch-layout #app.battle-view,
 html[data-skin="slate"] body.touch-layout #app.battle-view #battle {
   overflow: clip;
 }
-/* Landscape notices and target instructions share the header band. */
-html[data-skin="slate"]
-  body.mobile-landscape
-  #app:is(.battle-notice-active, .is-targeting)
-  #turn-number {
-  visibility: hidden;
-}
 /* Freeze belongs to the portrait, not the transparent HUD container. */
 html[data-skin="slate"] body #battle .hero.frozen::after {
   display: none;
@@ -2599,56 +2594,238 @@ html[data-skin="slate"] body #hand .hand-card.reading-source {
   opacity: 0.3;
   transform: translateY(0);
 }
-/* A single top status slot; messages temporarily replace instructions. */
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #app.battle-view
-  :is(#toast, #touch-target-bar) {
-  left: 480px;
-  top: 16px;
-  width: 640px;
-  max-width: 640px;
-  height: 48px;
-  margin: 0;
-  transform: none;
-  z-index: 60;
-  padding: 0 8px 0 16px;
+/* Shared rolling status capsule: one spatial anchor for turn and messages. */
+#battle-status {
+  display: none;
 }
-html[data-skin="slate"] body #app.battle-view #touch-target-text {
-  flex: 1;
-  text-align: left;
+html[data-skin="slate"] body #app.battle-view #battle-status {
+  display: block;
+  position: absolute;
+  left: 590px;
+  top: 16px;
+  width: 420px;
+  height: 48px;
+  z-index: 60;
+  overflow: hidden;
+  perspective: 600px;
+  border-radius: 999px;
+  border: 1px solid var(--slate-pill-line);
+  background: var(--slate-pill);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 4px 16px #0008,
+    inset 0 1px #ffffff12;
+  box-sizing: border-box;
 }
 html[data-skin="slate"]
   body
   #app.battle-view
-  #touch-target-bar[data-mode="inspect"]
-  #touch-target-text {
-  color: var(--slate-ink-2);
+  #battle-status
+  :is(#turn-number, #touch-target-bar, #toast) {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 0 8px;
+  box-sizing: border-box;
+  transform: none;
+  background: none;
+  box-shadow: none;
+  color: var(--slate-ink);
+  text-shadow:
+    0 1px 3px #000,
+    0 0 8px #0008;
+  font: 700 15px/1.35 var(--slate-font);
+  letter-spacing: 0;
+}
+html[data-skin="slate"] body #app.battle-view #battle-status #turn-number {
+  display: grid;
+  place-items: center;
+  opacity: 1;
+  visibility: visible;
+  transform-origin: center top;
+  transition:
+    transform 240ms var(--e-std),
+    opacity 180ms,
+    visibility 0s;
 }
 html[data-skin="slate"]
-  body:not(.mobile-portrait)
-  #app:is(.battle-notice-active, .is-targeting, .reading-hand)
+  body
+  #app.battle-view
+  #battle-status.has-message
   #turn-number {
+  transform: translateY(-100%) rotateX(55deg);
+  opacity: 0;
   visibility: hidden;
+  transition:
+    transform 240ms var(--e-std),
+    opacity 180ms,
+    visibility 0s 240ms;
 }
-#battle-status-caption {
+html[data-skin="slate"]
+  body
+  #app.battle-view
+  #battle-status
+  #touch-target-bar:not([hidden]),
+html[data-skin="slate"] body #app.battle-view #battle-status #toast.visible {
+  animation: status-roll-in 240ms var(--e-std) both;
+}
+html[data-skin="slate"]
+  body
+  #app.battle-view
+  #battle-status
+  #toast[data-kind="error"] {
+  color: #ffe0be;
+  font-weight: 750;
+}
+html[data-skin="slate"]
+  body
+  #app.battle-view
+  #battle-status
+  #touch-target-text {
+  flex: 1;
+  text-align: left;
+  color: var(--slate-ink);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+html[data-skin="slate"] body #app.battle-view #battle-status #touch-cancel {
+  min-width: 44px;
+  flex: 0 0 44px;
+  height: 44px;
+  padding: 0;
+  border-color: var(--slate-pill-line);
+  background: var(--slate-pill);
+}
+html[data-skin="slate"]
+  body.mobile-portrait
+  #app.battle-view
+  :is(#sound-btn, #settings-btn) {
   display: none;
 }
 html[data-skin="slate"]
   body.mobile-portrait
   #app.battle-view
-  #battle-status-caption {
-  display: flex;
-  position: absolute;
-  align-items: center;
-  justify-content: center;
-  color: var(--slate-ink-3);
-  font: 400 12px/1.4 var(--slate-font);
-  pointer-events: none;
+  #battle-status
+  :is(#toast, #touch-target-text) {
+  font-size: 12px;
+}
+@keyframes status-roll-in {
+  from {
+    transform: translateY(100%) rotateX(-55deg);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+html[data-skin="slate"] body.reduced-motion #app #battle-status * {
+  animation: none !important;
+  transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="slate"] body #app #battle-status * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+/* Desktop scales its canvas: keep the cancel action at 44 physical pixels. */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  #battle-status {
+  height: max(48px, calc(44px / var(--scale, 1) + 2px));
 }
 html[data-skin="slate"]
-  body.mobile-portrait
-  #app.battle-view:is(.battle-notice-active, .is-targeting, .reading-hand)
-  #battle-status-caption {
-  visibility: hidden;
+  body:not(.touch-layout)
+  #app.battle-view
+  #battle-status
+  #touch-cancel {
+  min-width: var(--slate-hud-hit);
+  flex-basis: var(--slate-hud-hit);
+  height: var(--slate-hud-hit);
+}
+
+html[data-skin="slate"] body.mobile-portrait #app.battle-view .topbar {
+  height: var(--battle-header-h, 64px);
+}
+
+/* Compact divine action beside the hero skill, never in the hand scroller. */
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .contract-open
+  .contract-seal {
+  top: 36%;
+  width: 64%;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .contract-open
+  .contract-sigil {
+  display: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .contract-open
+  .contract-label {
+  display: block;
+  position: absolute;
+  inset: auto 0 2px;
+  color: #fff2cf;
+  font: 700 9px/1.2 var(--slate-font);
+  text-shadow: 0 1px 3px #000;
+}
+/* Fixed edge hints are siblings of the scroller, so they never scroll away. */
+#hand-scroll-hints {
+  display: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #app.battle-view
+  #hand-scroll-hints:not([hidden]) {
+  display: block;
+  position: absolute;
+  z-index: 54;
+  pointer-events: none;
+}
+html[data-skin="slate"] body #hand-scroll-hints span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 44px;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  color: var(--slate-ink);
+  font: 600 28px/1 var(--slate-font);
+  display: flex;
+  align-items: center;
+  text-shadow: 0 1px 4px #000;
+  pointer-events: none;
+  background: linear-gradient(90deg, #0e172bd9, #0e172b00);
+}
+html[data-skin="slate"] body #hand-scroll-hints span[data-hand-scroll="-1"] {
+  left: 0;
+  text-align: left;
+  padding-left: 6px;
+}
+html[data-skin="slate"] body #hand-scroll-hints span[data-hand-scroll="1"] {
+  right: 0;
+  justify-content: flex-end;
+  padding-right: 6px;
+  background: linear-gradient(270deg, #0e172bd9, #0e172b00);
+}
+html[data-skin="slate"] body #hand-scroll-hints span[hidden] {
+  display: none;
 }

@@ -1953,6 +1953,9 @@ const EmberFX = (() => {
     const edge = "linear-gradient(to top, transparent 0%, #000 13%, #000 100%)";
     el.style.maskImage = edge;
     el.style.webkitMaskImage = edge;
+    // animate() cancels its finished WAAPI effect before scheduled removal.
+    // The underlying pose must stay invisible during that cleanup interval.
+    el.style.opacity = "0";
     const f = freeze / total;
     animate(
       el,
@@ -1969,6 +1972,7 @@ const EmberFX = (() => {
     line.style.cssText =
       `left:${old.left}px;top:${old.top + old.h - 2}px;width:${old.w}px;height:2px;` +
       `background:linear-gradient(90deg,transparent,${tint} 16%,#fff4dc 50%,${tint} 84%,transparent);`;
+    line.style.opacity = "0";
     app.appendChild(line);
     nodes.add(line);
     animate(

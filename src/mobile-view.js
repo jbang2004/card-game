@@ -99,7 +99,7 @@ const EmberViewport = (() => {
     if (mobile) {
       /* Console + dock model (docs/design/BATTLE_REDESIGN_20260914.md):
        *   portrait  = topbar / enemy console strip / arena / player console
-       *               strip / hand dock (cards peek 55%, god slot at the right)
+       *               strip with divine action / ordinary hand dock
        *   landscape = topbar / [left rail: enemy console, player console]
        *               arena [right rail: end turn] / hand dock
        * The hero buttons ARE the consoles: they get the whole strip and lay
@@ -108,7 +108,7 @@ const EmberViewport = (() => {
       const padL = safe.left + 12,
         padR = safe.right + 12,
         usableW = W - padL - padR;
-      l.header = safe.top + (portrait ? 100 : 44);
+      l.header = safe.top + (portrait ? 64 : 44);
       /* Tablets and compact desktops get the same layout at a larger scale. */
       const roomy = portrait ? W >= 600 : W >= 1000;
       /* Landscape reserves separate bands for portraits, equipment and stats. */
@@ -130,40 +130,18 @@ const EmberViewport = (() => {
               ? 96
               : 88,
         cardH = Math.round((cardW * 7.4) / 5),
-        peek = Math.round(cardH * (!portrait && H < 380 ? 0.55 : 0.66)),
-        /* The god slot is a hand card: same size, same dock line, same
-         * peek (its lower third hangs off the screen just like the fan). */
-        godW = cardW,
-        godH = cardH;
+        peek = Math.round(cardH * (!portrait && H < 380 ? 0.55 : 0.66));
       /* The dock box extends below the screen: only the top `peek` px of a
        * resting card are visible; a selected or dragged card rises out of it. */
       const dockTop = H - safe.bottom - peek - 10;
       l.hand = { x: 0, y: dockTop, w: 0, h: cardH + 20 };
-      /* The turn capsule shares the top bar with the brand wordmark on the
-       * left and the icon cluster on the right, so it may only claim the band
-       * BETWEEN them — a capsule centred on the screen runs under the volume
-       * button as soon as the phone is narrow. The band is measured from the
-       * same constants the bar is built from (brand 50 wide at padL + 14,
-       * `.top-actions` 116 wide ending padR + 14 from the right edge) with an
-       * 8px gutter on each side, and the capsule is centred IN THE BAND. */
-      const brandRight = padL + 52,
-        actionsLeft = W - padR - 118,
-        roundBand = Math.max(0, actionsLeft - 8 - (brandRight + 8)),
-        roundW = Math.min(portrait ? 200 : 260, roundBand);
-      l.round = {
-        x: Math.round(brandRight + 8 + (roundBand - roundW) / 2),
-        y: safe.top + 6,
-        w: Math.round(roundW),
-        h: portrait ? 34 : 30,
-      };
       if (portrait) {
         /* §12.1: the hero is the SAME card at every size, just three scales.
          * A mini card needs a taller strip than a 56px avatar did. */
         const consoleH = 96,
           enemyH = mini ? 78 : 56;
         l.hand.x = padL - 6;
-        l.hand.w = usableW + 6 - godW - 8;
-        l.contract = { x: W - padR - godW, y: dockTop + 10, w: godW, h: godH };
+        l.hand.w = usableW + 6;
         l.enemyConsole = { x: padL, y: l.header + 4, w: usableW, h: enemyH };
         l.playerConsole = {
           x: padL,
@@ -194,9 +172,9 @@ const EmberViewport = (() => {
         l.chip = { x: padL, y: l.header, w: 0, h: 0 };
         const top = l.enemyConsole.y + enemyH + 6;
         l.arena = {
-          x: padL - 2,
+          x: padL + heroW + 16,
           y: top,
-          w: usableW + 4,
+          w: usableW - heroW - 14,
           h: Math.max(120, l.playerConsole.y - 6 - top),
         };
       } else {
@@ -208,14 +186,8 @@ const EmberViewport = (() => {
           right = 76;
         const arenaX = padL + rail + 8,
           arenaW = W - arenaX - padR - right - 8;
-        l.contract = {
-          x: W - padR - right - 8 - godW,
-          y: dockTop + 10,
-          w: godW,
-          h: godH,
-        };
         l.hand.x = arenaX - 4;
-        l.hand.w = l.contract.x - 8 - l.hand.x;
+        l.hand.w = W - padR - l.hand.x;
         /* Both consoles are the card plus the chip row that sits under it. */
         const railH = mini ? heroH + 6 : 66;
         l.enemyConsole = {
@@ -227,7 +199,7 @@ const EmberViewport = (() => {
         const playerH = mini ? heroH + 40 : 110;
         l.playerConsole = {
           x: padL,
-          y: dockTop - 8 - playerH,
+          y: H - safe.bottom - 10 - playerH,
           w: rail,
           h: playerH,
         };
@@ -260,13 +232,26 @@ const EmberViewport = (() => {
           h: Math.max(100, dockTop - 8 - (l.header + 4)),
         };
       }
-      // Portrait gets its own status row; wide screens share the topbar's
-      // centre with the idle round label. Neither rail covers a minion row.
-      l.notice = portrait
-        ? { x: padL, y: safe.top + 52, w: usableW, h: 44 }
-        : { x: padL + 56, y: safe.top, w: usableW - 176, h: 44 };
+      // Reserve a hero-width lane: covenant above, hero below. Landscape
+      // uses the full-height left rail because its hand starts beside it.
+      l.contract = {
+        x: l.player.x,
+        y: l.player.y - l.player.h - 12,
+        w: l.player.w,
+        h: l.player.h,
+      };
+      l.handHints = { x: l.hand.x, y: dockTop + 10, w: l.hand.w, h: peek };
+      // Brand / shared round-notice slot / compact menu. Portrait secondary
+      // actions remain available in the menu instead of crowding the message.
+      const noticeBand = usableW - (portrait ? 104 : 176),
+        noticeWidth = Math.min(420, noticeBand);
+      l.notice = {
+        x: padL + 56 + (noticeBand - noticeWidth) / 2,
+        y: safe.top + (portrait ? 4 : 0),
+        w: noticeWidth,
+        h: portrait ? 56 : 44,
+      };
       l.handLabel = { x: padL, y: -100, w: 0, h: 0 };
-      l.actionChip = { ...l.notice };
       l.cardH = cardH;
       l.cardW = cardW;
       l.peek = peek;
@@ -284,8 +269,6 @@ const EmberViewport = (() => {
       signature,
     };
     if (mobile) {
-      for (const [key, value] of Object.entries(l.notice))
-        app.style.setProperty("--notice-" + key, value + "px");
       const roots = {
         arena: l.arena,
         "enemy-hero": l.enemyConsole,
@@ -293,10 +276,9 @@ const EmberViewport = (() => {
         "power-btn": l.power,
         "contract-open": l.contract,
         hand: l.hand,
-        "touch-target-bar": l.actionChip,
-        "battle-status-caption": l.actionChip,
+        "hand-scroll-hints": l.handHints,
+        "battle-status": l.notice,
         "touch-match-chip": l.chip,
-        "turn-number": l.round,
       };
       for (const [id, r] of Object.entries(roots))
         box(document.getElementById(id), r);
@@ -307,9 +289,9 @@ const EmberViewport = (() => {
       app.style.setProperty("--hand-card-h", l.cardH + "px");
       app.style.setProperty("--hand-peek", l.peek + "px");
       app.style.setProperty("--hand-lift", l.cardH - l.peek + "px");
-      app.style.setProperty("--god-w", l.contract.w + "px");
       app.style.setProperty("--battle-card-w", l.cardW + "px");
       app.style.setProperty("--battle-card-h", l.cardH + "px");
+      app.style.setProperty("--battle-header-h", l.header + "px");
       app.style.setProperty(
         "--header-h",
         safe.top + (portrait ? 52 : 44) + "px",
@@ -341,8 +323,10 @@ const EmberViewport = (() => {
         "power-btn",
         "contract-open",
         "hand",
+        "hand-scroll-hints",
         "board-empty",
         "weapon-slot",
+        "battle-status",
         "turn-number",
         "touch-target-bar",
         "touch-match-chip",

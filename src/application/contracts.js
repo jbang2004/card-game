@@ -173,7 +173,7 @@ const EmberContractUI = (() => {
       const tablet =
         !v.mobile || (v.portrait ? v.width >= 600 : v.width >= 900);
       if (tablet && count > 1) return "spread";
-      if (!v.portrait) return "wide";
+      if (!v.portrait && count === 1) return "wide";
       return "flow";
     }
     function stageCardWidth(shape, count) {
@@ -297,7 +297,7 @@ const EmberContractUI = (() => {
             ? `translate(${(i - (n - 1) / 2) * (w + 24)}px, ${d ? 0 : -12}px)`
             : `translate(${dd * w * 0.62 + (d - dd) * 10}px, 0) scale(${d ? 0.62 - (Math.abs(d) - 1) * 0.06 : 1})`,
         );
-        if (!card.dataset.flying) card.style.transform = `var(--stack)`;
+        card.style.transform = "var(--stack)";
       });
     }
     function stageFocus(index) {
@@ -348,12 +348,28 @@ const EmberContractUI = (() => {
       /* One timeline (§13.1): the class starts the ritual's fade-and-sink and
        * the scrim's un-blur, and the card's flight transform is set in the same
        * frame, so nothing queues behind the card. */
+      // Freeze every current pose before cancelling staggered entrance motion.
+      const poses = ctx.cards.map((card) => [
+        getComputedStyle(card).transform,
+        getComputedStyle(card.querySelector(".god-card-inner")).transform,
+      ]);
+      el.classList.remove("flying");
+      ctx.cards.forEach((card, i) => {
+        card.style.transition = "none";
+        card.style.transform = poses[i][0];
+        const inner = card.querySelector(".god-card-inner");
+        inner.style.transition = "none";
+        inner.style.transform = poses[i][1];
+      });
+      void el.offsetWidth;
       el.classList.add("closing");
-      const card = ctx.cards[ctx.focus];
-      card.dataset.flying = "1";
-      card.style.transform = ctx.flight;
-      card.querySelector(".god-card-inner").style.transform =
-        "rotateY(180deg) translateZ(40px)";
+      ctx.cards.forEach((card) => {
+        card.style.transition = "";
+        card.style.transform = ctx.flight;
+        const inner = card.querySelector(".god-card-inner");
+        inner.style.transition = "";
+        inner.style.transform = "rotateY(180deg)";
+      });
       setTimeout(drop, 340);
     }
     function stageKey(e) {
@@ -403,10 +419,10 @@ const EmberContractUI = (() => {
       stageFocus(0);
       /* FLIP: the slot's measured rect is the take-off pose. Every `.god-card`
        * is `inset: 0` inside `.god-cards`, so they all share one untransformed
-       * box — measuring the focused card (whose `--stack` is the identity)
-       * gives the take-off for all three. */
+       * box. Measure that container so focus offsets cannot displace the
+       * shared take-off and return destination. */
       const slot = v.pos(document.getElementById("contract-open"));
-      const here = v.pos(stageCtx.cards[0]);
+      const here = v.pos(el.querySelector(".god-cards"));
       if (slot && here && !calm()) {
         const scale = slot.w / here.w,
           dx = Math.round(slot.x - here.x),
@@ -457,7 +473,7 @@ const EmberContractUI = (() => {
      * than a picture pasted on the scrim. */
     function bindStageTilt(el) {
       const move = (e) => {
-        if (!stageCtx || calm()) return;
+        if (!stageCtx || calm() || e.pointerType === "touch") return;
         const card = stageCtx.cards[stageCtx.focus];
         const r = card?.getBoundingClientRect();
         if (!r?.width) return;
@@ -482,34 +498,61 @@ const EmberContractUI = (() => {
      * 90px puts the card back in its slot. */
     function bindStageDrag(el) {
       const cards = el.querySelector(".god-cards");
-      let start = null;
+      let start = null,
+        consumed = false;
       cards.addEventListener(
         "pointerdown",
         (e) => {
-          start = { x: e.clientX, y: e.clientY, turned: false };
+          if (!e.isPrimary || e.button !== 0) return;
+          consumed = false;
+          start = { x: e.clientX, y: e.clientY, id: e.pointerId };
         },
         { passive: true },
       );
       cards.addEventListener(
         "pointermove",
         (e) => {
-          if (!start || !stageCtx) return;
+          if (!start || !stageCtx || e.pointerId !== start.id || consumed)
+            return;
           const dx = e.clientX - start.x,
             dy = e.clientY - start.y;
           if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) {
+            consumed = true;
+            cards.setPointerCapture(e.pointerId);
             stageCtx.pinned = true;
-            stageFocus(stageCtx.focus + (dx < 0 ? 1 : -1));
-            start = { x: e.clientX, y: e.clientY, turned: true };
+            const next = Math.max(
+              0,
+              Math.min(
+                stageCtx.cards.length - 1,
+                stageCtx.focus + (dx < 0 ? 1 : -1),
+              ),
+            );
+            if (next !== stageCtx.focus) stageFocus(next);
           } else if (dy > 90 && dy > Math.abs(dx)) {
+            consumed = true;
             start = null;
             closeStage();
           }
         },
         { passive: true },
       );
-      const drop = () => (start = null);
+      // A swipe must not also activate the card under the release point.
+      cards.addEventListener(
+        "click",
+        (e) => {
+          if (consumed) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        },
+        true,
+      );
+      const drop = () => {
+        start = null;
+      };
       cards.addEventListener("pointerup", drop, { passive: true });
       cards.addEventListener("pointercancel", drop, { passive: true });
+      cards.addEventListener("lostpointercapture", drop, { passive: true });
     }
     window.addEventListener("ember:viewport", () => closeStage(false));
 
@@ -532,7 +575,7 @@ const EmberContractUI = (() => {
         ? Math.min(...gates.map((g) => Math.min(1, g.current / g.required)))
         : 0;
       b.style.setProperty("--ritual-progress", fraction * 360 + "deg");
-      b.innerHTML = `<i class="contract-back" aria-hidden="true"></i><i class="contract-seal" aria-hidden="true"></i><i class="contract-sigil" aria-hidden="true">${A.icon(symbolFor(kind))}</i><span class="contract-label">诸神契约</span><small>${ready ? ready + " 项可唤醒" : god && s.p.usedContracts.includes(god.id) ? "神祇已降临" : gates.map((gate) => gate.label + " " + Math.min(gate.current, gate.required) + "/" + gate.required).join(" · ") || "查看公开契约"}</small>`;
+      b.innerHTML = `<i class="contract-back" aria-hidden="true"></i><i class="contract-seal" aria-hidden="true"></i><i class="contract-sigil" aria-hidden="true">${A.icon(symbolFor(kind))}</i><span class="contract-label">神契</span><small>${ready ? ready + " 项可唤醒" : god && s.p.usedContracts.includes(god.id) ? "神祇已降临" : gates.map((gate) => gate.label + " " + Math.min(gate.current, gate.required) + "/" + gate.required).join(" · ") || "查看公开契约"}</small>`;
       /* The slot opens the god stage; the full covenant page (enemy side,
          soul ledger) is one link away inside it. §12.3 step 1: the press is
          acknowledged before the flight starts — the back rebounds past its

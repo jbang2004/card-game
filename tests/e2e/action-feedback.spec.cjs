@@ -85,6 +85,9 @@ test.describe("battle instruction and feedback rails", () => {
     await expect(cue).toHaveAttribute("data-mode", "placement");
     await expect(page.locator("#touch-target-bar")).toBeVisible();
     await expect(page.locator("#touch-target-text")).toBeVisible();
+    await page
+      .locator("#touch-target-bar")
+      .evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
     await assertPlacementCue(page);
   });
 
@@ -157,6 +160,9 @@ test.describe("battle instruction and feedback rails", () => {
       "data-mode",
       "placement",
     );
+    await chip.evaluate((el) =>
+      Promise.all(el.getAnimations().map((a) => a.finished)),
+    );
     const geometry = await page.evaluate(() => {
       const chip = document
           .getElementById("touch-target-bar")
@@ -165,9 +171,16 @@ test.describe("battle instruction and feedback rails", () => {
         label = document
           .getElementById("touch-target-text")
           .getBoundingClientRect();
-      return { chip, hand, label };
+      return {
+        chip,
+        hand,
+        label,
+        rail: document.getElementById("battle-status").getBoundingClientRect(),
+      };
     });
-    expect(geometry.chip.width).toBeGreaterThanOrEqual(280);
+    expect(
+      Math.abs(geometry.chip.width - geometry.rail.width),
+    ).toBeLessThanOrEqual(2);
     expect(geometry.chip.bottom).toBeLessThanOrEqual(geometry.hand.top + 1);
     expect(geometry.label.width).toBeGreaterThan(40);
     const cancel = await page.locator("#touch-cancel").boundingBox();
@@ -205,6 +218,9 @@ for (const [width, height] of [
       .locator('#hand [data-cardid="frostbolt"]')
       .click({ position: { x: 14, y: 30 } });
     await expect(page.locator("#touch-target-text")).toBeVisible();
+    await page
+      .locator("#touch-target-bar")
+      .evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
     const before = await page.evaluate(() => JSON.stringify(EmberDebug.game.s));
     const faults = await page.evaluate(() => {
       const errors = [],

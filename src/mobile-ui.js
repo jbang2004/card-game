@@ -212,7 +212,7 @@
       `<small>第 ${s.bossIndex + 1} 战</small><strong>${esc(b.name)}</strong><span>${s.phase2 ? "第二阶段 · 已觉醒" : "第一阶段"} · ${s.e.hand.length} 手牌</span>`;
     /* Same capsule wording as the desktop read-out (design doc §12.6): the
      * round number leads, whose turn it is follows. The capsule only owns the
-     * band between the brand and the icon cluster (`mobile-view.js` `l.round`),
+     * band between the brand and the icon cluster (`mobile-view.js` `l.notice`),
      * so on a narrow phone the wording steps down until it fits rather than
      * running under the volume button; 12px is the floor. */
     const turn = $("turn-number"),

@@ -865,14 +865,14 @@ for (const [label, viewport] of VIEWPORTS) {
         touchPoints: [{ x: from.x, y: from.y }],
       });
       await page.waitForTimeout(120);
-      expect((await handState(page)).snapped).toBe(0);
+      await expect.poll(async () => (await handState(page)).snapped).toBe(0);
 
       await cdp.send("Input.dispatchTouchEvent", {
         type: "touchMove",
         touchPoints: [to],
       });
       await page.waitForTimeout(120);
-      expect((await handState(page)).snapped).toBe(1);
+      await expect.poll(async () => (await handState(page)).snapped).toBe(1);
       await cdp.send("Input.dispatchTouchEvent", {
         type: "touchEnd",
         touchPoints: [],

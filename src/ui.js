@@ -171,6 +171,22 @@
         }
       : null;
   }
+  // One status slot, coalesced so replacing a guide does not flash the round.
+  const statusRail = $("battle-status");
+  for (const id of ["turn-number", "touch-target-bar"])
+    statusRail.appendChild($(id));
+  let statusFrame = 0;
+  function syncStatusRail() {
+    if (statusFrame) return;
+    statusFrame = requestAnimationFrame(() => {
+      statusFrame = 0;
+      const active =
+        $("toast").classList.contains("visible") ||
+        !$("touch-target-bar").hidden;
+      statusRail.classList.toggle("has-message", active);
+      $("turn-number").setAttribute("aria-hidden", String(active));
+    });
+  }
   function setGuide(text, mode = "target") {
     hideBattleNotice();
     actionGuide = { text, mode };
@@ -188,6 +204,7 @@
       bar.hidden = false;
     }
     app.classList.toggle("placement-active", mode === "placement");
+    syncStatusRail();
   }
   function clearGuide() {
     actionGuide = { text: "", mode: null };
@@ -200,6 +217,7 @@
       bar.removeAttribute("aria-label");
     }
     app.classList.remove("placement-active");
+    syncStatusRail();
     clearActionCue();
   }
   function clearActionCue() {
@@ -401,20 +419,6 @@
         )
       : null;
   }
-  function positionBattleNotice() {
-    const notice = $("toast");
-    if (!notice) return;
-    const rail = EmberViewport.mobile
-      ? EmberViewport.layout.notice
-      : { x: 480, y: 16, w: 640, h: 48 };
-    Object.assign(notice.style, {
-      left: rail.x + "px",
-      top: rail.y + "px",
-      width: rail.w + "px",
-      minHeight: rail.h + "px",
-    });
-  }
-
   function hideBattleNotice() {
     clearTimeout(toastTimer);
     clearFeedbackMarks();
@@ -422,6 +426,7 @@
     notice?.classList.remove("visible");
     notice?.removeAttribute("data-kind");
     app.classList.remove("battle-notice-active");
+    syncStatusRail();
   }
   function showBattleNotice(
     text,
@@ -435,7 +440,7 @@
     notice.dataset.kind = kind;
     app.classList.add("battle-notice-active");
     notice.classList.add("visible");
-    positionBattleNotice();
+    syncStatusRail();
     sourceCard(sourceUid)?.classList.add(
       kind === "info" ? "feedback-info" : "feedback-error",
     );
@@ -562,6 +567,7 @@
     else scheduleAI();
   }
   function setView(battle) {
+    (battle ? statusRail : app).appendChild($("toast"));
     app.classList.toggle("battle-view", battle);
     app.classList.toggle("lobby-view", !battle);
     $("lobby").style.display = battle ? "none" : "block";
@@ -760,31 +766,44 @@
     return snapshot.point ? snapshot : { ...snapshot, point: null };
   }
   let pendingCardOrigin = null;
-  /* The phone hand keeps its scroll position across renders. The position is
-   * tracked by a passive scroll listener and restored on the next frame, so
-   * render() itself never reads or writes scroll geometry (either one forces a
-   * style recalc and layout in the middle of a battle beat). */
+  // Measure overflow once after a render/resize. Scroll events only update
+  // cached position and the two directional hints; no per-scroll layout read.
   let handScrollLeft = 0,
-    handScrollFrame = 0;
-  $("hand")?.addEventListener(
+    handScrollFrame = 0,
+    handScrollMax = 0;
+  const handHints = $("hand-scroll-hints"),
+    handLeft = handHints.querySelector('[data-hand-scroll="-1"]'),
+    handRight = handHints.querySelector('[data-hand-scroll="1"]');
+  function paintHandScrollHints() {
+    handHints.hidden = !EmberViewport.mobile || handScrollMax <= 2;
+    handLeft.hidden = handScrollLeft <= 2;
+    handRight.hidden = handScrollLeft >= handScrollMax - 2;
+  }
+  $("hand").addEventListener(
     "scroll",
     (event) => {
-      if (
-        readingUid &&
-        Math.abs(handScrollLeft - event.currentTarget.scrollLeft) > 4
-      )
-        clearSelection();
-      handScrollLeft = event.currentTarget.scrollLeft;
+      const next = event.currentTarget.scrollLeft;
+      if (readingUid && Math.abs(handScrollLeft - next) > 4) clearSelection();
+      handScrollLeft = next;
+      paintHandScrollHints();
     },
     { passive: true },
   );
   function restoreHandScroll() {
-    if (handScrollFrame || !handScrollLeft) return;
-    const wanted = handScrollLeft;
+    if (handScrollFrame) return;
     handScrollFrame = requestAnimationFrame(() => {
       handScrollFrame = 0;
       const hand = $("hand");
-      if (hand && hand.scrollLeft !== wanted) hand.scrollLeft = wanted;
+      handScrollMax = EmberViewport.mobile
+        ? Math.max(0, hand.scrollWidth - hand.clientWidth)
+        : 0;
+      hand.setAttribute(
+        "aria-description",
+        handScrollMax > 2 ? "左右滑动查看更多手牌" : "",
+      );
+      handScrollLeft = Math.min(handScrollLeft, handScrollMax);
+      if (hand.scrollLeft !== handScrollLeft) hand.scrollLeft = handScrollLeft;
+      paintHandScrollHints();
     });
   }
   /* Hero chips (design doc §13.4). `render()` rebuilds the console markup, so
@@ -1154,7 +1173,7 @@
       el.addEventListener("mouseenter", () => preview(el.dataset.cardid, el));
       el.addEventListener("mouseleave", hidePreview);
     });
-    if (EmberViewport.mobile) restoreHandScroll();
+    restoreHandScroll();
     window.EmberMobile?.afterRender(s);
     if (readingUid) syncHandLift();
     updateSelection();

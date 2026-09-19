@@ -189,6 +189,15 @@ test("card focus cannot scroll the battlefield and header messages have one text
     }),
     page = await context.newPage();
   await prepare(page);
+  // Divine actions no longer consume hand width; explicitly create overflow.
+  await page.evaluate(() => {
+    const g = EmberDebug.game;
+    g.s.p.hand = Array.from({ length: 10 }, () => g.card("guard"));
+    g.events = [];
+    g.emit();
+  });
+  await page.waitForTimeout(100);
+
   await page
     .locator("#hand .hand-card")
     .last()
