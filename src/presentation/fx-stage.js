@@ -25,8 +25,9 @@ const EmberFx2 = (() => {
   const SCENE_UPLOAD_MIN_MS = 120;
 
   let engine = null;
-  const benchmarkFeedback=typeof EmberBenchmarkFeedback!=="undefined"?EmberBenchmarkFeedback.create():null;
-  const remasterFeedback=typeof EmberRemasterFeedback!=="undefined"?EmberRemasterFeedback.create():null;
+  const motionFeedback = EmberMotionFeedback.create([EmberBenchmarkFeedback, EmberRemasterFeedback]);
+  const benchmarkFeedback = motionFeedback.channel("benchmark");
+  const remasterFeedback = motionFeedback.channel("remaster");
   const lifecycleFeedback=typeof EmberLifecycleFeedback!=="undefined"?EmberLifecycleFeedback.create():null;
   let castGroup=0;
   let meshEngine = null, meshCanvas = null, meshError = null;
@@ -172,12 +173,15 @@ const EmberFx2 = (() => {
         ready = true;
         if (typeof EmberVFX3 !== "undefined") {
           try {
-            meshEngine = EmberVFX3.create(meshCanvas, { resolveTarget: resolveMeshTarget, onEmit: d => {benchmarkFeedback?.schedule(d);remasterFeedback?.schedule(d);}, onFrame:(a,t,m)=>{benchmarkFeedback?.frame(a,t,m);remasterFeedback?.frame(a,t,m);lifecycleFeedback?.frame(a,t,m);}, onClear:()=>{benchmarkFeedback?.clear();remasterFeedback?.clear();lifecycleFeedback?.clear();} });
-            meshEngine.stage(stage.w, stage.h);
-            meshEngine.setQuality(quality);
+            meshEngine = EmberVFX3.create(meshCanvas, { resolveTarget: resolveMeshTarget, onEmit: d => {motionFeedback.schedule(d);}, onFrame:(a,t,m)=>{motionFeedback.frame(a,t,m);lifecycleFeedback?.frame(a,t,m);}, onClear:()=>{motionFeedback.clear();lifecycleFeedback?.clear();} });
+            const currentStage = stageSize();
+            meshEngine.stage(currentStage.w, currentStage.h);
+            // The initial quality call runs before this asynchronous creation.
+            // Synchronize the actual DOM layer as well as the renderer state.
+            setQuality(quality);
             meshCanvas.addEventListener("webglcontextlost", (event) => {
               event.preventDefault(); meshError = "3D WebGL context lost; reload to restore";
-              lifecycleFeedback?.clear();benchmarkFeedback?.clear();remasterFeedback?.clear();
+              lifecycleFeedback?.clear();motionFeedback.clear();
               meshEngine = null; meshCanvas.hidden = true;
             });
           } catch (error) {
@@ -370,6 +374,10 @@ const EmberFx2 = (() => {
       return EmberFx2Engine.plan(kind, o);
     },
 
+    beginSequence(id) {
+      meshEngine?.beginSequence(id);
+    },
+
     /** cast(kind, { from, targets, tier, tint, tintGrad, aoe, seed }) → plan 或 false */
     cast(kind, o) {
       if (!available()) return false;
@@ -380,9 +388,12 @@ const EmberFx2 = (() => {
         const start = Number.isFinite(o.startedAt) ? o.startedAt : performance.now();
         const groupId="r9-cast-"+(++castGroup);
         targets.forEach((to, i) => meshEngine.emit(kind, {
-          ...o, to, targetRef: o.targetRefs?.[i], startedAt: start, groupId, silent: i>0,
+          ...o, to, targetRef: o.targetRefs?.[i], startedAt: start, groupId,
+          tier: o.tiers?.[i] ?? o.tier,
+          outcome: o.outcomes?.[i], audioPrimary: i === 0,
+          audioGain: 1 / Math.sqrt(Math.max(1, targets.length)),
           contactAt: o.contactAt?.[i] ?? start + (p.hitAt[i] ?? 0),
-          hitStopMs: (EmberTiming.tiers[o.tier || 1]?.hitStopMs || 0) * (o.timeScale || 1),
+          hitStopMs: (EmberTiming.tiers[o.tiers?.[i] ?? o.tier ?? 1]?.hitStopMs || 0) * (o.timeScale || 1),
         }));
         return p;
       }

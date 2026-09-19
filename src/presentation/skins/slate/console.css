@@ -3,7 +3,7 @@
  * Implements docs/design/BATTLE_REDESIGN_20260914.md on top of the existing
  * DOM: the two hero buttons become "consoles" (avatar + name + chips, with the
  * skill node, mana pips and end-turn boxed inside the same strip by
- * `mobile-view.js`), the hand becomes a 55%-peek fan dock, and the covenant
+ * `mobile-view.js`), the hand becomes a full-width scrolling dock, and the covenant
  * button becomes a gold card back parked at the right end of the dock.
  *
  * Geometry on touch comes from `mobile-view.js` inline boxes; this file lays
@@ -55,7 +55,11 @@ html[data-skin="slate"] body.touch-layout #battle .hero.ready {
     0 0 14px #8cc4ff80;
 }
 /* avatar: a round aperture, no card plaque */
-html[data-skin="slate"] body.touch-layout #battle .hero-card-inner {
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  :is(.hero.enemy, .hero.player)
+  .hero-card-inner {
   position: absolute;
   inset: auto;
   left: 6px;
@@ -130,7 +134,11 @@ html[data-skin="slate"]
     #07111d99 100%
   );
 }
-html[data-skin="slate"] body.touch-layout #battle .hero.ready .portrait-frame {
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  :is(.hero.enemy, .hero.player).ready
+  .portrait-frame {
   border-color: var(--slate-blue);
   box-shadow:
     0 0 0 3px #0f141dcc,
@@ -406,11 +414,11 @@ html[data-skin="slate"] body.touch-layout #battle .end-turn.ready-end::before {
 }
 
 /* ---------------------------------------------------------------------------
- * 3. Hand dock (touch) — 55% peek, overlapping fan, native rail only when the
- * step would drop below 24px (`.hand-pan`, set by ui.js)
+ * 3. Hand dock (touch) — full card widths, 8px gaps, native horizontal rail
+ * whenever the cards cannot fit side by side (`.hand-pan`, set by ui.js)
  * ------------------------------------------------------------------------ */
 html[data-skin="slate"] body.touch-layout #battle .hand-zone {
-  gap: 0;
+  gap: 8px;
   align-items: flex-start;
   padding: 10px 8px 0;
   overflow: visible;
@@ -442,10 +450,10 @@ html[data-skin="slate"] body.touch-layout #battle .hand-zone.hand-pan {
   overflow-x: auto;
   overflow-y: hidden;
   justify-content: flex-start;
-  mask-image: linear-gradient(90deg, #0000, #000 20px calc(100% - 20px), #0000);
+  mask-image: none;
 }
 html[data-skin="slate"] body.touch-layout #battle .hand-card {
-  margin-left: calc(var(--hand-step, var(--hand-card-w)) - var(--hand-card-w));
+  margin: 0;
   transform: translateY(0);
   transition:
     transform var(--m-base) var(--e-std),
@@ -810,13 +818,15 @@ html[data-skin="slate"] body:not(.touch-layout) #battle .hero-covenant.spent {
 }
 html[data-skin="slate"] body:not(.touch-layout) #battle .power-button {
   left: 204px;
-  top: 512px;
+  /* A seven-card row ends at y=532. The whole clickable grid, including its
+   * transparent corners, must stay below that row's attack/health badges. */
+  top: 548px;
 }
 /* The desktop slot is the same gold card back, at 0.72 of a desktop hand card
  * (156x231), parked under the skill node beside the player's hero. */
 html[data-skin="slate"] body:not(.touch-layout) #battle .contract-open {
   left: 204px;
-  top: 580px;
+  top: 616px;
   width: 112px;
   height: 166px;
   /* undo the HUD pill this used to be (skins/slate/battle.css §"command rail") */
@@ -1843,40 +1853,6 @@ html[data-skin="slate"] body #battle .power-button[data-block="mana"] > b {
   border-color: var(--slate-line);
 }
 
-/* 10.3 The dock is a fan, not a stack: `ui.js` writes ±3° of roll and a 2px
- * arc per card into `--r` / `--y`. A card raised by the finger (or a mouse, or
- * focus) straightens up — reading it must not mean reading it at an angle. */
-html[data-skin="slate"]
-  body.touch-layout
-  #battle
-  .hand-zone.hand-fits
-  .hand-card {
-  transform: translateY(var(--y, 0)) rotate(var(--r, 0deg));
-  transform-origin: 50% 165%;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #battle
-  .hand-zone.hand-fits
-  .hand-card.peek,
-html[data-skin="slate"]
-  body.touch-layout.pointer-fine
-  #battle
-  .hand-zone.hand-fits
-  .hand-card:hover,
-html[data-skin="slate"]
-  body.touch-layout
-  #battle
-  .hand-zone.hand-fits
-  .hand-card:focus-visible,
-html[data-skin="slate"]
-  body.touch-layout
-  #battle
-  .hand-zone.hand-fits
-  .hand-card.selected {
-  transform: translateY(calc(-1 * var(--hand-lift, 60px))) rotate(0deg) scale(1);
-}
-
 /* 10.4 Fresh mana unlocked this card: one 600ms white edge, once. */
 html[data-skin="slate"] body #battle .hand-card.just-playable::after {
   content: "";
@@ -1969,7 +1945,7 @@ html[data-skin="slate"] body #battle .minion.ready::after {
  * avatar survives only below 320px and in very short landscape, where
  * `mobile-view.js` withholds `body.hero-mini`.
  *
- * The console loses its plate at the same time: §12.1 asks for frameless
+ * All touch sizes lose the outer console plate, including compact avatars: §12.1 asks for frameless
  * floating HUD, so the strip stops being a panel and the pieces that remain —
  * card, chips, skill node — each carry their own shadow.
  * ------------------------------------------------------------------------ */
@@ -1977,26 +1953,57 @@ html[data-skin="slate"] body #battle .minion.ready::after {
  * `:is(.hero.enemy, .hero.player)`, which counts as two classes — a plain
  * `.hero` here would lose to it on specificity regardless of file order, so
  * these rules use the same shape. */
-html[data-skin="slate"] body.hero-mini #battle :is(.hero.enemy, .hero.player) {
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  :is(.hero.enemy, .hero.player) {
+  outline: 0;
   border: 0;
   background: none;
   box-shadow: none;
   backdrop-filter: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .hero:focus-visible
+  .portrait-frame {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 4px;
+}
+html[data-skin="slate"] body.hero-mini #battle :is(.hero.enemy, .hero.player) {
   --mini-w: 72px;
   --mini-h: 106px;
   --mini-x: 6px;
   --mini-y: 6px;
 }
 html[data-skin="slate"]
-  body.hero-mini
+  body.touch-layout
   #battle
-  :is(.hero.enemy, .hero.player).valid-target,
-html[data-skin="slate"]
-  body.hero-mini
-  #battle
-  :is(.hero.enemy, .hero.player).ready {
+  :is(.hero.enemy, .hero.player):is(.valid-target, .ready, .selected) {
   border: 0;
   box-shadow: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  :is(.hero.enemy, .hero.player).selected
+  .hero-card-inner
+  .portrait-frame {
+  border-color: var(--slate-blue);
+  box-shadow:
+    0 0 0 2px #8cc4ff88,
+    0 0 12px #8cc4ff88;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  :is(.hero.enemy, .hero.player).valid-target
+  .portrait-frame {
+  border-color: #e0b455;
+  box-shadow:
+    0 0 0 2px #e0b45588,
+    0 0 12px #f0cf8299;
 }
 /* The card itself. `mobile-view.js` sizes and positions the hero BOX; this is
  * what goes inside it. It is its own query container so the name plate scales
@@ -2055,7 +2062,11 @@ html[data-skin="slate"]
   object-position: var(--art-pos, 50% 24%);
   transform: none;
 }
-html[data-skin="slate"] body.hero-mini #battle .hero.ready .portrait-frame {
+html[data-skin="slate"]
+  body.hero-mini
+  #battle
+  :is(.hero.enemy, .hero.player).ready
+  .portrait-frame {
   border-color: var(--slate-blue);
   box-shadow:
     inset 0 0 0 1px #050910cc,
@@ -2064,7 +2075,7 @@ html[data-skin="slate"] body.hero-mini #battle .hero.ready .portrait-frame {
 html[data-skin="slate"]
   body.hero-mini
   #battle
-  .hero.valid-target
+  :is(.hero.enemy, .hero.player).valid-target
   .portrait-frame {
   border-color: #e0b455;
   box-shadow:
@@ -2236,10 +2247,10 @@ html[data-skin="slate"] body #app.enemy-turn #battle .turn-number {
 /* 13.3 Touch end turn: a 64px disc in the bottom-right corner (§12.6).
  * `mobile-view.js` sizes the box; this makes it round and drops the shortcut
  * caption, which is meaningless without a keyboard. */
-html[data-skin="slate"] body.hero-mini #battle .turn-controls {
+html[data-skin="slate"] body.touch-layout #battle .turn-controls {
   border-radius: 50%;
 }
-html[data-skin="slate"] body.hero-mini #battle .end-turn {
+html[data-skin="slate"] body.touch-layout #battle .end-turn {
   border-radius: 50%;
   padding: 0;
   font-size: 13px;
@@ -2250,14 +2261,14 @@ html[data-skin="slate"] body.hero-mini #battle .end-turn {
     0 8px 22px #0009,
     inset 0 1px 0 #ffffff2e;
 }
-html[data-skin="slate"] body.hero-mini #battle .turn-shortcut {
+html[data-skin="slate"] body.touch-layout #battle .turn-shortcut {
   display: none;
 }
 /* The spinner has no room beside the text on a disc: it takes the bottom. */
-html[data-skin="slate"] body.hero-mini #battle .end-turn.thinking {
+html[data-skin="slate"] body.touch-layout #battle .end-turn.thinking {
   font-size: 11px;
 }
-html[data-skin="slate"] body.hero-mini #battle .end-turn.thinking::after {
+html[data-skin="slate"] body.touch-layout #battle .end-turn.thinking::after {
   right: calc(50% - 6px);
   top: auto;
   bottom: 6px;
@@ -2337,4 +2348,212 @@ html[data-skin="slate"]
   :is(.enemy-deck, .player-deck)
   .deck-count {
   font-size: 13px;
+}
+
+/* 14. Hero HUD ownership. Weapon geometry is local to the hero at every size;
+ * names are local to the portrait, never offset a second time by the HUD rail.
+ * Status, controls and mana each own a separate band on compact displays. */
+html[data-skin="slate"] body #battle .hero .weapon-slot {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: -6px;
+  width: 44px;
+  height: 40px;
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--slate-line-strong);
+  border-radius: 8px;
+  background: var(--slate-pill);
+  box-shadow: 0 3px 10px #0008;
+  transform: none;
+  pointer-events: none;
+}
+html[data-skin="slate"] body #battle .hero .weapon-slot[hidden] {
+  display: none;
+}
+html[data-skin="slate"] body #battle .hero .weapon-slot img {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+  opacity: 1;
+}
+html[data-skin="slate"] body #battle .hero .weapon-slot b {
+  bottom: -4px;
+  min-width: 16px;
+  padding: 1px 3px;
+  border: 1px solid var(--slate-line-strong);
+  border-radius: 6px;
+  background: var(--slate-card-base);
+  box-shadow: none;
+  color: var(--slate-ink);
+  font: 700 12px/1.1 var(--slate-font);
+  font-variant-numeric: tabular-nums;
+  text-shadow: none;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero.player .hero-attack {
+  /* Attack is already printed on the weapon; health and armour get the room. */
+  display: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  :is(.hero.enemy, .hero.player)
+  .hero-card-inner
+  .hero-name {
+  inset: auto 0 0;
+  width: 100%;
+  max-width: 100%;
+  display: block;
+  padding: 2px;
+  border-radius: 0 0 6px 6px;
+  background: linear-gradient(#0a111bcc, #060b12ee);
+  font: 700 9px/1.2 var(--slate-font);
+  letter-spacing: 0;
+  text-align: center;
+}
+html[data-skin="slate"]
+  body.touch-layout.mobile-portrait
+  #battle
+  .hero.player
+  .hero-chips {
+  left: 76px;
+  right: 76px;
+  top: 52px;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+html[data-skin="slate"]
+  body.touch-layout.mobile-portrait
+  #battle
+  .hero.enemy
+  .hero-chips {
+  right: 6px;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+html[data-skin="slate"]
+  body.touch-layout.mobile-portrait:not(.hero-mini)
+  #battle
+  .hero.enemy
+  .hero-chips {
+  top: 4px;
+}
+html[data-skin="slate"]
+  body.touch-layout.mobile-landscape
+  #battle
+  .hero.enemy
+  .hero-chips {
+  left: calc(var(--mini-w, 40px) + 14px);
+  top: 4px;
+  right: 4px;
+  gap: 3px;
+  flex-wrap: wrap;
+  align-content: flex-start;
+}
+html[data-skin="slate"]
+  body.hero-mini.mobile-landscape
+  #battle
+  .hero.player
+  .hero-chips {
+  top: calc(var(--mini-h) + 12px);
+}
+html[data-skin="slate"]
+  body.touch-layout.mobile-landscape:not(.hero-mini)
+  #battle
+  .hero.player
+  .hero-chips {
+  left: 6px;
+  right: auto;
+  top: 58px;
+  width: 48px;
+  gap: 3px;
+}
+html[data-skin="slate"] body.touch-layout #battle .mana-caption strong {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+html[data-skin="slate"] body.touch-layout.mobile-portrait #battle .mana-panel {
+  gap: 8px;
+}
+html[data-skin="slate"] body.touch-layout.mobile-portrait #battle .mana-gems {
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+html[data-skin="slate"] body.touch-layout.mobile-portrait #battle .mana-gem {
+  flex: 0 1 10px;
+  min-width: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout.mobile-landscape
+  #battle
+  .mana-caption {
+  width: 100%;
+  min-width: 0;
+  padding: 0 2px;
+  box-sizing: border-box;
+  letter-spacing: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout.mobile-landscape
+  #battle
+  .mana-caption
+  strong {
+  font-size: 11px;
+}
+html[data-skin="slate"]
+  body.touch-layout.mobile-landscape
+  #battle
+  .mana-caption
+  strong::before {
+  content: none;
+}
+@media (max-height: 469px) {
+  html[data-skin="slate"]
+    body.touch-layout.mobile-landscape
+    #battle
+    :is(.hero-stat, .hero-chip) {
+    height: 19px;
+    padding: 0 5px 0 2px;
+    font-size: 11px;
+  }
+}
+/* The battlefield is a fixed coordinate plane. Focusing a partially exposed
+ * card may scroll its hand rail, but must never scroll the whole battlefield. */
+html[data-skin="slate"] body.touch-layout #app.battle-view,
+html[data-skin="slate"] body.touch-layout #app.battle-view #battle {
+  overflow: clip;
+}
+/* Landscape notices and target instructions share the header band. */
+html[data-skin="slate"]
+  body.mobile-landscape
+  #app:is(.battle-notice-active, .is-targeting)
+  #turn-number {
+  visibility: hidden;
+}
+/* Freeze belongs to the portrait, not the transparent HUD container. */
+html[data-skin="slate"] body #battle .hero.frozen::after {
+  display: none;
+}
+html[data-skin="slate"]
+  body
+  #battle
+  .hero.frozen
+  .hero-card-inner
+  .portrait-frame::after {
+  content: "❄";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: start end;
+  padding: 4px;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #b4eeff55, #7bbdfb22 55%, #b4eeff77);
+  box-shadow: inset 0 0 10px #b4eeff99;
+  color: #e0f7ff;
+  font: 700 14px/1 var(--slate-font);
+  pointer-events: none;
 }

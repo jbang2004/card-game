@@ -30,9 +30,9 @@ test('reference charge, continuous firing, smoke tail and finished state are dis
  assert.ok(R.sample(4.3).sprites.filter(x=>x.mode===9).length>0);
  assert.equal(R.sample(5.5).sprites.length,0);
 });
-test('host preserves contact deadline and advances original post-contact time at 1:1',()=>{
+test('host preserves contact deadline and compresses the original post-contact field into one short attack',()=>{
  const d=desc();close(E.breathClock(d,.26).time,1.46);
- close(E.breathClock(d,1.26).time,2.46);close(E.breathClock(d,2.26).time,3.46);
+ close(E.breathClock(d,1.26).time,4.46);close(E.breathClock(d,2.26).time,7.46);
  for(const x of [.1,.26,.4,1.2])close(E.breathClock(desc(.5),x*.5).time,E.breathClock(d,x).time);
 });
 test('host phase mapping is continuous on the authoritative contact boundary',()=>{

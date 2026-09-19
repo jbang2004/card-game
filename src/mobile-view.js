@@ -111,19 +111,14 @@ const EmberViewport = (() => {
       l.header = safe.top + (portrait ? 52 : 44);
       /* Tablets and compact desktops get the same layout at a larger scale. */
       const roomy = portrait ? W >= 600 : W >= 1000;
-      const short = shortLandscape,
-        /* Landscape stacks both hero cards in one narrow rail, so the 72x106
-         * card is only affordable when the rail is tall enough for two of them
-         * plus their chip rows; a 390-high phone gets the smaller step. */
-        roomyRail = H >= 470,
+      /* Landscape reserves separate bands for portraits, equipment and stats. */
+      const roomyRail = H >= 470,
         heroW = portrait ? 60 : roomyRail ? 72 : 56,
         heroH = portrait ? 89 : roomyRail ? 106 : 83;
       const cardW = portrait
           ? roomy
             ? 140
-            : /* 360-wide phones: the dock also carries a full-size god slot
-                 now, so anything above 96 pushes their six-card step under
-                 the 24px pan threshold and costs them the riffle gesture. */
+            : /* Compact phones keep a readable full-width scrolling card. */
               W < 380 || H < 640
               ? 96
               : H >= 760
@@ -164,7 +159,7 @@ const EmberViewport = (() => {
       if (portrait) {
         /* §12.1: the hero is the SAME card at every size, just three scales.
          * A mini card needs a taller strip than a 56px avatar did. */
-        const consoleH = mini ? 96 : 82,
+        const consoleH = 96,
           enemyH = mini ? 78 : 56;
         l.hand.x = padL - 6;
         l.hand.w = usableW + 6 - godW - 8;
@@ -184,24 +179,18 @@ const EmberViewport = (() => {
           : { x: padL + 6, y: l.enemyConsole.y + 6, w: 44, h: 44 };
         l.player = mini
           ? { x: padL + 8, y: l.playerConsole.y - 12, w: heroW, h: heroH }
-          : { x: padL + 8, y: l.playerConsole.y + 12, w: 56, h: 56 };
-        const skillX = padL + (mini ? 16 + heroW : 72);
-        l.power = { x: skillX, y: l.playerConsole.y + 12, w: 56, h: 56 };
-        /* The mana row starts clear of the card, or the pips run under it. */
+          : { x: padL + 8, y: l.playerConsole.y + 10, w: 56, h: 56 };
+        const infoX = padL + 76,
+          turnX = W - padR - 64;
+        l.weapon = { x: 76, y: 4, w: 36, h: 40 };
+        l.power = { x: infoX + 44, y: l.playerConsole.y + 2, w: 44, h: 44 };
         l.mana = {
-          x: mini ? skillX : padL + 10,
-          y: l.playerConsole.y + (mini ? 74 : 64),
-          /* Stops at the round button's left edge (64 + 12 of clearance). */
-          w: mini ? W - padR - 76 - skillX : 220,
+          x: infoX,
+          y: l.playerConsole.y + 78,
+          w: turnX - 12 - infoX,
           h: 14,
         };
-        /* §12.6: the primary action becomes a 64px round button at the
-         * bottom-right corner of the play area. It stays inside the console
-         * band, which is the only strip guaranteed clear of the god slot and
-         * the hand dock below it. */
-        l.turn = mini
-          ? { x: W - padR - 64, y: l.playerConsole.y + 16, w: 64, h: 64 }
-          : { x: W - padR - 124, y: l.playerConsole.y + 14, w: 124, h: 52 };
+        l.turn = { x: turnX, y: l.playerConsole.y + 12, w: 64, h: 64 };
         l.chip = { x: padL, y: l.header, w: 0, h: 0 };
         const top = l.enemyConsole.y + enemyH + 6;
         l.arena = {
@@ -213,10 +202,10 @@ const EmberViewport = (() => {
       } else {
         /* The landscape rail holds the hero card, the skill node beside it and
          * the mana pill under that. */
-        const rail = mini ? (roomyRail ? 150 : 128) : 104,
+        const rail = mini ? (roomyRail ? 180 : 164) : 144,
           /* A 64px round button needs far less of the right edge than the old
            * 124px pill did; the arena takes the difference. */
-          right = mini ? 76 : 124;
+          right = 76;
         const arenaX = padL + rail + 8,
           arenaW = W - arenaX - padR - right - 8;
         l.contract = {
@@ -228,14 +217,14 @@ const EmberViewport = (() => {
         l.hand.x = arenaX - 4;
         l.hand.w = l.contract.x - 8 - l.hand.x;
         /* Both consoles are the card plus the chip row that sits under it. */
-        const railH = mini ? heroH + 30 : 0;
+        const railH = mini ? heroH + 6 : 66;
         l.enemyConsole = {
           x: padL,
           y: l.header + 4,
           w: rail,
-          h: mini ? railH : short ? 72 : 102,
+          h: railH,
         };
-        const playerH = mini ? railH : short ? 96 : 118;
+        const playerH = mini ? heroH + 40 : 110;
         l.playerConsole = {
           x: padL,
           y: dockTop - 8 - playerH,
@@ -254,19 +243,15 @@ const EmberViewport = (() => {
           w: 44,
           h: 44,
         };
-        /* Under the skill node, clear of the chip row that sits below the
-         * card — the rail has no spare height for a third band. */
-        l.mana = mini
-          ? {
-              x: padL + 12 + heroW,
-              y: l.playerConsole.y + 56,
-              w: rail - 18 - heroW,
-              h: 20,
-            }
-          : { x: padL + 6, y: l.playerConsole.y + playerH - 14, w: 92, h: 10 };
-        l.turn = mini
-          ? { x: W - padR - 64, y: dockTop - 8 - 64, w: 64, h: 64 }
-          : { x: W - padR - right, y: dockTop - 8 - 52, w: right, h: 52 };
+        const supportX = l.power.x - padL;
+        l.weapon = { x: supportX, y: 54, w: 36, h: 40 };
+        l.mana = {
+          x: l.power.x + 48,
+          y: l.playerConsole.y + 16,
+          w: rail - supportX - 48,
+          h: 24,
+        };
+        l.turn = { x: W - padR - 64, y: dockTop - 8 - 64, w: 64, h: 64 };
         l.chip = { x: padL, y: l.header, w: 0, h: 0 };
         l.arena = {
           x: arenaX,

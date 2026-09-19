@@ -28,10 +28,10 @@ function reaction(d,t){
  const dx=d.to.x-d.from.x,dy=d.to.y-d.from.y,len=Math.hypot(dx,dy)||1;
  const anticipation=E((q+m.pre)/Math.max(.025,m.pre*.5))*(1-E((q+m.flight)/Math.max(.015,m.flight)));
  const release=Math.sin(Math.PI*C((q+m.flight)/(m.flight+.11)));
- const punch=q<0?0:(1-Math.exp(-q*170))*Math.exp(-Math.max(0,q-.05)*(night?21:12));
+ const punch=q<0||["shield","armor"].includes(d.outcome?.kind)?0:(1-Math.exp(-q*170))*Math.exp(-Math.max(0,q-.05)*(night?21:12));
  const s=night?Math.min(len*.058,18)*release:-4*anticipation;
  return {source:[dx/len*s,dy/len*s,night?release*-1.4:anticipation*-1.0],
- target:night?[dx/len*5*punch,dy/len*5*punch,punch*1.5]:[0,7*punch,-punch*1.2],
+ target:(night?[dx/len*5*punch,dy/len*5*punch,punch*1.5]:[0,7*punch,-punch*1.2]).map(v=>v*([0,.65,.85,1][d.tier]||1)),
  sourceLight:anticipation*.16,targetLight:q>=0?Math.exp(-Math.max(0,q-.028)*27)*.16:0};
 }
 // R8 material language is authored per style. Brightness is not a substitute
@@ -180,7 +180,7 @@ function sample(d,t,W=1600,H=940,low=false){
    }
    f.tip=q<0?head:c;
   }
-  if(q>=0&&q<.64){
+  if(q>=0&&q<.64&&!['shield','armor'].includes(d.outcome?.kind)){
    const fade=1-E((q-.18)/.43),an=Math.atan2(dir[1],dir[0]),len=w*.81;
    const fn=v=>pt(Math.cos(an)*(v-.5)*len,Math.sin(an)*(v-.5)*len,7);
    // Faceted black incision with only the lower lip catching violet light.
@@ -214,7 +214,7 @@ function sample(d,t,W=1600,H=940,low=false){
      v=>Math.pow(1-v,2)*Math.sin(Math.PI*v)*w*(night?.020:ice?.041:.054),flash*(j%3?.85:1.0),hot,5,true,low?11:17);
    }
   }
-  if(!night){
+  if(!night&&!['shield','armor'].includes(d.outcome?.kind)){
    const fade=1-E((q-.34)/(ice?.75:.63)),growth=1-Math.pow(1-C(q/(ice?.21:.15)),3),n=ice?6:8;
    // Dark puncture remains legible beneath the luminous scar edges.
    if(q>.022){
@@ -252,9 +252,9 @@ function sample(d,t,W=1600,H=940,low=false){
     }
    }else{
     const frostFade=1-E((q-.67)/.70),spread=E(q/.22);
-    f.plates.push({p:pt(0,0,1),w:w*.88,h:h*.68,alpha:spread*frostFade*.94,material:16,color:[.28,.61,.84],growth:spread});
+    if(d.outcome?.freezes)f.plates.push({p:pt(0,0,1),w:w*.88,h:h*.68,alpha:spread*frostFade*.94,material:16,color:[.28,.61,.84],growth:spread});
     // Visible fern branches: a few legible stems rather than uniform glitter.
-    if(q>.07&&q<1.18)for(let j=0;j<6;j++){
+    if(d.outcome?.freezes&&q>.07&&q<1.18)for(let j=0;j<6;j++){
      const an=j*TAU/6+.18,reach=E((q-.07)/.23),ex=Math.cos(an)*w*.33*reach,ey=Math.sin(an)*h*.255*reach;
      for(let k=1;k<=4;k++){
       const u=k/5,p=pt(ex*u,ey*u,5);

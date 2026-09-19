@@ -20,6 +20,7 @@ const DEFINITIONS=Object.freeze({
  siphon:{name:'血契 · 回流',tail:1000,flight:.18,power:.55,theme:'blood'},
  arcane:{name:'星构 · 解印',tail:930,flight:.16,power:.55,theme:'arcane'},
  bladeCross:{name:'终裁 · 交锋',tail:820,flight:.14,power:1.1,theme:'steel'},
+ soulbind:{name:'银魂 · 系结',tail:660,flight:.16,power:0,theme:'arcane'},
  heal:{name:'生息 · 回复',tail:870,flight:0,power:0,theme:'nature'},
  ward:{name:'光壁 · 凝盾',tail:940,flight:0,power:0,theme:'holy'},
  buff:{name:'战意 · 赋能',tail:760,flight:0,power:0,theme:'holy'},
@@ -29,8 +30,8 @@ const DEFINITIONS=Object.freeze({
 });
 const COLORS={steel:[.58,.78,1.08],nature:[.18,.95,.57],claw:[1.05,.58,.20],earth:[.84,.53,.20],
  fire:[1.6,.31,.025],ice:[.13,.66,1.25],holy:[1.5,.73,.17],void:[.53,.14,.89],blood:[1.35,.055,.14],arcane:[.53,.35,1.25]};
-const SUPPORT=new Set(['heal','ward','buff','summon','demise','holy','nature','arcane']);
-const semantics={renew:'heal',absolution:'ward',blessing:'buff',shield:'ward',icebarrier:'ward',dawnvow:'ward',
+const SUPPORT=new Set(['heal','ward','buff','summon','demise','holy','nature','arcane','soulbind']);
+const semantics={soultether:'soulbind',renew:'heal',absolution:'ward',blessing:'buff',shield:'ward',icebarrier:'ward',dawnvow:'ward',
  dagger:'buff',sunblade:'buff',coin:'buff',rally:'buff',muster:'summon',wolves:'summon',mooncall:'summon',huntinghorn:'buff',battlecry:'buff',tracking:'arcane'};
 function resolve(kind,sourceCid,semantic){return DEFINITIONS[semantic]?semantic:(semantics[sourceCid]||kind);}
 const supports=k=>Object.hasOwn(DEFINITIONS,k);
@@ -54,13 +55,14 @@ function reaction(d,t){const m=timing(d,t),{a,q,pre,flight}=m;
  if(d.kind==='claw')s=[ux*14*release,uy*14*release,-3.0*release];
  if(d.kind==='slam')s=[ux*10*release,-12*pull+uy*10*release,2.4*pull];
  if(['arrow','spear'].includes(d.kind))s=[-ux*(4*pull+3*release),-uy*(4*pull+3*release),-1.2*release];
- return{source:s,target:d.kind==='slam'?[ux*3*p,Math.min(12,9*p),-2.2*p]:[ux*8*p,uy*8*p,-2.1*p],
+ return{source:s,target:['shield','armor'].includes(d.outcome?.kind)?[0,0,0]:d.kind==='slam'?[ux*3*p,Math.min(12,9*p),-2.2*p]:[ux*8*p,uy*8*p,-2.1*p],
  sourceLight:pull*.12,targetLight:contactEnvelope(q,.038,16)*.18};}
 function sample(d,t,W=1600,H=940,low=false){
  const m=timing(d,t),f={kind:d.kind,phase:m.phase,alive:m.alive,contact:m.q>=0,meshes:[],ribbons:[],lines:[],sprites:[],glows:[],particles:[],tip:null,projectile:null};
  if(!m.alive)return f;
+ const blocked=['shield','armor'].includes(d.outcome?.kind);
  const {q,a,flight,pre}=m,w=d.to.w,h=d.to.h,g=C(w/116,.44,1.5),seed=(d.seed||7)+(d.kind==='frost-field'?[...String(d.targetRef?.uid||'')].reduce((n,c)=>(n*31+c.charCodeAt(0))%997,0):0),
- col=(d.tint?.length===3&&['claw','slam'].includes(d.kind))?d.tint:COLORS[a.theme],hot=col.map(v=>L(v,2,.58));
+ col=d.tint?.length===3?d.tint:COLORS[a.theme],hot=col.map(v=>L(v,2,.58));
  const F=[d.from.x-W/2,H/2-d.from.y,46],T=[d.to.x-W/2,H/2-(d.to.y+h*.035),52],
  delta=T.map((v,i)=>v-F[i]),distance=Math.hypot(delta[0],delta[1]),ux=distance?delta[0]/distance:1,uy=distance?delta[1]/distance:0;
  const angle=(d.visualAngle||0)*Math.PI/180,ca=Math.cos(angle),sa=Math.sin(angle);
@@ -97,7 +99,7 @@ function sample(d,t,W=1600,H=940,low=false){
   }
  };
  const scars=(style,count=5)=>{
-  if(q<0)return;const grow=E(q/.14),fade=1-E((q-.33)/.47);
+  if(q<0||blocked)return;const grow=E(q/.14),fade=1-E((q-.33)/.47);
   for(let j=0;j<count;j++){
    const aa=j*TAU/count+.23+(N(seed+j)-.5)*.23,end=(.65+N(j+seed)*.25),pts=[at(0,0,2)];
    for(let i=1;i<6;i++){const u=i/5;if(u>grow+.2)break;const v=Math.min(u,grow),wig=(N(seed+j*23+i)-.5)*.12;
@@ -107,15 +109,16 @@ function sample(d,t,W=1600,H=940,low=false){
   }
  };
  const charge=E((q+pre)/Math.max(.03,pre-flight))*(1-E((q+.015)/.06));
- const hit=contactEnvelope(q,.066,13),fade=1-E((q-.20)/.46);
+ const hit=contactEnvelope(q,Math.max(.035,(d.hold||0)/1000/(d.scale||1)),13),fade=1-E((q-.20)/.46);
  f.scale=g;f.center=T;
  // Ballistic weapons: fixed shaft and head, independently rendered speed history.
  if(d.kind==='arrow'||d.kind==='spear'){
   const spear=d.kind==='spear',flying=q<0,u=q<0?C(1+q/Math.max(.001,flight)):1,
    path=u=>point(u,7,spear?Math.min(34*g,distance*.09):0),tip=path(u),shaft=C((spear?132:94)*g,38,spear?174:128);
+  if(blocked&&q>0){tip[0]-=ux*Math.min(q,.14)*110*g;tip[1]+=(35-uy*110)*Math.min(q,.14)*g;}
   f.tip=tip;f.projectile={tip,shaft,angle:Math.atan2(uy,ux),inFlight:flying};
   if(q>=-flight&&q<(spear?.63:.63)){
-   const alpha=1-E((q-.34)/.28),eps=.001,p1=path(C(u-eps)),p2=path(C(u+eps)),dx=p2[0]-p1[0]||delta[0],dy=p2[1]-p1[1]||delta[1],len=Math.hypot(dx,dy)||1,
+   const alpha=1-E(blocked?(q-.02)/.12:(q-.34)/.28),eps=.001,p1=path(C(u-eps)),p2=path(C(u+eps)),dx=p2[0]-p1[0]||delta[0],dy=p2[1]-p1[1]||delta[1],len=Math.hypot(dx,dy)||1,
     ax=dx/len,ay=dy/len,nx=-ay,ny=ax,
     P=(back,side=0,z=0)=>[tip[0]-ax*back+nx*side,tip[1]-ay*back+ny*side,tip[2]+z];
    line(P(shaft),P(5*g),spear?3.2*g:2.05*g,spear?[.30,.15,.052]:[.30,.19,.08],alpha,false);
@@ -131,7 +134,7 @@ function sample(d,t,W=1600,H=940,low=false){
     band(v=>path(L(start,u,v)),v=>Math.sin(v*Math.PI)*2.8*g,alpha*.65,spear?[.18,.78,.43]:[.41,.77,1.3],5);}
   }
   glow(F,42*g,col,charge*.36);if(q>=0){glow(T,42*g,hot,hit*.64);debris('wood',spear?20:13,.66);
-   const scarAlpha=1-E((q-.25)/.34);poly([at(-3*g,1*g,2),at(1*g,5*g,2),at(3*g,-1*g,2),at(0,-7*g,2)],[.02,.014,.009],scarAlpha*.88,false);}
+   const scarAlpha=1-E((q-.25)/.34);if(!blocked)poly([at(-3*g,1*g,2),at(1*g,5*g,2),at(3*g,-1*g,2),at(0,-7*g,2)],[.02,.014,.009],scarAlpha*.88,false);}
  }
  // Predatory tearing: three staggered crescents, each has a dark incision.
  else if(d.kind==='claw'){
@@ -142,7 +145,7 @@ function sample(d,t,W=1600,H=940,low=false){
    if(z>-.075){band(v=>path(L(tail,end,v)),v=>Math.sin(v*Math.PI)**.8*w*.10,alpha*.94,[.055,.022,.035],15,false);
     band(v=>path(L(tail,end,v)),v=>Math.sin(v*Math.PI)**.75*w*.062,alpha,col,12,true);
     band(v=>{let p=path(L(tail,end,v));return[p[0]+2*g,p[1]+g,p[2]+1];},v=>Math.sin(v*Math.PI)*1.05*g,alpha,hot,6);}
-   if(q>=0){const a0=path(.15),a1=path(.85),n=[-(a1[1]-a0[1]),a1[0]-a0[0]],len=Math.hypot(...n)||1;const sg=1-E((q-.27)/.38);
+   if(q>=0&&!blocked){const a0=path(.15),a1=path(.85),n=[-(a1[1]-a0[1]),a1[0]-a0[0]],len=Math.hypot(...n)||1;const sg=1-E((q-.27)/.38);
     band(v=>path(L(.16,.84,v)),v=>Math.sin(v*Math.PI)**.5*4.1*g,sg*.94,[.012,.008,.018],15,false);
     band(v=>{let p=path(L(.16,.84,v));return[p[0]+n[0]/len*g,p[1]+n[1]/len*g,p[2]+.5];},v=>Math.sin(v*Math.PI)*.9*g,sg*.6,col,6);}
   }
@@ -210,7 +213,7 @@ function sample(d,t,W=1600,H=940,low=false){
     const age=E(q/(.09+j*.018)),xx=(j-2)*w*.17,sz=(10+N(seed+j*17)*10)*g*age;
     shard(at(xx,-h*.23+sz*.8,8+j),sz,(j-2)*-.10,col,a*.91,true);
    }}
-   const grow=E(q/.20),a=1-E((q-.26)/.55);f.sprites.push({p:at(0,0,1),size:w*.87,color:col,alpha:a*.79,mode:16,rot:0,seed:grow});
+   const grow=E(q/.20),a=1-E((q-.26)/.55);if(d.outcome?.freezes)f.sprites.push({p:at(0,0,1),size:w*.87,color:col,alpha:a*.79,mode:16,rot:0,seed:grow});
    sprite(at(0,15*g,5),w*(.70+q*.3),[.30,.50,.61],a*.10,9,t*.2);}
  }
  else if(d.kind==='void'){
@@ -223,6 +226,16 @@ function sample(d,t,W=1600,H=940,low=false){
    band(v=>{const p=path(v);return[p[0]+g,p[1],p[2]+1];},v=>Math.sin(v*Math.PI)*1.35*g,a*.76,col,5);
   }
   if(q>=0){glow(T,w*.35,col,hit*.32);for(let j=0;j<20;j++){const u=C(q/.45),an=N(seed+j)*TAU,rad=w*(.66*(1-u)+.02);f.particles.push({p:at(Math.cos(an)*rad,Math.sin(an)*rad*.65,8),color:col,size:(1+j%3)*g,alpha:(1-u)*.9,type:2});}}
+ }
+ else if(d.kind==='soulbind'){
+  // A silver thread travels into the ally and ties a soul knot; nothing drains back.
+  if(q<0){const u=C(1+q/Math.max(.001,flight)),p=point(u,8,18*g);glow(p,14*g,[.84,.76,1.2],charge*.55);
+   band(v=>point(C(u-v*.18),8,18*g),v=>(1-v)*1.5*g,charge*.8,[.84,.76,1.2],5);}
+  if(q>=0){const a=E(q/.035)*(1-E((q-.23)/.40)),rise=E(q/.22);
+   for(let side of [-1,1])band(u=>{const th=u*TAU;return at(Math.sin(th)*w*.19*side,Math.sin(th*2)*h*.08+h*.17*rise,8);},u=>Math.sin(u*Math.PI)*1.8*g,a,[.87,.78,1.35],5);
+   glow(at(0,h*.17*rise,8),w*.30,[.66,.55,1],a*.18);
+   for(let j=0;j<(low?4:8);j++){const u=C(q/.6),th=j*TAU/8;f.particles.push({p:at(Math.cos(th)*w*.24*(1-u),Math.sin(th)*h*.15+h*.17*rise,8),size:1.8*g,color:[1.2,1.1,1.5],alpha:a*.6,type:1});}
+  }
  }
  else if(d.kind==='siphon'){
   if(q<0){ring(T,w*.26,h*.22,col,charge*.55,-q,1*g);}

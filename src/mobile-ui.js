@@ -250,15 +250,8 @@
     );
     const tip = document.querySelector(".hand-tip");
     if (tip) tip.textContent = "左右滑动 · 点按选中 · 拖动出牌";
-    const p = V.layout.player,
-      wslot = $("weapon-slot"),
-      beside = V.portrait && V.layout.power.x - (p.x + p.w) > 36;
-    V.box(wslot, {
-      x: beside ? p.x + p.w + 6 : p.x - 8,
-      y: p.y + (beside ? 36 : 18),
-      w: 30,
-      h: 34,
-    });
+    // The weapon belongs to the hero, so these are local HUD coordinates.
+    V.box($("weapon-slot"), V.layout.weapon);
     const arrow = $("target-arrow");
     arrow?.setAttribute("aria-hidden", "true");
     selectionChanged();

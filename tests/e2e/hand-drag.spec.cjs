@@ -97,9 +97,13 @@ async function touchDrag(page, from, to, steps = 14) {
 }
 
 async function boxOf(page, uid) {
-  /* Dock cards fan with overlap and peek above the screen edge: the exposed
-   * strip is the top-left of each card, so gestures start there. */
-  const b = await page.locator(`#hand [data-hand="${uid}"]`).boundingBox();
+  // Bring a card into the horizontal rail before sending raw touch coordinates.
+  const card = page.locator(`#hand [data-hand="${uid}"]`);
+  await card.evaluate((el) => {
+    const hand = el.parentElement;
+    hand.scrollLeft = el.offsetLeft - 8;
+  });
+  const b = await card.boundingBox();
   return { x: b.x + Math.min(16, b.width / 2), y: b.y + 30 };
 }
 
@@ -1036,17 +1040,9 @@ for (const [label, viewport] of VIEWPORTS) {
           fits: h.classList.contains("hand-fits"),
         };
       });
-      /* The dock only becomes a scrolling rail when the fan step would drop
-       * below 24px (`.hand-pan`); a fan that fits never scrolls, and a
-       * horizontal swipe across it must not play a card either. */
-      /* A fitting dock is `overflow: visible`, so it is not a scroll
-       * container at all — but round 3 fans the cards by up to 3° (design doc
-       * §13.5) and a rotated outer card reports a few px of overflow past the
-       * dock edge. That overflow is unscrollable paint, not a rail, so the
-       * assertion allows the roll while still rejecting a real scroller. */
-      if (rail.fits)
-        expect(rail.scrollWidth - rail.clientWidth).toBeLessThanOrEqual(8);
-      else expect(rail.scrollWidth).toBeGreaterThan(rail.clientWidth);
+      // Full-width cards must scroll when they exceed the dock's width.
+      expect(rail.fits).toBe(false);
+      expect(rail.scrollWidth).toBeGreaterThan(rail.clientWidth);
       const box = await page.locator("#hand .hand-card").first().boundingBox();
       const before = await handState(page);
       const from = { x: box.x + 14, y: box.y + 30 };

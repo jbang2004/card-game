@@ -617,7 +617,7 @@
     closeModal(false);
     setView(true);
     game.demo();
-    toast("点击手牌或己方随从，开始行动", { kind: "info" });
+    toast("选择手牌或随从开始行动", { kind: "info" });
   }
   function showModal(html, type, locked = false) {
     clearTimeout(toastTimer);
@@ -941,7 +941,12 @@
           side === "e"
             ? `<div class="hero-chip hero-hand" title="敌方手牌"><i aria-hidden="true"></i><span>${p.hand.length}</span></div>`
             : "";
-      el.innerHTML = `<div class="hero-card-inner"><div class="portrait-frame"><img src="${A.character(data)}" data-art-key="${data.portraitId}" alt="${data.name}" draggable="false" style="${artStyleForHero(data, "hero")}"></div><span class="hero-card-plaque" aria-hidden="true"></span><div class="hero-name">${data.name}</div></div><div class="hero-chips">${stats}${covenant}${handChip}</div>${p.secrets.length ? '<div class="secret-indicator" title="奥秘已布置">?</div>' : ""}${side === "e" && s.mode !== "practice" ? `<div class="hero-phase">${s.phase2 ? "阶段 II" : "阶段 I"}</div>` : ""}`;
+      const weapon = side === "p" && p.weapon,
+        weaponCard = weapon && D.byId[weapon.cid],
+        weaponMarkup = side === "p"
+          ? `<div class="weapon-slot" id="weapon-slot"${weapon ? "" : " hidden"} title="${weapon ? weaponCard.name + "：攻击 " + weapon.atk + "，耐久 " + weapon.durability + "。点击英雄攻击。" : "未装备武器"}">${weapon ? `<img src="${A.card(weaponCard)}" alt="${weaponCard.name}"><b aria-label="攻击 ${weapon.atk}">${weapon.atk}</b><b aria-label="耐久 ${weapon.durability}">${weapon.durability}</b>` : ""}</div>`
+          : "";
+      el.innerHTML = `<div class="hero-card-inner"><div class="portrait-frame"><img src="${A.character(data)}" data-art-key="${data.portraitId}" alt="${data.name}" draggable="false" style="${artStyleForHero(data, "hero")}"></div><span class="hero-card-plaque" aria-hidden="true"></span><div class="hero-name">${data.name}</div></div><div class="hero-chips">${stats}${covenant}${handChip}</div>${weaponMarkup}${p.secrets.length ? '<div class="secret-indicator" title="奥秘已布置">?</div>' : ""}${side === "e" && s.mode !== "practice" ? `<div class="hero-phase">${s.phase2 ? "阶段 II" : "阶段 I"}</div>` : ""}`;
       el.dataset.heroClass = data.classId || "boss";
       el.classList.toggle("frozen", p.frozen);
       el.classList.toggle("ready", game.canAttack(side, "hero"));
@@ -999,19 +1004,6 @@
      * id and title — this is presentation, not a new control. */
     $("enemy-deck-count").title = "敌方牌库剩余 " + s.e.deck.length + " 张";
     $("player-deck-count").title = "你的牌库剩余 " + s.p.deck.length + " 张";
-    if (s.p.weapon) {
-      const c = D.byId[s.p.weapon.cid];
-      $("weapon-slot").style.display = "flex";
-      $("weapon-slot").innerHTML =
-        `<img src="${A.card(c)}" alt="${c.name}"><b>${s.p.weapon.atk}</b><b>${s.p.weapon.durability}</b>`;
-      $("weapon-slot").title =
-        c.name +
-        "：攻击力 " +
-        s.p.weapon.atk +
-        "，耐久 " +
-        s.p.weapon.durability +
-        "。点击英雄进行攻击。";
-    } else $("weapon-slot").style.display = "none";
     $("minions").innerHTML = ["e", "p"]
       .map((side) =>
         s[side].board
@@ -1058,30 +1050,17 @@
       app.style.setProperty("--battle-card-h", metrics.height + "px");
     }
     const gap = metrics.step;
-    /* A dock that fits its hand lays the cards out as a real fan (§13.5); a
-     * panning dock stays flat, because a rotated card is harder to scroll. */
-    let fanned = false;
     if (EmberViewport.mobile) {
-      /* Touch dock: cards overlap into a fan instead of scrolling as soon as
-       * they stop fitting side by side; only below a 24px step does the dock
-       * fall back to the native horizontal rail. Six cards at 390/360 land
-       * just under 28px, and the rail would cost them the riffle gesture. */
+      // Every card keeps its full hit area. Overflow scrolls instead of
+      // squeezing the hand into overlapping strips that hide art and names.
       const dock = EmberViewport.layout,
         n = s.p.hand.length,
-        inner = (dock.hand?.w || 0) - 16,
+        inner = Math.max(0, (dock.hand?.w || 0) - 16),
         cardW = dock.cardW || 112,
-        natural = n > 1 ? (inner - cardW) / (n - 1) : cardW + 12,
-        step = Math.min(cardW + 12, natural),
-        pan = step < 24;
-      fanned = !pan;
-      $("hand").style.setProperty(
-        "--hand-step",
-        Math.round(pan ? 24 : step) + "px",
-      );
+        pan = n * cardW + Math.max(0, n - 1) * 8 > inner;
       $("hand").classList.toggle("hand-pan", pan);
       $("hand").classList.toggle("hand-fits", !pan);
     } else {
-      $("hand").style.removeProperty("--hand-step");
       $("hand").classList.remove("hand-pan", "hand-fits");
     }
     const wasPlayable = playableUids;
@@ -1093,15 +1072,10 @@
           offset = i - (n - 1) / 2,
           playable = !game.legalCard("p", card.uid);
         if (playable) playableUids.add(card.uid);
-        /* Physical fan: ±3° of roll and a 2px arc, both driven off the card's
-         * normalised position in the hand (design doc §13.5). */
-        const spread = n > 1 && fanned ? offset / ((n - 1) / 2) : 0,
-          roll = (spread * 3).toFixed(2),
-          arc = (Math.abs(spread) * 2).toFixed(2);
         /* A card that only became playable because the turn refreshed mana
          * flashes once, so "what can I do now" needs no re-scan. */
         const woke = playable && manaRefreshed && !wasPlayable.has(card.uid);
-        return `<button class="hand-card ${playable ? "playable" : ""} ${woke ? "just-playable" : ""} ${game.cost(card) > s.p.mana ? "unaffordable" : ""}" style="--x:${offset * gap}px;--y:${arc}px;--r:${roll}deg;--i:${i + 1}" data-hand="${card.uid}" data-cardid="${c.id}" aria-label="${c.name}，${game.cost(card)} 法力。点按选中，拖动出牌。${c.text}">${cardHTML(c, { cost: game.cost(card) })}</button>`;
+        return `<button class="hand-card ${playable ? "playable" : ""} ${woke ? "just-playable" : ""} ${game.cost(card) > s.p.mana ? "unaffordable" : ""}" style="--x:${offset * gap}px;--y:0px;--r:0deg;--i:${i + 1}" data-hand="${card.uid}" data-cardid="${c.id}" aria-label="${c.name}，${game.cost(card)} 法力。点按选中，拖动出牌。${c.text}">${cardHTML(c, { cost: game.cost(card) })}</button>`;
       })
       .join("");
     const ours = s.active === "p";
@@ -2046,8 +2020,7 @@
     }
   }
   /* Touch "riffle" (docs/design/HAND_GESTURES.md): while the dock fits its
-   * cards (`.hand-fits`), a sideways finger sweeps the fan instead of doing
-   * nothing — the card under the finger peeks up, and releasing selects it
+   * cards (`.hand-fits`), a sideways finger sweeps the row — the card under the finger peeks up, and releasing selects it
    * through the normal `handClick` path. Upward drags still play the card and
    * a stationary long press still inspects it; the panning dock
    * (`.hand-pan`) keeps the browser's native rail. */
@@ -2109,7 +2082,7 @@
         if (Math.abs(dx) < 10 || Math.abs(dx) <= Math.abs(dy) + 4) return;
         riffle.swiping = true;
       }
-      /* Leaving the dock drops the raised card back into the fan: the lifted
+      /* Leaving the dock drops the raised card back into the row: the lifted
        * card stands `--hand-lift` above the dock line, so the live band is the
        * dock rect grown upwards by that much (design doc §12.2). */
       const dock = $("hand").getBoundingClientRect(),

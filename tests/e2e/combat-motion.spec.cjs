@@ -6,6 +6,16 @@ async function demo(page) {
   await page.locator("#quick-btn").click();
   await page.waitForFunction(() => !EmberFX.busy);
 }
+// These four cases exercise the retained DOM fallback. Mesh attacks use the
+// real card and shared sampled poses, covered by motion-semantics.spec.cjs.
+async function useDOMFallback(page) {
+  await page.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function(type, ...args) {
+      return /webgl/.test(type) ? null : original.call(this, type, ...args);
+    };
+  });
+}
 async function prepare(page, config) {
   await page.evaluate((config) => {
     EmberFX.cancel(true);
@@ -129,6 +139,7 @@ test("multi-draw reveals one actual card per beat, and statuses have named feedb
 test("a lunging minion clone carries its static illustration", async ({
   page,
 }) => {
+  await useDOMFallback(page);
   await demo(page);
   await prepare(page, { friends: ["frostking"], enemies: ["treant"] });
   const art = page.locator(
@@ -168,6 +179,7 @@ test("a lunging minion clone carries its static illustration", async ({
 test("attack owner keeps one causal clock, live stats and status classes until recovery", async ({
   page,
 }) => {
+  await useDOMFallback(page);
   await demo(page);
   await prepare(page, { friends: ["solaris"], enemies: ["treant"] });
   const report = await page.evaluate(async () => {
@@ -234,6 +246,7 @@ test("attack owner keeps one causal clock, live stats and status classes until r
 test("contact rebind updates the visible proxy after retaliation without FLIP takeover", async ({
   page,
 }) => {
+  await useDOMFallback(page);
   await demo(page);
   await prepare(page, { friends: ["guard"], enemies: ["treant"] });
   const report = await page.evaluate(async () => {
@@ -280,6 +293,7 @@ test("contact rebind updates the visible proxy after retaliation without FLIP ta
 test("a new contact reaction owns target translation when the contact render moves layout", async ({
   page,
 }) => {
+  await useDOMFallback(page);
   await demo(page);
   await prepare(page, { friends: ["guard"], enemies: ["treant"] });
   const targetUid = await page.evaluate(() => {

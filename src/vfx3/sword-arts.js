@@ -136,7 +136,8 @@ function sample(d,t,W=1600,H=940,low=false){
    const p=pt(Math.cos(ang)*sp*q,Math.sin(ang)*sp*q*.65-100*g*q*q,10+q*24);
    f.particles.push({p,size:(.9+R(k+3)*1.5)*g,alpha:(1-q/life)**1.7,color:i%5?col:hot,type:i%7?2:1});
   }
-  if(['sky','sunfall','frost','shatter','cross'].includes(a.form)){
+  const blocked=['shield','armor'].includes(d.outcome?.kind);
+  if(!blocked&&['sky','sunfall','frost','shatter','cross'].includes(a.form)){
    const grow=1-(1-C(q/.17))**3,fade=1-E((q-.38)/.52);
    const n=a.form==='frost'?6:a.form==='sunfall'?9:a.form==='cross'?4:7;
    for(let j=0;j<n;j++){
@@ -151,7 +152,7 @@ function sample(d,t,W=1600,H=940,low=false){
      prev=next;
     }
    }
-  }else if(q<.5){
+  }else if(!blocked&&q<.5){
    const an=a.angle||0,fade=1-E((q-.09)/.34),dx=Math.cos(an)*w*.35,dy=Math.sin(an)*w*.35;
    f.cracks.push({a:pt(-dx,-dy,2),b:pt(dx,dy,2),width:1.0*g,alpha:fade*.78,color:col});
   }

@@ -113,20 +113,16 @@ for (const mobile of [false, true]) {
       const final = JSON.stringify(g.s);
       return await new Promise((resolve) => {
         function sample() {
-          const number = document.querySelector(".damage-number"),
-            actor = document.querySelector(".attack-actor");
-          if (number && actor) {
+          const number = document.querySelector(".damage-number");
+          const attack = EmberFX.trace.find(r => r.type === "attack" && r.at >= start);
+          if (number && attack) {
             const cue = EmberAudio.diagnostics.history.find(
-              (e) => e.at >= start && e.type.startsWith("impact-"),
+              e => e.at >= start && e.type === "benchmark-frost-impact",
             );
-            const motion = actor
-              .getAnimations()
-              .find((a) => a.effect.getKeyframes().some((k) => k.transform));
+            const mesh = EmberFx2.mesh3d.last;
             resolve({
-              audioDelta: performance.now() - cue.at,
-              motionDelta: Math.abs(
-                motion.currentTime - Number(actor.dataset.contactMs),
-              ),
+              audioDelta: Math.abs(performance.now() - (cue?.scheduledAt ?? cue?.at ?? -Infinity)),
+              motionDelta: Math.abs(mesh.impact - attack.hitAt[0]),
               final,
             });
           } else requestAnimationFrame(sample);
@@ -162,7 +158,7 @@ test("AOE plays one impact per staggered contact, and full armor absorption has 
     hand: ["storm"],
   });
   const before = await page.evaluate(
-    () => EmberAudio.played["impact-fire"] || 0,
+    () => EmberAudio.played["remaster-fireball-impact"] || 0,
   );
   await page.evaluate(() => {
     const g = EmberDebug.game;
@@ -173,7 +169,7 @@ test("AOE plays one impact per staggered contact, and full armor absorption has 
   await page.waitForFunction(() => !EmberFX.busy);
   // V2 §3.3/§4.2: each AOE target gets its own number, reaction and impact
   // cue at its own hitAt (45ms apart), weighted by its own tier.
-  expect(await page.evaluate(() => EmberAudio.played["impact-fire"])).toBe(
+  expect(await page.evaluate(() => EmberAudio.played["remaster-fireball-impact"] || 0)).toBe(
     before + 3,
   );
   await prepare(page, { hand: ["bolt"] });
@@ -204,7 +200,7 @@ test("AOE plays one impact per staggered contact, and full armor absorption has 
   expect(await page.evaluate(() => EmberAudio.played.armor)).toBe(
     state.armor + 1,
   );
-  expect(await page.evaluate(() => EmberAudio.played["impact-fire"])).toBe(
+  expect(await page.evaluate(() => EmberAudio.played["impact-fire"] || 0)).toBe(
     state.impact,
   );
   await expect(page.locator(".damage-number")).toHaveCount(state.numbers);

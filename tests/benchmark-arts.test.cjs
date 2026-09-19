@@ -122,8 +122,8 @@ function feedbackFixture(){
  const nodes={a:{isConnected:true,style:{transform:'rotate(2deg)',filter:'saturate(.9)'}},b:{isConnected:true,style:{transform:'',filter:''}}};
  const sounds=[],ctx={console,Math,Map,Set,CSS:{escape:x=>x},EmberBenchmarkArts:B,EmberBenchmarkCues:Cues,performance:{now:()=>1000},
  document:{hidden:false,querySelector:q=>nodes[q.includes('"a"')?'a':'b']},EmberAudio:{fx:(type,opt)=>{sounds.push({type,opt});return true;}},EmberViewport:{width:1600}};
- vm.createContext(ctx);vm.runInContext(fs.readFileSync('src/presentation/benchmark-feedback.js','utf8')+';this.Feedback=EmberBenchmarkFeedback;',ctx);
- return {nodes,sounds,f:ctx.Feedback.create(),ctx};
+ vm.createContext(ctx);vm.runInContext(fs.readFileSync('src/presentation/motion-feedback.js','utf8')+fs.readFileSync('src/presentation/benchmark-feedback.js','utf8')+';this.Feedback=EmberMotionFeedback.create([EmberBenchmarkFeedback]);',ctx);
+ return {nodes,sounds,f:ctx.Feedback,ctx};
 }
 test('DOM feedback composes on the existing style and restores it on cancellation',()=>{
  const {nodes,f}=feedbackFixture(),before=JSON.stringify(nodes),d=desc('judgment');
@@ -140,7 +140,7 @@ test('audio is scheduled once by authoritative timestamps despite repeated rende
 test('manual scrubbing is silent; explicitly playing it consumes each cue only once',()=>{
  const {sounds,f}=feedbackFixture(),d=desc('night');
  for(const t of [1400,1100,1340,1020,1800])f.frame([d],t,true);assert.equal(sounds.length,0);
- f.resetAudio();for(let t=1000;t<1800;t+=16)f.play(d,t===1000?999.999:t-16,t);
+ f.channel("benchmark").resetAudio();for(let t=1000;t<1800;t+=16)f.play(d,t===1000?999.999:t-16,t);
  assert.equal(sounds.length,4);
 });
 test('hidden tabs never schedule sounds and detached cards do not retain ownership',()=>{

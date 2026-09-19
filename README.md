@@ -1,4 +1,4 @@
-> 2026-09-12：当前界面已重构为星海银蓝风格。架构、素材与换肤方法见 [重构说明](docs/design/SILVERBLUE_REBUILD.md)。以下旧版本章节保留作历史记录。
+> 当前唯一界面为磨砂青岩（slate），规范见 [设计系统](docs/design/SLATE_DESIGN_SYSTEM.md)。下文带日期的旧版美术记录保留作历史参考。
 
 # 烬域 · 鎏金酒馆 v0.14.0 · 诸神同辉
 
@@ -54,7 +54,9 @@ npm run test:release
 
 卡牌飞行与落桌音、按接触时刻对齐的攻击和反击、分层轻重撞击、护甲与圣盾反馈、死亡与胜负音色，以及可分别调整的音效/氛围音量。12 段本地 CC0 音效同样支持单文件离线运行。实现与验收见 [音画反馈记录](docs/AUDIO_FEEDBACK.md)。
 
-刀剑、利爪、重击、弓箭、投矛、能量弹和吐息具有不同攻击语言；陨火、火焰风暴、冰封领域、暗影湮灭与四张传说牌具有具名演出。战斗表现由 `effects.js` 导演层统一调度，唯一特效后端为 WebGL 的 EmberFx2（`fx2-engine.js`，素材在 `assets/fx2/`），时序与分量档见 `presentation/timing.js`；契约见 [战斗表现层 V2](docs/design/BATTLE_PRESENTATION_V2.md)。2026-09-08 的 Canvas 贴图特效（EmberVFX 与 `assets/vfx/` 素材）已于 2026-09-17 删除，[战斗特效记录](docs/VFX_FEEDBACK.md) 与 [资源清理记录](docs/MEDIA_CLEANUP.md) 仅作历史参考。
+刀剑、利爪、重击、弓箭、投矛、能量弹和吐息具有不同攻击语言；陨火、火焰风暴、冰封领域、暗影湮灭与四张传说牌具有具名演出。战斗表现由 `effects.js` 导演层统一调度，当前由 EmberVFX3（`vfx3/`）绘制已迁移的几何特效，EmberFx2（`fx2-engine.js`）保留其余特效与后处理，接入层按技能互斥路由；WebGL 不可用时保留 DOM 反馈，时序与分量档见 `presentation/timing.js`；契约见 [战斗表现层 V2](docs/design/BATTLE_PRESENTATION_V2.md)。2026-09-08 的 Canvas 贴图特效（EmberVFX 与 `assets/vfx/` 素材）已于 2026-09-17 删除，[战斗特效记录](docs/VFX_FEEDBACK.md) 与 [资源清理记录](docs/MEDIA_CLEANUP.md) 仅作历史参考。
+
+2026-09-19 的语义与移动端改进：修复特效层首次加载隐藏；表现读取实际伤害、护甲、圣盾和冻结结果；群攻逐目标命中，连续动作让旧余韵淡出；姿态由单一管理器合成和复原；减少动态模式停用冲撞、后坐与补位位移。见 [本轮实施与验证](docs/qa/MOTION_IMPROVEMENTS_20260919.md)。
 
 ## 界面美术与细节精修
 

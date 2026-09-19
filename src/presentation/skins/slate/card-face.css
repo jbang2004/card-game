@@ -1377,3 +1377,9 @@ html[data-skin="slate"] body .card-back::after {
     inset 0 0 0 0.3cqw #0a121b30,
     0 0 1.4cqw #9fc7ef1a;
 }
+
+/* Dense touch rows overlap by 10px. Keep BOTH values in the exposed strip;
+ * lifting only the badge's z-index cannot escape its card's stacking context. */
+html[data-skin="slate"] body.touch-layout .minion[data-stacked="true"] > .stat.hp {
+  right: 12px;
+}

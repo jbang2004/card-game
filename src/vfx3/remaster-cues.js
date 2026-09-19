@@ -3,9 +3,12 @@
 const Arts=G.EmberRemasterArts||(typeof require==='function'?require('./remaster-arts.js'):null);
 function events(d){if(!Arts.supports(d.kind)||d.visualOnly||d.silent)return[];
  const flight=Arts.DEFINITIONS[d.kind].flight*1000*d.scale;
- return[{id:'charge',at:d.start},{id:'launch',at:Math.max(d.start,d.impact-flight)},{id:'impact',at:d.impact},{id:'tail',at:d.impact+130*d.scale}];}
+ return[{id:'charge',at:d.start},{id:'launch',at:Math.max(d.start,d.impact-flight)},{id:'impact',at:d.impact},{id:'tail',at:d.impact+130*d.scale}]
+  .filter(e=>e.id==='charge'||e.id==='launch'?d.audioPrimary!==false:
+   !['shield','armor'].includes(d.outcome?.kind)&&(e.id==='impact'||d.audioPrimary!==false))
+  .map(e=>({...e,gain:([0,.75,.9,1][d.tier]||1)*(['impact','tail'].includes(e.id)?d.audioGain??1:1)}));}
 function recipe(kind,cue){const ls=[],tone=(dur,f0,f1,vol,at=0)=>ls.push({at,dur,f0,f1,vol,kind:'sine'}),noise=(dur,f0,f1,vol,at=0,high=false)=>ls.push({at,dur,f0,f1,vol,kind:high?'hiss':'noise'});
- const physical=['arrow','spear','claw','slam','bladeCross','contact'].includes(kind),soft=['heal','ward','buff','summon','holy','nature','arcane','demise'].includes(kind);
+ const physical=['arrow','spear','claw','slam','bladeCross','contact'].includes(kind),soft=['heal','ward','buff','summon','holy','nature','arcane','demise','soulbind'].includes(kind);
  if(cue==='charge'){if(physical){tone(.14,kind==='slam'?75:210,kind==='slam'?58:320,.05);noise(.10,400,1100,.055);}else{tone(.20,soft?523:196,soft?660:250,.065);noise(.16,1300,3400,.035);}}
  if(cue==='launch'){if(kind==='arrow'||kind==='spear'){tone(.07,760,230,.19);noise(.13,7100,2200,.16,0,true);}else if(kind==='claw'){noise(.10,6800,1600,.22,0,true);noise(.06,5900,1900,.08,.020,true);}else if(kind==='slam'){noise(.13,2200,250,.20);tone(.13,165,65,.16);}else{noise(.14,4200,1200,soft?.055:.18);tone(.15,soft?880:420,soft?1046:185,.08);}}
  if(cue==='impact'){

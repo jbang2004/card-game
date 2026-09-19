@@ -6,14 +6,16 @@
 "use strict";
 const keys=["judgment","night","frost"],clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
 function events(d){
- if(!keys.includes(d.swordStyle))return [];
+ if(!keys.includes(d.swordStyle)||d.visualOnly||d.silent)return [];
  const flight={judgment:125,night:95,frost:140}[d.swordStyle]*d.scale;
  return [
   {id:"charge",at:d.start},
   {id:"launch",at:Math.max(d.start,d.impact-flight)},
   {id:"impact",at:d.impact},
   {id:"tail",at:d.impact+({judgment:180,night:85,frost:110}[d.swordStyle])*d.scale}
- ];
+ ].filter(e=>e.id==='charge'||e.id==='launch'?d.audioPrimary!==false:
+   !['shield','armor'].includes(d.outcome?.kind)&&(e.id==='impact'||d.audioPrimary!==false))
+  .map(e=>({...e,gain:([0,.75,.9,1][d.tier]||1)*(['impact','tail'].includes(e.id)?d.audioGain??1:1)}));
 }
 function recipe(style,cue){
  const layers=[],tone=(at,dur,f0,f1,vol,kind="sine")=>layers.push({at,dur,f0,f1,vol,kind}),
@@ -57,7 +59,7 @@ function timeline(d,rate=44100,speed=1){
  const total=(d.impact-d.start+d.tail)/1000/speed+.5,out=new Float32Array(Math.ceil(total*rate));
  for(const e of events(d)){
   const src=pcm(d.swordStyle,e.id,rate),offset=Math.round((e.at-d.start)/1000/speed*rate);
-  for(let i=0;i<src.length&&i+offset<out.length;i++)if(i+offset>=0)out[i+offset]+=src[i]*.65;
+  for(let i=0;i<src.length&&i+offset<out.length;i++)if(i+offset>=0)out[i+offset]+=src[i]*.65*(e.gain??1);
  }
  return out;
 }
