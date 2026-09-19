@@ -114,7 +114,7 @@ async function emptyDropPoint(page) {
     const a = EmberViewport.layout.arena;
     const unit = (x, y) => {
       const el = document.elementFromPoint(x, y);
-      return el?.closest?.("[data-uid]") ? 1 : 0;
+      return el?.closest?.("[data-uid],#hand-card-lift") ? 1 : 0;
     };
     let fallback = null;
     for (let fy = 0.8; fy >= 0.42; fy -= 0.12) {
@@ -788,9 +788,7 @@ for (const [label, viewport] of VIEWPORTS) {
       expect(prepared.mana).toBe(before.mana);
       expect(prepared.detail).toBe(null);
 
-      await page
-        .locator(`#hand [data-hand="${plain.uid}"]`)
-        .tap({ position: { x: 14, y: 30 } });
+      await page.locator("#hand-card-lift").tap({ position: { x: 50, y: 60 } });
       await page.waitForTimeout(200);
       const cancelled = await handState(page);
       expect(cancelled.selected).toBe(0);
@@ -1103,7 +1101,11 @@ for (const [label, viewport] of [
       // card actually IS at commit time, so the source is measured after the
       // selection pose is applied, not before it.
       await card.click();
-      const source = await card.boundingBox();
+      const lifted = page.locator("#hand-card-lift");
+      await lifted.evaluate((el) =>
+        Promise.all(el.getAnimations().map((a) => a.finished)),
+      );
+      const source = await lifted.boundingBox();
       const arena = await page.locator("#arena").boundingBox();
       await page.mouse.click(
         arena.x + arena.width / 2,

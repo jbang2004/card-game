@@ -108,7 +108,7 @@ const EmberViewport = (() => {
       const padL = safe.left + 12,
         padR = safe.right + 12,
         usableW = W - padL - padR;
-      l.header = safe.top + (portrait ? 52 : 44);
+      l.header = safe.top + (portrait ? 100 : 44);
       /* Tablets and compact desktops get the same layout at a larger scale. */
       const roomy = portrait ? W >= 600 : W >= 1000;
       /* Landscape reserves separate bands for portraits, equipment and stats. */
@@ -260,22 +260,11 @@ const EmberViewport = (() => {
           h: Math.max(100, dockTop - 8 - (l.header + 4)),
         };
       }
-      /* Transient messages float between the two minion rows in portrait
-       * (`minion()` keeps a 44px band free there); landscape has no spare
-       * height, so they take the topbar's centre instead. */
+      // Portrait gets its own status row; wide screens share the topbar's
+      // centre with the idle round label. Neither rail covers a minion row.
       l.notice = portrait
-        ? {
-            x: l.arena.x + 8,
-            y: l.arena.y + l.arena.h / 2 - 20,
-            w: l.arena.w - 16,
-            h: 40,
-          }
-        : {
-            x: l.arena.x + 40,
-            y: safe.top + 4,
-            w: l.arena.w - 80,
-            h: 36,
-          };
+        ? { x: padL, y: safe.top + 52, w: usableW, h: 44 }
+        : { x: padL + 56, y: safe.top, w: usableW - 176, h: 44 };
       l.handLabel = { x: padL, y: -100, w: 0, h: 0 };
       l.actionChip = { ...l.notice };
       l.cardH = cardH;
@@ -305,6 +294,7 @@ const EmberViewport = (() => {
         "contract-open": l.contract,
         hand: l.hand,
         "touch-target-bar": l.actionChip,
+        "battle-status-caption": l.actionChip,
         "touch-match-chip": l.chip,
         "turn-number": l.round,
       };
@@ -320,7 +310,10 @@ const EmberViewport = (() => {
       app.style.setProperty("--god-w", l.contract.w + "px");
       app.style.setProperty("--battle-card-w", l.cardW + "px");
       app.style.setProperty("--battle-card-h", l.cardH + "px");
-      app.style.setProperty("--header-h", l.header + "px");
+      app.style.setProperty(
+        "--header-h",
+        safe.top + (portrait ? 52 : 44) + "px",
+      );
       app.style.setProperty(
         "--enemy-row-y",
         l.arena.y + l.arena.h * 0.25 + "px",
@@ -515,8 +508,8 @@ const EmberViewport = (() => {
       };
     /* Board tokens are sized by how many units share the row, never by the
      * seven-slot ceiling: three minions get three-minion tokens. A row that
-     * still cannot fit unstacked overlaps its tokens by 10px. A 44px band
-     * between the rows stays clear for the floating notice. */
+     * still cannot fit unstacked overlaps its tokens by 10px. Notices now
+     * live in the header, so the centre only needs a small visual gutter. */
     const a = state.layout.arena,
       count = Math.max(1, n),
       rowH = a.h / 2,
@@ -528,7 +521,7 @@ const EmberViewport = (() => {
       ),
       inner = a.w - 16;
     let gap = 8,
-      w = Math.floor(Math.min(cap, (rowH - (state.portrait ? 44 : 10)) / 1.25));
+      w = Math.floor(Math.min(cap, (rowH - (state.portrait ? 16 : 10)) / 1.25));
     if (count * w + (count - 1) * gap > inner) {
       w = Math.floor((inner - (count - 1) * gap) / count);
       if (w < 58) {

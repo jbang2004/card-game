@@ -38,6 +38,7 @@
     isDemo = false,
     modalType = null,
     selection = null,
+    readingUid = null,
     chosenHero = D.heroes[0].id,
     aiTimer = null,
     turnTimer = null,
@@ -392,6 +393,8 @@
     if (slot) slot.hidden = true;
   }
   function sourceCard(uid) {
+    const lift = $("hand-card-lift");
+    if (uid && lift?.dataset.hand === uid) return lift;
     return uid
       ? [...document.querySelectorAll("#hand .hand-card")].find(
           (el) => el.dataset.hand === uid,
@@ -403,7 +406,7 @@
     if (!notice) return;
     const rail = EmberViewport.mobile
       ? EmberViewport.layout.notice
-      : { x: 370, y: 145, w: 860, h: 44 };
+      : { x: 480, y: 16, w: 640, h: 48 };
     Object.assign(notice.style, {
       left: rail.x + "px",
       top: rail.y + "px",
@@ -693,9 +696,7 @@
     const el =
       ref.el ||
       (ref.side === "p"
-        ? [...document.querySelectorAll("#hand .hand-card")].find(
-            (node) => node.dataset.hand === ref.uid,
-          )
+        ? sourceCard(ref.uid)
         : [...document.querySelectorAll("#enemy-hand .card-back")].find(
             (node) => node.dataset.enemyHand === ref.uid,
           ));
@@ -768,6 +769,11 @@
   $("hand")?.addEventListener(
     "scroll",
     (event) => {
+      if (
+        readingUid &&
+        Math.abs(handScrollLeft - event.currentTarget.scrollLeft) > 4
+      )
+        clearSelection();
       handScrollLeft = event.currentTarget.scrollLeft;
     },
     { passive: true },
@@ -943,9 +949,10 @@
             : "";
       const weapon = side === "p" && p.weapon,
         weaponCard = weapon && D.byId[weapon.cid],
-        weaponMarkup = side === "p"
-          ? `<div class="weapon-slot" id="weapon-slot"${weapon ? "" : " hidden"} title="${weapon ? weaponCard.name + "：攻击 " + weapon.atk + "，耐久 " + weapon.durability + "。点击英雄攻击。" : "未装备武器"}">${weapon ? `<img src="${A.card(weaponCard)}" alt="${weaponCard.name}"><b aria-label="攻击 ${weapon.atk}">${weapon.atk}</b><b aria-label="耐久 ${weapon.durability}">${weapon.durability}</b>` : ""}</div>`
-          : "";
+        weaponMarkup =
+          side === "p"
+            ? `<div class="weapon-slot" id="weapon-slot"${weapon ? "" : " hidden"} title="${weapon ? weaponCard.name + "：攻击 " + weapon.atk + "，耐久 " + weapon.durability + "。点击英雄攻击。" : "未装备武器"}">${weapon ? `<img src="${A.card(weaponCard)}" alt="${weaponCard.name}"><b aria-label="攻击 ${weapon.atk}">${weapon.atk}</b><b aria-label="耐久 ${weapon.durability}">${weapon.durability}</b>` : ""}</div>`
+            : "";
       el.innerHTML = `<div class="hero-card-inner"><div class="portrait-frame"><img src="${A.character(data)}" data-art-key="${data.portraitId}" alt="${data.name}" draggable="false" style="${artStyleForHero(data, "hero")}"></div><span class="hero-card-plaque" aria-hidden="true"></span><div class="hero-name">${data.name}</div></div><div class="hero-chips">${stats}${covenant}${handChip}</div>${weaponMarkup}${p.secrets.length ? '<div class="secret-indicator" title="奥秘已布置">?</div>' : ""}${side === "e" && s.mode !== "practice" ? `<div class="hero-phase">${s.phase2 ? "阶段 II" : "阶段 I"}</div>` : ""}`;
       el.dataset.heroClass = data.classId || "boss";
       el.classList.toggle("frozen", p.frozen);
@@ -1125,7 +1132,7 @@
       el.addEventListener("focus", () => preview(el.dataset.cardid, el));
       el.addEventListener("blur", hidePreview);
     });
-    document.querySelectorAll(".hand-card").forEach((el) => {
+    document.querySelectorAll("#hand .hand-card").forEach((el) => {
       el.onclick = () => {
         if (suppressClick) {
           suppressClick = false;
@@ -1149,6 +1156,7 @@
     });
     if (EmberViewport.mobile) restoreHandScroll();
     window.EmberMobile?.afterRender(s);
+    if (readingUid) syncHandLift();
     updateSelection();
     // Rendering can replace card nodes while a presentation sequence is
     // between beats. Let the compositor rebind its visual track immediately,
@@ -1250,7 +1258,7 @@
      * The magnified card would cover the hero rail the aim is heading for, so
      * hover preview stands down until the selection is resolved. Touch is
      * unaffected: it has no hover and its own inspect gesture. */
-    if (app.classList.contains("is-targeting")) return;
+    if (readingUid || app.classList.contains("is-targeting")) return;
     previewTimer = setTimeout(() => {
       if (!el.isConnected) return;
       let actual = null;
@@ -1306,11 +1314,12 @@
         }
         return;
       }
-      const el = e.target.closest?.("#battle [data-cardid]");
+      const el = e.target.closest?.("#battle [data-cardid],#hand-card-lift");
       if (!el || modalType || EmberFX.busy) return;
       /* Hand cards use long-press as a lift-to-drag gesture on touch. Their
        * secondary action must not reopen the full-screen detail layer. */
       if (el.matches(".hand-card")) {
+        clearSelection();
         e.preventDefault();
         e.stopPropagation();
         return;
@@ -1434,6 +1443,16 @@
   document.addEventListener(
     "click",
     (e) => {
+      if (
+        readingUid &&
+        !selection &&
+        !e.target.closest?.(".hand-card,#touch-target-bar")
+      ) {
+        clearSelection();
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
       if (!detail.pinned) return;
       /* A long press or a drag already handled this tap: keep the detail open
        * and let the owner of that gesture swallow the compatibility click. */
@@ -1526,31 +1545,104 @@
     EmberAudio.fx("select");
     return true;
   }
+  // Reading is independent of play legality. The lifted card lives beside
+  // #battle so the native horizontal hand scroller cannot clip its details.
+  function syncHandLift() {
+    const card = game.s.p.hand.find((x) => x.uid === readingUid);
+    const source = [...$("hand").children].find(
+      (el) => el.dataset.hand === readingUid,
+    );
+    if (!card || !source) return clearSelection();
+    let lift = $("hand-card-lift");
+    const fresh = !lift;
+    if (!lift) {
+      lift = document.createElement("button");
+      lift.id = "hand-card-lift";
+      lift.className = "hand-card hand-lift";
+      lift.onclick = () => {
+        if (suppressClick) {
+          suppressClick = false;
+          return;
+        }
+        selectCard(lift.dataset.hand);
+      };
+      lift.addEventListener("pointerdown", beginDrag);
+      app.appendChild(lift);
+    }
+    lift.dataset.hand = card.uid;
+    lift.dataset.cardid = card.cid;
+    lift.setAttribute(
+      "aria-label",
+      source.getAttribute("aria-label") + "；再次点击收起",
+    );
+    lift.innerHTML = cardHTML(D.byId[card.cid], { cost: game.cost(card) });
+    app.classList.add("reading-hand");
+    source.classList.add("reading-source");
+    source.setAttribute("aria-expanded", "true");
+    const mobile = EmberViewport.mobile;
+    const bottom =
+      EmberViewport.height - (mobile ? EmberViewport.safe.bottom : 0) - 12;
+    const height = Math.min(
+      354,
+      bottom - (mobile ? EmberViewport.layout.header : 80) - 12,
+    );
+    const width = Math.min(240, height / 1.35);
+    const origin = centerOf(source);
+    const insetL = 12 + (mobile ? EmberViewport.safe.left : 0),
+      insetR = 12 + (mobile ? EmberViewport.safe.right : 0);
+    const x = Math.max(
+      insetL,
+      Math.min(EmberViewport.width - width - insetR, origin.x - width / 2),
+    );
+    Object.assign(lift.style, {
+      left: x + "px",
+      top: bottom - height + "px",
+      width: width + "px",
+      height: height + "px",
+    });
+    // Reserve rules by their actual line count, rather than hiding overflow.
+    const copy = lift.querySelector(".card-copy"),
+      text = lift.querySelector(".card-text");
+    const rulesHeight = Math.max(42, copy.scrollHeight);
+    const rulesTop = height - width * 0.24 - rulesHeight - 8;
+    text.style.top = rulesTop + "px";
+    lift.querySelector(".card-title").style.top = rulesTop - 36 + "px";
+    lift.querySelector(".card-art").style.height = rulesTop - 20 + "px";
+    if (
+      fresh &&
+      !settings.reduced &&
+      !matchMedia("(prefers-reduced-motion: reduce)").matches
+    )
+      lift.animate(
+        [
+          { transform: "translateY(24px) scale(.94)", opacity: 0.6 },
+          { transform: "none", opacity: 1 },
+        ],
+        { duration: 180, easing: "cubic-bezier(.2,.8,.2,1)" },
+      );
+  }
   function selectCard(uid) {
     if (!inBattle || modalType || EmberFX.busy) return;
-    if (selection?.type === "card-play" && selection.uid === uid) {
-      clearSelection();
-      return;
-    }
-    const card = game.s.p.hand.find((x) => x.uid === uid),
-      err = game.legalCard("p", uid);
+    if (readingUid === uid) return clearSelection();
+    const card = game.s.p.hand.find((x) => x.uid === uid);
+    if (!card) return;
+    clearSelection();
+    hidePreview();
+    readingUid = uid;
+    syncHandLift();
+    const err = game.legalCard("p", uid);
     if (err) {
-      EmberAudio.fx("error");
-      const mana = err === "法力不足",
-        message =
-          mana && card
-            ? `法力不足 · 需要 ${game.cost(card)} 点，当前 ${game.s.p.mana} 点`
-            : err;
-      toast(message, { sourceUid: uid, mana });
+      setGuide(
+        err === "法力不足"
+          ? `法力不足 · 需要 ${game.cost(card)} 点，当前 ${game.s.p.mana} 点`
+          : err,
+        "inspect",
+      );
+      EmberAudio.fx("select");
       return;
     }
-    const c = card && D.byId[card.cid];
     if (armCard(uid)) return EmberAudio.fx("select");
-    if (c && !c.target) return prepareCard(uid);
-    return act(() => game.dispatch({ type: "play", side: "p", uid }), {
-      side: "p",
-      uid,
-    });
+    return prepareCard(uid);
   }
   function clickUnit(side, uid) {
     if (modalType || !inBattle || EmberFX.busy) return;
@@ -1646,6 +1738,7 @@
   }
   function usePower() {
     if ($("power-btn").disabled || EmberFX.busy) return;
+    clearSelection();
     const power = game.powerDefinition("p");
     if (power.target) {
       selection = { type: "power" };
@@ -1656,6 +1749,13 @@
     } else act(() => game.dispatch({ type: "power", side: "p" }));
   }
   function clearSelection() {
+    readingUid = null;
+    app.classList.remove("reading-hand");
+    $("hand-card-lift")?.remove();
+    document.querySelectorAll("#hand .reading-source").forEach((el) => {
+      el.classList.remove("reading-source");
+      el.setAttribute("aria-expanded", "false");
+    });
     app.classList.remove("is-targeting");
     selection = null;
     lastHit = null;
@@ -1728,7 +1828,7 @@
         ? findUnit("p", selection.uid)
         : selection.type === "power"
           ? $("power-btn")
-          : document.querySelector(`[data-hand="${selection.uid}"]`);
+          : sourceCard(selection.uid);
     const from = centerOf(source);
     if (!from) {
       clearActionCue();
@@ -2278,7 +2378,7 @@
     if (input && e.key !== "Escape") return;
     if (e.key === "Escape") {
       if (drag) cancelDrag(false);
-      if (selection) clearSelection();
+      if (selection || readingUid) clearSelection();
       else if (modalType && $("modal").dataset.locked !== "1") closeModal();
       return;
     }
