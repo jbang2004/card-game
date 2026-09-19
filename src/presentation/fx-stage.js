@@ -25,6 +25,10 @@ const EmberFx2 = (() => {
   const SCENE_UPLOAD_MIN_MS = 120;
 
   let engine = null;
+  const benchmarkFeedback=typeof EmberBenchmarkFeedback!=="undefined"?EmberBenchmarkFeedback.create():null;
+  const remasterFeedback=typeof EmberRemasterFeedback!=="undefined"?EmberRemasterFeedback.create():null;
+  const lifecycleFeedback=typeof EmberLifecycleFeedback!=="undefined"?EmberLifecycleFeedback.create():null;
+  let castGroup=0;
   let meshEngine = null, meshCanvas = null, meshError = null;
   let glCanvas = null;
   let cutinEl = null;
@@ -112,6 +116,21 @@ const EmberFx2 = (() => {
     }
   }
 
+  // Return a target point in the 3D canvas's pre-camera stage coordinates.
+  // Undo the shared canvas transform once, retaining the target's own recoil.
+  function resolveMeshTarget(ref) {
+    if (!ref || !meshCanvas) return null;
+    const el = ref.uid === "hero"
+      ? document.querySelector(ref.side === "p" ? "#player-hero .hero-card-inner" : "#enemy-hero .hero-card-inner")
+      : document.querySelector(`#battle .minion[data-uid="${CSS.escape(String(ref.uid))}"]`);
+    if (!el?.isConnected) return null;
+    const b = EmberViewport.pos(el); if (!b) return null;
+    const style = getComputedStyle(meshCanvas), m = new DOMMatrix(style.transform);
+    const [ox, oy] = style.transformOrigin.split(" ").map(parseFloat);
+    const p = new DOMPoint(b.x - (ox || 0), b.y - (oy || 0)).matrixTransform(m.inverse());
+    return { ...b, x: p.x + (ox || 0), y: p.y + (oy || 0) };
+  }
+
   /**
    * 建层并初始化引擎。战斗视图进入时调一次；重复调用无副作用。
    * 返回 Promise<boolean>：false = WebGL 不可用，导演层只保留 DOM 动作与数字。
@@ -153,11 +172,12 @@ const EmberFx2 = (() => {
         ready = true;
         if (typeof EmberVFX3 !== "undefined") {
           try {
-            meshEngine = EmberVFX3.create(meshCanvas);
+            meshEngine = EmberVFX3.create(meshCanvas, { resolveTarget: resolveMeshTarget, onEmit: d => {benchmarkFeedback?.schedule(d);remasterFeedback?.schedule(d);}, onFrame:(a,t,m)=>{benchmarkFeedback?.frame(a,t,m);remasterFeedback?.frame(a,t,m);lifecycleFeedback?.frame(a,t,m);}, onClear:()=>{benchmarkFeedback?.clear();remasterFeedback?.clear();lifecycleFeedback?.clear();} });
             meshEngine.stage(stage.w, stage.h);
             meshEngine.setQuality(quality);
             meshCanvas.addEventListener("webglcontextlost", (event) => {
               event.preventDefault(); meshError = "3D WebGL context lost; reload to restore";
+              lifecycleFeedback?.clear();benchmarkFeedback?.clear();remasterFeedback?.clear();
               meshEngine = null; meshCanvas.hidden = true;
             });
           } catch (error) {
@@ -356,11 +376,12 @@ const EmberFx2 = (() => {
       prepare(kind);
       if (meshEngine && EmberVFX3.supports(kind)) {
         const p = engine.plan ? engine.plan(kind, o) : EmberFx2Engine.plan(kind, o);
-        const targets = o.targets || (o.to ? [o.to] : []);
+        const targets = o.targets?.length ? o.targets : (o.to ? [o.to] : (EmberRemasterArts.supports(kind)?[o.from]:[]));
         const start = Number.isFinite(o.startedAt) ? o.startedAt : performance.now();
+        const groupId="r9-cast-"+(++castGroup);
         targets.forEach((to, i) => meshEngine.emit(kind, {
-          ...o, to, startedAt: start,
-          contactAt: o.contactAt?.[i] ?? start + p.hitAt[i],
+          ...o, to, targetRef: o.targetRefs?.[i], startedAt: start, groupId, silent: i>0,
+          contactAt: o.contactAt?.[i] ?? start + (p.hitAt[i] ?? 0),
           hitStopMs: (EmberTiming.tiers[o.tier || 1]?.hitStopMs || 0) * (o.timeScale || 1),
         }));
         return p;
@@ -380,10 +401,24 @@ const EmberFx2 = (() => {
       return engine.attack(family, o);
     },
 
+    lifecycle(kind,o) {
+      if(!available()||!meshEngine||!EmberLifecycleArts.supports(kind))return false;
+      const now=performance.now();
+      return meshEngine.emit(kind,{...o,from:o.from||o.at,to:o.to||o.at,
+        startedAt:now,contactAt:now,visualOnly:true,silent:true});
+    },
+    get lifecycleFeedback(){return lifecycleFeedback;},
+    cue(kind,o) {
+      if(!available()||!meshEngine||!EmberRemasterArts.supports(kind))return false;
+      const now=performance.now();
+      return meshEngine.emit(kind,{...o,from:o.from||o.at,to:o.to||o.at,
+        startedAt:now,contactAt:now,visualOnly:true,silent:true});
+    },
     /** contact({ at, tier, tint, tintGrad }) → plan 或 false */
     contact(o) {
       if (!available()) return false;
       prepare("contact");
+      if(meshEngine){const now=performance.now();meshEngine.emit("contact",{...o,from:o.at,to:o.at,startedAt:now,contactAt:now,visualOnly:true,silent:true});return EmberFx2Engine.plan("contact",o);}
       return engine.contact(o);
     },
 
@@ -412,6 +447,8 @@ const EmberFx2 = (() => {
 
     get renderer3dAvailable() { return !!meshEngine && available(); },
     get mesh3d() { return meshEngine; },
+    get benchmarkFeedback() { return benchmarkFeedback; },
+    get remasterFeedback() { return remasterFeedback; },
     get diagnostics() {
       return {
         available: available(),

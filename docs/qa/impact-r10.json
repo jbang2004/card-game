@@ -1,0 +1,134 @@
+{
+  "release": "R10",
+  "baseline_remote": "412e135da6645ece1c8ba31d56663b1099222fcf",
+  "branch": "feat/full-vfx-remaster",
+  "node": {
+    "total": 523,
+    "pass": 515,
+    "skip": 8,
+    "fail": 0,
+    "new_cases": 28
+  },
+  "browser": {
+    "remaster": {
+      "passed": 411,
+      "failed": 0,
+      "errors": []
+    },
+    "approved_benchmark": {
+      "passed": 102,
+      "failed": 0,
+      "errors": []
+    },
+    "total_assertions": 513
+  },
+  "preserved_baseline": {
+    "src/vfx3/reference-flame.js": true,
+    "src/vfx3/benchmark-arts.js": true,
+    "src/vfx3/benchmark-cues.js": true,
+    "src/presentation/benchmark-feedback.js": true,
+    "src/vfx3/renderer.js": true,
+    "src/engine.js": true,
+    "src/content/cards.js": true,
+    "src/content/campaign.js": true,
+    "src/presentation/timing.js": true
+  },
+  "comparison": {
+    "viewport": [
+      1280,
+      800
+    ],
+    "same_fixture_and_seeds": true,
+    "unaltered_exposure_colors": true,
+    "phase": "approach -50ms; peak family-specific +60/+85/+110/+180ms; residue +280ms",
+    "capture_errors": []
+  },
+  "video": {
+    "fps": 24,
+    "frames": 468,
+    "seconds": 19.5,
+    "segments": [
+      {
+        "role": "archer",
+        "start": 0,
+        "frames": 26,
+        "audio": true
+      },
+      {
+        "role": "wolf",
+        "start": 26,
+        "frames": 24,
+        "audio": true
+      },
+      {
+        "role": "berserker",
+        "start": 50,
+        "frames": 30,
+        "audio": true
+      },
+      {
+        "role": "fireball",
+        "start": 80,
+        "frames": 36,
+        "audio": true
+      },
+      {
+        "role": "frostbolt",
+        "start": 116,
+        "frames": 39,
+        "audio": true
+      },
+      {
+        "role": "nova",
+        "start": 155,
+        "frames": 35,
+        "audio": true
+      },
+      {
+        "role": "shield",
+        "start": 190,
+        "frames": 31,
+        "audio": true
+      },
+      {
+        "role": "lifedrain",
+        "start": 221,
+        "frames": 32,
+        "audio": true
+      },
+      {
+        "role": "renew",
+        "start": 253,
+        "frames": 29,
+        "audio": true
+      },
+      {
+        "role": "archer",
+        "start": 282,
+        "frames": 52,
+        "audio": false
+      },
+      {
+        "role": "fireball",
+        "start": 334,
+        "frames": 72,
+        "audio": false
+      },
+      {
+        "role": "shield",
+        "start": 406,
+        "frames": 62,
+        "audio": false
+      }
+    ],
+    "audio": "Same runtime PCM, offline mixed at exact cue timestamps. Not live speaker recording.",
+    "visual": "Actual game deterministic replay, not performance measurement."
+  },
+  "limitations": [
+    "Software Chromium / ANGLE / Mesa; no hardware FPS claim",
+    "In-memory HTML; HTTP navigation blocked by policy",
+    "No physical mobile, Safari, full E2E, or real-origin storage verification",
+    "Pixel area / geometry counts are not perceptual quality certification",
+    "Raw prerecorded comparison is deterministic replay, no duplicate rules resolution"
+  ]
+}

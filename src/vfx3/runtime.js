@@ -9,37 +9,32 @@ const ease=x=>{x=clamp(x);return x*x*(3-2*x);};
 const mix=(a,b,t)=>a+(b-a)*t;
 const rnd=n=>{let x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);};
 const env=(t,a,b,i=.04,o=.1)=>ease((t-a)/i)*(1-ease((t-(b-o))/o));
-const KIND={breath:'breath',lightning:'lightning',bolt:'lightning',slash:'slash'};
-const TAIL={breath:4100,lightning:320,slash:1120};
+const Arts=G.EmberSwordArts||(typeof require==='function'?require('./sword-arts.js'):null);
+const Rem=G.EmberRemasterArts||(typeof require==='function'?require('./remaster-arts.js'):null);
+const Life=G.EmberLifecycleArts||(typeof require==='function'?require('./lifecycle-arts.js'):null);
+const KIND={...Object.fromEntries(Object.keys(Life.DEFINITIONS).map(k=>[k,k])),...Object.fromEntries(Object.keys(Rem.DEFINITIONS).map(k=>[k,k])),breath:'breath',lightning:'lightning',bolt:'lightning',slash:'slash'};
+const TAIL={...Object.fromEntries(Object.entries(Life.DEFINITIONS).map(([k,v])=>[k,v.tail])),...Object.fromEntries(Object.entries(Rem.DEFINITIONS).map(([k,v])=>[k,v.tail])),breath:4100,lightning:320,slash:1120};
 const valid=b=>b&&['x','y','w','h'].every(k=>Number.isFinite(b[k]))&&b.w>0&&b.h>0;
 function descriptor(kind,o,now=0){
  if(!KIND[kind]||!valid(o.from)||!valid(o.to))return null;
+ const resolved=Rem.supports(kind)?Rem.resolve(kind,o.sourceCid,o.visualKind):KIND[kind];
  const start=Number.isFinite(o.startedAt)?o.startedAt:now;
  const lead=Math.max(0,Number(o.leadMs)||0);
  const impact=Number.isFinite(o.contactAt)?o.contactAt:start+lead;
  const scale=clamp(Number(o.timeScale)||1,.1,1);
- return {kind:KIND[kind],sourceKind:kind,from:{...o.from},to:{...o.to},start,impact:Math.max(start,impact),
-   hold:Math.max(0,Number(o.hitStopMs)||0),tail:TAIL[KIND[kind]]*scale,seed:Number(o.seed)||7,
+ return {sequenceId:o.sequenceId??null,artPosition:o.artPosition||null,previousCid:o.previousCid||null,lifecycle:Life.supports(kind),visualOnly:!!o.visualOnly,silent:!!o.silent,groupId:o.groupId||null,aoe:!!o.aoe,swordStyle:kind==='slash'?Arts.resolve(o.swordStyle):null, sourceCid:o.sourceCid||null, sourceRef:o.sourceRef?{...o.sourceRef}:null, targetRef:o.targetRef?{...o.targetRef}:null,
+   kind:resolved,sourceKind:kind,from:{...o.from},to:{...o.to},start,impact:Math.max(start,impact),
+   hold:Math.max(0,Number(o.hitStopMs)||0),tail:(kind==="slash"&&G.EmberBenchmarkArts?.supports(o.swordStyle)?G.EmberBenchmarkArts.STYLES[o.swordStyle].tail:TAIL[resolved])*scale,seed:Number(o.seed)||7,
    tier:clamp(o.tier||2,1,3),scale,tint:Array.isArray(o.tint)?o.tint.slice():null};
 }
 function sample(d,now){
  const t=(now-d.start)/1000,hit=(d.impact-d.start)/1000,after=t-hit;
- return {t,hit,after,alive:now>=d.start&&now<d.impact+d.tail,phase:t<0?'待机':after<0?'释放':after<.075?'命中':'余韵'};
+ return {t,hit,after,alive:now>=d.start&&now<d.impact+d.tail-1e-6,phase:t<0?'待机':after<0?'释放':after<.075?'命中':'余韵'};
 }
 
-// R3: one authored motion, sampled by the mesh and by its blade-history trail.
-// Warm-up uses the existing actor anticipation (no new damage event or rule delay).
-function cleaveMotion(d,t){
- const hit=(d.impact-d.start)/1000,post=(t-hit)/d.scale;
- const u=hit>0?clamp(t/hit):1,wind=ease(u/.29),v=clamp((u-.29)/.71);
- const drop=v*v*v,sign=d.to.x>=d.from.x?1:-1;
- const hold=clamp(d.hold/1000/d.scale,.045,.070);
- const settle=Math.max(0,post-hold),recover=ease((post-.28)/.28);
- const tilt=post<0?(.93+.25*wind)*(1-drop):.095*Math.sin(settle*26)*Math.exp(-settle*15);
- return {u,wind,drop,sign,angle:Math.PI+sign*tilt,post,hold,recover,
-   yaw:post<0?mix(-.48,.14,drop):.14+.18*recover,
-   visibility:t<0?0:ease(t/(.04*d.scale))*(1-ease((post-.36)/.32))};
-}
+// R5: screen-top strike; model, trail and tests share one rigid pose.
+const Sky=G.EmberSkyfall||(typeof require==='function'?require('./skyfall.js'):null);
+const cleaveMotion=(d,t)=>Sky.motion(d,t);
 // Original flame time/coordinates remain isolated from the game clock.
 const Ref=G.EmberReferenceFlame||(typeof require==='function'?require('./reference-flame.js'):null);
 function breathClock(d,t){
@@ -60,23 +55,28 @@ function flameMapping(d,W,H){
   point(p){const v=Ref.view(p),x=(v[0]-source[0])*scale,y=(v[1]-source[1])*scale;
    return [F[0]+c*x-q*y,F[1]+q*x+c*y,F[2]+(v[2]-source[2])*scale];}};
 }
-// Partial double-slab separation, followed by monotonic settlement.
-function fractureAt(seconds){
- const growth=1-Math.pow(1-clamp(seconds/.15),3),open=1-Math.pow(1-clamp(seconds/.095),3);
- return {growth,open,fade:1-ease((seconds-.49)/.45)};
-}
+const fractureAt=t=>Sky.fractureAt(t);
 
-function create(canvas){
+function create(canvas,options={}){
  const X=G.Ember3D,{M,V,Geo}=X,R=new X.Renderer(canvas);
- let W=1600,H=940,quality={low:false,reduced:false},instances=[],last=null,manual=null,uid=0,lastNow=0,dirty=true;
+ let W=1600,H=940,quality={low:false,reduced:false},instances=[],last=null,lastUtility=null,lastGroup=[],manual=null,uid=0,lastNow=0,dirty=true;
  let stats={active:0,drawCalls:0,particles:0,renderer:'mesh3d',frames:0};
- const trace=[];
- const blade=R.mesh(makeBlade());
+ const trace=[],lifecycleTrace=[];let lastLifecycleGroup=[];
+ const arts=Arts.create(R,X),remaster=Rem.create(R,X),lifecycle=Life.create(R,X);
  const tmp=R.dynamic;
  function emit(kind,o,now=performance.now()){
   const d=descriptor(kind,o,now);if(!d||quality.reduced)return false;
-  d.id=++uid;instances.push(d);if(instances.length>12)instances.shift();last={...d,from:{...d.from},to:{...d.to}};
-  trace.push({id:d.id,kind:d.kind,start:d.start,impact:d.impact,backend:'mesh3d'});if(trace.length>100)trace.shift();dirty=true;return d;
+  d.id=++uid;options.onEmit?.(d);instances.push(d);if(instances.length>24)instances.shift();
+  const copy={...d,from:{...d.from},to:{...d.to}};
+  if(d.lifecycle){
+   if(d.groupId&&lastLifecycleGroup[0]?.groupId===d.groupId)lastLifecycleGroup.push(copy);else lastLifecycleGroup=[copy];
+   lifecycleTrace.push({...copy});if(lifecycleTrace.length>180)lifecycleTrace.shift();
+  }else if(d.visualOnly){lastUtility=copy;if(lastGroup.length&&d.start>=lastGroup[0].start&&d.start-lastGroup[0].start<1600)lastGroup.push(copy);}
+  else{
+   if(d.groupId&&lastGroup[0]?.groupId===d.groupId)lastGroup.push(copy);else lastGroup=[copy];
+   last=copy;
+   trace.push({id:d.id,kind:d.kind,start:d.start,impact:d.impact,backend:'mesh3d',swordStyle:d.swordStyle});if(trace.length>100)trace.shift();
+  }dirty=true;return d;
  }
  function stage(w,h){W=Math.max(1,w);H=Math.max(1,h);const dpr=Math.min(G.devicePixelRatio||1,quality.low?1:1.5);R.resize(W,H,dpr);R.camera();}
  function xyz(b,z=16){return[b.x-W/2,H/2-b.y,z];}
@@ -101,111 +101,31 @@ function create(canvas){
   }
  }
 
- function swordPose(d,t){
-  const m=cleaveMotion(d,t),L=clamp(d.to.w*1.46,66,168);
-  const T=xyz({...d.to,y:d.to.y+d.to.h*.50},32);
-  const lift=Math.max(12,Math.min(d.to.h*.78,d.to.y+d.to.h*.50-L*1.23-22));
-  const back=(-.46-.19*m.wind)*m.sign*L;
-  const k=m.drop;
-  // The point follows a curved sweep, not a lift/elevator translation. Recover
-  // releases the sword only AFTER the rigid planted-contact interval.
-  const tip=[T[0]+back*(1-k)+m.sign*Math.sin(k*Math.PI)*L*.17+m.sign*m.recover*L*.06,
-   T[1]+lift*(.80+.20*m.wind)*(1-k)+m.recover*L*.16,
-   T[2]+(1-k)*(28+Math.sin(k*Math.PI)*20)+m.recover*10];
-  const rot=M.mul(M.Rz(m.angle),M.Ry(m.yaw));
-  const mat=M.mul(M.T(...tip),M.mul(rot,M.mul(M.S(L),M.T(0,-.98,0))));
-  return {mat,L,root:M.point(mat,[0,.14,0]),tip:M.point(mat,[0,.98,0]),
-   contact:M.point(mat,[0,.98,0]),target:T,motion:m};
- }
- function groundCleave(d,s,T){
-  const q=s.after/d.scale;if(q<0||q>=.96)return;
-  const f=fractureAt(q),g=clamp(d.to.w/116,.48,1.25),span=76*g;
-  // A shallow 3D ground patch, not two stretched halves of a card illustration.
-  // x/y are the stage plane; z is true elevation toward the fixed camera.
-  const base=[T[0],T[1],9];
-  const path=[];for(let i=0;i<11;i++){
-   const u=(i-5)/5;path.push([base[0]+u*span,base[1]+(rnd(d.seed+i*23)-.5)*9*g+u*12*g,base[2]]);
-  }
-  const seam=[],lip=[],firstFx=R.fxList.length;
-  for(let i=0;i<path.length-1;i++){
-   const progress=clamp((f.growth-Math.abs((i+.5-5)/5))/.18);if(progress<=0)continue;
-   const a=path[i],b=path[i+1],w=(1.6+3.4*(1-Math.abs((i-5)/5)))*g*f.open*ease(progress);
-   const a0=[a[0],a[1]-w,a[2]],a1=[a[0],a[1]+w,a[2]],b0=[b[0],b[1]-w,b[2]],b1=[b[0],b[1]+w,b[2]];
-   Geo.tri(seam,a0,b0,b1);Geo.tri(seam,a0,b1,a1);
-   for(const sg of [-1,1]){
-    const innerA=[a[0],a[1]+sg*w,a[2]+1],innerB=[b[0],b[1]+sg*w,b[2]+1];
-    const outA=[a[0],a[1]+sg*(w+2.5*g),a[2]+1.2+f.open*g*2],outB=[b[0],b[1]+sg*(w+2.5*g),b[2]+1.2+f.open*g*2];
-    Geo.tri(lip,innerA,innerB,outB);Geo.tri(lip,innerA,outB,outA);
-   }
-   // Fine light only inside the fissure; dark opening stays readable.
-   R.line([a[0],a[1],a[2]+.2],[b[0],b[1],b[2]+.2],.75*g,'#b7dfff',{mode:6,alpha:f.fade*.72});
-   if(i%2===0){
-    const sg=i%4===0?1:-1,len=(14+rnd(i+23)*22)*g*f.growth;
-    const mid=[b[0]+sg*len*.4,b[1]+sg*len*.52,b[2]+.4],end=[mid[0]-len*.23,mid[1]+sg*len*.40,mid[2]];
-    R.line(b,mid,2.3*g,'#152531',{mode:6,alpha:f.fade,add:false,transparent:true});
-    R.line(mid,end,1.2*g,'#152531',{mode:6,alpha:f.fade,add:false,transparent:true});
-    R.line(b,mid,.45*g,'#a4d5fb',{mode:6,alpha:f.fade*.63});
-   }
-  }
-  // Ground is transient illusion only; geometry/data of the board never changes.
-  const fissureLines=R.fxList.splice(firstFx);
-  mesh(seam,'#09131c',{mode:6,alpha:f.fade*.96,add:false,transparent:true});
-  mesh(lip,'#49515a',{mode:6,alpha:f.fade*.70,add:false,transparent:true});
-  R.fxList.push(...fissureLines);
-  // Lifted angular fragments separate to either side, then settle. Fixed-size rocks.
-  for(let i=0;i<(quality.low?8:18);i++){
-   const seed=d.seed+i*43,sg=i%2?1:-1,delay=rnd(seed)*.045,age=q-delay;if(age<0)continue;
-   const sz=(3+rnd(seed+1)*5)*g,vel=40+rnd(seed+2)*55;
-   const h=Math.max(0,vel*age-230*age*age)*g;
-   const travel=(1-Math.exp(-age*7))*(12+rnd(seed+3)*13)*g;
-   const p=[T[0]+(rnd(seed+4)-.5)*span*1.65,T[1]+sg*travel,T[2]-20+h];
-   R.fx('rock',p,[sz,sz*.56,sz*.9],i%3?'#506b7d':'#92a0a1',[age*3+seed,sg*age*4,age],
-    {mode:0,alpha:f.fade,roughness:.85,metal:.03,transparent:true,add:false});
-  }
-  const expand=1-Math.pow(1-clamp(q/.32),3);
-  if(q<.32)ring([T[0],T[1],12],(11+expand*74)*g,'#adc7d7',(1-expand)*.56,1.03);
-  for(let i=0;i<(quality.low?4:9);i++){
-   const age=q-.035;if(age<0)continue;
-   const th=i/9*Math.PI*2,r=(8+Math.min(age,.35)*80)*g;
-   const p=[T[0]+Math.cos(th)*r,T[1]+Math.sin(th)*r*.30+age*11*g,21+i*.03];
-   const a=env(age,0,.78,.10,.39)*.26;
-   sprite(p,(28+age*35)*g,'#637c89',a,9,d.seed+i,.2*i);
-  }
- }
+ function swordPose(d,t){return Sky.pose(d,t,W,H,M);}
  function slash(d,s){
-  const pose=swordPose(d,s.t),{mat,L,target:T,motion:m}=pose;
-  // Crack pass beneath the blade, bloom and sparks. No foreground-wide shake.
-  if(s.after>=0)groundCleave(d,s,T);
-  if(m.visibility>.003){
-   const opt={roughness:.29,metal:.78,dissolve:1-m.visibility};
-   R.draw(blade,mat,'#7d94a8',opt);
-   R.draw(R.geo.box,M.mul(mat,M.trs([0,.40,.027],[0,0,0],[.008,.58,.006])),'#284963',{...opt,emission:.25});
-   R.draw(R.geo.box,M.mul(mat,M.trs([0,-.025,0],[0,0,.045],[.28,.043,.067])),'#c6a76b',opt);
-   R.draw(R.geo.cyl,M.mul(mat,M.trs([0,-.17,0],[0,0,0],[.057,.26,.057])),'#213646',{...opt,roughness:.65,metal:.12});
-   R.draw(R.geo.sphere,M.mul(mat,M.trs([0,-.315,0],[0,0,0],[.075,.075,.075])),'#a4dcff',{...opt,emission:.5});
+  let visual=d;
+  if(!manual && s.after>=0 && d.targetRef && typeof options.resolveTarget==='function'){
+   const live=options.resolveTarget(d.targetRef);
+   if(live) d.attachment={...d.to,x:live.x,y:live.y};
+   else if(d.attachment) return; // removed target: no persistent status on an empty slot
+   if(d.attachment) visual={...d,to:d.attachment};
   }
-  // Only a blade-history smear, never a full-screen beam or stretched sword.
-  const rows=[],stop=Math.min(s.t,s.hit),begin=Math.max(s.hit*.27,s.t-.095*d.scale);
-  if(stop>begin&&m.visibility>.01){
-   for(let i=0;i<16;i++){const p=swordPose(d,mix(begin,stop,i/15));rows.push([p.root,p.tip]);}
-   const verts=[];for(let i=0;i<rows.length-1;i++){
-    const [a,b]=rows[i],[c,e]=rows[i+1];if(V.len(V.sub(b,e))<.01)continue;
-    const u=i/(rows.length-1),v=(i+1)/(rows.length-1);
-    Geo.tri(verts,a,b,c,null,[u,0],[u,1],[v,0]);Geo.tri(verts,b,e,c,null,[u,1],[v,1],[v,0]);
-   }
-   mesh(verts,[.22,.52,.90],{mode:5,alpha:m.visibility*.34,time:s.t/d.scale});
-   if(rows.length>2)beam(rows.map(r=>r[1]),.85,[.65,1.15,1.55],m.visibility*.66);
+  if(manual && G.EmberBenchmarkArts?.supports(d.swordStyle)){
+   const r=G.EmberBenchmarkArts.reaction(d,s.t).target;
+   visual={...d,to:{...d.to,x:d.to.x+r[0],y:d.to.y+r[1]}};
   }
-  if(s.after<0){
-   const a=Math.sin(m.u*Math.PI)*.36;
-   R.glow([T[0],T[1],9],d.to.w*.44,'#96c5e4',a);
-  }else{
-   const q=s.after/d.scale,a=Math.exp(-q*27),g=clamp(d.to.w/116,.48,1.25);
-   R.glow(T,68*g,'#e2eeec',a*.76);
-   sparks(T,q,42,'#dfedee',d.seed,g*1.05);
-   sparks(T,q,14,'#ffcf8a',d.seed+81,g*.83);
-   R.line([T[0]-26*g,T[1]+4*g,36],[T[0]+26*g,T[1]-4*g,36],1.5*g,'#eaf4ff',{mode:6,alpha:a});
-  }
+  arts.render(visual,s,W,H,quality.low);
+ }
+ function remastered(d,s){
+  let visual=d;
+  const r=Rem.reaction(d,s.t).target;
+  if(!manual && s.after>=0 && d.targetRef && options.resolveTarget){
+   const live=options.resolveTarget(d.targetRef);
+   if(live)d.attachment={...d.to,x:live.x,y:live.y};
+   else if(d.attachment&&!d.visualOnly)return;
+   if(d.attachment)visual={...d,to:d.attachment,visualAngle:r[2]};
+  }else if(manual)visual={...d,to:{...d.to,x:d.to.x+r[0],y:d.to.y+r[1]},visualAngle:r[2]};
+  remaster.render({...visual,crowd:Math.max(1,instances.filter(x=>!x.visualOnly&&sample(x,lastNow).alive&&Math.abs(x.impact-d.impact)<260).length)},s,W,H,quality.low);
  }
  function electricity(d,s){
   const F=xyz(d.from,22),T=xyz(d.to,23),delta=V.sub(T,F),dist=V.len(delta)||1,dir=V.scale(delta,1/dist),per=[-dir[1],dir[0],0];
@@ -267,31 +187,32 @@ function create(canvas){
  }
  function draw(now){
   lastNow=now;if(quality.reduced){if(dirty)R.clear();dirty=false;return;}
-  const active=manual?instances:instances.filter(d=>now<d.impact+d.tail);
-  if(!manual)instances=active;
+  if(!manual)instances=instances.filter(d=>now<d.impact+d.tail-1e-6);
+  const active=instances.filter(d=>sample(d,now).alive);
+  options.onFrame?.(active,now,!!manual);
   if(!active.length){if(dirty)R.clear();dirty=false;stats.active=0;stats.particles=0;stats.drawCalls=0;return;}
   R.camera();R.lamp=[0,0,120];R.lampColor=[.15,.21,.27];R.begin((now-active[0].start)/1000);
   for(const d of active){const state=sample(d,now);if(!state.alive)continue;
-   if(d.kind==='breath')fire(d,state);else if(d.kind==='lightning')electricity(d,state);else slash(d,state);
+   if(d.lifecycle){let v=d;if(!manual&&d.targetRef&&options.resolveTarget){const p=options.resolveTarget(d.targetRef);if(p)v={...d,to:{...d.to,x:p.x,y:p.y}};}lifecycle.render(v,state,W,H,quality.low);}else if(d.kind==='breath')fire(d,state);else if(d.kind==='lightning')electricity(d,state);else if(d.kind==='slash')slash(d,state);else remastered(d,state);
   }
   const hasFire=active.some(d=>d.kind==='breath');
   R.flush();R.end({bloom:hasFire?.28:(quality.low?.34:.46),bloomThreshold:hasFire?.78:.28,referenceFlame:hasFire});dirty=true;
   stats={...stats,active:active.length,drawCalls:R.count,particles:R.particles.length/9,frames:stats.frames+1,hdr:R.hdr};
  }
- function clear(){instances=[];manual=null;R.clear();dirty=false;stats.active=0;stats.particles=0;stats.drawCalls=0;}
- function replay(ms){if(!last)return false;manual=true;instances=[{...last,start:0,impact:last.impact-last.start}];draw(ms);return true;}
+ function clear(){options.onClear?.();instances=[];manual=null;R.clear();dirty=false;stats.active=0;stats.particles=0;stats.drawCalls=0;}
+ function replayGroup(){
+  const id=lastGroup[0]?.sequenceId;
+  return id==null?lastGroup:lastGroup.concat(lifecycleTrace.filter(d=>d.sequenceId===id));
+ }
+ function replay(ms){if(!last)return false;manual=true;const origin=lastGroup[0]?.start??last.start;instances=replayGroup().map(d=>({...d,start:d.start-origin,impact:d.impact-origin}));draw(ms);return true;}
+ function replayUtility(ms){if(!lastUtility)return false;manual=true;instances=[{...lastUtility,start:0,impact:0}];draw(ms);return true;}
+ function replayLifecycle(ms){if(!lastLifecycleGroup.length)return false;manual=true;const o=lastLifecycleGroup[0].start;instances=lastLifecycleGroup.map(d=>({...d,start:d.start-o,impact:d.impact-o}));draw(ms);return true;}
  function advance(now){if(!manual)draw(now);}
  function setQuality(q){quality={...quality,...q};if(quality.reduced)clear();else{stage(W,H);dirty=true;}}
- return {emit,draw:advance,stage,clear,setQuality,replay,resume(){manual=null;instances=[];dirty=true;},
+ return {emit,replayLifecycle,get lifecycleTrace(){return lifecycleTrace.slice();},get lastLifecycleGroup(){return lastLifecycleGroup.map(d=>({...d}));},draw:advance,stage,clear,setQuality,replay,replayUtility,get lastUtility(){return lastUtility?{...lastUtility}:null;},get lastGroup(){return lastGroup.map(d=>({...d}));},get replayGroup(){return replayGroup().map(d=>({...d}));},resume(){options.onClear?.();manual=null;instances=[];dirty=true;},
   get available(){return !quality.reduced;},get stats(){return {...stats};},get last(){return last?{...last,from:{...last.from},to:{...last.to}}:null;},get trace(){return trace.slice();},
   diagnostics(){return{...stats,webgl:R.info(),error:R.gl.getError()};},
-  destroy(){clear();R.gl.deleteBuffer(blade.b);R.destroy();},_sample:sample,_swordPose:swordPose};
- function makeBlade(){
-  const out=[],outline=[[-.076,0],[-.061,.74],[0,.98],[.061,.74],[.076,0]];
-  for(let side of [-1,1])for(let i=0;i<outline.length;i++){
-   const a=outline[i],b=outline[(i+1)%outline.length];const av=[a[0],a[1],0],bv=[b[0],b[1],0];Geo.tri(out,[0,.42,.040*side],side>0?bv:av,side>0?av:bv);
-  }return out;
- }
+  destroy(){clear();arts.destroy();remaster.destroy();lifecycle.destroy();R.destroy();},_remasterFrame:(d,t)=>Rem.sample(d,t,W,H,quality.low),_sample:sample,_swordPose:swordPose,_swordArtFrame:(d,t)=>Arts.sample(d,t,W,H,quality.low)};
  function tube(points,radius,sides=6){
   const out=[];for(let i=0;i<points.length-1;i++){
    const a=points[i],b=points[i+1],D=V.sub(b,a);if(V.len(D)<.001)continue;

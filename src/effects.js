@@ -230,6 +230,17 @@ const EmberFX = (() => {
       return false;
     }
   }
+  function lifeCue(ctx,e,kind,box,options={}) {
+    if(!box||quality.reduced||!fx2()?.renderer3dAvailable||typeof EmberFx2.lifecycle!=="function")return false;
+    const ref=options.targetRef||{side:e.side,uid:e.uid||"hero"};
+    const key=[e.id||"event",kind,ref.side,ref.uid].join(":");
+    ctx.lifecycleSeen ||= new Set();if(ctx.lifecycleSeen.has(key))return false;
+    const previous=ctx.lifecycleBefore?.[refKey(ref)]||ctx.history?.[refKey(ref)];
+    const out=EmberFx2.lifecycle(kind,{at:fxBox(box),sourceCid:e.cid||previous?.cid||null,
+      previousCid:previous?.cid||null,artPosition:previous?.artPosition||null,targetRef:ref,sequenceId:ctx.sequence.id,groupId:"life-"+ctx.sequence.id,
+      seed:ctx.sequence.id*71+[...String(e.id||0)].reduce((n,c)=>(n*31+c.charCodeAt(0))%100003,0),timeScale:ctx.sequence.plan.scale,...options});
+    if(out)ctx.lifecycleSeen.add(key);return !!out;
+  }
   const fxBox = (box) =>
     box
       ? {
@@ -733,6 +744,7 @@ const EmberFX = (() => {
           ...pos(face),
           el,
           cid: el.dataset.cardid,
+          artPosition: el.querySelector(".minion-art img") ? getComputedStyle(el.querySelector(".minion-art img")).objectPosition : null,
           html: el.outerHTML,
         };
       });
@@ -2160,22 +2172,34 @@ const EmberFX = (() => {
     const { sequence } = ctx;
     if (!cast.kind) return;
     const from = anchors.resolve(cast.actor, sequence.anchors);
-    if (!from) return; // warned when the record was written
-    const targets = cast.targets
-      .map((ref) => anchors.resolve(ref, sequence.anchors))
-      .filter(Boolean);
-    if (cast.targets.length && !targets.length) return;
+    if (!from) return;
+    const sourceEvent = ctx.plan.beats[beatIndex]?.events?.[0];
+    const sourceCid = sourceEvent?.cid || null;
+    const remastered = fx2()?.renderer3dAvailable && typeof EmberRemasterArts !== "undefined" && EmberRemasterArts.supports(cast.kind);
+    let targetRefs = cast.targets;
+    let contactAt = cast.contactAt;
+    // Destroy/transform or a redundant status can have an explicit rule target
+    // without a damage/status contact beat. Never turn that cast into a self-hit.
+    // Untargeted spells must NOT inherit an arbitrary UI/test action target.
+    if (remastered && !targetRefs.length && EmberData.byId[sourceCid]?.target && sourceEvent?.target) {
+      const ref = sourceEvent.target;
+      if ((ref.side === "p" || ref.side === "e") && ref.uid != null) {
+        targetRefs = [ref];
+        contactAt = [cast.startAt + cast.duration];
+      }
+    }
+    const resolved = targetRefs.map((ref, i) => ({ ref, box: anchors.resolve(ref, sequence.anchors), at: contactAt[i] })).filter(x => x.box);
+    if (targetRefs.length && !resolved.length) return;
+    if (remastered) { const rec = sequence.records.get(beatIndex); if (rec) rec.remasterKind = cast.kind; }
     fxCall("cast", cast.kind, {
-      from: fxBox(from),
-      targets: targets.map(fxBox),
-      tier: cast.tier,
-      tint: cast.tint,
-      tintGrad: cast.tintGrad,
-      aoe: cast.aoe,
-      seed: sequence.id * 97 + beatIndex,
+      sourceCid, sourceRef: cast.actor,sequenceId:sequence.id,
+      from: fxBox(from), targets: resolved.map(x => fxBox(x.box)),
+      targetRefs: resolved.map(x => x.ref), swordStyle: cast.swordStyle,
+      tier: cast.tier, tint: cast.tint, tintGrad: cast.tintGrad,
+      aoe: cast.aoe, seed: sequence.id * 97 + beatIndex,
       timeScale: sequence.plan.scale,
       startedAt: sequence.origin + cast.startAt,
-      contactAt: cast.contactAt.map((ms) => sequence.origin + ms),
+      contactAt: resolved.map(x => sequence.origin + x.at),
     });
   }
 
@@ -2190,6 +2214,7 @@ const EmberFX = (() => {
       if (now >= sequence.origin + (track.markers?.endAt ?? Infinity))
         disposeCardMotion(sequence, track);
     const old = capture();
+    ctx.lifecycleBefore=old;
     ctx.render(frame);
     if (!isCurrentSequence(sequence)) return null;
     rebindReactions(sequence);
@@ -2273,11 +2298,12 @@ const EmberFX = (() => {
         if (!enterFrame(ctx, beat, i, beat.frame)) return;
         const rec = castFlash(ctx, i, cast, beat.kind === "power" ? "power" : "cast");
         rec.countered = !!beat.countered;
+        if(!beat.countered&&card?.type==="weapon")lifeCue(ctx,e,"weapon-equip",heroFace(ctx,e.side));
         const from = anchors.resolve(cast.actor, ctx.sequence.anchors);
         const school = beat.kind === "power" ? powerSchool(e.side, ctx.s) : schoolOf(card);
         rec.school = school;
         sound("play", from);
-        sound(card?.type === "weapon" ? "equip" : "cast-" + school, from);
+        if(!(fx2()?.renderer3dAvailable&&typeof EmberRemasterArts!=="undefined"&&EmberRemasterArts.supports(cast.kind))) sound(card?.type === "weapon" ? "equip" : "cast-" + school, from);
         if (e.side === "e" && card)
           reveal(
             card,
@@ -2322,25 +2348,37 @@ const EmberFX = (() => {
         });
         sequence.records.set(i, rec);
         if (!actorBox || !targetBox) return;
+        if(/class="[^"]*\bstealth\b/.test(old[refKey(e.from)]?.html||""))
+          lifeCue(ctx,e,"stealth-out",actorBox,{targetRef:e.from});
         if (beat.cutin) {
           const art = cutinArt(e.from, beat.sourceCid, ctx.s);
           if (art && !quality.reduced && fx2()?.available)
             fx2().cutin(art, { side: e.from.side });
         }
-        if (m.ranged) rangedRecoil(sequence, beat, e.from, actorBox, targetBox);
+        const skyStrike = fx2()?.renderer3dAvailable &&
+          EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid], beat.sourceCid)?.fx === "slash";
+        // Skyfall comes from offscreen, not a second body colliding with the card.
+        const swordStyle=EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid],beat.sourceCid)?.swordStyle;
+        const benchmark=skyStrike&&typeof EmberBenchmarkArts!=="undefined"&&EmberBenchmarkArts.supports(swordStyle);
+        const remasterKind=EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid],beat.sourceCid)?.fx;
+        const remastered=fx2()?.renderer3dAvailable&&typeof EmberRemasterArts!=="undefined"&&EmberRemasterArts.supports(remasterKind);
+        if(benchmark) rec.benchmarkStyle=swordStyle;
+        else if(remastered)rec.remasterKind=remasterKind;
+        else if (m.ranged || skyStrike) rangedRecoil(sequence, beat, e.from, actorBox, targetBox);
         else lunge(ctx, beat, i, e.from, actorBox, targetBox, old);
         // R3: a weapon needs its anticipation; a dragon needs an inhalation.
         // These are the SAME instance later consumed at contact, not extra casts.
         const preSpec = EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid], beat.sourceCid);
-        if (fx2()?.renderer3dAvailable && ["slash", "breath"].includes(preSpec?.fx)) {
+        if (fx2()?.renderer3dAvailable && (["slash", "breath"].includes(preSpec?.fx)||EmberRemasterArts.supports(preSpec?.fx))) {
           const started = fxCall("attack", preSpec.fx, {
             from: fxBox(actorBox), to: fxBox(targetBox),
+            swordStyle: preSpec.swordStyle, sourceCid: beat.sourceCid, sourceRef: e.from, targetRef: e.to,
             tier: outgoing?.tier || 1, tint: preSpec.tint || null,
             tintGrad: preSpec.tintGrad ?? null, ranged: m.ranged,
             startedAt: sequence.origin + beat.at,
             contactAt: sequence.origin + beat.at + m.contact,
             leadMs: m.contact, hitStopMs: m.hitStop,
-            seed: sequence.id * 97 + i, timeScale: sequence.plan.scale,
+            seed: sequence.id * 97 + i, timeScale: sequence.plan.scale,sequenceId:sequence.id,
           });
           if (started) { rec.meshPrelude = true; if (!m.ranged) rec.meshMelee = true; }
         }
@@ -2349,7 +2387,7 @@ const EmberFX = (() => {
         const { sequence } = ctx;
         if (performance.now() >= sequence.origin + beat.at + m.contact) return;
         if (sequence.records.get(i)?.meshPrelude) {
-          sound("swing", anchors.resolve(e.from, sequence.anchors));
+          if(!sequence.records.get(i)?.benchmarkStyle&&!sequence.records.get(i)?.remasterKind) sound("swing", anchors.resolve(e.from, sequence.anchors));
           return;
         }
         const actorBox = anchors.resolve(e.from, sequence.anchors),
@@ -2362,6 +2400,7 @@ const EmberFX = (() => {
             from: fxBox(actorBox),
             to: fxBox(targetBox),
             tier: beat.contacts[0]?.tier || 1,
+            swordStyle: spec?.swordStyle, sourceCid: beat.sourceCid,
             tint: spec?.tint || null,
             tintGrad: spec?.tintGrad ?? null,
             ranged: m.ranged,
@@ -2394,6 +2433,9 @@ const EmberFX = (() => {
               (p) => p.el?.dataset.uid === beat.sourceId,
             );
             cue(source, "亡语", "deathrattle");
+            const target=beat.contacts?.[bucket.contacts?.[0]]?.targetRef;
+            const to=target&&anchors.resolve(target,ctx.sequence.anchors);
+            if(source&&to)lifeCue(ctx,{id:"rattle-"+beat.sourceId},"trigger",to,{from:fxBox(source),targetRef:target});
           }
           Object.assign(ctx.history, old);
           let impactBox = null,
@@ -2411,7 +2453,7 @@ const EmberFX = (() => {
           if (Math.abs(bucket.at - beat.impulseAt) < 1e-6 && boxes.length) {
             const causeIndex = beat.contacts[bucket.contacts[0]].castBeat,
               cause = causeIndex !== null ? ctx.plan.beats[causeIndex] : null;
-            fxCall("impulse", {
+            if(!ctx.sequence.records.get(causeIndex)?.benchmarkStyle&&!ctx.sequence.records.get(causeIndex)?.remasterKind) fxCall("impulse", {
               at: boxes.map(fxBox),
               tier: beat.tier,
               cinematic: !!(cause?.cutin || (cause?.battlecry && cause.legendary)),
@@ -2420,7 +2462,7 @@ const EmberFX = (() => {
           if (impactBox) {
             const contact = beat.contacts[bucket.contacts[0]],
               cause = contact.castBeat !== null ? ctx.sequence.records.get(contact.castBeat) : null;
-            sound(cause ? "impact-" + (cause.school || "steel") : "damage", impactBox, {
+            if(!cause?.benchmarkStyle&&!cause?.remasterKind) sound(cause ? "impact-" + (cause.school || "steel") : "damage", impactBox, {
               gain: T.tiers[impactTier].volume,
               strength: T.tiers[impactTier].volume,
               heavy: impactTier === 3,
@@ -2453,6 +2495,11 @@ const EmberFX = (() => {
           if (landed.id === ctx.primaryLandingEventId && !landed.rebornFrom)
             sound("play", box, { gain: 0.8 });
           sound("summon", box);
+          if(box){
+            if(!landed.rebornFrom||!lifeCue(ctx,landed,"rebirth",box))
+              fxCall("cue","summon",{at:fxBox(box),targetRef:{side:landed.side,uid:landed.uid},sourceCid:landed.cid,seed:sequence.id*71+i,timeScale:sequence.plan.scale});
+            if(card?.tags?.includes("stealth"))lifeCue(ctx,landed,"stealth-in",box);
+          }
           if (card?.rarity === "legendary") sound("legendary", box);
           if (landed.rebornFrom) cue(box, "复生 · 1 生命", "reborn");
           if (beat.legendary && box && !quality.reduced) {
@@ -2529,6 +2576,7 @@ const EmberFX = (() => {
             releaseAttackOwner(key, false, owner);
           } else if (owner) releaseAttackOwner(key, false, owner);
           deathGhost(sequence, visual, schoolOf(EmberData.byId[e.cid]));
+          if(visual)fxCall("cue","demise",{at:fxBox(visual),sourceCid:e.cid,seed:sequence.id*71+i,timeScale:sequence.plan.scale});
           dropNumbers(key, scaled(sequence, T.death.freeze + T.death.dissolve));
           sequence.anchors.delete(key);
           soundBox ||= visual;
@@ -2559,6 +2607,11 @@ const EmberFX = (() => {
         for (const e of beat.events) {
           sound("draw", e.side === "p" ? { x: W * 0.72 } : { x: W * 0.55 });
           if (!quality.reduced) startDrawCardMotion(ctx.sequence, e, beat);
+          const tr=ctx.plan.cardTracks?.find(x=>x.sourceEventId===e.id);
+          if(e.side==="p")at(ctx,tr?.markers?.handoffAt??(beat.at+beat.hold*.78),()=>{
+            const el=document.querySelector(`#hand [data-hand="${e.uid}"]`),b=el&&pos(el);
+            if(b)lifeCue(ctx,e,"draw-arrive",b,{targetRef:{side:e.side,uid:"hand-"+e.uid}});
+          });
         }
       });
     },
@@ -2568,6 +2621,9 @@ const EmberFX = (() => {
         for (const e of beat.events) {
           const p = heroFace(ctx, e.side);
           sound("burn", p);
+          const anchor=EmberViewport.deckAnchor(e.side)||p;
+          const w=EmberViewport.mobile?72:104,drawBox={...anchor,w,h:w*1.40};
+          lifeCue(ctx,e,"overdraw",drawBox,{targetRef:{side:e.side,uid:"burn"},sourceCid:e.side==="p"?e.cid:null});
           cue(p, e.side === "p" && e.cid ? `${EmberData.byId[e.cid].name} · 手牌已满` : "手牌已满 · 焚毁", "burn");
         }
       });
@@ -2577,6 +2633,7 @@ const EmberFX = (() => {
         if (!enterFrame(ctx, beat, i, beat.frame)) return;
         for (const e of beat.events) {
           turnCue(e.side, beat.frame?.turn ?? ctx.s.turn);
+          lifeCue(ctx,e,"turn-ready",heroFace(ctx,e.side));
           sound(e.side === "p" ? "turn" : "turn-enemy");
         }
       });
@@ -2586,6 +2643,11 @@ const EmberFX = (() => {
         if (!enterFrame(ctx, beat, i, beat.frame)) return;
         for (const e of beat.events) {
           sound(e.winner === "p" ? "victory" : e.winner === "draw" ? "draw-result" : "defeat");
+          if(e.winner!=="draw"){
+            const loser=e.winner==="p"?"e":"p";
+            lifeCue(ctx,e,"hero-fall",heroFace(ctx,loser),{targetRef:{side:loser,uid:"hero"}});
+            lifeCue(ctx,e,e.winner==="p"?"victory":"defeat",heroFace(ctx,"p"),{targetRef:{side:"p",uid:"hero"}});
+          }
           if (e.winner !== "draw")
             cue(heroFace(ctx, e.winner === "p" ? "e" : "p"), "英雄倒下", "defeat");
         }
@@ -2605,7 +2667,11 @@ const EmberFX = (() => {
           );
           const caster = countered ? countered.cast.actor : null,
             casterBox = caster ? anchors.resolve(caster, sequence.anchors) : null;
-          if (casterBox) fxCall("contact", { at: fxBox(casterBox), tier: 1 });
+          lifeCue(ctx,e,"secret-reveal",box,{targetRef:owner});
+          if (casterBox) {
+            lifeCue(ctx,e,"counterspell",casterBox,{from:fxBox(box),targetRef:caster});
+            fxCall("contact", { at: fxBox(casterBox), tier: 1 });
+          }
           tracePush({
             beat: i,
             sequence: sequence.id,
@@ -2631,7 +2697,7 @@ const EmberFX = (() => {
         for (const e of beat.events) {
           const box = heroFace(ctx, e.side);
           cue(box, e.broken ? "武器损坏" : "耐久 −1", "weapon");
-          if (e.broken) sound("weapon-break", box);
+          if (e.broken) {sound("weapon-break", box);lifeCue(ctx,e,"weapon-break",box);}
         }
       });
     },
@@ -2654,6 +2720,7 @@ const EmberFX = (() => {
       at(ctx, beat.at, () => {
         if (!enterFrame(ctx, beat, i, beat.frame)) return;
         phaseChange(ctx.s, beat.hold);
+        lifeCue(ctx,beat.events[0]||{},"awaken",heroFace(ctx,"e"),{targetRef:{side:"e",uid:"hero"}});
       });
     },
   };
@@ -2679,12 +2746,20 @@ const EmberFX = (() => {
     const sourceless = contact.direction === "sourceless" || !cause;
     if (event.type === "damage") {
       const loss = event.loss ?? event.amount;
+      if(ref.uid==="hero"&&!event.from){
+        const current=ctx.s?.[ref.side]?.fatigue||0;
+        if(current>(ctx.lifecycleFatigue?.[ref.side]||0)){
+          lifeCue(ctx,event,"fatigue",box);ctx.lifecycleFatigue[ref.side]=(ctx.lifecycleFatigue[ref.side]||0)+1;
+        }
+      }
       if (event.absorbed) {
+        lifeCue(ctx,event,"armor-break",box);
         cue({ ...box, y: box.y - 24 }, `护甲吸收 ${event.absorbed}`, "armor");
         sound("armor", box);
       }
       if (loss > 0) {
-        startReaction(sequence, ref, actorBox, timing);
+        if(!((cause?.benchmarkStyle||cause?.remasterKind) && contact.direction === "outgoing"))
+          startReaction(sequence, ref, actorBox, timing);
         numberAt = number(numberSpot(contact, box, actorBox), loss, "damage", { key, tier });
         if (contact.direction === "outgoing" && cause && !cause.ranged && !cause.meshMelee) {
           const spec = EmberFXProfiles.fx2Attack(EmberData.byId[contact.sourceCid], contact.sourceCid);
@@ -2692,6 +2767,7 @@ const EmberFX = (() => {
             from: fxBox(actorBox),
             to: fxBox(box),
             tier,
+            swordStyle: spec?.swordStyle, sourceCid: contact.sourceCid, targetRef: ref,sequenceId:sequence.id,
             tint: spec?.tint || null,
             tintGrad: spec?.tintGrad ?? null,
             ranged: false,
@@ -2705,10 +2781,13 @@ const EmberFX = (() => {
       startReaction(sequence, ref, actorBox, { ...timing, recoilPx: T.tiers[1].recoilPx });
       numberAt = number(box, 0, "shield", { key });
       sound("shield", box);
+      if(!lifeCue(ctx,event,"shield-break",box))
+        fxCall("cue","ward",{at:fxBox(box),targetRef:ref,seed:sequence.id*71+index,timeScale:sequence.plan.scale});
       if (sourceless || contact.direction === "retaliation") fxCall("contact", { at: fxBox(box), tier: 1 });
     } else if (event.type === "heal") {
       numberAt = number(box, event.amount, "heal", { key });
       sound("heal", box);
+      if(!cause?.remasterKind)fxCall("cue","heal",{at:fxBox(box),targetRef:ref,seed:sequence.id*71+index,timeScale:sequence.plan.scale});
       if (sourceless) fxCall("contact", { at: fxBox(box), tier: 1 });
     } else if (event.type === "status") {
       statusCue(ctx, event, box);
@@ -2776,7 +2855,10 @@ const EmberFX = (() => {
   function statusCue(ctx, e, box) {
     cue(box, STATUS_LABELS[e.kind]?.(e) || e.kind, e.kind);
     if (STATUS_SOUNDS[e.kind]) sound(STATUS_SOUNDS[e.kind], box, { gain: 0.6 });
-    if (e.kind === "transform" && !quality.reduced) {
+    const identity=typeof EmberLifecycleArts!=="undefined"?EmberLifecycleArts.kindFor(e):null;
+    const played=identity&&lifeCue(ctx,e,identity,box);
+    if(e.kind==="thaw"&&played)sound("freeze",box,{gain:.35});
+    if (e.kind === "transform" && !quality.reduced && !played) {
       const el = unit(e.side, e.uid);
       if (el)
         animate(
@@ -2840,7 +2922,7 @@ const EmberFX = (() => {
       else if (ctx.kind === "battlecry")
         spec = EmberFXProfiles.fx2Cast(ctx.battlecry, EmberData.byId[ctx.cid]);
       return spec
-        ? { kind: spec.fx, tint: spec.tint || null, tintGrad: spec.tintGrad ?? null }
+        ? { kind: spec.fx, tint: spec.tint || null, tintGrad: spec.tintGrad ?? null, swordStyle: spec.swordStyle || null }
         : null;
     };
   }
@@ -2885,6 +2967,7 @@ const EmberFX = (() => {
       events,
       s,
       history: capture(),
+      lifecycleFatigue:{p:before?.p?.fatigue||0,e:before?.e?.fatigue||0},
       seenRattles: new Set(),
       primaryLandingEventId:
         plan.cardTracks?.find((track) => track.sourceEventId === primary?.id)?.landingEventId || null,

@@ -208,7 +208,7 @@ const EmberCombat = (() => {
             ? profiles.fx2(cid)
             : null;
       return spec
-        ? { kind: spec.fx, tint: spec.tint || null, tintGrad: spec.tintGrad ?? null }
+        ? { kind: spec.fx, tint: spec.tint || null, tintGrad: spec.tintGrad ?? null, swordStyle: spec.swordStyle || null }
         : null;
     } catch {
       return null;
@@ -492,6 +492,7 @@ const EmberCombat = (() => {
         kind: spec?.kind || null,
         tint: spec?.tint || null,
         tintGrad: spec?.tintGrad ?? null,
+        swordStyle: spec?.swordStyle || null,
         actor: plainRef(actor),
         targets: targets.map((t) => t.ref),
         tiers: targets.map((t) => t.tier),

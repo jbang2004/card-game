@@ -82,5 +82,16 @@
   "SKIN_SLATE_CONSOLE": "presentation/skins/slate/console.css",
   "MESH_RENDERER": "vfx3/renderer.js",
   "MESH_RUNTIME": "vfx3/runtime.js",
-  "MESH_REFERENCE": "vfx3/reference-flame.js"
+  "MESH_REFERENCE": "vfx3/reference-flame.js",
+  "MESH_SKYFALL": "vfx3/skyfall.js",
+  "MESH_SWORD_ARTS": "vfx3/sword-arts.js",
+  "BENCHMARK_ARTS": "vfx3/benchmark-arts.js",
+  "BENCHMARK_CUES": "vfx3/benchmark-cues.js",
+  "BENCHMARK_FEEDBACK": "presentation/benchmark-feedback.js",
+  "REMASTER_ARTS": "vfx3/remaster-arts.js",
+  "REMASTER_CUES": "vfx3/remaster-cues.js",
+  "REMASTER_FEEDBACK": "presentation/remaster-feedback.js",
+  "LIFECYCLE_ARTS": "vfx3/lifecycle-arts.js",
+  "LIFECYCLE_FEEDBACK": "presentation/lifecycle-feedback.js",
+  "LIFECYCLE_STYLE": "presentation/skins/slate/lifecycle.css"
 }

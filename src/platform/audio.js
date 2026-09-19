@@ -205,9 +205,9 @@ const EmberAudio = (() => {
     track(
       source,
       [source, level],
-      ctx.currentTime + buffer.duration / currentVoice.pitch,
+      currentVoice.start + buffer.duration / currentVoice.pitch,
     );
-    source.start();
+    source.start(currentVoice.start);
     return true;
   }
   function cast(s) {
@@ -459,9 +459,11 @@ const EmberAudio = (() => {
       send,
       nodes: [input, send, pan],
       sources: [],
+      start: (type.startsWith("benchmark-") || type.startsWith("remaster-")) && Number.isFinite(options.atMs)
+        ? now + Math.max(0, (options.atMs - performance.now()) / 1000) : now,
       end: now,
       priority,
-      pitch: /turn|victory|defeat|draw-result/.test(type)
+      pitch: /turn|victory|defeat|draw-result|benchmark-|remaster-/.test(type)
         ? 1
         : 0.97 + Math.random() * 0.06,
     };
@@ -469,6 +471,12 @@ const EmberAudio = (() => {
     currentVoice = voice;
     try {
       let id = type;
+      if((type.startsWith("benchmark-") || type.startsWith("remaster-")) && typeof EmberBenchmarkCues!=="undefined" && !buffers.has(type)){
+        const parts=type.split("-"),cue=parts.pop(),style=parts.slice(1).join("-");
+        const bank=type.startsWith("remaster-")?EmberRemasterCues:EmberBenchmarkCues;
+        const pcm=bank.pcm(style,cue,ctx.sampleRate);
+        const buffer=ctx.createBuffer(1,pcm.length,ctx.sampleRate);buffer.copyToChannel(pcm,0);buffers.set(type,buffer);
+      }
       if (type.startsWith("impact-"))
         id = options.heavy ? "impact-heavy" : "impact-light";
       if (type === "summon" || type === "land") id = "table-thump";
@@ -486,7 +494,7 @@ const EmberAudio = (() => {
         }[id] || id;
       const sampled = sample(
         id,
-        ui ? 0.18 : type.startsWith("impact-") ? 0.23 : 0.3,
+        ui ? 0.18 : (type.startsWith("benchmark-") || type.startsWith("remaster-")) ? 0.65 : type.startsWith("impact-") ? 0.23 : 0.3,
       );
       // Elemental magic and weight remain responsive, even before decoding.
       if (
@@ -499,6 +507,7 @@ const EmberAudio = (() => {
       history.push({
         type,
         at: performance.now(),
+        ...((type.startsWith("benchmark-") || type.startsWith("remaster-")) ? { scheduledAt: Number.isFinite(options.atMs) ? options.atMs : performance.now() } : {}),
         sampled,
         pan: pan.pan.value,
         strength: intensity,

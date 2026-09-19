@@ -98,6 +98,78 @@ if(uMode>10.5&&uMode<11.5){
  a*=(1.-smoothstep(.18+n*.35,.70+n*.31,d))*(.40+n*.55);
  c=mix(vec3(2.5,.38,.015),vec3(4.1,2.15,.38),smoothstep(.23,.68,n+(1.-d)*.25));
 }
+// R6 sword-light material: striated energy, a fine bright lip, soft exterior.
+// Separate mode; original flame/smoke branches and post-processing are untouched.
+if(uMode>11.5&&uMode<12.5){
+ float u=vUV.x,v=vUV.y;
+ float feather=pow(max(0.,sin(v*3.14159265)),.70);
+ float endMask=smoothstep(0.,.025,u)*(1.-smoothstep(.955,1.,u));
+ float wave=sin(u*19.-uTime*8.+uSurface)*.035;
+ float striation=.5+.5*sin(v*79.+sin(u*13.+uTime*4.)*2.2);
+ float grain=fbm(vec2(u*21.-uTime*2.2,v*13.+uSurface));
+ float lip=exp(-pow((v-.78-wave)*31.,2.));
+ float spine=exp(-pow((v-.53+wave*.5)*52.,2.));
+ c=c*(.56+grain*.34+striation*.12)+vec3(1.8,1.94,2.08)*lip*.84+vec3(.42,.60,.70)*spine;
+ a*=feather*endMask*(.70+grain*.30);
+}
+
+// R8 independent materials: broad holy bevels, crystalline optical planes,
+// and an opaque shadow incision. Reference flame 8/9 and post remain untouched.
+if(uMode>12.5&&uMode<13.5){
+ float u=vUV.x,v=vUV.y,edge=abs(v-.5)*2.;
+ float flow=fbm(vec2(u*12.-uTime*1.9,v*4.7+uSurface));
+ float ridge=exp(-pow((v-.52)*24.,2.));
+ float left=1.-smoothstep(.10,.48,v),right=smoothstep(.54,.94,v);
+ c=mix(vec3(.40,.095,.008),vec3(2.15,.91,.08),.23+left*.67+right*.38);
+ c*=.91+flow*.18;
+ float fil=pow(.5+.5*sin(v*37.+sin(u*13.-uTime*2.)*.7),13.);
+ c+=vec3(2.6,1.84,.67)*(pow(edge,24.)*.83+ridge*.50+fil*.075);
+ float noiseValue=.12+fbm(vec2(u*41.,v*13.+uSurface))*.87+u*.09;
+ float erode=smoothstep(uDissolve-.03,uDissolve+.035,noiseValue);
+ c+=vec3(1.6,.61,.05)*(1.-smoothstep(.0,.08,abs(noiseValue-uDissolve)))*step(.01,uDissolve);
+ a*=erode*(1.-smoothstep(.984,1.,edge));
+}
+if(uMode>13.5&&uMode<14.5){
+ float u=vUV.x,v=vUV.y,edge=abs(v-.5)*2.;
+ float facets=fract(u*4.8+v*.72);
+ float plane=step(.49,facets),bevel=step(.76,abs(v-.49)*2.);
+ float optic=.5+.5*sin(u*9.+v*5.2);
+ c=mix(vec3(.035,.14,.29),vec3(.32,.73,1.0),plane*.77+bevel*.23);
+ c*=.76+optic*.35;
+ float crack=1.-smoothstep(.003,.012,abs(facets-.50));
+ float ridge=exp(-pow((v-.53)*45.,2.));
+ c+=vec3(.87,1.58,2.12)*(pow(edge,28.)*.94+crack*.53+ridge*.51);
+ float cells=fbm(vec2(floor(u*24.),floor(v*9.))+uSurface);
+ float erode=smoothstep(uDissolve-.035,uDissolve+.02,.14+cells*.86+u*.08);
+ a*=.96*erode*(1.-smoothstep(.989,1.,edge));
+}
+if(uMode>14.5&&uMode<15.5){
+ float u=vUV.x,v=vUV.y;
+ float n=fbm(vec2(u*12.-uTime*3.,v*3.+uSurface));
+ c*=.82+n*.29;
+ a*=(1.-smoothstep(.90,1.,abs(v-.5)*2.))*smoothstep(0.,.014,u)*(1.-smoothstep(.992,1.,u));
+}
+if(uMode>15.5&&uMode<16.5){
+ vec2 q=(vUV-.5)*2.,grid=vUV*vec2(8.,10.);
+ vec2 cell=floor(grid),local=fract(grid);
+ float first=9.,second=9.;vec2 nearest=vec2(0.);
+ for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){
+  vec2 off=vec2(float(x),float(y));
+  vec2 seed=cell+off;
+  vec2 p=off+vec2(hash(seed),hash(seed+17.31))*.78+.11-local;
+  float dist=dot(p,p);
+  if(dist<first){second=first;first=dist;nearest=seed;}else if(dist<second){second=dist;}
+ }
+ float seam=1.-smoothstep(.008,.07,second-first);
+ float grain=fbm(vUV*64.),facet=hash(nearest+4.3);
+ float r=length(q*vec2(1.,.94));
+ float silhouette=1.-smoothstep(.78+grain*.13,.94+grain*.08,r);
+ float grow=1.-smoothstep(uSurface*1.38-.13,uSurface*1.38+.07,r);
+ c=mix(vec3(.055,.20,.35),vec3(.46,.78,.97),facet*.74+grain*.20);
+ c+=vec3(.58,.92,1.12)*seam*.57;
+ a*=silhouette*grow*(.26+seam*.31+grain*.23);
+}
+
 if(a<.004)discard;gl_FragColor=vec4(c,a);}`;
 const pvs=`attribute vec3 aPos;attribute vec4 aColor;attribute vec2 aInfo;uniform mat4 uVP;uniform float uScale;varying vec4 vC;varying float vType;void main(){vec4 p=uVP*vec4(aPos,1.);gl_Position=p;gl_PointSize=clamp(aInfo.x*uScale,1.,120.);vC=aColor;vType=aInfo.y;}`;
 const pfs=`precision mediump float;varying vec4 vC;varying float vType;void main(){vec2 q=gl_PointCoord*2.-1.;float d=length(q),a=0.;if(vType<.5)a=pow(max(0.,1.-d),2.);else if(vType<1.5){a=pow(max(0.,1.-abs(q.x)),6.)*pow(max(0.,1.-abs(q.y)),.5)+pow(max(0.,1.-abs(q.x)),.5)*pow(max(0.,1.-abs(q.y)),6.);}else a=step(abs(q.x)+abs(q.y),.9);gl_FragColor=vec4(vC.rgb,vC.a*a);}`;

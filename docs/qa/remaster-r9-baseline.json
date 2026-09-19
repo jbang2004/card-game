@@ -1,0 +1,11 @@
+{
+  "src/vfx3/reference-flame.js": "13760d9670d88ec107a0e5830411f8f4c467ad1a9897853d6e576a27e32597e8",
+  "src/vfx3/benchmark-arts.js": "87b1185b9534643224d2b034100e1df7a293bbdd0c4cb6921b86e29c37c1d9e8",
+  "src/vfx3/benchmark-cues.js": "f1b7b3fbb753bd16692f7b138f8a732818cfaf3226df2e187bd6c6e755c66d37",
+  "src/presentation/benchmark-feedback.js": "3e4f09d4094e405776accbd20416c03e6f2951df65505a127380ad4884857bfa",
+  "src/vfx3/renderer.js": "480ef9455041ed8dfd4e7bda746db1ca20c11e799e0bb256a9d449706fab9b57",
+  "src/engine.js": "137f55810e5657c8aed232805821e42ba7aa1d7a1ddfd456b0982dee425c8c82",
+  "src/content/cards.js": "652aa68c033e08e9aab4198d27bfc75c08359828bffb36f3f555bdc87a36262f",
+  "src/content/campaign.js": "b5075d1f560b54d5ebb5f8bfc3a8b074540c146eb8e5a3fd5cbcdcdb389ed6bf",
+  "src/presentation/timing.js": "35405a98b161d7f89d97ba1ecea61ea8af246c49f1c71d60d981ed18d2347fb7"
+}
