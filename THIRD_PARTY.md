@@ -56,3 +56,7 @@ The sections above describe historical editions. The current game uses Canvas/DO
 - Removed 2026-09-17: Kenney Particle Pack (https://kenney.nl/assets/particle-pack, CC0 1.0) masks and Mikodrak 2D Spell Effects (https://opengameart.org/content/2d-spell-effects, CC0 1.0) atlases. They were only used by the retired EmberVFX canvas renderer; `assets/vfx/` and its retained originals are no longer in the repository or the build. Combat effects now use the single EmberFx2 backend described in `docs/design/BATTLE_PRESENTATION_V2.md`.
 
 CC0 terms: https://creativecommons.org/publicdomain/zero/1.0/. Manifests record source URLs, original/derived hashes, author and processing. The game loads these locally, including the portable build. Elemental sound design also uses Web Audio synthesis. No Blizzard/Hearthstone audio or effect assets are redistributed.
+
+## Card relief maps · 2026-09-21
+
+`art/relief/*.webp` are derived from this project's own hero portraits. Their height channel is the output of Depth Anything V2 Small (Apache-2.0, ONNX export at https://huggingface.co/onnx-community/depth-anything-v2-small) run locally by `tools/bake_card_relief.py`. The model weights are an authoring input only; they are not redistributed, tracked or loaded by the game.

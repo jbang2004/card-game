@@ -1174,6 +1174,12 @@
       el.addEventListener("mouseleave", hidePreview);
     });
     restoreHandScroll();
+    EmberCardRelief.warm(
+      [...document.querySelectorAll("#hand .hand-card")].map((el) => ({
+        id: el.dataset.cardid,
+        image: el.querySelector(".card-art img"),
+      })),
+    );
     window.EmberMobile?.afterRender(s);
     if (readingUid) syncHandLift();
     updateSelection();
@@ -1229,6 +1235,11 @@
       el.classList.add("open");
     });
     if (!detail.pinned) placeHoverDetail();
+    EmberCardRelief.mountCard(el.querySelector(".card"), {
+      id: c.id,
+      rarity: c.rarity,
+      anchor: detail.source,
+    });
   }
   /* Desktop battle hover is deliberately fixed on the left, restoring one
    * stable reading position instead of duplicating the card over the hand. */
@@ -1263,6 +1274,7 @@
     detail.source = null;
     document.body.classList.remove("has-card-detail");
     const el = $("card-preview");
+    if (el.querySelector(".card-relief-canvas")) EmberCardRelief.release();
     el.classList.remove("open");
     el.style.display = "none";
     el.setAttribute("aria-hidden", "true");
@@ -1298,6 +1310,7 @@
     detail.source = null;
     document.body.classList.remove("has-card-detail");
     const el = $("card-preview");
+    if (el.querySelector(".card-relief-canvas")) EmberCardRelief.release();
     el.classList.remove("open");
     el.style.display = "none";
     el.setAttribute("aria-hidden", "true");
@@ -1639,6 +1652,11 @@
         ],
         { duration: 180, easing: "cubic-bezier(.2,.8,.2,1)" },
       );
+    EmberCardRelief.mountCard(lift.querySelector(".card"), {
+      id: card.cid,
+      rarity: D.byId[card.cid].rarity,
+      steer: "held",
+    });
   }
   function selectCard(uid) {
     if (!inBattle || modalType || EmberFX.busy) return;
@@ -1770,6 +1788,8 @@
   function clearSelection() {
     readingUid = null;
     app.classList.remove("reading-hand");
+    if ($("hand-card-lift")?.querySelector(".card-relief-canvas"))
+      EmberCardRelief.release();
     $("hand-card-lift")?.remove();
     document.querySelectorAll("#hand .reading-source").forEach((el) => {
       el.classList.remove("reading-source");
@@ -1925,6 +1945,7 @@
     const d = drag;
     drag = null;
     if (d.timer) clearTimeout(d.timer);
+    if (d.ghost) EmberCardRelief.release();
     d.ghost?.remove();
     d.el?.classList.remove("drag-source", "drag-armed");
     clearSelection();
@@ -1956,6 +1977,11 @@
     ghost.style.left = d.x + "px";
     ghost.style.top = d.y - (d.lift || 0) + "px";
     const c = D.byId[d.cid];
+    EmberCardRelief.mountCard(ghost.querySelector(".card"), {
+      id: c.id,
+      rarity: c.rarity,
+      steer: "drag",
+    });
     if (c.target) {
       selection = { type: "card", uid: d.uid, cid: d.cid };
       updateSelection();
@@ -1966,6 +1992,9 @@
    * only leaves the hand when the drop is legal (unit -> legal target, or
    * anywhere in the play area for a card that needs no target). */
   function finishDrag(d, e) {
+    /* The ghost's markup seeds the card-motion proxy; return it flat first so
+     * the proxy does not inherit a frozen lean or an empty canvas. */
+    EmberCardRelief.release();
     const source = d.ghost || d.el;
     const origin = captureCardOrigin({
       side: "p",

@@ -313,6 +313,16 @@ const EmberContractUI = (() => {
       stageLayout();
       const holder = stageEl.querySelector(".god-ritual-holder");
       const c = D.byId[stageCtx.ids[stageCtx.focus]];
+      /* The relief face belongs to the card in front, like the tilt: it follows
+       * the stage's own tilt rather than adding a second one. */
+      const front = stageCtx.cards[stageCtx.focus];
+      EmberCardRelief.mountCard(front.querySelector(".god-card-front .card"), {
+        id: c.id,
+        rarity: c.rarity,
+        steer: "follow",
+        tilt: false,
+        anchor: front,
+      });
       holder.innerHTML = ritualHTML(game.s.p, c);
       bindRitual();
     }
@@ -337,6 +347,7 @@ const EmberContractUI = (() => {
       if (!el) return;
       stageEl = null;
       stageCtx = null;
+      if (el.querySelector(".card-relief-canvas")) EmberCardRelief.release();
       document.removeEventListener("keydown", stageKey, true);
       const drop = () => el.remove();
       if (!animate) return drop();
@@ -490,6 +501,7 @@ const EmberContractUI = (() => {
           const card = stageCtx?.cards[stageCtx.focus];
           card?.style.removeProperty("--tilt-x");
           card?.style.removeProperty("--tilt-y");
+          EmberCardRelief.rest();
         },
         { passive: true },
       );

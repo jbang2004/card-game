@@ -57,6 +57,18 @@ AI 是独立的参数化启发式策略。其取舍会与旧版略有不同，�
 
 `atelier-world.js` 是桌面、手机共用的 Canvas 场景，无代理层，无 WebGL/CDN 加载。旧 Three.js、TavernWorld、MobileWorld、程序化卡图及未使用的兼容素材缓存已删除。
 
+### 卡面浮雕（2026-09-21）
+
+`presentation/card-relief.js`（`EmberCardRelief`）给"正在被呈现的那一张卡"绘制立体卡面。同一时刻只有一个挂载，因此只有一个 WebGL2 上下文、一张画布、一个全屏三角形；它不依赖 Three.js。四个调用点：`application/screens/heroes.js` 的预览卡（`mount`）；`ui.js` 的 `syncHandLift` 给点选后原地抬起阅读的手牌 `#hand-card-lift`（`mountCard`，`steer: "held"`——桌面点击与触屏点牌都走这条，是最主要的"提起"路径）；`startDrag` 给拖拽幽灵卡（`steer: "drag"`）；`showCardDetail` 给放大详情卡（以来源卡为指针锚点）。第五个调用点在 `application/contracts.js`：战场里神祇舞台（`#god-stage`）居前的那张契约卡，`stageFocus` 时 `mountCard(..., { steer: "follow", tilt: false })`。舞台自己已有 ±6° 的指针倾斜（`--tilt-x/y`），所以浮雕不再给卡加第二个变换，只按同一指针位置、略宽的虚拟转角（±0.24 rad）给卡面打光和算视差，不自摆、不响应触摸（舞台对手指也不倾斜）；指针离开舞台时 `rest()` 回正，`closeStage` 时释放。"诸神契约"页面的半屏肖像是场景背景而不是卡，刻意不加浮雕。另有三处"把卡摆到玩家面前"的界面：图鉴的"卡牌详情"大卡（`library.js`，`mountCard`，`held`）；开局换牌与"发现"三选一（`screens/heroes.js`、`screens/campaign.js`）用 `attend(choices, describe, initial)`——一排卡里只有玩家正在关注的那张是立体的，并保持到关注下一张为止；换牌每次切换都会重画整排，被点的那张经 `initial` 立刻接回。`attend` 只认真实的关注：重画把卡滑到静止指针下产生的 `pointerenter`（坐标未变）不算，对话框把焦点停在第一个按钮（非 `:focus-visible`）也不算。成排的卡下方紧贴标签，所以用 `hinge`：以底边为轴、先绕 X 后绕 Y（CSS `rotateY rotateX`，着色器同步用 R = Ry·Rx），底边严格不动，`responsive-component-style` 守的 8px 标签间距不受影响。图鉴格子、静置手牌与场上随从保持平面——规则是：单独拿到玩家面前的卡是立体的，成排成片的不是。战役奖励发的是遗物，没有卡。从抬起卡直接拖出时，`clearSelection` 先释放，幽灵卡再接手，任何时刻只有一张画布。战场上静置的手牌与随从仍是平面 `<img>`。
+
+几何倾斜不在 WebGL 里做——模块把同一组角度写进 `tiltTarget` 的 `--relief-rx` / `--relief-ry`，由皮肤层的 CSS 3D 变换转动整张 DOM 卡，所以卡名、费用、攻血徽章、边框和渐变随卡一起转，仍是实时 DOM；着色器只按这组角度计算视线、光照与视差。画布以 `append` 挂在原 `<img>` 之后、`::after` 渐变之前——卡牌的 `<img>` 是绝对定位，两者同为定位元素时由文档顺序决定谁在上；曾经用 `prepend` 导致画布一直被原图盖住，而类名、角度等断言全部通过，所以 `tests/e2e/card-relief.spec.cjs` 的 `expectReliefVisible` 会把原图涂黑后截图，确认玩家看到的确实是画布——并按 `object-position` 对齐裁切，就绪前后不跳变；被克隆的卡（冲撞克隆、出牌代理）因此仍显示平面原图。`finishDrag` / `cancelDrag` 在交出幽灵卡标记前先 `release()`，出牌代理不会继承冻结的倾角或空画布。
+
+光照分三层：原画自带光影，漫反射只轻靠主光；金属按遮罩去掉大部分漫反射，改由预烘环境贴图 `art/relief/studio.webp` 按粗糙度取样的反射补回，哑光区以 `(1-roughness)²` 挡掉环境反射以免整面泛灰；清漆是平整的一层，由两盏近处条灯给出窄斜光带。材质按稀有度分档（见 ASSETS.md）。视差深度以图高为单位：肖像卡 0.06，普通卡 0.095——小卡的插画只是一个被裁切的小窗口，需要更深的景深才读得出分层。正视时卡面与原插画一致。
+
+三种驱动，倾角都由阻尼弹簧推进（半隐式欧拉、1/120 秒子步；少量过冲给卡以重量感）：`pointer` 让卡朝向指针（±0.3 / ±0.2 rad，9 rad/s、阻尼比 0.8），挂载即开始缓慢自摆；`held` 同样朝向指针但以整张卡为参照（横穿卡面即扫满 ±0.34 / ±0.24 rad；10 rad/s、0.7），0.9 秒无输入开始自摆，让无法悬停的手指也能看到纵深；`drag` 按手的移动速度倾斜（约 1.2 px/ms 为满倾，±0.42 / ±0.32 rad；13 rad/s、0.5，手停后会回摆一下），停住 0.5 秒后轻摆，触屏拖拽同样生效。
+
+按需绘制：只有姿态在变（或宿主尺寸变了，由 `ResizeObserver` 标脏）才重画；自摆按 30 帧绘制；自摆持续 12 秒后回正，此后完全不绘制、不占 rAF，直到指针再动（`diagnostics().asleep`）。`ui.js` 每次渲染手牌后调用 `warm()`：空闲时建好 GPU 管线（在一个隐藏像素上空画一次）并上传手牌的贴图，因此抬起任意手牌都在一两帧内就绪；颜色贴图直接取页面上已解码的 `<img>`，不重复解码。减少动态模式下保持正视并只绘制一帧。页面隐藏或宿主离开文档即停止循环并释放挂载。GPU 上只保留最近 40 张贴图（满手十张牌各三张，加当前展示的）。WebGL2 不可用或上下文丢失时发一条警告并永久回退到平面原图；单张贴图解码失败只跳过那张卡。`diagnostics()` 为只读快照，`pose(x, y)` 是供走查与端到端测试冻结姿态的钩子。样式归属 `presentation/skins/slate/card-relief.css`。
+
 `art.js` 只有 `card` / `character` / `relic` / `icon` 四种明确接口，启动时校验所有图片。角色通过 `portraitId` 指定图像，卡牌与首领同名不会再依赖 palette 猜路由。`atelier-art.js` 仅负责裁切焦点。接口不再被后续脚本覆盖。
 
 `application/library.js` 拥有组牌草稿和过滤器，应用只注入导航、存储、牌组校验和预览回调。界面其余流程仍在 `ui.js`，没有为拆文件而引入框架。

@@ -276,6 +276,10 @@ const EmberLibrary = (() => {
             `<section class="modal-box"><div class="modal-heading"><h2>卡牌详情</h2></div><div class="card-detail-layout"><div class="card-detail-art">${cardHTML(c)}</div><div class="card-detail-copy"><h3>${escape(c.name)}</h3><p class="card-detail-rule">${escape(c.text)}</p><p>${escape(D.classNames[c.class])} · ${{ common: "普通", rare: "稀有", epic: "史诗", legendary: "传说" }[c.rarity]}</p><p>已加入 ${editDeck.filter((id) => id === c.id).length} / ${rules.copyLimit(D, c)} 张</p><p>牌组 ${editDeck.length} / ${D.deckRules.size}</p></div></div><div class="modal-footer"><button class="ghost-btn" id="library-detail-back">返回收藏</button><button class="gold-btn" id="library-detail-add">加入牌组</button></div></section>`,
             "library-card",
           );
+          EmberCardRelief.mountCard(
+            document.querySelector("#modal .card-detail-art > .card"),
+            { id: c.id, rarity: c.rarity, steer: "held" },
+          );
           $("library-detail-back").onclick = () => renderLibrary();
           $("library-detail-add").onclick = () => {
             if (editDeck.length >= D.deckRules.size) {

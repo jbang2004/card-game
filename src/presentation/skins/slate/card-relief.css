@@ -1,0 +1,53 @@
+/* Test skin "slate" — relief-mapped card face (EmberCardRelief).
+ * The canvas paints the illustration; the card element itself carries the 3D
+ * tilt so its frame, text, badges and gradients turn with the face. */
+html[data-skin="slate"] .card-relief-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 320ms ease;
+  pointer-events: none;
+}
+html[data-skin="slate"] .card-relief-ready > .card-relief-canvas {
+  opacity: 1;
+}
+/* A lifted card is already in motion: the face must be there at once. */
+html[data-skin="slate"] .drag-ghost .card-relief-canvas {
+  transition-duration: 90ms;
+}
+html[data-skin="slate"] body #modal.folio-host .scene-showcase.card-relief-tilt {
+  transform: perspective(1100px) rotateX(var(--relief-rx, 0deg))
+    rotateY(var(--relief-ry, 0deg));
+  will-change: transform;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  .scene-showcase.card-relief-tilt::before {
+  z-index: 1;
+}
+html[data-skin="slate"] body .mulligan-card > .card.card-relief-tilt,
+html[data-skin="slate"] body .discover-card > .card.card-relief-tilt,
+html[data-skin="slate"] body .card-detail-art > .card.card-relief-tilt,
+html[data-skin="slate"] body .drag-ghost > .card.card-relief-tilt,
+html[data-skin="slate"] body #hand-card-lift > .card.card-relief-tilt,
+html[data-skin="slate"] body .card-preview > .card.card-relief-tilt {
+  transform: perspective(720px) rotateX(var(--relief-rx, 0deg))
+    rotateY(var(--relief-ry, 0deg));
+  will-change: transform;
+}
+/* The spring already shapes the motion; a CSS transition on top would smear it. */
+html[data-skin="slate"] body .card.card-relief-tilt {
+  transition-property: none;
+}
+/* Cards offered in a row carry a label right under them: hinge the tilt on the
+ * bottom edge — X turn first, so that edge never moves and the label keeps its
+ * clearance. card-relief.js lights the face for this same order. */
+html[data-skin="slate"] body .card.card-relief-tilt.card-relief-hinge {
+  transform-origin: 50% 100%;
+  transform: perspective(720px) rotateY(var(--relief-ry, 0deg))
+    rotateX(var(--relief-rx, 0deg));
+}
