@@ -228,13 +228,8 @@
     svg.removeAttribute("data-mode");
     svg.removeAttribute("data-hit");
   }
-  /* The aim cue is a stack, not one line: a dark understroke that keeps the
-   * gold line readable over lit artwork, the line itself, a marker rail that
-   * flows along the same path through `stroke-dashoffset` (CSS owns the
-   * animation, so the geometry is written once per aim frame rather than per
-   * display frame), the head, and the reticle with its two ripples. Only
-   * `#target-path`, `#target-arrow` and `#target-circle` ship in the template;
-   * the rest are added here on first use so the markup stays one stream's. */
+  /* A shared SVG cue: outlined shaft, raised highlight, faceted head and
+   * landing reticle. Geometry follows the pointer; none of it handles input. */
   function cueNode(id, tag, before) {
     let el = $(id);
     if (el) return el;
@@ -245,6 +240,7 @@
     svg.insertBefore(el, before ? $(before) : null);
     return el;
   }
+  const cueArcLengths = new Float32Array(49);
   function drawActionCue(from, to, mode = "target", locked = false) {
     const svg = $("target-lines");
     if (!svg || !from || !to) {
@@ -258,48 +254,103 @@
       clearActionCue();
       return;
     }
-    const bend =
-        mode === "placement"
-          ? Math.min(EmberViewport.mobile ? 26 : 58, len * 0.14)
-          : Math.min(EmberViewport.mobile ? 18 : 34, len * 0.07),
-      nx = -dy / len,
-      ny = dx / len,
-      c1 = {
-        x: from.x + dx * 0.33 + nx * bend,
-        y: from.y + dy * 0.33 + ny * bend,
-      },
-      c2 = {
-        x: from.x + dx * 0.66 + nx * bend,
-        y: from.y + dy * 0.66 + ny * bend,
-      };
+    // Project an arch above the board: height lifts screen Y only. Never
+    // offset sideways along the direction normal (which made a flat turn).
+    const lift = Math.min(EmberViewport.mobile ? 62 : 100, len * .24),
+      c1 = { x: from.x + dx / 3, y: from.y + dy / 3 - lift },
+      c2 = { x: from.x + dx * 2 / 3, y: from.y + dy * 2 / 3 - lift };
     svg.dataset.mode = mode;
     svg.dataset.hit = locked ? "1" : "0";
     svg.style.display = "block";
-    const d = `M${from.x},${from.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${to.x},${to.y}`;
-    cueNode("target-under", "path", "target-path")?.setAttribute("d", d);
-    $("target-path").setAttribute("d", d);
-    /* One chevron every 28 path pixels. The dash pattern is a length, so it is
-     * written with the geometry; the flow is a CSS `stroke-dashoffset`
-     * animation over that fixed pattern. */
-    const flow = cueNode("target-flow", "path", "target-arrow");
-    if (flow) {
-      const step = EmberViewport.mobile ? 22 : 28;
-      flow.setAttribute("d", d);
-      // Inline, not an attribute: `style.css` dashes every path in this svg,
-      // and a stylesheet rule outranks a presentation attribute.
-      flow.style.strokeDasharray = `${step * 0.3} ${step * 0.7}`;
+    // The spine is kept only as data (tests and tooling read `#target-path`);
+    // nothing of it paints, so it is the one legacy path still written.
+    $("target-path").setAttribute("d", `M${from.x},${from.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${to.x},${to.y}`);
+    /* The ribbon is built in screen space along that same spine: sample the
+     * cubic, offset each sample along its normal, and draw short widening tiles
+     * with a gap between them. Depth is two fakes that read well and cost
+     * nothing — a dark band under each tile's lower edge, and a soft shadow the
+     * whole ribbon casts a little further down the screen. */
+    const bez = (t) => {
+      const u = 1 - t;
+      return {
+        x: u*u*u*from.x + 3*u*u*t*c1.x + 3*u*t*t*c2.x + t*t*t*to.x,
+        y: u*u*u*from.y + 3*u*u*t*c1.y + 3*u*t*t*c2.y + t*t*t*to.y,
+      };
+    };
+    const tangent = (t) => {
+      const u = 1 - t,
+        x = 3*u*u*(c1.x-from.x) + 6*u*t*(c2.x-c1.x) + 3*t*t*(to.x-c2.x),
+        y = 3*u*u*(c1.y-from.y) + 6*u*t*(c2.y-c1.y) + 3*t*t*(to.y-c2.y),
+        n = Math.hypot(x, y) || 1;
+      return { x: x/n, y: y/n };
+    };
+    // Equal steps in t bunch up where the curve is tight; a small arc-length
+    // table (reused across frames) keeps the tiles evenly spaced.
+    const arc = cueArcLengths;
+    arc[0] = 0;
+    let prev = bez(0);
+    for (let i = 1; i <= 48; i++) {
+      const at = bez(i/48);
+      arc[i] = arc[i-1] + Math.hypot(at.x-prev.x, at.y-prev.y);
+      prev = at;
     }
-    const angle = Math.atan2(to.y - c2.y, to.x - c2.x),
-      // One head size for both modes: a placement arrow that reads smaller
-      // than an attack arrow only makes the quieter action harder to see.
-      tip = EmberViewport.mobile ? 16 : 22,
-      wing = tip * 0.55,
-      ux = Math.cos(angle),
-      uy = Math.sin(angle);
-    $("target-arrow").setAttribute(
-      "d",
-      `M${to.x},${to.y} L${to.x - tip * ux - wing * uy},${to.y - tip * uy + wing * ux} L${to.x - tip * ux + wing * uy},${to.y - tip * uy - wing * ux} Z`,
-    );
+    const total = arc[48];
+    const atLength = (value) => {
+      const length = Math.max(0, Math.min(total, value));
+      let i = 1;
+      while (i < 48 && arc[i] < length) i++;
+      return (i-1 + (length-arc[i-1])/(arc[i]-arc[i-1] || 1))/48;
+    };
+    // side: signed offset along the normal; drop: screen px straight down.
+    const project = (t, side = 0, drop = 0) => {
+      const p = bez(t), d = tangent(t);
+      return `${(p.x - d.y*side).toFixed(2)},${(p.y + d.x*side + drop).toFixed(2)}`;
+    };
+    const polygon = (points) => `M${points.join(' L')} Z`;
+    const width = Math.min(EmberViewport.mobile ? 15 : 21, total*.14);
+    const headLength = Math.min(EmberViewport.mobile ? 48 : 66, total*.42);
+    const shaftLength = total - headLength*.75;
+    const count = Math.min(EmberViewport.mobile ? 14 : 20,
+      Math.max(2, Math.ceil(shaftLength/(EmberViewport.mobile ? 30 : 40))));
+    // Narrow where it leaves the hand, widest under the head: the taper is what
+    // reads as the shaft coming toward the viewer.
+    const w = (t) => width*(.45 + .95*t);
+    const faces = [], sides = [], shadows = [], highlights = [];
+    for (let i = 0; i < count; i++) {
+      const a = atLength(shaftLength*i/count),
+        b = atLength(shaftLength*(i+.72)/count),
+        m = (a+b)/2;
+      faces.push(polygon([
+        ...[a,m,b].map((t) => project(t,-w(t))),
+        ...[b,m,a].map((t) => project(t, w(t))),
+      ]));
+      for (const sign of [-1, 1]) sides.push(polygon([
+        project(a,sign*w(a)), project(b,sign*w(b)),
+        project(b,sign*w(b),3), project(a,sign*w(a),3),
+      ]));
+      shadows.push(polygon([
+        project(a,-w(a),10), project(b,-w(b),10), project(b,w(b),10), project(a,w(a),10),
+      ]));
+      highlights.push(polygon([
+        project(a,-w(a)*.82), project(b,-w(b)*.82), project(b,-w(b)*.62), project(a,-w(a)*.62),
+      ]));
+    }
+    const put = (id, data, before = 'target-arrow') =>
+      cueNode(id, 'path', before)?.setAttribute('d', data);
+    put('target-ground-shadow', shadows.join(' '), 'target-path');
+    put('target-ribbon-depth', sides.join(' '));
+    put('target-ribbon', faces.join(' '));
+    put('target-ribbon-highlight', highlights.join(' '));
+    const base = atLength(total-headLength), notch = atLength(total-headLength*.72);
+    const wing = width*1.85;
+    const head = [project(1), project(base,-wing), project(notch), project(base,wing)];
+    const lower = [project(1,0,3), project(base,-wing,3), project(notch,0,3), project(base,wing,3)];
+    put('target-arrow-depth', head.map((p,i) => polygon([p, head[(i+1)%4], lower[(i+1)%4], lower[i]])).join(' '));
+    $('target-arrow').setAttribute('d', polygon(head));
+    put('target-arrow-shade', polygon([project(1), project(notch), project(base,wing)]), 'target-circle');
+    put('target-arrow-shine', polygon([
+      project(atLength(total-headLength*.15)), project(base,-wing*.82), project(notch,-width*.15),
+    ]), 'target-circle');
     const radius =
       mode === "placement"
         ? EmberViewport.mobile
@@ -326,10 +377,18 @@
     if (!arena) return null;
     const margin = EmberViewport.mobile ? 26 : 72,
       hand = localRect($("hand")),
+      // The touch dock's box has one lift of headroom above its cards
+      // (mobile-view.js); placement measures from the cards, not the box.
+      handTop =
+        hand &&
+        hand.top +
+          (EmberViewport.mobile
+            ? parseFloat(getComputedStyle($("app")).getPropertyValue("--hand-lift")) || 0
+            : 0),
       minY = arena.top + arena.h * 0.5,
       maxY = Math.min(
         arena.bottom - margin,
-        hand ? hand.top - margin : arena.bottom - margin,
+        hand ? handTop - margin : arena.bottom - margin,
       ),
       board = game.s?.p?.board || [],
       count = board.length,
@@ -1036,6 +1095,7 @@
           .map((m, i) => {
             const c = D.byId[m.cid],
               ready = game.canAttack(side, m.uid),
+              sleeping = m.sick && !ready && !m.frozen,
               geo = EmberViewport.minion(side, i, s[side].board.length),
               x = geo.x,
               y = geo.y;
@@ -1060,7 +1120,7 @@
                   })[t],
               )
               .join("");
-            return `<button class="minion ${side === "e" ? "enemy" : "friendly"} ${m.tags.join(" ")} ${ready ? "ready" : ""} ${m.frozen ? "frozen" : ""} ${c.rarity}" style="left:${x}px;top:${y}px;width:${geo.w}px;height:${geo.h}px;--unit-w:${geo.w}px" data-compact="${geo.w < 50}" data-stacked="${!!geo.stacked}" data-side="${side}" data-uid="${m.uid}" data-cardid="${c.id}" data-class="${c.class}" aria-label="${c.name}，攻击 ${m.atk}，生命 ${m.hp}，${m.tags.map((t) => D.kw[t]).join("、")}${m.frozen ? "，被冻结" : ""}"><div class="minion-art"><img src="${A.card(c)}" alt="" draggable="false" data-art-key="${artKeyForCard(c)}" style="${artStyleForCard(c, "minion")}"></div><span class="unit-aura" aria-hidden="true"></span><div class="minion-band"><span>${bandLabel(c)}</span></div><span class="stat atk">${A.statGem("blade")}<span class="stat-value">${m.atk}</span></span><span class="stat hp ${m.hp < m.maxHp ? "hurt" : ""}">${A.statGem("heart")}<span class="stat-value">${Math.max(0, m.hp)}</span></span><span class="minion-status">${m.frozen ? "❄" : specials ? '<span class="special">' + specials + "</span>" : m.sick && !ready ? '<span class="sleep">z z</span>' : ""}</span>${ready ? '<span class="ready-dot"></span>' : ""}</button>`;
+            return `<button class="minion ${side === "e" ? "enemy" : "friendly"} ${m.tags.join(" ")} ${ready ? "ready" : ""} ${m.frozen ? "frozen" : ""} ${c.rarity}" style="left:${x}px;top:${y}px;width:${geo.w}px;height:${geo.h}px;--unit-w:${geo.w}px" data-compact="${geo.w < 50}" data-stacked="${!!geo.stacked}" data-side="${side}" data-uid="${m.uid}" data-cardid="${c.id}" data-class="${c.class}" aria-label="${c.name}，攻击 ${m.atk}，生命 ${m.hp}，${m.tags.map((t) => D.kw[t]).join("、")}${m.frozen ? "，被冻结" : sleeping ? "，召唤疲劳，休息中" : ""}"><div class="minion-art"><img src="${A.card(c)}" alt="" draggable="false" data-art-key="${artKeyForCard(c)}" style="${artStyleForCard(c, "minion")}"></div><span class="unit-aura" aria-hidden="true"></span><div class="minion-band"><span>${bandLabel(c)}</span></div><span class="stat atk">${A.statGem("blade")}<span class="stat-value">${m.atk}</span></span><span class="stat hp ${m.hp < m.maxHp ? "hurt" : ""}">${A.statGem("heart")}<span class="stat-value">${Math.max(0, m.hp)}</span></span><span class="minion-status">${m.frozen ? "❄" : specials ? '<span class="special">' + specials + "</span>" : ""}${sleeping ? '<span class="minion-sleep" aria-hidden="true"><span class="sleep-z">Z</span><span class="sleep-z">Z</span><span class="sleep-z">Z</span></span>' : ""}</span>${ready ? '<span class="ready-dot"></span>' : ""}</button>`;
           })
           .join(""),
       )
@@ -1238,7 +1298,7 @@
     EmberCardRelief.mountCard(el.querySelector(".card"), {
       id: c.id,
       rarity: c.rarity,
-      anchor: detail.source,
+      anchor: pinned ? el.querySelector(".card") : detail.source,
     });
   }
   /* Desktop battle hover is deliberately fixed on the left, restoring one

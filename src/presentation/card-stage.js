@@ -95,7 +95,8 @@ const EmberCardStage = (() => {
     /* The card in front leans toward the pointer; the relief face follows that
      * lean rather than adding one of its own. */
     const lean = (e) => {
-      if (open !== state || calm() || e.pointerType === "touch") return;
+      if (open !== state || calm()) return;
+      if (e.pointerType === "touch" && (!e.isPrimary || !node.contains(e.target))) return;
       const r = node.getBoundingClientRect();
       if (!r.width) return;
       const clamp = (n) => Math.max(-1, Math.min(1, n)),
@@ -105,6 +106,10 @@ const EmberCardStage = (() => {
       node.style.setProperty("--tilt-x", (-py * 6).toFixed(2) + "deg");
     };
     el.addEventListener("pointermove", lean, { passive: true });
+    EmberCardRelief.bindTouch(node, () => {
+      node.style.removeProperty("--tilt-x");
+      node.style.removeProperty("--tilt-y");
+    });
     el.addEventListener(
       "pointerleave",
       () => {

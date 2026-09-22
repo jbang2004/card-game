@@ -420,17 +420,26 @@ html[data-skin="slate"] body.touch-layout #battle .end-turn.ready-end::before {
 html[data-skin="slate"] body.touch-layout #battle .hand-zone {
   gap: 8px;
   align-items: flex-start;
-  padding: 10px 8px 0;
+  /* One lift of headroom above the cards (mobile-view.js sizes the box for it):
+   * a panning dock clips, and a hovered card rises inside the box instead. */
+  padding: calc(10px + var(--hand-lift, 0px)) 8px 0;
   overflow: visible;
   scroll-snap-type: none;
   touch-action: pan-x;
+  /* That headroom lies over the covenant and the hero: only the cards take the
+   * pointer; the box itself lets it through. (Panning still works: a swipe on
+   * a card scrolls the box that holds it.) */
+  pointer-events: none;
+}
+html[data-skin="slate"] body.touch-layout #battle .hand-zone > .hand-card {
+  pointer-events: auto;
 }
 html[data-skin="slate"] body.touch-layout #battle .hand-zone::before {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
-  top: 0;
+  top: var(--hand-lift, 0px);
   height: 1px;
   background: var(--slate-line);
   pointer-events: none;
@@ -486,14 +495,14 @@ html[data-skin="slate"]
   transform: translateY(calc(-1 * var(--hand-lift, 60px))) scale(1);
   z-index: 28;
 }
-/* A panning dock cannot lift a card clear of the rail without tearing the
- * scroll, so a mouse there gets the shorter hint the selected card uses. */
+/* A panning dock clips to its box; the box carries one lift of headroom, so
+ * a mouse there gets the same full lift as a dock that fits its hand. */
 html[data-skin="slate"]
   body.touch-layout.pointer-fine
   #battle
   .hand-zone.hand-pan
   .hand-card:hover {
-  transform: translateY(-8px);
+  transform: translateY(calc(-1 * var(--hand-lift, 60px))) scale(1);
   z-index: 28;
 }
 html[data-skin="slate"] body.touch-layout #battle .hand-card.selected {
@@ -1378,77 +1387,89 @@ html[data-skin="slate"] body #battle :is(.hero-stat, .hero-chip) {
  * 9. Arena: aiming, turn handover and token noise (design doc §13.3)
  * ------------------------------------------------------------------------ */
 
-/* 9.1 The aim line is one confident stroke, not a marching dashed hint: 6px of
- * gradient (5px on touch) with a glowing head that sits on the target. Gold,
- * because §13.6 assigns gold to "target and divine"; placement keeps the blue
- * of "mine". A stroke that wide has to survive a lit backdrop, so it is drawn
- * three times over the SAME path data, which `ui.js` writes once per aim
- * frame: `#target-under` is the dark 1px-per-side outline, `#target-path` the
- * line, `#target-flow` a rail of chevron dashes whose only animation is
- * `stroke-dashoffset` over a fixed pattern — no path is recomputed to make it
- * move. */
-html[data-skin="slate"] body #target-lines #target-under {
-  fill: none;
-  stroke: #0a0f18cc;
-  stroke-width: 8;
-  stroke-dasharray: none;
-  stroke-linecap: round;
-  filter: none;
-  animation: none;
+/* Segmented red cue above lifted/dragged cards, without owning hit testing. */
+html[data-skin="slate"] body #target-lines {
+  z-index: 66;
+  pointer-events: none;
+  --cue-edge: #651414;
+  --cue-face: #e73722;
+  --cue-shade: #a41b18;
+  --cue-light: #ff9860;
 }
-/* The pattern itself is written inline by `ui.js` (one chevron per 28px of
- * path), because `style.css` still dashes every path inside this svg and a
- * sheet cannot know the spacing. Only the offset is animated here. */
-html[data-skin="slate"] body #target-lines #target-flow {
-  fill: none;
-  stroke: #fff6da;
-  stroke-width: 3;
-  stroke-linecap: butt;
-  opacity: 0.85;
-  filter: none;
-  animation: slate-aim-flow 0.9s linear infinite;
-}
-html[data-skin="slate"] body #target-lines[data-mode="target"] #target-path {
-  stroke: url(#aim-gold);
-  stroke-width: 6;
-  stroke-dasharray: none;
-  stroke-linecap: round;
-  animation: none;
-  filter: drop-shadow(0 0 5px #e0b45599);
-}
-html[data-skin="slate"] body #target-lines #target-arrow {
+html[data-skin="slate"] body #target-lines :is(#target-ribbon, #target-ribbon-depth) {
+  fill: var(--cue-face);
+  fill-opacity: .95;
   stroke-dasharray: none;
   animation: none;
-}
-html[data-skin="slate"] body #target-lines[data-mode="target"] #target-arrow {
-  fill: #fff3cf;
-  stroke: #0a0f18;
-  stroke-width: 1;
-}
-html[data-skin="slate"] body #target-lines[data-mode="target"] #target-circle {
-  fill: #e0b45526;
-  stroke: #fff3cf;
+  stroke: var(--cue-edge);
   stroke-width: 2;
-  filter: drop-shadow(0 0 7px #f0cf82);
+  filter: none;
 }
-html[data-skin="slate"] body #target-lines[data-mode="placement"] #target-path {
-  stroke: url(#aim-gradient);
-  stroke-width: 6;
+html[data-skin="slate"] body #target-lines #target-ribbon-depth {
+  fill: var(--cue-edge);
+  transform: none;
 }
-html[data-skin="slate"] body #target-lines[data-mode="placement"] #target-flow {
-  stroke: #e8f4ff;
+html[data-skin="slate"] body #target-lines #target-ground-shadow {
+  fill: #180909;
+  opacity: .12;
+  stroke: none;
+  filter: none;
+  animation: none;
 }
-html[data-skin="slate"]
-  body
-  #target-lines[data-mode="placement"]
-  #target-arrow {
-  stroke: #0a0f18;
-  stroke-width: 1;
+html[data-skin="slate"] body .drag-ghost { z-index: 65; }
+/* Retain the centerline's geometry for targeting; only segmented tiles paint. */
+html[data-skin="slate"] body #target-lines :is(#target-under, #target-path, #target-flow) {
+  opacity: 0;
 }
-@keyframes slate-aim-flow {
-  to {
-    stroke-dashoffset: -28;
-  }
+html[data-skin="slate"] body #target-lines:is([data-mode="target"], [data-mode="placement"]) #target-arrow,
+html[data-skin="slate"] body #target-lines #target-arrow-depth {
+  fill: var(--cue-face);
+  stroke: var(--cue-edge);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-dasharray: none;
+  filter: none;
+  animation: none;
+}
+html[data-skin="slate"] body #target-lines #target-arrow-depth {
+  fill: var(--cue-edge);
+  transform: none;
+  filter: none;
+}
+html[data-skin="slate"] body #target-lines :is(#target-arrow-shade, #target-arrow-shine, #target-ribbon-highlight) {
+  fill: var(--cue-shade);
+  stroke: none;
+  stroke-dasharray: none;
+  filter: none;
+  animation: none;
+}
+html[data-skin="slate"] body #target-lines :is(#target-arrow-shine, #target-ribbon-highlight) {
+  fill: var(--cue-light);
+}
+html[data-skin="slate"] body.touch-layout #target-lines #target-under { stroke-width: 3; }
+html[data-skin="slate"] body.touch-layout #target-lines:is([data-mode="target"], [data-mode="placement"]) #target-path { stroke-width: 2; }
+html[data-skin="slate"] body.touch-layout #target-lines #target-flow { stroke-width: 2; transform: translate(-1px, -2px); }
+/* The landing ring belongs to the same red arrow, not to the old gold line. */
+html[data-skin="slate"] body #target-lines[data-mode="target"] #target-circle {
+  fill: #e7372226;
+  stroke: var(--cue-light);
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 6px #e7372299);
+}
+/* A targeted spell dragged out over the board: the card itself steps out of
+ * the way (as in Hearthstone), the arrow runs from its slot in the hand to the
+ * pointer, and nothing is drawn across a full card face. A minion being placed
+ * keeps its ghost — the ghost IS what lands. */
+html[data-skin="slate"] body #app.is-targeting:not(.placement-active) #battle .hand-card.drag-source {
+  opacity: 1;
+}
+html[data-skin="slate"] body #app.is-targeting:not(.placement-active) .drag-ghost {
+  opacity: 0;
+  /* Same anchor as the ghost's own pose (style.css), only smaller. */
+  transform: translate(-50%, -55%) rotate(5deg) scale(0.6);
+  transition:
+    opacity 120ms var(--e-std),
+    transform 120ms var(--e-std);
 }
 /* 9.1b The reticle only rings twice when the aim is resting on something that
  * can actually be chosen (`data-hit="1"`, written by `ui.js`). The ripples are
@@ -1459,7 +1480,7 @@ html[data-skin="slate"]
   #target-lines
   :is(#target-ripple-a, #target-ripple-b) {
   fill: none;
-  stroke: #fff3cf;
+  stroke: var(--cue-light);
   stroke-width: 2;
   opacity: 0;
   transform-box: fill-box;
@@ -1500,23 +1521,6 @@ html[data-skin="slate"]
   :is(#target-ripple-a, #target-ripple-b) {
   animation: none;
 }
-/* Touch keeps the same language one step narrower. */
-html[data-skin="slate"] body.touch-layout #target-lines #target-under {
-  stroke-width: 7;
-}
-html[data-skin="slate"] body.touch-layout #target-lines #target-path {
-  stroke-width: 5;
-}
-html[data-skin="slate"] body.touch-layout #target-lines #target-flow {
-  stroke-width: 2.5;
-  animation-name: slate-aim-flow-touch;
-}
-@keyframes slate-aim-flow-touch {
-  to {
-    stroke-dashoffset: -22;
-  }
-}
-
 /* 9.2 While aiming, everything that cannot be chosen steps back. Saying which
  * targets are illegal is faster to read than only marking the legal ones. */
 html[data-skin="slate"]

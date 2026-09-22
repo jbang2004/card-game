@@ -471,9 +471,13 @@ const EmberContractUI = (() => {
       document.addEventListener("keydown", stageKey, true);
       stageCtx.cards.forEach((node, i) => {
         node.addEventListener("mouseenter", () => {
+          /* Cards taking off from the slot pass under the pointer that just
+           * clicked it, and the browser reports each as an enter: hover picks
+           * a card only once the stack has landed. */
           if (
             document.body.classList.contains("pointer-fine") &&
-            !stageCtx?.pinned
+            !stageCtx?.pinned &&
+            !el.classList.contains("flying")
           )
             stageFocus(i);
         });
@@ -492,8 +496,9 @@ const EmberContractUI = (() => {
      * than a picture pasted on the scrim. */
     function bindStageTilt(el) {
       const move = (e) => {
-        if (!stageCtx || calm() || e.pointerType === "touch") return;
+        if (!stageCtx || calm()) return;
         const card = stageCtx.cards[stageCtx.focus];
+        if (e.pointerType === "touch" && (!e.isPrimary || !card?.contains(e.target))) return;
         const r = card?.getBoundingClientRect();
         if (!r?.width) return;
         const px = (e.clientX - (r.x + r.width / 2)) / (r.width / 2),
@@ -503,6 +508,10 @@ const EmberContractUI = (() => {
         card.style.setProperty("--tilt-x", (-clamp(py) * 6).toFixed(2) + "deg");
       };
       el.addEventListener("pointermove", move, { passive: true });
+      for (const card of stageCtx.cards) EmberCardRelief.bindTouch(card, () => {
+        card.style.removeProperty("--tilt-x");
+        card.style.removeProperty("--tilt-y");
+      });
       el.addEventListener(
         "pointerleave",
         () => {

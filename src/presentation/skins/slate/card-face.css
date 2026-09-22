@@ -1383,3 +1383,67 @@ html[data-skin="slate"] body .card-back::after {
 html[data-skin="slate"] body.touch-layout .minion[data-stacked="true"] > .stat.hp {
   right: 12px;
 }
+
+/* Sleep Zs live in the status subtree so combat proxies copy both signals together;
+ * the box for them is the Zs' own, not the status row's. */
+html[data-skin="slate"] body .minion .minion-status {
+  pointer-events: none;
+}
+/* Hearthstone reference: upright green Zs rising past the upper-right edge.
+ * Keep the smallest near the portrait and the largest outside it. */
+html[data-skin="slate"] body .minion .minion-sleep {
+  position: absolute;
+  z-index: 10;
+  top: -22cqw;
+  right: -2cqw;
+  width: 34cqw;
+  height: 40cqw;
+  pointer-events: none;
+  color: #42f044;
+  filter: drop-shadow(0 1px 1px #082b0c);
+}
+/* Each Z drifts up and fades OUT before it is reborn — both ends of the loop
+ * are invisible, so the restart never pops. Three different periods keep the
+ * three from marching in step. */
+html[data-skin="slate"] body .minion .sleep-z {
+  position: absolute;
+  font: 900 clamp(14px, 21cqw, 27px) / 1 var(--ui-font, sans-serif);
+  -webkit-text-stroke: 1.5px #155523;
+  paint-order: stroke fill;
+  text-shadow: 0 1px 0 #249b32;
+  opacity: 0;
+  transform: rotate(3deg);
+  animation: slate-sleep-rise 3.3s ease-in-out infinite;
+}
+html[data-skin="slate"] body .minion .sleep-z:nth-child(1) {
+  left: 0;
+  top: 70%;
+  font-size: clamp(9px, 11cqw, 14px);
+  animation-duration: 2.4s;
+  animation-delay: -1.1s;
+}
+html[data-skin="slate"] body .minion .sleep-z:nth-child(2) {
+  left: 32%;
+  top: 35%;
+  font-size: clamp(11px, 16cqw, 20px);
+  animation-duration: 2.9s;
+  animation-delay: -2.2s;
+}
+html[data-skin="slate"] body .minion .sleep-z:nth-child(3) {
+  right: 0;
+  top: 0;
+  animation-delay: -0.6s;
+}
+@keyframes slate-sleep-rise {
+  0% { opacity: 0; transform: translate(-1px, 4px) scale(.86) rotate(3deg); }
+  30%, 65% { opacity: 1; }
+  100% { opacity: 0; transform: translate(2px, -6px) scale(1.08) rotate(-3deg); }
+}
+/* Reduced motion keeps the marker as a still: all three visible, no drift. */
+html[data-skin="slate"] body.reduced-motion .minion .sleep-z {
+  animation: none;
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="slate"] body .minion .sleep-z { animation: none; opacity: 1; }
+}
