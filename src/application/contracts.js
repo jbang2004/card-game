@@ -492,8 +492,9 @@ const EmberContractUI = (() => {
      * than a picture pasted on the scrim. */
     function bindStageTilt(el) {
       const move = (e) => {
-        if (!stageCtx || calm() || e.pointerType === "touch") return;
+        if (!stageCtx || calm()) return;
         const card = stageCtx.cards[stageCtx.focus];
+        if (e.pointerType === "touch" && (!e.isPrimary || !card?.contains(e.target))) return;
         const r = card?.getBoundingClientRect();
         if (!r?.width) return;
         const px = (e.clientX - (r.x + r.width / 2)) / (r.width / 2),
@@ -503,6 +504,10 @@ const EmberContractUI = (() => {
         card.style.setProperty("--tilt-x", (-clamp(py) * 6).toFixed(2) + "deg");
       };
       el.addEventListener("pointermove", move, { passive: true });
+      for (const card of stageCtx.cards) EmberCardRelief.bindTouch(card, () => {
+        card.style.removeProperty("--tilt-x");
+        card.style.removeProperty("--tilt-y");
+      });
       el.addEventListener(
         "pointerleave",
         () => {

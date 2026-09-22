@@ -309,11 +309,56 @@ void main(){
     tilt.x = tilt.y = velocity.x = velocity.y = target.x = target.y = 0;
     removeEventListener("pointermove", steer);
   }
+  // Only dedicated reading surfaces own this gesture. Hand rails and lifted hand
+  // cards keep their scroll / play handlers. Vertical pans in lists remain native.
+  const touchSurfaces = new WeakSet();
+  let touchOwner = null, rubbed = null;
+  function bindTouch(element, onRest = null) {
+    if (!element || touchSurfaces.has(element)) return;
+    touchSurfaces.add(element);
+    element.classList.add("card-touch-surface");
+    let contact = null;
+    element.addEventListener("pointerdown", (e) => {
+      if (e.pointerType !== "touch" || !e.isPrimary) return;
+      contact = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: false };
+      touchOwner = { element, id: e.pointerId };
+      rubbed = null;
+      steer(e);
+    }, { passive: true });
+    element.addEventListener("pointermove", (e) => {
+      if (!contact || e.pointerId !== contact.id) return;
+      contact.moved ||= Math.hypot(e.clientX - contact.x, e.clientY - contact.y) > 9;
+    }, { passive: true });
+    const end = (e) => {
+      if (!contact || e.pointerId !== contact.id) return;
+      if (contact.moved) rubbed = { element, until: performance.now() + 500 };
+      contact = null;
+      if (touchOwner?.element === element) touchOwner = null;
+      target.x = target.y = 0;
+      lastPointer = performance.now();
+      onRest?.();
+      wake();
+    };
+    for (const type of ["pointerup", "pointercancel", "lostpointercapture"])
+      element.addEventListener(type, end, { passive: true });
+  }
+  // Run before dialog click handlers: rubbing a choice must not select it.
+  window.addEventListener("click", (e) => {
+    if (!rubbed || performance.now() > rubbed.until || !rubbed.element.contains(e.target)) return;
+    rubbed = null;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+  }, true);
   function steer(event) {
     pointerAt = { x: event.clientX, y: event.clientY };
     if (!current) return;
-    // The stage it follows does not tilt for a finger, so neither does the face.
-    if (current.steer === STEER.follow && event.pointerType === "touch") return;
+    if (event.pointerType === "touch" && current.steer !== STEER.drag) {
+      const surface = current.anchor || host;
+      const readingHand = surface.closest("#hand-card-lift");
+      const ownsTouch = touchOwner?.id === event.pointerId &&
+        (touchOwner.element.contains(surface) || surface.contains(touchOwner.element));
+      if (!ownsTouch && !readingHand?.contains(event.target)) return;
+    }
     const now = performance.now();
     if (current.steer === STEER.drag) {
       if (lastMove && now > lastMove.t) {
@@ -524,6 +569,8 @@ void main(){
    *   hinge       turn about the bottom edge, which then never moves */
   async function mount(element, options) {
     const { id, color, focus = [0.5, 0.22], rarity } = options;
+    const surface = element?.closest(".scene-showcase,.mulligan-card,.discover-card,.card-detail-art,.card-preview[data-mode='pinned']");
+    if (surface) bindTouch(surface);
     // Re-mounting the same kind of view (switching hero) keeps the pose it had.
     const carried = current && (options.steer || "pointer") !== "drag" ? { ...tilt } : null;
     if (host) release();
@@ -613,6 +660,7 @@ void main(){
       mountCard(card, { ...describe(choice), steer: "held", hinge: true });
     };
     for (const choice of choices) {
+      bindTouch(choice);
       choice.addEventListener(
         "pointerenter",
         (event) => {
@@ -669,6 +717,7 @@ void main(){
   return Object.freeze({
     mount,
     mountCard,
+    bindTouch,
     attend,
     slab,
     warm,

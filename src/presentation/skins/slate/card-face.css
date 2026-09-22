@@ -1383,3 +1383,58 @@ html[data-skin="slate"] body .card-back::after {
 html[data-skin="slate"] body.touch-layout .minion[data-stacked="true"] > .stat.hp {
   right: 12px;
 }
+
+/* Keep both signals in the status subtree so combat proxies copy them together. */
+html[data-skin="slate"] body .minion .minion-status {
+  height: 36%;
+  pointer-events: none;
+}
+/* Hearthstone reference: upright green Zs rising past the upper-right edge.
+ * Keep the smallest near the portrait and the largest outside it. */
+html[data-skin="slate"] body .minion .minion-sleep {
+  position: absolute;
+  z-index: 10;
+  top: -22cqw;
+  right: -2cqw;
+  width: 34cqw;
+  height: 40cqw;
+  pointer-events: none;
+  color: #42f044;
+  filter: drop-shadow(0 1px 1px #082b0c);
+}
+html[data-skin="slate"] body .minion .sleep-z {
+  position: absolute;
+  font: 900 clamp(14px, 21cqw, 27px)/1 Arial, sans-serif;
+  -webkit-text-stroke: 1.5px #155523;
+  paint-order: stroke fill;
+  text-shadow: 0 1px 0 #249b32;
+  transform: rotate(3deg);
+  animation: slate-sleep-rise 2.7s linear infinite;
+}
+html[data-skin="slate"] body .minion .sleep-z:nth-child(1) {
+  left: 0;
+  top: 70%;
+  font-size: clamp(9px, 11cqw, 14px);
+  animation-delay: -1.8s;
+}
+html[data-skin="slate"] body .minion .sleep-z:nth-child(2) {
+  left: 32%;
+  top: 35%;
+  font-size: clamp(11px, 16cqw, 20px);
+  animation-delay: -.9s;
+}
+html[data-skin="slate"] body .minion .sleep-z:nth-child(3) {
+  right: 0;
+  top: 0;
+}
+@keyframes slate-sleep-rise {
+  0% { opacity: .3; transform: translate(-1px, 3px) scale(.88) rotate(3deg); }
+  25%, 60% { opacity: 1; }
+  100% { opacity: .2; transform: translate(2px, -5px) scale(1.06) rotate(-3deg); }
+}
+html[data-skin="slate"] body.reduced-motion .minion .sleep-z {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="slate"] body .minion .sleep-z { animation: none; }
+}

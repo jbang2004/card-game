@@ -106,3 +106,16 @@ html[data-skin="slate"] body .god-card-inner:has(> .god-card-front > .card-relie
   inset: calc(-1 * var(--relief-flange, 0px));
   transform: rotateY(180deg) translateZ(var(--relief-depth, 0px));
 }
+
+/* Rub sideways to turn a reading card; drag vertically to scroll its page.
+ * A modal stage / pinned detail has no list underneath the card to scroll. */
+html[data-skin="slate"] body .card-touch-surface {
+  touch-action: pan-y pinch-zoom;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+html[data-skin="slate"] body .god-card.card-touch-surface,
+html[data-skin="slate"] body .card-preview[data-mode="pinned"].card-touch-surface {
+  touch-action: none;
+}
