@@ -137,9 +137,13 @@ const EmberViewport = (() => {
         cardH = Math.round((cardW * 7.4) / 5),
         peek = Math.round(cardH * (!portrait && H < 380 ? 0.55 : 0.66));
       /* The dock box extends below the screen: only the top `peek` px of a
-       * resting card are visible; a selected or dragged card rises out of it. */
-      const dockTop = H - safe.bottom - peek - 10;
-      l.hand = { x: 0, y: dockTop, w: 0, h: cardH + 20 };
+       * resting card are visible; a selected or dragged card rises out of it.
+       * The box also reaches one lift ABOVE the cards (the skin pads that much
+       * on top): a panning dock has to clip sideways, and a hovered card that
+       * rises into that headroom is then not clipped with it. */
+      const dockTop = H - safe.bottom - peek - 10,
+        lift = cardH - peek;
+      l.hand = { x: 0, y: dockTop - lift, w: 0, h: cardH + 20 + lift };
       if (portrait) {
         /* §12.1: the hero is the SAME card at every size, just three scales.
          * A mini card needs a taller strip than a 56px avatar did. */
@@ -285,6 +289,7 @@ const EmberViewport = (() => {
       l.cardH = cardH;
       l.cardW = cardW;
       l.peek = peek;
+      l.standingMage = standingMage;
       l.tokenScale = roomy ? 1.4 : 1;
     }
     const before = state;
