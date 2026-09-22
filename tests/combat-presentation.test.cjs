@@ -607,3 +607,47 @@ test("countered spells cast nothing and cut-ins are reserved for heroes and lege
   assert.equal(EmberFXProfiles.cutinPolicy({ cutin: true, fx2: true, art: true, legendary: true }), true);
   assert.equal(EmberFXProfiles.cutinPolicy({ cutin: true, fx2: true, art: true, hero: true }), true);
 });
+
+test("hero anticipation delays launch and contact together, preserving projectile time and reduced scaling", () => {
+  const g = setup();
+  const { result, before } = play(g, "fireball", { side: "e", uid: "hero" });
+  const originalEvents = JSON.stringify(result.events);
+  const normal = compile(result.events, before, g.snapshot());
+  const options = { heroCastWindup: () => T.hero.mageCastWindup };
+  const authored = compile(result.events, before, g.snapshot(), false, "blade", options);
+  const reduced = compile(result.events, before, g.snapshot(), true, "blade", options);
+  const old = normal.beats.find(b => b.kind === "play");
+  const beat = authored.beats.find(b => b.kind === "play");
+  const small = reduced.beats.find(b => b.kind === "play");
+  assert.equal(beat.cast.flashAt, beat.at);
+  assert.equal(beat.cast.startAt - beat.at, 550);
+  assert.equal(beat.cast.windupMs, 550);
+  assert.deepEqual(beat.cast.hitAt, old.cast.hitAt);
+  assert.equal(beat.cast.contactAt[0] - old.cast.contactAt[0], 550);
+  assert.equal(authored.beats.find(b => b.kind === "hit").at, beat.cast.contactAt[0]);
+  assert.equal(small.cast.windupMs, 275);
+  assert.equal(small.cast.startAt - small.at, 275);
+  assert.equal(small.cast.contactAt[0], beat.cast.contactAt[0] / 2);
+  assert.equal(JSON.stringify(result.events), originalEvents);
+});
+
+test("hero anticipation is requested for powers and spells, never minion play or battlecry", () => {
+  const g = setup();
+  const powerBefore = g.snapshot();
+  const power = g.dispatch({ type: "power", side: "p", target: { side: "e", uid: "hero" } });
+  assert.ok(power.ok, power.error);
+  const powerCalls = [];
+  const powerPlan = compile(power.events, powerBefore, g.snapshot(), false, "blade", {
+    heroCastWindup: ctx => { powerCalls.push(ctx); return 550; },
+  });
+  assert.equal(powerCalls.length, 1);
+  assert.equal(powerCalls[0].kind, "power");
+  assert.equal(powerPlan.beats.find(b => b.kind === "power").cast.windupMs, 550);
+  const h = setup();
+  const { result, before } = play(h, "guard");
+  const minionCalls = [];
+  compile(result.events, before, h.snapshot(), false, "blade", {
+    heroCastWindup: ctx => { minionCalls.push(ctx); return 550; },
+  });
+  assert.equal(minionCalls.length, 0);
+});

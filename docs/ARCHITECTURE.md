@@ -55,7 +55,19 @@ AI 是独立的参数化启发式策略。其取舍会与旧版略有不同，�
 
 ## 唯一表现与素材路径
 
-`atelier-world.js` 是桌面、手机共用的 Canvas 场景，无代理层，无 WebGL/CDN 加载。旧 Three.js、TavernWorld、MobileWorld、程序化卡图及未使用的兼容素材缓存已删除。
+`atelier-world.js` 是桌面、手机共用的 Canvas 场景，无代理层，无 WebGL/CDN 加载。旧 Three.js 预览、TavernWorld、MobileWorld、程序化卡图及未使用的兼容素材缓存已删除。2026-09-20 新增的法师模型是独立英雄表现模块，见下节；它不替换或代理世界场景。
+
+### 法师英雄模型（2026-09-20）
+
+已注册真实 `art/models/alia.glb`，包含完整骨骼和原创待机／施法／受击动作。构建器严格检查已注册素材；无占位模型或缺文件容错。
+
+`presentation/hero-model.js` 只观察英雄表现快照和演出提示，不写规则状态。`ui.js` 在英雄 DOM 更新后调用 `sync(snapshot, runToken)`，`effects.js` 在法术／英雄技能演出起点发出 `cue(side, "cast")`。生命变化来自实际展示快照；新对局令牌会清除前一局的生命和技能记录，避免误报受击。
+
+一个持久 Three.js 渲染器共享 GLB 及纹理，通过小尺寸透明缓冲区分别绘制双方英雄，再同步拷贝到英雄 DOM 内的持久 2D Canvas。这样现有目标选择、冻结标记、攻血数据、变换合成器与弹窗遮挡顺序继续有效；每次 `innerHTML` 更新只重新挂接 Canvas，不重建 WebGL 上下文。法师对法师练习复制骨骼实例并复用网格资源。
+
+帧率上限 30 FPS，DPR 上限桌面 2／触屏 1.5；隐藏页面或退出战场暂停绘制，减少动态模式静止并在状态／尺寸变化时重绘。模型成功绘制出非空像素后才隐藏原肖像；加载或 WebGL 失败恢复肖像并释放资源。`EmberHeroModel.diagnostics()` 提供只读诊断快照，不暴露游戏规则写接口。所有模型样式归属 `presentation/skins/slate/hero-model.css`。
+
+`art/models/alia.glb` 是独立模型素材，不改 `config/characters.json` 的静态插画契约。构建器将 GLB 内嵌到离线单文件，或抽取为网页的内容哈希文件；不能引用远程模型、生成服务凭据或外部解码器。Three.js 依赖由显式 `npm run vendor:hero` 生成 checked-in IIFE，正常 Python 构建仍只用标准库。
 
 ### 卡面浮雕（2026-09-21）
 

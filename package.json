@@ -13,13 +13,16 @@
     "dev": "python3 build.py && python3 -m http.server 8000 --bind 127.0.0.1 --directory dist",
     "art:anime": "python3 tools/pack_card_assets.py",
     "art:atlas": "python3 tools/build_anime_assets.py",
-    "format": "prettier --write src/content src/rules src/presentation src/platform src/data.js src/engine.js src/ui.js"
+    "format": "prettier --write src/content src/rules src/presentation src/platform src/data.js src/engine.js src/ui.js",
+    "vendor:hero": "node tools/build-hero-three.mjs"
   },
   "engines": {
     "node": ">=18"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
-    "prettier": "^3.6.2"
+    "esbuild": "0.28.2",
+    "prettier": "^3.6.2",
+    "three": "0.186.0"
   }
 }

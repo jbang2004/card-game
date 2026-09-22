@@ -42,3 +42,6 @@ tests/*-run.log
 
 # Local depth-estimation weights for tools/bake_card_relief.py (99 MB).
 /tools/.scratch/card-relief/model/
+
+# Local spikes and intermediate products (card relief three.js page, model weights…)
+/tools/.scratch/

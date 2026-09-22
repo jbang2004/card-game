@@ -21,7 +21,8 @@ ROOT = Path(__file__).resolve().parent
 SRC = ROOT / 'src'
 ART = ROOT / 'art'
 TOKEN = re.compile(r'/\*([A-Z_]+)\*/')
-MEDIA = re.compile(r'data:(?:image|audio)/(png|webp|jpeg|gif|mpeg);base64,([A-Za-z0-9+/=]+)')
+ASSET_URI = re.compile(r'''(?<=["'(`])asset:([\w/.-]+)''')
+MEDIA = re.compile(r'data:(?:image|audio|model)/(png|webp|jpeg|gif|mpeg|gltf-binary);base64,([A-Za-z0-9+/=]+)')
 
 
 def build():
@@ -54,10 +55,13 @@ def build():
             raise FileNotFoundError(
                 f'Missing inlined asset {match[1]}: neither art/{match[1]} nor '
                 f'assets/{match[1]} exists. 素材源不在仓库中，见 README 的「素材源」一节。')
-        mime = {'.png': 'png', '.webp': 'webp', '.jpg': 'jpeg'}[path.suffix]
-        return 'data:image/' + mime + ';base64,' + base64.b64encode(data).decode()
+        mime = {'.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg',
+                '.glb': 'model/gltf-binary'}[path.suffix]
+        return 'data:' + mime + ';base64,' + base64.b64encode(data).decode()
 
-    sources = {k: re.sub(r'asset:([\w/.-]+)', embed_asset, (SRC / v).read_text())
+    # Match literal URI values, not JavaScript fields such as glTF's
+    # `{asset: result.asset}` in the bundled model loader.
+    sources = {k: ASSET_URI.sub(embed_asset, (SRC / v).read_text())
                for k, v in registry.items()}
     portable = TOKEN.sub(lambda m: sources[m[1]], template)
     (ROOT / 'index.html').write_text(portable)
@@ -74,7 +78,7 @@ def build():
 
     def extract_media(match):
         data = base64.b64decode(match[2], validate=True)
-        suffix = {'jpeg': 'jpg', 'mpeg': 'mp3'}.get(match[1], match[1])
+        suffix = {'jpeg': 'jpg', 'mpeg': 'mp3', 'gltf-binary': 'glb'}.get(match[1], match[1])
         name = f'assets/{hashlib.sha256(data).hexdigest()[:20]}.{suffix}'
         (dist / name).write_bytes(data)
         records[name] = len(data)

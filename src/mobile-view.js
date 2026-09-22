@@ -65,7 +65,12 @@ const EmberViewport = (() => {
      * because it changes both the body class and the strip heights. */
     const shortLandscape = mobile && !portrait && H < 380,
       mini = mobile && W > 320 && !shortLandscape;
+    const standingMage =
+      document
+        .getElementById("player-hero")
+        ?.classList.contains("hero-model-ready") || false;
     const signature = [
+      standingMage,
       mobile,
       compactDesktop,
       portrait,
@@ -132,9 +137,13 @@ const EmberViewport = (() => {
         cardH = Math.round((cardW * 7.4) / 5),
         peek = Math.round(cardH * (!portrait && H < 380 ? 0.55 : 0.66));
       /* The dock box extends below the screen: only the top `peek` px of a
-       * resting card are visible; a selected or dragged card rises out of it. */
-      const dockTop = H - safe.bottom - peek - 10;
-      l.hand = { x: 0, y: dockTop, w: 0, h: cardH + 20 };
+       * resting card are visible; a selected or dragged card rises out of it.
+       * The box also reaches one lift ABOVE the cards (the skin pads that much
+       * on top): a panning dock has to clip sideways, and a hovered card that
+       * rises into that headroom is then not clipped with it. */
+      const dockTop = H - safe.bottom - peek - 10,
+        lift = cardH - peek;
+      l.hand = { x: 0, y: dockTop - lift, w: 0, h: cardH + 20 + lift };
       if (portrait) {
         /* §12.1: the hero is the SAME card at every size, just three scales.
          * A mini card needs a taller strip than a 56px avatar did. */
@@ -240,6 +249,31 @@ const EmberViewport = (() => {
         w: l.player.w,
         h: l.player.h,
       };
+      if (standingMage) {
+        // The original hero button is the stage and remains the hit target.
+        // Swap its avatar lane with the covenant, without moving the hand dock.
+        const originalPlayer = { ...l.player };
+        const desiredStageHeight = portrait ? 174 : roomyRail ? 232 : 120;
+        const stageWidth = portrait ? 76 : roomyRail ? 136 : 90;
+        const floor = l.contract.y + l.contract.h;
+        const stageHeight = Math.min(
+          desiredStageHeight,
+          floor - l.enemyConsole.y - l.enemyConsole.h - 8,
+        );
+        l.playerConsole = {
+          x: portrait ? padL - 4 : padL + (roomyRail ? 12 : 0),
+          y: floor - stageHeight,
+          w: stageWidth,
+          h: stageHeight,
+        };
+        l.player = { ...l.playerConsole };
+        l.contract = {
+          x: portrait ? originalPlayer.x : padL + 2,
+          y: originalPlayer.y + (portrait ? 20 : 4),
+          w: originalPlayer.w,
+          h: originalPlayer.h,
+        };
+      }
       l.handHints = { x: l.hand.x, y: dockTop + 10, w: l.hand.w, h: peek };
       // Brand / shared round-notice slot / compact menu. Portrait secondary
       // actions remain available in the menu instead of crowding the message.
@@ -255,6 +289,7 @@ const EmberViewport = (() => {
       l.cardH = cardH;
       l.cardW = cardW;
       l.peek = peek;
+      l.standingMage = standingMage;
       l.tokenScale = roomy ? 1.4 : 1;
     }
     const before = state;

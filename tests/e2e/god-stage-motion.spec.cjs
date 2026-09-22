@@ -36,14 +36,23 @@ for (const [width, height] of [
     await open(page);
     if (width < 1000) {
       const geometry = await page.evaluate(() => {
-        const { contract, player, arena } = EmberViewport.layout;
-        return { contract, player, arena };
+        const { contract, player, arena, standingMage } = EmberViewport.layout;
+        return { contract, player, arena, standingMage };
       });
-      expect(geometry.contract.w).toBe(geometry.player.w);
-      expect(geometry.contract.h).toBe(geometry.player.h);
-      expect(geometry.contract.y + geometry.contract.h).toBeLessThan(
-        geometry.player.y,
-      );
+      if (geometry.standingMage) {
+        /* A standing hero model takes the taller stage in the left rail and the
+         * covenant keeps the avatar's size below it (reference-pages, 2026-09-20). */
+        expect(geometry.contract.w).toBeLessThanOrEqual(geometry.player.w);
+        expect(geometry.contract.y).toBeGreaterThanOrEqual(
+          geometry.player.y + geometry.player.h - 1,
+        );
+      } else {
+        expect(geometry.contract.w).toBe(geometry.player.w);
+        expect(geometry.contract.h).toBe(geometry.player.h);
+        expect(geometry.contract.y + geometry.contract.h).toBeLessThan(
+          geometry.player.y,
+        );
+      }
       expect(geometry.contract.x + geometry.contract.w).toBeLessThan(
         geometry.arena.x,
       );

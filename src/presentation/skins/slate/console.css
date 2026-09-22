@@ -420,17 +420,26 @@ html[data-skin="slate"] body.touch-layout #battle .end-turn.ready-end::before {
 html[data-skin="slate"] body.touch-layout #battle .hand-zone {
   gap: 8px;
   align-items: flex-start;
-  padding: 10px 8px 0;
+  /* One lift of headroom above the cards (mobile-view.js sizes the box for it):
+   * a panning dock clips, and a hovered card rises inside the box instead. */
+  padding: calc(10px + var(--hand-lift, 0px)) 8px 0;
   overflow: visible;
   scroll-snap-type: none;
   touch-action: pan-x;
+  /* That headroom lies over the covenant and the hero: only the cards take the
+   * pointer; the box itself lets it through. (Panning still works: a swipe on
+   * a card scrolls the box that holds it.) */
+  pointer-events: none;
+}
+html[data-skin="slate"] body.touch-layout #battle .hand-zone > .hand-card {
+  pointer-events: auto;
 }
 html[data-skin="slate"] body.touch-layout #battle .hand-zone::before {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
-  top: 0;
+  top: var(--hand-lift, 0px);
   height: 1px;
   background: var(--slate-line);
   pointer-events: none;
@@ -486,14 +495,14 @@ html[data-skin="slate"]
   transform: translateY(calc(-1 * var(--hand-lift, 60px))) scale(1);
   z-index: 28;
 }
-/* A panning dock cannot lift a card clear of the rail without tearing the
- * scroll, so a mouse there gets the shorter hint the selected card uses. */
+/* A panning dock clips to its box; the box carries one lift of headroom, so
+ * a mouse there gets the same full lift as a dock that fits its hand. */
 html[data-skin="slate"]
   body.touch-layout.pointer-fine
   #battle
   .hand-zone.hand-pan
   .hand-card:hover {
-  transform: translateY(-8px);
+  transform: translateY(calc(-1 * var(--hand-lift, 60px))) scale(1);
   z-index: 28;
 }
 html[data-skin="slate"] body.touch-layout #battle .hand-card.selected {
