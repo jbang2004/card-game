@@ -471,9 +471,13 @@ const EmberContractUI = (() => {
       document.addEventListener("keydown", stageKey, true);
       stageCtx.cards.forEach((node, i) => {
         node.addEventListener("mouseenter", () => {
+          /* Cards taking off from the slot pass under the pointer that just
+           * clicked it, and the browser reports each as an enter: hover picks
+           * a card only once the stack has landed. */
           if (
             document.body.classList.contains("pointer-fine") &&
-            !stageCtx?.pinned
+            !stageCtx?.pinned &&
+            !el.classList.contains("flying")
           )
             stageFocus(i);
         });

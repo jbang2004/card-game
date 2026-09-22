@@ -377,10 +377,18 @@
     if (!arena) return null;
     const margin = EmberViewport.mobile ? 26 : 72,
       hand = localRect($("hand")),
+      // The touch dock's box has one lift of headroom above its cards
+      // (mobile-view.js); placement measures from the cards, not the box.
+      handTop =
+        hand &&
+        hand.top +
+          (EmberViewport.mobile
+            ? parseFloat(getComputedStyle($("app")).getPropertyValue("--hand-lift")) || 0
+            : 0),
       minY = arena.top + arena.h * 0.5,
       maxY = Math.min(
         arena.bottom - margin,
-        hand ? hand.top - margin : arena.bottom - margin,
+        hand ? handTop - margin : arena.bottom - margin,
       ),
       board = game.s?.p?.board || [],
       count = board.length,
