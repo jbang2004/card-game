@@ -81,7 +81,11 @@ test("reference pages: live settings, guide chapters, hero modes and public cont
   await page.locator("#lobby-library-btn").click();
   await shot(page, "library");
   await page.locator("[data-library-inspect]").first().click();
+  await page.locator("#card-stage #library-detail-add").waitFor();
   await shot(page, "detail");
+  // The card is held up over the library: one Escape puts it back, the next leaves.
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#card-stage")).toHaveCount(0);
   await page.keyboard.press("Escape");
   await page.locator("#adventure-nav").click();
   await page.locator(".atlas-ready").waitFor();

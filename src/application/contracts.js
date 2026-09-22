@@ -347,6 +347,8 @@ const EmberContractUI = (() => {
       if (!el) return;
       stageEl = null;
       stageCtx = null;
+      /* The slabs stay for the return flight (the cards turn over again); the
+       * whole stage is dropped after it. */
       if (el.querySelector(".card-relief-canvas")) EmberCardRelief.release();
       document.removeEventListener("keydown", stageKey, true);
       const drop = () => el.remove();
@@ -428,6 +430,15 @@ const EmberContractUI = (() => {
         cardW: width,
       };
       stageFocus(0);
+      /* Every card in the stack is a slab from the start: turning over in flight is
+       * where the thickness shows. The back of each is seated that far behind its
+       * face (card-relief.css). */
+      stageCtx.cards.forEach((node) => {
+        const slab = EmberCardRelief.slab(node.querySelector(".god-card-front .card"));
+        if (!slab) return;
+        node.style.setProperty("--relief-depth", slab.depth + "px");
+        node.style.setProperty("--relief-flange", slab.flange.toFixed(2) + "px");
+      });
       /* FLIP: the slot's measured rect is the take-off pose. Every `.god-card`
        * is `inset: 0` inside `.god-cards`, so they all share one untransformed
        * box. Measure that container so focus offsets cannot displace the
@@ -454,10 +465,7 @@ const EmberContractUI = (() => {
           node.style.setProperty("--fly-delay", i * 70 + "ms"),
         );
         el.classList.add("flying");
-        setTimeout(
-          () => el.classList.remove("flying"),
-          620 + (ids.length - 1) * 70,
-        );
+        setTimeout(() => el.classList.remove("flying"), 620 + (ids.length - 1) * 70);
       } else el.classList.add("instant");
       el.querySelector(".god-scrim").onclick = () => closeStage();
       document.addEventListener("keydown", stageKey, true);

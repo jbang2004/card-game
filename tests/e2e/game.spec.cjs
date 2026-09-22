@@ -518,7 +518,7 @@ test("shared desktop and touch materials, readable lobby, single card aperture",
             Math.abs(a.y - b.y) > 0.5 ||
             s.borderRadius !== "0px" ||
             s.overflow !== "hidden"
-            ? [el.closest("[data-add]").dataset.add]
+            ? [el.closest("[data-library-inspect]").dataset.libraryInspect]
             : [];
         },
       ),

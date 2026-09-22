@@ -97,5 +97,7 @@
   "LIFECYCLE_STYLE": "presentation/skins/slate/lifecycle.css",
   "CARD_RELIEF_MAPS": "card-relief-maps.js",
   "CARD_RELIEF": "presentation/card-relief.js",
-  "SKIN_SLATE_CARD_RELIEF": "presentation/skins/slate/card-relief.css"
+  "SKIN_SLATE_CARD_RELIEF": "presentation/skins/slate/card-relief.css",
+  "CARD_STAGE": "presentation/card-stage.js",
+  "SKIN_SLATE_CARD_STAGE": "presentation/skins/slate/card-stage.css"
 }

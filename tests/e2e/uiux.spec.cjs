@@ -223,14 +223,18 @@ test("long collection rules stay above stats on desktop and phone", async ({
     await page.screenshot({
       path: `artifacts/uiux/verified-long-card-${width}.png`,
     });
+    // The card is taken out of the grid and held up; its label must fit the screen.
     await page.locator("[data-library-inspect]").click();
-    await assertDialogFit(page);
-    await expect(page.locator(".card-detail-copy > h3")).toHaveText("引火学徒");
-    await turnTo(page, ".card-detail-copy > p:last-child");
-    await expect(
-      page.locator(".card-detail-copy > p:last-child"),
-    ).not.toBeEmpty();
+    await expect(page.locator("#card-stage .card-stage-name")).toHaveText("引火学徒");
+    await expect(page.locator("#card-stage .card-stage-count")).not.toBeEmpty();
+    await page.waitForTimeout(700); // flight
+    const shell = await page.locator("#card-stage .god-shell").boundingBox();
+    expect(shell.x).toBeGreaterThanOrEqual(0);
+    expect(shell.y).toBeGreaterThanOrEqual(0);
+    expect(shell.x + shell.width).toBeLessThanOrEqual(width + 0.5);
+    expect(shell.y + shell.height).toBeLessThanOrEqual(page.viewportSize().height + 0.5);
     await page.locator("#library-detail-back").click();
+    await expect(page.locator("#card-stage")).toHaveCount(0);
     await expect(page.locator("#library-search")).toHaveValue("引火学徒");
     await ctx.close();
   }

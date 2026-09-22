@@ -1,0 +1,19 @@
+/* Test skin "slate" — a library card held up on the stage (EmberCardStage).
+ * Structure, flight, flip and scrim are the god stage's (console.css); this file
+ * only adds what an ordinary card's label needs. */
+html[data-skin="slate"] body .god-stage.card-stage {
+  position: fixed;
+  z-index: 1100;
+}
+html[data-skin="slate"] body .card-stage .card-stage-name {
+  margin: 0;
+  color: var(--slate-ink);
+  font: 700 28px/1.2 var(--slate-font);
+  letter-spacing: 1px;
+}
+html[data-skin="slate"] body .card-stage .card-detail-rule {
+  color: var(--slate-ink);
+}
+html[data-skin="slate"] body.touch-layout .card-stage .card-stage-name {
+  font-size: 22px;
+}

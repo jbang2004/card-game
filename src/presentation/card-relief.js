@@ -36,6 +36,18 @@ const EmberCardRelief = (() => {
   // sways on its own, because the card itself would not be moving.
   STEER.follow = { range: [0.24, 0.24], spring: [10, 0.7], idleAfter: Infinity, sway: [0, 0] };
   const SWAY_SPRING = [5, 1];
+  // A card is a slab, not a sticker. Its thickness is real geometry: a stack of
+  // card-shaped layers straight behind the face along Z, so the browser's own
+  // perspective produces the side faces and the way the back recedes — and, like a
+  // real card, shows them only on the edges turned toward the viewer, only by
+  // depth × sin(angle). A held card leans a few degrees and shows a sliver; the
+  // thickness is read when a card turns over on a stage. Thick card stock, not a
+  // tile: about 12px on a hand card, 17px on a stage card.
+  const THICKNESS = 0.05,
+    MAX_LAYERS = 28;
+  // The face's painted edge (card-face.css `.card-inner`: a max(1px, 0.5cqw)
+  // hairline seated on a 1px dark line) lies outside the card box, in its plane.
+  const EDGE = (width) => Math.max(1, width * 0.005);
   const SWAY_FRAME_MS = 1000 / 30;
   // The sway makes its point in a few breaths; after that a card left alone comes to
   // rest and costs nothing until the pointer moves again.
@@ -284,6 +296,7 @@ void main(){
     stats.asleep = true;
     if (current?.tiltTarget) {
       current.tiltTarget.classList.remove("card-relief-tilt", "card-relief-hinge");
+      slab(current.tiltTarget, false);
       current.tiltTarget.style.removeProperty("--relief-rx");
       current.tiltTarget.style.removeProperty("--relief-ry");
     }
@@ -313,15 +326,83 @@ void main(){
     } else {
       const anchor = current.anchor?.isConnected ? current.anchor : host;
       const box = anchor.getBoundingClientRect();
-      const reach =
-        anchor === host
-          ? Math.max(box.width * 1.6, innerWidth * 0.3)
-          : Math.max(box.width, box.height) * 0.55;
-      target.x = Math.max(-1, Math.min(1, (event.clientX - box.left - box.width / 2) / reach));
-      target.y = Math.max(-1, Math.min(1, (event.clientY - box.top - box.height / 2) / reach));
+      // Against the card itself, its own edges are the full turn on each axis; the
+      // hero preview is steered from anywhere in the window instead.
+      const wide = anchor === host ? Math.max(box.width * 1.6, innerWidth * 0.3) : 0,
+        reachX = wide || box.width / 2,
+        reachY = wide || box.height / 2;
+      target.x = Math.max(-1, Math.min(1, (event.clientX - box.left - box.width / 2) / reachX));
+      target.y = Math.max(-1, Math.min(1, (event.clientY - box.top - box.height / 2) / reachY));
     }
     lastPointer = now;
     wake();
+  }
+  /* Give `card` (a `.card` element inside a 3D-tilted parent, or tilted itself) its
+   * thickness, or take it away. Returns { depth, flange } in px (null when off) so an
+   * owner with a card back can seat it that far behind the face. The layers sit under
+   * the card's own children and the rim over them; a flat clone of the markup is
+   * unaffected once they are removed. Owners that turn a card over (the stages) keep
+   * the slab through the flip — that is where it is seen. */
+  function slab(card, on = true) {
+    if (!card?.classList.contains("card")) return null;
+    card
+      .querySelectorAll(":scope > .card-relief-slab, :scope > .card-relief-rim")
+      .forEach((node) => node.remove());
+    card.classList.toggle("card-relief-slabbed", on);
+    ["--relief-depth", "--relief-flange", "--relief-rim"].forEach((p) =>
+      card.style.removeProperty(p),
+    );
+    if (!on) return null;
+    const width = card.offsetWidth,
+      depth = Math.max(4, Math.round(width * THICKNESS)),
+      // The slab is as wide as the face with its painted edge: an edge overhanging
+      // the side would cover it at every gentle angle.
+      flange = EDGE(width) + 1,
+      count = Math.min(MAX_LAYERS, depth);
+    card.style.setProperty("--relief-depth", depth + "px");
+    card.style.setProperty("--relief-flange", flange.toFixed(2) + "px");
+    const layers = document.createDocumentFragment();
+    for (let k = 1; k <= count; k++) {
+      const layer = document.createElement("i");
+      layer.className = "card-relief-slab";
+      layer.setAttribute("aria-hidden", "true");
+      // Board lit by the key light right behind the face's dark line, falling off
+      // toward the back. Only a layer's rim is ever seen, so a diagonal ramp per layer
+      // makes the sides facing the upper-left light paler than the sides facing away.
+      const at = k / count,
+        lit = 0.9 - 0.5 * at,
+        tone = (level) =>
+          "rgb(" + [226, 231, 238].map((c) => Math.round(c * level + 12 * (1 - level))).join(",") + ")";
+      layer.style.background = `linear-gradient(135deg, ${tone(lit)} 0%, ${tone(lit * 0.72)} 50%, ${tone(lit * 0.36)} 100%)`;
+      if (k === count) layer.dataset.last = "";
+      layer.style.setProperty("--z", (-depth * at).toFixed(2) + "px");
+      layers.append(layer);
+    }
+    card.prepend(layers);
+    // The bevel where the face meets the side; paint() lights it by the tilt.
+    const rim = document.createElement("i");
+    rim.className = "card-relief-rim";
+    rim.setAttribute("aria-hidden", "true");
+    card.append(rim);
+    return { depth, flange };
+  }
+  /* The face's bevel catches the key light (upper left) on the edges turned toward
+   * the viewer and falls dark on the edges turned away, like the sides do. */
+  function lightRim(face) {
+    if (!face?.classList.contains("card-relief-slabbed")) return;
+    // CSS rotateY(+) brings the left edge forward, rotateX(+) the bottom; paint()
+    // writes --relief-ry = ry and --relief-rx = -rx.
+    const near = { left: tilt.x, right: -tilt.x, top: tilt.y, bottom: -tilt.y },
+      lit = { left: 0.45, top: 0.45, right: -0.45, bottom: -0.45 },
+      w = (parseFloat(face.style.getPropertyValue("--relief-flange")) - 1).toFixed(2) + "px",
+      color = (side) => {
+        const i = Math.max(-1, Math.min(1, lit[side] + 0.5 * near[side]));
+        return i >= 0 ? `rgba(255,255,255,${(i * 0.55).toFixed(3)})` : `rgba(0,0,0,${(-i * 0.7).toFixed(3)})`;
+      };
+    face.style.setProperty(
+      "--relief-rim",
+      `inset 0 ${w} 0 0 ${color("top")}, inset 0 -${w} 0 0 ${color("bottom")}, inset ${w} 0 0 0 ${color("left")}, inset -${w} 0 0 0 ${color("right")}`,
+    );
   }
   function wake() {
     clearTimeout(idleTimer);
@@ -384,6 +465,8 @@ void main(){
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     current.tiltTarget?.style.setProperty("--relief-rx", (-rx * 180) / Math.PI + "deg");
     current.tiltTarget?.style.setProperty("--relief-ry", (ry * 180) / Math.PI + "deg");
+    // A card an owner tilts itself (the stages) still has its slab and rim.
+    lightRim(current.tiltTarget || host.closest(".card"));
     stats.frames++;
   }
   function spring(axis, goal, [rate, damping], dt) {
@@ -487,6 +570,7 @@ void main(){
       element.classList.add("card-relief-ready");
       current.tiltTarget?.classList.add("card-relief-tilt");
       current.tiltTarget?.classList.toggle("card-relief-hinge", current.hinge);
+      slab(current.tiltTarget);
       stats.status = "ready";
       wake();
       return true;
@@ -586,6 +670,7 @@ void main(){
     mount,
     mountCard,
     attend,
+    slab,
     warm,
     release,
     /* The pointer left the surface that steers the card: come back to face-on. */

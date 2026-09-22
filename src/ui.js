@@ -783,7 +783,7 @@
     "scroll",
     (event) => {
       const next = event.currentTarget.scrollLeft;
-      if (readingUid && Math.abs(handScrollLeft - next) > 4) clearSelection();
+      if (readingUid && Math.abs(handScrollLeft - next) > 4) clearSelection(true);
       handScrollLeft = next;
       paintHandScrollHints();
     },
@@ -1480,7 +1480,7 @@
         !selection &&
         !e.target.closest?.(".hand-card,#touch-target-bar")
       ) {
-        clearSelection();
+        clearSelection(true);
         e.preventDefault();
         e.stopPropagation();
         return;
@@ -1586,6 +1586,11 @@
     );
     if (!card || !source) return clearSelection();
     let lift = $("hand-card-lift");
+    // A lift still sinking back is not the one to reuse.
+    if (lift?.dataset.leaving) {
+      lift.remove();
+      lift = null;
+    }
     const fresh = !lift;
     if (!lift) {
       lift = document.createElement("button");
@@ -1660,7 +1665,7 @@
   }
   function selectCard(uid) {
     if (!inBattle || modalType || EmberFX.busy) return;
-    if (readingUid === uid) return clearSelection();
+    if (readingUid === uid) return clearSelection(true);
     const card = game.s.p.hand.find((x) => x.uid === uid);
     if (!card) return;
     clearSelection();
@@ -1785,12 +1790,42 @@
       updateSelection(targets);
     } else act(() => game.dispatch({ type: "power", side: "p" }));
   }
-  function clearSelection() {
+  /* `settle`: the player put the card back themselves (tapped the table, the card
+   * again, Escape, scrolled the hand), so it sinks back the way it rose. Every
+   * other caller is handing the card on — to a drag, a play, a new state — and
+   * must not leave a ghost fading behind it. */
+  function clearSelection(settle = false) {
     readingUid = null;
     app.classList.remove("reading-hand");
-    if ($("hand-card-lift")?.querySelector(".card-relief-canvas"))
-      EmberCardRelief.release();
-    $("hand-card-lift")?.remove();
+    const lift = $("hand-card-lift");
+    if (
+      lift &&
+      settle &&
+      !lift.dataset.leaving &&
+      !settings.reduced &&
+      !matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      lift.dataset.leaving = "1";
+      lift.style.pointerEvents = "none";
+      lift.setAttribute("aria-hidden", "true");
+      // The exit is the entrance reversed, at the 60% duration exits get (§13.2).
+      lift
+        .animate(
+          [
+            { transform: "none", opacity: 1 },
+            { transform: "translateY(24px) scale(.94)", opacity: 0 },
+          ],
+          { duration: 110, easing: "cubic-bezier(.4,0,1,1)", fill: "forwards" },
+        )
+        .finished.catch(() => {})
+        .then(() => {
+          if (lift.querySelector(".card-relief-canvas")) EmberCardRelief.release();
+          lift.remove();
+        });
+    } else if (lift && !lift.dataset.leaving) {
+      if (lift.querySelector(".card-relief-canvas")) EmberCardRelief.release();
+      lift.remove();
+    }
     document.querySelectorAll("#hand .reading-source").forEach((el) => {
       el.classList.remove("reading-source");
       el.setAttribute("aria-expanded", "false");
@@ -2376,7 +2411,7 @@
         side: "p",
         uid,
       });
-    } else clearSelection();
+    } else clearSelection(true);
   };
   document.addEventListener("pointerdown", () => EmberAudio.unlock(), {
     passive: true,
@@ -2426,7 +2461,7 @@
     if (input && e.key !== "Escape") return;
     if (e.key === "Escape") {
       if (drag) cancelDrag(false);
-      if (selection || readingUid) clearSelection();
+      if (selection || readingUid) clearSelection(true);
       else if (modalType && $("modal").dataset.locked !== "1") closeModal();
       return;
     }

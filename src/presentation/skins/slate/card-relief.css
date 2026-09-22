@@ -48,6 +48,61 @@ html[data-skin="slate"] body .card.card-relief-tilt {
  * clearance. card-relief.js lights the face for this same order. */
 html[data-skin="slate"] body .card.card-relief-tilt.card-relief-hinge {
   transform-origin: 50% 100%;
-  transform: perspective(720px) rotateY(var(--relief-ry, 0deg))
-    rotateX(var(--relief-rx, 0deg));
+  /* Half a pixel up: on a landscape phone the label clearance is exactly its 8px
+   * minimum, and a 3D matrix's rounding must not be what decides it. */
+  transform: translateY(-0.5px) perspective(720px)
+    rotateY(var(--relief-ry, 0deg)) rotateX(var(--relief-rx, 0deg));
+}
+/* Thickness (EmberCardRelief.slab): real layers behind the face along Z. The card
+ * must keep its children in 3D for that, and `isolation: isolate` — which the card
+ * face uses only to scope its internal z-indexes — would flatten them; a 3D
+ * transform already scopes them just as well. */
+html[data-skin="slate"] :is(#app, body) .card.card-relief-slabbed {
+  transform-style: preserve-3d;
+  isolation: auto;
+  /* A filter flattens the element's 3D too (the legacy sheet gives rare and better
+   * cards a drop-shadow filter — with it every layer collapses onto the face and all
+   * that remains is a pale outline). The slab's own shadow takes over. */
+  filter: none;
+  clip-path: none;
+  mask: none;
+}
+html[data-skin="slate"] body .card-relief-slab {
+  position: absolute;
+  /* As wide as the face together with its painted edge (card-face.css `.card-inner`
+   * draws that edge outside the card box, in its plane): the slab's side starts
+   * right behind the dark line, with nothing overhanging it. */
+  inset: calc(-1 * var(--relief-flange, 0px));
+  border-radius: inherit;
+  pointer-events: none;
+  /* One layer per pixel of depth, straight back along Z and nothing else: what shows
+   * of the side is depth × sin(angle), on the near edges only, as on a real card.
+   * Face-on the stack is exactly hidden. */
+  transform: translateZ(var(--z));
+  /* Each layer's tone is set inline by card-relief.js: it varies along the depth. */
+  background: #2a3340;
+}
+/* Under the slab, the shadow it casts on the table: below the card, never a ring
+ * around it. */
+html[data-skin="slate"] body .card-relief-slab[data-last] {
+  box-shadow: 0 14px 22px -8px #000000b3;
+}
+/* The bevel between face and side; card-relief.js lights it by the tilt. */
+html[data-skin="slate"] body .card-relief-rim {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: var(--relief-rim, none);
+}
+/* On a stage the tilt lives on an ancestor, so every box between it and the card
+ * has to pass the 3D scene down; the card's back then sits a card's depth behind
+ * its face, and the slab fills the space between — mid-flip that is the side. The
+ * owner copies --relief-depth/--relief-flange from slab() onto the `.god-card`. */
+html[data-skin="slate"] body .god-card-face:has(> .card-relief-slabbed) {
+  transform-style: preserve-3d;
+}
+html[data-skin="slate"] body .god-card-inner:has(> .god-card-front > .card-relief-slabbed) > .god-card-back {
+  inset: calc(-1 * var(--relief-flange, 0px));
+  transform: rotateY(180deg) translateZ(var(--relief-depth, 0px));
 }

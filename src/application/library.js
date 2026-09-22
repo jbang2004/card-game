@@ -251,7 +251,7 @@ const EmberLibrary = (() => {
         ? list
             .map(
               (c) =>
-                `<div class="library-entry"><button class="library-item" data-add="${c.id}" title="${c.name}：${c.text}">${cardHTML(c)}<span class="add-label">+ 加入牌组</span><span class="owned-count">${editDeck.filter((id) => id === c.id).length} / ${rules.copyLimit(D, c)}</span></button><button class="library-inspect" data-library-inspect="${c.id}" aria-label="查看${escape(c.name)}详情">详情</button></div>`,
+                `<div class="library-entry"><button class="library-item" data-library-inspect="${c.id}" title="${c.name}：${c.text}" aria-label="翻看${escape(c.name)}">${cardHTML(c)}<span class="add-label">点击翻看</span><span class="owned-count">${editDeck.filter((id) => id === c.id).length} / ${rules.copyLimit(D, c)}</span></button><button class="library-inspect" data-add="${c.id}" aria-label="将${escape(c.name)}加入牌组">加入</button></div>`,
             )
             .join("")
         : '<p class="library-empty">没有符合筛选条件的卡牌。<br>试试其他关键词或费用。</p>';
@@ -269,56 +269,60 @@ const EmberLibrary = (() => {
         .join(" · ");
       $("library-foot").textContent =
         "显示 " + list.length + ` 张可用职业与中立牌 · ${rules.summary(D)}`;
+      /* One way into the deck for the pill under a card and for the stage. */
+      const addToDeck = (id) => {
+        const c = D.byId[id],
+          max = rules.copyLimit(D, c);
+        if (editDeck.length >= D.deckRules.size) {
+          toast("牌组已满。先在右侧移除卡牌。");
+          return false;
+        }
+        if (editDeck.filter((x) => x === id).length >= max) {
+          toast(`${c.name}最多携带 ${max} 张。`);
+          return false;
+        }
+        editDeck.push(id);
+        renderDeck();
+        const count = document.querySelector(
+          `#library-grid [data-library-inspect="${id}"] .owned-count`,
+        );
+        if (count)
+          count.textContent = editDeck.filter((x) => x === id).length + " / " + max;
+        EmberAudio.fx("ui");
+        return true;
+      };
+      const rarityName = { common: "普通", rare: "稀有", epic: "史诗", legendary: "传说" };
+      const stageLabel = (c) =>
+        `<p class="god-eyebrow">${escape(D.classNames[c.class])} · ${rarityName[c.rarity]} · ${c.cost} 法力</p><h3 class="card-stage-name">${escape(c.name)}</h3><p class="god-cond card-detail-rule">${escape(c.text)}</p><p class="god-cond card-stage-count"><b>已加入 ${editDeck.filter((id) => id === c.id).length} / ${rules.copyLimit(D, c)} 张</b> · 牌组 ${editDeck.length} / ${D.deckRules.size}</p><button type="button" class="gold-btn god-invoke" id="library-detail-add">加入牌组</button><button type="button" class="god-page-link" id="library-detail-back">返回收藏</button>`;
+      /* Clicking a card takes it out of the grid: it flies up, turns over and lands
+       * enlarged, the way a contract does on the god stage. */
       document.querySelectorAll("[data-library-inspect]").forEach((b) => {
         b.onclick = () => {
+          hidePreview();
           const c = D.byId[b.dataset.libraryInspect];
-          showModal(
-            `<section class="modal-box"><div class="modal-heading"><h2>卡牌详情</h2></div><div class="card-detail-layout"><div class="card-detail-art">${cardHTML(c)}</div><div class="card-detail-copy"><h3>${escape(c.name)}</h3><p class="card-detail-rule">${escape(c.text)}</p><p>${escape(D.classNames[c.class])} · ${{ common: "普通", rare: "稀有", epic: "史诗", legendary: "传说" }[c.rarity]}</p><p>已加入 ${editDeck.filter((id) => id === c.id).length} / ${rules.copyLimit(D, c)} 张</p><p>牌组 ${editDeck.length} / ${D.deckRules.size}</p></div></div><div class="modal-footer"><button class="ghost-btn" id="library-detail-back">返回收藏</button><button class="gold-btn" id="library-detail-add">加入牌组</button></div></section>`,
-            "library-card",
-          );
-          EmberCardRelief.mountCard(
-            document.querySelector("#modal .card-detail-art > .card"),
-            { id: c.id, rarity: c.rarity, steer: "held" },
-          );
-          $("library-detail-back").onclick = () => renderLibrary();
-          $("library-detail-add").onclick = () => {
-            if (editDeck.length >= D.deckRules.size) {
-              toast("牌组已满。先移除卡牌再加入。");
-              return;
-            }
-            const max = rules.copyLimit(D, c);
-            if (editDeck.filter((id) => id === c.id).length >= max) {
-              toast(`${c.name}最多携带 ${max} 张。`);
-              return;
-            }
-            editDeck.push(c.id);
-            renderLibrary();
-          };
+          EmberCardStage.show({
+            card: c,
+            cardHTML: cardHTML(c),
+            from: b.querySelector(".card"),
+            label: stageLabel(c),
+            bind: (stage, close) => {
+              stage.querySelector("#library-detail-back").onclick = () => close();
+              stage.querySelector("#library-detail-add").onclick = () => {
+                if (!addToDeck(c.id)) return;
+                stage.querySelector(".card-stage-count").innerHTML =
+                  `<b>已加入 ${editDeck.filter((id) => id === c.id).length} / ${rules.copyLimit(D, c)} 张</b> · 牌组 ${editDeck.length} / ${D.deckRules.size}`;
+              };
+            },
+          });
         };
+        b.onmouseenter = () => preview(b.dataset.libraryInspect, b);
+        b.onmouseleave = hidePreview;
       });
-      document.querySelectorAll("[data-add]").forEach((b) => {
+      document.querySelectorAll("#library-grid [data-add]").forEach((b) => {
         b.onclick = () => {
           hidePreview();
-          const id = b.dataset.add,
-            c = D.byId[id],
-            max = rules.copyLimit(D, c);
-          if (editDeck.length >= D.deckRules.size) {
-            toast("牌组已满。先在右侧移除卡牌。");
-            return;
-          }
-          if (editDeck.filter((x) => x === id).length >= max) {
-            toast(`${c.name}最多携带 ${max} 张。`);
-            return;
-          }
-          editDeck.push(id);
-          renderDeck();
-          const count = b.querySelector(".owned-count");
-          count.textContent =
-            editDeck.filter((x) => x === id).length + " / " + max;
-          EmberAudio.fx("ui");
+          addToDeck(b.dataset.add);
         };
-        b.onmouseenter = () => preview(b.dataset.add, b);
-        b.onmouseleave = hidePreview;
       });
     }
     function renderDeck() {
