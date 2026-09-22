@@ -265,81 +265,92 @@
     // The spine is kept only as data (tests and tooling read `#target-path`);
     // nothing of it paints, so it is the one legacy path still written.
     $("target-path").setAttribute("d", `M${from.x},${from.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${to.x},${to.y}`);
-    // A virtual tilted camera projects BOTH ribbon edges, not just its spine.
-    // Invert that camera on the ground plane so the pointer endpoint is exact.
-    const ox = (from.x + to.x) / 2, oy = (from.y + to.y) / 2;
-    const camera = 1100, cosine = .72, sine = Math.sqrt(1 - cosine*cosine);
-    const ground = (p) => {
-      const y = (p.y-oy)*camera / (camera*cosine-(p.y-oy)*sine);
-      return { x: (p.x-ox)*(camera+y*sine)/camera, y };
+    /* The ribbon is built in screen space along that same spine: sample the
+     * cubic, offset each sample along its normal, and draw short widening tiles
+     * with a gap between them. Depth is two fakes that read well and cost
+     * nothing — a dark band under each tile's lower edge, and a soft shadow the
+     * whole ribbon casts a little further down the screen. */
+    const bez = (t) => {
+      const u = 1 - t;
+      return {
+        x: u*u*u*from.x + 3*u*u*t*c1.x + 3*u*t*t*c2.x + t*t*t*to.x,
+        y: u*u*u*from.y + 3*u*u*t*c1.y + 3*u*t*t*c2.y + t*t*t*to.y,
+      };
     };
-    const start = ground(from), end = ground(to);
-    const gx = end.x-start.x, gy = end.y-start.y, distance = Math.hypot(gx, gy);
-    const height = Math.min(EmberViewport.mobile ? 52 : 80, distance*.14);
-    const width = Math.min(EmberViewport.mobile ? 15 : 21, distance*.14);
-    const project = (t, side = 0, depth = 0, flat = false) => {
-      const x = start.x+gx*t-gy/distance*side;
-      const y = start.y+gy*t+gx/distance*side;
-      const z = (flat ? 0 : 4*height*t*(1-t)) + depth;
-      const scale = camera/(camera+y*sine-z*cosine);
-      return `${(ox+x*scale).toFixed(2)},${(oy+(y*cosine-z*sine)*scale).toFixed(2)}`;
+    const tangent = (t) => {
+      const u = 1 - t,
+        x = 3*u*u*(c1.x-from.x) + 6*u*t*(c2.x-c1.x) + 3*t*t*(to.x-c2.x),
+        y = 3*u*u*(c1.y-from.y) + 6*u*t*(c2.y-c1.y) + 3*t*t*(to.y-c2.y),
+        n = Math.hypot(x, y) || 1;
+      return { x: x/n, y: y/n };
     };
-    const polygon = points => `M${points.join(' L')} Z`;
-    // Small fixed lookup table gives approximately equal WORLD arc lengths.
-    // Reused across updates; all visible segments share four SVG paths.
+    // Equal steps in t bunch up where the curve is tight; a small arc-length
+    // table (reused across frames) keeps the tiles evenly spaced.
     const arc = cueArcLengths;
     arc[0] = 0;
+    let prev = bez(0);
     for (let i = 1; i <= 48; i++) {
-      const t = (i-.5)/48;
-      arc[i] = arc[i-1]+Math.hypot(distance, 4*height*(1-2*t))/48;
+      const at = bez(i/48);
+      arc[i] = arc[i-1] + Math.hypot(at.x-prev.x, at.y-prev.y);
+      prev = at;
     }
     const total = arc[48];
-    const atLength = value => {
+    const atLength = (value) => {
       const length = Math.max(0, Math.min(total, value));
       let i = 1;
       while (i < 48 && arc[i] < length) i++;
-      return (i-1+(length-arc[i-1])/(arc[i]-arc[i-1]))/48;
+      return (i-1 + (length-arc[i-1])/(arc[i]-arc[i-1] || 1))/48;
     };
+    // side: signed offset along the normal; drop: screen px straight down.
+    const project = (t, side = 0, drop = 0) => {
+      const p = bez(t), d = tangent(t);
+      return `${(p.x - d.y*side).toFixed(2)},${(p.y + d.x*side + drop).toFixed(2)}`;
+    };
+    const polygon = (points) => `M${points.join(' L')} Z`;
+    const width = Math.min(EmberViewport.mobile ? 15 : 21, total*.14);
     const headLength = Math.min(EmberViewport.mobile ? 48 : 66, total*.42);
-    const shaftLength = total-headLength*.75;
+    const shaftLength = total - headLength*.75;
     const count = Math.min(EmberViewport.mobile ? 14 : 20,
       Math.max(2, Math.ceil(shaftLength/(EmberViewport.mobile ? 30 : 40))));
+    // Narrow where it leaves the hand, widest under the head: the taper is what
+    // reads as the shaft coming toward the viewer.
+    const w = (t) => width*(.45 + .95*t);
     const faces = [], sides = [], shadows = [], highlights = [];
     for (let i = 0; i < count; i++) {
-      const a = atLength(shaftLength*i/count);
-      const b = atLength(shaftLength*(i+.72)/count);
-      const m = (a+b)/2;
-      // Narrow where it leaves the hand, widest under the head: the taper is what
-      // reads as the shaft coming toward the viewer.
-      const w = t => width*(.45+.95*t);
-      const left = [a,m,b].map(t => project(t,-w(t)));
-      const right = [b,m,a].map(t => project(t,w(t)));
-      faces.push(polygon([...left,...right]));
-      // Extrude in WORLD height; side thickness foreshortens with the camera.
-      for (const sign of [-1,1]) sides.push(polygon([
-        project(a,sign*w(a)), project(b,sign*w(b)),
-        project(b,sign*w(b),-3), project(a,sign*w(a),-3),
+      const a = atLength(shaftLength*i/count),
+        b = atLength(shaftLength*(i+.72)/count),
+        m = (a+b)/2;
+      faces.push(polygon([
+        ...[a,m,b].map((t) => project(t,-w(t))),
+        ...[b,m,a].map((t) => project(t, w(t))),
       ]));
-      shadows.push(polygon([project(a,-w(a),0,true),project(b,-w(b),0,true),
-        project(b,w(b),0,true),project(a,w(a),0,true)]));
-      highlights.push(polygon([project(a,-w(a)*.82),project(b,-w(b)*.82),
-        project(b,-w(b)*.62),project(a,-w(a)*.62)]));
+      for (const sign of [-1, 1]) sides.push(polygon([
+        project(a,sign*w(a)), project(b,sign*w(b)),
+        project(b,sign*w(b),3), project(a,sign*w(a),3),
+      ]));
+      shadows.push(polygon([
+        project(a,-w(a),10), project(b,-w(b),10), project(b,w(b),10), project(a,w(a),10),
+      ]));
+      highlights.push(polygon([
+        project(a,-w(a)*.82), project(b,-w(b)*.82), project(b,-w(b)*.62), project(a,-w(a)*.62),
+      ]));
     }
     const put = (id, data, before = 'target-arrow') =>
       cueNode(id, 'path', before)?.setAttribute('d', data);
-    put('target-ground-shadow',shadows.join(' '),'target-path');
-    put('target-ribbon-depth',sides.join(' '));
-    put('target-ribbon',faces.join(' '));
-    put('target-ribbon-highlight',highlights.join(' '));
+    put('target-ground-shadow', shadows.join(' '), 'target-path');
+    put('target-ribbon-depth', sides.join(' '));
+    put('target-ribbon', faces.join(' '));
+    put('target-ribbon-highlight', highlights.join(' '));
     const base = atLength(total-headLength), notch = atLength(total-headLength*.72);
     const wing = width*1.85;
-    const head = [project(1),project(base,-wing),project(notch),project(base,wing)];
-    const lower = [project(1,0,-3),project(base,-wing,-3),project(notch,0,-3),project(base,wing,-3)];
-    put('target-arrow-depth', head.map((p,i) => polygon([p,head[(i+1)%4],lower[(i+1)%4],lower[i]])).join(' '));
-    $('target-arrow').setAttribute('d',polygon(head));
-    put('target-arrow-shade',polygon([project(1),project(notch),project(base,wing)]),'target-circle');
-    put('target-arrow-shine',polygon([project(atLength(total-headLength*.15)),
-      project(base,-wing*.82),project(notch,-width*.15)]),'target-circle');
+    const head = [project(1), project(base,-wing), project(notch), project(base,wing)];
+    const lower = [project(1,0,3), project(base,-wing,3), project(notch,0,3), project(base,wing,3)];
+    put('target-arrow-depth', head.map((p,i) => polygon([p, head[(i+1)%4], lower[(i+1)%4], lower[i]])).join(' '));
+    $('target-arrow').setAttribute('d', polygon(head));
+    put('target-arrow-shade', polygon([project(1), project(notch), project(base,wing)]), 'target-circle');
+    put('target-arrow-shine', polygon([
+      project(atLength(total-headLength*.15)), project(base,-wing*.82), project(notch,-width*.15),
+    ]), 'target-circle');
     const radius =
       mode === "placement"
         ? EmberViewport.mobile

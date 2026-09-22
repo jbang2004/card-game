@@ -1451,6 +1451,9 @@ html[data-skin="slate"] body #target-lines[data-mode="target"] #target-circle {
  * the way (as in Hearthstone), the arrow runs from its slot in the hand to the
  * pointer, and nothing is drawn across a full card face. A minion being placed
  * keeps its ghost — the ghost IS what lands. */
+html[data-skin="slate"] body #app.is-targeting:not(.placement-active) #battle .hand-card.drag-source {
+  opacity: 1;
+}
 html[data-skin="slate"] body #app.is-targeting:not(.placement-active) .drag-ghost {
   opacity: 0;
   /* Same anchor as the ghost's own pose (style.css), only smaller. */
