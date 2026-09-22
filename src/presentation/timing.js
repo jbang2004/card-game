@@ -25,6 +25,7 @@ const EmberTiming = (() => {
     stagger: 45,
     staggerSteps: 5,
     attack: { lift: 110, lunge: 150, recover: 200, rangedRecoil: 90, rangedSpeed: 1800, rangedMin: 90, rangedMax: 220 },
+    hero: { mageCastWindup: 550 },
     spell: { castFlash: 120, projectileSpeed: 1400, projectileMin: 160, projectileMax: 320, link: 140 },
     death: { delay: 120, freeze: 100, dissolve: 320, reflow: 220 },
     summon: { land: 260, legendary: 500 },

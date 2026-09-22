@@ -7,5 +7,5 @@
   "src/engine.js": "137f55810e5657c8aed232805821e42ba7aa1d7a1ddfd456b0982dee425c8c82",
   "src/content/cards.js": "652aa68c033e08e9aab4198d27bfc75c08359828bffb36f3f555bdc87a36262f",
   "src/content/campaign.js": "b5075d1f560b54d5ebb5f8bfc3a8b074540c146eb8e5a3fd5cbcdcdb389ed6bf",
-  "src/presentation/timing.js": "35405a98b161d7f89d97ba1ecea61ea8af246c49f1c71d60d981ed18d2347fb7"
+  "src/presentation/timing.js": "fd3204825b5dec69f73e516c35d7e5e324350dc10ed396960830090a49be5693"
 }

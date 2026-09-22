@@ -65,7 +65,12 @@ const EmberViewport = (() => {
      * because it changes both the body class and the strip heights. */
     const shortLandscape = mobile && !portrait && H < 380,
       mini = mobile && W > 320 && !shortLandscape;
+    const standingMage =
+      document
+        .getElementById("player-hero")
+        ?.classList.contains("hero-model-ready") || false;
     const signature = [
+      standingMage,
       mobile,
       compactDesktop,
       portrait,
@@ -240,6 +245,31 @@ const EmberViewport = (() => {
         w: l.player.w,
         h: l.player.h,
       };
+      if (standingMage) {
+        // The original hero button is the stage and remains the hit target.
+        // Swap its avatar lane with the covenant, without moving the hand dock.
+        const originalPlayer = { ...l.player };
+        const desiredStageHeight = portrait ? 174 : roomyRail ? 232 : 120;
+        const stageWidth = portrait ? 76 : roomyRail ? 136 : 90;
+        const floor = l.contract.y + l.contract.h;
+        const stageHeight = Math.min(
+          desiredStageHeight,
+          floor - l.enemyConsole.y - l.enemyConsole.h - 8,
+        );
+        l.playerConsole = {
+          x: portrait ? padL - 4 : padL + (roomyRail ? 12 : 0),
+          y: floor - stageHeight,
+          w: stageWidth,
+          h: stageHeight,
+        };
+        l.player = { ...l.playerConsole };
+        l.contract = {
+          x: portrait ? originalPlayer.x : padL + 2,
+          y: originalPlayer.y + (portrait ? 20 : 4),
+          w: originalPlayer.w,
+          h: originalPlayer.h,
+        };
+      }
       l.handHints = { x: l.hand.x, y: dockTop + 10, w: l.hand.w, h: peek };
       // Brand / shared round-notice slot / compact menu. Portrait secondary
       // actions remain available in the menu instead of crowding the message.

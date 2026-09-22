@@ -346,6 +346,7 @@ const EmberCombat = (() => {
    *   plan(kind, args)    → {hitAt[], duration}; EmberFx2Engine.plan when present
    *   castSpec(ctx)       → {kind, tint, tintGrad} | null for play/power/battlecry
    *   card(cid)           → card definition (rarity, onPlay selectors)
+   *   heroCastWindup(ctx) → anticipation ms for hero spell/power only
    *   cutin(ctx)          → boolean; only asked for hero or legendary attackers */
   function compile(
     events,
@@ -360,6 +361,13 @@ const EmberCombat = (() => {
     const card = typeof o.card === "function" ? o.card : defaultCard;
     const castSpec =
       typeof o.castSpec === "function" ? o.castSpec : defaultCastSpec;
+    const heroCastWindup = (group, first, def) => {
+      if (group.kind !== "power" && def?.type !== "spell") return 0;
+      const value = Number(o.heroCastWindup?.({
+        kind: group.kind, side: first.side, cid: first.cid, frame: group.frame,
+      }));
+      return Number.isFinite(value) ? Math.max(0, value) : 0;
+    };
     const stopMs = (tier) => (reduced ? 0 : T.tiers[tier]?.hitStopMs || 0);
     const planner = typeof o.plan === "function" ? o.plan : engine().plan;
     /* hitAt from the cast() call (it opens with the caster flash), excluding
@@ -511,7 +519,8 @@ const EmberCombat = (() => {
         tier,
         aoe,
         link: statusOnly,
-        flashAt: startAt,
+        flashAt: startAt - (extra.windupMs || 0),
+        windupMs: extra.windupMs || 0,
         flashMs: T.spell.castFlash,
         startAt,
         hitAt: result.hitAt.slice(),
@@ -562,19 +571,21 @@ const EmberCombat = (() => {
           const spec = countered
             ? null
             : castSpec({ kind: "play", cid: first.cid, side: first.side, frame: group.frame });
-          const cast = registerCast(group, firstIndex, group.actor, first.cid, spec, at, {
-            cid: first.cid,
+          const windupMs = heroCastWindup(group, first, def);
+          const cast = registerCast(group, firstIndex, group.actor, first.cid, spec, at + windupMs, {
+            cid: first.cid, windupMs,
           });
-          group.hold = castLead(cast);
+          group.hold = windupMs + castLead(cast);
           break;
         }
         case "power": {
           group.actor = { side: first.side, uid: "hero" };
           const spec = castSpec({ kind: "power", side: first.side, frame: group.frame });
-          const cast = registerCast(group, firstIndex, group.actor, undefined, spec, at, {
-            effects: o.powerEffects?.(first.side) || [],
+          const windupMs = heroCastWindup(group, first);
+          const cast = registerCast(group, firstIndex, group.actor, undefined, spec, at + windupMs, {
+            effects: o.powerEffects?.(first.side) || [], windupMs,
           });
-          group.hold = castLead(cast);
+          group.hold = windupMs + castLead(cast);
           break;
         }
         case "attack": {
@@ -899,7 +910,7 @@ const EmberCombat = (() => {
       if (typeof group.impulseAt === "number") group.impulseAt *= scale;
     }
     for (const cast of castRecords) {
-      scaleKeys(cast, ["flashAt", "flashMs", "startAt", "duration"]);
+      scaleKeys(cast, ["flashAt", "flashMs", "windupMs", "startAt", "duration"]);
       cast.hitAt = cast.hitAt.map((ms) => ms * scale);
       cast.contactAt = cast.contactAt.map((ms) => ms * scale);
     }

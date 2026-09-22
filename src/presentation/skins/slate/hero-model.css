@@ -1,0 +1,232 @@
+/* Mage stage: keep the live hero button, name and stats. Geometry activates
+ * after the first render; portrait fallback retains the original card layout. */
+html[data-skin="slate"]
+  body
+  #battle
+  :is(.hero-model-canvas, .hero-magic-canvas) {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+  opacity: 0;
+}
+html[data-skin="slate"] body #battle .hero-model-canvas {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+html[data-skin="slate"] body #battle .hero-magic-canvas {
+  z-index: 2;
+}
+html[data-skin="slate"]
+  body
+  #battle
+  .hero-model-ready
+  :is(.hero-model-canvas, .hero-magic-canvas) {
+  opacity: 1;
+}
+html[data-skin="slate"] body #app #battle .hero.hero-model-ready,
+html[data-skin="slate"]
+  body
+  #app
+  #battle
+  .hero.hero-model-ready
+  :is(.hero-card-inner, .portrait-frame) {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+html[data-skin="slate"] body #battle .hero-model-ready .portrait-frame > img {
+  opacity: 0;
+}
+html[data-skin="slate"]
+  body
+  #battle
+  .hero-model-ready:not(.frozen)
+  .portrait-frame::after {
+  background: none;
+  box-shadow: none;
+}
+html[data-skin="slate"] body #battle .hero-model-ground {
+  display: none;
+}
+html[data-skin="slate"] body #app #battle .hero-model-ready .hero-model-ground {
+  display: block;
+  position: absolute;
+  inset: auto 18% 3%;
+  height: 9%;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse,
+    #030812b8,
+    #08111d66 42%,
+    transparent 72%
+  );
+  transform: scaleX(1.2);
+  pointer-events: none;
+}
+html[data-skin="slate"] body #app #battle .hero-model-ready .hero-name {
+  inset: auto 22% -8px;
+  width: auto;
+  max-width: none;
+  padding: 3px 4px;
+  border: 1px solid var(--slate-pill-line);
+  border-radius: 999px;
+  background: var(--slate-pill);
+  box-shadow: 0 3px 8px #0006;
+}
+html[data-skin="slate"]
+  body
+  #battle
+  .hero-model-ready:is(.selected, .valid-target)
+  .hero-model-canvas {
+  filter: drop-shadow(0 0 4px #edba77b3);
+}
+html[data-skin="slate"]
+  body
+  #battle
+  .hero-model-ready.ready
+  .hero-model-canvas {
+  filter: drop-shadow(0 0 4px #8cc4ff99);
+}
+html[data-skin="slate"]
+  body
+  #battle
+  .hero-model-ready.frozen
+  .hero-model-canvas {
+  filter: saturate(0.6) drop-shadow(0 0 5px #95dcffb3);
+}
+/* One camera surface per size. The opponent retains its top-HUD clearance. */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app
+  #battle
+  .hero-model-ready
+  .hero-model-canvas {
+  inset: -8% -14% 0;
+  width: 128%;
+  height: 108%;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #app
+  #battle
+  .hero-model-ready
+  .hero-model-canvas {
+  inset: -12% -24% 0;
+  width: 148%;
+  height: 118%;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #app
+  #battle
+  .hero-model-ready
+  .hero-name {
+  inset: auto -6px -9px;
+  padding: 2px 3px;
+  font-size: 9px;
+}
+/* The player stands in the former covenant lane; moving its actual button
+ * keeps focus, selection, damage anchors and clicks attached to the figure. */
+html[data-skin="slate"]
+  body
+  #app
+  #battle
+  #player-hero.hero-model-ready
+  .hero-card-inner {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+html[data-skin="slate"]
+  body
+  #app
+  #battle
+  #player-hero.hero-model-ready
+  .hero-model-canvas {
+  inset: -8% -12% 0;
+  width: 124%;
+  height: 110%;
+}
+html[data-skin="slate"]
+  body
+  #app
+  #battle
+  #player-hero.hero-model-ready
+  .hero-name {
+  inset: auto 12% -11px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app
+  #battle
+  #player-hero.hero-model-ready {
+  left: 48px;
+  top: 424px;
+  width: 184px;
+  height: 282px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app
+  #battle
+  #player-hero.hero-model-ready
+  ~ #contract-open {
+  left: 36px;
+  top: 742px;
+  width: 100px;
+  height: 148px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app
+  #battle
+  #player-hero.hero-model-ready
+  ~ #power-btn {
+  left: 204px;
+  top: 714px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #app
+  #battle
+  #player-hero.hero-model-ready
+  .hero-chips {
+  inset: auto 0 24px auto;
+  width: auto;
+  max-width: none;
+  flex-wrap: nowrap;
+}
+html[data-skin="slate"]
+  body.mobile-portrait
+  #app
+  #battle
+  #player-hero.hero-model-ready
+  .hero-chips {
+  left: calc(100% + 4px);
+  right: auto;
+  bottom: 10px;
+}
+/* Desktop badges keep their card-edge positions; leave a narrow name slot
+ * between them. Short landscape has empty rail space to the figure's right. */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app
+  #battle
+  #player-hero.hero-model-ready
+  .hero-name {
+  left: 30%;
+  right: 30%;
+}
+@media (max-height: 469px) {
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #app
+    #battle
+    #player-hero.hero-model-ready
+    .hero-chips {
+    left: calc(100% + 4px);
+    right: auto;
+  }
+}

@@ -28,6 +28,16 @@ uv run --python 3.12 --no-project --with pillow --with numpy --with onnxruntime 
 
 新增卡牌或英雄时重跑烘焙脚本。`tests/card-relief.test.cjs` 要求注册表、`art/relief/` 文件与 `src/content/cards.js` 的卡牌 ID 三者完全一致，可选英雄的肖像必须带法线贴图，每个稀有度必须有材质档。
 
+## 2026-09-20 · 法师英雄 3D 样板
+
+运行素材 `art/models/alia.glb` 仅由战场 `hero.id === "mage"` 使用。Tripo 负责生成、减面与 Mixamo 骨骼绑定；本地完成纹理优化、布料权重修复，并制作原创 `idle`（4.4 秒）、`cast`（1.6 秒）、`hit`（0.78 秒）骨骼动作。第三版动作以自信站直、左手叉腰为待机轮廓；施法由右肘带动单臂弧线，在第 0.55 秒从实际右手骨位置单掌发射，左手保持腰侧，随后分段回收。动作、四种视口与魔法同步验收记录在 `output/hero-pose-v3-20260920/`。身份依据现有 `oracle` 肖像的银发、蓝披风形象；原肖像以及 79 张独立动漫卡图继续保留。模型为 18,292 三角形、65 根骨骼、1 材质、3 纹理，运行文件大小以 `art/models/alia.glb` 为准。
+
+素材为自包含 GLB；最终运行文件已离线解开 Meshopt，渲染 bundle 也保留内嵌 Meshopt 解码器，不访问远程解码服务。`asset:models/alia.glb` 在离线 HTML 中内嵌，在 `dist/assets/` 中按内容哈希提取；已注册文件缺失会使构建报错。来源与处理记录见 `art/models/README.md` 及本轮 `output/hero-3d-20260920/`。
+
+三个显式离线工具位于 `tools/`：`decode-hero-meshopt.mjs` 解压 bufferViews；`optimize-hero-textures.py` 将主色纹理缩为 2K、法线与金属粗糙度缩为 1K；`repair-mage-cloth-weights.mjs` 修正低裙摆错误跟随手指的权重。`animate-mage-hero.mjs` 在完整骨骼上制作短战斗动作，最终 GLB 保留源缓冲区边界，允许直接以自身为输入重建动作，不依赖 `output/` 中间文件。正常 `python3 build.py` 不调用这些素材工具，也不需要 Pillow。
+
+渲染库为固定版本 Three.js 0.186.0，bundle 和完整 MIT 许可位于 `src/vendor/`，通过 `npm run vendor:hero` 显式更新。正常构建无需重新安装打包依赖。
+
 # v0.12 素材与加工
 
 运行时保留原 56 张已确认卡图，并新增六张酒馆誓约扩展卡图、6 张遗物、当前完整酒馆图和山谷原画档案。角色明确复用卡图；不加载旧程序化人物、旧 Three.js 场景、旧卡框缓存或旧酒馆背景。

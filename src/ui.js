@@ -997,6 +997,7 @@
         attack +
         (p.armor ? " · 护甲 " + p.armor : "");
     }
+    EmberHeroModel.sync(s, runToken);
     syncHeroChips(s);
     $("power-btn").innerHTML =
       A.icon(hero.powerIcon) +

@@ -2183,8 +2183,23 @@ const EmberFX = (() => {
   function castLaunch(ctx, beatIndex, cast) {
     const { sequence } = ctx;
     if (!cast.kind) return;
-    const from = anchors.resolve(cast.actor, sequence.anchors);
+    let from = anchors.resolve(cast.actor, sequence.anchors);
+    let handSource = false;
+    if (cast.windupMs > 0 && cast.actor?.uid === "hero" && typeof EmberHeroModel !== "undefined") {
+      EmberHeroModel.release?.(cast.actor.side);
+      const hand = EmberHeroModel.anchor?.(cast.actor.side);
+      if (hand?.width > 0 && hand?.height > 0) {
+        const handBox = EmberViewport.pos({ getBoundingClientRect: () => hand });
+        if (handBox) { from = handBox; handSource = true; }
+      }
+    }
     if (!from) return;
+    const record = sequence.records.get(beatIndex);
+    if (record) {
+      record.from = point(from);
+      record.launchAt = performance.now();
+      record.sourceAnchor = handSource ? "hero-hand" : "card";
+    }
     const sourceEvent = ctx.plan.beats[beatIndex]?.events?.[0];
     const sourceCid = sourceEvent?.cid || null;
     const remastered = fx2()?.renderer3dAvailable && typeof EmberRemasterArts !== "undefined" && EmberRemasterArts.supports(cast.kind);
@@ -2315,6 +2330,12 @@ const EmberFX = (() => {
         const from = anchors.resolve(cast.actor, ctx.sequence.anchors);
         const school = beat.kind === "power" ? powerSchool(e.side, ctx.s) : schoolOf(card);
         rec.school = school;
+        if (typeof EmberHeroModel !== "undefined" && (beat.kind === "power" || card?.type === "spell"))
+          EmberHeroModel.cue(e.side, "cast", {
+            windupMs: cast.windupMs, school,
+            timeScale: ctx.plan.scale,
+            startedAt: ctx.sequence.origin + beat.at,
+          });
         sound("play", from);
         if(!(fx2()?.renderer3dAvailable&&typeof EmberRemasterArts!=="undefined"&&EmberRemasterArts.supports(cast.kind))) sound(card?.type === "weapon" ? "equip" : "cast-" + school, from);
         if (e.side === "e" && card)
@@ -2958,6 +2979,11 @@ const EmberFX = (() => {
           ? EmberViewport.minionLandingBox(frame, ref.side, ref.uid)
           : null),
       castSpec: castSpecFor(s),
+      heroCastWindup: ({ side, frame }) => {
+        const state = frame || s;
+        const heroId = side === "p" ? state.heroId : state.mode === "practice" ? state.opponentHero : null;
+        return heroId === "mage" ? T.hero.mageCastWindup : 0;
+      },
       card: (cid) => EmberData.byId[cid] || null,
       cutin: cutinAllowed(s),
     });
