@@ -1440,11 +1440,24 @@ html[data-skin="slate"] body #target-lines :is(#target-arrow-shine, #target-ribb
 html[data-skin="slate"] body.touch-layout #target-lines #target-under { stroke-width: 3; }
 html[data-skin="slate"] body.touch-layout #target-lines:is([data-mode="target"], [data-mode="placement"]) #target-path { stroke-width: 2; }
 html[data-skin="slate"] body.touch-layout #target-lines #target-flow { stroke-width: 2; transform: translate(-1px, -2px); }
+/* The landing ring belongs to the same red arrow, not to the old gold line. */
 html[data-skin="slate"] body #target-lines[data-mode="target"] #target-circle {
-  fill: #e0b45526;
-  stroke: #fff3cf;
-  stroke-width: 2;
-  filter: drop-shadow(0 0 7px #f0cf82);
+  fill: #e7372226;
+  stroke: var(--cue-light);
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 6px #e7372299);
+}
+/* A targeted spell dragged out over the board: the card itself steps out of
+ * the way (as in Hearthstone), the arrow runs from its slot in the hand to the
+ * pointer, and nothing is drawn across a full card face. A minion being placed
+ * keeps its ghost — the ghost IS what lands. */
+html[data-skin="slate"] body #app.is-targeting:not(.placement-active) .drag-ghost {
+  opacity: 0;
+  /* Same anchor as the ghost's own pose (style.css), only smaller. */
+  transform: translate(-50%, -55%) rotate(5deg) scale(0.6);
+  transition:
+    opacity 120ms var(--e-std),
+    transform 120ms var(--e-std);
 }
 /* 9.1b The reticle only rings twice when the aim is resting on something that
  * can actually be chosen (`data-hit="1"`, written by `ui.js`). The ripples are
@@ -1455,7 +1468,7 @@ html[data-skin="slate"]
   #target-lines
   :is(#target-ripple-a, #target-ripple-b) {
   fill: none;
-  stroke: #fff3cf;
+  stroke: var(--cue-light);
   stroke-width: 2;
   opacity: 0;
   transform-box: fill-box;

@@ -262,9 +262,9 @@
     svg.dataset.mode = mode;
     svg.dataset.hit = locked ? "1" : "0";
     svg.style.display = "block";
-    const d = `M${from.x},${from.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${to.x},${to.y}`;
-    cueNode("target-under", "path", "target-path")?.setAttribute("d", d);
-    $("target-path").setAttribute("d", d);
+    // The spine is kept only as data (tests and tooling read `#target-path`);
+    // nothing of it paints, so it is the one legacy path still written.
+    $("target-path").setAttribute("d", `M${from.x},${from.y} C${c1.x},${c1.y} ${c2.x},${c2.y} ${to.x},${to.y}`);
     // A virtual tilted camera projects BOTH ribbon edges, not just its spine.
     // Invert that camera on the ground plane so the pointer endpoint is exact.
     const ox = (from.x + to.x) / 2, oy = (from.y + to.y) / 2;
@@ -309,7 +309,9 @@
       const a = atLength(shaftLength*i/count);
       const b = atLength(shaftLength*(i+.72)/count);
       const m = (a+b)/2;
-      const w = t => width*(.6+.4*t);
+      // Narrow where it leaves the hand, widest under the head: the taper is what
+      // reads as the shaft coming toward the viewer.
+      const w = t => width*(.45+.95*t);
       const left = [a,m,b].map(t => project(t,-w(t)));
       const right = [b,m,a].map(t => project(t,w(t)));
       faces.push(polygon([...left,...right]));
