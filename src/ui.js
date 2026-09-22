@@ -38,6 +38,7 @@
     isDemo = false,
     modalType = null,
     selection = null,
+    readingUid = null,
     chosenHero = D.heroes[0].id,
     aiTimer = null,
     turnTimer = null,
@@ -170,6 +171,22 @@
         }
       : null;
   }
+  // One status slot, coalesced so replacing a guide does not flash the round.
+  const statusRail = $("battle-status");
+  for (const id of ["turn-number", "touch-target-bar"])
+    statusRail.appendChild($(id));
+  let statusFrame = 0;
+  function syncStatusRail() {
+    if (statusFrame) return;
+    statusFrame = requestAnimationFrame(() => {
+      statusFrame = 0;
+      const active =
+        $("toast").classList.contains("visible") ||
+        !$("touch-target-bar").hidden;
+      statusRail.classList.toggle("has-message", active);
+      $("turn-number").setAttribute("aria-hidden", String(active));
+    });
+  }
   function setGuide(text, mode = "target") {
     hideBattleNotice();
     actionGuide = { text, mode };
@@ -187,6 +204,7 @@
       bar.hidden = false;
     }
     app.classList.toggle("placement-active", mode === "placement");
+    syncStatusRail();
   }
   function clearGuide() {
     actionGuide = { text: "", mode: null };
@@ -199,6 +217,7 @@
       bar.removeAttribute("aria-label");
     }
     app.classList.remove("placement-active");
+    syncStatusRail();
     clearActionCue();
   }
   function clearActionCue() {
@@ -392,26 +411,14 @@
     if (slot) slot.hidden = true;
   }
   function sourceCard(uid) {
+    const lift = $("hand-card-lift");
+    if (uid && lift?.dataset.hand === uid) return lift;
     return uid
       ? [...document.querySelectorAll("#hand .hand-card")].find(
           (el) => el.dataset.hand === uid,
         )
       : null;
   }
-  function positionBattleNotice() {
-    const notice = $("toast");
-    if (!notice) return;
-    const rail = EmberViewport.mobile
-      ? EmberViewport.layout.notice
-      : { x: 370, y: 145, w: 860, h: 44 };
-    Object.assign(notice.style, {
-      left: rail.x + "px",
-      top: rail.y + "px",
-      width: rail.w + "px",
-      minHeight: rail.h + "px",
-    });
-  }
-
   function hideBattleNotice() {
     clearTimeout(toastTimer);
     clearFeedbackMarks();
@@ -419,6 +426,7 @@
     notice?.classList.remove("visible");
     notice?.removeAttribute("data-kind");
     app.classList.remove("battle-notice-active");
+    syncStatusRail();
   }
   function showBattleNotice(
     text,
@@ -432,7 +440,7 @@
     notice.dataset.kind = kind;
     app.classList.add("battle-notice-active");
     notice.classList.add("visible");
-    positionBattleNotice();
+    syncStatusRail();
     sourceCard(sourceUid)?.classList.add(
       kind === "info" ? "feedback-info" : "feedback-error",
     );
@@ -559,6 +567,7 @@
     else scheduleAI();
   }
   function setView(battle) {
+    (battle ? statusRail : app).appendChild($("toast"));
     app.classList.toggle("battle-view", battle);
     app.classList.toggle("lobby-view", !battle);
     $("lobby").style.display = battle ? "none" : "block";
@@ -617,7 +626,7 @@
     closeModal(false);
     setView(true);
     game.demo();
-    toast("点击手牌或己方随从，开始行动", { kind: "info" });
+    toast("选择手牌或随从开始行动", { kind: "info" });
   }
   function showModal(html, type, locked = false) {
     clearTimeout(toastTimer);
@@ -693,9 +702,7 @@
     const el =
       ref.el ||
       (ref.side === "p"
-        ? [...document.querySelectorAll("#hand .hand-card")].find(
-            (node) => node.dataset.hand === ref.uid,
-          )
+        ? sourceCard(ref.uid)
         : [...document.querySelectorAll("#enemy-hand .card-back")].find(
             (node) => node.dataset.enemyHand === ref.uid,
           ));
@@ -759,26 +766,44 @@
     return snapshot.point ? snapshot : { ...snapshot, point: null };
   }
   let pendingCardOrigin = null;
-  /* The phone hand keeps its scroll position across renders. The position is
-   * tracked by a passive scroll listener and restored on the next frame, so
-   * render() itself never reads or writes scroll geometry (either one forces a
-   * style recalc and layout in the middle of a battle beat). */
+  // Measure overflow once after a render/resize. Scroll events only update
+  // cached position and the two directional hints; no per-scroll layout read.
   let handScrollLeft = 0,
-    handScrollFrame = 0;
-  $("hand")?.addEventListener(
+    handScrollFrame = 0,
+    handScrollMax = 0;
+  const handHints = $("hand-scroll-hints"),
+    handLeft = handHints.querySelector('[data-hand-scroll="-1"]'),
+    handRight = handHints.querySelector('[data-hand-scroll="1"]');
+  function paintHandScrollHints() {
+    handHints.hidden = !EmberViewport.mobile || handScrollMax <= 2;
+    handLeft.hidden = handScrollLeft <= 2;
+    handRight.hidden = handScrollLeft >= handScrollMax - 2;
+  }
+  $("hand").addEventListener(
     "scroll",
     (event) => {
-      handScrollLeft = event.currentTarget.scrollLeft;
+      const next = event.currentTarget.scrollLeft;
+      if (readingUid && Math.abs(handScrollLeft - next) > 4) clearSelection(true);
+      handScrollLeft = next;
+      paintHandScrollHints();
     },
     { passive: true },
   );
   function restoreHandScroll() {
-    if (handScrollFrame || !handScrollLeft) return;
-    const wanted = handScrollLeft;
+    if (handScrollFrame) return;
     handScrollFrame = requestAnimationFrame(() => {
       handScrollFrame = 0;
       const hand = $("hand");
-      if (hand && hand.scrollLeft !== wanted) hand.scrollLeft = wanted;
+      handScrollMax = EmberViewport.mobile
+        ? Math.max(0, hand.scrollWidth - hand.clientWidth)
+        : 0;
+      hand.setAttribute(
+        "aria-description",
+        handScrollMax > 2 ? "左右滑动查看更多手牌" : "",
+      );
+      handScrollLeft = Math.min(handScrollLeft, handScrollMax);
+      if (hand.scrollLeft !== handScrollLeft) hand.scrollLeft = handScrollLeft;
+      paintHandScrollHints();
     });
   }
   /* Hero chips (design doc §13.4). `render()` rebuilds the console markup, so
@@ -941,7 +966,13 @@
           side === "e"
             ? `<div class="hero-chip hero-hand" title="敌方手牌"><i aria-hidden="true"></i><span>${p.hand.length}</span></div>`
             : "";
-      el.innerHTML = `<div class="hero-card-inner"><div class="portrait-frame"><img src="${A.character(data)}" data-art-key="${data.portraitId}" alt="${data.name}" draggable="false" style="${artStyleForHero(data, "hero")}"></div><span class="hero-card-plaque" aria-hidden="true"></span><div class="hero-name">${data.name}</div></div><div class="hero-chips">${stats}${covenant}${handChip}</div>${p.secrets.length ? '<div class="secret-indicator" title="奥秘已布置">?</div>' : ""}${side === "e" && s.mode !== "practice" ? `<div class="hero-phase">${s.phase2 ? "阶段 II" : "阶段 I"}</div>` : ""}`;
+      const weapon = side === "p" && p.weapon,
+        weaponCard = weapon && D.byId[weapon.cid],
+        weaponMarkup =
+          side === "p"
+            ? `<div class="weapon-slot" id="weapon-slot"${weapon ? "" : " hidden"} title="${weapon ? weaponCard.name + "：攻击 " + weapon.atk + "，耐久 " + weapon.durability + "。点击英雄攻击。" : "未装备武器"}">${weapon ? `<img src="${A.card(weaponCard)}" alt="${weaponCard.name}"><b aria-label="攻击 ${weapon.atk}">${weapon.atk}</b><b aria-label="耐久 ${weapon.durability}">${weapon.durability}</b>` : ""}</div>`
+            : "";
+      el.innerHTML = `<div class="hero-card-inner"><div class="portrait-frame"><img src="${A.character(data)}" data-art-key="${data.portraitId}" alt="${data.name}" draggable="false" style="${artStyleForHero(data, "hero")}"></div><span class="hero-card-plaque" aria-hidden="true"></span><div class="hero-name">${data.name}</div></div><div class="hero-chips">${stats}${covenant}${handChip}</div>${weaponMarkup}${p.secrets.length ? '<div class="secret-indicator" title="奥秘已布置">?</div>' : ""}${side === "e" && s.mode !== "practice" ? `<div class="hero-phase">${s.phase2 ? "阶段 II" : "阶段 I"}</div>` : ""}`;
       el.dataset.heroClass = data.classId || "boss";
       el.classList.toggle("frozen", p.frozen);
       el.classList.toggle("ready", game.canAttack(side, "hero"));
@@ -999,19 +1030,6 @@
      * id and title — this is presentation, not a new control. */
     $("enemy-deck-count").title = "敌方牌库剩余 " + s.e.deck.length + " 张";
     $("player-deck-count").title = "你的牌库剩余 " + s.p.deck.length + " 张";
-    if (s.p.weapon) {
-      const c = D.byId[s.p.weapon.cid];
-      $("weapon-slot").style.display = "flex";
-      $("weapon-slot").innerHTML =
-        `<img src="${A.card(c)}" alt="${c.name}"><b>${s.p.weapon.atk}</b><b>${s.p.weapon.durability}</b>`;
-      $("weapon-slot").title =
-        c.name +
-        "：攻击力 " +
-        s.p.weapon.atk +
-        "，耐久 " +
-        s.p.weapon.durability +
-        "。点击英雄进行攻击。";
-    } else $("weapon-slot").style.display = "none";
     $("minions").innerHTML = ["e", "p"]
       .map((side) =>
         s[side].board
@@ -1058,30 +1076,17 @@
       app.style.setProperty("--battle-card-h", metrics.height + "px");
     }
     const gap = metrics.step;
-    /* A dock that fits its hand lays the cards out as a real fan (§13.5); a
-     * panning dock stays flat, because a rotated card is harder to scroll. */
-    let fanned = false;
     if (EmberViewport.mobile) {
-      /* Touch dock: cards overlap into a fan instead of scrolling as soon as
-       * they stop fitting side by side; only below a 24px step does the dock
-       * fall back to the native horizontal rail. Six cards at 390/360 land
-       * just under 28px, and the rail would cost them the riffle gesture. */
+      // Every card keeps its full hit area. Overflow scrolls instead of
+      // squeezing the hand into overlapping strips that hide art and names.
       const dock = EmberViewport.layout,
         n = s.p.hand.length,
-        inner = (dock.hand?.w || 0) - 16,
+        inner = Math.max(0, (dock.hand?.w || 0) - 16),
         cardW = dock.cardW || 112,
-        natural = n > 1 ? (inner - cardW) / (n - 1) : cardW + 12,
-        step = Math.min(cardW + 12, natural),
-        pan = step < 24;
-      fanned = !pan;
-      $("hand").style.setProperty(
-        "--hand-step",
-        Math.round(pan ? 24 : step) + "px",
-      );
+        pan = n * cardW + Math.max(0, n - 1) * 8 > inner;
       $("hand").classList.toggle("hand-pan", pan);
       $("hand").classList.toggle("hand-fits", !pan);
     } else {
-      $("hand").style.removeProperty("--hand-step");
       $("hand").classList.remove("hand-pan", "hand-fits");
     }
     const wasPlayable = playableUids;
@@ -1093,15 +1098,10 @@
           offset = i - (n - 1) / 2,
           playable = !game.legalCard("p", card.uid);
         if (playable) playableUids.add(card.uid);
-        /* Physical fan: ±3° of roll and a 2px arc, both driven off the card's
-         * normalised position in the hand (design doc §13.5). */
-        const spread = n > 1 && fanned ? offset / ((n - 1) / 2) : 0,
-          roll = (spread * 3).toFixed(2),
-          arc = (Math.abs(spread) * 2).toFixed(2);
         /* A card that only became playable because the turn refreshed mana
          * flashes once, so "what can I do now" needs no re-scan. */
         const woke = playable && manaRefreshed && !wasPlayable.has(card.uid);
-        return `<button class="hand-card ${playable ? "playable" : ""} ${woke ? "just-playable" : ""} ${game.cost(card) > s.p.mana ? "unaffordable" : ""}" style="--x:${offset * gap}px;--y:${arc}px;--r:${roll}deg;--i:${i + 1}" data-hand="${card.uid}" data-cardid="${c.id}" aria-label="${c.name}，${game.cost(card)} 法力。点按选中，拖动出牌。${c.text}">${cardHTML(c, { cost: game.cost(card) })}</button>`;
+        return `<button class="hand-card ${playable ? "playable" : ""} ${woke ? "just-playable" : ""} ${game.cost(card) > s.p.mana ? "unaffordable" : ""}" style="--x:${offset * gap}px;--y:0px;--r:0deg;--i:${i + 1}" data-hand="${card.uid}" data-cardid="${c.id}" aria-label="${c.name}，${game.cost(card)} 法力。点按选中，拖动出牌。${c.text}">${cardHTML(c, { cost: game.cost(card) })}</button>`;
       })
       .join("");
     const ours = s.active === "p";
@@ -1151,7 +1151,7 @@
       el.addEventListener("focus", () => preview(el.dataset.cardid, el));
       el.addEventListener("blur", hidePreview);
     });
-    document.querySelectorAll(".hand-card").forEach((el) => {
+    document.querySelectorAll("#hand .hand-card").forEach((el) => {
       el.onclick = () => {
         if (suppressClick) {
           suppressClick = false;
@@ -1173,8 +1173,15 @@
       el.addEventListener("mouseenter", () => preview(el.dataset.cardid, el));
       el.addEventListener("mouseleave", hidePreview);
     });
-    if (EmberViewport.mobile) restoreHandScroll();
+    restoreHandScroll();
+    EmberCardRelief.warm(
+      [...document.querySelectorAll("#hand .hand-card")].map((el) => ({
+        id: el.dataset.cardid,
+        image: el.querySelector(".card-art img"),
+      })),
+    );
     window.EmberMobile?.afterRender(s);
+    if (readingUid) syncHandLift();
     updateSelection();
     // Rendering can replace card nodes while a presentation sequence is
     // between beats. Let the compositor rebind its visual track immediately,
@@ -1228,6 +1235,11 @@
       el.classList.add("open");
     });
     if (!detail.pinned) placeHoverDetail();
+    EmberCardRelief.mountCard(el.querySelector(".card"), {
+      id: c.id,
+      rarity: c.rarity,
+      anchor: detail.source,
+    });
   }
   /* Desktop battle hover is deliberately fixed on the left, restoring one
    * stable reading position instead of duplicating the card over the hand. */
@@ -1262,6 +1274,7 @@
     detail.source = null;
     document.body.classList.remove("has-card-detail");
     const el = $("card-preview");
+    if (el.querySelector(".card-relief-canvas")) EmberCardRelief.release();
     el.classList.remove("open");
     el.style.display = "none";
     el.setAttribute("aria-hidden", "true");
@@ -1276,7 +1289,7 @@
      * The magnified card would cover the hero rail the aim is heading for, so
      * hover preview stands down until the selection is resolved. Touch is
      * unaffected: it has no hover and its own inspect gesture. */
-    if (app.classList.contains("is-targeting")) return;
+    if (readingUid || app.classList.contains("is-targeting")) return;
     previewTimer = setTimeout(() => {
       if (!el.isConnected) return;
       let actual = null;
@@ -1297,6 +1310,7 @@
     detail.source = null;
     document.body.classList.remove("has-card-detail");
     const el = $("card-preview");
+    if (el.querySelector(".card-relief-canvas")) EmberCardRelief.release();
     el.classList.remove("open");
     el.style.display = "none";
     el.setAttribute("aria-hidden", "true");
@@ -1332,11 +1346,12 @@
         }
         return;
       }
-      const el = e.target.closest?.("#battle [data-cardid]");
+      const el = e.target.closest?.("#battle [data-cardid],#hand-card-lift");
       if (!el || modalType || EmberFX.busy) return;
       /* Hand cards use long-press as a lift-to-drag gesture on touch. Their
        * secondary action must not reopen the full-screen detail layer. */
       if (el.matches(".hand-card")) {
+        clearSelection();
         e.preventDefault();
         e.stopPropagation();
         return;
@@ -1460,6 +1475,16 @@
   document.addEventListener(
     "click",
     (e) => {
+      if (
+        readingUid &&
+        !selection &&
+        !e.target.closest?.(".hand-card,#touch-target-bar")
+      ) {
+        clearSelection(true);
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
       if (!detail.pinned) return;
       /* A long press or a drag already handled this tap: keep the detail open
        * and let the owner of that gesture swallow the compatibility click. */
@@ -1552,31 +1577,114 @@
     EmberAudio.fx("select");
     return true;
   }
+  // Reading is independent of play legality. The lifted card lives beside
+  // #battle so the native horizontal hand scroller cannot clip its details.
+  function syncHandLift() {
+    const card = game.s.p.hand.find((x) => x.uid === readingUid);
+    const source = [...$("hand").children].find(
+      (el) => el.dataset.hand === readingUid,
+    );
+    if (!card || !source) return clearSelection();
+    let lift = $("hand-card-lift");
+    // A lift still sinking back is not the one to reuse.
+    if (lift?.dataset.leaving) {
+      lift.remove();
+      lift = null;
+    }
+    const fresh = !lift;
+    if (!lift) {
+      lift = document.createElement("button");
+      lift.id = "hand-card-lift";
+      lift.className = "hand-card hand-lift";
+      lift.onclick = () => {
+        if (suppressClick) {
+          suppressClick = false;
+          return;
+        }
+        selectCard(lift.dataset.hand);
+      };
+      lift.addEventListener("pointerdown", beginDrag);
+      app.appendChild(lift);
+    }
+    lift.dataset.hand = card.uid;
+    lift.dataset.cardid = card.cid;
+    lift.setAttribute(
+      "aria-label",
+      source.getAttribute("aria-label") + "；再次点击收起",
+    );
+    lift.innerHTML = cardHTML(D.byId[card.cid], { cost: game.cost(card) });
+    app.classList.add("reading-hand");
+    source.classList.add("reading-source");
+    source.setAttribute("aria-expanded", "true");
+    const mobile = EmberViewport.mobile;
+    const bottom =
+      EmberViewport.height - (mobile ? EmberViewport.safe.bottom : 0) - 12;
+    const height = Math.min(
+      354,
+      bottom - (mobile ? EmberViewport.layout.header : 80) - 12,
+    );
+    const width = Math.min(240, height / 1.35);
+    const origin = centerOf(source);
+    const insetL = 12 + (mobile ? EmberViewport.safe.left : 0),
+      insetR = 12 + (mobile ? EmberViewport.safe.right : 0);
+    const x = Math.max(
+      insetL,
+      Math.min(EmberViewport.width - width - insetR, origin.x - width / 2),
+    );
+    Object.assign(lift.style, {
+      left: x + "px",
+      top: bottom - height + "px",
+      width: width + "px",
+      height: height + "px",
+    });
+    // Reserve rules by their actual line count, rather than hiding overflow.
+    const copy = lift.querySelector(".card-copy"),
+      text = lift.querySelector(".card-text");
+    const rulesHeight = Math.max(42, copy.scrollHeight);
+    const rulesTop = height - width * 0.24 - rulesHeight - 8;
+    text.style.top = rulesTop + "px";
+    lift.querySelector(".card-title").style.top = rulesTop - 36 + "px";
+    lift.querySelector(".card-art").style.height = rulesTop - 20 + "px";
+    if (
+      fresh &&
+      !settings.reduced &&
+      !matchMedia("(prefers-reduced-motion: reduce)").matches
+    )
+      lift.animate(
+        [
+          { transform: "translateY(24px) scale(.94)", opacity: 0.6 },
+          { transform: "none", opacity: 1 },
+        ],
+        { duration: 180, easing: "cubic-bezier(.2,.8,.2,1)" },
+      );
+    EmberCardRelief.mountCard(lift.querySelector(".card"), {
+      id: card.cid,
+      rarity: D.byId[card.cid].rarity,
+      steer: "held",
+    });
+  }
   function selectCard(uid) {
     if (!inBattle || modalType || EmberFX.busy) return;
-    if (selection?.type === "card-play" && selection.uid === uid) {
-      clearSelection();
-      return;
-    }
-    const card = game.s.p.hand.find((x) => x.uid === uid),
-      err = game.legalCard("p", uid);
+    if (readingUid === uid) return clearSelection(true);
+    const card = game.s.p.hand.find((x) => x.uid === uid);
+    if (!card) return;
+    clearSelection();
+    hidePreview();
+    readingUid = uid;
+    syncHandLift();
+    const err = game.legalCard("p", uid);
     if (err) {
-      EmberAudio.fx("error");
-      const mana = err === "法力不足",
-        message =
-          mana && card
-            ? `法力不足 · 需要 ${game.cost(card)} 点，当前 ${game.s.p.mana} 点`
-            : err;
-      toast(message, { sourceUid: uid, mana });
+      setGuide(
+        err === "法力不足"
+          ? `法力不足 · 需要 ${game.cost(card)} 点，当前 ${game.s.p.mana} 点`
+          : err,
+        "inspect",
+      );
+      EmberAudio.fx("select");
       return;
     }
-    const c = card && D.byId[card.cid];
     if (armCard(uid)) return EmberAudio.fx("select");
-    if (c && !c.target) return prepareCard(uid);
-    return act(() => game.dispatch({ type: "play", side: "p", uid }), {
-      side: "p",
-      uid,
-    });
+    return prepareCard(uid);
   }
   function clickUnit(side, uid) {
     if (modalType || !inBattle || EmberFX.busy) return;
@@ -1672,6 +1780,7 @@
   }
   function usePower() {
     if ($("power-btn").disabled || EmberFX.busy) return;
+    clearSelection();
     const power = game.powerDefinition("p");
     if (power.target) {
       selection = { type: "power" };
@@ -1681,7 +1790,46 @@
       updateSelection(targets);
     } else act(() => game.dispatch({ type: "power", side: "p" }));
   }
-  function clearSelection() {
+  /* `settle`: the player put the card back themselves (tapped the table, the card
+   * again, Escape, scrolled the hand), so it sinks back the way it rose. Every
+   * other caller is handing the card on — to a drag, a play, a new state — and
+   * must not leave a ghost fading behind it. */
+  function clearSelection(settle = false) {
+    readingUid = null;
+    app.classList.remove("reading-hand");
+    const lift = $("hand-card-lift");
+    if (
+      lift &&
+      settle &&
+      !lift.dataset.leaving &&
+      !settings.reduced &&
+      !matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      lift.dataset.leaving = "1";
+      lift.style.pointerEvents = "none";
+      lift.setAttribute("aria-hidden", "true");
+      // The exit is the entrance reversed, at the 60% duration exits get (§13.2).
+      lift
+        .animate(
+          [
+            { transform: "none", opacity: 1 },
+            { transform: "translateY(24px) scale(.94)", opacity: 0 },
+          ],
+          { duration: 110, easing: "cubic-bezier(.4,0,1,1)", fill: "forwards" },
+        )
+        .finished.catch(() => {})
+        .then(() => {
+          if (lift.querySelector(".card-relief-canvas")) EmberCardRelief.release();
+          lift.remove();
+        });
+    } else if (lift && !lift.dataset.leaving) {
+      if (lift.querySelector(".card-relief-canvas")) EmberCardRelief.release();
+      lift.remove();
+    }
+    document.querySelectorAll("#hand .reading-source").forEach((el) => {
+      el.classList.remove("reading-source");
+      el.setAttribute("aria-expanded", "false");
+    });
     app.classList.remove("is-targeting");
     selection = null;
     lastHit = null;
@@ -1754,7 +1902,7 @@
         ? findUnit("p", selection.uid)
         : selection.type === "power"
           ? $("power-btn")
-          : document.querySelector(`[data-hand="${selection.uid}"]`);
+          : sourceCard(selection.uid);
     const from = centerOf(source);
     if (!from) {
       clearActionCue();
@@ -1832,6 +1980,7 @@
     const d = drag;
     drag = null;
     if (d.timer) clearTimeout(d.timer);
+    if (d.ghost) EmberCardRelief.release();
     d.ghost?.remove();
     d.el?.classList.remove("drag-source", "drag-armed");
     clearSelection();
@@ -1863,6 +2012,11 @@
     ghost.style.left = d.x + "px";
     ghost.style.top = d.y - (d.lift || 0) + "px";
     const c = D.byId[d.cid];
+    EmberCardRelief.mountCard(ghost.querySelector(".card"), {
+      id: c.id,
+      rarity: c.rarity,
+      steer: "drag",
+    });
     if (c.target) {
       selection = { type: "card", uid: d.uid, cid: d.cid };
       updateSelection();
@@ -1873,6 +2027,9 @@
    * only leaves the hand when the drop is legal (unit -> legal target, or
    * anywhere in the play area for a card that needs no target). */
   function finishDrag(d, e) {
+    /* The ghost's markup seeds the card-motion proxy; return it flat first so
+     * the proxy does not inherit a frozen lean or an empty canvas. */
+    EmberCardRelief.release();
     const source = d.ghost || d.el;
     const origin = captureCardOrigin({
       side: "p",
@@ -2046,8 +2203,7 @@
     }
   }
   /* Touch "riffle" (docs/design/HAND_GESTURES.md): while the dock fits its
-   * cards (`.hand-fits`), a sideways finger sweeps the fan instead of doing
-   * nothing — the card under the finger peeks up, and releasing selects it
+   * cards (`.hand-fits`), a sideways finger sweeps the row — the card under the finger peeks up, and releasing selects it
    * through the normal `handClick` path. Upward drags still play the card and
    * a stationary long press still inspects it; the panning dock
    * (`.hand-pan`) keeps the browser's native rail. */
@@ -2109,7 +2265,7 @@
         if (Math.abs(dx) < 10 || Math.abs(dx) <= Math.abs(dy) + 4) return;
         riffle.swiping = true;
       }
-      /* Leaving the dock drops the raised card back into the fan: the lifted
+      /* Leaving the dock drops the raised card back into the row: the lifted
        * card stands `--hand-lift` above the dock line, so the live band is the
        * dock rect grown upwards by that much (design doc §12.2). */
       const dock = $("hand").getBoundingClientRect(),
@@ -2255,7 +2411,7 @@
         side: "p",
         uid,
       });
-    } else clearSelection();
+    } else clearSelection(true);
   };
   document.addEventListener("pointerdown", () => EmberAudio.unlock(), {
     passive: true,
@@ -2305,7 +2461,7 @@
     if (input && e.key !== "Escape") return;
     if (e.key === "Escape") {
       if (drag) cancelDrag(false);
-      if (selection) clearSelection();
+      if (selection || readingUid) clearSelection(true);
       else if (modalType && $("modal").dataset.locked !== "1") closeModal();
       return;
     }

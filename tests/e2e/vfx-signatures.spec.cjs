@@ -145,7 +145,7 @@ test("attack families keep distinct contact language, ranged attackers never lun
       lastSeq,
     );
     if (ranged) expect(await page.locator(".attack-actor").count()).toBe(0);
-    else await expect(page.locator(".attack-actor")).toHaveCount(1);
+    else expect(await page.evaluate(() => EmberFx2.mesh3d.last?.sourceCid)).toBe(id);
     await page.waitForTimeout(ranged ? 100 : 60);
     await page.screenshot({
       path: path.resolve(`artifacts/qa/vfx-signatures/attack-${id}.png`),
@@ -159,7 +159,7 @@ test("attack families keep distinct contact language, ranged attackers never lun
   }
 });
 
-test("a compressed sequence scales contact, hit-stop and DOM motion with one clock", async ({
+test("a compressed sequence scales contact, hit-stop and mesh motion with one clock", async ({
   page,
 }) => {
   await demo(page);
@@ -200,9 +200,9 @@ test("a compressed sequence scales contact, hit-stop and DOM motion with one clo
     });
     const attack = EmberFX.trace.find((r) => r.seq > lastSeq && r.type === "attack");
     return {
-      contactMs: Number(actor?.dataset.contactMs),
-      releaseMs: Number(actor?.dataset.releaseMs),
-      motionEndMs: Number(actor?.dataset.motionEndMs),
+      contactMs: attack.motion.contact,
+      releaseMs: attack.motion.release,
+      motionEndMs: attack.motion.duration,
       numberDelta: Math.abs(attack.numberAt[0] - attack.hitAt[0]),
     };
   });

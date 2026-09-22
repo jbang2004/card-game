@@ -212,7 +212,7 @@
       `<small>第 ${s.bossIndex + 1} 战</small><strong>${esc(b.name)}</strong><span>${s.phase2 ? "第二阶段 · 已觉醒" : "第一阶段"} · ${s.e.hand.length} 手牌</span>`;
     /* Same capsule wording as the desktop read-out (design doc §12.6): the
      * round number leads, whose turn it is follows. The capsule only owns the
-     * band between the brand and the icon cluster (`mobile-view.js` `l.round`),
+     * band between the brand and the icon cluster (`mobile-view.js` `l.notice`),
      * so on a narrow phone the wording steps down until it fits rather than
      * running under the volume button; 12px is the floor. */
     const turn = $("turn-number"),
@@ -250,15 +250,8 @@
     );
     const tip = document.querySelector(".hand-tip");
     if (tip) tip.textContent = "左右滑动 · 点按选中 · 拖动出牌";
-    const p = V.layout.player,
-      wslot = $("weapon-slot"),
-      beside = V.portrait && V.layout.power.x - (p.x + p.w) > 36;
-    V.box(wslot, {
-      x: beside ? p.x + p.w + 6 : p.x - 8,
-      y: p.y + (beside ? 36 : 18),
-      w: 30,
-      h: 34,
-    });
+    // The weapon belongs to the hero, so these are local HUD coordinates.
+    V.box($("weapon-slot"), V.layout.weapon);
     const arrow = $("target-arrow");
     arrow?.setAttribute("aria-hidden", "true");
     selectionChanged();

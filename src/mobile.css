@@ -289,9 +289,9 @@ body.touch-layout.reduced-motion .hand-card:focus-visible {
   transform: none;
   transform-origin: center;
   transition: none;
-  /* Touch handling is owned by the controller (drag to play, manual rail pan);
-     leaving pan-x here lets the browser cancel the pointer on any lift. */
-  touch-action: none;
+  /* Hover/focus/selection must preserve native horizontal panning too.
+     Vertical lifts stay with the pointer controller for drag-to-play. */
+  touch-action: pan-x;
   filter: drop-shadow(0 4px 2px #130b1480);
   z-index: auto;
   scroll-snap-align: start;

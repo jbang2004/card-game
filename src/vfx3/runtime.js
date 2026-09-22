@@ -13,7 +13,7 @@ const Arts=G.EmberSwordArts||(typeof require==='function'?require('./sword-arts.
 const Rem=G.EmberRemasterArts||(typeof require==='function'?require('./remaster-arts.js'):null);
 const Life=G.EmberLifecycleArts||(typeof require==='function'?require('./lifecycle-arts.js'):null);
 const KIND={...Object.fromEntries(Object.keys(Life.DEFINITIONS).map(k=>[k,k])),...Object.fromEntries(Object.keys(Rem.DEFINITIONS).map(k=>[k,k])),breath:'breath',lightning:'lightning',bolt:'lightning',slash:'slash'};
-const TAIL={...Object.fromEntries(Object.entries(Life.DEFINITIONS).map(([k,v])=>[k,v.tail])),...Object.fromEntries(Object.entries(Rem.DEFINITIONS).map(([k,v])=>[k,v.tail])),breath:4100,lightning:320,slash:1120};
+const TAIL={...Object.fromEntries(Object.entries(Life.DEFINITIONS).map(([k,v])=>[k,v.tail])),...Object.fromEntries(Object.entries(Rem.DEFINITIONS).map(([k,v])=>[k,v.tail])),breath:1400,lightning:320,slash:1120};
 const valid=b=>b&&['x','y','w','h'].every(k=>Number.isFinite(b[k]))&&b.w>0&&b.h>0;
 function descriptor(kind,o,now=0){
  if(!KIND[kind]||!valid(o.from)||!valid(o.to))return null;
@@ -22,7 +22,7 @@ function descriptor(kind,o,now=0){
  const lead=Math.max(0,Number(o.leadMs)||0);
  const impact=Number.isFinite(o.contactAt)?o.contactAt:start+lead;
  const scale=clamp(Number(o.timeScale)||1,.1,1);
- return {sequenceId:o.sequenceId??null,artPosition:o.artPosition||null,previousCid:o.previousCid||null,lifecycle:Life.supports(kind),visualOnly:!!o.visualOnly,silent:!!o.silent,groupId:o.groupId||null,aoe:!!o.aoe,swordStyle:kind==='slash'?Arts.resolve(o.swordStyle):null, sourceCid:o.sourceCid||null, sourceRef:o.sourceRef?{...o.sourceRef}:null, targetRef:o.targetRef?{...o.targetRef}:null,
+ return {sequenceId:o.sequenceId??null,artPosition:o.artPosition||null,previousCid:o.previousCid||null,lifecycle:Life.supports(kind),visualOnly:!!o.visualOnly,silent:!!o.silent,audioPrimary:o.audioPrimary!==false,audioGain:Number.isFinite(o.audioGain)?o.audioGain:1,outcome:o.outcome?{...o.outcome}:null,groupId:o.groupId||null,aoe:!!o.aoe,swordStyle:kind==='slash'?Arts.resolve(o.swordStyle):null, sourceCid:o.sourceCid||null, sourceRef:o.sourceRef?{...o.sourceRef}:null, targetRef:o.targetRef?{...o.targetRef}:null,
    kind:resolved,sourceKind:kind,from:{...o.from},to:{...o.to},start,impact:Math.max(start,impact),
    hold:Math.max(0,Number(o.hitStopMs)||0),tail:(kind==="slash"&&G.EmberBenchmarkArts?.supports(o.swordStyle)?G.EmberBenchmarkArts.STYLES[o.swordStyle].tail:TAIL[resolved])*scale,seed:Number(o.seed)||7,
    tier:clamp(o.tier||2,1,3),scale,tint:Array.isArray(o.tint)?o.tint.slice():null};
@@ -35,14 +35,15 @@ function sample(d,now){
 // R5: screen-top strike; model, trail and tests share one rigid pose.
 const Sky=G.EmberSkyfall||(typeof require==='function'?require('./skyfall.js'):null);
 const cleaveMotion=(d,t)=>Sky.motion(d,t);
-// Original flame time/coordinates remain isolated from the game clock.
+// Keep the authored flame field; compress post-contact feeding and smoke to
+// one readable attack. The first arrival still uses the authoritative deadline.
 const Ref=G.EmberReferenceFlame||(typeof require==='function'?require('./reference-flame.js'):null);
 function breathClock(d,t){
  const hit=(d.impact-d.start)/1000,refHit=1.46,begin=.72;
- const time=t<0?-1:t<hit?begin+(refHit-begin)*t/Math.max(.000001,hit):refHit+(t-hit)/d.scale;
+ const time=t<0?-1:t<hit?begin+(refHit-begin)*t/Math.max(.000001,hit):refHit+(t-hit)/d.scale*3;
  return {time,hit,refHit,begin,launch:hit*(.96-begin)/(refHit-begin),
  travel:Math.max(.000001,hit*(refHit-.96)/(refHit-begin)),
- stop:hit+(3.36-refHit)*d.scale,interval:.0124*d.scale};
+ stop:hit+(3.36-refHit)/3*d.scale,interval:.0124/3*d.scale};
 }
 function flameMapping(d,W,H){
  const source=Ref.view(Ref.mouth(.96)),target=Ref.view([2.68,1.70,0]);
@@ -129,9 +130,10 @@ function create(canvas,options={}){
  }
  function electricity(d,s){
   const F=xyz(d.from,22),T=xyz(d.to,23),delta=V.sub(T,F),dist=V.len(delta)||1,dir=V.scale(delta,1/dist),per=[-dir[1],dir[0],0];
+  const tint=d.tint||[.25,.62,1],color=(energy,white=0)=>tint.map(v=>(v*(1-white)+white)*energy);
   const hit=Math.max(.015,s.hit),charge=env(s.t,0,hit+.025,.025,.05);
-  R.glow(F,Math.min(70,d.from.w*.7),'#74b9ff',charge*.5);
-  ring(F,clamp(d.from.w*.15,8,22),'#7aa9ff',charge*.62,.3,s.t*2,s.t*3);
+  R.glow(F,Math.min(70,d.from.w*.7),color(1),charge*.5);
+  ring(F,clamp(d.from.w*.15,8,22),color(1,.12),charge*.62,.3,s.t*2,s.t*3);
   const arrive=clamp(s.t/hit),head=ease(clamp((arrive-.46)/.54));
   const strength=s.after<0?ease((arrive-.38)/.3):env(s.after,-.01,.235,.012,.09)*(.77+.23*Math.cos(s.after*45));
   if(strength>.005){
@@ -142,22 +144,22 @@ function create(canvas,options={}){
     const zig=noise*Math.min(70,dist*.18)*factor;
     points.push([base[0]+per[0]*zig,base[1]+per[1]*zig,base[2]+factor*(16+noise*18)]);
    }
-   beam(points,5.4,[.025,.18,1.7],strength*.34);beam(points,2.1,[.16,.92,2.8],strength*.70);beam(points,.80,[1.4,2.6,4.1],strength);
+   beam(points,5.4,color(1.7),strength*.34);beam(points,2.1,color(2.8,.10),strength*.70);beam(points,.80,color(4.1,.65),strength);
    for(let j=0;j<5;j++){
     const ix=5+j*4,beg=points[ix],length=(35+rnd(j+d.seed)*65)*head,sg=j%2?-1:1;
     const ps=[beg];for(let k=1;k<6;k++){const u=k/5;
      ps.push([beg[0]+dir[0]*length*u+per[0]*sg*length*u*.55,beg[1]+dir[1]*length*u+per[1]*sg*length*u*.55+(rnd(k*37+j*13+frame)-.5)*18,beg[2]+Math.sin(u*Math.PI)*16]);}
-    beam(ps,.52,[.38,1.1,2.9],strength*.62);
+    beam(ps,.52,color(2.9,.20),strength*.62);
    }
   }
   if(s.after>=0){
-   const a=env(s.after,-.01,.30,.015,.13);R.glow(T,d.to.w*.7,'#82bfff',a*.58);
-   ring(T,d.to.w*(.15+ease(s.after/.20)*.40),'#77bdff',a*.5,.5,0,s.t*2);
-   sparks(T,s.after,30,'#cceaff',d.seed+9,clamp(d.to.w/116,.55,1.1));
+   const a=env(s.after,-.01,.30,.015,.13);R.glow(T,d.to.w*.7,color(1,.25),a*.58);
+   ring(T,d.to.w*(.15+ease(s.after/.20)*.40),color(1,.12),a*.5,.5,0,s.t*2);
+   sparks(T,s.after,30,color(1,.70),d.seed+9,clamp(d.to.w/116,.55,1.1));
    for(let j=0;j<3;j++){
     const ps=[];for(let i=0;i<15;i++){const a=i/14*Math.PI*1.5+s.t*(j+2)*2,rad=d.to.w*.3;
       ps.push([T[0]+Math.cos(a)*rad,T[1]+Math.sin(a)*rad*.64,T[2]+Math.sin(a+j)*14]);}
-    beam(ps,.55,[.17,.67,1.7],a*.5);
+    beam(ps,.55,color(1.7,.10),a*.5);
    }
   }
  }
@@ -165,7 +167,7 @@ function create(canvas,options={}){
  function fire(d,s){
   const clock=breathClock(d,s.t),frame=Ref.sample(clock.time,quality.low?.45:1),map=flameMapping(d,W,H);
   const k=map.scale,plumes=frame.sprites.map(p=>({...p,pos:map.point(p.pos)}));
-  // Same flames, fade, speed, sizes and random seeds as the original. Only a
+  // Same authored flame field and shader, sampled through breathClock. A
   // rigid rotation + uniform scale maps reference space onto the card stage.
   // No hot duplicate, target clamp, shortened parcel lifetime, or cone shell.
   for(const p of frame.glows){
@@ -185,15 +187,27 @@ function create(canvas,options={}){
   R.fxList.push({geo:R.geo.plane,model:new Float32Array([ca*w,sa*w,0,0,0,0,1,0,-sa*h,ca*h,0,0,...pos,1]),
    color:col,opt:{mode,alpha,transparent:true,add:false,surface:seed,emission:mode===8?.4:0,time}});
  }
+ function beginSequence(id,now=performance.now()){
+  for(const d of instances)if(d.sequenceId!=null&&d.sequenceId!==id&&now>=d.impact){
+   d.retireAt=now;d.endAt=Math.min(d.impact+d.tail,now+140);
+  }
+ }
  function draw(now){
   lastNow=now;if(quality.reduced){if(dirty)R.clear();dirty=false;return;}
-  if(!manual)instances=instances.filter(d=>now<d.impact+d.tail-1e-6);
+  if(!manual)instances=instances.filter(d=>now<(d.endAt??d.impact+d.tail)-1e-6);
   const active=instances.filter(d=>sample(d,now).alive);
   options.onFrame?.(active,now,!!manual);
   if(!active.length){if(dirty)R.clear();dirty=false;stats.active=0;stats.particles=0;stats.drawCalls=0;return;}
   R.camera();R.lamp=[0,0,120];R.lampColor=[.15,.21,.27];R.begin((now-active[0].start)/1000);
   for(const d of active){const state=sample(d,now);if(!state.alive)continue;
+   const firstFX=R.fxList.length,firstParticle=R.particles.length;
    if(d.lifecycle){let v=d;if(!manual&&d.targetRef&&options.resolveTarget){const p=options.resolveTarget(d.targetRef);if(p)v={...d,to:{...d.to,x:p.x,y:p.y}};}lifecycle.render(v,state,W,H,quality.low);}else if(d.kind==='breath')fire(d,state);else if(d.kind==='lightning')electricity(d,state);else if(d.kind==='slash')slash(d,state);else remastered(d,state);
+   // Stronger results retain their peak; a previous action's tail yields to the next.
+   const strength=d.lifecycle?1:([0,.76,.90,1][d.tier]||1);
+   const fade=d.retireAt==null?1:1-ease((now-d.retireAt)/140);
+   const alpha=strength*fade;
+   for(let i=firstFX;i<R.fxList.length;i++){const o=R.fxList[i].opt||(R.fxList[i].opt={});o.alpha=(o.alpha??1)*alpha;if(alpha<1&&!o.add)o.transparent=true;}
+   for(let i=firstParticle+6;i<R.particles.length;i+=9)R.particles[i]*=alpha;
   }
   const hasFire=active.some(d=>d.kind==='breath');
   R.flush();R.end({bloom:hasFire?.28:(quality.low?.34:.46),bloomThreshold:hasFire?.78:.28,referenceFlame:hasFire});dirty=true;
@@ -209,7 +223,7 @@ function create(canvas,options={}){
  function replayLifecycle(ms){if(!lastLifecycleGroup.length)return false;manual=true;const o=lastLifecycleGroup[0].start;instances=lastLifecycleGroup.map(d=>({...d,start:d.start-o,impact:d.impact-o}));draw(ms);return true;}
  function advance(now){if(!manual)draw(now);}
  function setQuality(q){quality={...quality,...q};if(quality.reduced)clear();else{stage(W,H);dirty=true;}}
- return {emit,replayLifecycle,get lifecycleTrace(){return lifecycleTrace.slice();},get lastLifecycleGroup(){return lastLifecycleGroup.map(d=>({...d}));},draw:advance,stage,clear,setQuality,replay,replayUtility,get lastUtility(){return lastUtility?{...lastUtility}:null;},get lastGroup(){return lastGroup.map(d=>({...d}));},get replayGroup(){return replayGroup().map(d=>({...d}));},resume(){options.onClear?.();manual=null;instances=[];dirty=true;},
+ return {emit,beginSequence,replayLifecycle,get lifecycleTrace(){return lifecycleTrace.slice();},get lastLifecycleGroup(){return lastLifecycleGroup.map(d=>({...d}));},draw:advance,stage,clear,setQuality,replay,replayUtility,get lastUtility(){return lastUtility?{...lastUtility}:null;},get lastGroup(){return lastGroup.map(d=>({...d}));},get replayGroup(){return replayGroup().map(d=>({...d}));},resume(){options.onClear?.();manual=null;instances=[];dirty=true;},
   get available(){return !quality.reduced;},get stats(){return {...stats};},get last(){return last?{...last,from:{...last.from},to:{...last.to}}:null;},get trace(){return trace.slice();},
   diagnostics(){return{...stats,webgl:R.info(),error:R.gl.getError()};},
   destroy(){clear();arts.destroy();remaster.destroy();lifecycle.destroy();R.destroy();},_remasterFrame:(d,t)=>Rem.sample(d,t,W,H,quality.low),_sample:sample,_swordPose:swordPose,_swordArtFrame:(d,t)=>Arts.sample(d,t,W,H,quality.low)};

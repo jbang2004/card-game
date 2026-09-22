@@ -87,11 +87,17 @@
   "MESH_SWORD_ARTS": "vfx3/sword-arts.js",
   "BENCHMARK_ARTS": "vfx3/benchmark-arts.js",
   "BENCHMARK_CUES": "vfx3/benchmark-cues.js",
+  "MOTION_FEEDBACK": "presentation/motion-feedback.js",
   "BENCHMARK_FEEDBACK": "presentation/benchmark-feedback.js",
   "REMASTER_ARTS": "vfx3/remaster-arts.js",
   "REMASTER_CUES": "vfx3/remaster-cues.js",
   "REMASTER_FEEDBACK": "presentation/remaster-feedback.js",
   "LIFECYCLE_ARTS": "vfx3/lifecycle-arts.js",
   "LIFECYCLE_FEEDBACK": "presentation/lifecycle-feedback.js",
-  "LIFECYCLE_STYLE": "presentation/skins/slate/lifecycle.css"
+  "LIFECYCLE_STYLE": "presentation/skins/slate/lifecycle.css",
+  "CARD_RELIEF_MAPS": "card-relief-maps.js",
+  "CARD_RELIEF": "presentation/card-relief.js",
+  "SKIN_SLATE_CARD_RELIEF": "presentation/skins/slate/card-relief.css",
+  "CARD_STAGE": "presentation/card-stage.js",
+  "SKIN_SLATE_CARD_STAGE": "presentation/skins/slate/card-stage.css"
 }

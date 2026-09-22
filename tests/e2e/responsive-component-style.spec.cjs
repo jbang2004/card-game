@@ -115,8 +115,8 @@ const pages = {
     ".library-item .card",
   ],
   detail: [
-    ".modal-box",
-    ".card-detail-layout",
+    "#card-stage .god-ritual",
+    "#card-stage .card-stage-name",
     ".card-detail-rule",
     "#library-detail-back",
     "#library-detail-add",

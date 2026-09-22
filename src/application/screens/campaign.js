@@ -24,6 +24,13 @@ const EmberCampaignScreens = (() => {
         "discover",
         true,
       );
+      EmberCardRelief.attend(
+        [...document.querySelectorAll("[data-discover]")],
+        (b) => ({
+          id: b.dataset.discover,
+          rarity: D.byId[b.dataset.discover].rarity,
+        }),
+      );
       document.querySelectorAll("[data-discover]").forEach(
         (b) =>
           (b.onclick = () => {

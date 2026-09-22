@@ -31,9 +31,11 @@ test('R8 ice: folded silhouette differs from the smooth holy blade',()=>{
  assert.notDeepEqual(h.widths,i.widths);let changes=0;for(let n=1;n<i.widths.length-1;n++)if((i.widths[n]-i.widths[n-1])*(i.widths[n+1]-i.widths[n])<0)changes++;
  assert.ok(changes>=2);
 });
-test('R8 ice: at least one legible large crystal, plus local irregular frost plate',()=>{
+test('R8 ice: large crystal remains but frost film requires a real freeze outcome',()=>{
  const f=frame('frost',.19);assert.ok(f.shards.some(s=>s.size>=6));
- const p=f.plates.find(p=>p.material===16);assert.ok(p&&p.w<=to.w*.9&&p.h<=to.h*.7);
+ assert.ok(!f.plates.some(p=>p.material===16));
+ const frozen=B.sample(desc('frost',{outcome:{kind:'damage',freezes:true}}),.53);
+ const p=frozen.plates.find(p=>p.material===16);assert.ok(p&&p.w<=to.w*.9&&p.h<=to.h*.7);
 });
 test('R8 shadow: opaque dark incision remains after projectile, no radial fracture substitution',()=>{
  const f=frame('night',.23);assert.equal(f.cracks.length,0);

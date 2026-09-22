@@ -62,6 +62,11 @@ const EmberHeroScreens = (() => {
         }</details><div class="hero-config-plan"><p id="hero-plan" class="deck-plan"></p><label class="archetype-picker" id="opponent-picker" hidden>对手 <select id="practice-opponent" class="library-search">${D.archetypes.map((a) => `<option value="${a.id}">${D.classNames[a.classId]} · ${a.name}</option>`).join("")}</select></label></div></div><div class="modal-footer"><button class="ghost-btn" id="hero-deck-btn">调整牌组</button><button class="gold-btn" id="hero-confirm">开始冒险 ${A.icon("arrow")}</button></div></section>`,
         "heroes",
       );
+      EmberCardRelief.mount(document.querySelector("#modal .scene-showcase"), {
+        id: hero.portraitId,
+        color: A.character(hero),
+        focus: [0.5, heroSceneFocus / 100],
+      });
       document.querySelectorAll("[data-hero]").forEach(
         (b) =>
           (b.onclick = () => {
@@ -197,19 +202,29 @@ const EmberHeroScreens = (() => {
       mulliganSet = new Set();
       renderMulligan();
     }
-    function renderMulligan() {
+    function renderMulligan(attended = null) {
       showModal(
         `<section class="modal-box mulligan-box"><div class="modal-heading"><div class="eyebrow">YOUR OPENING HAND</div><h2>命运的第一手</h2><p>点击不想保留的卡牌进行替换。优先留下低费随从，建立你的战场。</p></div><div class="mulligan-cards">${game.s.p.hand.map((c) => `<button class="mulligan-card ${mulliganSet.has(c.uid) ? "replace" : ""}" data-mulligan="${c.uid}" aria-label="${D.byId[c.cid].name}，点击${mulliganSet.has(c.uid) ? "保留" : "替换"}">${cardHTML(D.byId[c.cid])}<span class="mulligan-choice-state">${A.icon(mulliganSet.has(c.uid) ? "refresh" : "check")} ${mulliganSet.has(c.uid) ? "替换" : "保留"}</span></button>`).join("")}</div><div class="modal-footer"><button class="gold-btn" id="mulligan-confirm">${mulliganSet.size ? "替换 " + mulliganSet.size + " 张并开始" : "保留手牌，开始战斗"} ${A.icon("arrow")}</button></div><p class="hero-deck-note">${game.s.first === "e" ? "你后手，换牌后获得硬币。" : "你先手。"}每个回合开始时，抽一张牌。</p></section>`,
         "mulligan",
         true,
       );
-      document.querySelectorAll("[data-mulligan]").forEach(
+      const choices = [...document.querySelectorAll("[data-mulligan]")];
+      choices.forEach(
         (b) =>
           (b.onclick = () => {
             const id = b.dataset.mulligan;
             mulliganSet.has(id) ? mulliganSet.delete(id) : mulliganSet.add(id);
-            renderMulligan();
+            renderMulligan(id);
           }),
+      );
+      /* Toggling a card redraws the row; the card just touched keeps its relief. */
+      EmberCardRelief.attend(
+        choices,
+        (b) => {
+          const c = D.byId[game.s.p.hand.find((x) => x.uid === b.dataset.mulligan).cid];
+          return { id: c.id, rarity: c.rarity };
+        },
+        choices.find((b) => b.dataset.mulligan === attended),
       );
       $("mulligan-confirm").onclick = () => {
         const ids = [...mulliganSet];

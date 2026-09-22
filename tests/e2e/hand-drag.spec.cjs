@@ -97,9 +97,13 @@ async function touchDrag(page, from, to, steps = 14) {
 }
 
 async function boxOf(page, uid) {
-  /* Dock cards fan with overlap and peek above the screen edge: the exposed
-   * strip is the top-left of each card, so gestures start there. */
-  const b = await page.locator(`#hand [data-hand="${uid}"]`).boundingBox();
+  // Bring a card into the horizontal rail before sending raw touch coordinates.
+  const card = page.locator(`#hand [data-hand="${uid}"]`);
+  await card.evaluate((el) => {
+    const hand = el.parentElement;
+    hand.scrollLeft = el.offsetLeft - 8;
+  });
+  const b = await card.boundingBox();
   return { x: b.x + Math.min(16, b.width / 2), y: b.y + 30 };
 }
 
@@ -110,7 +114,7 @@ async function emptyDropPoint(page) {
     const a = EmberViewport.layout.arena;
     const unit = (x, y) => {
       const el = document.elementFromPoint(x, y);
-      return el?.closest?.("[data-uid]") ? 1 : 0;
+      return el?.closest?.("[data-uid],#hand-card-lift") ? 1 : 0;
     };
     let fallback = null;
     for (let fy = 0.8; fy >= 0.42; fy -= 0.12) {
@@ -784,9 +788,7 @@ for (const [label, viewport] of VIEWPORTS) {
       expect(prepared.mana).toBe(before.mana);
       expect(prepared.detail).toBe(null);
 
-      await page
-        .locator(`#hand [data-hand="${plain.uid}"]`)
-        .tap({ position: { x: 14, y: 30 } });
+      await page.locator("#hand-card-lift").tap({ position: { x: 50, y: 60 } });
       await page.waitForTimeout(200);
       const cancelled = await handState(page);
       expect(cancelled.selected).toBe(0);
@@ -863,14 +865,14 @@ for (const [label, viewport] of VIEWPORTS) {
         touchPoints: [{ x: from.x, y: from.y }],
       });
       await page.waitForTimeout(120);
-      expect((await handState(page)).snapped).toBe(0);
+      await expect.poll(async () => (await handState(page)).snapped).toBe(0);
 
       await cdp.send("Input.dispatchTouchEvent", {
         type: "touchMove",
         touchPoints: [to],
       });
       await page.waitForTimeout(120);
-      expect((await handState(page)).snapped).toBe(1);
+      await expect.poll(async () => (await handState(page)).snapped).toBe(1);
       await cdp.send("Input.dispatchTouchEvent", {
         type: "touchEnd",
         touchPoints: [],
@@ -1036,17 +1038,9 @@ for (const [label, viewport] of VIEWPORTS) {
           fits: h.classList.contains("hand-fits"),
         };
       });
-      /* The dock only becomes a scrolling rail when the fan step would drop
-       * below 24px (`.hand-pan`); a fan that fits never scrolls, and a
-       * horizontal swipe across it must not play a card either. */
-      /* A fitting dock is `overflow: visible`, so it is not a scroll
-       * container at all — but round 3 fans the cards by up to 3° (design doc
-       * §13.5) and a rotated outer card reports a few px of overflow past the
-       * dock edge. That overflow is unscrollable paint, not a rail, so the
-       * assertion allows the roll while still rejecting a real scroller. */
-      if (rail.fits)
-        expect(rail.scrollWidth - rail.clientWidth).toBeLessThanOrEqual(8);
-      else expect(rail.scrollWidth).toBeGreaterThan(rail.clientWidth);
+      // Full-width cards must scroll when they exceed the dock's width.
+      expect(rail.fits).toBe(false);
+      expect(rail.scrollWidth).toBeGreaterThan(rail.clientWidth);
       const box = await page.locator("#hand .hand-card").first().boundingBox();
       const before = await handState(page);
       const from = { x: box.x + 14, y: box.y + 30 };
@@ -1107,7 +1101,11 @@ for (const [label, viewport] of [
       // card actually IS at commit time, so the source is measured after the
       // selection pose is applied, not before it.
       await card.click();
-      const source = await card.boundingBox();
+      const lifted = page.locator("#hand-card-lift");
+      await lifted.evaluate((el) =>
+        Promise.all(el.getAnimations().map((a) => a.finished)),
+      );
+      const source = await lifted.boundingBox();
       const arena = await page.locator("#arena").boundingBox();
       await page.mouse.click(
         arena.x + arena.width / 2,

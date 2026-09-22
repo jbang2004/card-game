@@ -39,7 +39,7 @@ async function assertPlacementCue(page) {
 }
 
 test.describe("battle instruction and feedback rails", () => {
-  test("insufficient mana highlights its source and explains the error outside the court", async ({
+  test("unaffordable cards open for reading with a persistent top explanation", async ({
     page,
   }) => {
     await startDemo(page);
@@ -50,24 +50,19 @@ test.describe("battle instruction and feedback rails", () => {
       return g.s.p.hand.find((card) => g.cost(card) > 0).uid;
     });
     const card = page.locator(`#hand [data-hand="${uid}"]`),
-      notice = page.locator("#toast");
+      notice = page.locator("#touch-target-bar");
     await card.click();
     await expect(notice).toBeVisible();
+    await expect(notice).toHaveAttribute("data-mode", "inspect");
     await expect(notice).toContainText("法力不足");
     await expect(notice).toContainText("当前 0 点");
-    await expect(page.locator("#touch-target-bar")).toBeHidden();
+    await expect(page.locator("#hand-card-lift")).toBeVisible();
     await expect(page.locator("#target-lines")).toBeHidden();
-    await expect(card).toHaveClass(/feedback-error/);
-    await expect(page.locator(".mana-panel")).toHaveClass(/feedback-error/);
-    const geometry = await page.evaluate(() => {
-      const n = document.getElementById("toast").getBoundingClientRect(),
-        c = document
-          .querySelector("#hand .feedback-error")
-          .getBoundingClientRect();
-      return { n, c };
-    });
-    expect(geometry.n.width).toBeLessThanOrEqual(900);
-    expect(geometry.n.bottom).toBeLessThanOrEqual(geometry.c.top + 2);
+    const box = await notice.boundingBox();
+    expect(box.y + box.height).toBeLessThanOrEqual(80);
+    expect(await page.evaluate(() => Emberfall.selection)).toBe(null);
+    await page.locator("#touch-cancel").click();
+    await expect(page.locator("#hand-card-lift")).toHaveCount(0);
   });
 
   test("desktop targetless play offers a visible instruction and cancel action", async ({
@@ -90,6 +85,9 @@ test.describe("battle instruction and feedback rails", () => {
     await expect(cue).toHaveAttribute("data-mode", "placement");
     await expect(page.locator("#touch-target-bar")).toBeVisible();
     await expect(page.locator("#touch-target-text")).toBeVisible();
+    await page
+      .locator("#touch-target-bar")
+      .evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
     await assertPlacementCue(page);
   });
 
@@ -162,6 +160,9 @@ test.describe("battle instruction and feedback rails", () => {
       "data-mode",
       "placement",
     );
+    await chip.evaluate((el) =>
+      Promise.all(el.getAnimations().map((a) => a.finished)),
+    );
     const geometry = await page.evaluate(() => {
       const chip = document
           .getElementById("touch-target-bar")
@@ -170,9 +171,16 @@ test.describe("battle instruction and feedback rails", () => {
         label = document
           .getElementById("touch-target-text")
           .getBoundingClientRect();
-      return { chip, hand, label };
+      return {
+        chip,
+        hand,
+        label,
+        rail: document.getElementById("battle-status").getBoundingClientRect(),
+      };
     });
-    expect(geometry.chip.width).toBeGreaterThanOrEqual(280);
+    expect(
+      Math.abs(geometry.chip.width - geometry.rail.width),
+    ).toBeLessThanOrEqual(2);
     expect(geometry.chip.bottom).toBeLessThanOrEqual(geometry.hand.top + 1);
     expect(geometry.label.width).toBeGreaterThan(40);
     const cancel = await page.locator("#touch-cancel").boundingBox();
@@ -210,6 +218,9 @@ for (const [width, height] of [
       .locator('#hand [data-cardid="frostbolt"]')
       .click({ position: { x: 14, y: 30 } });
     await expect(page.locator("#touch-target-text")).toBeVisible();
+    await page
+      .locator("#touch-target-bar")
+      .evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
     const before = await page.evaluate(() => JSON.stringify(EmberDebug.game.s));
     const faults = await page.evaluate(() => {
       const errors = [],
@@ -243,7 +254,13 @@ for (const [width, height] of [
             ? r.y + Math.min(r.height, innerHeight - r.y) / 2
             : r.y + r.height / 2,
         );
-        if (!el.contains(hit)) errors.push("blocked:" + el.id);
+        // Reading temporarily covers part of the battlefield. Only the card
+        // itself may intercept those controls; cancellation must stay exposed.
+        if (
+          !el.contains(hit) &&
+          (el.id === "touch-cancel" || !hit?.closest("#hand-card-lift"))
+        )
+          errors.push("blocked:" + el.id);
       }
       for (let i = 0; i < controls.length; i++)
         for (let j = i + 1; j < controls.length; j++)
@@ -282,6 +299,17 @@ for (const [width, height] of [
     });
     await page.locator("#touch-cancel").click();
     await expect(page.locator("#touch-target-bar")).toBeHidden();
+    const blockedAfterClose = await page.evaluate(() =>
+      [...document.querySelectorAll("#power-btn,#end-turn")]
+        .filter((el) => {
+          const r = el.getBoundingClientRect();
+          return !el.contains(
+            document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2),
+          );
+        })
+        .map((el) => el.id),
+    );
+    expect(blockedAfterClose).toEqual([]);
     expect(await page.evaluate(() => JSON.stringify(EmberDebug.game.s))).toBe(
       before,
     );

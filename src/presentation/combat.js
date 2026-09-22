@@ -62,6 +62,17 @@ const EmberCombat = (() => {
     "friendlyBeasts",
   ]);
   const CONTACT_TYPES = new Set(["damage", "shield", "heal", "status"]);
+  // Presentation consumes observed results, never infers a status from artwork.
+  function outcomeOf(events) {
+    const damage = events.filter((e) => e.type === "damage");
+    return {
+      kind: damage.some((e) => (e.loss ?? e.amount) > 0) ? "damage"
+        : events.some((e) => e.type === "shield") ? "shield"
+        : damage.length ? "armor"
+        : "support",
+      freezes: events.some((e) => e.type === "status" && e.kind === "freeze"),
+    };
+  }
   // Bookkeeping statuses that are not caused by the action's card.
   const PASSIVE_STATUS = new Set(["trigger", "thaw", "expire"]);
 
@@ -496,6 +507,7 @@ const EmberCombat = (() => {
         actor: plainRef(actor),
         targets: targets.map((t) => t.ref),
         tiers: targets.map((t) => t.tier),
+        outcomes: targets.map((t) => outcomeOf(t.events.map((x) => x.event))),
         tier,
         aoe,
         link: statusOnly,
@@ -669,6 +681,7 @@ const EmberCombat = (() => {
               family: direction === "outgoing" ? resolvedFamily : sourceFamily(group.frame, event.from, "blade"),
               sourceCid: direction === "outgoing" ? cid : sourceCid(group.frame, event.from),
               tier: eventTier,
+              outcome: outcomeOf([event]),
               heavy: eventTier === 3,
               recoilPx: T.tiers[eventTier].recoilPx,
               contactAt,
@@ -902,6 +915,6 @@ const EmberCombat = (() => {
       cardTracks,
     };
   }
-  return Object.freeze({ compile, refKey });
+  return Object.freeze({ compile, refKey, outcomeOf });
 })();
 if (typeof module !== "undefined") module.exports = EmberCombat;

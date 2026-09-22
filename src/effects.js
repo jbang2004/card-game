@@ -522,10 +522,16 @@ const EmberFX = (() => {
       `<span class="dmg-value">` +
       (type === "shield"
         ? "格挡"
-        : `${type === "heal" ? "+" : "−"}${n}${heavy ? "<small>重击</small>" : ""}`) +
+        : `${type === "heal" ? "+" : "−"}${n}`) +
       `</span>`;
     if (options?.key) el.dataset.hitKey = options.key;
-    el.style.left = clamp(p.x, 40, W - 40) + "px";
+    // A crowded touch row must not turn one result into a two-card overlay.
+    if (EmberViewport.mobile && Number.isFinite(p.w)) {
+      const size = clamp(p.w * (heavy ? 1.02 : .90), 38, heavy ? 76 : 64);
+      el.style.setProperty("--splat-size", size + "px");
+      el.style.setProperty("--splat-font", (type === "shield" ? clamp(size * .22, 11, 17) : clamp(size * .40, 17, 30)) + "px");
+      el.style.left = clamp(p.x, size / 2, W - size / 2) + "px";
+    } else el.style.left = clamp(p.x, 40, W - 40) + "px";
     el.style.top = p.y - (p.h || 100) * 0.2 + "px";
     app.appendChild(el);
     nodes.add(el);
@@ -656,7 +662,7 @@ const EmberFX = (() => {
     return anchorEl(ref);
   }
   function recoil(el, from, contact, elapsed = 0) {
-    if (!el) return null;
+    if (!el || quality.reduced) return null;
     const box = pos(el);
     if (!box) return null;
     const duration = contact.recoveryEnd - contact.contact,
@@ -781,6 +787,7 @@ const EmberFX = (() => {
   /** FLIP survivors from their previous boxes. `hold` keeps them in place
    * first (a death reflows only after the dissolve). */
   function settleLayout(old, excludedKeys = new Set(), timing = null) {
+    if (quality.reduced) return;
     const duration = timing?.duration ?? 420,
       hold = timing?.hold ?? 0;
     if (duration <= 0) return;
@@ -1946,6 +1953,9 @@ const EmberFX = (() => {
     const edge = "linear-gradient(to top, transparent 0%, #000 13%, #000 100%)";
     el.style.maskImage = edge;
     el.style.webkitMaskImage = edge;
+    // animate() cancels its finished WAAPI effect before scheduled removal.
+    // The underlying pose must stay invisible during that cleanup interval.
+    el.style.opacity = "0";
     const f = freeze / total;
     animate(
       el,
@@ -1962,6 +1972,7 @@ const EmberFX = (() => {
     line.style.cssText =
       `left:${old.left}px;top:${old.top + old.h - 2}px;width:${old.w}px;height:2px;` +
       `background:linear-gradient(90deg,transparent,${tint} 16%,#fff4dc 50%,${tint} 84%,transparent);`;
+    line.style.opacity = "0";
     app.appendChild(line);
     nodes.add(line);
     animate(
@@ -2009,6 +2020,7 @@ const EmberFX = (() => {
     };
   }
   function lunge(ctx, beat, beatIndex, actorRef, actorBox, targetBox, old) {
+    if (quality.reduced) return null;
     const { sequence } = ctx;
     const m = beat.motion,
       duration = m.duration;
@@ -2188,13 +2200,14 @@ const EmberFX = (() => {
         contactAt = [cast.startAt + cast.duration];
       }
     }
-    const resolved = targetRefs.map((ref, i) => ({ ref, box: anchors.resolve(ref, sequence.anchors), at: contactAt[i] })).filter(x => x.box);
+    const resolved = targetRefs.map((ref, i) => ({ ref, box: anchors.resolve(ref, sequence.anchors), at: contactAt[i], tier: cast.tiers[i], outcome: cast.outcomes?.[i] })).filter(x => x.box);
     if (targetRefs.length && !resolved.length) return;
     if (remastered) { const rec = sequence.records.get(beatIndex); if (rec) rec.remasterKind = cast.kind; }
     fxCall("cast", cast.kind, {
       sourceCid, sourceRef: cast.actor,sequenceId:sequence.id,
       from: fxBox(from), targets: resolved.map(x => fxBox(x.box)),
       targetRefs: resolved.map(x => x.ref), swordStyle: cast.swordStyle,
+      tiers: resolved.map(x => x.tier), outcomes: resolved.map(x => x.outcome),
       tier: cast.tier, tint: cast.tint, tintGrad: cast.tintGrad,
       aoe: cast.aoe, seed: sequence.id * 97 + beatIndex,
       timeScale: sequence.plan.scale,
@@ -2333,6 +2346,7 @@ const EmberFX = (() => {
           blockId: beat.blockId,
           type: "attack",
           kind: m.family,
+          motion: { ...m },
           ranged: m.ranged,
           actor: traced(e.from, actorBox),
           targets: [traced(e.to, targetBox)],
@@ -2374,6 +2388,7 @@ const EmberFX = (() => {
             from: fxBox(actorBox), to: fxBox(targetBox),
             swordStyle: preSpec.swordStyle, sourceCid: beat.sourceCid, sourceRef: e.from, targetRef: e.to,
             tier: outgoing?.tier || 1, tint: preSpec.tint || null,
+            outcome: outgoing?.outcome,
             tintGrad: preSpec.tintGrad ?? null, ranged: m.ranged,
             startedAt: sequence.origin + beat.at,
             contactAt: sequence.origin + beat.at + m.contact,
@@ -2401,6 +2416,8 @@ const EmberFX = (() => {
             to: fxBox(targetBox),
             tier: beat.contacts[0]?.tier || 1,
             swordStyle: spec?.swordStyle, sourceCid: beat.sourceCid,
+            sourceRef: e.from, targetRef: e.to, outcome: beat.contacts.find(c => c.targetRef?.uid === e.to.uid)?.outcome,
+            sequenceId: sequence.id,
             tint: spec?.tint || null,
             tintGrad: spec?.tintGrad ?? null,
             ranged: m.ranged,
@@ -2954,6 +2971,7 @@ const EmberFX = (() => {
     }
     setBusy(true);
     const sequence = createSequence(plan, version);
+    fx2()?.beginSequence?.(sequence.id);
     sequence.anchors = snapshot;
     pendingCommit = () => render();
     doneCallback = after;

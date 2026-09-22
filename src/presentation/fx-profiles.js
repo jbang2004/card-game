@@ -134,7 +134,7 @@ const EmberFXProfiles = (() => {
     execute: { fx: "bladeCross" },
     // 冰系：frostbolt / moonlance 走冰枪，nova（新星）走群体霜原
     frostbolt: { fx: "frost" },
-    moonlance: { fx: "frost" },
+    moonlance: { fx: "frost", tint: [0.78, 0.67, 1.0], tintGrad: 8 },
     nova: { fx: "frost-field", field: true },
     // 圣光：光柱 + 地面光环 + 上升金粒。field = 群体（每个目标各一道光柱），
     // shield = 额外闪一次六边护盾。
@@ -167,7 +167,7 @@ const EmberFXProfiles = (() => {
     // 汲取：目标 → 施法方的血色光束，脉冲逆着攻击方向跑
     lifedrain: { fx: "siphon" },
     graveoffering: { fx: "siphon" },
-    soultether: { fx: "siphon" },
+    soultether: { fx: "arcane" },
   });
   // 英雄装备后的平砍：剑风，sunblade 金色、dagger 银白
   const fx2Weapons = Object.freeze({
