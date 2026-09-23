@@ -1,5 +1,12 @@
-/* Cached scene composition. Theme data owns artwork and light; this renderer
- * owns only presentation, and shares the existing effects clock. */
+/* Cached scene composition for the 2D world canvas. Theme data owns artwork
+ * and light; this renderer owns only presentation, and shares the existing
+ * effects clock.
+ *
+ * The lobby paints the home scene here. A battle paints only the ambient
+ * shade: the arena itself is rendered live by EmberArena3D into `#arena-gl`,
+ * which sits directly above this canvas, so what is painted here is the
+ * fallback that shows before the arena's first frame or when WebGL2 is
+ * unavailable. */
 const AtelierWorld = (() => {
   const cache = document.createElement("canvas"),
     ctx = cache.getContext("2d");
@@ -8,8 +15,7 @@ const AtelierWorld = (() => {
     key = "",
     dusk = false,
     hover = null,
-    activeImage,
-    encounter = "warden",
+    activeImage = null,
     activeArtwork = "home";
   const hits = [];
   const layers = Object.freeze(
@@ -38,20 +44,16 @@ const AtelierWorld = (() => {
       H = V.height;
     const role = view === "lobby" ? "home" : "battle",
       scene = theme.scenes[role];
-    // Content can introduce a boss before it introduces a bespoke backdrop.
-    // Keep that encounter playable on the approved battle scene rather than
-    // throwing during render (named shipped bosses still have unique scenes).
-    const artwork =
-      role === "battle" ? theme.encounters[encounter] || scene.art : scene.art;
-    activeArtwork = artwork;
-    activeImage = EmberTheme.image(artwork);
+    const artwork = scene.art;
+    activeArtwork = role === "battle" ? "arena" : artwork;
+    activeImage = artwork ? EmberTheme.image(artwork) : null;
     const next = [W, H, role, artwork, role === "home" && dusk].join(":");
     if (dirty || next !== key) {
       cache.width = W;
       cache.height = H;
       ctx.fillStyle = theme.light.ambient;
       ctx.fillRect(0, 0, W, H);
-      if (activeImage.naturalWidth) {
+      if (activeImage?.naturalWidth) {
         const scale = Math.max(
           W / activeImage.naturalWidth,
           H / activeImage.naturalHeight,
@@ -73,18 +75,19 @@ const AtelierWorld = (() => {
       ctx.fillRect(0, 0, W, H);
       ctx.restore();
       if (role === "battle") {
-        const veil = ctx.createRadialGradient(W * .5, H * .48, W * .08, W * .5, H * .48, W * .65);
-        veil.addColorStop(0, "rgba(8, 18, 32, .46)");
-        veil.addColorStop(.65, "rgba(8, 18, 32, .24)");
-        veil.addColorStop(1, "rgba(8, 18, 32, .06)");
+        // Ember-lit obsidian: the arena's own palette, so the instant before
+        // its first frame (and a WebGL-less browser) still reads as the same place.
+        const veil = ctx.createRadialGradient(W * .5, H * .55, W * .05, W * .5, H * .55, W * .8);
+        veil.addColorStop(0, "#1a1218");
+        veil.addColorStop(.7, "#120c10");
+        veil.addColorStop(1, "#2a1008");
         ctx.fillStyle = veil;
         ctx.fillRect(0, 0, W, H);
       }
       // 底图还没解码完就别记账：否则缓存里只剩一层底色，而 dirty/key 已经
-      // 宣称"这一帧画好了"，首次进战场就一直是纯色背景。解码好了（onload 会
-      // 再置 dirty）或者彻底失败了（complete 且仍是 0）才收下这一帧 —— 后者
-      // 不收的话缓存会逐帧重画。
-      if (activeImage.naturalWidth || activeImage.complete) {
+      // 宣称"这一帧画好了"，首次进大厅就一直是纯色背景。解码好了（onload 会
+      // 再置 dirty）或者彻底失败了（complete 且仍是 0）才收下这一帧。
+      if (!activeImage || activeImage.naturalWidth || activeImage.complete) {
         dirty = false;
         key = next;
       }
@@ -112,13 +115,6 @@ const AtelierWorld = (() => {
   }
   return Object.freeze({
     paint,
-    setEncounter(id) {
-      const resolved = Object.hasOwn(theme.encounters, id) ? id : null;
-      if (encounter !== resolved) {
-        encounter = resolved;
-        dirty = true;
-      }
-    },
     get sceneId() {
       return activeArtwork;
     },
@@ -146,7 +142,7 @@ const AtelierWorld = (() => {
       return dusk;
     },
     get loading() {
-      return dirty || !activeImage?.complete;
+      return dirty || !!(activeImage && !activeImage.complete);
     },
     get cacheSize() {
       return [cache.width, cache.height];

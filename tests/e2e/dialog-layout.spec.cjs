@@ -50,13 +50,17 @@ for (const [width, height] of [
     }
     if (width === 1600) {
       await turnTo(page, ".hero-option");
+      // the card stage (design system §5.1, 2026-09-22): the four hero cards
+      // share one row under the relief card, and the choices column sits to
+      // the right of that card
       const cards = await page
         .locator(".hero-option")
-        .evaluateAll((es) => es.map((e) => e.getBoundingClientRect().left));
+        // offsetTop, not the client rect: the selected card lifts 8px
+        .evaluateAll((es) => es.map((e) => e.offsetTop));
       expect(Math.max(...cards) - Math.min(...cards)).toBeLessThanOrEqual(1);
-      const choices = await page.locator(".hero-option").first().boundingBox();
+      const showcase = await page.locator(".scene-showcase").boundingBox();
       const config = await page.locator(".hero-configuration").boundingBox();
-      expect(config.x).toBeGreaterThan(choices.x + choices.width);
+      expect(config.x).toBeGreaterThan(showcase.x + showcase.width);
       await expect(page.locator(".hero-dossier")).toHaveCount(0);
     }
 

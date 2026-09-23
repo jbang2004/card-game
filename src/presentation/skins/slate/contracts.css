@@ -84,7 +84,7 @@ html[data-skin="slate"]
   margin: 0;
   padding: 0;
   border: 0;
-  border-bottom: 1px solid var(--slate-line);
+  border-bottom: 1px solid transparent;
   background: none;
 }
 html[data-skin="slate"]
@@ -117,7 +117,7 @@ html[data-skin="slate"]
   top: 8px;
   width: 1px;
   height: 22px;
-  background: var(--slate-line-strong);
+  background: none;
 }
 html[data-skin="slate"]
   body
@@ -229,7 +229,7 @@ html[data-skin="slate"]
   .covenant-copy
   > p {
   order: 3;
-  border-top: 1px solid var(--slate-line);
+  border-top: 1px solid transparent;
   font: 400 15px/1.8 var(--slate-font);
   color: var(--slate-ink-2);
   overflow-wrap: anywhere;
@@ -285,7 +285,7 @@ html[data-skin="slate"]
   .covenant-progress {
   display: flex;
   flex-direction: column;
-  border-top: 1px solid var(--slate-line);
+  border-top: 1px solid transparent;
 }
 html[data-skin="slate"]
   body
@@ -379,7 +379,7 @@ html[data-skin="slate"]
   .covenant-copy
   > p:is(.covenant-status, .enemy-covenant-status) {
   order: 6;
-  border-top: 1px solid var(--slate-line);
+  border-top: 1px solid transparent;
   font: 400 15px/1.7 var(--slate-font);
   letter-spacing: 1px;
   color: var(--slate-ink-3);

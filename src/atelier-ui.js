@@ -15,7 +15,7 @@
     const scenes = EmberData.bosses.map((b) => ({
       name: b.name,
       chapter: b.title,
-      art: EmberTheme.art(EmberThemeDefinition.encounters[b.id]),
+      art: A.character(b),
     }));
     E.showModal(
       `<section class="modal-box atelier-box"><div class="modal-heading"><div class="eyebrow">EMBERFALL · THE ARTISAN’S ATELIER</div><h2>战场画廊</h2><p>从灰烬城门到月影神殿，探索六处冒险战场。</p></div><div class="atelier-architecture">${scenes.map((scene) => `<article class="atelier-vignette crafted-panel"><img src="${scene.art}" alt="${scene.name}的战场" draggable="false"><h3>${scene.name}</h3><p>${scene.chapter}</p></article>`).join("")}</div><div class="atelier-foot"><p>探索首领领地，回望你的冒险旅程。</p><button class="gold-btn small-btn" id="atelier-done">回到酒馆 ${A.icon("arrow")}</button></div></section>`,

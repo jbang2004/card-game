@@ -85,7 +85,7 @@ html[data-skin="slate"]
 html[data-skin="slate"] body #app.lobby-view .topbar {
   background: linear-gradient(180deg, #0e131bc4 0%, #0e131b5c 62%, #0e131b00);
   border: 0;
-  border-bottom: 1px solid var(--slate-line);
+  border-bottom: 0;
   color: var(--slate-ink);
 }
 html[data-skin="slate"] body #app.lobby-view .brand {
@@ -110,7 +110,7 @@ html[data-skin="slate"] body #app.lobby-view .brand:hover strong {
 
 /* --- nav: text tabs with a glowing underline bar --- */
 html[data-skin="slate"] body #app.lobby-view .top-nav {
-  border-left: 1px solid var(--slate-line-strong);
+  border-left: 0;
 }
 html[data-skin="slate"] body #app.lobby-view .nav-link {
   position: relative;
@@ -278,7 +278,7 @@ html[data-skin="slate"] body #lobby .home-collection-heading {
   display: block;
   /* `--slate-line-strong` rather than `--slate-line`: this hairline sits on
    * painted scene art, not on the matte panel the token was tuned for. */
-  border-bottom: 1px solid var(--slate-line-strong);
+  border-bottom: 0;
   font: 700 20px/1.2 var(--slate-font);
   letter-spacing: 2px;
   color: #fff;
@@ -354,7 +354,7 @@ html[data-skin="slate"] body #lobby .home-verse.lower::before {
   background: var(--slate-line-strong);
 }
 html[data-skin="slate"] body #lobby .lobby-bottom {
-  border-top: 1px solid var(--slate-line);
+  border-top: 0;
   background: none;
   font: 500 16px/1.5 var(--slate-font);
   color: var(--slate-ink-2);
@@ -816,7 +816,7 @@ html[data-skin="slate"]
   height: 44px;
   margin: 0 0 0 6px;
   padding-left: 12px;
-  border-left: 1px solid var(--slate-line-strong);
+  border-left: 0;
 }
 html[data-skin="slate"]
   body.touch-layout.mobile-landscape

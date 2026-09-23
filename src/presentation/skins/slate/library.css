@@ -119,7 +119,7 @@ html[data-skin="slate"]
   .library-filters
   > .filter-bar {
   border: 0;
-  border-bottom: 1px solid var(--slate-line);
+  border-bottom: 0;
   background: none;
 }
 html[data-skin="slate"]
@@ -187,7 +187,7 @@ html[data-skin="slate"]
   top: 8px;
   width: 1px;
   height: 22px;
-  background: var(--slate-line-strong);
+  background: none;
 }
 html[data-skin="slate"]
   body
@@ -348,7 +348,7 @@ html[data-skin="slate"]
   body
   #modal.folio-host[data-type="library"]
   .library-foot {
-  border-top: 1px solid var(--slate-line);
+  border-top: 0;
   font: 400 14px/1.4 var(--slate-font);
   color: var(--slate-ink-3);
 }
@@ -365,8 +365,10 @@ html[data-skin="slate"]
   body
   #modal.folio-host[data-type="library"]
   .deck-editor {
-  border-left: 1px solid var(--slate-line);
-  border-radius: 0;
+  border-left: 0;
+  border-radius: 20px;
+  background: var(--glass-fill-2);
+  box-shadow: inset 0 1px 0 #ffffff14;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -376,14 +378,14 @@ html[data-skin="slate"]
   flex-direction: column;
   min-height: 0;
   margin: 0;
-  padding: 0 0 0 32px;
+  padding: 20px 24px;
 }
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="library"]
   .deck-editor::before {
   content: "牌组预览";
-  border-bottom: 1px solid var(--slate-line);
+  border-bottom: 0;
   font: 700 22px/1.2 var(--slate-font);
   color: #fff;
   letter-spacing: 1px;
@@ -408,7 +410,7 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="library"]
   .deck-identity {
   border: 0;
-  border-bottom: 1px solid var(--slate-line);
+  border-bottom: 0;
   background: none;
 }
 html[data-skin="slate"]
@@ -503,7 +505,7 @@ html[data-skin="slate"]
   .deck-tools
   > summary {
   border: 0;
-  border-bottom: 1px solid var(--slate-line);
+  border-bottom: 0;
   border-radius: 0;
   background: none;
   box-shadow: none;
@@ -671,7 +673,7 @@ html[data-skin="slate"]
   body
   #modal.folio-host[data-type="library"]
   .deck-curve {
-  border-top: 1px solid var(--slate-line);
+  border-top: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -691,7 +693,7 @@ html[data-skin="slate"]
   body
   #modal.folio-host[data-type="library"]
   .deck-actions {
-  border-top: 1px solid var(--slate-line);
+  border-top: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -768,7 +770,7 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="library"]
   .touch-library-tabs {
   border: 0;
-  border-bottom: 1px solid var(--slate-line);
+  border-bottom: 0;
   border-radius: 0;
   background: none;
   box-shadow: none;
@@ -848,7 +850,7 @@ html[data-skin="slate"]
   top: 12px;
   width: 1px;
   height: 20px;
-  background: var(--slate-line-strong);
+  background: none;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1035,7 +1037,7 @@ html[data-skin="slate"]
   top: 12px;
   width: 1px;
   height: 20px;
-  background: var(--slate-line-strong);
+  background: none;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1865,4 +1867,50 @@ html[data-skin="slate"]
     overflow-y: auto;
     overscroll-behavior: contain;
   }
+}
+
+/* phone landscape (844×390): the grid column is ~110px, so the 「点击翻看」
+ * label wrapped onto two lines against the owned count. Same cure as the
+ * narrow portrait block above: drop the count, ellipsise the label. */
+@media (orientation: landscape) and (max-height: 500px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="library"]
+    .library-item
+    > .owned-count {
+    display: none;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="library"]
+    .library-item
+    > .add-label {
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 11px;
+  }
+}
+
+/* touch: the deck column is a sub-glass block, so it needs its own inset */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="library"]
+  .deck-editor {
+  padding: 12px 16px 16px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="library"]
+  .deck-editor::before {
+  padding: 2px 0 10px;
+  font-size: 20px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="library"]
+  .library-heading
+  p {
+  margin-left: 12px;
 }

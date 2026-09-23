@@ -1,13 +1,13 @@
 # 共享面板
 
-2026-09-13 建立统一的面板归属；2026-09-14 随旧主题移除更新：面板材质由磨砂青岩（slate）的两套外壳提供（页面壳 / 浮层壳，见 [SLATE_DESIGN_SYSTEM.md](SLATE_DESIGN_SYSTEM.md) §1），**没有四角 SVG、玻璃底或位图皮肤**。全屏原画页面保留构图，只将内部数据面板接入组件。不为每个数据行再套一层装饰框。
+2026-09-13 建立统一的面板归属；2026-09-14 随旧主题移除更新：面板材质由磨砂青岩（slate）的两套外壳提供（页面壳 / 浮层壳，见 [SLATE_DESIGN_SYSTEM.md](SLATE_DESIGN_SYSTEM.md) §1；2026-09-22 起两套外壳都是液态玻璃：透色 + 背景模糊 + 折射内高光；另加第三种「舞台壳」给看卡的对话——无面板，卡牌直接落在模糊战场上；设置 / 手册在所有布局都是浮层壳，遗物奖励桌面浮层、触屏全屏；英雄选择改为「卡牌舞台」版式），**没有四角 SVG、位图皮肤或 1px 发丝线分节**。全屏原画页面保留构图，只将内部数据面板接入组件。不为每个数据行再套一层装饰框。
 
 ## 单一归属
 
 - `src/presentation/panels.js` 的 `EmberPanels.mount` 只做标识：给浮层弹窗根加 `.crafted-panel`，给其标题行加 `.panel-heading`、操作区加 `.panel-actions`。它不再注入任何装饰节点（旧的四角 SVG `decorate()` 已删除）。
 - 英雄、图鉴、地图、契约是全屏页面，由 `EmberDialogs.mount` 按 `[data-dialog-size]` 套页面壳，`EmberPanels.mount` 对它们不做任何事；这些页面内部显式声明 `.crafted-panel` 的数据面板照常接入。
 - `src/presentation/components.css` 统一内边距及内容间距：`--panel-inset: clamp(20px, 2.4vmin, 32px)` 四边一致；`--panel-gap: clamp(12px, 1.6vmin, 20px)` 作为内容节奏。材质本身由 `skins/slate/base.css` 决定，它把 `.crafted-panel` 的旧玻璃底中和掉再套自己的外壳。
-- `.panel-heading` 为关闭按钮预留独立空间；`.panel-actions` 统一分隔线、居中操作组和按钮间距。表单内部用行分隔，不重复套框。
+- `.panel-heading` 为关闭按钮预留独立空间；`.panel-actions` 统一居中操作组和按钮间距（`components.css` 里的标题下线与页脚上线由 `skins/slate/base.css` 归零）。表单内部靠行距与子玻璃块分组，不重复套框。
 - `dialog-layout.css` 与既有页面布局只负责宽高、列数和滚动。小屏不更换背景、圆角或状态皮肤。
 
 ## 覆盖范围

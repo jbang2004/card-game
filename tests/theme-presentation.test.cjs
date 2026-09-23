@@ -95,30 +95,26 @@ test("a replacement theme binds semantic art without gameplay or storage service
   assert.throws(() => theme.art("missing"), /Theme artwork missing/);
 });
 
-// Boss identity owns scenery; responsive layouts may only crop the same asset.
-test("all six map bosses bind distinct packaged battle scenes", sources, () => {
+// The battle backdrop is rendered live; the theme ships no scene bitmaps and
+// the arena module owns its material maps (normal / roughness / AO / emission).
+test("the theme ships no battle scene bitmaps; the arena owns its material maps", sources, () => {
   const context = {};
   vm.runInNewContext(fs.readFileSync(path.join(root, "src/presentation/themes/silverblue.js"), "utf8") + ";this.definition=EmberThemeDefinition", context);
   const { definition } = context;
-  const manifest = JSON.parse(fs.readFileSync(path.join(root, "assets/scenes/boss-topdown-v1/generation.json")));
-  const ids = ["warden", "queen", "oracle", "frost", "dragon", "moonkeeper"];
-  assert.equal(manifest.records.length, ids.length);
-  const files = new Set();
-  for (const id of ids) {
-    const entry = manifest.records.find(r => r.id === id);
-    const reference = definition.art[definition.encounters[id]];
-    const file = reference.replace("asset:", "assets/");
-    assert.equal(file, entry.runtime);
-    files.add(file);
-    const bytes = fs.readFileSync(path.join(root, file));
-    assert.equal(bytes.toString("ascii", 8, 12), "WEBP");
-    assert.equal(crypto.createHash("sha256").update(bytes).digest("hex"), entry.sha256);
-    // art/ is the version-controlled copy the build inlines; it must not drift.
-    assert.deepEqual(fs.readFileSync(path.join(root, reference.replace("asset:", "art/"))), bytes);
+  assert.equal(definition.encounters, undefined);
+  assert.equal(definition.scenes.battle.art, null);
+  assert.deepEqual(Object.keys(definition.art).filter((k) => k.startsWith("battle")), []);
+  assert.equal(fs.existsSync(path.join(root, "assets/scenes/boss-topdown-v1")), false);
+  assert.equal(fs.existsSync(path.join(root, "art/scenes/boss-topdown-v1")), false);
+  const arena = fs.readFileSync(path.join(root, "src/presentation/arena-3d.js"), "utf8");
+  const maps = [...arena.matchAll(/asset:(scenes\/lava-forge\/[\w-]+\.jpg)/g)].map((m) => m[1]);
+  assert.equal(new Set(maps).size, 9);
+  for (const file of maps) {
+    const bytes = fs.readFileSync(path.join(root, "assets", file));
+    assert.equal(bytes[0], 0xff);
+    assert.equal(bytes[1], 0xd8);
+    assert.ok(bytes.length < 700 * 1024, file + " stays under 700 KB");
   }
-  assert.equal(files.size, 6);
-  assert.equal(definition.art.battlePortrait, undefined);
-  assert.equal(definition.art.battleLandscape, undefined);
 });
 
 test("responsive polish sheets own layout, never a second component skin", () => {

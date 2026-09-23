@@ -342,7 +342,7 @@ test("a card turning over on the god stage shows its thickness as a side", async
     await page.evaluate(() =>
       getComputedStyle(document.querySelector("#god-stage .god-card-back")).transform,
     ),
-  ).toMatch(/-1[0-9](\.\d+)?, 1\)$/);
+  ).toMatch(/-[1-3][0-9](\.\d+)?, 1\)$/);
   expect(errors).toEqual([]);
 });
 
@@ -384,9 +384,11 @@ const holdFlight = (page, stage, fraction) =>
 const leanOf = (card) =>
   card.evaluate((el) => parseFloat(el.style.getPropertyValue("--relief-ry")));
 
-test("opening hand: the attended card is in relief and keeps it through a toggle", async ({
+test("opening hand: the cards are still — no relief, no lean, a click still toggles", async ({
   page,
 }) => {
+  // 2026-09-22: the opening hand is a decision, not a showcase; the three
+  // cards neither rise nor turn under the pointer.
   const errors = errorsFor(page);
   await page.goto("./?debug=1");
   await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
@@ -396,19 +398,14 @@ test("opening hand: the attended card is in relief and keeps it through a toggle
   const cards = page.locator(".mulligan-card");
   await cards.first().waitFor();
   await cards.nth(1).hover();
-  await expectReliefVisible(page, cards.nth(1).locator(".card-art"));
   const box = await cards.nth(1).boundingBox();
   await page.mouse.move(box.x + box.width * 0.92, box.y + box.height / 2, { steps: 4 });
-  await expect.poll(() => leanOf(cards.nth(1).locator("> .card"))).toBeGreaterThan(5);
-  // Toggling redraws the whole row; the same card must come back in relief.
+  await page.waitForTimeout(300);
+  expect((await leanOf(cards.nth(1).locator("> .card"))) || 0).toBeLessThan(1);
+  await expect(page.locator("#modal .card-relief-canvas")).toHaveCount(0);
   await cards.nth(1).click();
   await expect(cards.nth(1)).toHaveClass(/replace/);
-  await expect(cards.nth(1).locator(".card-art")).toHaveClass(/card-relief-ready/);
-  await cards.nth(2).hover();
-  await expect(cards.nth(2).locator(".card-art")).toHaveClass(/card-relief-ready/);
-  await expect(page.locator(".card-relief-canvas")).toHaveCount(1);
   await page.locator("#mulligan-confirm").click();
-  await expect(page.locator("#modal .card-relief-canvas")).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 

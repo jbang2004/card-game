@@ -99,8 +99,11 @@ for (const [width, height] of [
         expect(frame.background).toBe("rgba(0, 0, 0, 0)");
         expect(frame.shadow).toBe("none");
         expect(frame.innerBackground).toBe("rgba(0, 0, 0, 0)");
-        if (status === "ready" || status === "selected")
-          expect(frame.portrait).toBe("rgb(140, 196, 255)");
+        /* The court's palette (skins/slate/arena.css): ember for "can act",
+         * brass for the chosen hero, amber for a target. */
+        if (status === "ready") expect(frame.portrait).toBe("rgb(255, 179, 90)");
+        if (status === "selected")
+          expect(frame.portrait).toBe("rgb(243, 223, 166)");
         if (status === "valid-target")
           expect(frame.portrait).toBe("rgb(224, 180, 85)");
       }

@@ -157,8 +157,8 @@ const EmberViewport = (() => {
          * 12px out of the console band, like a name plate pulled from a slot;
          * the enemy's mirrors it downwards so it never hits the top bar. */
         l.enemy = mini
-          ? { x: padL + 6, y: l.enemyConsole.y + 2, w: heroW, h: heroH }
-          : { x: padL + 6, y: l.enemyConsole.y + 6, w: 44, h: 44 };
+          ? { x: W - padR - 6 - heroW, y: l.enemyConsole.y + 2, w: heroW, h: heroH }
+          : { x: W - padR - 6 - 44, y: l.enemyConsole.y + 6, w: 44, h: 44 };
         l.player = mini
           ? { x: padL + 8, y: l.playerConsole.y - 12, w: heroW, h: heroH }
           : { x: padL + 8, y: l.playerConsole.y + 10, w: 56, h: 56 };
@@ -194,8 +194,10 @@ const EmberViewport = (() => {
         l.hand.w = W - padR - l.hand.x;
         /* Both consoles are the card plus the chip row that sits under it. */
         const railH = mini ? heroH + 6 : 66;
+        /* The enemy sits at the top-right, across the causeway from the
+         * player's console at the bottom-left (2026-09-22). */
         l.enemyConsole = {
-          x: padL,
+          x: W - padR - rail,
           y: l.header + 4,
           w: rail,
           h: railH,
@@ -208,8 +210,8 @@ const EmberViewport = (() => {
           h: playerH,
         };
         l.enemy = mini
-          ? { x: padL + 6, y: l.enemyConsole.y + 2, w: heroW, h: heroH }
-          : { x: padL + 6, y: l.enemyConsole.y + 6, w: 40, h: 40 };
+          ? { x: W - padR - 6 - heroW, y: l.enemyConsole.y + 2, w: heroW, h: heroH }
+          : { x: W - padR - 6 - 40, y: l.enemyConsole.y + 6, w: 40, h: 40 };
         l.player = mini
           ? { x: padL + 6, y: l.playerConsole.y + 6, w: heroW, h: heroH }
           : { x: padL + 6, y: l.playerConsole.y + 8, w: 44, h: 44 };
@@ -490,7 +492,7 @@ const EmberViewport = (() => {
     if (!state.mobile)
       return {
         x: 800 + (i - (n - 1) / 2) * 132 - 58,
-        y: side === "e" ? 222 : 386,
+        y: side === "e" ? 196 : 472,
         w: 116,
         h: 146,
       };
