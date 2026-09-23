@@ -110,14 +110,15 @@ vec3 blink(vec2 px, vec2 c, vec2 hs, float tilt, float k, inout vec2 skin){
   if (y < top - 7. || y > bot + 1.) return vec3(px, 0.);
   if (y < line - la) w = smoothstep(top - 7., top - 2., y)*smoothstep(0., .12, kk)*smoothstep(0., .3, fx);
   else if (y <= line + lb) y -= span;
-  else y = mix(top + lb, bot, (y - (line + lb))/max(bot - (line + lb), .001));
+  // below the lid the rest of the eye is uncovered, as it is
   skin = toW(vec2(p.x, bot + 5.), c, tilt);
   return vec3(toW(vec2(p.x, y), c, tilt), w);
 }
 void main(){
   vec2 uv = vUv, skinPx = vec2(0.);
   float shade = 0.;
-  if (uLayer == 1) {
+  // The figure's eyes blink; the background layer too, in case a face was left in it.
+  if (uLayer != 2) {
     vec3 bb = vec3(vUv*IMG, 0.);
 ${rig.eyes
   .map(
@@ -170,11 +171,14 @@ ${rig.fx}
     "  d += rot(px, uAnchor.xy, radians(.35)*sin(TAU*t/6.1 + ph)) - px;",
     "  d.x += PER*1.5*sin(TAU*t/3.1 + px.y*.01 + ph);",
     "}",
+    // A held prop (FR) moves rigidly: it rides the breath, never the sway.
+    "d = mix(d, vec2(.5*sin(TAU*t/6.7 + ph), -2.2*(breath(t + ph)*2. - 1.)), FR);",
   ].join("\n");
   const AUTO_FX = [
     "float ph = uPhase;",
-    "vec2 cell = floor(vUv*vec2(200., 266.));",
-    "c.rgb += c.rgb*k.r*(.55*sin(t*(1. + h21(cell)*1.6) + h21(cell + 3.)*6.28) + .1)*uFx;",
+    // continuous noise, not per-cell hashes: enlarged, cells read as blocks
+    "float tw = vn(vUv*vec2(200., 266.))*6.28, sp = 1. + vn(vUv*vec2(90., 120.) + 5.)*1.6;",
+    "c.rgb += c.rgb*k.r*(.55*sin(t*sp + tw) + .1)*uFx;",
     "float flow = vn(vec2(vUv.x*12. + ph, vUv.y*12. - t*.4))*vn(vec2(vUv.x*27. - t*.25, vUv.y*23. + ph));",
     "c.rgb += c.rgb*k.b*((flow - .2)*uGlowAmt + .08*sin(t*TAU/3.3 + ph))*uFx;",
     "float band = dot(vUv - vec2(.5), normalize(vec2(.35, -1.)));",

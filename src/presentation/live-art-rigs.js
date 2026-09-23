@@ -356,5 +356,11 @@ const EmberLiveArtRigs = Object.freeze({
       "if (layer == 2) c.rgb += vec3(.7,.75,.9)*rain(vUv, t)*.35*uFx;",
     ].join("\n"),
   },
+  // Legendary cards and contract gods on the auto template: only blinking eyes are
+  // added here (their props come from AUTO_PROPS in tools/bake_live_art.py).
+  solaris: { auto: true, eyes: [{c: [523, 191], hs: [15, 6], tilt: -3}, {c: [577, 193], hs: [14, 6], tilt: 8}] },
+  eclipsewolf: { auto: true, eyes: [{c: [535, 190], hs: [17, 6], tilt: 20}] },
+  aurion: { auto: true, eyes: [{c: [571, 143], hs: [12, 5], tilt: 15}, {c: [609, 160], hs: [8, 4], tilt: 15}] },
+  fenlos: { auto: true, eyes: [{c: [706, 170], hs: [14, 5], tilt: 15}] },
 });
 if (typeof module !== "undefined") module.exports = EmberLiveArtRigs;

@@ -48,7 +48,11 @@ test("auto parameters are complete and inside the picture", () => {
 
 test("hand rigs are complete: a pair of blinking eyes (or none) and a displacement body", () => {
   for (const [id, rig] of Object.entries(rigs)) {
-    if (rig.auto) continue;
+    if (rig.auto) {
+      // an auto card adds only eyes: one (a profile) or two
+      assert.ok([1, 2].includes(rig.eyes.length), id);
+      continue;
+    }
     assert.ok([0, 2].includes(rig.eyes.length), id);
     for (const eye of rig.eyes) {
       assert.equal(eye.c.length, 2);

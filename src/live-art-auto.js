@@ -49,14 +49,14 @@ const EmberLiveArtAuto = Object.freeze({
  "aurion": {
   "kind": "creature",
   "box": [
-   18,
-   618,
-   980,
-   1440
+   24,
+   42,
+   954,
+   1438
   ],
   "centre": [
-   331,
-   1153
+   376,
+   935
   ],
   "particles": "embers",
   "phase": 1.22
@@ -259,14 +259,14 @@ const EmberLiveArtAuto = Object.freeze({
  "eclipsewolf": {
   "kind": "creature",
   "box": [
-   48,
-   1208,
-   1004,
-   1444
+   62,
+   118,
+   988,
+   1442
   ],
   "centre": [
-   529,
-   1340
+   523,
+   1070
   ],
   "particles": "frost",
   "phase": 5.643
@@ -289,14 +289,14 @@ const EmberLiveArtAuto = Object.freeze({
  "fenlos": {
   "kind": "creature",
   "box": [
-   6,
-   588,
-   886,
+   8,
+   86,
+   870,
    1442
   ],
   "centre": [
-   329,
-   1252
+   404,
+   1029
   ],
   "particles": "embers",
   "phase": 5.453
@@ -484,14 +484,14 @@ const EmberLiveArtAuto = Object.freeze({
  "moonguard": {
   "kind": "creature",
   "box": [
-   20,
-   1294,
-   1062,
-   1444
+   44,
+   492,
+   1040,
+   1440
   ],
   "centre": [
-   539,
-   1370
+   532,
+   1075
   ],
   "particles": "frost",
   "phase": 4.58
@@ -769,14 +769,14 @@ const EmberLiveArtAuto = Object.freeze({
  "solaris": {
   "kind": "creature",
   "box": [
-   40,
-   386,
-   1030,
+   44,
+   196,
+   1026,
    1430
   ],
   "centre": [
-   565,
-   980
+   563,
+   933
   ],
   "particles": "embers",
   "phase": 5.001
