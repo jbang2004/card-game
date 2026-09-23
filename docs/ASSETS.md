@@ -241,7 +241,7 @@ uv run --python 3.12 --no-project --with pillow --with numpy --with onnxruntime 
 
 ## 2026-09-13 · 地图对应的俯视战场
 
-战场不再是一张位图。`presentation/arena-3d.js` 在 `#arena-gl`（WebGL2）里实时渲染「断裂王庭」（2026-09-23 重做，场景说明见 `docs/design/SLATE_DESIGN_SYSTEM.md` §5.4b）：火山灰石台基、左右熔岩河、柱状玄武岩与紫水晶/祖母绿晶簇，随从的 DOM 包围盒转成接触阴影。它只用 `assets/scenes/lava-forge/` 里的 6 张贴图（ambientCG CC0：Rock035 的法线、粗糙度、AO，Lava001 的法线、颜色、自发光，缩至 512–1024 并重新压缩），颜色由代码里的令牌决定。原来引入的 Lava001 粗糙度与 Metal032 法线/粗糙度三张图着色器从未采样，2026-09-23 已移除。旧的六张俯视场景图（`boss-topdown-v1`）已移除；六个 Boss 目前共用这一场景，`EmberArena3D.setEncounter` 保留了按 Boss 换调色板的入口。
+战场不再是一张位图。`presentation/arena-3d.js` 在 `#arena-gl`（WebGL2）里实时渲染「断裂王庭」（2026-09-23 重做，场景说明见 `docs/design/SLATE_DESIGN_SYSTEM.md` §5.4b）：火山灰石台基、左右熔岩河、柱状玄武岩与紫水晶/祖母绿晶簇，随从的 DOM 包围盒转成接触阴影。它只用 `assets/scenes/lava-forge/` 里的 6 张贴图（ambientCG CC0：Rock035 的法线、粗糙度、AO，Lava001 的法线、颜色、自发光，缩至 512–1024 并重新压缩），颜色由代码里的令牌决定。原来引入的 Lava001 粗糙度与 Metal032 法线/粗糙度三张图着色器从未采样，2026-09-23 已移除。旧的六张俯视场景图（`boss-topdown-v1`）已移除；灰烬监守与练习赛用这一场景，其余五个 Boss 各有自己的实时 3D 战场（`EmberArena3D.setEncounter` 按 Boss 选配方，清单见 SLATE §5.4b），它们不引入新贴图。
 
 上一轮地面视角图保存在 `output/boss-topdown-20260913/ground-level-sources/`，旧桌面/横竖屏背景保存在 `output/boss-map-20260913/retired/`，均移出生产素材注册。官方参考仅作为研究证据，见 `output/boss-topdown-20260913/RESEARCH.md`，没有复制其图片到游戏。
 

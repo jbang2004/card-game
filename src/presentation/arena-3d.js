@@ -1,19 +1,19 @@
-/* 3D battle arena (断裂王庭 — the broken court). Presentation only: it never
- * reads rules.
+/* 3D battle arenas. Presentation only: it never reads rules.
  *
- * The court is a raised plinth of pressed volcanic ash between two rivers of
- * lava. Its top carries one designed graphic layer, drawn once per layout into
- * a mask (courtArt): flow bands engraved around a diagonal inlay of rainbow
- * obsidian, a broken-crown emblem, the river line between the two ranks, and
- * inscriptions along the margins. A warm pool of light holds the eye on the
- * court; everything else sits in cool moonlight and stays dark, except the
- * melt. The rivers run down both flanks, wider apart up the picture and closer
- * to the court near the camera where the view narrows, and swing round the two
- * seat pads that carry the heroes. Columnar basalt walls the far banks and
- * dots the near ones. The accent colour is two gems, amethyst and emerald:
- * druses lit from within stand on the ground between court and river (past
- * the court's two ends in portrait), light the ground round them and shed
- * motes, placed only where the camera sees them and no HUD box covers them.
+ * Every boss fights on its own battlefield (SCENES, picked by SCENE_OF through
+ * setEncounter). All of them share one court — a raised plinth whose top
+ * carries a designed graphic layer drawn once per layout into an RGBA mask
+ * (relief, inlay, accent, sheen) — the camera, the contact shadows and the HUD
+ * avoidance; a recipe sets the palette and light rig, how the court's mask is
+ * painted, what lies round the court and which set pieces and particles it
+ * builds.
+ *
+ * The first, 断裂王庭 (warden and practice), is a court of pressed volcanic ash
+ * between two rivers of lava that swing round the hero seat pads, columnar
+ * basalt on the banks, and amethyst and emerald druses lit from within,
+ * placed only where the camera sees them and no HUD box covers them. The
+ * other five (see SCENES) replace the rivers with a forest deck, an ice
+ * plaza, a black mirror, or nothing but a cloud sea far below.
  *
  * Everything is drawn into `#arena-gl` (WebGL2, one context) beneath
  * `#battle`; the DOM minions, heroes and hand stay exactly where the game puts
@@ -28,10 +28,10 @@
  * touch layouts therefore share one scene.
  *
  * Materials: CC0 ambientCG maps (Rock035, Lava001) give normals, roughness,
- * occlusion and the melt's emission and veining; colour is authored in a few
- * tokens so a future encounter palette stays in one key. Lighting is a
- * hand-written GGX/Schlick model with a shadow map, a procedural reflection
- * environment, HDR bloom, depth of field, heat shimmer and ACES tone mapping.
+ * occlusion and the melt's emission and veining; colour lives in the recipes.
+ * Lighting is a hand-written GGX/Schlick model with a shadow map, a procedural
+ * reflection environment, HDR bloom, depth of field, heat shimmer and ACES
+ * tone mapping, with per-recipe bloom, exposure and light leak.
  * `quality.low` drops MSAA, depth of field and the device pixel ratio;
  * `quality.reduced` renders one still frame.
  */
@@ -48,14 +48,44 @@ const EmberArena3D = (() => {
   const TEXNAMES = Object.keys(TEXTURES);
   /* ?arena-skip=shadow,scene,fx,bloom,post,all — diagnostics only, for cost bisection. */
   const SKIP = new Set((new URLSearchParams(location.search).get("arena-skip") || "").split(",").filter(Boolean));
-  const SCENE_ID = "lava-forge";
   const PITCH = 57, FOV = 27, NEAR = 80, FAR = 7500, SM = 2048;
   /* the court top is y = 0; the gravel around it sits one plinth lower; the melt lower still */
   const GROUND = -30, LAVA_Y = -88;
-  /* pressed ash of the court (warm grey) and the basalt of everything else (blue-black) */
-  const STONE = [0.3, 0.286, 0.262], STONE2 = [0.37, 0.354, 0.328], ROCK = [0.045, 0.047, 0.053], ROCK2 = [0.085, 0.087, 0.095], EMBER = [1, 0.34, 0.06];
-  const PAL = { key: [0.4, 0.5, 0.72], pool: [2.1, 1.86, 1.55], sky: [0.035, 0.042, 0.062], groundAmb: [0.02, 0.014, 0.011], fog: [0.018, 0.018, 0.024] };
-  const SEAT_TINT = { p: [0.36, 0.62, 1.45], e: [1.45, 0.42, 0.22] };
+  /* One recipe per battlefield. The camera, court, contact shadows and HUD
+   * avoidance are shared; a recipe holds the palette (court stone, ground,
+   * glow, light rig), which set pieces it builds and how its court is drawn.
+   *   lava      灰烬监守 · 断裂王庭: ash court between two lava rivers, moonlit
+   *   pavilion  荆棘女王 · 低语密林: a stained silk court in a lacquer pavilion the forest has taken back, moonlit
+   *   frost     霜狱君王 · 永冻王座: ice court under creeping frost; bubbles, shards and snow stopped in mid-air
+   *   clouds    断契监誓者 · 月蚀祭坛: a night star-map altar over the cloud sea, an eclipse, broken chains, hanging blades
+   *   abyss     深渊先知 · 无光圣所: black glass over an endless black mirror, a ring of pillars, jellyfish, shafts of light
+   *   dragon    终焉巨龙 · 世界之烬: bronze court on the living dragon's back, spines rising, a burning cloud sea below
+   * inlay/accent colour the court art's G and B channels (metal and glow per recipe); `ground` is what lies
+   * round the court (lava rivers, deck, plaza, water, or nothing: a sheet far below); fall/dust name the particles. */
+  const SCENES = {
+    lava: { id: 0, stone: [0.3, 0.286, 0.262], stone2: [0.37, 0.354, 0.328], rock: [0.045, 0.047, 0.053], rock2: [0.085, 0.087, 0.095], ember: [1, 0.34, 0.06], lacquer: [0.4, 0.05, 0.03], inlay: [0.64, 0.5, 0.3],
+      pal: { key: [0.4, 0.5, 0.72], pool: [2.1, 1.86, 1.55], sky: [0.035, 0.042, 0.062], groundAmb: [0.02, 0.014, 0.011], fog: [0.018, 0.018, 0.024] }, seat: { p: [0.36, 0.62, 1.45], e: [1.45, 0.42, 0.22] },
+      ground: "lava", under: LAVA_Y, glow: [1.9, 640, LAVA_Y + 70], fall: "embers", dust: "ash" },
+    pavilion: { id: 1, stone: [0.33, 0.3, 0.38], stone2: [0.42, 0.38, 0.46], rock: [0.035, 0.03, 0.03], rock2: [0.09, 0.07, 0.06], ember: [0.75, 1, 0.45], lacquer: [0.26, 0.025, 0.03], inlay: [0.78, 0.58, 0.3],
+      pal: { key: [0.75, 0.78, 1.1], pool: [1.35, 1.15, 1.1], sky: [0.1, 0.1, 0.15], groundAmb: [0.04, 0.045, 0.05], fog: [0.05, 0.055, 0.075] }, seat: { p: [0.45, 0.78, 1.25], e: [1.35, 0.2, 0.3] },
+      ground: "deck", glow: [0.9, 300, 30], fall: "petals", dust: "fireflies", inlayMetal: 1, inlayGlow: 0.22, bloom: 0.9 },
+    frost: { id: 2, stone: [0.28, 0.4, 0.52], stone2: [0.36, 0.5, 0.62], rock: [0.2, 0.26, 0.34], rock2: [0.3, 0.37, 0.46], fogK: 0.35, bloom: 0.5, expo: 1.05, ember: [0.55, 0.85, 1], lacquer: [0.8, 0.92, 1], inlay: [0.6, 0.9, 1],
+      pal: { key: [0.9, 1.05, 1.35], pool: [0.9, 1.0, 1.15], sky: [0.14, 0.2, 0.32], groundAmb: [0.07, 0.1, 0.15], fog: [0.2, 0.28, 0.4] }, seat: { p: [0.35, 0.8, 1.4], e: [0.8, 0.95, 1.5] },
+      ground: "plaza", glow: [0.8, 320, 120], fall: "frozen", dust: "diamond", inlayGlow: 0.5, accentGlow: 0.4 },
+    clouds: { id: 3, stone: [0.3, 0.31, 0.38], stone2: [0.4, 0.41, 0.48], rock: [0.03, 0.05, 0.13], rock2: [0.3, 0.36, 0.58], fogK: 0.35, bloom: 1, expo: 1.1, ember: [0.4, 0.7, 1], lacquer: [1, 0.78, 0.4], inlay: [0.72, 0.82, 1],
+      pal: { key: [0.62, 0.68, 0.95], pool: [1.2, 1.15, 1.25], sky: [0.05, 0.07, 0.16], groundAmb: [0.03, 0.04, 0.08], fog: [0.05, 0.07, 0.17] }, seat: { p: [0.4, 0.8, 1.4], e: [1.3, 0.55, 0.8] },
+      ground: null, under: -760, glow: [1.2, 420, -60], fall: "stars", dust: "glint", inlayMetal: 0.7, inlayGlow: 0.9, accentGlow: 1.6, deep: true },
+    abyss: { id: 4, stone: [0.012, 0.014, 0.02], stone2: [0.03, 0.036, 0.052], rock: [0.03, 0.034, 0.045], rock2: [0.06, 0.07, 0.09], ember: [0.25, 0.85, 1], lacquer: [0.65, 0.42, 1], inlay: [0.4, 0.95, 1],
+      pal: { key: [0.12, 0.16, 0.24], pool: [0.55, 0.68, 0.8], sky: [0.012, 0.02, 0.036], groundAmb: [0.004, 0.006, 0.012], fog: [0.004, 0.008, 0.018] }, seat: { p: [0.35, 0.8, 1.5], e: [0.9, 0.5, 1.5] },
+      ground: "water", glow: [1.3, 420, 20], fall: "jelly", dust: "souls", inlayGlow: 1.6, accentGlow: 1 },
+    dragon: { id: 5, stone: [0.2, 0.13, 0.09], stone2: [0.3, 0.2, 0.12], rock: [0.02, 0.012, 0.014], rock2: [0.12, 0.06, 0.06], fogK: 0.5, bloom: 0.9, ember: [0.95, 0.22, 0.06], lacquer: [1, 0.3, 0.06], inlay: [1, 0.7, 0.3],
+      pal: { key: [1.8, 0.55, 0.36], pool: [0.8, 0.55, 0.42], sky: [0.07, 0.03, 0.05], groundAmb: [0.06, 0.02, 0.02], fog: [0.1, 0.03, 0.035] }, leak: [0.9, 0.18, 0.08], seat: { p: [0.4, 0.75, 1.4], e: [1.5, 0.35, 0.12] },
+      ground: null, under: -700, glow: [1.6, 700, -160], fall: "rising", dust: "dying", inlayMetal: 1, inlayGlow: 0.1, accentGlow: 2.4, deep: true, light: [0.85, 0.3, -0.35] },
+  };
+  /* which boss fights on which field; the warden and practice games keep the lava court */
+  const SCENE_OF = { queen: "pavilion", frost: "frost", moonkeeper: "clouds", oracle: "abyss", dragon: "dragon" };
+  const FORCED = new URLSearchParams(location.search).get("arena-scene");
+  let SC = SCENES[FORCED] || SCENES.lava;
   /* opaque HUD the druses keep out from under (the hero consoles themselves are transparent bars on touch) */
   const HUD_BOXES = "#home-btn, .top-actions > *, #battle-status, #enemy-hand, #log-toggle, #intel-toggle, .hero-card-inner, .hero-stat, .hero-phase, #power-btn, #contract-open, .enemy-deck, .player-deck, #end-turn, .mana-panel, #hand";
   /* amethyst and emerald, the ground's only cool colours: body glow, the core that lights edges and tips */
@@ -92,7 +122,7 @@ precision highp float;precision highp sampler2DShadow;
 in vec3 vW,vN;in vec2 vX;in vec4 vSh;layout(location=0) out vec4 o;
 uniform sampler2DShadow uShadow;uniform sampler2D uRockN,uRockR,uRockAO,uLavaC,uLavaN,uLavaE,uCourt;
 uniform float uMode,uTime,uLavaY,uGround,uK,uFogStart,uFogK,uSoft,uRadius,uEngrave;uniform vec2 uArena;uniform vec4 uRiv,uBulge,uStroke;
-uniform vec3 uEye,uLightDir,uKey,uPool,uSky,uGroundAmb,uFog,uTint,uEmber,uStoneA,uStoneB,uRockA,uRockB;
+uniform vec3 uEye,uLightDir,uKey,uPool,uSky,uGroundAmb,uFog,uTint,uEmber,uStoneA,uStoneB,uRockA,uRockB,uLacquer,uInlay;uniform float uScene;uniform vec3 uInlayMat;
 uniform vec3 uLightPos[16],uLightCol[16];uniform float uLightRad[16];uniform vec3 uGemGlow[2],uGemCore[2];uniform float uGemGain;
 uniform vec4 uCards[16];uniform vec4 uDecals[8];
 ${NOISE}
@@ -129,6 +159,26 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
   vec2 p=vW.xz;vec2 cuv=(p+uArena)/(2.*uArena);vec4 cm=texture(uCourt,cuv);vec2 ts=1./vec2(textureSize(uCourt,0));
   float hL=texture(uCourt,cuv-vec2(ts.x,0.)).r,hR=texture(uCourt,cuv+vec2(ts.x,0.)).r,hD=texture(uCourt,cuv-vec2(0.,ts.y)).r,hU=texture(uCourt,cuv+vec2(0.,ts.y)).r;
   vec3 nm=texture(uRockN,p/230.).rgb*2.-1.;n=normalize(vec3(nm.x*.05,1.,nm.y*.05));
+  if(abs(uScene-1.)<.5){ /* pavilion: stained lilac silk-lacquer, faint ripples, gilt vines (lit a little so they read at any pitch), crimson roses, a pearl sheen */
+   float rip=sin(length(p-vec2(-.3,.2)*uArena)*.09-uTime*.35)+sin(length(p-vec2(.4,-.25)*uArena)*.07+uTime*.28);
+   n=normalize(vec3(cos(p.x*.09+rip)*.012+nm.x*.02,1.,sin(p.y*.08+rip)*.012+nm.y*.02));
+   alb=mix(uStoneA,uStoneB,fbm(p/420.)*.8+fbm(p/90.)*.25)*(1.+(fbm(p/5.)-.5)*.03);rough=.34;float stain=smoothstep(.55,.8,fbm(p/140.+3.))*.35+smoothstep(.6,.9,fbm(p/40.+7.))*.15;alb*=1.-stain;
+   vec3 en=-vec3(hR-hL,0.,hU-hD)*uEngrave*.8;n=normalize(n+en);alb*=1.+cm.r*.05;
+   float gd=cm.g;alb=mix(alb,uInlay,gd);metal=mix(metal,uInlayMat.x,gd);rough=mix(rough,.24,gd);emis+=uInlay*gd*uInlayMat.y;
+   float lq=cm.b*(1.-gd);alb=mix(alb,uLacquer,lq);rough=mix(rough,.16,lq);
+   gloss+=vec3(1.,.93,.98)*cm.a*.05*(.6+.4*sin(uTime*.6+p.x*.01));
+  }else if(uScene>1.5){ /* painted courts: ice tiles, cloud marble, black glass, dragon bronze; G inlay and B accent from the art */
+   if(uScene<2.5){vec2 q=mat2(.7071,-.7071,.7071,.7071)*p;vec2 c=floor(q/64.),f=fract(q/64.);float sm=min(min(f.x,1.-f.x),min(f.y,1.-f.y))*64.;
+    alb=mix(uStoneA,uStoneB,hash(c)*.5+fbm(p/260.)*.5);alb*=1.-(1.-smoothstep(.6,2.,sm))*.18;rough=.22;n=normalize(vec3(0.,1.,0.)+vec3(nm.x,0.,nm.y)*.02);}
+   else if(uScene<3.5){float vein=pow(1.-abs(2.*fbm(p/160.+fbm(p/55.)*1.3)-1.),10.);alb=mix(uStoneA,uStoneB,fbm(p/300.))*(1.-vein*.28);rough=.16;n=normalize(vec3(nm.x*.015,1.,nm.y*.015));}
+   else if(uScene<4.5){alb=mix(uStoneA,uStoneB,fbm(p/300.)*.6);rough=.05;n=normalize(vec3(sin(p.x*.02+uTime*.2)*.004,1.,cos(p.y*.02-uTime*.15)*.004));}
+   else{float wear=fbm(p/40.),scr=fbm(vec2(p.x/3.,p.y/60.));alb=mix(uStoneA,uStoneB,fbm(p/200.)*.7+wear*.3)*(.85+.3*scr);metal=.55;rough=.42-wear*.12;n=normalize(vec3(nm.x*.06,1.,nm.y*.06));}
+   vec3 en=-vec3(hR-hL,0.,hU-hD)*uEngrave*.8;n=normalize(n+en);alb*=1.+cm.r*.06;
+   float gd=cm.g;alb=mix(alb,uInlay,gd);metal=mix(metal,uInlayMat.x,gd);rough=mix(rough,.22,gd);emis+=uInlay*gd*uInlayMat.y;
+   float ac=cm.b*(1.-gd);alb=mix(alb,uLacquer,ac);rough=mix(rough,.1,ac);emis+=uLacquer*ac*uInlayMat.z*(.85+.15*sin(uTime*1.3+p.x*.01));
+   gloss+=mix(uSky,vec3(1.),.5)*cm.a*.06;
+   if(abs(uScene-4.)<.5){float rr=length(p/uArena);emis+=uInlay*cm.g*pow(.5+.5*sin(rr*16.+uTime*1.6),10.)*1.4;}
+  }else{
   float macro=fbm(p/520.),mott=fbm(p/150.+9.),grain=fbm(p/6.)-.5;
   alb=mix(uStoneA,uStoneB,clamp(macro*.8+mott*.3-.05,0.,1.))*(1.+grain*.07)*(.9+.2*fbm(p/60.+4.));rough=.66+(mott-.5)*.12;
   /* obsidian chips pressed into the ash */
@@ -145,15 +195,39 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
    fc=mix(vec3(dot(fc,vec3(.333))),fc,.7);
    gloss+=ob*(fc*shn*(1.-wht)*zone*.3+vec3(1.,.97,.92)*wht*.8+fc*sweep*.22*(.25+shn));}
   float bz=cm.b;if(bz>.003){alb=mix(alb,vec3(.64,.5,.3),bz);metal=mix(metal,1.,bz);rough=mix(rough,.32,bz);}
+  }
   /* the units stand here: their footprints shade the ash */
   float occ=1.;for(int i=0;i<16;i++){vec4 c=uCards[i];if(c.z<=0.)continue;vec2 dd=abs(p-c.xy+vec2(-.18,.15)*c.z)-c.zw;float sdc=length(max(dd,0.))+min(max(dd.x,dd.y),0.)-8.;float blur=12.+c.z*.25;occ*=1.-(1.-smoothstep(-2.,blur,sdc))*.62;}
   ao*=occ;
   for(int i=0;i<8;i++){vec4 dc=uDecals[i];if(dc.z<=0.)continue;float dr=length(p-dc.xy)/dc.z;float nz=fbm(p/26.+dc.xy);float m=1.-smoothstep(.3,1.,dr+nz*.5);float age=clamp((uTime-dc.w)/7.,0.,1.);alb*=1.-m*.7*(1.-age*.6);rough=mix(rough,.95,m);float ember=smoothstep(.55,.9,nz)*(1.-smoothstep(0.,.65,dr))*(1.-age);emis+=uEmber*ember*.9*(.6+.4*sin(uTime*7.+nz*30.));}
  }else if(uMode<1.5){ /* ---- terrain: basalt gravel, river banks, canyon rock ---- */
-  vec3 p=vW;vec3 gn=n;n=triN(uRockN,p,n,w,1./520.,.8);n=triN(uRockN,p+31.,n,w,1./150.,.35);float rr=tri(uRockR,p,w,1./520.).r;ao=tri(uRockAO,p,w,1./520.).r*.5+.5;
+  vec3 p=vW;vec3 gn=n;
+  if(abs(uScene-1.)<.5){ /* pavilion: dark forest-floor boards strewn with fallen rose petals */
+   float row=floor(p.z/34.),along=p.x+hash(vec2(row,3.))*400.,board=floor(along/210.);float h1=hash(vec2(row,board));
+   float grain=fbm(vec2(along/120.,p.z/6.+row*3.))*.6+fbm(vec2(along/18.,p.z/2.5))*.4;
+   float seam=max(1.-smoothstep(.6,1.8,abs(fract(p.z/34.)*34.-.5)),1.-smoothstep(.5,1.6,abs(fract(along/210.)*210.-.5)));
+   alb=mix(uRockA,uRockB,grain*.8+h1*.35)*(1.-seam*.55);rough=.34+grain*.2;n=normalize(vec3((grain-.5)*.08,1.,seam*.2));ao=1.-seam*.4;
+   vec2 lc=floor(p.xz/26.);float lh=hash(lc+.7),drift=smoothstep(.42,.7,fbm(p.xz/340.+5.));if(lh>.97-.5*drift){vec2 lp=(lc+.2+.6*vec2(hash(lc+1.3),hash(lc+2.9)))*26.;vec2 q=p.xz-lp;float ang=hash(lc+4.1)*6.2831;q=mat2(cos(ang),-sin(ang),sin(ang),cos(ang))*q;
+    float rl=length(q*vec2(1.,1.8))/(6.+hash(lc+5.)*4.);float leaf=1.-smoothstep(.8,1.,rl);
+    vec3 lcol=mix(vec3(.3,.01,.02),vec3(.55,.03,.05),hash(lc+6.));alb=mix(alb,lcol,leaf);rough=mix(rough,.5,leaf);}
+   float moss=smoothstep(.5,.75,fbm(p.xz/160.+2.));alb=mix(alb,vec3(.03,.06,.03),moss*.8);
+  }else if(abs(uScene-2.)<.5){ /* frost: pale pavers under drifted snow */
+   vec2 c=floor(p.xz/72.),f=fract(p.xz/72.);float sm=min(min(f.x,1.-f.x),min(f.y,1.-f.y))*72.;float snow=smoothstep(.58,.8,fbm(p.xz/220.)+fbm(p.xz/40.)*.25);
+   alb=mix(uRockA,uRockB,hash(c)*.6+fbm(p.xz/90.)*.4)*(1.-(1.-smoothstep(.8,2.5,sm))*.3);alb=mix(alb,vec3(.93,.96,1.),snow);rough=mix(.5,.85,snow);n=normalize(vec3((fbm(p.xz/12.)-.5)*.1*snow,1.,0.));
+  }else if(abs(uScene-4.)<.5){ /* abyss: an endless black mirror; slow swells */
+   float sw=sin(p.x*.012+uTime*.3)*.5+sin(p.z*.017-uTime*.22)*.5+fbm(p.xz/80.+uTime*.02)*.6;n=normalize(vec3(cos(p.x*.012+uTime*.3)*.012,1.,cos(p.z*.017-uTime*.22)*.012+ (sw-.5)*.01));
+   alb=uRockA*.2;rough=.035;metal=0.;
+  }else{
+  n=triN(uRockN,p,n,w,1./520.,.8);n=triN(uRockN,p+31.,n,w,1./150.,.35);float rr=tri(uRockR,p,w,1./520.).r;ao=tri(uRockAO,p,w,1./520.).r*.5+.5;
   float flatG=smoothstep(.82,.97,gn.y);float macro=fbm(p.xz/600.);
   alb=mix(uRockA,uRockB,macro)*(.65+.35*flatG);float gr=hash(floor(p.xz/3.5));alb*=.8+.4*gr*flatG;rough=clamp(rr*.6+.35,.5,1.);
   float near=smoothstep(55.,-4.,p.y-uLavaY);float crack=fbm(p.xz/55.+2.);alb=mix(alb,vec3(.02,.014,.012),near*.75);emis+=uEmber*near*(.1+.9*smoothstep(.55,.8,crack))*1.9;
+  }
+ }else if(uMode<2.5&&uScene>1.5){ /* ---- a sea of cloud far below: sunlit in the sky altar, lit by fire under the dragon ---- */
+  vec2 p=vW.xz;float t=uTime*.012;float c1=fbm(p/1100.+vec2(t,0.)),c2=fbm(p/380.-vec2(0.,t*1.4)),c3=fbm(p/120.+vec2(t*2.,t));
+  float dens=smoothstep(.28,.78,c1*.65+c2*.45+c3*.12);n=normalize(vec3((c2-.5)*1.4+(c3-.5)*.5,1.,(c1-.5)*1.4));
+  alb=mix(uRockA,uRockB,dens);rough=.95;
+  if(uScene>4.5){float gap_=pow(1.-dens,2.);emis+=uEmber*gap_*(1.6+1.4*c3)+uEmber*.12*dens*smoothstep(.55,.9,c2);}else{emis+=uSky*.35*dens+vec3(1.,.8,.9)*.06*smoothstep(.6,.9,c3);}
  }else if(uMode<2.5){ /* ---- the rivers: open melt down the channel, crust drifting at the banks ---- */
   vec2 p=vW.xz;float sd_=p.x<0.?-1.:1.;float xc=rivC(p.y,sd_),rw=rivW(p.y,sd_);float s=(p.x-xc)/rw,as=abs(s);
   float spd=1.-min(as,1.)*.65;vec2 fp=vec2(p.x,p.y-uTime*26.*sd_*spd);
@@ -180,6 +254,8 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
   alb=mix(uRockA,uRockB*1.15,fbm(p.xz/260.+p.y/180.))*(.85+.35*top)*(.88+.24*id);rough=mix(clamp(rr*.55+.4,.55,1.),.72,top);
   if(top<.5){float jnt=smoothstep(.92,1.,sin(p.y*.085+id*6.2831));alb*=1.-jnt*.35;}
   float near=smoothstep(60.,-6.,p.y-uLavaY);float crack=fbm(p.xz/60.+p.y/40.);alb=mix(alb,vec3(.02,.015,.014),near*.6);emis+=uEmber*near*(.1+.9*smoothstep(.55,.85,crack))*1.5;
+  if(abs(uScene-4.)<.5){float band=smoothstep(.955,1.,sin(p.y*.045+id*6.2831))*(1.-top);emis+=uInlay*band*(.5+.5*sin(uTime*.8+p.y*.01))*2.4+uInlay*.06*(1.-top);alb*=.8;}
+  if(uScene>4.5){float lc=smoothstep(.58,.74,fbm(p.xz/26.+p.y/30.));emis+=uEmber*lc*2.2+uEmber*smoothstep(-80.,-260.,p.y)*.6;}
  }else if(uMode<4.5){ /* ---- dry grass: dark at the root, straw at the tip, the odd ember ---- */
   float t=smoothstep(.05,1.,vX.x);float v=hash(vec2(vX.y,1.7));alb=mix(vec3(.05,.042,.032),mix(vec3(.22,.18,.12),vec3(.3,.25,.17),v),t);rough=.85;
   float fl=.5+.5*sin(uTime*3.+vX.y*7.);emis+=uEmber*step(.965,v)*t*t*(.4+.6*fl)*.5;
@@ -191,6 +267,11 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
   float lens=1.-smoothstep(1.,2.4,abs(r-78.));float halo=1.-smoothstep(3.,14.,abs(r-78.));
   emis+=uTint*(lens*1.25+halo*.18)*(.92+.08*sin(uTime*1.8));
   if(abs(n.y)<.5){alb=vec3(.035,.035,.04);metal=.5;emis=vec3(0.);}
+  if(abs(uScene-1.)<.5){ /* pavilion: a gilt medallion on a lacquer drum */
+   float gr=1.-smoothstep(.5,1.5,abs(r-92.))+1.-smoothstep(.5,1.2,abs(r-72.));float disc=1.-smoothstep(96.,98.,r);
+   alb=mix(uLacquer,uInlay,max(rim,gr));metal=max(rim,gr);rough=mix(.2,.3,metal);if(abs(n.y)<.5){alb=uLacquer*.8;metal=0.;}
+   float petal=smoothstep(.6,.9,cos(atan(q.y,q.x)*8.))*(1.-smoothstep(40.,62.,r))*step(14.,r);alb=mix(alb,uInlay,petal*disc);metal=max(metal,petal*disc);
+   emis=uTint*lens*.35;}
  }else if(uMode<6.5){ /* ---- crystals: amethyst and emerald druses, lit from within ---- */
   float ci=floor(vX.x*.5),h=vX.x-2.*ci,ac=clamp((fract(vX.y)-.01)/.97,0.,1.);bool am=vX.y<1.;
   vec3 cg=am?uGemGlow[0]:uGemGlow[1],cc=am?uGemCore[0]:uGemCore[1];vec3 v=normalize(uEye-vW);float ndv=max(dot(n,v),0.);
@@ -201,17 +282,48 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
   float glint=pow(max(0.,sin(uTime*1.7+face*40.)),60.)*step(.6,face);
   alb=cg*.04;rough=.1;metal=0.;
   emis=(cg*body*thick*(.22+1.15*face*face)*veil+cc*(ridge*(.15+.85*h)*.5+tip*.75+glint*h*1.2))*pulse*uGemGain;
+ }else if(uMode>7.5&&uMode<8.5){ /* ---- rails and props: lacquer, gilt, trunks and roots, and each field's own material (aX.x) ---- */
+  if(vX.x>2.5&&abs(uScene-1.)<.5){alb=vec3(.02,.035,.02)*(.7+.6*fbm(vW.xz/6.+vW.y*.2));rough=.7;}
+  else if(abs(uScene-2.)<.5){alb=vec3(.62,.7,.78);metal=.8;rough=.3;if(vX.x>.5&&vX.x<1.5){emis=uInlay*.6;alb=uInlay;}
+   if(vX.x>2.5){vec3 v=normalize(uEye-vW);float fr=pow(1.-abs(dot(n,v)),2.);alb=vec3(.55,.78,.9);metal=0.;rough=.06;emis=vec3(.25,.55,.75)*(.25+fr*.9)+vec3(.8,.95,1.)*pow(fr,4.)*.6;}}
+  else if(abs(uScene-3.)<.5&&vX.x>2.5){alb=vec3(.86,.9,.97);metal=1.;rough=.18;}
+  else if(abs(uScene-3.)<.5){float vein=pow(1.-abs(2.*fbm(vW.xz/60.+vW.y/50.)-1.),8.);alb=mix(uStoneB,uStoneA,.4)*(1.-vein*.3);rough=.3;if(n.y>.8){alb=uLacquer*.35;rough=.05;emis=uLacquer*(.7+.3*sin(uTime+vW.x*.01));}if(vX.x>.5){alb=uInlay;metal=1.;rough=.25;}}
+  else if(uScene>4.5){float sc=fbm(vW.xz/14.+vW.y/14.);alb=vec3(.07,.02,.018)*(.8+.4*sc);metal=.35;rough=.3;emis=uInlay*smoothstep(160.,380.,vW.y)*.9+uEmber*.05*sc;}
+  else if(vX.x>1.5){alb=vec3(.07,.045,.035)*(.7+.6*fbm(vW.xy/9.+vW.z*.1));rough=.8;}
+  else if(vX.x>.5){alb=uInlay;metal=1.;rough=.26;}
+  else{alb=uLacquer*(.85+.3*fbm(vW.xz/40.+vW.y*.02));rough=.2;float cc=pow(1.-max(dot(n,normalize(uEye-vW)),0.),4.);gloss+=vec3(1.,.8,.7)*cc*.06;}
+ }else if(uMode>8.5&&uMode<9.5){ /* ---- foliage: dark crowns (blob cores, roses where aX.y = 1) and cut-out leaf cards ---- */
+  bool card=vX.x>1.5;if(card){vec2 q=vec2(vX.x-2.,vX.y)-.5;float th=atan(q.y,q.x),rl=length(q)*2.,e=.55+.42*pow(abs(cos(2.5*th+.3)),.7);if(rl>e)discard;}
+  float sd=card?hash(floor(vW.xz/40.)):-vX.x,f=fbm(vW.xz*.05+vW.y*.04+sd*3.1),cells=card?hash(floor(vW.xz*.4)+floor(vW.y*.4)):fbm(vW.xz*.16+vW.y*.13+sd*5.)*1.25-.1;
+  vec3 cA=vec3(.02,.05,.035),cB=vec3(.06,.15,.08),cC=vec3(.14,.26,.12);float t=clamp(f*1.2-.2+(hash(vec2(sd,2.))-.5)*.5,0.,1.);
+  alb=t<.5?mix(cA,cB,t*2.):mix(cB,cC,t*2.-1.);alb*=.7+.5*cells;rough=.75;if(!card&&vX.y>.5){alb=vec3(.45,.02,.04)*(.7+.5*cells);rough=.5;}
+  float gap=smoothstep(.72,.9,cells);ao=(.55+.45*smoothstep(-.6,.8,n.y))*(1.-gap*.5);if(!card){alb*=.45;ao*=.6;}n=normalize(n+vec3(cells-.5,0.,hash(vec2(cells,1.))-.5)*.5);
+  emis=alb*uKey*.22*pow(max(dot(-normalize(vN),normalize(uLightDir)),0.),1.5);
  }else{ /* ---- the court's plinth: chamfer and sides ---- */
   vec3 p=vW;vec3 gn=n;n=triN(uRockN,p,n,w,1./300.,.35);float up=smoothstep(.3,.8,gn.y);float fall=smoothstep(uGround-14.,0.,p.y);
   alb=mix(uStoneA*.5,uStoneB*1.05,up)*(.5+.5*fall);rough=mix(.82,.6,up);ao=.55+.45*fall;
+  if(abs(uScene-1.)<.5){alb=mix(uLacquer,uInlay,up);metal=up;rough=mix(.18,.28,up);ao=.7+.3*fall;}
+  else if(uScene>1.5){alb=mix(uStoneA*.72,uInlay,up*.85);metal=up*uInlayMat.x;rough=mix(.3,.24,up);ao=.7+.3*fall;emis+=uInlay*up*uInlayMat.y*.5;if(uScene>4.5)alb*=mix(.8,1.,up);}
  }
- o=lit(alb,rough,metal,ao,n,vW,emis);o.rgb+=gloss;if(abs(uMode-6.)<.5)o.a*=-.85;}`;
+ o=lit(alb,rough,metal,ao,n,vW,emis);o.rgb+=gloss;if(abs(uMode-6.)<.5)o.a*=-.85;
+ if(uMode>10.5){vec3 v=normalize(uEye-vW);float ndv=abs(dot(n,v)),fr=pow(1.-ndv,2.2);
+  if(uMode<11.5){ /* soap-film bubble; with vX.x = 1 the spirit whale */
+   vec3 R=reflect(-v,n);vec3 env=mix(uSky*1.2,uSky*2.6+.1,smoothstep(-.3,.8,R.y))+uKey*pow(max(dot(R,normalize(uLightDir)),0.),160.)*2.5;
+   vec3 fc=film(fract(fr*1.3+fbm(vW.xz*.015+vW.y*.02)*.9+uTime*.02));bool wh=vX.x>.5;vec3 tint=wh?uEmber:uInlay;
+   vec3 body=wh?tint:abs(uScene-2.)<.5?mix(vec3(.22,.42,.55),vec3(.75,.88,.95),smoothstep(.55,.85,fbm(vW.xz*.04+vW.y*.05))):vec3(.05,.58,.52);vec3 col=body*(.5+fr*.5)*(.55+.45*max(dot(n,normalize(uLightDir)),0.))+env*(.12+fr*.75)+fc*fr*.35;float a=clamp(.34+fr*.6,0.,.93);
+   if(wh){float sp=vX.y,band=.6+.4*sin(sp*40.-uTime*3.);col=tint*(.5+1.4*pow(fr,1.3))*band+env*.2;a=clamp(.22+fr*.7,0.,.95);}
+   o=vec4(col,a);
+  }else{float u=vX.x,h=vX.y;float e=pow(sin(u*PI),3.)*pow(1.-h,1.5)*smoothstep(0.,.06,h);o=vec4((abs(uScene-3.)<.5?uLacquer*.7:uInlay)*e*.22*(.85+.15*sin(uTime*.7+vW.x*.01)),0.);}
+ }}`;
   const DEPTH_FS = `#version 300 es
 precision highp float;out vec4 o;void main(){o=vec4(1.);}`;
   const PT_VS = `#version 300 es
-layout(location=0) in vec4 aP;uniform mat4 uVP;uniform float uSize;out float vA;void main(){gl_Position=uVP*vec4(aP.xyz,1.);gl_PointSize=(uSize+aP.w*uSize)*1100./max(1.,gl_Position.w);vA=aP.w;}`;
+layout(location=0) in vec4 aP;uniform mat4 uVP;uniform float uSize,uTime;out float vA,vR;void main(){gl_Position=uVP*vec4(aP.xyz,1.);gl_PointSize=(uSize+aP.w*uSize)*1100./max(1.,gl_Position.w);vA=aP.w;float id=float(gl_VertexID);vR=id*2.4+uTime*(.6+fract(id*.37)*1.4);}`;
   const PT_FS = `#version 300 es
-precision highp float;in float vA;out vec4 o;uniform vec3 uColor;void main(){float d=length(gl_PointCoord-.5)*2.;float a=pow(max(0.,1.-d),2.2)*vA;o=vec4(uColor*a,a);}`;
+precision highp float;in float vA,vR;out vec4 o;uniform vec3 uColor;uniform float uShape;void main(){vec2 q=gl_PointCoord-.5;float a;
+ if(uShape>2.5){q=mat2(cos(vR),-sin(vR),sin(vR),cos(vR))*q;float r=length(q*vec2(1.,2.1+abs(sin(vR*.5))))*2.;a=(1.-smoothstep(.7,1.,r))*vA;}
+ else if(uShape>1.5){float r=length(q*vec2(1.,1.25))*2.;float dome=(1.-smoothstep(.62,.9,r))*(.3+.7*smoothstep(.25,.85,r));float tent=(1.-smoothstep(0.,.05,abs(fract(q.x*7.+sin(q.y*18.+vR)*.2)-.5)-.35))*step(.05,q.y)*(1.-smoothstep(.05,.5,q.y))*.5;a=(dome+tent)*vA*(.75+.25*sin(vR*2.));}
+ else{float d=length(q)*2.;a=pow(max(0.,1.-d),2.2)*vA;}o=vec4(uColor*a,a);}`;
   const POST_VS = `#version 300 es
 layout(location=0) in vec2 aQ;out vec2 vUV;void main(){vUV=aQ*.5+.5;gl_Position=vec4(aQ,0.,1.);}`;
   const BRIGHT_FS = `#version 300 es
@@ -219,7 +331,7 @@ precision highp float;in vec2 vUV;out vec4 o;uniform sampler2D uColor;void main(
   const BLUR_FS = `#version 300 es
 precision highp float;in vec2 vUV;out vec4 o;uniform sampler2D uColor;uniform vec2 uDir;void main(){vec4 s=vec4(0.);float w[5]=float[](.227,.194,.121,.054,.016);s+=texture(uColor,vUV)*w[0];for(int i=1;i<5;i++){vec2 off=uDir*float(i)*1.5;s+=texture(uColor,vUV+off)*w[i];s+=texture(uColor,vUV-off)*w[i];}o=s;}`;
   const POST_FS = `#version 300 es
-precision highp float;in vec2 vUV;out vec4 o;uniform sampler2D uColor,uDepth,uBloom;uniform vec2 uRes;uniform float uNear,uFar,uFocus,uTime,uDof,uFocusScale;
+precision highp float;in vec2 vUV;out vec4 o;uniform sampler2D uColor,uDepth,uBloom;uniform vec2 uRes;uniform float uNear,uFar,uFocus,uTime,uDof,uFocusScale,uBloomK,uExpo;uniform vec3 uLeak;
 float hash_(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float lin(float z){z=z*2.-1.;return 2.*uNear*uFar/(uFar+uNear-z*(uFar-uNear));}
 vec3 aces(vec3 x){return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.,1.);}
@@ -227,8 +339,9 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
  vec2 sh=vec2(sin(vUV.y*90.+uTime*3.)+sin(vUV.x*70.-uTime*2.3),cos(vUV.y*80.-uTime*2.7))*heat*.0022;vec2 uv=vUV+sh;
  float d=lin(texture(uDepth,uv).r);float coc=smoothstep(360.*uFocusScale,1100.*uFocusScale,abs(d-uFocus))*6.*uDof;float j=hash_(vUV*913.)*6.2831;vec3 c=vec3(0.);
  for(int i=0;i<16;i++){float a=float(i)*2.39996+j;float r=sqrt((float(i)+.5)/16.);vec2 off=vec2(cos(a),sin(a))*r*coc*px*1.6;c+=texture(uColor,uv+off).rgb;}c/=16.;
- c+=bl.rgb*.5;
- c=aces(c*1.15);float lum=dot(c,vec3(.299,.587,.114));c=mix(c*vec3(.95,.96,1.05),c*vec3(1.05,1.0,.94),smoothstep(.15,.7,lum));c=pow(c,vec3(1./2.2));
+ c+=bl.rgb*.5*uBloomK;
+ vec2 lq=(vUV-vec2(1.02,-.04))*vec2(1.7,1.);float lk=pow(max(0.,1.-length(lq)),2.6);c+=uLeak*lk*(.75+.25*smoothstep(.2,1.,sin((vUV.x*.9+vUV.y)*26.)*.5+.5));
+ c=aces(c*uExpo);float lum=dot(c,vec3(.299,.587,.114));c=mix(c*vec3(.95,.96,1.05),c*vec3(1.05,1.0,.94),smoothstep(.15,.7,lum));c=pow(c,vec3(1./2.2));
  lum=dot(c,vec3(.299,.587,.114));c=mix(vec3(lum),c,1.08);c=c*c*(3.-2.*c)*.85+c*.15;vec2 q=vUV-.5;c*=1.-dot(q,q)*1.5;c+=(hash_(vUV*uRes+fract(uTime))-.5)*.012;o=vec4(c,1.);}`;
 
   /* ------------------------------------------------------------ geometry */
@@ -266,6 +379,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
    * melt line; beyond the far bank the ground climbs into basalt, and the
    * island rises into hills past both ends of the court. */
   function terrainAt(x, z) {
+    if (SC !== SCENES.lava) return GROUND - 2 + (fbm(x * 0.004 + 3, z * 0.004 + 1, 2) - 0.5) * 3;
     const s = x < 0 ? -1 : 1, xc = riverC(z, s), rw = riverW(z, s), d = Math.abs(x - xc) - rw;
     let h = GROUND - (GROUND - (LAVA_Y - 26)) * sstep(20, -28, d);
     h += (fbm(x * 0.011 + 3, z * 0.011 + 1, 3) - 0.5) * 9 * sstep(20, 90, rrectSD(x, z, HX, HZ, RC)) * sstep(10, 60, d);
@@ -286,7 +400,109 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
   const SERIF_CN = '"Songti SC", STSong, "Noto Serif CJK SC", "Source Han Serif SC", "Noto Serif SC", SimSun, serif';
   const SANS_CN = '"PingFang SC", "Hiragino Sans GB", "Source Han Sans SC", "Noto Sans SC", "Microsoft YaHei", sans-serif';
   let artKey = "", art = null, artMs = 0;
+  /** The painted courts of the five boss fields. Pavilion (低语密林): gilt margin, two sweeping arcs, thorn vines and roses at both ends, a rose medallion; the others below. */
+  function courtArtPainted() {
+    const k = clamp(Math.min(HX, HZ) / 409.24, 0.6, 1.3), R = RC;
+    const big = EmberViewport.mobile ? 1408 : 1792, S = big / (2 * Math.max(HX, HZ)), TW = Math.round(2 * HX * S), TH = Math.round(2 * HZ * S);
+    const cv = document.createElement("canvas"); cv.width = TW; cv.height = TH;
+    const g = cv.getContext("2d", { willReadFrequently: true }), data = new Uint8Array(TW * TH * 4);
+    let chan = 0; const col = (a) => { const v = Math.round(clamp(a) * 255); return chan === 0 ? `rgb(${v},0,0)` : chan === 1 ? `rgb(0,${v},0)` : `rgb(0,0,${v})`; };
+    const path = (pts, close) => { const q = new Path2D(); pts.forEach((p, i) => (i ? q.lineTo(p[0], p[1]) : q.moveTo(p[0], p[1]))); if (close) q.closePath(); return q; };
+    const line = (q, w, a) => { g.strokeStyle = col(a); g.lineWidth = Math.max(w * k, 1.2 / S); g.stroke(q); }; /* never under ~1 texel: the small touch masks would drop fine lines */
+    const fill = (q, a) => { g.fillStyle = col(a); g.fill(q); };
+    const circ = (x, z, r) => { const q = new Path2D(); q.arc(x, z, r, 0, Math.PI * 2); return q; };
+    const rr = (inset) => { const n = 400, hx = HX - inset, hz = HZ - inset, r = Math.max(4, R - inset), per = rrectPerim(hx, hz, r), pts = []; for (let i = 0; i < n; i++) { const q = rrectAt(hx, hz, r, (i / n) * per); pts.push([q[0], q[1]]); } return path(pts, true); };
+    /* a spiral of `turns` from radius r0 inwards, clockwise when dir > 0 */
+    const spiral = (cx, cz, r0, turns, a0, dir) => { const pts = []; for (let t = 0; t <= 1; t += 0.01) { const a = a0 + dir * t * turns * Math.PI * 2, r = r0 * (1 - 0.82 * t); pts.push([cx + Math.cos(a) * r, cz + Math.sin(a) * r]); } return pts; };
+    /* thorn vines along both ends: a wandering stem, curling tendrils, thorns, a rose at the end of some tendrils */
+    const vine = (sz) => { const rb = rng(sz > 0 ? 3 : 4), stem = [], thorns = new Path2D(), curls = [], roses = [];
+      for (let x = -HX * 0.86; x <= HX * 0.86; x += 5) stem.push([x, sz * (HZ - 62 * k) + Math.sin(x * 0.011 + sz) * 14 * k + Math.sin(x * 0.031) * 5 * k]);
+      for (let i = 8; i < stem.length - 8; i += 7) { const [x, z] = stem[i], d = (i % 14 ? 1 : -1); thorns.moveTo(x - 3 * k, z); thorns.lineTo(x, z + d * 9 * k); thorns.lineTo(x + 3 * k, z); }
+      for (let i = 20; i < stem.length - 20; i += 26 + Math.floor(rb() * 14)) { const [x, z] = stem[i], d = rb() < 0.5 ? 1 : -1, r0 = (12 + rb() * 10) * k, cx = x + d * r0, cz = z - sz * r0 * 0.8; curls.push(path(spiral(cx, cz, r0, 1.3, d > 0 ? Math.PI : 0, -d)));
+        if (rb() < 0.55) { const rz = z + sz * (rb() < 0.5 ? -1 : 1) * 16 * k, q = new Path2D(); for (let pp = 0; pp < 5; pp++) { const aa = (pp / 5) * Math.PI * 2; q.moveTo(x, rz); q.arc(x + Math.cos(aa) * 5 * k, rz + Math.sin(aa) * 5 * k, 5.5 * k, 0, Math.PI * 2); } roses.push(q); } }
+      return { body: roses, curls, lines: [path(stem), thorns] }; };
+    const vines = [vine(-1), vine(1)], roses = vines.flatMap((v) => v.body);
+    /* two sweeping arcs that cross at the court's flanks (the lens) and run on towards the corners */
+    const a = HX - 60 * k, h = HZ * 0.33, r = (a * a + h * h) / (2 * h), c = r - h, arcs = [];
+    for (const sg of [-1, 1]) { const pts = []; for (let x = -a * 1.12; x <= a * 1.12; x += 4) pts.push([x, sg * (c - Math.sqrt(Math.max(0, r * r - x * x)))]); arcs.push(path(pts)); }
+    /* the medallion: two gilt rings, sixteen pearls and a rose of two rings of cupped petals, the inner ring turned half a petal, and a curling heart */
+    const petals = [];
+    for (const [M, off, n] of [[70 * k, 0, 5], [46 * k, 0.5, 5]]) for (let i = 0; i < n; i++) { const a0 = ((i + off) / n) * Math.PI * 2 - Math.PI / 2, pts = [[0, 0]]; for (let t = 0; t <= 1; t += 0.02) { const aa = a0 + (t - 0.5) * 1.18, rad = M * Math.pow(Math.sin(t * Math.PI), 0.45) * (0.92 + 0.08 * Math.cos(t * Math.PI * 2)); pts.push([Math.cos(aa) * rad, Math.sin(aa) * rad]); } petals.push(path(pts, true)); }
+    const heart = path(spiral(0, 0, 22 * k, 2.4, 0, 1));
+    const draw = (layers, toAlpha) => {
+      g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = "source-over"; g.fillStyle = "#000"; g.fillRect(0, 0, TW, TH);
+      g.setTransform(S, 0, 0, S, TW / 2, TH / 2); g.globalCompositeOperation = "lighten"; g.lineCap = "round"; g.lineJoin = "round";
+      layers.forEach((f, i) => { chan = i; f(); });
+      const d = g.getImageData(0, 0, TW, TH).data;
+      if (toAlpha) for (let i = 0; i < d.length; i += 4) data[i + 3] = d[i]; else for (let i = 0; i < d.length; i += 4) { data[i] = d[i]; data[i + 1] = d[i + 1]; data[i + 2] = d[i + 2]; }
+    };
+    const star = (x, z, r, pts = 4) => { const q = []; for (let i = 0; i < pts * 2; i++) { const aa = (i / (pts * 2)) * Math.PI * 2 - Math.PI / 2, ra = i % 2 ? r * 0.26 : r; q.push([x + Math.cos(aa) * ra, z + Math.sin(aa) * ra]); } return path(q, true); };
+    const ell = (rx, rz, rot, a0 = 0, a1 = Math.PI * 2) => { const q = []; for (let t = a0; t <= a1 + 1e-3; t += 0.02) { const x = Math.cos(t) * rx, z = Math.sin(t) * rz; q.push([x * Math.cos(rot) - z * Math.sin(rot), x * Math.sin(rot) + z * Math.cos(rot)]); } return path(q); };
+    /* 永冻王座: frost ferns creeping in from the margin to a crown of six-fold snowflake */
+    const frostArt = () => {
+      const rb = rng(5), bok = []; for (let i = 0; i < 18; i++) bok.push([(rb() - 0.5) * 1.7 * HX, (rb() - 0.5) * 1.6 * HZ, (28 + rb() * 70) * k]);
+      /* frost ferns: branching strokes grown inward from points round the margin */
+      const fern = new Path2D(), grow = (x, z, a, len, depth) => { if (depth > 4 || len < 4 * k) return; const x1 = x + Math.cos(a) * len, z1 = z + Math.sin(a) * len; fern.moveTo(x, z); fern.lineTo(x1, z1); for (const sd of [-1, 1]) grow(x + Math.cos(a) * len * 0.55, z + Math.sin(a) * len * 0.55, a + sd * (0.7 + rb() * 0.3), len * 0.5, depth + 1); grow(x1, z1, a + (rb() - 0.5) * 0.4, len * 0.72, depth + 1); };
+      const per0 = rrectPerim(HX - 22 * k, HZ - 22 * k, Math.max(4, R - 22 * k));
+      for (let i = 0; i < 46; i++) { const q = rrectAt(HX - 22 * k, HZ - 22 * k, Math.max(4, R - 22 * k), rb() * per0); grow(q[0], q[1], Math.atan2(-q[3], -q[2]) + (rb() - 0.5) * 0.5, (22 + rb() * 44) * k, 0); }
+      const flake = new Path2D(); for (let i = 0; i < 6; i++) { const aa = (i / 6) * Math.PI * 2 - Math.PI / 2, c = Math.cos(aa), sn = Math.sin(aa); flake.moveTo(0, 0); flake.lineTo(c * 96 * k, sn * 96 * k); for (const f of [0.38, 0.62, 0.82]) for (const sd of [-1, 1]) { const b = aa + sd * 0.7, L = (1 - f) * 44 * k; flake.moveTo(c * f * 96 * k, sn * f * 96 * k); flake.lineTo(c * f * 96 * k + Math.cos(b) * L, sn * f * 96 * k + Math.sin(b) * L); } }
+      return { R: () => { line(fern, 3.2, 0.55); line(circ(0, 0, 124 * k), 2, 0.4); },
+        G: () => { line(rr(16 * k), 2.2, 0.8); line(rr(26 * k), 1, 0.5); line(flake, 2.6, 1); for (let i = 0; i < 6; i++) { const aa = (i / 6) * Math.PI * 2 - Math.PI / 2; fill(star(Math.cos(aa) * 112 * k, Math.sin(aa) * 112 * k, 9 * k), 1); } line(circ(0, 0, 124 * k), 1.8, 0.8); line(fern, 0.9, 0.55); },
+        B: () => { fill(circ(0, 0, 18 * k), 0.8); },
+        A: () => { line(fern, 7, 0.7); for (const [x, z, r] of bok) fill(circ(x, z, r), 0.25); } };
+    };
+    /* 云海祭坛: a star map — orbits, constellations, a crescent of blue glass inside a rayed sun */
+    const cloudArt = () => {
+      const rb = rng(11), stars = [], cons = [];
+      for (let q = 0; q < 9; q++) { let x = (rb() - 0.5) * 1.6 * HX, z = (rb() - 0.5) * 1.5 * HZ; if (Math.hypot(x / HX, z / HZ) < 0.4) continue; const c = []; for (let i = 0; i < 4 + Math.floor(rb() * 3); i++) { x += (rb() - 0.5) * 120 * k; z += (rb() - 0.5) * 90 * k; c.push([clamp(x, -HX * 0.9, HX * 0.9), clamp(z, -HZ * 0.88, HZ * 0.88)]); } cons.push(c); }
+      for (let i = 0; i < 160; i++) stars.push([(rb() - 0.5) * 1.84 * HX, (rb() - 0.5) * 1.8 * HZ, (0.8 + rb() * rb() * 2.6) * k]);
+      const orbits = [ell(HX * 0.62, HZ * 0.34, 0.12), ell(HX * 0.82, HZ * 0.52, -0.08), ell(HX * 0.42, HZ * 0.62, 0.5)];
+      const cres = new Path2D(); cres.arc(0, 0, 58 * k, 0, Math.PI * 2); cres.arc(2 * k, -2 * k, 47 * k, 0, Math.PI * 2, true);
+      const rays = new Path2D(); for (let i = 0; i < 32; i++) { const aa = (i / 32) * Math.PI * 2, r0 = 74 * k, r1 = (i % 2 ? 94 : 112) * k; rays.moveTo(Math.cos(aa) * r0, Math.sin(aa) * r0); rays.lineTo(Math.cos(aa) * r1, Math.sin(aa) * r1); }
+      return { R: () => { fill(circ(0, 0, 66 * k), 0.5); },
+        G: () => { line(rr(20 * k), 3, 1); line(rr(30 * k), 1.2, 0.8); for (const o of orbits) line(o, 1.4, 0.85); for (const c of cons) { line(path(c), 1.2, 0.9); for (const [x, z] of c) fill(circ(x, z, 3.4 * k), 1); } for (const [x, z, r] of stars) fill(circ(x, z, r), 0.95); line(circ(0, 0, 66 * k), 2.6, 1); line(rays, 1.6, 1); line(circ(0, 0, 124 * k), 1.2, 0.8); },
+        B: () => { fill(cres, 1); for (let i = 0; i < 12; i++) { const st = stars[i * 11]; fill(circ(st[0], st[1], st[2] * 2.4), 1); } },
+        A: () => { for (const o of orbits) line(o, 12, 0.5); } };
+    };
+    /* 无光圣所: nothing but broken tide rings and a closed eye, in cold light */
+    const abyssArt = () => {
+      const rings = []; for (let i = 0; i < 9; i++) { const f = i / 8, gap = (i * 0.9) % (Math.PI * 2); rings.push(ell(130 * k + (HX * 0.92 - 130 * k) * f, 94 * k + (HZ * 0.86 - 94 * k) * f, 0, gap + 0.3, gap + Math.PI * 2 - 0.3)); }
+      const eye = new Path2D(), ew = 92 * k, eh = 34 * k; eye.moveTo(-ew, 0); eye.quadraticCurveTo(0, -eh * 2, ew, 0); eye.quadraticCurveTo(0, eh * 2, -ew, 0);
+      return { R: () => { fill(eye, 0.4); },
+        G: () => { line(rr(18 * k), 1.4, 1); rings.forEach((q, i) => line(q, i % 3 === 0 ? 1.4 : 0.8, i % 3 === 0 ? 0.9 : 0.55)); line(eye, 1.8, 1); fill(circ(0, 0, 14 * k), 1); line(circ(0, 0, 26 * k), 1.2, 0.9); },
+        B: () => { line(circ(0, 0, 20 * k), 4, 0.6); },
+        A: () => { for (const q of rings) line(q, 14, 0.25); } };
+    };
+    /* 世界之烬: a gilt sun of twenty-four rays, rows of dragon scales at both ends, cracks running with fire */
+    const dragonArt = () => {
+      const rb = rng(21), cracks = [];
+      for (let i = 0; i < 8; i++) { let x = (rb() - 0.5) * 1.6 * HX, z = (rb() - 0.5) * 1.5 * HZ, aa = rb() * Math.PI * 2; const c = [[x, z]]; for (let j = 0; j < 26; j++) { aa += (rb() - 0.5) * 0.9; x += Math.cos(aa) * 14 * k; z += Math.sin(aa) * 14 * k; if (Math.abs(x) > HX * 0.9 || Math.abs(z) > HZ * 0.86 || Math.hypot(x, z) < 160 * k) break; c.push([x, z]); } cracks.push(path(c)); }
+      const sun = new Path2D(); for (let i = 0; i < 24; i++) { const aa = (i / 24) * Math.PI * 2, r0 = 60 * k, r1 = (i % 2 ? 100 : 134) * k, w = 0.05; sun.moveTo(Math.cos(aa - w) * r0, Math.sin(aa - w) * r0); sun.lineTo(Math.cos(aa) * r1, Math.sin(aa) * r1); sun.lineTo(Math.cos(aa + w) * r0, Math.sin(aa + w) * r0); }
+      const scales = new Path2D(); for (let row = 0; row < 3; row++) for (let x = -HX + 60 * k; x < HX - 60 * k; x += 40 * k) for (const sz of [-1, 1]) { const z = sz * (HZ - (46 + row * 24) * k), cx = x + (row % 2) * 20 * k; scales.moveTo(cx + 20 * k, z); scales.arc(cx, z, 20 * k, 0, sz < 0 ? Math.PI : -Math.PI, sz >= 0); }
+      return { R: () => { line(scales, 2.2, 0.8); fill(circ(0, 0, 60 * k), 0.5); },
+        G: () => { line(rr(20 * k), 3.4, 1); line(rr(30 * k), 1.2, 0.8); fill(sun, 0.9); line(circ(0, 0, 60 * k), 3, 1); line(circ(0, 0, 46 * k), 1.2, 1); line(circ(0, 0, 152 * k), 1.6, 0.8); },
+        B: () => { for (const q of cracks) line(q, 2.4, 1); fill(circ(0, 0, 40 * k), 0.9); },
+        A: () => { fill(circ(0, 0, 152 * k), 0.3); } };
+    };
+    const other = SC === SCENES.frost ? frostArt() : SC === SCENES.clouds ? cloudArt() : SC === SCENES.abyss ? abyssArt() : SC === SCENES.dragon ? dragonArt() : null;
+    if (other) { draw([other.R, other.G, other.B], false); draw([other.A], true); return { w: TW, h: TH, data, engrave: (1.5 * k * S) / 2, stroke: [0, 0, 1, 0] }; }
+    draw([
+      /* R: relief — the roses stand a little proud of the silk */
+      () => { for (const q of roses) fill(q, 0.6); fill(circ(0, 0, 100 * k), 0.3); for (const q of petals) fill(q, 0.5); },
+      /* G: gilt lines */
+      () => { line(rr(24 * k), 3.6, 1); line(rr(36 * k), 1.4, 0.9); for (const q of arcs) line(q, 3, 1);
+        for (const q of roses) line(q, 3, 1); for (const v of vines) { for (const q of v.curls) line(q, 2.6, 1); for (const q of v.lines) line(q, 2.2, 1); }
+        line(circ(0, 0, 100 * k), 3.6, 1); line(circ(0, 0, 90 * k), 1.4, 1); for (let i = 0; i < 16; i++) { const aa = (i / 16) * Math.PI * 2; fill(circ(Math.cos(aa) * 95 * k, Math.sin(aa) * 95 * k, 2.6 * k), 1); }
+        for (const q of petals) line(q, 2.4, 1); line(heart, 2.2, 1); },
+      /* B: crimson lacquer inside the rose */
+      () => { for (const q of petals) fill(q, 0.95); for (const q of roses) fill(q, 0.95); },
+    ], false);
+    /* A: pearl sheen over the roses and the medallion */
+    draw([() => { for (const q of roses) fill(q, 0.8); fill(circ(0, 0, 84 * k), 0.5); }], true);
+    return { w: TW, h: TH, data, engrave: (1.5 * k * S) / 2, stroke: [0, 0, 1, 0] };
+  }
   function courtArt() {
+    if (SC !== SCENES.lava) return courtArtPainted();
     const k = clamp(Math.min(HX, HZ) / 409.24, 0.6, 1.3), R = RC;
     const big = EmberViewport.mobile ? 1408 : 1792, S = big / (2 * Math.max(HX, HZ)), TW = Math.round(2 * HX * S), TH = Math.round(2 * HZ * S);
     const A = [-0.902 * HX, 0.787 * HZ], B = [0.902 * HX, -0.777 * HZ], len = Math.hypot(B[0] - A[0], B[1] - A[1]);
@@ -468,7 +684,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
   let prog = null, tex = null, rt = null, geom = null, particles = null;
   let VP = null, eye = null, basis = null, lightVP = null;
   const cam = { pitch: PITCH, dist: 2600, tz: 0 };
-  const LIGHT_DIR = V.norm([0.55, 0.5, -0.5]);
+  const LIGHT_DEF = V.norm([0.55, 0.5, -0.5]); let LIGHT_DIR = LIGHT_DEF;
   const cardU = new Float32Array(64), decals = new Float32Array(32); let decalI = 0;
   const lightPos = new Float32Array(48), lightCol = new Float32Array(48), lightRad = new Float32Array(16);
   const GEM_GLOW = new Float32Array(GEM.glow.flat()), GEM_CORE = new Float32Array(GEM.core.flat()), MOTE = GEM.glow.map((c) => c.map((v) => v * 1.8 + 0.25));
@@ -487,7 +703,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
   function tex2d(w, h, fmt, filter) { const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texStorage2D(gl.TEXTURE_2D, 1, fmt, w, h); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); return t; }
   /** Upload the court's graphic layer; it only changes with the court's size. */
   function ensureCourtArt() {
-    const key = HX + ":" + Math.round(HZ) + ":" + (EmberViewport.mobile ? "m" : "d");
+    const key = HX + ":" + Math.round(HZ) + ":" + (EmberViewport.mobile ? "m" : "d") + ":" + SC.id;
     if (key === artKey && tex.court) return;
     artKey = key; const t0 = performance.now(); art = courtArt(); artMs = Math.round(performance.now() - t0);
     if (tex.court) gl.deleteTexture(tex.court);
@@ -603,13 +819,14 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     ornK = clamp(Math.min(HX, HZ) / 500, 0.55, 1.2);
     /* the druses keep a readable size on screen: larger in the world where the camera stands further off */
     gemK = clamp(Math.min(Math.sqrt((2 * HX) / (project([HX, 0, 0])[0] - project([-HX, 0, 0])[0])), 0.6 + HZ / 500), 1, 1.9);
+    LIGHT_DIR = SC.light ? V.norm(SC.light) : LIGHT_DEF;
     lightVP = M.mul(M.ortho(-(HX + 1250), HX + 1250, -(HZ + 950), HZ + 950, 10, 6500), M.look(V.scale(LIGHT_DIR, 3000), [0, 0, -HZ * 0.5]));
     /* the rivers sit a little past half way between the court and the screen's
      * edge, measured at the court's far and near ends, so every layout sees them */
     { const edgeX = (y) => { const f = floorAt(W, y); return f ? f[0] : HX + 400; }, rw = tall ? 72 : Vp.mobile ? 86 : 100, gapMin = tall ? 18 : 40;
       const xT = edgeX(project([0, 0, -HZ])[1]), xB = edgeX(project([0, 0, HZ])[1]);
       const cT = Math.max(HX + rw + gapMin, HX + 0.55 * (xT - HX)), cB = Math.max(HX + rw + (tall ? 18 : 25), HX + 0.55 * (xB - HX));
-      RIV = { a: (cT + cB) / 2, b: (cT - cB) / (2 * HZ), w: rw }; }
+      RIV = SC === SCENES.lava ? { a: (cT + cB) / 2, b: (cT - cB) / (2 * HZ), w: rw } : { a: 1e5, b: 0, w: 1 }; }
     PADS = seats(); BULGE = [0, 0, 0, 0];
     HUD = [...document.querySelectorAll(HUD_BOXES)].map((el) => Vp.pos(el)).filter(Boolean);
     for (const pd of Object.values(PADS)) { const s = pd[0] < 0 ? -1 : 1, need = Math.abs(pd[0]) + 118 * ornK + riverW(pd[1], s) + 18 - Math.abs(riverC(pd[1], s)); if (need > 0) { if (s < 0) BULGE[0] = pd[1], BULGE[1] = need; else BULGE[2] = pd[1], BULGE[3] = need; } }
@@ -660,6 +877,154 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     for (let i = 0; i < 2; i++) { const a = rnd() * Math.PI * 2, dd = 62 + rnd() * 40, bx = cx + Math.cos(a) * dd * sc, bz = cz + Math.sin(a) * dd * sc; if (rrectSD(bx, bz, HX, HZ, RC) > 40 && riverSD(bx, bz) > 12) grow(Math.cos(a) * dd, Math.sin(a) * dd, 0.2 + rnd() * 0.3, a + (rnd() - 0.5), 6 + rnd() * 2.5, 22 + rnd() * 14, 11); }
     return idx;
   }
+  /* A beam between two ground points a, b (x,z), from y0 to y1, w wide; aX.x = 1 marks gilt. */
+  function beam(o, a, b, y0, y1, w, gilt = 0) {
+    const dx = b[0] - a[0], dz = b[1] - a[1], l = Math.hypot(dx, dz) || 1, nx = (-dz / l) * w / 2, nz = (dx / l) * w / 2;
+    const P = [[a[0] - nx, a[1] - nz], [b[0] - nx, b[1] - nz], [b[0] + nx, b[1] + nz], [a[0] + nx, a[1] + nz]];
+    const put = (p, n) => o.push(p[0], p[1], p[2], n[0], n[1], n[2], gilt, 0);
+    const face = (A, B, C, D, n) => { put(A, n); put(B, n); put(C, n); put(A, n); put(C, n); put(D, n); };
+    const lo = P.map((q) => [q[0], y0, q[1]]), hi = P.map((q) => [q[0], y1, q[1]]);
+    face(hi[0], hi[1], hi[2], hi[3], [0, 1, 0]);
+    for (let i = 0; i < 4; i++) { const j = (i + 1) % 4, e = [P[j][0] - P[i][0], P[j][1] - P[i][1]], el = Math.hypot(e[0], e[1]) || 1; face(lo[i], lo[j], hi[j], hi[i], [e[1] / el, 0, -e[0] / el]); }
+  }
+  /* A low-poly sphere (an icosahedron split once), pushed about by noise: one clump of leaves. aX = (tree seed, 0). */
+  const ICO = (() => {
+    const t = (1 + Math.sqrt(5)) / 2, v = [[-1, t, 0], [1, t, 0], [-1, -t, 0], [1, -t, 0], [0, -1, t], [0, 1, t], [0, -1, -t], [0, 1, -t], [t, 0, -1], [t, 0, 1], [-t, 0, -1], [-t, 0, 1]].map(V.norm);
+    const f = [[0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11], [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8], [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9], [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1]];
+    const out = []; for (const [a, b, c] of f) { const ab = V.norm(V.add(v[a], v[b])), bc = V.norm(V.add(v[b], v[c])), ca = V.norm(V.add(v[c], v[a])); out.push([v[a], ab, ca], [ab, v[b], bc], [ca, bc, v[c]], [ab, bc, ca]); }
+    return out;
+  })();
+  /* leaf cards round a clump: lobed cutouts (the shader cuts the shape), lit as the clump's surface. aX = (2 + u, v). */
+  function leafCards(o, c, r, rnd, n) {
+    for (let i = 0; i < n; i++) {
+      const d = V.norm([rnd() - 0.5, (rnd() - 0.35) * 0.9, rnd() - 0.5]), p = V.add(c, V.scale([d[0], d[1] * 0.8, d[2]], r * (0.72 + 0.4 * rnd()))), sz = r * (0.2 + 0.12 * rnd());
+      const nn = V.norm(V.add(d, [rnd() - 0.5, rnd() - 0.3, rnd() - 0.5])), t = V.norm(V.cross(nn, Math.abs(nn[1]) > 0.9 ? [1, 0, 0] : [0, 1, 0])), b = V.cross(nn, t), sn = V.norm(V.add(V.scale(d, 0.65), V.scale(nn, 0.35)));
+      const P = (u, v) => V.add(p, V.add(V.scale(t, (u - 0.5) * sz), V.scale(b, (v - 0.5) * sz)));
+      for (const [u, v] of [[0, 0], [1, 0], [1, 1], [0, 0], [1, 1], [0, 1]]) { const q = P(u, v); o.push(q[0], q[1], q[2], sn[0], sn[1], sn[2], 2 + u, v); }
+    }
+  }
+  function clump(o, c, r, seed) {
+    const d = (p) => { const k = 1 + 0.28 * (vnoise(p[0] * 2.1 + seed * 7, p[1] * 2.1 + p[2] * 1.3) - 0.5) * 2; return [c[0] + p[0] * r * k, c[1] + p[1] * r * k * 0.8, c[2] + p[2] * r * k]; };
+    for (const tr of ICO) { const q = tr.map(d), n = V.norm(V.cross(V.sub(q[1], q[0]), V.sub(q[2], q[0]))); const out = V.dot(n, V.sub(q[0], c)) < 0 ? V.scale(n, -1) : n; for (let i = 0; i < 3; i++) { const sn = V.norm(V.add(V.scale(out, 0.45), V.scale(tr[i], 0.55))); o.push(q[i][0], q[i][1], q[i][2], sn[0], sn[1], sn[2], -1 - seed, 0); } }
+  }
+  const ICO2 = ICO.flatMap(([a, b, c]) => { const ab = V.norm(V.add(a, b)), bc = V.norm(V.add(b, c)), ca = V.norm(V.add(c, a)); return [[a, ab, ca], [ab, b, bc], [ca, bc, c], [ab, bc, ca]]; });
+  function sphere(o, c, r) { for (const tr of ICO2) for (const q of tr) o.push(c[0] + q[0] * r, c[1] + q[1] * r, c[2] + q[2] * r, q[0], q[1], q[2], 0, 0); }
+  /* a tube swept along a polyline, radius rad(t) at t in [0, 1] */
+  function tube(o, pts, rad, segs = 10) {
+    const n = pts.length, rings = [];
+    for (let i = 0; i < n; i++) { const tg = V.norm(V.sub(pts[Math.min(n - 1, i + 1)], pts[Math.max(0, i - 1)])), b1 = V.norm(V.cross(tg, Math.abs(tg[1]) > 0.9 ? [1, 0, 0] : [0, 1, 0])), b2 = V.cross(tg, b1), r = rad(i / (n - 1)); rings.push(Array.from({ length: segs }, (_, j) => { const aa = (j / segs) * Math.PI * 2, nn = V.add(V.scale(b1, Math.cos(aa)), V.scale(b2, Math.sin(aa))); return [V.add(pts[i], V.scale(nn, r)), nn]; })); }
+    for (let i = 0; i < n - 1; i++) for (let j = 0; j < segs; j++) { const a = rings[i][j], b = rings[i][(j + 1) % segs], c = rings[i + 1][(j + 1) % segs], d = rings[i + 1][j]; for (const [pp, nn] of [a, b, c, a, c, d]) o.push(pp[0], pp[1], pp[2], nn[0], nn[1], nn[2], 0, 0); }
+  }
+  const hexRing = (x, z, r) => [0, 1, 2, 3, 4, 5].map((j) => [x + Math.cos(j * Math.PI / 3 + 0.3) * r, z + Math.sin(j * Math.PI / 3 + 0.3) * r]);
+  /* only what the camera can see is built */
+  const seen = (x, y, z, r) => { const q = project([x, y, z]), m = r * 1.2; return q[0] > -m && q[0] < W + m && q[1] > -m && q[1] < H + m; };
+  /* a balustrade round the court's rim, open where a seat meets the court; d = post width/height, rail heights */
+  function balustrade(rail, nearSeat, d) {
+    const off = 20, per = rrectPerim(HX + off, HZ + off, RC + off), n = Math.max(24, Math.round(per / d.step)), pts = [];
+    for (let i = 0; i < n; i++) { const q = rrectAt(HX + off, HZ + off, RC + off, (i / n) * per); pts.push([q[0], q[1]]); }
+    const open = pts.map((q) => nearSeat(q[0], q[1], 30));
+    for (let i = 0; i < n; i++) { const a = pts[i], b = pts[(i + 1) % n], pw = d.post / 2;
+      if (!open[i]) { beam(rail, [a[0] - pw, a[1]], [a[0] + pw, a[1]], GROUND - 4, d.postH, d.post); if (d.cap) beam(rail, [a[0] - pw - 3, a[1]], [a[0] + pw + 3, a[1]], d.postH, d.postH + 6, d.post + 6, 1); }
+      if (!open[i] && !open[(i + 1) % n]) { beam(rail, a, b, d.top[0], d.top[1], d.top[2]); beam(rail, a, b, d.mid[0], d.mid[1], d.mid[2]); beam(rail, a, b, d.top[1], d.top[1] + 2, d.top[2] - 4, 1); } }
+  }
+  function shard(o, c, len, w, dir, flag) {
+    const d = V.norm(dir), u = V.norm(V.cross(d, Math.abs(d[1]) > 0.9 ? [1, 0, 0] : [0, 1, 0])), v = V.cross(d, u), tip = V.add(c, V.scale(d, len)), tail = V.add(c, V.scale(d, -len * 0.35));
+    const ring = [0, 1, 2, 3].map((j) => V.add(c, V.add(V.scale(u, Math.cos(j * Math.PI / 2 + 0.4) * w), V.scale(v, Math.sin(j * Math.PI / 2 + 0.4) * w))));
+    for (let j = 0; j < 4; j++) for (const e of [tip, tail]) { const a = ring[j], b = ring[(j + 1) % 4], n0 = V.norm(V.cross(V.sub(b, a), V.sub(e, a))), n1 = V.dot(n0, V.sub(a, c)) < 0 ? V.scale(n0, -1) : n0; for (const q of [a, b, e]) o.push(q[0], q[1], q[2], n1[0], n1[1], n1[2], flag, 0); }
+  }
+  function link(o, c, r, axisA, axisB) { const pts = []; for (let i = 0; i <= 12; i++) { const a = (i / 12) * Math.PI * 2; pts.push(V.add(c, V.add(V.scale(axisA, Math.cos(a) * r * 1.5), V.scale(axisB, Math.sin(a) * r)))); } const n0 = o.length; tube(o, pts, () => r * 0.28, 6); for (let q = n0 + 6; q < o.length; q += 8) o[q] = 3; }
+  function blade(o, c, len) { const n0 = o.length; beam(o, [c[0], c[2] - 3], [c[0], c[2] + 3], c[1] - len, c[1], 14); beam(o, [c[0] - 22, c[2]], [c[0] + 22, c[2]], c[1], c[1] + 6, 8); beam(o, [c[0] - 3, c[2]], [c[0] + 3, c[2]], c[1] + 6, c[1] + 34, 7); for (let q = n0 + 6; q < o.length; q += 8) o[q] = 3; }
+  /** 霜狱君王 · 冰泡广场: a slim steel rail with a neon strip, and drifts of frozen bubbles on the snow. */
+  function buildFrost(rnd, nearSeat) {
+    const rail = [], glass = [], lights = [];
+    balustrade(rail, nearSeat, { step: 140, post: 8, postH: 46, cap: 0, top: [38, 44, 8], mid: [16, 19, 4] });
+    /* frozen bubbles hang where time stopped them: in rings round the court, some high, none over the court */
+    for (let i = 0; i < 70; i++) { const a = rnd() * Math.PI * 2, x = Math.cos(a) * (HX + 110 + rnd() * 520), z = Math.sin(a) * (HZ + 90 + rnd() * 380);
+      const near = z > HZ * 0.55, r = (near ? 16 + rnd() * 26 : 20 + rnd() * 70) * (rnd() < 0.15 ? 1.6 : 1), y = GROUND + r + (near ? rnd() * 40 : rnd() * 360);
+      if (rrectSD(x, z, HX, HZ, RC) < 60 + r || nearSeat(x, z, r + 30) || !seen(x, y, z, r * 2)) continue; sphere(glass, [x, y, z], r); }
+    /* shards of ice caught mid-fall */
+    for (let i = 0; i < 90; i++) { const a = rnd() * Math.PI * 2, x = Math.cos(a) * (HX + 70 + rnd() * 560), z = Math.sin(a) * (HZ + 60 + rnd() * 420), y = GROUND + 20 + rnd() * (z > HZ * 0.5 ? 60 : 320);
+      if (rrectSD(x, z, HX, HZ, RC) < 40 || nearSeat(x, z, 40) || !seen(x, y, z, 60)) continue; shard(rail, [x, y, z], 10 + rnd() * 26, 3 + rnd() * 5, [rnd() - 0.5, -0.6 - rnd(), rnd() - 0.5], 3); }
+    /* spires of ice at the far corners and along the sides: the frozen throne's crown */
+    for (const [sx, fz, kk] of [[-1, -1.1, 1.3], [1, -1.1, 1.3], [-1, -0.45, 0.9], [1, -0.4, 0.9], [-1, 0.3, 0.6], [1, 0.35, 0.6]]) { const cx = sx * (HX + 160), cz = fz * HZ; if (nearSeat(cx, cz, 110)) continue;
+      for (let j = 0; j < 7; j++) { const x = cx + (rnd() - 0.5) * 120, z = cz + (rnd() - 0.5) * 100; if (rrectSD(x, z, HX, HZ, RC) < 50) continue; shard(rail, [x, GROUND, z], (120 + rnd() * 260) * kk * (fz > 0 ? 0.5 : 1), (14 + rnd() * 14) * kk, [sx * (0.1 + rnd() * 0.3), 1, (rnd() - 0.6) * 0.3], 3); }
+      if (lights.length < 6) lights.push([cx, cz]); }
+    return { rail, glass, lights };
+  }
+  /** 断契监誓者 · 云海祭坛: floating marble islands crowned with blue glass, pebbles adrift; the whale is animated per frame. */
+  function buildClouds(rnd, nearSeat) {
+    const rail = [];
+    for (const [x, z, kk] of [[-(HX + 330), -HZ * 0.25, 1.15], [HX + 310, -HZ * 0.62, 1], [HX + 370, HZ * 0.55, 0.8], [-(HX + 290), HZ * 0.72, 0.75], [-HX * 0.35, -(HZ + 330), 0.95], [HX * 0.4, -(HZ + 380), 0.7]]) {
+      if (!seen(x, 60, z, 220 * kk) || nearSeat(x, z, 120)) continue; const r = 34 * kk;
+      for (let q = -2; q <= 2; q++) for (let w = -2; w <= 2; w++) { const d = Math.max(Math.abs(q), Math.abs(w), Math.abs(q + w)); if (d > 2 || rnd() < 0.25) continue;
+        const cx = x + (q + w / 2) * r * 1.75, cz = z + w * r * 1.52, top = (-20 + rnd() * 200 * (1 - d / 3)) * kk, bot = top - (160 + rnd() * 260) * kk;
+        prism(rail, hexRing(cx, cz, r * 0.93), bot, top, [0, 0]); beam(rail, [cx - r * 0.95, cz], [cx + r * 0.95, cz], top - 8, top - 4, r * 1.7, 1); }
+      for (let i = 0; i < 5; i++) clump(rail, [x + (rnd() - 0.5) * 300 * kk, -80 + rnd() * 240, z + (rnd() - 0.5) * 240 * kk], (10 + rnd() * 18) * kk, 0); }
+    /* broken oath-chains adrift round the altar */
+    const beams = [], lights = [];
+    for (let c = 0; c < 7; c++) { const a0 = rnd() * Math.PI * 2, R = 1 + 0.25 + rnd() * 0.45, y0 = 60 + rnd() * 220, n = 8 + Math.floor(rnd() * 10);
+      for (let i = 0; i < n; i++) { const a = a0 + i * 0.045, x = Math.cos(a) * (HX * R + 60), z = Math.sin(a) * (HZ * R + 60), y = y0 + Math.sin(i * 0.5) * 20 - i * 3;
+        if (rrectSD(x, z, HX, HZ, RC) < 60 || nearSeat(x, z, 60) || !seen(x, y, z, 40)) continue; const tg = V.norm([-Math.sin(a), -0.1, Math.cos(a)]);
+        link(rail, [x, y, z], 9 * ornK, tg, i % 2 ? [0, 1, 0] : V.norm(V.cross(tg, [0, 1, 0]))); } }
+    /* blades hanging point-down: the price of the oath */
+    for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2 + 0.3, x = Math.cos(a) * (HX + 150 + rnd() * 90), z = Math.sin(a) * (HZ + 130 + rnd() * 70), y = 150 + rnd() * 160;
+      if (nearSeat(x, z, 80) || !seen(x, y, z, 80) || z > HZ * 0.7) continue; blade(rail, [x, y, z], 90 + rnd() * 50); if (lights.length < 6) lights.push([x, z, y - 60]); }
+    /* the eclipse's corona, laid out on the cloud sea round the altar */
+    { const r0 = Math.max(HX, HZ) + 520, r1 = r0 + 520, y = -600, n = 96; for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2, b = ((i + 1) / n) * Math.PI * 2, P = (r, t) => [Math.cos(t) * r * 1.15, y, Math.sin(t) * r];
+      for (const [q, h] of [[P(r0, a), 0], [P(r0, b), 0], [P(r1, b), 1], [P(r0, a), 0], [P(r1, b), 1], [P(r1, a), 1]]) beams.push(q[0], q[1], q[2], 0, 1, 0, 0.5, h); } }
+    return { rail, beams, lights };
+  }
+  /** 深渊先知 · 无光圣所: a ring of drowned pillars with bands of cold light, and shafts of light from far above. */
+  function buildAbyss(rnd, nearSeat) {
+    const cols = [], beams = [], lights = [];
+    for (let i = 0; i < 20; i++) { const a = (i / 20) * Math.PI * 2 + (rnd() - 0.5) * 0.2, x = Math.cos(a) * (HX + 250 + rnd() * 150), z = Math.sin(a) * (HZ + 210 + rnd() * 120);
+      const h = z > HZ * 0.25 ? 30 + rnd() * 60 : 380 + rnd() * 760; if (nearSeat(x, z, 70) || !seen(x, GROUND + Math.min(h, 260), z, 140)) continue;
+      prism(cols, hexRing(x, z, 30 + rnd() * 22), GROUND - 80, GROUND + h, [0, 0]); if (lights.length < 6) lights.push([x, z]); }
+    for (const [x, z, w] of [[-HX * 0.62, -(HZ + 230), 110], [HX * 0.2, -(HZ + 460), 150], [HX + 200, -HZ * 0.2, 90], [-(HX + 220), HZ * 0.25, 80], [HX * 0.75, -(HZ + 120), 70]]) {
+      for (const rot of [0, Math.PI / 2]) { const dx = Math.cos(rot) * w / 2, dz = Math.sin(rot) * w / 2, y0 = GROUND, y1 = GROUND + 1900;
+        for (const [px, py, pz, u, hh] of [[x - dx, y0, z - dz, 0, 0], [x + dx, y0, z + dz, 1, 0], [x + dx, y1, z + dz, 1, 1], [x - dx, y0, z - dz, 0, 0], [x + dx, y1, z + dz, 1, 1], [x - dx, y1, z - dz, 0, 1]]) beams.push(px, py, pz, 0, 1, 0, u, hh); } }
+    return { cols, beams, lights };
+  }
+  /** 终焉巨龙 · 世界之烬: the ribs the court rests on, and burning islands adrift in the cloud sea below. */
+  function buildDragon(rnd, nearSeat) {
+    const rail = [], cols = [], lights = [];
+    /* the court rides the living dragon's back: its spines rise in two rows and curve away, taller towards the far end */
+    for (const sg of [-1, 1]) for (let i = 0; i < 6; i++) { const z = -HZ - 160 + (i * (2 * HZ + 240)) / 5, tall = 1.3 - i * 0.12, bx = sg * (HX + 70 + (i % 2) * 40);
+      const P = [[bx, -160, z], [bx + sg * 30, 40 * tall, z], [bx + sg * 120, 220 * tall, z - 20], [bx + sg * 260, 360 * tall, z - 60]], pts = [];
+      for (let t = 0; t <= 1.0001; t += 1 / 14) { const u = 1 - t; pts.push([0, 1, 2].map((c) => u * u * u * P[0][c] + 3 * u * u * t * P[1][c] + 3 * u * t * t * P[2][c] + t * t * t * P[3][c])); }
+      if (!seen(pts[7][0], pts[7][1], pts[7][2], 260) || nearSeat(bx, z, 80)) continue; tube(rail, pts, (t) => Math.max(1.5, (84 - 80 * Math.pow(t, 0.7))) * ornK, 12); }
+    for (let i = 0; i < 12; i++) { const sg = rnd() < 0.5 ? -1 : 1, x = sg * (HX + 200 + rnd() * 700), z = (rnd() - 0.5) * (2 * HZ + 1200), y = -160 - rnd() * 260; if (!seen(x, y, z, 200)) continue; clump(cols, [x, y, z], 50 + rnd() * 110, i); }
+    for (const sg of [-1, 1]) for (const f of [-0.7, 0, 0.7]) lights.push([sg * (HX + 140), f * HZ]);
+    return { rail, cols, lights };
+  }
+  /** 荆棘女王 · 低语密林: a lacquered pavilion the forest has taken back — roots through the boards, thorns up the rails, roses. */
+  function buildPavilion(rnd, nearSeat) {
+    const rail = [], leaves = [], cards = [], lights = [];
+    balustrade(rail, nearSeat, { step: 118, post: 18, postH: 60, cap: 1, top: [44, 55, 13], mid: [18, 23, 6] });
+    /* thorn vines wound round the top rail, a rose where they knot */
+    { const off = 20, per = rrectPerim(HX + off, HZ + off, RC + off), n = 180;
+      for (let v = 0; v < 2; v++) { const pts = []; for (let i = 0; i <= n; i++) { const q = rrectAt(HX + off, HZ + off, RC + off, (i / n) * per), a = i * 0.9 + v * Math.PI, y = 50 + Math.sin(a) * 7; if (nearSeat(q[0], q[1], 40)) { if (pts.length > 3) { const n0 = rail.length; tube(rail, pts.splice(0), () => 2.4, 5); for (let k2 = n0 + 6; k2 < rail.length; k2 += 8) rail[k2] = 3; } else pts.length = 0; continue; } pts.push([q[0] + q[2] * Math.cos(a) * 8, y, q[1] + q[3] * Math.cos(a) * 8]); }
+        if (pts.length > 3) { const n0 = rail.length; tube(rail, pts, () => 2.4, 5); for (let k2 = n0 + 6; k2 < rail.length; k2 += 8) rail[k2] = 3; } }
+      for (let i = 0; i < 26; i++) { const q = rrectAt(HX + off, HZ + off, RC + off, rnd() * per); if (nearSeat(q[0], q[1], 40)) continue; const n0 = leaves.length; clump(leaves, [q[0], 56 + rnd() * 6, q[1]], 7 + rnd() * 4, 0); for (let k2 = n0 + 7; k2 < leaves.length; k2 += 8) leaves[k2] = 1; } }
+    /* black roots break up through the boards and dive back under them */
+    for (let i = 0; i < 12; i++) { const a = rnd() * Math.PI * 2, r0 = 1.25 + rnd() * 0.5, x0 = Math.cos(a) * HX * r0, z0 = Math.sin(a) * HZ * r0, a1 = a + (rnd() - 0.5) * 0.9, r1 = r0 + 0.3 + rnd() * 0.5, x1 = Math.cos(a1) * HX * r1, z1 = Math.sin(a1) * HZ * r1, hh = 30 + rnd() * 70;
+      if (nearSeat(x0, z0, 80) || !seen((x0 + x1) / 2, GROUND, (z0 + z1) / 2, 200)) continue; const pts = [];
+      for (let t = 0; t <= 1.0001; t += 1 / 18) pts.push([x0 + (x1 - x0) * t + Math.sin(t * 7 + i) * 12, GROUND - 14 + Math.sin(t * Math.PI) * hh, z0 + (z1 - z0) * t + Math.cos(t * 5 + i) * 12]);
+      if (pts.some((q) => rrectSD(q[0], q[2], HX, HZ, RC) < 40)) continue; const n0 = rail.length; tube(rail, pts, (t) => (8 + 16 * Math.sin(t * Math.PI)) * (1 + 0.15 * Math.sin(t * 30)), 8); for (let k2 = n0 + 6; k2 < rail.length; k2 += 8) rail[k2] = 2; }
+    /* the forest: trunks and dark crowns on a ring round the court, larger at the corners, never over a seat */
+    { const trees = [], corner = [[-1, -1, 1.25], [1, -1, 1.2], [-1, 1, 0.9], [1, 1, 1.05]];
+      for (const [sx, sz, k] of corner) trees.push([sx * (HX + 170 + rnd() * 60), sz * (HZ + 130 + rnd() * 60), k * 1.35]);
+      for (let i = 0; i < 80; i++) { const a = rnd() * Math.PI * 2, x = Math.cos(a) * (HX + 170 + rnd() * 460), z = Math.sin(a) * (HZ + 150 + rnd() * 340); trees.push([x, z, 0.8 + rnd() * 0.6]); }
+      let seed = 0;
+      for (const [x, z, k] of trees) { if (rrectSD(x, z, HX, HZ, RC) < 150 * k || nearSeat(x, z, 90 * k) || !seen(x, GROUND + 150 * k, z, 140 * k)) continue; seed++;
+        /* the near side stays low: a tall crown there would stand up over the court */
+        const near = z > HZ * 0.6 ? 0.55 : 1, h = (150 + rnd() * 110) * k * near, top = GROUND + h; if (lights.length < 6 && rnd() < 0.3) lights.push([x, z]);
+        const t0 = rail.length; prism(rail, [0, 1, 2, 3, 4].map((j) => [x + Math.cos(j * 1.2566) * 9 * k, z + Math.sin(j * 1.2566) * 9 * k]), GROUND - 4, top - 30 * k);
+        for (let q = t0 + 6; q < rail.length; q += 8) rail[q] = 2;
+        const m = 5 + Math.floor(rnd() * 5);
+        for (let j = 0; j < m; j++) { const a = rnd() * Math.PI * 2, rr = (j ? 30 + rnd() * 45 : 0) * k; const cc = [x + Math.cos(a) * rr, top + (rnd() - 0.3) * 40 * k, z + Math.sin(a) * rr], cr = (46 + rnd() * 34) * k * (j ? 0.85 : 1.1); clump(leaves, cc, cr * 0.82, seed + j * 0.01); leafCards(cards, cc, cr, rnd, 56); } } }
+    return { rail, leaves, cards, lights };
+  }
   function build() {
     if (geom) for (const m of geom.all) freeMesh(m);
     ensureCourtArt();
@@ -670,7 +1035,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
 
     /* terrain: finer across the rivers and near the court, a hole under the plinth */
     const to = [];
-    { const X0 = -(HX + 1900), X1 = HX + 1900, Z0 = -(HZ + 1800), Z1 = HZ + 1300, xs = [], zs = [];
+    if (SC.ground) { const X0 = -(HX + 1900), X1 = HX + 1900, Z0 = -(HZ + 1800), Z1 = HZ + 1300, xs = [], zs = [];
       for (let x = X0; x < X1; ) { xs.push(x); const ax = Math.abs(x); x += ax > HX - 60 && ax < RIV.a + RIV.w + 420 ? 22 : 60; } xs.push(X1);
       for (let z = Z0; z < Z1; ) { zs.push(z); z += z > -(HZ + 800) && z < HZ + 800 ? 26 : 70; } zs.push(Z1);
       const grid = zs.map((z) => xs.map((x) => [x, terrainAt(x, z), z]));
@@ -683,7 +1048,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     /* the plinth: the court top, a chamfer that catches the light, sides down into the gravel */
     const co = [], so = [];
     { const n = 480, per = rrectPerim(HX, HZ, RC), ring = (off, y) => { const out = []; for (let i = 0; i < n; i++) { const q = rrectAt(HX, HZ, RC, (i / n) * per); out.push([q[0] + q[2] * off, y, q[1] + q[3] * off, q[2], q[3]]); } return out; };
-      const t0 = ring(0, 0), t1 = ring(7, -7), b0 = ring(7, GROUND - 14), up = [0, 1, 0];
+      const t0 = ring(0, 0), t1 = ring(7, -7), b0 = ring(7, SC.deep ? -150 : GROUND - 14), up = [0, 1, 0];
       for (let i = 0; i < n; i++) { const j = (i + 1) % n; tri(co, [0, 0, 0], [t0[j][0], 0, t0[j][2]], [t0[i][0], 0, t0[i][2]], up);
         const cn = (r) => V.norm([r[3] * 0.7071, 0.7071, r[4] * 0.7071]), sn = (r) => [r[3], 0, r[4]];
         for (const [A, B, C, D, nf] of [[t0[i], t0[j], t1[j], t1[i], cn], [t1[i], t1[j], b0[j], b0[i], sn]]) { vtx(so, A, nf(A)); vtx(so, B, nf(B)); vtx(so, C, nf(C)); vtx(so, A, nf(A)); vtx(so, C, nf(C)); vtx(so, D, nf(D)); } } }
@@ -694,7 +1059,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
      * portrait has no such ground, so they gather past the court's two ends.
      * Only where the camera sees them, never on a seat, never crowding. */
     const gems = [];
-    { const courtX = (z) => { const az = Math.abs(z), sz = HZ - RC; return az <= sz ? HX : az < HZ ? HX - RC + Math.sqrt(RC * RC - (az - sz) ** 2) : 0; };
+    if (SC === SCENES.lava) { const courtX = (z) => { const az = Math.abs(z), sz = HZ - RC; return az <= sz ? HX : az < HZ ? HX - RC + Math.sqrt(RC * RC - (az - sz) ** 2) : 0; };
       /* half way across the ground between the court's edge and a river's near bank, or past one end of the court */
       const bank = (s, fz) => { const z = fz * HZ; return [(s * courtX(z) + riverC(z, s) - s * riverW(z, s)) / 2, z]; };
       const end = (fx, dz) => [fx * HX, Math.sign(dz) * HZ + dz];
@@ -720,7 +1085,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
 
     /* columnar basalt: Voronoi cells of a jittered hex lattice, walls on the far banks and low clusters on the near ones */
     const cols = [];
-    { const s = 24, X = HX + 1250, Z0 = -(HZ + 1150), Z1 = HZ + 950, seeds = [], cellOf = new Map(), ck = (x, z) => Math.floor(x / 72) + ":" + Math.floor(z / 72);
+    if (SC === SCENES.lava) { const s = 24, X = HX + 1250, Z0 = -(HZ + 1150), Z1 = HZ + 950, seeds = [], cellOf = new Map(), ck = (x, z) => Math.floor(x / 72) + ":" + Math.floor(z / 72);
       /* hand-placed low clusters: off the court's far corners and on the near banks the camera sees */
       const clusters = [[-(HX + 60), -HZ * 0.66, 120, 70], [HX + 60, HZ * 0.66, 120, 70], [-HX * 0.55, -(HZ + 95), 110, 60], [HX * 0.45, -(HZ + 105), 110, 55], [-(HX + 150), HZ * 0.1, 80, 45], [HX + 150, -HZ * 0.05, 80, 45]];
       for (let r = Math.floor(Z0 / (s * 1.5)); r * s * 1.5 < Z1; r++) for (let q = Math.floor(-X / (s * 1.7320508) - r / 2) - 1; ; q++) { const x0 = s * 1.7320508 * (q + r / 2); if (x0 > X) break; if (x0 < -X) continue; const sd = [x0 + (rnd() - 0.5) * s * 0.75, r * s * 1.5 + (rnd() - 0.5) * s * 0.75]; seeds.push(sd); const kk = ck(sd[0], sd[1]); if (!cellOf.has(kk)) cellOf.set(kk, []); cellOf.get(kk).push(sd); }
@@ -751,7 +1116,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
 
     /* dry grass: along the near banks, the shores and round the basalt */
     const ro = []; let clumps = 0;
-    for (let tries = 0; clumps < 360 && tries < 16000; tries++) {
+    for (let tries = 0; SC === SCENES.lava && clumps < 360 && tries < 16000; tries++) {
       const x = (rnd() - 0.5) * (RIV.a * 2 + 700), z = -(HZ + 900) + rnd() * (HZ * 2 + 1500), court = rrectSD(x, z, HX, HZ, RC), d = riverSD(x, z);
       if (court < 22 || d < 8 || nearSeat(x, z, 8) || nearGem(x, z, 34)) continue;
       const want = (d < 60 ? 0.55 : 0) + (court < 80 ? 0.3 : 0) + (fbm(x * 0.006 + 2, z * 0.006 + 8, 3) > 0.58 ? 0.35 : 0); if (rnd() > want) continue;
@@ -763,30 +1128,58 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
 
     /* seat pads: a low metal drum at each hero's feet */
     const pads = {};
-    for (const [k, q] of padList) { const o = [], r = 106 * ornK, y = -8, n = 64; for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2, b = ((i + 1) / n) * Math.PI * 2, A = [q[0] + Math.cos(a) * r, y, q[1] + Math.sin(a) * r], B = [q[0] + Math.cos(b) * r, y, q[1] + Math.sin(b) * r]; vtx(o, [q[0], y, q[1]], [0, 1, 0], q[0], q[1]); vtx(o, B, [0, 1, 0], q[0], q[1]); vtx(o, A, [0, 1, 0], q[0], q[1]); const na = [Math.cos(a), 0, Math.sin(a)], nb = [Math.cos(b), 0, Math.sin(b)], A2 = [A[0], GROUND - 12, A[2]], B2 = [B[0], GROUND - 12, B[2]]; vtx(o, A, na, q[0], q[1]); vtx(o, B, nb, q[0], q[1]); vtx(o, B2, nb, q[0], q[1]); vtx(o, A, na, q[0], q[1]); vtx(o, B2, nb, q[0], q[1]); vtx(o, A2, na, q[0], q[1]); } pads[k] = mk(o); }
+    for (const [k, q] of padList) { const o = [], r = 106 * ornK, y = -8, n = 64; for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2, b = ((i + 1) / n) * Math.PI * 2, A = [q[0] + Math.cos(a) * r, y, q[1] + Math.sin(a) * r], B = [q[0] + Math.cos(b) * r, y, q[1] + Math.sin(b) * r]; vtx(o, [q[0], y, q[1]], [0, 1, 0], q[0], q[1]); vtx(o, B, [0, 1, 0], q[0], q[1]); vtx(o, A, [0, 1, 0], q[0], q[1]); const na = [Math.cos(a), 0, Math.sin(a)], nb = [Math.cos(b), 0, Math.sin(b)], A2 = [A[0], SC.deep ? -90 : GROUND - 12, A[2]], B2 = [B[0], SC.deep ? -90 : GROUND - 12, B[2]]; vtx(o, A, na, q[0], q[1]); vtx(o, B, nb, q[0], q[1]); vtx(o, B2, nb, q[0], q[1]); vtx(o, A, na, q[0], q[1]); vtx(o, B2, nb, q[0], q[1]); vtx(o, A2, na, q[0], q[1]); } pads[k] = mk(o); }
 
     /* one sheet of melt under everything; the terrain hides it outside the channels */
-    const lo = []; quad(lo, [-(HX + 1900), LAVA_Y, -(HZ + 1800)], [-(HX + 1900), LAVA_Y, HZ + 1300], [HX + 1900, LAVA_Y, HZ + 1300], [HX + 1900, LAVA_Y, -(HZ + 1800)], [0, 1, 0]); const lava = mk(lo);
+    const lo = [], E = SC.deep ? 5200 : 1900, Y = SC.under; if (Y != null) quad(lo, [-(HX + E), Y, -(HZ + E)], [-(HX + E), Y, HZ + E], [HX + E, Y, HZ + E], [HX + E, Y, -(HZ + E)], [0, 1, 0]); const lava = mk(lo);
 
     /* embers rise from the rivers; three lights down each */
     const spots = []; for (let i = 0; i < 400; i++) { const s = i % 2 ? 1 : -1, z = -(HZ + 700) + Math.random() * (HZ * 2 + 1300), x = riverC(z, s) + (Math.random() - 0.5) * 1.5 * riverW(z, s); if (terrainAt(x, z) < LAVA_Y - 10) spots.push([x, z]); }
-    particles.spots = spots; particles.lavaLights = []; for (const s of [-1, 1]) for (const f of [-0.95, -0.1, 0.72]) { const z = f * HZ; particles.lavaLights.push([riverC(z, s), z]); }
+    particles.spots = spots; particles.lavaLights = []; if (SC === SCENES.lava) for (const s of [-1, 1]) for (const f of [-0.95, -0.1, 0.72]) { const z = f * HZ; particles.lavaLights.push([riverC(z, s), z]); }
+    const make = { pavilion: buildPavilion, frost: buildFrost, clouds: buildClouds, abyss: buildAbyss, dragon: buildDragon }[Object.keys(SCENES).find((k) => SCENES[k] === SC)];
+    const pav = Object.assign({ rail: [], leaves: [], cards: [], glass: [], beams: [], cols: [], lights: [] }, make ? make(rnd, nearSeat) : {});
+    particles.lavaLights.push(...pav.lights);
+    const rail = mk(pav.rail), leaves = mk(pav.leaves), cards = mk(pav.cards), glass = mk(pav.glass), beams = mk(pav.beams), rocks = mk(pav.cols);
+    const whale = SC === SCENES.clouds ? mk(new Array(WHALE_MAX * 8).fill(0)) : null;
     for (let i = 0; i < particles.embers.n; i++) { spawnEmber(i); particles.embers.st[i].life = Math.random() * particles.embers.st[i].max; }
     for (let i = 0; i < particles.ash.n; i++) { spawnAsh(i); particles.ash.st[i].life = Math.random() * particles.ash.st[i].max; particles.ash.st[i].y = Math.random() * 800; }
-    geom = { all, terrain, board, plinth, columns, crystals, reeds, pads, lava, gems: gems.length };
+    geom = { all, terrain, board, plinth, columns, crystals, reeds, pads, lava, rail, leaves, cards, glass, beams, rocks, whale, gems: gems.length };
   }
-  function spawnEmber(i) { const s = particles.spots.length ? particles.spots[(Math.random() * particles.spots.length) | 0] : [0, -9999]; particles.embers.st[i] = { x: s[0] + (Math.random() - 0.5) * 50, y: LAVA_Y + 4, z: s[1] + (Math.random() - 0.5) * 50, vy: 18 + Math.random() * 34, life: 0, max: 3 + Math.random() * 4.5, ph: Math.random() * 7 }; }
+  /* kinds of particle: spawn box (y range, lift), speed, sway, colour, size, shape (0 dot, 2 jellyfish, 3 petal), blend (over / add) */
+  const PFX = {
+    petals: { y: [240, 620], vy: [-34, -16], sway: [36, 24], drift: 10, life: [10, 18], col: [0.42, 0.02, 0.04], size: 4.2, shape: 3, over: true, n: 180 },
+    fireflies: { y: [10, 220], vy: [-4, 4], sway: [34, 30], drift: 0, life: [5, 10], col: [0.9, 1.4, 0.45], size: 1.9, shape: 0, twinkle: true, n: 140 },
+    frozen: { y: [0, 520], vy: [-0.4, 0.4], sway: [1.5, 1.5], drift: 0, life: [20, 40], col: [0.85, 0.93, 1], size: 2.1, shape: 0, over: true, twinkle: true },
+    souls: { y: [10, 160], vy: [2, 6], sway: [10, 10], drift: 0, life: [7, 12], col: [0.55, 1.1, 1.3], size: 2.6, shape: 0, pull: true, n: 120 },
+    dying: { y: [-620, -240], vy: [-1, 1], sway: [2, 2], drift: 0, life: [6, 14], col: [1.2, 0.3, 0.15], size: 1.6, shape: 0, twinkle: true, n: 90 },
+    diamond: { y: [0, 220], vy: [-2, 2], sway: [6, 6], drift: 0, life: [4, 9], col: [1.4, 1.6, 1.9], size: 1.1, shape: 0, twinkle: true },
+    stars: { y: [-300, 420], vy: [3, 9], sway: [10, 10], drift: 0, life: [6, 12], col: [1.2, 1.15, 1.0], size: 1.8, shape: 0, twinkle: true },
+    glint: { y: [-100, 300], vy: [-3, 3], sway: [20, 20], drift: 0, life: [5, 10], col: [0.8, 1.0, 1.4], size: 1.2, shape: 0 },
+    jelly: { y: [20, 520], vy: [3, 8], sway: [26, 26], drift: 0, life: [14, 24], col: [0.3, 0.95, 1.2], size: 18, shape: 2, n: 36 },
+    rising: { y: [-520, -60], vy: [30, 64], sway: [22, 16], drift: 0, life: [7, 12], col: [1.8, 0.7, 0.16], size: 3, shape: 0 },
+  };
+  function spawnP(set, i, f) { const r = Math.random; set.st[i] = { x: (r() - 0.5) * (HX * 2 + 1400), y: f.y[0] + r() * (f.y[1] - f.y[0]), z: -(HZ + 800) + r() * (HZ * 2 + 1300), vy: f.vy[0] + r() * (f.vy[1] - f.vy[0]), life: 0, max: f.life[0] + r() * (f.life[1] - f.life[0]), ph: r() * 7 }; }
+  function stepP(set, f, t, spawn) {
+    const n = Math.min(set.n, f.n || set.n);
+    for (let i = 0; i < n; i++) { const p = set.st[i]; p.life += 1 / 60; if (p.life > p.max || p.y < f.y[0] - 400 || p.y > f.y[1] + 600) spawn(i); p.y += p.vy / 60;
+      const env = Math.sin(Math.PI * Math.min(1, p.life / p.max)) * (f.twinkle ? 0.4 + 0.6 * Math.pow(Math.abs(Math.sin(t * 3 + p.ph * 5)), 4) : 1);
+      if (f.pull) { const k = 1 - 0.0045; p.x *= k; p.z *= k; }
+      set.data.set([p.x + Math.sin(t * 0.8 + p.ph) * f.sway[0] + p.life * f.drift, p.y, p.z + Math.cos(t * 0.6 + p.ph) * f.sway[1], env * (f.pull ? Math.min(1, Math.hypot(p.x, p.z) / 260) : 1)], i * 4); }
+    if (f.over) gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); else gl.blendFunc(gl.ONE, gl.ONE);
+    gl.colorMask(true, true, true, false); const n0 = set.n; set.n = n; drawPoints(set, f.col, f.size, f.shape, t); set.n = n0; gl.colorMask(true, true, true, true);
+  }
+  function spawnEmber(i) { if (SC !== SCENES.lava) { spawnP(particles.embers, i, PFX[SC.fall]); return; } const s = particles.spots.length ? particles.spots[(Math.random() * particles.spots.length) | 0] : [0, -9999]; particles.embers.st[i] = { x: s[0] + (Math.random() - 0.5) * 50, y: LAVA_Y + 4, z: s[1] + (Math.random() - 0.5) * 50, vy: 18 + Math.random() * 34, life: 0, max: 3 + Math.random() * 4.5, ph: Math.random() * 7 }; }
   function spawnMote(set, i) { const g = set.gems.length ? set.gems[(Math.random() * set.gems.length) | 0] : null; set.st[i] = g ? { x: g.x + (Math.random() - 0.5) * 100 * g.sc, y: g.g0 + 8 + Math.random() * 50 * g.sc, z: g.z + (Math.random() - 0.5) * 100 * g.sc, vy: 5 + Math.random() * 11, life: 0, max: 2.5 + Math.random() * 3.5, ph: Math.random() * 7 } : { x: 0, y: -9999, z: 0, vy: 0, life: 0, max: 5, ph: 0 }; }
-  function spawnAsh(i) { particles.ash.st[i] = { x: (Math.random() - 0.5) * (HX * 2 + 1500), y: 500 + Math.random() * 300, z: -(HZ + 900) + Math.random() * (HZ * 2 + 1400), vy: -(10 + Math.random() * 14), life: 0, max: 14 + Math.random() * 10, ph: Math.random() * 7 }; }
+  function spawnAsh(i) { if (SC !== SCENES.lava) { spawnP(particles.ash, i, PFX[SC.dust]); return; } particles.ash.st[i] = { x: (Math.random() - 0.5) * (HX * 2 + 1500), y: 500 + Math.random() * 300, z: -(HZ + 900) + Math.random() * (HZ * 2 + 1400), vy: -(10 + Math.random() * 14), life: 0, max: 14 + Math.random() * 10, ph: Math.random() * 7 }; }
 
   /* --------------------------------------------------------------- render */
   const U3 = ["key", "pool", "sky", "groundAmb", "fog"];
   function setSurfUniforms(P, t, vp) {
     gl.useProgram(P.p); const u = P.u; gl.uniformMatrix4fv(u.uVP, false, vp || VP); gl.uniformMatrix4fv(u.uLightVP, false, lightVP); if (!u.uEye) return;
-    gl.uniform1f(u.uTime, t); gl.uniform1f(u.uLavaY, LAVA_Y); gl.uniform1f(u.uGround, GROUND); gl.uniform1f(u.uK, ornK); gl.uniform1f(u.uSoft, effTier() >= 2 ? 0 : 1); gl.uniform1f(u.uFogStart, cam.dist * 0.654); gl.uniform1f(u.uFogK, 2.0e-7 * Math.pow(2600 / cam.dist, 2)); gl.uniform1f(u.uRadius, RC); gl.uniform1f(u.uEngrave, art ? art.engrave : 1);
+    gl.uniform1f(u.uTime, t); gl.uniform1f(u.uLavaY, SC === SCENES.lava ? LAVA_Y : -9999); gl.uniform1f(u.uGround, GROUND); gl.uniform1f(u.uK, ornK); gl.uniform1f(u.uSoft, effTier() >= 2 ? 0 : 1); gl.uniform1f(u.uFogStart, cam.dist * 0.654); gl.uniform1f(u.uFogK, 2.0e-7 * Math.pow(2600 / cam.dist, 2) * (SC.fogK ?? 1)); gl.uniform1f(u.uRadius, RC); gl.uniform1f(u.uEngrave, art ? art.engrave : 1);
     gl.uniform3fv(u.uEye, eye); gl.uniform3fv(u.uLightDir, LIGHT_DIR); gl.uniform2f(u.uArena, HX, HZ); gl.uniform4f(u.uRiv, RIV.a, RIV.b, RIV.w, 0); gl.uniform4fv(u.uBulge, BULGE); if (art) gl.uniform4fv(u.uStroke, art.stroke);
-    for (const k of U3) gl.uniform3fv(u["u" + k[0].toUpperCase() + k.slice(1)], PAL[k]);
-    gl.uniform3fv(u.uEmber, EMBER); gl.uniform3fv(u.uStoneA, STONE); gl.uniform3fv(u.uStoneB, STONE2); gl.uniform3fv(u.uRockA, ROCK); gl.uniform3fv(u.uRockB, ROCK2);
+    for (const k of U3) gl.uniform3fv(u["u" + k[0].toUpperCase() + k.slice(1)], SC.pal[k]);
+    gl.uniform3fv(u.uEmber, SC.ember); gl.uniform3fv(u.uStoneA, SC.stone); gl.uniform3fv(u.uStoneB, SC.stone2); gl.uniform3fv(u.uRockA, SC.rock); gl.uniform3fv(u.uRockB, SC.rock2); gl.uniform3fv(u.uLacquer, SC.lacquer); gl.uniform3fv(u.uInlay, SC.inlay); gl.uniform1f(u.uScene, SC.id); gl.uniform3f(u.uInlayMat, SC.inlayMetal || 0, SC.inlayGlow || 0, SC.accentGlow || 0);
     gl.uniform3fv(u.uLightPos, lightPos); gl.uniform3fv(u.uLightCol, lightCol); gl.uniform1fv(u.uLightRad, lightRad); gl.uniform4fv(u.uCards, cardU); gl.uniform4fv(u.uDecals, decals);
     gl.uniform3fv(u.uGemGlow, GEM_GLOW); gl.uniform3fv(u.uGemCore, GEM_CORE); gl.uniform1f(u.uGemGain, GEM.gain);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, rt.shadowTex); gl.uniform1i(u.uShadow, 0);
@@ -797,12 +1190,36 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
   function drawScene(P, t, depthPass, vp) {
     setSurfUniforms(P, t, vp); const u = P.u; const g = geom;
     const draw = (m, mode, tint) => { if (u.uMode) { gl.uniform1f(u.uMode, mode); gl.uniform3fv(u.uTint, tint || [1, 1, 1]); } gl.bindVertexArray(m.vao); gl.drawArrays(gl.TRIANGLES, 0, m.n); };
-    draw(g.terrain, 1); if (!depthPass) draw(g.lava, 2); draw(g.board, 0); draw(g.plinth, 7); draw(g.columns, 3); draw(g.crystals, 6);
+    draw(g.terrain, 1); if (!depthPass) draw(g.lava, 2); draw(g.board, 0); draw(g.plinth, 7); draw(g.columns, 3); draw(g.crystals, 6); draw(g.rail, 8); draw(g.leaves, 9); draw(g.rocks, 3); if (!depthPass) draw(g.cards, 9);
     if (!depthPass) draw(g.reeds, 4);
-    for (const [k, m] of Object.entries(g.pads)) draw(m, 5, SEAT_TINT[k]);
+    for (const [k, m] of Object.entries(g.pads)) draw(m, 5, SC.seat[k]);
+  }
+  /* Translucent things after the opaque scene: bubbles and the whale (11), shafts of light (12). Alpha is masked: they bloom by brightness and never shimmer. */
+  function drawGlass(t) {
+    const g = geom; if (!g.glass.n && !g.beams.n && !g.whale) return;
+    if (g.whale) { whaleVerts(g.whale, t); }
+    gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false); gl.colorMask(true, true, true, false);
+    setSurfUniforms(prog.surf, t); const u = prog.surf.u;
+    for (const [m, mode] of [[g.glass, 11], [g.whale, 11], [g.beams, 12]]) { if (!m || !m.n) continue; gl.uniform1f(u.uMode, mode); gl.bindVertexArray(m.vao); gl.drawArrays(gl.TRIANGLES, 0, m.n); }
+    gl.colorMask(true, true, true, true); gl.depthMask(true); gl.disable(gl.BLEND);
+  }
+  /* The spirit whale of the cloud sea: a translucent body swimming a slow loop round the altar, tail beating. aX = (1, place along the body). */
+  const WHALE_MAX = 2200, whaleBuf = new Float32Array(WHALE_MAX * 8);
+  function whaleVerts(m, t) {
+    const L = 320 * gemK, RI = 22, SG = 12, ang = t * 0.085, A = HX + 420, B = HZ + 330, ctr = [Math.cos(ang) * A, 190 + Math.sin(t * 0.4) * 30, Math.sin(ang) * B];
+    const fwd = V.norm([-Math.sin(ang) * A, 0, Math.cos(ang) * B]), up = [0, 1, 0], rt = V.norm(V.cross(fwd, up));
+    let k = 0; const put = (p, n, sp) => { if (k >= WHALE_MAX) return; whaleBuf.set([p[0], p[1], p[2], n[0], n[1], n[2], 1, sp], k * 8); k++; };
+    const at = (sp, a) => { const along = (sp - 0.55) * L, sway = Math.sin(t * 2.2 - sp * 5) * 16 * Math.pow(1 - sp, 1.5), bob = Math.sin(t * 1.1 - sp * 3) * 6, r = L * 0.11 * Math.pow(Math.sin(Math.PI * Math.min(1, sp * 1.04 + 0.02)), 0.7);
+      const c = V.add(ctr, V.add(V.scale(fwd, along), V.add(V.scale(rt, sway), V.scale(up, bob)))), nn = V.add(V.scale(rt, Math.cos(a)), V.scale(up, Math.sin(a))); return [V.add(c, [nn[0] * r, nn[1] * r * 0.82, nn[2] * r]), nn, c]; };
+    for (let i = 0; i < RI; i++) for (let j = 0; j < SG; j++) { const s0 = i / RI, s1 = (i + 1) / RI, a0 = (j / SG) * Math.PI * 2, a1 = ((j + 1) / SG) * Math.PI * 2, P = [at(s0, a0), at(s0, a1), at(s1, a1), at(s1, a0)];
+      for (const q of [0, 1, 2, 0, 2, 3]) put(P[q][0], P[q][1], q < 2 || q === 3 ? (q === 3 ? s1 : s0) : s1); }
+    const tail = at(0, 0)[2], flap = Math.sin(t * 2.2) * L * 0.06, back = V.add(tail, V.add(V.scale(fwd, -L * 0.12), V.scale(up, flap)));
+    for (const sg of [-1, 1]) { put(tail, up, 0); put(V.add(back, V.scale(rt, sg * L * 0.22)), up, 0); put(back, up, 0); }
+    for (const sg of [-1, 1]) { const base = at(0.62, sg > 0 ? 0 : Math.PI)[0]; put(base, up, 0.62); put(V.add(base, V.add(V.scale(rt, sg * L * 0.2), V.scale(fwd, -L * 0.1))), up, 0.6); put(V.add(base, V.scale(fwd, -L * 0.12)), up, 0.6); }
+    gl.bindBuffer(gl.ARRAY_BUFFER, m.buf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, whaleBuf.subarray(0, k * 8)); m.n = k;
   }
   function blit(P, fbo, w, h, texture, extra) { gl.bindFramebuffer(gl.FRAMEBUFFER, fbo); gl.viewport(0, 0, w, h); gl.useProgram(P.p); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, texture); gl.uniform1i(P.u.uColor, 0); if (extra) extra(P.u); gl.bindVertexArray(rt.quadVao); gl.drawArrays(gl.TRIANGLES, 0, 6); }
-  function drawPoints(set, color, size) { gl.bindVertexArray(set.vao); gl.bindBuffer(gl.ARRAY_BUFFER, set.buf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, set.data); gl.useProgram(prog.pts.p); gl.uniformMatrix4fv(prog.pts.u.uVP, false, VP); gl.uniform3fv(prog.pts.u.uColor, color); gl.uniform1f(prog.pts.u.uSize, size); gl.drawArrays(gl.POINTS, 0, set.n); }
+  function drawPoints(set, color, size, shape = 0, t = 0) { gl.bindVertexArray(set.vao); gl.bindBuffer(gl.ARRAY_BUFFER, set.buf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, set.data); gl.useProgram(prog.pts.p); gl.uniformMatrix4fv(prog.pts.u.uVP, false, VP); gl.uniform3fv(prog.pts.u.uColor, color); gl.uniform1f(prog.pts.u.uSize, size); gl.uniform1f(prog.pts.u.uShape, shape); gl.uniform1f(prog.pts.u.uTime, t); gl.drawArrays(gl.POINTS, 0, set.n); }
 
   /** The units are DOM; their footprints become the board's contact shadows.
    * At rest the rows are placed by EmberViewport.minion(), so the footprints
@@ -845,17 +1262,19 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     frameCount++; const T = effTier(); if ((T >= 3 && frameCount % 4) || (T >= 1 && frameCount % 2)) return;
     if (SKIP.has("all") || !canvas.offsetWidth) return;
     ensureTargets(); measureCards(nowMs);
-    for (let i = 0; i < 6; i++) { const s = particles.lavaLights[i] || [0, -9999], fl = 1.9 * (0.85 + 0.15 * Math.sin(t * 1.3 + i * 1.7)); lightPos.set([s[0], LAVA_Y + 70, s[1]], i * 3); lightCol.set(EMBER.map((v) => v * fl), i * 3); lightRad[i] = 640; }
-    for (const [slot, k] of [[6, "p"], [7, "e"]]) { const s = PADS[k]; lightPos.set(s ? [s[0], 30, s[1]] : [0, -9999, 0], slot * 3); lightCol.set(s ? SEAT_TINT[k].map((v) => v * 0.55) : [0, 0, 0], slot * 3); lightRad[slot] = s ? 240 * ornK : 1; }
+    for (let i = 0; i < 6; i++) { const s = particles.lavaLights[i] || [0, -9999], fl = SC.glow[0] * (0.85 + 0.15 * Math.sin(t * 1.3 + i * 1.7)); lightPos.set([s[0], s[2] ?? SC.glow[2], s[1]], i * 3); lightCol.set(SC.ember.map((v) => v * fl), i * 3); lightRad[i] = SC.glow[1]; }
+    for (const [slot, k] of [[6, "p"], [7, "e"]]) { const s = PADS[k]; lightPos.set(s ? [s[0], 30, s[1]] : [0, -9999, 0], slot * 3); lightCol.set(s ? SC.seat[k].map((v) => v * 0.55) : [0, 0, 0], slot * 3); lightRad[slot] = s ? 240 * ornK : 1; }
     lightPos.set([0, 1150, 140], 24); lightCol.set([0.7, 0.64, 0.55], 24); lightRad[8] = 1500;
     for (let i = 0; i < 7; i++) { const g = particles.gemLights[i], slot = 9 + i, c = g ? GEM.glow[g.hue] : [0, 0, 0], f = GEM.light * (0.92 + 0.08 * Math.sin(t * 1.1 + i * 2.3)); lightPos.set(g ? [g.x, g.g0 + 42 * g.sc, g.z] : [0, -9999, 0], slot * 3); lightCol.set([c[0] * f, c[1] * f, c[2] * f], slot * 3); lightRad[slot] = g ? 250 * g.sc : 1; }
     gl.enable(gl.DEPTH_TEST); gl.disable(gl.BLEND); gl.depthMask(true);
     gl.bindFramebuffer(gl.FRAMEBUFFER, rt.shadowFbo); gl.viewport(0, 0, SM, SM); gl.clear(gl.DEPTH_BUFFER_BIT); if (!SKIP.has("shadow")) drawScene(prog.depth, t, true, lightVP);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, samples ? rt.msFbo : rt.rsFbo); gl.viewport(0, 0, PW, PH); gl.clearColor(PAL.fog[0], PAL.fog[1], PAL.fog[2], 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); if (!SKIP.has("scene")) drawScene(prog.surf, t, false);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, samples ? rt.msFbo : rt.rsFbo); gl.viewport(0, 0, PW, PH); gl.clearColor(SC.pal.fog[0], SC.pal.fog[1], SC.pal.fog[2], 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); if (!SKIP.has("scene")) drawScene(prog.surf, t, false);
+    if (!SKIP.has("scene")) drawGlass(t);
     /* embers and ash into the same HDR target */
     gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE); gl.depthMask(false);
     if (!quality.reduced && !SKIP.has("fx")) {
       const em = particles.embers, ash = particles.ash;
+      if (SC !== SCENES.lava) { stepP(em, PFX[SC.fall], t, spawnEmber); stepP(ash, PFX[SC.dust], t, spawnAsh); } else {
       for (let i = 0; i < em.n; i++) { const p = em.st[i]; p.life += 1 / 60; if (p.life > p.max) spawnEmber(i); p.y += p.vy / 60; const k = 1 - p.life / p.max; em.data.set([p.x + Math.sin(t * 1.3 + p.ph) * 14 * p.life, p.y, p.z + Math.cos(t * 0.9 + p.ph) * 10 * p.life, k * Math.min(1, p.life * 3)], i * 4); }
       for (let i = 0; i < ash.n; i++) { const p = ash.st[i]; p.life += 1 / 60; if (p.life > p.max || p.y < -100) spawnAsh(i); p.y += p.vy / 60; p.x += Math.sin(t * 0.7 + p.ph) * 0.4; ash.data.set([p.x, p.y, p.z, 0.55 * Math.min(1, p.life * 2) * Math.min(1, p.max - p.life)], i * 4); }
       drawPoints(em, [1.7, 0.66, 0.15], 2.8);
@@ -864,6 +1283,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
       particles.motes.forEach((set, h) => { for (let i = 0; i < set.n; i++) { const p = set.st[i]; p.life += 1 / 60; if (p.life > p.max) spawnMote(set, i); p.y += p.vy / 60; set.data.set([p.x + Math.sin(t * 0.9 + p.ph) * 8 * p.life, p.y, p.z + Math.cos(t * 0.7 + p.ph) * 8 * p.life, Math.sin(Math.PI * Math.min(1, p.life / p.max)) * (0.65 + 0.35 * Math.sin(t * 5 + p.ph * 3))], i * 4); } drawPoints(set, MOTE[h], 2.4 * gemK); });
       gl.colorMask(true, true, true, true);
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); drawPoints(ash, [0.42, 0.4, 0.42], 1.6);
+      }
     }
     gl.depthMask(true); gl.disable(gl.BLEND);
     if (samples) { gl.bindFramebuffer(gl.READ_FRAMEBUFFER, rt.msFbo); gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, rt.rsFbo); gl.blitFramebuffer(0, 0, PW, PH, 0, 0, PW, PH, gl.COLOR_BUFFER_BIT, gl.NEAREST); gl.bindFramebuffer(gl.FRAMEBUFFER, rt.rsFbo); gl.colorMask(false, false, false, false); gl.clear(gl.DEPTH_BUFFER_BIT); drawScene(prog.depth, t, true); gl.colorMask(true, true, true, true); }
@@ -872,7 +1292,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     if (!SKIP.has("bloom")) { blit(prog.bright, rt.bloomFboA, BW, BH, rt.colorTex); blit(prog.blur, rt.bloomFboB, BW, BH, rt.bloomA, (u) => gl.uniform2f(u.uDir, 1 / BW, 0)); blit(prog.blur, rt.bloomFboA, BW, BH, rt.bloomB, (u) => gl.uniform2f(u.uDir, 0, 1 / BH)); blit(prog.blur, rt.bloomFboB, BW, BH, rt.bloomA, (u) => gl.uniform2f(u.uDir, 2 / BW, 0)); blit(prog.blur, rt.bloomFboA, BW, BH, rt.bloomB, (u) => gl.uniform2f(u.uDir, 0, 2 / BH)); }
     gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, PW, PH); gl.useProgram(prog.post.p);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, rt.colorTex); gl.uniform1i(prog.post.u.uColor, 0); gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, rt.depthTex); gl.uniform1i(prog.post.u.uDepth, 1); gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, rt.bloomA); gl.uniform1i(prog.post.u.uBloom, 2);
-    gl.uniform2f(prog.post.u.uRes, PW, PH); gl.uniform1f(prog.post.u.uNear, NEAR); gl.uniform1f(prog.post.u.uFar, FAR); gl.uniform1f(prog.post.u.uFocus, cam.dist); gl.uniform1f(prog.post.u.uTime, t); gl.uniform1f(prog.post.u.uDof, quality.low || effTier() >= 1 ? 0 : 1); gl.uniform1f(prog.post.u.uFocusScale, cam.dist / 2600);
+    gl.uniform2f(prog.post.u.uRes, PW, PH); gl.uniform1f(prog.post.u.uNear, NEAR); gl.uniform1f(prog.post.u.uFar, FAR); gl.uniform1f(prog.post.u.uFocus, cam.dist); gl.uniform1f(prog.post.u.uTime, t); gl.uniform1f(prog.post.u.uDof, quality.low || effTier() >= 1 ? 0 : 1); gl.uniform1f(prog.post.u.uFocusScale, cam.dist / 2600); gl.uniform3fv(prog.post.u.uLeak, SC.leak || [0, 0, 0]); gl.uniform1f(prog.post.u.uBloomK, SC.bloom ?? 1); gl.uniform1f(prog.post.u.uExpo, SC.expo ?? 1.15);
     gl.bindVertexArray(rt.quadVao); if (!SKIP.has("post")) gl.drawArrays(gl.TRIANGLES, 0, 6);
     stillDrawn = pending === 0;
   }
@@ -884,14 +1304,15 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     /** Any layout change (viewport, orientation, hand geometry) re-solves the camera on the next frame. */
     resize() { layoutDirty = true; stillDrawn = false; seatTries = 0; },
     setQuality(q) { quality = { reduced: !!q?.reduced, low: !!q?.low }; layoutDirty = true; stillDrawn = false; },
-    /** Which boss is fought. One scene ships today; the id is kept for per-encounter palettes. */
-    setEncounter(id) { encounter = id || "warden"; },
+    /** Which boss is fought: it picks the battlefield recipe (SCENE_OF). */
+    setEncounter(id) { encounter = id || "warden"; const next = SCENES[FORCED] || SCENES[SCENE_OF[encounter]] || SCENES.lava; if (next !== SC) { SC = next; geomKey = ""; artKey = ""; layoutDirty = true; stillDrawn = false; } },
     /** Start the context and texture loads early (the mulligan hides the decode). */
     preload() { ensure(); },
     /** A spell impact scorches the board at a stage box. */
     scorch(at) { if (!gl || !basis || !at) return false; const p = floorAt(at.x, at.y + (at.h || 0) * 0.3); if (!p || Math.abs(p[0]) > HX || Math.abs(p[1]) > HZ) return false; decals.set([p[0], p[1], 70 + Math.random() * 40, performance.now() / 1000], decalI * 4); decalI = (decalI + 1) % 8; stillDrawn = false; return true; },
     frame,
-    get sceneId() { return SCENE_ID; },
+    /** The battlefield recipe on screen (SCENES key). */
+    get sceneId() { return Object.keys(SCENES).find((k) => SCENES[k] === SC); },
     get encounter() { return encounter; },
     get active() { return active; },
     get ready() { return !!gl && pending === 0 && !!geom; },

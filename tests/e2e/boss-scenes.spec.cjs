@@ -1,16 +1,23 @@
 const { test, expect } = require('@playwright/test');
-test('every map boss fights on the live arena, which follows the layout through resize and awakening',async({page})=>{
+test('every boss fights on its own live battlefield, and the arena follows the layout through resize and awakening',async({page})=>{
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('./?debug=1');
   await page.waitForFunction(()=>window.Emberfall&&!AtelierWorld.loading);
   await page.locator('#quick-btn').click();
   await page.waitForFunction(()=>Emberfall.inBattle&&!EmberFX.busy);
   await page.waitForFunction(()=>EmberArena3D.active&&EmberArena3D.ready,null,{timeout:20000});
+  expect(await page.evaluate(()=>EmberArena3D.sceneId)).toBe('lava');
+  const field={warden:'lava',queen:'pavilion',frost:'frost',moonkeeper:'clouds',oracle:'abyss',dragon:'dragon'};
   const ids=await page.evaluate(()=>EmberData.bosses.map(b=>b.id));
-  for(let i=0;i<ids.length;i++){
-    await page.evaluate(i=>{EmberDebug.game.s.bossIndex=i;Emberfall.renderNow();},i);
-    expect(await page.evaluate(()=>EmberArena3D.encounter)).toBe(ids[i]);
-    expect(await page.evaluate(()=>EmberArena3D.sceneId)).toBe('lava-forge');
+  expect(ids.sort()).toEqual(Object.keys(field).sort());
+  for(const id of ids){
+    await page.evaluate(id=>EmberArena3D.setEncounter(id),id);
+    expect(await page.evaluate(()=>EmberArena3D.sceneId)).toBe(field[id]);
+    await page.waitForTimeout(400);
+    expect(await page.evaluate(()=>EmberArena3D.failed)).toBe(false);
   }
+  expect(errors).toEqual([]);
+  await page.evaluate(()=>EmberArena3D.setEncounter('practice'));
   for(const [width,height] of [[1672,941],[1117,884],[390,844],[844,390]]){
     const state=await page.evaluate(()=>JSON.stringify(EmberDebug.game.s));
     await page.setViewportSize({width,height});
