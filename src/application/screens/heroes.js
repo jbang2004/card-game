@@ -62,11 +62,25 @@ const EmberHeroScreens = (() => {
         }</details><div class="hero-config-plan"><p id="hero-plan" class="deck-plan"></p><label class="archetype-picker" id="opponent-picker" hidden>对手 <select id="practice-opponent" class="library-search">${D.archetypes.map((a) => `<option value="${a.id}">${D.classNames[a.classId]} · ${a.name}</option>`).join("")}</select></label></div></div><div class="modal-footer"><button class="ghost-btn" id="hero-deck-btn">调整牌组</button><button class="gold-btn" id="hero-confirm">开始冒险 ${A.icon("arrow")}</button></div></section>`,
         "heroes",
       );
-      EmberCardRelief.mount(document.querySelector("#modal .scene-showcase"), {
-        id: hero.portraitId,
-        color: A.character(hero),
-        focus: [0.5, heroSceneFocus / 100],
-      });
+      // The preview card: the hero's living portrait when one is baked, turning with
+      // the card's relief tilt; otherwise (or if WebGL gives out) the relief face.
+      const showcase = document.querySelector("#modal .scene-showcase");
+      const focus = [0.5, heroSceneFocus / 100];
+      const reliefFace = () =>
+        showcase.isConnected &&
+        EmberCardRelief.mount(showcase, {
+          id: hero.portraitId,
+          color: A.character(hero),
+          focus,
+        });
+      if (EmberLiveArt.has(hero.portraitId)) {
+        EmberCardRelief.mount(showcase, { id: hero.portraitId, focus, face: false });
+        EmberLiveArt.mount(showcase, {
+          id: hero.portraitId,
+          focus,
+          onFail: reliefFace,
+        }).then((ok) => ok || reliefFace());
+      } else reliefFace();
       document.querySelectorAll("[data-hero]").forEach(
         (b) =>
           (b.onclick = () => {

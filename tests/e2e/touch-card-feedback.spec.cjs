@@ -17,7 +17,8 @@ async function rub(page, cdp, card, property, distance = 45) {
   const x = r.x + r.width * .5, y = r.y + r.height * .45;
   await touch(cdp, 'touchStart', x, y);
   if (await card.locator('.card-art').count())
-    await expect(card.locator('.card-art')).toHaveClass(/card-relief-ready/);
+    // a card with live artwork shows that instead of the relief face; it turns the same way
+    await expect(card.locator('.card-art')).toHaveClass(/card-relief-ready|live-art-ready/);
   for (let d = 5; d <= distance; d += 5) {
     await touch(cdp, 'touchMove', x + d, y);
     await page.waitForTimeout(20);
@@ -37,7 +38,7 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 844, height: 390 }
     await boot(page);
     await page.locator('#start-btn').click();
     const hero = page.locator('.scene-showcase');
-    await expect(hero).toHaveClass(/card-relief-ready/);
+    await expect(hero).toHaveClass(/live-art-ready/);
     await rub(page, cdp, hero, '--relief-ry');
     await page.keyboard.press('Escape');
     await page.locator('#lobby-library-btn').click();
@@ -158,7 +159,7 @@ test('pinned battlefield detail follows the finger and cancellation returns it t
   await page.waitForTimeout(600);
   await touch(cdp, 'touchEnd');
   const detail = page.locator('#card-preview[data-mode=pinned]');
-  await expect(detail.locator('.card-art')).toHaveClass(/card-relief-ready/);
+  await expect(detail.locator('.card-art')).toHaveClass(/card-relief-ready|live-art-ready/);
   await rub(page, cdp, detail.locator('> .card'), '--relief-ry', 35);
   await expect(detail).toBeVisible();
   const box = await detail.boundingBox();
@@ -181,7 +182,7 @@ test('an unaffordable lifted hand card still turns under the finger without play
   const before = await page.evaluate(() => JSON.stringify(EmberDebug.game.s));
   await page.locator('#hand .hand-card').tap();
   const card = page.locator('#hand-card-lift > .card');
-  await expect(card.locator('.card-art')).toHaveClass(/card-relief-ready/);
+  await expect(card.locator('.card-art')).toHaveClass(/card-relief-ready|live-art-ready/);
   await rub(page, cdp, card, '--relief-ry', 40);
   expect(await page.evaluate(() => JSON.stringify(EmberDebug.game.s))).toBe(before);
   await context.close();

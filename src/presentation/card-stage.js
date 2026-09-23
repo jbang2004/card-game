@@ -119,7 +119,7 @@ const EmberCardStage = (() => {
       },
       { passive: true },
     );
-    EmberCardRelief.mountCard(node.querySelector(".god-card-front .card"), {
+    EmberLiveArt.mountCard(node.querySelector(".god-card-front .card"), {
       id: card.id,
       rarity: card.rarity,
       steer: "follow",

@@ -461,6 +461,17 @@ void main(){
     const width = host.clientWidth,
       height = host.clientHeight;
     if (!width || !height) return;
+    const ry = tilt.x * current.steer.range[0],
+      rx = tilt.y * current.steer.range[1];
+    // A tilt-only mount (`face: false`) turns the element; another painter owns its picture.
+    if (current.face) paintFace(width, height, rx, ry);
+    current.tiltTarget?.style.setProperty("--relief-rx", (-rx * 180) / Math.PI + "deg");
+    current.tiltTarget?.style.setProperty("--relief-ry", (ry * 180) / Math.PI + "deg");
+    // A card an owner tilts itself (the stages) still has its slab and rim.
+    lightRim(current.tiltTarget || host.closest(".card"));
+    stats.frames++;
+  }
+  function paintFace(width, height, rx, ry) {
     const dpr = Math.min(devicePixelRatio || 1, 2);
     const w = Math.round(width * dpr),
       h = Math.round(height * dpr);
@@ -469,8 +480,6 @@ void main(){
       canvas.height = h;
     }
     gl.viewport(0, 0, w, h);
-    const ry = tilt.x * current.steer.range[0],
-      rx = tilt.y * current.steer.range[1];
     // Same order as the CSS transform: rotateX rotateY. CSS y points down, so
     // its rotateX angle is the negative of the rotation about this space's +x.
     const cy = Math.cos(ry),
@@ -508,11 +517,6 @@ void main(){
       gl.bindTexture(gl.TEXTURE_2D, entry.handle);
     });
     gl.drawArrays(gl.TRIANGLES, 0, 3);
-    current.tiltTarget?.style.setProperty("--relief-rx", (-rx * 180) / Math.PI + "deg");
-    current.tiltTarget?.style.setProperty("--relief-ry", (ry * 180) / Math.PI + "deg");
-    // A card an owner tilts itself (the stages) still has its slab and rim.
-    lightRim(current.tiltTarget || host.closest(".card"));
-    stats.frames++;
   }
   function spring(axis, goal, [rate, damping], dt) {
     // Semi-implicit Euler in short sub-steps stays stable through a dropped frame.
@@ -566,7 +570,9 @@ void main(){
    *   anchor      for "pointer": the element the pointer is measured against
    *   rarity      material tier; omitted means the full finish
    *   tilt        false when the owner already tilts the element itself
-   *   hinge       turn about the bottom edge, which then never moves */
+   *   hinge       turn about the bottom edge, which then never moves
+   *   face        false: tilt and steer only; the element's picture is painted by
+   *               someone else (the hero-select live portrait) */
   async function mount(element, options) {
     const { id, color, focus = [0.5, 0.22], rarity } = options;
     const surface = element?.closest(".scene-showcase,.mulligan-card,.discover-card,.card-detail-art,.card-preview[data-mode='pinned']");
@@ -576,18 +582,22 @@ void main(){
     if (host) release();
     if (carried) Object.assign(tilt, carried);
     const mine = ++token;
-    if (!element || !MAPS[id] || !ensureContext()) return false;
+    const face = options.face !== false;
+    if (!element || (face && (!MAPS[id] || !ensureContext()))) return false;
     stats.status = "loading";
     try {
-      const set = MAPS[id];
-      const maps = await Promise.all(
-        [color, set.height, set.normal || set.height, set.orm, STUDIO].map(texture),
-      );
+      const set = MAPS[id] || {};
+      const maps = face
+        ? await Promise.all(
+            [color, set.height, set.normal || set.height, set.orm, STUDIO].map(texture),
+          )
+        : [];
       if (mine !== token || !element.isConnected) return false;
       host = element;
       current = {
         id,
         maps,
+        face,
         focus,
         derive: !set.normal,
         depth: set.normal ? DEPTH.portrait : DEPTH.card,
@@ -599,10 +609,12 @@ void main(){
       };
       stats.id = id;
       stats.steer = options.steer || "pointer";
-      trimTextures();
-      // After the artwork it replaces (a card's <img> is positioned, so document order
-      // decides), still before the element's ::after gradient.
-      element.append(canvas);
+      if (face) {
+        trimTextures();
+        // After the artwork it replaces (a card's <img> is positioned, so document order
+        // decides), still before the element's ::after gradient.
+        element.append(canvas);
+      }
       addEventListener("pointermove", steer, { passive: true });
       last = performance.now();
       // The preview sways from the start; a card just picked up first answers the hand.
@@ -614,7 +626,7 @@ void main(){
       resizeWatch.observe(element);
       paint();
       lastPaint = last;
-      element.classList.add("card-relief-ready");
+      if (face) element.classList.add("card-relief-ready");
       current.tiltTarget?.classList.add("card-relief-tilt");
       current.tiltTarget?.classList.toggle("card-relief-hinge", current.hinge);
       slab(current.tiltTarget);
@@ -728,6 +740,15 @@ void main(){
       wake();
     },
     has: (id) => !!MAPS[id],
+    /* Whether `element` is the one currently mounted (tilted and steered). */
+    holds: (element) => !!element && host === element,
+    /* The presented element's current turn in radians ({ x: about the horizontal
+     * axis, y: about the vertical axis }, as written to --relief-rx/ry), for a
+     * painter that follows the same tilt. */
+    angles: () =>
+      current
+        ? { x: -tilt.y * current.steer.range[1], y: tilt.x * current.steer.range[0] }
+        : { x: 0, y: 0 },
     diagnostics: () => ({ ...stats }),
     /* Review hook: hold a fixed tilt (-1..1 on each axis) for A/B frames, optionally
      * with an overriding relief depth (0 isolates lighting from parallax). */

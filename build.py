@@ -21,6 +21,10 @@ ROOT = Path(__file__).resolve().parent
 SRC = ROOT / 'src'
 ART = ROOT / 'art'
 TOKEN = re.compile(r'/\*([A-Z_]+)\*/')
+EMPTY_REGISTRY = {
+    'LIVE_ART_MAPS': 'const EmberLiveArtMaps = Object.freeze({});\n',
+    'LIVE_ART_AUTO': 'const EmberLiveArtAuto = Object.freeze({});\n',
+}
 MEDIA = re.compile(r'data:(?:image|audio)/(png|webp|jpeg|gif|mpeg);base64,([A-Za-z0-9+/=]+)')
 
 
@@ -59,7 +63,11 @@ def build():
 
     sources = {k: re.sub(r'asset:([\w/.-]+)', embed_asset, (SRC / v).read_text())
                for k, v in registry.items()}
-    portable = TOKEN.sub(lambda m: sources[m[1]], template)
+    # The single file inlines every image, so it leaves out the live artwork
+    # (about 13 MB): its cards and hero preview keep the relief face. The web
+    # build loads a card's live artwork only when that card is shown.
+    portable_sources = {**sources, **{k: EMPTY_REGISTRY[k] for k in EMPTY_REGISTRY if k in sources}}
+    portable = TOKEN.sub(lambda m: portable_sources[m[1]], template)
     (ROOT / 'index.html').write_text(portable)
 
     dist = ROOT / 'dist'

@@ -637,6 +637,20 @@ test("portable build starts without retired globals and plays a spell", async ({
   expect(errors).toEqual([]);
 });
 
+test("portable build leaves out live artwork: the hero preview keeps its relief face", async ({
+  page,
+}) => {
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.goto("../index.html");
+  await ready(page);
+  expect(await page.evaluate(() => Object.keys(EmberLiveArtMaps).length)).toBe(0);
+  await page.locator("#start-btn").click();
+  await expect(page.locator("#modal .scene-showcase")).toHaveClass(/card-relief-ready/);
+  await expect(page.locator(".live-art-canvas")).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
 test("current fixture resumes through actual browser storage", async ({
   page,
 }) => {
