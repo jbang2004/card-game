@@ -17,7 +17,8 @@ async function rub(page, cdp, card, property, distance = 45) {
   const x = r.x + r.width * .5, y = r.y + r.height * .45;
   await touch(cdp, 'touchStart', x, y);
   if (await card.locator('.card-art').count())
-    await expect(card.locator('.card-art')).toHaveClass(/card-relief-ready/);
+    // a card with live artwork shows that instead of the relief face; it turns the same way
+    await expect(card.locator('.card-art')).toHaveClass(/card-relief-ready|live-art-ready/);
   for (let d = 5; d <= distance; d += 5) {
     await touch(cdp, 'touchMove', x + d, y);
     await page.waitForTimeout(20);

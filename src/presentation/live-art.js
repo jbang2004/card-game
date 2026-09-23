@@ -207,6 +207,11 @@ ${rig.fx}
   function gridFor(width) {
     return Math.max(61, Math.min(181, Math.round(width / 5 / 20) * 20 + 1));
   }
+  /* The grid reaches this far past each edge of the picture, sampled mirrored.
+   * At rest the margin lies outside the frame; when the camera turns (at most
+   * about 3% of the width at a full card tilt) it shows the picture continued
+   * instead of the empty clear colour. */
+  const MARGIN = 0.08;
   function ensureMesh(width) {
     const GX = gridFor(width);
     if (mesh?.grid === GX) return mesh;
@@ -214,19 +219,21 @@ ${rig.fx}
       gl.deleteVertexArray(mesh.vao);
       mesh.buffers.forEach((b) => gl.deleteBuffer(b));
     }
-    const GY = Math.round(((GX - 1) * IMG_H) / IMG_W) + 1,
-      uvs = new Float32Array(GX * GY * 2),
-      index = new Uint32Array((GX - 1) * (GY - 1) * 6);
-    for (let j = 0; j < GY; j++)
-      for (let i = 0; i < GX; i++) {
-        uvs[(j * GX + i) * 2] = i / (GX - 1);
-        uvs[(j * GX + i) * 2 + 1] = j / (GY - 1);
+    const cells = Math.round((GX - 1) * (1 + 2 * MARGIN)),
+      NX = cells + 1,
+      NY = Math.round((cells * IMG_H) / IMG_W) + 1,
+      uvs = new Float32Array(NX * NY * 2),
+      index = new Uint32Array((NX - 1) * (NY - 1) * 6);
+    for (let j = 0; j < NY; j++)
+      for (let i = 0; i < NX; i++) {
+        uvs[(j * NX + i) * 2] = -MARGIN + ((1 + 2 * MARGIN) * i) / (NX - 1);
+        uvs[(j * NX + i) * 2 + 1] = -MARGIN + ((1 + 2 * MARGIN) * j) / (NY - 1);
       }
     let n = 0;
-    for (let j = 0; j < GY - 1; j++)
-      for (let i = 0; i < GX - 1; i++) {
-        const a = j * GX + i;
-        index.set([a, a + GX, a + 1, a + 1, a + GX, a + GX + 1], n);
+    for (let j = 0; j < NY - 1; j++)
+      for (let i = 0; i < NX - 1; i++) {
+        const a = j * NX + i;
+        index.set([a, a + NX, a + 1, a + 1, a + NX, a + NX + 1], n);
         n += 6;
       }
     const vao = gl.createVertexArray(),
@@ -271,8 +278,9 @@ ${rig.fx}
     gl.generateMipmap(gl.TEXTURE_2D);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    // Mirrored: the grid's margin past the edges continues the picture (see MARGIN).
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
     textures.set(key, handle);
     return handle;
   }

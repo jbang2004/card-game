@@ -378,6 +378,33 @@ test("library: a card with live artwork flies up alive, then lets go when the st
     await expect(page.locator("#card-stage.flying")).toHaveCount(0);
     await expectLiveVisible(page, page.locator("#card-stage .card-art"));
     expect((await page.evaluate(() => EmberLiveArt.diagnostics())).id).toBe(id);
+    // Turned all the way, the frame's edges still show picture, not the empty
+    // clear colour behind the layers (the grid reaches past the edges).
+    const bare = await page.evaluate(() => {
+      const canvas = document.querySelector(".live-art-canvas"), worst = [];
+      for (const [x, y] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+        EmberCardRelief.pose(x, y);
+        EmberLiveArt.pose(2, 0);
+        const copy = document.createElement("canvas");
+        copy.width = canvas.width;
+        copy.height = canvas.height;
+        const g = copy.getContext("2d", { willReadFrequently: true });
+        g.drawImage(canvas, 0, 0);
+        const { width: w, height: h } = copy;
+        const edge = (x0, y0, ew, eh) => {
+          const d = g.getImageData(x0, y0, ew, eh).data;
+          let k = 0;
+          for (let i = 0; i < d.length; i += 4)
+            if (Math.abs(d[i] - 8) < 3 && Math.abs(d[i + 1] - 9) < 3 && Math.abs(d[i + 2] - 15) < 3) k++;
+          return k / (d.length / 4);
+        };
+        worst.push(Math.max(edge(0, 0, 3, h), edge(w - 3, 0, 3, h), edge(0, 0, w, 3), edge(0, h - 3, w, 3)));
+      }
+      EmberCardRelief.pose();
+      EmberLiveArt.pose();
+      return Math.max(...worst);
+    });
+    expect(bare).toBeLessThan(0.2);
     await page.keyboard.press("Escape");
     await expect(page.locator(".live-art-canvas")).toHaveCount(0);
   }
