@@ -243,6 +243,7 @@ ${rig.fx}
     programs.clear();
     textures.clear();
     recent.length = 0;
+    warmKeys = new Set();
     console.warn("Hero live portrait unavailable; using the relief face.", stats.error);
     owner?.onFail?.();
   }
@@ -380,12 +381,16 @@ ${rig.fx}
    * per hero preview). */
   const KEEP_RECENT = 4;
   const recent = [];
+  let warmKeys = new Set();
   function trimTextures(keep) {
-    const at = recent.findIndex((keys) => keys[0] === keep[0]);
-    if (at >= 0) recent.splice(at, 1);
-    recent.unshift(keep);
-    recent.length = Math.min(recent.length, KEEP_RECENT);
-    const wanted = new Set(recent.flat());
+    if (keep) {
+      const at = recent.findIndex((keys) => keys[0] === keep[0]);
+      if (at >= 0) recent.splice(at, 1);
+      recent.unshift(keep);
+      recent.length = Math.min(recent.length, KEEP_RECENT);
+    }
+    // ...plus the cards in hand, uploaded ahead by warm().
+    const wanted = new Set([...recent.flat(), ...warmKeys]);
     for (const [key, handle] of textures)
       if (!wanted.has(key)) {
         gl.deleteTexture(handle);
@@ -520,7 +525,7 @@ ${rig.fx}
   /* The idle motion is slow: 30 frames a second carry it, and so does the card's
    * own slow sway. While the player turns the card, every display frame is drawn
    * so the scene keeps pace with the CSS tilt of the card around it. */
-  const IDLE_FRAME_MS = 1000 / 30 - 2,
+  const IDLE_FRAME_MS = 1000 / 30,
     TURNING = 0.25; // rad/s
   function frame(now) {
     raf = 0;
@@ -534,10 +539,13 @@ ${rig.fx}
       since = Math.max((now - lastPaint) / 1000, 1e-3),
       turning =
         (Math.abs(turn.x - current.turn.x) + Math.abs(turn.y - current.turn.y)) / since > TURNING;
-    if (turning || now - lastPaint >= IDLE_FRAME_MS) {
+    // The idle schedule carries forward (not "since the last paint"), so an uneven
+    // display rate still averages 30 paints a second instead of dropping to 20.
+    const due = lastPaint + IDLE_FRAME_MS;
+    if (turning || now >= due - 2) {
       current.turn = turn;
       paint();
-      lastPaint = now;
+      lastPaint = turning || now - due > IDLE_FRAME_MS ? now : due;
     }
     wake();
   }
@@ -552,6 +560,35 @@ ${rig.fx}
     wake();
   });
 
+  const mapsAt = (id, scale) =>
+    KINDS.map((kind) => [MAPS[id][kind], ["bg", "body", "front"].includes(kind) ? scale : 1]);
+
+  /* Ahead of time, while idle: compile what the cards `ids` will draw with and
+   * upload their maps at the size a held or magnified card uses (half), so the
+   * first lift of any card in hand is up within a frame or two. The previous
+   * hand's uploads are let go. */
+  let warmToken = 0;
+  function warm(ids) {
+    if (calm() || stats.status === "fallback") return;
+    const wanted = [...new Set(ids)].filter((id) => MAPS[id] && rigFor(id));
+    const mine = ++warmToken;
+    (window.requestIdleCallback || setTimeout)(async () => {
+      if (mine !== warmToken || !ensureContext()) return;
+      try {
+        if (!mesh) ensureMesh(IMG_W / 2);
+        for (const id of wanted) program(id);
+        warmKeys = new Set(wanted.flatMap((id) => mapsAt(id, 0.5).map(([url, s]) => url + "@" + s)));
+        for (const id of wanted) {
+          if (mine !== warmToken || !gl) return;
+          await Promise.all(mapsAt(id, 0.5).map(([url, s]) => texture(url, s)));
+        }
+        if (gl) trimTextures();
+      } catch (error) {
+        // A map that fails here fails again, and is handled, when mounted.
+      }
+    });
+  }
+
   /* Paint the live portrait `id` (a portraitId) into `element`.
    *   focus   [x, y] cover anchor, 0..1, matching the CSS background underneath
    *   onFail  called if the context is lost later; the caller restores its face */
@@ -565,7 +602,7 @@ ${rig.fx}
         width = element.clientWidth * dpr;
       // The colour layers at half size once the card is no wider than that on screen.
       const scale = width && width <= IMG_W / 2 ? 0.5 : 1;
-      const wanted = KINDS.map((kind) => [MAPS[id][kind], ["bg", "body", "front"].includes(kind) ? scale : 1]);
+      const wanted = mapsAt(id, scale);
       const compiled = program(id);
       ensureMesh(width || IMG_W);
       const maps = await Promise.all(wanted.map(([url, s]) => texture(url, s)));
@@ -623,6 +660,7 @@ ${rig.fx}
   return Object.freeze({
     mount,
     mountCard,
+    warm,
     release,
     has: (id) => !!(MAPS[id] && rigFor(id)),
     diagnostics: () => ({ ...stats }),

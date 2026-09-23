@@ -195,7 +195,7 @@ test("hovered detail card faces the pointer over its hand card", async ({
   const [first] = await openBattle(page);
   await page.mouse.move(first.x, first.y);
   const art = page.locator("#card-preview .card-art");
-  await expectReliefVisible(page, art);
+  await expectFaceVisible(page, art);
   await page.mouse.move(first.x + 30, first.y, { steps: 4 });
   await expect
     .poll(() =>
@@ -256,7 +256,7 @@ for (const viewport of [
     await openBattle(page);
     await page.locator("#hand .hand-card").nth(1).click();
     const lift = page.locator("#hand-card-lift");
-    await expectReliefVisible(page, lift.locator(".card-art"));
+    await expectFaceVisible(page, lift.locator(".card-art"));
     const box = await lift.boundingBox();
     const leanAt = async (fx) => {
       await page.mouse.move(box.x + box.width * fx, box.y + box.height / 2, {
@@ -274,7 +274,7 @@ for (const viewport of [
     await page.mouse.down();
     await page.mouse.move(box.x + box.width / 2 + 60, box.y - 40, { steps: 5 });
     await expect(page.locator(".drag-ghost .card-art")).toHaveClass(
-      /card-relief-ready/,
+      /card-relief-ready|live-art-ready/,
     );
     await expect(page.locator(".card-relief-canvas")).toHaveCount(1);
     await page.mouse.up();
@@ -286,15 +286,25 @@ test("a held card draws only when the picture changes", async ({ page }) => {
   await openBattle(page);
   await page.locator("#hand .hand-card").nth(1).click();
   await expect(page.locator("#hand-card-lift .card-art")).toHaveClass(
-    /card-relief-ready/,
+    /card-relief-ready|live-art-ready/,
   );
+  // A card with live artwork is drawn by EmberLiveArt (the relief only turns it).
+  const painter = (await page
+    .locator("#hand-card-lift .card-art")
+    .evaluate((el) => el.classList.contains("live-art-ready")))
+    ? "EmberLiveArt"
+    : "EmberCardRelief";
   const paintsPerSecond = (ms) =>
-    page.evaluate(async (ms) => {
-      const before = EmberCardRelief.diagnostics().frames;
-      await new Promise((resolve) => setTimeout(resolve, ms));
-      return ((EmberCardRelief.diagnostics().frames - before) * 1000) / ms;
-    }, ms);
-  // The idle sway is slow enough for half the display rate.
+    page.evaluate(
+      async ([ms, painter]) => {
+        const source = painter === "EmberLiveArt" ? EmberLiveArt : EmberCardRelief;
+        const before = source.diagnostics().frames;
+        await new Promise((resolve) => setTimeout(resolve, ms));
+        return ((source.diagnostics().frames - before) * 1000) / ms;
+      },
+      [ms, painter],
+    );
+  // The idle sway (or the live artwork's idle motion) is slow enough for half the display rate.
   await page.waitForTimeout(1300);
   const swaying = await paintsPerSecond(1500);
   expect(swaying).toBeGreaterThan(20);
@@ -304,7 +314,7 @@ test("a held card draws only when the picture changes", async ({ page }) => {
   const elapsed = await page.evaluate(async () => {
     const started = performance.now();
     document.querySelectorAll("#hand .hand-card")[2].click();
-    while (!document.querySelector("#hand-card-lift .card-relief-ready"))
+    while (!document.querySelector("#hand-card-lift :is(.card-relief-ready, .live-art-ready)"))
       await new Promise(requestAnimationFrame);
     return performance.now() - started;
   });
@@ -336,6 +346,14 @@ async function expectLiveVisible(page, art) {
   }, shot);
   expect(seen).toBeGreaterThan(25);
   await art.evaluate((el) => (el.querySelector("img").style.filter = ""));
+}
+
+/* A card presented on its own shows its live artwork when it has one, else the
+ * relief face; either way it must be what the player actually sees. */
+async function expectFaceVisible(page, art) {
+  await expect(art).toHaveClass(/card-relief-ready|live-art-ready/);
+  if (await art.evaluate((el) => el.classList.contains("live-art-ready"))) await expectLiveVisible(page, art);
+  else await expectReliefVisible(page, art);
 }
 
 test("the god stage's front card carries its live artwork (or relief) and keeps the stage's own tilt", async ({
@@ -559,7 +577,7 @@ test("library: a clicked card flies up onto the stage in relief; the grid stays 
     document.getAnimations().forEach((a) => a.effect?.target?.closest?.("#card-stage") && a.finish()),
   );
   await page.clock.runFor(1000);
-  await expectReliefVisible(page, front.locator(".card-art"));
+  await expectFaceVisible(page, front.locator(".card-art"));
   const box = await stage.locator(".god-card").boundingBox();
   await page.mouse.move(box.x + box.width * 0.95, box.y + box.height / 2, { steps: 4 });
   // The stage's own lean steers the relief face.
@@ -585,7 +603,7 @@ test("a held card has thickness, and sinks back when the player puts it down", a
   });
   await page.locator("#hand .hand-card").nth(1).click();
   const lift = page.locator("#hand-card-lift");
-  await expect(lift.locator(".card-art")).toHaveClass(/card-relief-ready/);
+  await expect(lift.locator(".card-art")).toHaveClass(/card-relief-ready|live-art-ready/);
   const card = lift.locator("> .card");
   const box = await lift.boundingBox();
   // A real stack of layers behind the face: turned to the right the slab shows its

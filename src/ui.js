@@ -1233,6 +1233,9 @@
         image: el.querySelector(".card-art img"),
       })),
     );
+    EmberLiveArt.warm(
+      [...document.querySelectorAll("#hand .hand-card")].map((el) => el.dataset.cardid),
+    );
     window.EmberMobile?.afterRender(s);
     if (readingUid) syncHandLift();
     updateSelection();
@@ -1712,7 +1715,8 @@
         ],
         { duration: 180, easing: "cubic-bezier(.2,.8,.2,1)" },
       );
-    EmberCardRelief.mountCard(lift.querySelector(".card"), {
+    // The card held up to read shows its live artwork, turning under the hand.
+    EmberLiveArt.mountCard(lift.querySelector(".card"), {
       id: card.cid,
       rarity: D.byId[card.cid].rarity,
       steer: "held",

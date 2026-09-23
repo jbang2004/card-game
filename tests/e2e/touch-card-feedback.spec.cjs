@@ -159,7 +159,7 @@ test('pinned battlefield detail follows the finger and cancellation returns it t
   await page.waitForTimeout(600);
   await touch(cdp, 'touchEnd');
   const detail = page.locator('#card-preview[data-mode=pinned]');
-  await expect(detail.locator('.card-art')).toHaveClass(/card-relief-ready/);
+  await expect(detail.locator('.card-art')).toHaveClass(/card-relief-ready|live-art-ready/);
   await rub(page, cdp, detail.locator('> .card'), '--relief-ry', 35);
   await expect(detail).toBeVisible();
   const box = await detail.boundingBox();
@@ -182,7 +182,7 @@ test('an unaffordable lifted hand card still turns under the finger without play
   const before = await page.evaluate(() => JSON.stringify(EmberDebug.game.s));
   await page.locator('#hand .hand-card').tap();
   const card = page.locator('#hand-card-lift > .card');
-  await expect(card.locator('.card-art')).toHaveClass(/card-relief-ready/);
+  await expect(card.locator('.card-art')).toHaveClass(/card-relief-ready|live-art-ready/);
   await rub(page, cdp, card, '--relief-ry', 40);
   expect(await page.evaluate(() => JSON.stringify(EmberDebug.game.s))).toBe(before);
   await context.close();

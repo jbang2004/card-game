@@ -75,5 +75,7 @@ test("live portrait is presentation-only and registered ahead of the hero screen
   // Cards presented on their own go through EmberLiveArt.mountCard; hand cards do not.
   for (const file of ["src/ui.js", "src/application/contracts.js", "src/presentation/card-stage.js"])
     assert.match(read(file), /EmberLiveArt\.mountCard\(/, file);
-  assert.doesNotMatch(read("src/ui.js"), /EmberLiveArt\.mountCard\([^)]*\{[^}]*steer: "(held|drag)"/);
+  // The card lifted to read is live; the drag ghost (brief, moving fast) keeps the relief.
+  assert.match(read("src/ui.js"), /EmberLiveArt\.mountCard\([^;]*steer: "held"/);
+  assert.doesNotMatch(read("src/ui.js"), /EmberLiveArt\.mountCard\([^;]*steer: "drag"/);
 });
