@@ -345,11 +345,29 @@ ${rig.fx}
   }
   /* `scale` < 1 uploads a reduced copy: a preview card only a few hundred device
    * pixels wide gains nothing from the 1086x1448 maps but a quarter of the memory. */
+  /* A packaged build (tools/build_artifact.py) keeps each illustration's maps in
+   * one JSON file, `pack:<file>#<kind>`; fetched once, the last few are kept. */
+  const packs = new Map();
+  function resolveMap(url) {
+    if (!url.startsWith("pack:")) return url;
+    const [file, kind] = url.slice(5).split("#");
+    if (!packs.has(file)) {
+      packs.set(
+        file,
+        fetch(file).then((response) => {
+          if (!response.ok) throw Error(file + " " + response.status);
+          return response.json();
+        }),
+      );
+      if (packs.size > 6) packs.delete(packs.keys().next().value);
+    }
+    return packs.get(file).then((pack) => pack[kind]);
+  }
   async function texture(url, scale = 1) {
     const key = url + "@" + scale;
     if (textures.has(key)) return textures.get(key);
     const image = new Image();
-    image.src = url;
+    image.src = await resolveMap(url);
     await image.decode();
     let source = image;
     if (scale < 1 && typeof createImageBitmap === "function")
