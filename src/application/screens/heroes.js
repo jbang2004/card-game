@@ -217,15 +217,9 @@ const EmberHeroScreens = (() => {
             renderMulligan(id);
           }),
       );
-      /* Toggling a card redraws the row; the card just touched keeps its relief. */
-      EmberCardRelief.attend(
-        choices,
-        (b) => {
-          const c = D.byId[game.s.p.hand.find((x) => x.uid === b.dataset.mulligan).cid];
-          return { id: c.id, rarity: c.rarity };
-        },
-        choices.find((b) => b.dataset.mulligan === attended),
-      );
+      /* The opening hand is a still decision (2026-09-22): the three cards do
+       * not tilt or rise under the pointer, so nothing here attends them. */
+      void attended;
       $("mulligan-confirm").onclick = () => {
         const ids = [...mulliganSet];
         closeModal(false);

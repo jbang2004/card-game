@@ -645,14 +645,14 @@ html[data-skin="slate"]
   #app.battle-view
   :is(.log-panel, .boss-panel) {
   padding: 14px 16px 16px;
-  border: 1px solid var(--slate-line-strong);
-  border-radius: 12px;
-  background: var(--slate-material);
-  background-attachment: scroll;
-  box-shadow: 0 24px 60px #000a;
+  border: 0;
+  border-radius: 20px;
+  background: var(--glass-fill);
+  box-shadow: var(--glass-rim), var(--glass-shadow);
   color: var(--slate-ink);
   font-family: var(--slate-font);
-  backdrop-filter: none;
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   clip-path: none;
 }
 html[data-skin="slate"]
@@ -712,9 +712,9 @@ html[data-skin="slate"]
   ) {
   padding: 18px 16px 16px;
 }
-/* 遗物奖励 is the one battle-time dialog the design system puts on the PAGE
- * shell (§5.5). `dialogs.css` promotes it on the desktop; the touch layout has
- * to promote it too — the shell rim, radius and shadow are shared materials
+/* 遗物奖励 is the one battle-time dialog the touch layout puts on the PAGE
+ * shell (§5.5; on the desktop `dialogs.css` keeps it a wide floating pane
+ * since 2026-09-22). The touch layout promotes it — the shell rim, radius and shadow are shared materials
  * (`responsive-component-style.spec.cjs` compares `.rewards-box` against the
  * desktop one), and a full-bleed reward page is also the only way three relic
  * cards and the 「酒馆整备」 section fit a phone. The block mirrors base.css's
@@ -791,7 +791,6 @@ html[data-skin="slate"]
   right: 8px;
   float: none;
   margin: 0;
-  box-shadow: none;
 }
 /* dialog title row: the 32px/44px page scale is too tall for a 390px-high
  * screen; only the size changes, the weight/colour/shadow stay */
@@ -862,11 +861,11 @@ html[data-skin="slate"]
     [data-dialog-size="detail"]
   )
   > .modal-heading::after {
-  content: "";
+  content: none;
   position: absolute;
   inset: auto 0 0;
   height: 1px;
-  background: var(--slate-line);
+  background: none;
   box-shadow: none;
   border: 0;
   opacity: 1;
@@ -912,7 +911,7 @@ html[data-skin="slate"]
   margin: 0;
   padding: 14px 0 0;
   border: 0;
-  border-top: 1px solid var(--slate-line);
+  border-top: 0;
   background: none;
 }
 html[data-skin="slate"]
@@ -1158,8 +1157,17 @@ html[data-skin="slate"]
     #modal.folio-host
     .mulligan-box
     .mulligan-cards {
-    --opening-width: clamp(70px, calc((100dvh - 190px) / 1.48), 160px);
-    padding: 8px 0 2px;
+    --opening-width: clamp(70px, calc((100dvh - 236px) / 1.48), 160px);
+    padding: 4px 0 2px;
+  }
+  /* the pane must open at its top: a centred column taller than the pane
+   * beheads the cards */
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .mulligan-box
+    .modal-scroll {
+    justify-content: flex-start;
   }
   html[data-skin="slate"]
     body.mobile-landscape
@@ -1347,13 +1355,26 @@ html[data-skin="slate"]
     0 0 28px #8cc4ff40,
     0 8px 20px #0007;
 }
+/* the art sits in a `.relic-art` wrapper (campaign.js), so the wrapper is the
+ * grid child that spans the three text rows; the img only sizes itself */
+html[data-skin="slate"]
+  body.mobile-portrait
+  #modal.folio-host
+  .rewards-box
+  .relic-art {
+  grid-row: span 3;
+  width: 76px;
+  height: 76px;
+  display: grid;
+  place-items: center;
+}
 html[data-skin="slate"]
   body.mobile-portrait
   #modal.folio-host
   .rewards-box
   .relic-choice
   img {
-  grid-row: span 3;
+  grid-row: auto;
   width: 76px;
   height: 76px;
   border: 0;
@@ -1470,7 +1491,7 @@ html[data-skin="slate"]
   margin: 16px 0 0;
   padding: 14px 0 0;
   border: 0;
-  border-top: 1px solid var(--slate-line);
+  border-top: 0;
   border-radius: 0;
   background: none;
   box-shadow: none;
@@ -1686,8 +1707,20 @@ html[data-skin="slate"]
     .rewards-box
     .relic-choice
     img {
-    width: 52px;
-    height: 52px;
+    width: 48px;
+    height: 48px;
+  }
+  html[data-skin="slate"]
+    body.mobile-landscape
+    #modal.folio-host
+    .rewards-box
+    .relic-choice
+    p {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    font-size: 12px;
   }
   html[data-skin="slate"]
     body.mobile-landscape
@@ -1833,7 +1866,7 @@ html[data-skin="slate"]
   margin: 16px 0 4px;
   padding: 16px 0 2px;
   border: 0;
-  border-top: 1px solid var(--slate-line);
+  border-top: 0;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1849,7 +1882,7 @@ html[data-skin="slate"]
   width: auto;
   padding: 2px 0;
   border: 0;
-  border-right: 1px solid var(--slate-line);
+  border-right: 0;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1929,6 +1962,17 @@ html[data-skin="slate"]
 /* ===========================================================================
  * 13. 发现 / discover
  * ======================================================================== */
+/* short landscape: the card height is what the screen can hold */
+html[data-skin="slate"]
+  body.mobile-landscape
+  #modal.folio-host[data-type="discover"]
+  .discover-options {
+  justify-content: center;
+  grid-template-columns: repeat(
+    3,
+    clamp(84px, calc((100dvh - 150px) / 1.48), 200px)
+  );
+}
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="discover"]
@@ -2000,9 +2044,9 @@ html[data-skin="slate"]
   min-height: 52px;
   padding: 0 16px;
   border-radius: 999px;
-  border: 1px solid var(--slate-pill-line);
-  background: var(--slate-pill);
-  box-shadow: none;
+  border: 1px solid transparent;
+  background: #ffffff14;
+  box-shadow: inset 0 1px 0 #ffffff2e;
   color: var(--slate-ink);
   font: 500 15px/1.25 var(--slate-font);
   letter-spacing: 1px;
@@ -2026,8 +2070,7 @@ html[data-skin="slate"]
   #modal.folio-host
   .touch-menu-grid
   .menu-action:hover {
-  background: #1b2434d9;
-  border-color: var(--slate-line-strong);
+  background: #ffffff24;
 }
 html[data-skin="slate"] body.touch-layout #modal.folio-host .touch-menu-note {
   margin: 12px 0 0;
@@ -2049,7 +2092,7 @@ html[data-skin="slate"]
   margin: 0;
   padding: 11px 0;
   border: 0;
-  border-bottom: 1px solid var(--slate-line);
+  border-bottom: 0;
   border-radius: 0;
   background: none;
   font: 400 14px/1.65 var(--slate-font);
@@ -2179,7 +2222,7 @@ html[data-skin="slate"]
   margin: 0;
   padding: 0;
   border: 0;
-  border-bottom: 1px solid var(--slate-line);
+  border-bottom: 0;
   border-radius: 0;
   background: none;
   box-shadow: none;
@@ -2196,7 +2239,7 @@ html[data-skin="slate"]
   margin: 0;
   padding: 12px 0;
   border: 0;
-  border-bottom: 1px solid var(--slate-line);
+  border-bottom: 0;
   border-radius: 0;
   background: none;
   font: 400 14px/1.7 var(--slate-font);

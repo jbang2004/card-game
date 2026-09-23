@@ -19,12 +19,6 @@ const EmberThemeDefinition = Object.freeze({
     relicLens: "asset:ui/page-reference-v1/relic-lens.webp",
     relicCrown: "asset:ui/page-reference-v1/relic-crown.webp",
     victorySigil: "asset:ui/page-reference-v1/victory-sigil.webp",
-    battle_warden: "asset:scenes/boss-topdown-v1/warden.webp",
-    battle_queen: "asset:scenes/boss-topdown-v1/queen.webp",
-    battle_oracle: "asset:scenes/boss-topdown-v1/oracle.webp",
-    battle_frost: "asset:scenes/boss-topdown-v1/frost.webp",
-    battle_dragon: "asset:scenes/boss-topdown-v1/dragon.webp",
-    battle_moonkeeper: "asset:scenes/boss-topdown-v1/moonkeeper.webp",
     map: "asset:themes/silverblue/map.webp",
     backdrop: "asset:themes/silverblue/backdrop.webp",
     mage: "asset:themes/silverblue/mage.webp",
@@ -40,8 +34,10 @@ const EmberThemeDefinition = Object.freeze({
       portraitFocus: [0.54, 0.5],
       shade: 0.04,
     }),
+    /* The battle backdrop is rendered live by presentation/arena-3d.js; this
+     * role only keeps the ambient shade the 2D world canvas paints beneath it. */
     battle: Object.freeze({
-      art: "battle_warden",
+      art: null,
       focus: [0.5, 0.5],
       portraitFocus: [0.5, 0.48],
       shade: 0.1,
@@ -52,15 +48,6 @@ const EmberThemeDefinition = Object.freeze({
       portraitFocus: [0.5, 0.5],
       shade: 0.15,
     }),
-  }),
-  encounters: Object.freeze({
-    warden: "battle_warden",
-    queen: "battle_queen",
-    oracle: "battle_oracle",
-    frost: "battle_frost",
-    dragon: "battle_dragon",
-    moonkeeper: "battle_moonkeeper",
-    practice: "home",
   }),
   scenery: Object.freeze([
     {

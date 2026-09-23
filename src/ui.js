@@ -562,24 +562,16 @@
     // still looking at the lobby: start that request now, not on the click.
     if (s) preloadEncounter(s.bossIndex, s.mode);
   }
-  /* The battle backdrop is a separate HTTP asset in the web build, and nothing
-   * asks for it until `render` reaches `AtelierWorld.setEncounter` — which
-   * happens after the board is already on screen. On a phone connection the
-   * first match of an encounter therefore opens over flat ambient colour and
-   * only paints once the image lands (the second one is instant, from cache).
-   * The boss is known well before that, so the request is started here; the
-   * decode then overlaps the mulligan instead of the match.
-   * Role resolution mirrors `AtelierWorld.paint`: an unknown encounter falls
-   * back to the generic battle scene, exactly as `setEncounter` does. */
+  /* The battle arena is rendered live (presentation/arena-3d.js); its material
+   * maps are separate HTTP assets in the web build. The boss is known well
+   * before the board is on screen, so the context and texture decodes are
+   * started here and overlap the mulligan instead of the match. */
   function preloadEncounter(bossIndex, mode) {
-    const t = EmberTheme.definition,
-      id = mode === "practice" ? "practice" : D.bosses[bossIndex]?.id;
-    try {
-      EmberTheme.image(t.encounters[id] || t.scenes.battle.art);
-    } catch {
-      /* A content edit can name a boss before it names a backdrop; the scene
-       * still has to open, so a missing role is not worth failing a match. */
-    }
+    if (typeof EmberArena3D === "undefined") return;
+    EmberArena3D.setEncounter(
+      mode === "practice" ? "practice" : D.bosses[bossIndex]?.id,
+    );
+    EmberArena3D.preload();
   }
   function startGame(hero, boss = 0, relics = [], deck = null, options = {}) {
     preloadEncounter(boss, options.opponent ? "practice" : null);
@@ -983,7 +975,8 @@
               phaseText: "双方 30 血，无遗物与首领觉醒。",
             }
           : D.bosses[s.bossIndex];
-    AtelierWorld.setEncounter(s.mode === "practice" ? "practice" : boss.id);
+    if (typeof EmberArena3D !== "undefined")
+      EmberArena3D.setEncounter(s.mode === "practice" ? "practice" : boss.id);
     $("chapter-name").textContent =
       s.mode === "practice" ? "酒馆练习" : boss.title;
     $("relic-slots").innerHTML = s.relics
@@ -1161,7 +1154,7 @@
         /* A card that only became playable because the turn refreshed mana
          * flashes once, so "what can I do now" needs no re-scan. */
         const woke = playable && manaRefreshed && !wasPlayable.has(card.uid);
-        return `<button class="hand-card ${playable ? "playable" : ""} ${woke ? "just-playable" : ""} ${game.cost(card) > s.p.mana ? "unaffordable" : ""}" style="--x:${offset * gap}px;--y:0px;--r:0deg;--i:${i + 1}" data-hand="${card.uid}" data-cardid="${c.id}" aria-label="${c.name}，${game.cost(card)} 法力。点按选中，拖动出牌。${c.text}">${cardHTML(c, { cost: game.cost(card) })}</button>`;
+        return `<button class="hand-card ${playable ? "playable" : ""} ${woke ? "just-playable" : ""} ${game.cost(card) > s.p.mana ? "unaffordable" : ""}" style="--x:${offset * gap}px;--y:${EmberViewport.mobile ? 0 : Math.round(Math.min(offset * offset * 3, 26) - 8)}px;--r:${EmberViewport.mobile ? 0 : Math.max(-3.5, Math.min(3.5, offset * 1.4)).toFixed(1)}deg;--i:${i + 1}" data-hand="${card.uid}" data-cardid="${c.id}" aria-label="${c.name}，${game.cost(card)} 法力。点按选中，拖动出牌。${c.text}">${cardHTML(c, { cost: game.cost(card) })}</button>`;
       })
       .join("");
     const ours = s.active === "p";
@@ -1301,15 +1294,17 @@
       anchor: pinned ? el.querySelector(".card") : detail.source,
     });
   }
-  /* Desktop battle hover is deliberately fixed on the left, restoring one
-   * stable reading position instead of duplicating the card over the hand. */
+  /* Desktop battle hover is deliberately fixed in one place, restoring one
+   * stable reading position instead of duplicating the card over the hand.
+   * That place is the empty right rail (2026-09-22): on the left it covered
+   * the player's seat, the skill node and the covenant slot. */
   function placeHoverDetail() {
     const el = $("card-preview"),
       source = detail.source;
     if (!source || detail.pinned || el.style.display === "none") return;
     if (modalType !== "library") {
-      el.style.left = "29px";
-      el.style.top = "345px";
+      el.style.left = "1342px";
+      el.style.top = "300px";
       el.style.zIndex = "45";
       return;
     }

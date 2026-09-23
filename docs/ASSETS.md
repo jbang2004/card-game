@@ -228,7 +228,7 @@ uv run --python 3.12 --no-project --with pillow --with numpy --with onnxruntime 
 
 ## 2026-09-13 · 地图对应的俯视战场
 
-生产场景位于 `assets/scenes/boss-topdown-v1/`，六个 Boss 一一映射，按 ID 选择，尺寸不改变美术角色。建筑、植被和火山在边缘；中央庭院供实时卡牌与数值使用。`generation.json` 保存内置 image_gen 提示词、源文件与 SHA-256；`sources/` 保留原始 PNG。只对运行文件做 WebP 格式封装。
+战场不再是一张位图。`presentation/arena-3d.js` 在 `#arena-gl`（WebGL2）里实时渲染「熔岩要塞」：黑曜石桌式棋盘、铜边、火盆与灯柱、熔岩河道与城门背景，随从的 DOM 包围盒每帧转成接触阴影。它只用 `assets/scenes/lava-forge/` 里的法线、粗糙度、AO 与熔岩自发光贴图（ambientCG CC0：Rock035、Lava001、Metal032，缩至 512–1024 并重新压缩），颜色全部由代码里的三色（黑曜石 / 余烬 / 旧铜）决定。旧的六张俯视场景图（`boss-topdown-v1`）已移除；六个 Boss 目前共用这一场景，`EmberArena3D.setEncounter` 保留了按 Boss 换调色板的入口。
 
 上一轮地面视角图保存在 `output/boss-topdown-20260913/ground-level-sources/`，旧桌面/横竖屏背景保存在 `output/boss-map-20260913/retired/`，均移出生产素材注册。官方参考仅作为研究证据，见 `output/boss-topdown-20260913/RESEARCH.md`，没有复制其图片到游戏。
 

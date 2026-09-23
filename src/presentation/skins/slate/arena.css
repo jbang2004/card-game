@@ -1,0 +1,1396 @@
+/* Skin "slate" — the battlefield court (2026-09-22 "黑曜石对局台").
+ *
+ * One material for everything that stands on the table: smoked obsidian glass
+ * with a metal rim — aged brass for the player's side, cold iron for the
+ * enemy's — and ember as the ONLY accent, reserved for what can act right now
+ * (a token that can attack, a lit mana crystal, an end-turn button with
+ * nothing left to do). The slate blue that the rest of the app uses for menus
+ * never reaches the court; it was the loudest thing on the old board and it
+ * fought the lava scene.
+ *
+ * What this file restates (it is loaded after battle.css / mobile.css /
+ * card-face.css / console.css and wins on order, never on specificity):
+ *   §1 top bar, message rails, utility chips        §2 enemy hand card backs
+ *   §3 board tokens: metal frame, contact shadow, bottom stat plate instead of
+ *      the two gems and the rarity band; ember "can attack"
+ *   §4 hero seats (desktop): an arched portrait with a stat plate on its foot
+ *   §5 the player's command cluster: skill node, deck counters
+ *   §6 end turn and mana                            §7 the hand fan (desktop)
+ *   §8 touch consoles: avatar rims, chips, node, round end turn, pips
+ *
+ * Contracts kept (see tests/e2e): `#power-btn`, `#contract-open`, `#end-turn`,
+ * `#log-toggle`, `#intel-toggle`, `#touch-cancel` compute `background-image:
+ * none` and `clip-path: none` (every gradient is on a pseudo-element); the
+ * weapon slot stays 8px right of `.hero-card-inner`; `.hero-name` keeps its
+ * symmetric insets; `.stat.atk` ends where `.stat.hp` begins; the hero stats
+ * never overlap each other, the skill node, the end-turn or the mana value.
+ */
+
+/* ---------------------------------------------------------------------------
+ * 0. Glyphs. Stat glyphs are CSS masks (no `#` in the data URLs on purpose),
+ * so one drawing serves every size from a 28px phone token to the hero seat.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body {
+  --glyph-blade: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'><path d='M14.5 17.5 3 6V3h3l11.5 11.5'/><path d='M13 19l6-6'/><path d='M16 16l4 4'/><path d='M19 21l2-2'/></svg>");
+  --glyph-heart: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'><path d='M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z'/></svg>");
+  --glyph-shield: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'><path d='M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z'/></svg>");
+}
+
+/* ---------------------------------------------------------------------------
+ * 1. Top bar, message rails, utility chips
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body #app.battle-view .topbar {
+  background: linear-gradient(#000000b3, #00000000);
+}
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .brand strong {
+  font: 600 15px/1.1 var(--slate-font);
+  letter-spacing: 7px;
+  color: var(--arena-brass-hi);
+  text-shadow: 0 1px 3px #000c;
+}
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .brand small {
+  font: 500 8px/1.6 var(--slate-font);
+  letter-spacing: 4px;
+  color: var(--arena-ink-3);
+}
+html[data-skin="slate"] body #app.battle-view .top-actions .icon-btn,
+html[data-skin="slate"] body:not(.touch-layout) #battle .utility-tab {
+  border: 1px solid #ffffff12;
+  background: #0c0a08b8;
+  box-shadow:
+    inset 0 1px 0 #ffffff12,
+    0 4px 12px #0008;
+  color: var(--arena-ink-2);
+}
+html[data-skin="slate"] body #app.battle-view .top-actions .icon-btn:hover,
+html[data-skin="slate"] body:not(.touch-layout) #battle .utility-tab:hover {
+  background: #1b1712d9;
+  border-color: #c9a45c66;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .utility-tab[aria-expanded="true"] {
+  border-color: #c9a45c99;
+  background: #1b1712;
+  color: var(--arena-brass-hi);
+}
+html[data-skin="slate"]
+  body
+  #app.battle-view
+  .top-actions
+  .icon-btn:focus-visible,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .utility-tab:focus-visible,
+html[data-skin="slate"] body #battle .power-button:focus-visible,
+html[data-skin="slate"] body #battle .end-turn:focus-visible,
+html[data-skin="slate"] body #battle .contract-open:focus-visible,
+html[data-skin="slate"] body #app.battle-view #touch-cancel:focus-visible {
+  outline-color: var(--arena-ember-hi);
+}
+/* the notice rail, the aim prompt and the turn label share one pane */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  :is(#hint, #toast, #combat-preview, #action-status, #touch-target-bar),
+html[data-skin="slate"]
+  body.touch-layout
+  #app.battle-view
+  :is(#hint, #toast, #combat-preview, #action-status, #touch-target-bar),
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .turn-number,
+html[data-skin="slate"] body.touch-layout #app.battle-view .turn-number {
+  border: 1px solid #c9a45c2e;
+  background: #0c0a08c4;
+  box-shadow:
+    inset 0 1px 0 #ffffff10,
+    0 12px 30px #000a;
+  color: var(--arena-ink);
+  letter-spacing: 1px;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  :is(#hint, #toast, #combat-preview, #action-status) {
+  font: 500 15px/1.4 var(--slate-font);
+}
+html[data-skin="slate"] body #app.battle-view #toast[data-kind="error"] {
+  border-color: #e0475a80;
+  color: #ffd9dc;
+}
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view #touch-cancel,
+html[data-skin="slate"] body.touch-layout #app.battle-view #touch-cancel {
+  border: 1px solid #c9a45c4d;
+  background: #1b1712d9;
+  color: var(--arena-brass-hi);
+  letter-spacing: 2px;
+}
+html[data-skin="slate"] body #app.battle-view #touch-cancel:hover {
+  background: #2a2119;
+  border-color: var(--arena-brass);
+  color: #fff;
+}
+html[data-skin="slate"] body #app.battle-view .board-empty {
+  color: var(--arena-ink-3);
+  letter-spacing: 3px;
+}
+/* enemy turn: the arena hairline turns crimson instead of slate red */
+html[data-skin="slate"] body #battle .arena::after {
+  background: linear-gradient(90deg, #e0475a00, #e0475a 22% 78%, #e0475a00);
+  box-shadow: 0 0 10px #e0475a88;
+}
+
+/* ---------------------------------------------------------------------------
+ * 2. Card backs — the enemy's fan and the draw-flight proxies. Obsidian with a
+ * brass hairline frame and a small diamond seal; the mirror-steel plate was
+ * the one blue object left in the top rail.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body .card-back {
+  background: radial-gradient(
+    70% 60% at 50% 30%,
+    #3a3126 0%,
+    #1a1511 62%,
+    #0c0a08 100%
+  );
+  box-shadow:
+    0 0 0 1px #c9a45c80,
+    inset 0 0 0 1px #000000cc,
+    inset 0 1px 0 #ffffff1a,
+    0 3px 8px #000c;
+}
+html[data-skin="slate"] body .card-back::before {
+  inset: 9%;
+  border: 1px solid #c9a45c59;
+  border-radius: 6cqw;
+  background: none;
+  box-shadow: inset 0 0 0 1px #00000080;
+  filter: none;
+  opacity: 1;
+  mix-blend-mode: normal;
+}
+html[data-skin="slate"] body .card-back::after {
+  inset: 40% 34%;
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(135deg, #f3dfa6, #8a6a2c 60%, #4a3512);
+  box-shadow: none;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+/* ---------------------------------------------------------------------------
+ * 3. Board tokens
+ * A token is the portrait in a metal frame standing on the ash: a gradient
+ * rim (`::before`, masked to a 2px ring), a contact shadow on the ground
+ * (`::after`), and a dark plate along its foot that carries attack and health
+ * as bare numerals with a glyph. The two gems and the rarity band are gone —
+ * at token size they were the loudest thing in the picture and the hardest to
+ * read. The `.stat` cells keep their DOM and their halves (attack ends where
+ * health begins), the gems are simply not drawn.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body .minion {
+  --tok-metal: var(--arena-metal-iron);
+  --tok-line: var(--arena-iron);
+  border: 0;
+  border-radius: min(9px, 7%);
+  background: none;
+  box-shadow:
+    0 16px 24px -10px #000000f0,
+    0 3px 6px #0000a0;
+  overflow: visible;
+}
+html[data-skin="slate"] body .minion.friendly {
+  --tok-metal: var(--arena-metal-brass);
+  --tok-line: var(--arena-brass);
+}
+html[data-skin="slate"] body .minion::before {
+  content: "";
+  display: block;
+  position: absolute;
+  inset: -1px;
+  z-index: 2;
+  pointer-events: none;
+  border: 2px solid transparent;
+  border-radius: inherit;
+  background: var(--tok-metal) border-box;
+  box-shadow: none;
+  -webkit-mask:
+    linear-gradient(#000 0 0) padding-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) padding-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+html[data-skin="slate"] body .minion::after {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  bottom: -10%;
+  height: 20%;
+  z-index: 0;
+  pointer-events: none;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(50% 50% at 50% 50%, #000000c0, #00000000 72%);
+  box-shadow: none;
+  filter: blur(2px);
+}
+html[data-skin="slate"] body .minion .minion-art,
+html[data-skin="slate"] body.touch-layout .minion .minion-art {
+  --unit-ring: 0 0 0 1px #000000d9;
+  --unit-inset: inset 0 0 0 1px #ffffff14;
+  border-radius: inherit;
+  background: #0a0806;
+}
+html[data-skin="slate"] body .minion .minion-art img {
+  filter: saturate(0.94) contrast(1.04);
+}
+/* the foot plate is painted here, inside the art's clip, so its corners
+ * follow the token's; the numerals sit on it in their own cells */
+html[data-skin="slate"] body .minion .minion-art::after {
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff00 calc(100% - 25cqw),
+      #ffffff1f calc(100% - 25cqw),
+      #ffffff1f calc(100% - 24cqw),
+      #14110dd9 calc(100% - 24cqw),
+      #0a0806f2 100%
+    ),
+    linear-gradient(
+      90deg,
+      #ffffff00 calc(50% - 0.5px),
+      #ffffff14 calc(50% - 0.5px),
+      #ffffff14 calc(50% + 0.5px),
+      #ffffff00 calc(50% + 0.5px)
+    ),
+    linear-gradient(180deg, #0a080600 58%, #0a080680 100%),
+    radial-gradient(60% 34% at 50% 0%, #0000004d 0%, #00000000 74%);
+  background-size:
+    100% 100%,
+    100% 24cqw,
+    100% 100%,
+    100% 100%;
+  background-position:
+    0 0,
+    0 100%,
+    0 0,
+    0 0;
+  background-repeat: no-repeat;
+}
+html[data-skin="slate"] body .minion .minion-band {
+  display: none;
+}
+html[data-skin="slate"] body .minion > .stat {
+  position: absolute;
+  z-index: 7;
+  top: auto;
+  bottom: 0;
+  width: 50%;
+  height: 24cqw;
+  aspect-ratio: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4cqw;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  font: 700 clamp(10px, 14cqw, 26px) / 1 var(--slate-font);
+  font-variant-numeric: tabular-nums;
+  color: var(--arena-ink);
+}
+html[data-skin="slate"] body .minion > .stat.atk {
+  left: 0;
+  right: auto;
+}
+html[data-skin="slate"] body .minion > .stat.hp {
+  right: 0;
+  left: auto;
+}
+html[data-skin="slate"] body .minion > .stat > .stat-gem {
+  display: none;
+}
+html[data-skin="slate"] body .minion > .stat::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 10cqw;
+  height: 10cqw;
+  background: var(--arena-brass-hi);
+  -webkit-mask: var(--glyph-blade) center / contain no-repeat;
+  mask: var(--glyph-blade) center / contain no-repeat;
+  filter: drop-shadow(0 1px 1px #000);
+}
+html[data-skin="slate"] body .minion > .stat.hp::before {
+  background: #ff8592;
+  -webkit-mask-image: var(--glyph-heart);
+  mask-image: var(--glyph-heart);
+}
+html[data-skin="slate"] body .minion > .stat > .stat-value {
+  color: inherit;
+  text-shadow: 0 1px 2px #000000e6;
+  transform: none;
+}
+html[data-skin="slate"] body .minion > .stat.hp > .stat-value {
+  transform: none;
+}
+html[data-skin="slate"] body .minion > .stat.hp.hurt {
+  color: #ff9aa4;
+}
+html[data-skin="slate"] body .minion > .stat.hp.hurt > .stat-value {
+  color: inherit;
+  text-shadow:
+    0 1px 2px #000,
+    0 0 1.2cqw #e0475a80;
+}
+/* phone tokens: no glyph, a taller plate so the numeral keeps its 10px floor */
+@container (max-width: 60px) {
+  html[data-skin="slate"] body .minion > .stat::before {
+    display: none;
+  }
+  html[data-skin="slate"] body .minion > .stat {
+    height: 30cqw;
+  }
+  html[data-skin="slate"] body .minion .minion-art::after {
+    background-size:
+      100% 100%,
+      100% 30cqw,
+      100% 100%,
+      100% 100%;
+  }
+}
+/* card-face.css hangs the gems off the sides below 40px; the plate stays put */
+@container (max-width: 40px) {
+  html[data-skin="slate"] body .minion > .stat {
+    width: 50%;
+  }
+  html[data-skin="slate"] body .minion > .stat.atk {
+    left: 0;
+  }
+  html[data-skin="slate"] body .minion > .stat.hp {
+    right: 0;
+  }
+}
+html[data-skin="slate"]
+  body.touch-layout
+  .minion[data-stacked="true"]
+  > .stat.hp {
+  right: 0;
+}
+/* states: ember for "can attack", warm stone for taunt, crimson for a target */
+html[data-skin="slate"] body .minion.ready .unit-aura {
+  border: 0;
+  box-shadow: none;
+}
+html[data-skin="slate"] body .minion.ready .minion-art {
+  --unit-glow: 0 0 2cqw #ff9b3d59;
+  --unit-inset: inset 0 0 0 1px #ffb35a66;
+}
+html[data-skin="slate"] body #battle .minion .ready-dot {
+  border-color: #ffb35acc;
+  border-radius: min(12px, 9%);
+  box-shadow:
+    0 0 10px 1px #ff9b3d80,
+    inset 0 0 6px #ff9b3d33;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .minion .ready-dot {
+  border-width: 2px;
+  box-shadow:
+    0 0 14px 2px #ff9b3d99,
+    inset 0 0 8px #ff9b3d40;
+}
+html[data-skin="slate"] body .minion.taunt .minion-art {
+  --unit-ring:
+    0 0 0 max(3px, 3cqw) #d8d2c4, 0 0 0 calc(max(3px, 3cqw) + 1.5px) #0c0a08e6;
+}
+html[data-skin="slate"] body .minion.taunt .minion-art::after {
+  box-shadow: inset 0 0 0 max(1px, 0.9cqw) #e8e2d466;
+}
+html[data-skin="slate"] body .minion.valid-target .minion-art {
+  --unit-ring:
+    0 0 0 max(3px, 2.4cqw) #ff6a4d, 0 0 0 calc(max(3px, 2.4cqw) + 1px) #0c0a08e6;
+  --unit-glow: 0 0 2.4cqw #ff6a4d99;
+}
+
+/* ---------------------------------------------------------------------------
+ * 4. Hero seats — desktop
+ * The 156×231 card becomes a seat: an arched portrait in the side's metal, the
+ * name engraved low on the glass, and the same foot plate as the tokens with
+ * attack (only when armed) and health. Armour is a shield chip on the left
+ * shoulder, clear of the weapon slot, which hangs off the right edge.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  :is(.hero.enemy, .hero.player) {
+  --seat-metal: var(--arena-metal-iron);
+  --seat-line: var(--arena-iron);
+  border: 0;
+  border-radius: 78px 78px 14px 14px;
+  background: none;
+  box-shadow:
+    0 20px 34px -12px #000000f0,
+    0 4px 8px #0000a0;
+  overflow: visible;
+  color: var(--arena-ink);
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero.player {
+  --seat-metal: var(--arena-metal-brass);
+  --seat-line: var(--arena-brass);
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  border: 2px solid transparent;
+  border-radius: inherit;
+  background: var(--seat-metal) border-box;
+  -webkit-mask:
+    linear-gradient(#000 0 0) padding-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) padding-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero::after {
+  content: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  :is(.hero.enemy, .hero.player)
+  .hero-card-inner {
+  inset: 0;
+  border-radius: inherit;
+  background: #0a0806;
+  overflow: hidden;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .hero-card-inner
+  .portrait-frame
+  img {
+  object-position: var(--art-pos, 50% 30%);
+  transform: scale(var(--art-scale, 1.08));
+  filter: saturate(0.96) contrast(1.03);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .hero-card-inner
+  .portrait-frame::after {
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff00 calc(100% - 35px),
+      #ffffff22 calc(100% - 35px),
+      #ffffff22 calc(100% - 34px),
+      #14110de0 calc(100% - 34px),
+      #0a0806f5 100%
+    ),
+    linear-gradient(
+      180deg,
+      #0a080600 46%,
+      #0a08064d 70%,
+      #0a0806d9 calc(100% - 34px)
+    ),
+    linear-gradient(90deg, #0a080633, #0a080600 20% 80%, #0a080633);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  :is(.hero.enemy, .hero.player)
+  .hero-name {
+  top: auto;
+  bottom: 42px;
+  left: 17.8%;
+  right: 17.8%;
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  clip-path: none;
+  background: none;
+  box-shadow: none;
+  color: var(--arena-brass-hi);
+  font: 600 13px/1.25 var(--slate-font);
+  letter-spacing: 3px;
+  text-shadow:
+    0 1px 2px #000,
+    0 0 10px #000c;
+  justify-content: center;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero.enemy .hero-name {
+  color: var(--arena-iron-hi);
+}
+/* stat cells on the foot plate */
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero-stat {
+  position: absolute;
+  z-index: 7;
+  top: auto;
+  bottom: 0;
+  width: 50%;
+  height: 34px;
+  aspect-ratio: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--arena-ink);
+  font: 700 20px/1 var(--slate-font);
+  font-variant-numeric: tabular-nums;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .hero-stat
+  > .badge-frame {
+  display: none;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero-stat .stat-value {
+  display: block;
+  width: auto;
+  height: auto;
+  color: inherit;
+  -webkit-text-stroke: 0;
+  text-shadow: 0 1px 2px #000000e6;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero-stat::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  background: var(--arena-brass-hi);
+  -webkit-mask: var(--glyph-blade) center / contain no-repeat;
+  mask: var(--glyph-blade) center / contain no-repeat;
+  filter: drop-shadow(0 1px 1px #000);
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero-attack {
+  left: 0;
+  right: auto;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero-attack.is-zero {
+  display: none;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero-health {
+  right: 0;
+  left: auto;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero-health::before {
+  background: #ff8592;
+  -webkit-mask-image: var(--glyph-heart);
+  mask-image: var(--glyph-heart);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .hero-attack.is-zero
+  + .hero-health {
+  width: 100%;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .hero-attack:not(.is-zero)
+  + .hero-health {
+  box-shadow: inset 1px 0 0 #ffffff14;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero-health.damaged {
+  color: #ff9aa4;
+}
+/* armour: a shield chip on the left shoulder */
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero-armor {
+  top: 8px;
+  right: auto;
+  left: -12px;
+  bottom: auto;
+  width: 40px;
+  height: 28px;
+  gap: 3px;
+  border: 1px solid #a9b4c26b;
+  border-radius: 999px;
+  background: var(--arena-glass);
+  box-shadow:
+    inset 0 1px 0 #ffffff14,
+    0 4px 10px #000a;
+  font-size: 14px;
+  color: var(--arena-iron-hi);
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero-armor::before {
+  width: 12px;
+  height: 12px;
+  background: var(--arena-iron-hi);
+  -webkit-mask-image: var(--glyph-shield);
+  mask-image: var(--glyph-shield);
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero-covenant {
+  top: -12px;
+  height: 22px;
+  border-color: #c9a45c80;
+  background: var(--arena-glass);
+  box-shadow: 0 4px 10px #000a;
+  color: var(--arena-brass-hi);
+  letter-spacing: 1px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  :is(.hero.enemy, .hero.player)
+  .hero-phase {
+  position: absolute;
+  top: -12px;
+  right: -8px;
+  left: auto;
+  bottom: auto;
+  z-index: 8;
+  width: max-content;
+  height: 22px;
+  writing-mode: horizontal-tb;
+  transform: none;
+  padding: 0 9px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #a9b4c24d;
+  border-radius: 999px;
+  background: var(--arena-glass);
+  box-shadow: 0 4px 10px #000a;
+  color: var(--arena-ink-2);
+  font: 600 10px/1 var(--slate-font);
+  letter-spacing: 2px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .hero.enemy:has(.hero-covenant)
+  .hero-phase {
+  display: none;
+}
+html[data-skin="slate"] body #battle .hero .weapon-slot {
+  border: 1px solid #c9a45c59;
+  border-radius: 10px;
+  background: var(--arena-glass);
+  box-shadow:
+    inset 0 1px 0 #ffffff1a,
+    0 4px 10px #000a;
+}
+html[data-skin="slate"] body #battle .hero .weapon-slot b {
+  border-color: #c9a45c40;
+  background: #0c0a08;
+  color: var(--arena-brass-hi);
+}
+/* "can attack" on the hero: the same ember rim as the tokens */
+html[data-skin="slate"] body #battle .hero.ready .hero-card-inner {
+  box-shadow:
+    0 0 0 2px #ffb35a,
+    0 0 18px 2px #ff9b3d9e;
+}
+html[data-skin="slate"]
+  body
+  #battle
+  .hero.player.ready
+  .hero-card-inner::after {
+  border-color: #ffd39a;
+  box-shadow: 0 0 14px 2px #ff9b3dcc;
+}
+
+/* ---------------------------------------------------------------------------
+ * 5. Command cluster — skill node and deck counters (desktop)
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body:not(.touch-layout) #battle .power-button::before {
+  border: 1px solid #c9a45c80;
+  background: radial-gradient(
+    circle,
+    #ffb15a 0 9px,
+    #c8561a 10px 13px,
+    #1a120c 14px 19px,
+    #2a2118 20px 24px,
+    #3a2f22 25px
+  );
+  box-shadow:
+    0 0 20px #ff9b3d40,
+    inset 0 0 8px #000c,
+    0 6px 14px #000a;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .power-button:hover:not(:disabled)::before {
+  border-color: var(--arena-brass-hi);
+  box-shadow:
+    0 0 30px #ff9b3d80,
+    inset 0 0 8px #000c,
+    0 6px 14px #000a;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .power-button > span {
+  height: auto;
+  padding: 0 0 0 12px;
+  border: 0;
+  background: none;
+  color: var(--arena-brass-hi);
+  font: 600 14px/1 var(--slate-font);
+  letter-spacing: 2px;
+  text-shadow: 0 1px 3px #000c;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .power-button > b {
+  height: 22px;
+  margin-left: 8px;
+  padding: 0 8px;
+  border: 1px solid #c9a45c66;
+  border-radius: 999px;
+  background: #0c0a08cc;
+  box-shadow: none;
+  color: var(--slate-blue);
+  font: 700 12px/1 var(--slate-font);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .power-button:disabled::before {
+  border-color: #ffffff1a;
+  background: radial-gradient(
+    circle,
+    #3a342c 0 9px,
+    #241f19 10px 13px,
+    #14110d 14px 19px,
+    #1e1a15 20px
+  );
+  box-shadow: inset 0 0 8px #000c;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .power-button:disabled
+  > :is(span, b) {
+  border-color: #ffffff14;
+  color: var(--arena-ink-3);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  :is(.enemy-deck, .player-deck) {
+  left: 36px;
+  height: 28px;
+  padding: 0 10px 0 8px;
+  gap: 7px;
+  border: 1px solid #ffffff12;
+  background: #0c0a08c4;
+  box-shadow:
+    inset 0 1px 0 #ffffff10,
+    0 4px 10px #0008;
+  color: var(--arena-ink-2);
+}
+/* the counter sits under its owner's seat: what you have left, where you sit */
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .enemy-deck {
+  top: 338px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .player-deck {
+  top: 748px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  :is(.enemy-deck, .player-deck)
+  > [data-icon] {
+  width: 14px;
+  height: 18px;
+  border: 1px solid #c9a45c99;
+  border-radius: 2px;
+  background: linear-gradient(160deg, #3a3126, #14110d);
+  box-shadow:
+    2px -2px 0 -1px #0c0a08,
+    2px -2px 0 0 #c9a45c66;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  :is(.enemy-deck, .player-deck)
+  > [data-icon]
+  svg {
+  display: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  :is(.enemy-deck, .player-deck)
+  .deck-caption {
+  display: inline;
+  color: var(--arena-ink-3);
+  font: 500 10px/1 var(--slate-font);
+  letter-spacing: 2px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #app.battle-view
+  :is(.enemy-deck, .player-deck)
+  .deck-count {
+  color: var(--arena-brass-hi);
+}
+html[data-skin="slate"] body #battle .contract-open.ready .contract-back {
+  box-shadow:
+    0 0 0 1px #ffd39a99,
+    0 0 22px #ff9b3d80,
+    0 10px 24px #000c;
+}
+
+/* ---------------------------------------------------------------------------
+ * 6. End turn and mana — desktop
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body:not(.touch-layout) #battle .end-turn {
+  border: 1px solid #c9a45c99;
+  color: var(--arena-brass-hi);
+  font: 600 17px/1 var(--slate-font);
+  letter-spacing: 4px;
+  text-shadow: 0 1px 2px #000c;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .end-turn::before {
+  background: linear-gradient(180deg, #2a2119, #14100c);
+  box-shadow:
+    inset 0 1px 0 #ffffff1a,
+    0 8px 20px #000a;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .end-turn:hover:not(:disabled) {
+  border-color: var(--arena-brass-hi);
+  color: #fff;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .end-turn:hover:not(:disabled)::before {
+  background: linear-gradient(180deg, #3a2f22, #1b1712);
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .end-turn.ready-end {
+  border-color: #ffd39a;
+  color: #1a0f05;
+  text-shadow: 0 1px 0 #ffffff40;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .end-turn.ready-end::before {
+  background: linear-gradient(180deg, #ffc27a, #e0702a);
+  box-shadow:
+    inset 0 1px 0 #ffffff66,
+    0 0 22px #ff9b3d66,
+    0 8px 20px #000a;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .end-turn.ready-end:hover:not(:disabled)::before {
+  background: linear-gradient(180deg, #ffd39a, #ea7d33);
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .end-turn:disabled {
+  border-color: #ffffff14;
+  color: var(--arena-ink-3);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .end-turn:disabled::before {
+  background: #0c0a08c4;
+  box-shadow: none;
+}
+html[data-skin="slate"] body #battle .end-turn.thinking::after {
+  border-color: #ffffff2b;
+  border-top-color: var(--arena-brass);
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .turn-shortcut {
+  color: var(--arena-ink-3);
+  font: 500 10px/1.4 var(--slate-font);
+  letter-spacing: 2px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .mana-caption > span,
+html[data-skin="slate"] body.touch-layout #battle .mana-caption > span {
+  color: var(--arena-ink-3);
+  font: 500 10px/1.4 var(--slate-font);
+  letter-spacing: 3px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .mana-caption strong,
+html[data-skin="slate"] body.touch-layout #battle .mana-caption strong {
+  color: var(--arena-ink);
+  text-shadow: 0 1px 3px #000c;
+}
+/* mana crystals: a hexagonal ember gem, dark glass once spent */
+html[data-skin="slate"] body #battle .mana-gem,
+html[data-skin="slate"] body.mobile-portrait #battle .mana-gem {
+  position: relative;
+  opacity: 0.55;
+  filter: none;
+  transition:
+    opacity var(--m-base) var(--e-std),
+    filter var(--m-base) var(--e-std);
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .mana-gem {
+  width: 11px;
+  height: 17px;
+}
+html[data-skin="slate"] body #battle .mana-gem .badge-frame {
+  display: none;
+}
+html[data-skin="slate"] body #battle .mana-gem::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(50% 0, 100% 26%, 100% 74%, 50% 100%, 0 74%, 0 26%);
+  background: linear-gradient(160deg, #1e2128, #101217);
+  box-shadow: inset 0 0 0 1px #ffffff14;
+}
+html[data-skin="slate"] body #battle .mana-gem.used,
+html[data-skin="slate"] body.mobile-portrait #battle .mana-gem.used {
+  opacity: 1;
+  filter: none;
+}
+html[data-skin="slate"] body #battle .mana-gem.used::before {
+  background: linear-gradient(160deg, #2b3242, #171b24);
+  box-shadow: inset 0 0 0 1px #8cc4ff33;
+}
+html[data-skin="slate"] body #battle .mana-gem.available,
+html[data-skin="slate"] body.mobile-portrait #battle .mana-gem.available {
+  opacity: 1;
+  filter: drop-shadow(0 0 4px #8cc4ff99);
+}
+html[data-skin="slate"] body #battle .mana-gem.available::before {
+  background: linear-gradient(160deg, #eef8ff 0%, #7fbdf0 46%, #23558f 100%);
+  box-shadow:
+    inset 0 0 0 1px #ffffff40,
+    inset 0 -3px 4px #00000040;
+}
+
+/* ---------------------------------------------------------------------------
+ * 7. The hand fan — desktop
+ * `ui.js` writes `--r` (±2.2° per step from the centre) and `--y` (a shallow
+ * parabola) on every card; the cards rest as a fan, and a hovered or selected
+ * card straightens as it rises so the reading pose is always upright.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body:not(.touch-layout) #battle .hand-card {
+  transform: translateX(calc(-50% + var(--x))) rotate(var(--r, 0deg))
+    translateY(var(--y, 0px));
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hand-card:hover,
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .hand-card:focus-visible {
+  transform: translateX(calc(-50% + var(--x))) translateY(-78px) scale(1.06);
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hand-card.selected {
+  transform: translateX(calc(-50% + var(--x))) translateY(-78px) scale(1.03);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .hand-card:has(+ .hand-card:is(:hover, :focus-visible)) {
+  transform: translateX(calc(-50% + var(--x) - 22px)) rotate(var(--r, 0deg))
+    translateY(var(--y, 0px));
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .hand-card:is(:hover, :focus-visible)
+  + .hand-card {
+  transform: translateX(calc(-50% + var(--x) + 22px)) rotate(var(--r, 0deg))
+    translateY(var(--y, 0px));
+}
+
+/* ---------------------------------------------------------------------------
+ * 8. Touch consoles
+ * The strip is frameless (console.css §12); the pieces on it — the avatar or
+ * mini card, the chips, the skill node, the round end turn — take the same
+ * metal and glass as the desktop seat.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  :is(.hero.enemy, .hero.player) {
+  --seat-line: var(--arena-iron);
+  --seat-line-soft: #a9b4c259;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero.player {
+  --seat-line: var(--arena-brass);
+  --seat-line-soft: #c9a45c66;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .hero-card-inner
+  .portrait-frame,
+html[data-skin="slate"]
+  body.hero-mini
+  #battle
+  :is(.hero.enemy, .hero.player)
+  .hero-card-inner
+  .portrait-frame {
+  border: 1.5px solid var(--seat-line);
+  background: #0a0806;
+  box-shadow:
+    0 0 0 3px #0c0a08d9,
+    inset 0 0 0 1px #00000099,
+    0 4px 12px #000a;
+}
+/* the mini card gets the seat's arch */
+html[data-skin="slate"]
+  body.hero-mini
+  #battle
+  :is(.hero.enemy, .hero.player)
+  .hero-card-inner {
+  border-radius: calc(var(--mini-w) / 2) calc(var(--mini-w) / 2) 6px 6px;
+}
+html[data-skin="slate"]
+  body.hero-mini
+  #battle
+  :is(.hero.enemy, .hero.player)
+  .hero-card-inner
+  .portrait-frame {
+  box-shadow:
+    inset 0 0 0 1px #00000099,
+    0 3px 10px #000a;
+}
+html[data-skin="slate"]
+  body.hero-mini
+  #battle
+  :is(.hero.enemy, .hero.player)
+  .hero-name {
+  background: linear-gradient(#14110dd9, #0a0806f2);
+  box-shadow: inset 0 1px 0 #ffffff1c;
+  color: var(--arena-brass-hi);
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+html[data-skin="slate"] body.hero-mini #battle .hero.enemy .hero-name {
+  color: var(--arena-iron-hi);
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-name {
+  color: var(--arena-ink);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  :is(.hero.enemy, .hero.player).ready
+  .portrait-frame,
+html[data-skin="slate"]
+  body.hero-mini
+  #battle
+  :is(.hero.enemy, .hero.player).ready
+  .portrait-frame {
+  border-color: #ffb35a;
+  box-shadow:
+    0 0 0 3px #0c0a08d9,
+    0 0 14px #ff9b3d99;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  :is(.hero.enemy, .hero.player).valid-target
+  .portrait-frame,
+html[data-skin="slate"]
+  body.hero-mini
+  #battle
+  :is(.hero.enemy, .hero.player).valid-target
+  .portrait-frame {
+  border-color: #e0b455;
+  box-shadow:
+    0 0 0 2px #e0b45588,
+    0 0 12px #f0cf8299;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  :is(.hero.enemy, .hero.player).selected
+  .hero-card-inner
+  .portrait-frame {
+  border-color: var(--arena-brass-hi);
+  box-shadow:
+    0 0 0 2px #c9a45c88,
+    0 0 12px #c9a45c88;
+}
+html[data-skin="slate"] body.touch-layout #battle :is(.hero-stat, .hero-chip),
+html[data-skin="slate"] body.hero-mini #battle :is(.hero-stat, .hero-chip) {
+  gap: 4px;
+  padding: 0 7px 0 6px;
+  border: 1px solid var(--seat-line-soft);
+  background: #0c0a08d0;
+  box-shadow: 0 4px 12px #0009;
+  color: var(--arena-ink);
+  font-weight: 700;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-stat > .badge-frame {
+  display: none;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-stat::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 11px;
+  height: 11px;
+  background: var(--arena-brass-hi);
+  -webkit-mask: var(--glyph-blade) center / contain no-repeat;
+  mask: var(--glyph-blade) center / contain no-repeat;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-health::before {
+  background: #ff8592;
+  -webkit-mask-image: var(--glyph-heart);
+  mask-image: var(--glyph-heart);
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-armor::before {
+  background: var(--arena-iron-hi);
+  -webkit-mask-image: var(--glyph-shield);
+  mask-image: var(--glyph-shield);
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-health.damaged {
+  border-color: #e0475a80;
+  color: #ff9aa4;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-chip svg {
+  color: var(--arena-brass-hi);
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-covenant {
+  color: var(--arena-brass-hi);
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-covenant.ready {
+  border-color: #ffb35a99;
+  box-shadow: 0 0 8px #ff9b3d55;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-hand i {
+  background: linear-gradient(150deg, #3a3126, #1a1511 55%, #0c0a08);
+  box-shadow: 0 0 0 1px #c9a45c80;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero-phase {
+  border-color: #ffffff12;
+  background: #0c0a08b8;
+  color: var(--arena-ink-3);
+}
+/* skill node */
+html[data-skin="slate"] body.touch-layout #battle .power-button::before {
+  border: 1px solid #c9a45c80;
+  background: radial-gradient(
+    circle,
+    #ffb15a 0 33%,
+    #c8561a 36% 47%,
+    #1a120c 50% 68%,
+    #2a2118 71% 86%,
+    #3a2f22 89%
+  );
+  box-shadow:
+    0 0 20px #ff9b3d40,
+    inset 0 0 8px #000c,
+    0 6px 14px #000a;
+}
+html[data-skin="slate"] body.touch-layout #battle .power-button > b {
+  border-color: #c9a45c66;
+  background: #0c0a08d9;
+  color: var(--slate-blue);
+}
+html[data-skin="slate"] body.touch-layout #battle .power-button > span {
+  color: var(--arena-ink-2);
+  letter-spacing: 2px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .power-button:disabled::before {
+  border-color: #ffffff1a;
+  background: radial-gradient(
+    circle,
+    #3a342c 0 33%,
+    #241f19 36% 47%,
+    #14110d 50% 68%,
+    #1e1a15 71%
+  );
+  box-shadow: inset 0 0 8px #000c;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .power-button:disabled
+  > :is(span, b) {
+  border-color: #ffffff14;
+  color: var(--arena-ink-3);
+}
+/* round end turn */
+html[data-skin="slate"] body.touch-layout #battle .end-turn {
+  border: 1px solid #c9a45c99;
+  color: var(--arena-brass-hi);
+  font-weight: 600;
+  text-shadow: 0 1px 2px #000c;
+}
+html[data-skin="slate"] body.touch-layout #battle .end-turn::before {
+  background: linear-gradient(180deg, #2a2119, #14100c);
+  box-shadow:
+    inset 0 1px 0 #ffffff1a,
+    0 8px 20px #000a;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .end-turn:hover:not(:disabled)::before {
+  background: linear-gradient(180deg, #3a2f22, #1b1712);
+}
+html[data-skin="slate"] body.touch-layout #battle .end-turn.ready-end {
+  border-color: #ffd39a;
+  color: #1a0f05;
+  text-shadow: 0 1px 0 #ffffff40;
+}
+html[data-skin="slate"] body.touch-layout #battle .end-turn.ready-end::before {
+  background: linear-gradient(180deg, #ffc27a, #e0702a);
+  animation: arena-ember-breathe 2.2s ease-in-out infinite;
+}
+@keyframes arena-ember-breathe {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 1px 0 #ffffff66,
+      0 0 0 0 #ff9b3d00;
+  }
+  50% {
+    box-shadow:
+      inset 0 1px 0 #ffffff66,
+      0 0 18px 2px #ff9b3d80;
+  }
+}
+html[data-skin="slate"] body.touch-layout #battle .end-turn:disabled {
+  border-color: #ffffff14;
+  color: var(--arena-ink-3);
+}
+html[data-skin="slate"] body.touch-layout #battle .end-turn:disabled::before {
+  background: #0c0a08c4;
+  box-shadow: none;
+}
+/* mana: portrait shows the crystals, landscape a brass capsule */
+html[data-skin="slate"] body.mobile-portrait #battle .mana-gem {
+  width: 9px;
+  height: 14px;
+}
+html[data-skin="slate"] body.mobile-landscape #battle .mana-caption {
+  border-color: #c9a45c59;
+  background: #0c0a08cc;
+}
+html[data-skin="slate"]
+  body.mobile-landscape
+  #battle
+  .mana-caption
+  strong::before {
+  color: var(--slate-blue);
+}
+
+/* ---------------------------------------------------------------------------
+ * 9. Motion budget: nothing here animates on its own except the ember breath
+ * on a finished turn, which follows the platform and in-game settings.
+ * ------------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #battle
+    .end-turn.ready-end::before {
+    animation: none;
+  }
+}
+html[data-skin="slate"]
+  body.reduced-motion.touch-layout
+  #battle
+  .end-turn.ready-end::before {
+  animation: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * 10. The enemy sits at the top-right (2026-09-22), across the causeway from
+ * the player's seat at the bottom-left. Desktop moves the seat, its deck
+ * counter and the two side panels; the touch consoles mirror their content
+ * so the avatar or mini card is the outermost thing on the right.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero.enemy {
+  left: 1412px;
+  top: 94px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .enemy-deck {
+  left: auto;
+  right: 36px;
+  top: 338px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .boss-panel {
+  left: 32px;
+  right: auto;
+  top: 164px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .log-panel {
+  left: auto;
+  right: 32px;
+  top: 384px;
+}
+/* touch: the avatar / mini card hugs the right edge, the chips run leftwards */
+html[data-skin="slate"]
+  body.touch-layout
+  #battle
+  .hero.enemy
+  .hero-card-inner,
+html[data-skin="slate"]
+  body.hero-mini
+  #battle
+  :is(.hero.enemy)
+  .hero-card-inner {
+  left: auto;
+  right: var(--mini-x, 6px);
+}
+html[data-skin="slate"]
+  body.hero-mini
+  #battle
+  :is(.hero.enemy)
+  .hero-name {
+  left: auto;
+  right: var(--mini-x);
+}
+html[data-skin="slate"] body.touch-layout #battle .hero.enemy .hero-chips,
+html[data-skin="slate"] body.hero-mini #battle .hero.enemy .hero-chips,
+html[data-skin="slate"]
+  body.touch-layout.mobile-portrait:not(.hero-mini)
+  #battle
+  .hero.enemy
+  .hero-chips,
+html[data-skin="slate"]
+  body.touch-layout.mobile-landscape
+  #battle
+  .hero.enemy
+  .hero-chips,
+html[data-skin="slate"]
+  body.hero-mini.mobile-landscape
+  #battle
+  :is(.hero.enemy)
+  .hero-chips {
+  left: 6px;
+  right: calc(var(--mini-x, 6px) + var(--mini-w, 44px) + 8px);
+  justify-content: flex-end;
+}
+html[data-skin="slate"]
+  body.hero-mini.mobile-landscape
+  #battle
+  :is(.hero.enemy)
+  .hero-chips {
+  right: 4px;
+  top: calc(var(--mini-y) + var(--mini-h) + 4px);
+}
+html[data-skin="slate"] body.touch-layout #battle .hero.enemy .hero-phase {
+  right: auto;
+  left: 8px;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero.enemy .secret-indicator {
+  left: auto;
+  right: 38px;
+}

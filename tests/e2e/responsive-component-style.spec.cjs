@@ -14,6 +14,19 @@ const PAGE_SHELL_SIZES = [
   "help",
   "choice",
 ];
+// Settings and the guide float on every layout (design system §1); the relic
+// reward floats on the desktop and keeps the page shell on touch, where three
+// relic cards fill a phone.
+const FLOATING_SIZES = ["settings", "help"];
+const DESKTOP_FLOATING_SIZES = ["choice"];
+// Card-focus dialogs have no pane at all: the host blurs, the cards sit on it.
+const STAGE_SIZES = ["detail", "discover", "mulligan", "hand"];
+// Their roots therefore differ by layout on purpose and are not compared
+// across viewports.
+const LAYOUT_SHELL_ROOTS = [".settings-box", ".help-box", ".rewards-box"];
+// …and so does their close control: a round "×" on the floating pane, the
+// page shell's back chevron on touch.
+const LAYOUT_SHELL_PAGES = ["settings", "help", "rewards"];
 
 const MATERIAL_PROPERTIES = [
   "backgroundColor",
@@ -203,7 +216,9 @@ async function fingerprint(page, selectors) {
     await page.evaluate(async () => {
       await document.fonts.ready;
       // Hidden roster images also supply full-screen covenant artwork.
-      await Promise.all([...document.querySelectorAll("#modal img")].map((img) => img.decode()));
+      await Promise.all(
+        [...document.querySelectorAll("#modal img")].map((img) => img.decode()),
+      );
     });
     const type = await page.locator("#modal").getAttribute("data-type");
     await page.screenshot({
@@ -218,43 +233,86 @@ async function fingerprint(page, selectors) {
   // different shells (design system §1 「一种材质，两种外壳」), so audit each
   // against its own shell rather than against the retired single square
   // 16/26/42 panel.
-  const issues = await page.evaluate((pageShellSizes) => {
-    const issues = [];
-    for (const panel of document.querySelectorAll(".crafted-panel")) {
-      if (!panel.getBoundingClientRect().width || !panel.checkVisibility())
-        continue;
-      const s = getComputedStyle(panel);
-      const name = panel.className.split(" ").slice(0, 2).join(".");
-      const radius = parseFloat(s.borderRadius);
-      if (panel.classList.contains("folio-dialog")) {
-        const size = panel.dataset.dialogSize;
-        if (pageShellSizes.includes(size)) {
-          // page shell: square and unframed, the material sits on the host
-          if (radius !== 0)
-            issues.push(`${name}[${size}]: page shell radius ${s.borderRadius}`);
+  const issues = await page.evaluate(
+    ({ pageShellSizes, floating, desktopFloating, stageSizes }) => {
+      const touch = document.body.classList.contains("touch-layout");
+      const issues = [];
+      for (const panel of document.querySelectorAll(".crafted-panel")) {
+        if (!panel.getBoundingClientRect().width || !panel.checkVisibility())
+          continue;
+        const s = getComputedStyle(panel);
+        const name = panel.className.split(" ").slice(0, 2).join(".");
+        const radius = parseFloat(s.borderRadius);
+        if (panel.classList.contains("folio-dialog")) {
+          const size = panel.dataset.dialogSize;
+          const pageShell =
+            pageShellSizes.includes(size) &&
+            !floating.includes(size) &&
+            (touch || !desktopFloating.includes(size));
+          const stage =
+            stageSizes.includes(size) &&
+            panel.parentElement.dataset.type !== "touch-hero";
+          if (stage) {
+            // stage shell: no pane — the host carries the dim and the blur
+            if (
+              s.backgroundImage !== "none" ||
+              s.backgroundColor !== "rgba(0, 0, 0, 0)"
+            )
+              issues.push(`${name}[${size}]: stage shell paints a pane`);
+            if (parseFloat(s.borderTopWidth) > 0)
+              issues.push(`${name}[${size}]: stage shell has a border`);
+            if (s.boxShadow !== "none")
+              issues.push(`${name}[${size}]: stage shell has a shadow`);
+            const host = getComputedStyle(panel.parentElement);
+            if (
+              (host.backdropFilter || host.webkitBackdropFilter || "none") ===
+              "none"
+            )
+              issues.push(`${name}[${size}]: stage host has no backdrop blur`);
+          } else if (pageShell) {
+            // page shell: square and unframed, the material sits on the host
+            if (radius !== 0)
+              issues.push(
+                `${name}[${size}]: page shell radius ${s.borderRadius}`,
+              );
+          } else {
+            // floating shell: a 24px liquid-glass pane — a tinted gradient over
+            // a backdrop blur, edged by an inset highlight rather than a border
+            if (radius !== 24)
+              issues.push(
+                `${name}[${size}]: floating shell radius ${s.borderRadius}`,
+              );
+            if (s.backgroundImage === "none")
+              issues.push(`${name}[${size}]: floating shell has no tint`);
+            const blur = s.backdropFilter || s.webkitBackdropFilter || "none";
+            if (blur === "none")
+              issues.push(
+                `${name}[${size}]: floating shell has no backdrop blur`,
+              );
+            if (parseFloat(s.borderTopWidth) > 0)
+              issues.push(`${name}[${size}]: floating shell has a border`);
+            if (!/inset/.test(s.boxShadow))
+              issues.push(`${name}[${size}]: floating shell has no rim`);
+          }
         } else {
-          // floating shell: a 16px card carrying the one slate material
-          if (radius !== 16)
-            issues.push(
-              `${name}[${size}]: floating shell radius ${s.borderRadius}`,
-            );
-          if (s.backgroundImage === "none")
-            issues.push(`${name}[${size}]: floating shell has no material`);
-          if (parseFloat(s.borderTopWidth) <= 0)
-            issues.push(`${name}[${size}]: floating shell has no edge`);
+          // Contained surfaces take several slate shapes — rounded matte cards
+          // (§5.6), painted material columns (§5.2) and unadorned columns
+          // sectioned by hairlines (T3) — so there is no single geometry to
+          // pin. What none of them may do is wear the retired silverblue panel:
+          // a square framed pane filled with rgba(16, 26, 42, .9).
+          if (s.backgroundColor === "rgba(16, 26, 42, 0.9)")
+            issues.push(`${name}: retired silverblue panel material`);
         }
-      } else {
-        // Contained surfaces take several slate shapes — rounded matte cards
-        // (§5.6), painted material columns (§5.2) and unadorned columns
-        // sectioned by hairlines (T3) — so there is no single geometry to
-        // pin. What none of them may do is wear the retired silverblue panel:
-        // a square framed pane filled with rgba(16, 26, 42, .9).
-        if (s.backgroundColor === "rgba(16, 26, 42, 0.9)")
-          issues.push(`${name}: retired silverblue panel material`);
       }
-    }
-    return issues;
-  }, PAGE_SHELL_SIZES);
+      return issues;
+    },
+    {
+      pageShellSizes: PAGE_SHELL_SIZES,
+      floating: FLOATING_SIZES,
+      desktopFloating: DESKTOP_FLOATING_SIZES,
+      stageSizes: STAGE_SIZES,
+    },
+  );
   expect(issues).toEqual([]);
   return result;
 }
@@ -391,6 +449,11 @@ test("shared components keep one material contract across viewports", async ({
         // Responsive composition may hide or replace navigation affordances.
         // Only compare components that are physically present in both layouts.
         if (!actual) continue;
+        if (
+          LAYOUT_SHELL_ROOTS.includes(selector) ||
+          (LAYOUT_SHELL_PAGES.includes(pageName) && selector === ".modal-close")
+        )
+          continue;
         for (const property of MATERIAL_PROPERTIES)
           if (actual[property] !== expected[property])
             differences.push(

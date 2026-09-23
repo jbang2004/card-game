@@ -86,7 +86,7 @@ const EmberFx2 = (() => {
    * 40% 振幅做同相位的位移（不缩放，贴着舞台边缘的卡不会被推出去）。
    * 顶栏、手牌、HUD 不在其中。ox/oy = 元素左上角在舞台坐标里的偏移，引擎用它把
    * transform-origin 换算进元素自己的盒子，所有层围绕同一个冲击点缩放。 */
-  const CAMERA_IDS = ["world-canvas", "fx-gl", "fx-3d", "minions"];
+  const CAMERA_IDS = ["world-canvas", "arena-gl", "fx-gl", "fx-3d", "minions"];
   const SHAKE_IDS = ["player-hero", "enemy-hero"];
   const HERO_SHAKE = 0.4;
   let cameraList = [];
@@ -429,6 +429,7 @@ const EmberFx2 = (() => {
     contact(o) {
       if (!available()) return false;
       prepare("contact");
+      if (typeof EmberArena3D !== "undefined" && (o.tier || 0) >= 2) EmberArena3D.scorch(o.at);
       if(meshEngine){const now=performance.now();meshEngine.emit("contact",{...o,from:o.at,to:o.at,startedAt:now,contactAt:now,visualOnly:true,silent:true});return EmberFx2Engine.plan("contact",o);}
       return engine.contact(o);
     },

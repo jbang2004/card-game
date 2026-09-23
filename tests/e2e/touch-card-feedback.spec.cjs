@@ -72,8 +72,13 @@ test('rubbing an opening choice does not toggle it; a tap still does', async ({ 
   await page.locator('#hero-confirm').click();
   const choice = page.locator('.mulligan-card').first();
   await expect(choice).toBeVisible();
-  await rub(page, cdp, choice.locator('> .card'), '--relief-ry', 25);
+  // the opening hand is still (2026-09-22): rubbing neither turns nor toggles it
+  const box = await choice.boundingBox();
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: box.x + box.width * 0.2, y: box.y + box.height / 2 }] });
+  for (let i = 1; i <= 6; i++) await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: box.x + box.width * (0.2 + 0.1 * i), y: box.y + box.height / 2 }] });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   await expect(choice).not.toHaveClass(/replace/);
+  expect(Math.abs(parseFloat(await choice.locator('> .card').evaluate((el) => el.style.getPropertyValue('--relief-ry'))) || 0)).toBeLessThan(1);
   await choice.tap();
   await expect(choice).toHaveClass(/replace/);
   await context.close();
@@ -160,7 +165,9 @@ test('pinned battlefield detail follows the finger and cancellation returns it t
   await touch(cdp, 'touchStart', box.x + box.width * .8, box.y + box.height / 2);
   await touch(cdp, 'touchMove', box.x + box.width * .9, box.y + box.height / 2);
   await touch(cdp, 'touchCancel');
-  await expect.poll(() => detail.locator('> .card').evaluate(el => Math.abs(parseFloat(el.style.getPropertyValue('--relief-ry'))))).toBeLessThan(1);
+  // The relief settles through zero and may then sway; sample every frame so the
+  // pass through rest is never missed by a sparse poll.
+  await page.waitForFunction(() => Math.abs(parseFloat(document.querySelector('#card-preview[data-mode=pinned] > .card').style.getPropertyValue('--relief-ry'))) < 1, null, { timeout: 8000 });
   await context.close();
 });
 

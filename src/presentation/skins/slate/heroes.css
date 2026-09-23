@@ -144,7 +144,7 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="heroes"]
   .hero-options::before {
   content: "全部英雄";
-  border-bottom: 1px solid var(--slate-line);
+  border-bottom: 0;
   font: 700 20px/1.2 var(--slate-font);
   color: #fff;
   letter-spacing: 1px;
@@ -161,8 +161,7 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="heroes"]
   .hero-option {
   border: 0;
-  border-bottom: 1px solid var(--slate-line);
-  border-radius: 0;
+  border-radius: 14px;
   background: none;
   box-shadow: none;
   color: var(--slate-ink);
@@ -194,13 +193,7 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
   .hero-option::before {
-  content: "";
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  top: 46px;
-  height: 1px;
-  background: var(--slate-line);
+  content: none;
 }
 html[data-skin="slate"]
   body
@@ -210,7 +203,7 @@ html[data-skin="slate"]
   body
   #modal.folio-host[data-type="heroes"]
   .hero-option.selected {
-  background: linear-gradient(90deg, #ffffff0d, #ffffff00 85%);
+  background: var(--glass-fill-2);
 }
 html[data-skin="slate"]
   body
@@ -465,7 +458,7 @@ html[data-skin="slate"]
   body
   #modal.folio-host[data-type="heroes"]
   .hero-profile-heading {
-  border-bottom: 1px solid var(--slate-line);
+  border-bottom: 0;
   background: none;
 }
 html[data-skin="slate"]
@@ -655,7 +648,7 @@ html[data-skin="slate"]
   body
   #modal.folio-host[data-type="heroes"]
   .hero-config-intro {
-  border-top: 1px solid var(--slate-line);
+  border-top: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -722,7 +715,7 @@ html[data-skin="slate"]
   body
   #modal.folio-host[data-type="heroes"]
   .hero-mode-cards {
-  border-top: 1px solid var(--slate-line);
+  border-top: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -756,11 +749,11 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="heroes"]
   .hero-mode-cards
   button {
-  border-radius: 10px;
-  border: 1px solid var(--slate-line-strong);
-  background: #0f141d99;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: var(--glass-fill-2);
   color: #fff;
-  box-shadow: none;
+  box-shadow: inset 0 1px 0 #ffffff1f;
   transition:
     border-color 0.15s,
     box-shadow 0.15s;
@@ -851,7 +844,14 @@ html[data-skin="slate"]
   body
   #modal.folio-host[data-type="heroes"]
   .hero-composition {
-  border-top: 1px solid var(--slate-line);
+  border: 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  :is(em, p) {
+  border: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -947,7 +947,7 @@ html[data-skin="slate"]
   body
   #modal.folio-host[data-type="heroes"]
   .hero-config-contract {
-  border-top: 1px solid var(--slate-line);
+  border-top: 0;
   border-bottom: 0;
 }
 html[data-skin="slate"]
@@ -980,7 +980,7 @@ html[data-skin="slate"]
   body
   #modal.folio-host[data-type="heroes"]
   .hero-config-plan {
-  border-top: 1px solid var(--slate-line);
+  border-top: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -1745,4 +1745,677 @@ html[data-skin="slate"]
   top: auto;
   grid-column: auto;
   padding: 0;
+}
+
+/* ==========================================================================
+   卡牌舞台 / the hero page as a card stage (2026-09-22)
+   The page reads like the opening hand: one big relief card, a row of hero
+   cards to pick from, one compact column of choices, one primary action. The
+   navigation rail, the roster list chrome, the intro copy and the composition
+   chart are gone; the DOM is untouched (design system §5.1). Shared rules use
+   `body:is(.touch-layout, :not(.touch-layout))` so they tie the per-layout
+   rules above on specificity and win on source order.
+   ========================================================================== */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  > .hero-chooser {
+  --stage-config: 470px;
+  --stage-gap: 56px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-single-sheet {
+  display: grid;
+  grid-template-columns: var(--slate-card-w) var(--stage-config);
+  grid-template-rows: minmax(var(--slate-card-h), auto) auto;
+  grid-template-areas:
+    "art config"
+    "roster roster";
+  column-gap: var(--stage-gap);
+  row-gap: 30px;
+  justify-content: center;
+  align-content: start;
+  padding: 30px 0 0;
+  min-height: 0;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-chooser
+  > .scene-showcase {
+  left: calc(
+    50% - (var(--slate-card-w) + var(--stage-gap) + var(--stage-config)) / 2
+  );
+  top: 118px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-roster {
+  display: block;
+  grid-area: roster;
+  min-width: 0;
+}
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-roster-heading,
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-intro,
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-composition,
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading
+  small,
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  small,
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  em {
+  display: none;
+}
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-options::before,
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-option::before,
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-option:not(.selected)::after,
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-option:not(.selected):hover::after {
+  content: none;
+  display: none;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-options {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 22px;
+  padding: 6px 0 10px;
+}
+/* --- a hero option is a card: art, a name band, nothing else --- */
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  grid-template-columns: none;
+  grid-template-rows: none;
+  grid-template-areas: none;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: var(--glass-fill-2);
+  box-shadow: inset 0 1px 0 #ffffff1f;
+  overflow: hidden;
+  text-align: center;
+  transition:
+    transform var(--m-base) var(--e-std),
+    box-shadow var(--m-base) var(--e-std),
+    background var(--m-base) var(--e-std);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-option {
+  flex: 0 0 156px;
+  width: 156px;
+}
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  > img {
+  grid-area: auto;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 5 / 6;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  object-fit: cover;
+  object-position: 50% 18%;
+  box-shadow: none;
+  transform: none;
+}
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-option-text {
+  display: block;
+  padding: 10px 10px 12px;
+}
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  h3 {
+  grid-area: auto;
+  margin: 0;
+  font: 700 16px/1.3 var(--slate-font);
+  letter-spacing: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  .selected-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--slate-blue-deep);
+  box-shadow: 0 0 14px #2f72d6aa;
+  color: #fff;
+  font-size: 0;
+}
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  .selected-check
+  svg {
+  width: 14px;
+  height: 14px;
+}
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-option:not(.selected)
+  .selected-check {
+  display: none;
+}
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-option:hover {
+  background: #ffffff1a;
+  transform: translateY(-4px);
+}
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-option.selected {
+  background: #16243a;
+  box-shadow:
+    inset 0 0 0 2px var(--slate-blue),
+    0 0 28px #8cc4ff4d,
+    0 14px 30px #0008;
+  transform: translateY(-8px);
+}
+/* --- the choices column beside the card --- */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-configuration {
+  grid-area: config;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 2px 0 0;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading {
+  margin: 0 0 4px;
+  padding: 0;
+}
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading
+  h3 {
+  color: #fff;
+  font: 700 30px/1.2 var(--slate-font);
+  letter-spacing: 2px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill {
+  padding: 10px 0 14px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  :is(
+    .hero-config-deck,
+    .hero-config-mode,
+    .hero-mode-cards,
+    .hero-config-contract
+  ) {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards
+  button {
+  min-height: 54px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-plan {
+  padding: 4px 0 0;
+}
+
+/* --- touch: the same stage stacked; the hero cards become a swipe row --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-options {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  padding: 6px 4px 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-options::-webkit-scrollbar {
+  display: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-option {
+  flex: 0 0 104px;
+  width: 104px;
+  scroll-snap-align: center;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-option-text {
+  padding: 8px 6px 10px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  h3 {
+  font-size: 14px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-option.selected {
+  transform: translateY(-4px);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-configuration {
+  margin-top: 4px;
+}
+@media (max-height: 500px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-option {
+    flex-basis: 84px;
+    width: 84px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-option
+    h3 {
+    font-size: 13px;
+  }
+}
+
+/* --- stage polish: the pieces the older rules still dressed up --- */
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading
+  h3::before {
+  content: none;
+}
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-option.selected
+  .selected-check,
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  .selected-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  left: auto;
+  bottom: auto;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--slate-blue-deep);
+  box-shadow: 0 0 14px #2f72d6aa;
+  color: #fff;
+  font-size: 0;
+  letter-spacing: 0;
+}
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  .selected-check::before,
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  .selected-check::after {
+  content: none;
+}
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-plan
+  .deck-plan {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  font: 400 13px/1.6 var(--slate-font);
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract
+  summary
+  small {
+  display: none;
+}
+/* desktop: the choices column must not outgrow the card */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill {
+  margin: 0 0 6px;
+  padding: 8px 0 10px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  :is(
+    .hero-config-deck,
+    .hero-config-mode,
+    .hero-mode-cards,
+    .hero-config-contract
+  ) {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards
+  button {
+  min-height: 48px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-single-sheet {
+  row-gap: 22px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-option {
+  flex-basis: 132px;
+  width: 132px;
+}
+/* touch: nothing older may pin the swipe row's height */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  :is(.hero-roster, .hero-options, .hero-option) {
+  height: auto;
+  max-height: none;
+  min-height: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-options {
+  scroll-padding-inline: 4px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-option {
+  scroll-snap-align: start;
+}
+
+/* the 「英雄预览」 kicker was drawn by a pseudo-element; the name stands alone */
+html[data-skin="slate"]
+  body:is(.touch-layout, :not(.touch-layout))
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading::before {
+  content: none;
+  display: none;
+}
+/* touch: four cards share the row instead of swiping — 82px on a 390 phone */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-options {
+  gap: 10px;
+  padding: 6px 0 12px;
+  overflow: visible;
+  scroll-snap-type: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-option {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+  max-width: 124px;
+}
+@media (max-height: 500px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-option {
+    flex: 1 1 0;
+    width: auto;
+    max-width: 96px;
+  }
+}
+/* desktop windows under 820px tall cannot stack the hero row under the card:
+ * the four cards become a 2×2 block in a third column */
+@media (max-height: 820px) {
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="heroes"]
+    > .hero-chooser {
+    --stage-config: 400px;
+    --stage-gap: 40px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="heroes"]
+    .hero-single-sheet {
+    grid-template-columns: var(--slate-card-w) var(--stage-config) 262px;
+    grid-template-rows: minmax(var(--slate-card-h), auto);
+    grid-template-areas: "art config roster";
+    padding-top: 18px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="heroes"]
+    .hero-chooser
+    > .scene-showcase {
+    left: calc(
+      50% -
+        (
+          var(--slate-card-w) + 2 * var(--stage-gap) + var(--stage-config) +
+            262px
+        ) /
+        2
+    );
+    top: 106px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="heroes"]
+    .hero-options {
+    display: grid;
+    grid-template-columns: repeat(2, 120px);
+    justify-content: start;
+    gap: 14px;
+    padding: 2px 0 0;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="heroes"]
+    .hero-option {
+    flex-basis: auto;
+    width: auto;
+  }
+}
+
+/* --- tablet / wide touch (≥900×620): the hero row sits over the choices in
+   one column to the right of the relief card; the footer spans the page and
+   keeps its actions at the right --- */
+@media (min-width: 900px) and (min-height: 620px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    > .hero-chooser {
+    grid-template-columns: 240px minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "head head"
+      "art pane"
+      "foot foot";
+    column-gap: 36px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    > .hero-chooser
+    > .modal-footer {
+    justify-content: flex-end;
+    gap: 14px;
+    margin-top: 10px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-single-sheet {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    max-width: 620px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-options {
+    justify-content: flex-start;
+    gap: 14px;
+    padding: 4px 0 18px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-option {
+    flex: 0 0 110px;
+    width: 110px;
+    max-width: 110px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-profile-heading
+    h3 {
+    font-size: 28px;
+  }
+}
+@media (min-width: 900px) and (min-height: 620px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    > .hero-chooser
+    > .modal-footer {
+    width: 100%;
+    max-width: none;
+    justify-self: stretch;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    > .hero-chooser
+    > .modal-footer
+    > button {
+    flex: 0 0 auto;
+    min-width: 200px;
+  }
 }

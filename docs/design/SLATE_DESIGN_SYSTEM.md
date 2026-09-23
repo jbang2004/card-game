@@ -8,7 +8,7 @@
 
 | 参考元素 | 本项目实现 |
 | --- | --- |
-| 深蓝灰磨砂底 + 左上柔光 + 细斜纹 | `--slate-material`：三层径向渐变 + `repeating-linear-gradient(45deg)` 7px 斜纹 + 160° 线性渐变，纯 CSS，无位图 |
+| 深蓝灰磨砂底 + 左上柔光 + 细斜纹 | 2026-09-22 起改为**液态玻璃**：`--glass-fill` 透色 + `--glass-blur` 背景模糊 + `--glass-rim` 折射内高光，斜纹与描边一并删除；页面壳背后铺模糊后的 `--scene-backdrop` 夜景原画。旧 `--slate-material` 只剩别名 |
 | 左上「‹ 阵容」 | 关闭按钮改为 44px 返回箭头（CSS 描边），标题 32px 粗黑体 |
 | 左侧节点导航轨（发光圆点 + 空心小点 + 竖线） | 设置页 `.settings-nav` 与手册 `.help-toc` 的真实分页按钮成为节点，选中项显示图标与蓝色发光 |
 | 中列条目（标题行 / 分隔线 / 缩略图 / 药丸按钮） | 英雄页 `.hero-option` 为 grid：名称 + 英文副标题一行、发丝线、72×96 圆角缩略图、技能说明、「选择英雄 / 已选择」药丸 |
@@ -22,8 +22,10 @@
 
 ## 1. 设计原则
 
-1. **一种材质，两种外壳。** 所有 UI 面板只用 `--slate-material`（磨砂深蓝灰 + 左上柔光 + 45° 细斜纹）。全屏功能页用「页面壳」（满屏、无边框、左上返回箭头）；叠在场景或战场上的用「浮层壳」（圆角 16、细边、深投影、右上圆形关闭）。
-2. **发丝线分节，不套框。** 内容分组靠 1px `--slate-line` 分隔线与粗黑体节标题，不再使用四角 SVG、玻璃底、双层框。只有可点选的实体（卡片、缩略图、模式卡）才有圆角描边容器。
+1. **一块玻璃，两种外壳（2026-09-22 起）。** 所有 UI 面板都是液态玻璃：`--glass-fill` 透色 + `--glass-blur` 背景模糊 + `--glass-rim` 折射内高光（顶亮、底暗、5% 轮廓），不画边框、不用斜纹。全屏功能页用「页面壳」：面板本体透明，宿主 `::before` 铺模糊 30px 的 `--scene-backdrop` 夜景原画并盖一层左深右浅的暗幕（左 65% → 中 40% → 右 50%），左上返回箭头；叠在场景或战场上的用「浮层壳」：圆角 24、无边、blur 28 + 饱和 160%、`--glass-rim` + 柔投影，宿主暗幕 55%，右上圆形关闭。不支持 backdrop-filter 或系统「减少透明度」时，`@supports` / `prefers-reduced-transparency` 把玻璃退化为近不透明着色。
+   - **哪些页面全屏。** 只有内容真正铺满的页面才用页面壳：英雄、图鉴、地图、契约。设置与旅人手册在**所有布局**都是浮层壳（桌面 920 / 1240 宽；触屏 640 / 900 宽、16px 内边距、44px 圆形关闭、22px 标题），高度贴内容、最多占满视口后内部滚动，背后是清晰的场景加 55% 暗幕。遗物奖励桌面用 1080 宽浮层壳，触屏仍是页面壳（三张遗物卡要铺满手机）。`tests/e2e/responsive-component-style.spec.cjs` 的 `FLOATING_SIZES` / `DESKTOP_FLOATING_SIZES` 与 `dialog-sizing.spec.cjs` 记录这一约定。
+   - **舞台壳（第三种壳）。** 起手换牌、发现、卡牌详情表、手牌总览是「看卡」的页面：对话框本体完全透明、无边无影，宿主铺 65% 暗幕 + 18px 背景模糊（触屏 10px），卡牌、一行居中标题（带投影）和操作药丸直接落在模糊的战场上。英雄信息表共用 `detail` 尺寸但是数据面板，保留浮层壳。图鉴的卡片舞台（`EmberCardStage`）本来就是这个语言。起手换牌的三张牌是**静止**的：不挂浮雕、不倾斜、不上浮（2026-09-22，`heroes.js` 不再 `attend` 它们）。神祇舞台的卡在桌面按视口高度放大到最多 480 宽（`contracts.js stageCardWidth`），hover 同一张卡不再重建右侧仪式面板。
+2. **留白分组，不画线。** 内容分组靠 24–32px 留白与粗黑体节标题；需要块感的分组放进比外层浅一档的**子玻璃块** `--glass-fill-2`（圆角 16–20，顶部 1px 内高光，内边距 20/22）；列表行靠行距与 hover / 选中的圆角填充区分；标题行、页脚、文字分页、栏与栏之间一律不再画 1px 发丝线。全站保留的线只有两类：导航轨的 2px 竖线（导航语义）与手册示意图的连线（图示语义）。可点选实体（卡片、缩略图、模式卡）仍有轮廓，但用内高光和 `--glass-fill-2` 底而非描边；选中态仍是蓝色描边 + 发光。
 3. **药丸即按钮。** 主操作为蓝色药丸，次操作为深色药丸，禁用为灰字细边；不再使用位图按钮皮肤、切角、冰晶纹理。
 4. **节点即导航。** 竖向导航轨：2px 竖线 + 56px 发光节点（选中）/ 16px 空心点（未选中）+ 25px 粗体标签。水平分页用文字 + 竖线分隔 + 白色下划亮条。
 5. **原画只在卡片里或作为场景底。** 主页、地图、战场、契约保留场景原画；功能页里的原画一律装进圆角描边卡片（英雄预览卡、缩略图、遗物卡）。
@@ -43,16 +45,27 @@
 | `--slate-font` | PingFang SC / Hiragino Sans GB / Source Han Sans / Noto Sans SC / Microsoft YaHei / system-ui | 全部文字，标题 700，正文 400/500 |
 | `--slate-ink` `--slate-ink-2` `--slate-ink-3` | #f3f6fa / #c3ccd8 / #8e99a9 | 主文字 / 次文字 / 弱文字 |
 | `--slate-blue` `--slate-blue-deep` | #8cc4ff / #2f72d6 | 强调文字、选中描边 / 主按钮、选中填充 |
-| `--slate-line` `--slate-line-strong` | #ffffff26 / #ffffff40 | 发丝线 / 竖线分隔、浮层边 |
+| `--slate-line` `--slate-line-strong` | #ffffff26 / #ffffff40 | 仅剩导航轨竖线、图示连线与少数可点选实体轮廓（契约缩略图）使用；**不再作分节线或浮层边** |
 | `--slate-line-art` | #ffffff59 | 场景原画（T5）上的发丝线，`--slate-line` 压在画面上会看不见 |
-| `--slate-pill` `--slate-pill-line` | #121824b3 / #ffffff2e | 深色药丸底 / 边 |
+| `--slate-pill` `--slate-pill-line` | #121824b3 / #ffffff12 | 深色药丸底 / 7% 的极淡边（战场 HUD 芯片仍引用；对话框内的药丸已改为 #ffffff14 底 + 顶部内高光，无边） |
 | `--slate-card-line` `--slate-card-base` | #d6dfe9aa / #0f141d | 卡片描边 / 卡片底 |
-| `--slate-material` | 三层径向渐变 + 45° 斜纹 + 160° 线性渐变 | 页面壳与浮层壳底 |
+| `--glass-fill` | 左上 9% 白色高光 + 160° `#1a2231ad → #0f151fa3` 透色 | 玻璃着色（浮层壳、战场侧栏、英雄信息表等） |
+| `--glass-fill-2` | #ffffff0f | 子玻璃块：面板内分组、模式卡、手册内容卡、图鉴牌组编辑列、设置分组 |
+| `--glass-blur` | `blur(28px) saturate(160%)` | 玻璃的 backdrop-filter；回退时为 `none` |
+| `--glass-rim` | `inset 0 1px 0 #ffffff30, inset 0 -1px 0 #00000030, inset 0 0 0 1px #ffffff0c` | 折射边缘：顶部亮唇、底部阴影、5% 轮廓，代替 border |
+| `--glass-shadow` | `0 30px 80px #00000080` | 浮层柔投影，与 `--glass-rim` 一起写进 box-shadow |
+| `--slate-material` | `var(--glass-fill)` | **别名**，只为兼容尚未改写的旧引用（dialogs / map / mobile 的少数面板）；新代码直接用 `--glass-fill` |
 | `--slate-page-x` `--slate-rail` `--slate-list` `--slate-col-gap` `--slate-card-w/h` `--slate-thumb-w/h` | 48 / 200 / 400 / 40 / 300×430 / 72×96 px；`max-width:1500px` 时 36 / 150 / 330 / 28 / 240×344 | 页面壳几何 |
 | `--covenant-col` | `clamp(400px, 42vw, 600px)` | 契约页右栏列宽。分页轨与面板在不同子树里，必须共用同一条列边，所以不能挂在其中任何一个上（2026-09-14 由 contracts.css 上收） |
 | `--slate-hud-hit` | `max(44px, calc(44px / var(--scale, 1)))` | 战场 HUD 的最小命中区。`#battle` 是被 `--scale` 缩放的 1600×940 逻辑画布，按逻辑 px 写的控件会随窗口缩小；本令牌把它还原成 44 个真实设备 px。**必须声明在 `#app` 上而不是根元素**：自定义属性里的 `var()` 在「持有该声明的元素」上求值，而 `mobile-view.js` 是把 `--scale` 作为内联样式写在 `#app` 上的；写在 `html` 上会永远取 fallback 1，塌成固定 44px（2026-09-14 由 battle.css 上收） |
 | `--m-fast` `--m-base` `--m-stage` `--m-cine` | 120ms / 180ms / 320ms / 550ms | 动效时长（2026-09-14 第三轮加入）。`--m-fast` = 芯片数值变化、hover 让位；`--m-base` = 手牌抬起、选中、令牌高亮；`--m-stage` = 浮层进出、随从落场；`--m-cine` = 神卡出场、降临仪式。**退场时长 = 进场的 60%**（例：神卡进场 `--m-cine`，退场 `--m-stage`），同组元素共用一条时间线；`prefers-reduced-motion` 与设置里的「减少动态效果」下一律退化为 0.2s 淡入淡出 |
 | `--e-std` `--e-spring` `--e-exit` | `cubic-bezier(.2,.8,.2,1)` / `cubic-bezier(.34,1.4,.64,1)` / `cubic-bezier(.4,0,1,1)` | 缓动（同上）。`--e-std` = 进场与常规过渡；`--e-spring` = 带过冲的落定（神卡飞行、芯片弹入）；`--e-exit` = 退场，加速离开 |
+
+| `--arena-brass/-hi/-lo` `--arena-iron/-hi/-lo` | #c9a45c / #f3dfa6 / #6e5120；#a9b4c2 / #e6edf5 / #4a5563 | 对局台金属：玩家旧铜、敌方冷铁（2026-09-22 由 arena.css 上收） |
+| `--arena-ember/-hi/-lo` `--arena-crimson` | #ff9b3d / #ffd39a / #b4471a；#e0475a | 余烬 = 此刻可行动；朱红 = 受伤 / 敌方回合 |
+| `--arena-ink/-2/-3` | #f6efe2 / #cdbfa6 / #8f8471 | 对局台上的暖白文字三档 |
+| `--arena-glass` `--arena-glass-line` | 170° `#1b1712e0 → #0c0a08ea`；#ffffff14 | 烟黑曜石玻璃底与 8% 发丝线 |
+| `--arena-metal-brass` `--arena-metal-iron` | 155° 五段渐变 | 用 mask 画成 2px 金属环（令牌、座席） |
 
 新增页面若需要新令牌（例如战场 HUD 的半透明底 `--slate-hud`），在最终报告中提出，由协调者并入 base.css；页面文件里先用字面值并加 `/* token candidate */` 注释。
 
@@ -61,23 +74,24 @@
 | 组件 | 规格 | 已有实现参考 |
 | --- | --- | --- |
 | 页面标题 | 返回箭头 44px（CSS 描边 chevron，左 36 上 26）+ 标题 32px/700/字距 3px，标题左侧留 48px | base.css `.modal-close` / `.modal-heading h2` |
-| 节标题 | 20–26px/700 白字，下方 12px 发丝线；可带「\| 蓝色副标」 | heroes.css `.hero-profile-heading` |
+| 节标题 | 20–26px/700 白字，下方 12–14px 留白（无发丝线）；可带「\| 蓝色副标」 | heroes.css `.hero-profile-heading` |
 | 文字分页 | 20px，未选 ink-3，选中白色 700 + 3px 白色下划亮条（发光），项间 1px 竖线 | library.css `.filter-type-group` |
 | 圆形芯片 | 36px 圆，深色药丸底；选中蓝底白字 | library.css `.filter-btn.mana` |
 | 导航轨 | 2px 竖线 left 27px；选中节点 56px 径向蓝光圆 + 图标；未选 16px 空心点；标签 25px/700 | settings.css `.settings-nav` |
-| 主药丸 / 次药丸 | 高 48–52，圆角 999，主：`linear-gradient(180deg,#4a8be6,#2c66c4)` 边 #8cc4ff99；次：`--slate-pill` 底 + 边；文字 18px/500–600 | base.css `.gold-btn` `.ghost-btn` |
+| 主药丸 / 次药丸 | 高 48–52，圆角 999，无边。主：`linear-gradient(180deg,#4a8be6,#2c66c4)` + `inset 0 1px 0 #ffffff59` + 蓝色柔光 `0 10px 28px #2f72d659`；次：#ffffff14 底 + `inset 0 1px 0 #ffffff2e`，hover #ffffff24；文字 18px/500–600 | base.css `.gold-btn` `.ghost-btn` |
 | 小药丸 | 高 30–38，13–16px | base.css `.library-inspect`、heroes 「选择英雄」 |
 | 开关 | 104×40 药丸，圆形滑块；开启蓝底白字 | settings.css `.toggle` |
 | 滑杆 | 现有轨道，浅蓝进度，白色圆形滑块 | settings.css `.audio-level` |
-| 下拉 / 输入 | 高 44，圆角 999，药丸底与边，16px | base.css `select.library-search` |
+| 下拉 / 输入 | 高 44，圆角 999，#ffffff14 底 + 顶部内高光，无边，16px | base.css `select.library-search` |
 | 卡片容器 | 圆角 8–12，1.5px `--slate-card-line`，底 `--slate-card-base`，投影 `0 8px 20px #0007`；内侧 6px 处 1px #ffffff2a 细内框（大卡） | heroes.css `.scene-showcase` |
 | 缩略图 | 72×96（列表）/ 56×56（身份）/ 96×128（预览列表），圆角 8，1.5px 描边，`object-fit: cover` | heroes.css `.hero-option img` |
-| 模式卡 / 可选块 | 圆角 10，1px `--slate-line-strong`，底 #0f141d99；选中：边 `--slate-blue` + `inset 0 0 0 1px` + 外发光 #8cc4ff33 + 底 #16243a | heroes.css `.hero-mode-cards button` |
+| 模式卡 / 可选块 | 圆角 12，无边（1px 透明占位），底 `--glass-fill-2` + `inset 0 1px 0 #ffffff1f`；选中：边 `--slate-blue` + `inset 0 0 0 1px` + 外发光 #8cc4ff33 + 底 #16243a | heroes.css `.hero-mode-cards button` |
+| 子玻璃块 | 圆角 16–20，底 `--glass-fill-2` + `inset 0 1px 0 #ffffff14`，内边距 20/22，块与块之间 12px；用于设置分组、图鉴牌组编辑列、手册内容卡 | settings.css `.settings-options`、library.css `.deck-editor`、guide.css `.help-turn-flow` |
 | 列表行 | 高 40，圆角 8，深色底 + 右侧半透明卡图，左侧 28px 圆形费用 | library.css `.deck-row` |
 | 进度条 | 轨道 6px #ffffff1f 圆角，进度 `--slate-blue-deep`→`--slate-blue` | 新增（契约页） |
 | 徽章芯片 | 高 28，圆角 999，药丸底，14px，`b` 白色 | heroes.css `.comp-counts span` |
-| 浮层壳 | 圆角 16，边 `--slate-line-strong`，投影 `0 30px 80px #000a`，内边距 28/32，宿主暗幕 #0b0f16b8；关闭为右上 40px 圆 | base.css（重构后） |
-| HUD 芯片（战场） | 高 36–44 药丸，底 #0f141dcc，边 #ffffff2e，图标 + 数字；重要节点（技能）用 56px 发光圆 | 战场任务新增 |
+| 浮层壳 | 圆角 24，无边，底 `--glass-fill`，`backdrop-filter: var(--glass-blur)`，`box-shadow: var(--glass-rim), var(--glass-shadow)`，内边距 28/32，宿主暗幕 #0b0f168c；关闭为右上 40px 圆（#ffffff14 底 + 顶部内高光）。战场侧栏（战斗记录 / 首领情报）同一套，圆角 20 | base.css、battle.css §4、mobile.css §9 |
+| HUD 芯片（战场） | 高 36–44 药丸，底 #0f141dcc，边 `--slate-pill-line`（7%，几乎不可见），图标 + 数字；重要节点（技能）用 56px 发光圆。HUD 芯片的完整玻璃化（内高光代替边）待下一轮 | 战场任务新增 |
 | 提示 / Toast | 深色药丸，最大宽 520，16px，居中 | 战场任务新增 |
 
 状态：hover 底变亮 (#1b2434d9) 边 `--slate-line-strong`；pressed `transform: scale(.98)`；focus-visible 2px `--slate-blue` 外描边；disabled 文字 ink-3、边 #ffffff1a；遵循 `prefers-reduced-motion` 与游戏「减少动态效果」设置（不新增动画，仅 0.15–0.2s 过渡）。
@@ -85,15 +99,23 @@
 ## 4. 布局模板
 
 - **T1 轨 + 清单 + 预览**（参考图原型）：`[导航轨 200][清单 400][预览 1fr]`；预览列顶部节标题「X 预览 | 名称」，其下预览卡 + 分节。用于英雄选择；地图右栏、契约右栏采用其「预览列」部分。
-- **T2 轨 + 内容**：`[导航轨 260][内容 1fr]`，内容列节标题 + 发丝线行。用于设置、旅人手册。
+- **T2 轨 + 内容**：`[导航轨 200–240][内容 1fr]`，内容列节标题 + 子玻璃块分组。用于设置、旅人手册；桌面上装在浮层壳里，触屏上是页面壳。
 - **T3 分页 + 网格 + 侧栏**：标题行（返回 + 标题 + 搜索药丸）→ 文字分页 / 芯片 → 卡片网格 `auto-fill minmax(186px,1fr)` → 右侧 380px 发丝线分节侧栏。用于万象秘典。
-- **T4 浮层对话**：浮层壳内：标题（26px/700，右上关闭）→ 正文 / 卡片区 → 发丝线 → 底部药丸（右对齐；确认类左取消右主）。用于确认、详情、发现、菜单、记录、手牌总览、结算。
+- **T4 浮层对话**：浮层壳内：标题（26px/700，右上关闭）→ 正文 / 卡片区 → 留白 → 底部药丸（右对齐；确认类左取消右主）。用于确认、菜单、记录、结算、英雄信息。看卡的对话（发现、起手换牌、卡牌详情表、手牌总览）改用舞台壳：无面板，标题居中，卡牌直接落在模糊战场上。
 - **T5 场景页 + 磨砂 UI 层**：场景原画全屏为底；UI 元素全部换成组件语言（药丸、芯片、圆角卡片、发丝线、文字分页），面板用浮层壳。用于主页、地图、战场、契约。
-- **T6 全宽流程页**：页面壳；标题行 → 横排选项卡片（3 张）→ 发丝线 → 底部状态 + 主药丸。用于起手换牌（浮层壳版）、遗物奖励（页面壳版）。
+- **T6 流程页**：标题行 → 横排选项卡片（3 张）→ 留白 → 底部状态 + 主药丸。遗物奖励桌面用 1080 宽浮层壳，触屏用页面壳；起手换牌用舞台壳。
 
 ## 5. 页面简报
 
 每份简报：入口 / DOM 归属 / 模板 / 布局 / 保留与替换 / 验收尺寸。子代理先读该页档案（`docs/design/reference-pages/*.md`）确认真实入口与既往批注，再读源码核对类名。
+
+### 5.0 英雄选择 heroes（卡牌舞台，2026-09-22）— `src/application/screens/heroes.js`，`src/presentation/skins/slate/heroes.css` 末段「卡牌舞台」
+- 页面读起来像起手换牌：一张大的浮雕英雄卡（`.scene-showcase`，桌面 300×430）、一行**英雄卡**（`.hero-option` 改为 5:6 满幅立绘 + 名字带，桌面 132 宽四张居中一行；触屏四张平分一行、最宽 124；横屏 ≤500 高时最宽 96）、一列紧凑选项（技能、套牌、模式卡、契约栏、牌组思路两行截断）、一个主按钮。
+- 删掉的结构（DOM 仍在，CSS 隐藏）：左侧导航轨与「英雄名册」、列表行的英文副标与技能说明、`.hero-config-intro` 出发准备文案、`.hero-composition` 构成图表、「英雄预览 |」前缀、契约栏的说明小字。
+- 选中态：卡上浮 8px、蓝色 2px 内描边 + 发光，右上 26px 蓝色勾徽；hover 上浮 4px。
+- 桌面 ≤820 高：改三列 `[卡 300][选项 400][英雄卡 2×2]`，避免英雄行被挤出首屏。
+- 共享规则用 `body:is(.touch-layout, :not(.touch-layout))` 与前面的分布局规则打平特异性、靠源顺序取胜。
+- 验收：`dialog-layout.spec.cjs` 1600 分支断言四张英雄卡同一行（用 offsetTop，选中卡有位移）且选项列在大卡右侧。
 
 ### 5.1 主页 home（T5）— `src/template.html` `#lobby` 区、`src/presentation/home.js`、`src/presentation/components.css` 中 `.lobby-*` `.home-*` 规则
 - 顶栏：品牌改为文字字标（「烬域」20px/700 + `EMBERFALL` 10px 字距 3px），三个导航改为文字分页（`.nav-link.active::after` 下划亮条；旧的移动光带已删除），右侧图标按钮改为 36px 圆形药丸。
@@ -125,6 +147,17 @@
 - 结束回合：主药丸 160×56，下方快捷键 12px ink-3；法力面板：标签黑体，晶体保留。
 - 手牌标签、`#combat-preview` `#action-status` `#hint` `#toast` `#touch-target-bar`：深色药丸提示条，同一时刻只显示一种（沿用规范）；`#board-empty` 黑体 ink-3。
 - 验收：1672×941、1280×720 的完整对局截图（含选牌、瞄准、战斗记录展开、首领情报展开）；`game.spec.cjs`、`action-feedback.spec.cjs`、`ui-alignment.spec.cjs` 中与材质无关的断言应保持通过。
+
+#### 5.4b 黑曜石对局台（2026-09-22）— `src/presentation/skins/slate/arena.css`（皮肤层最后一个战场文件，靠加载顺序覆盖 battle / mobile / card-face / console 四个文件）
+- 材质一把钥匙：烟黑曜石玻璃（`--arena-glass`）+ 金属边（玩家 `--arena-metal-brass` 旧铜、敌方 `--arena-metal-iron` 冷铁）；**余烬 `--arena-ember` 是唯一强调色**，只给"此刻可行动"的东西（可攻击的令牌、无事可做的结束回合、技能节点的核心）。法力晶体与卡费同色，仍是月石蓝 `--slate-blue`，是战场上唯一允许的冷色。
+- 随从令牌：`::before` 遮罩画 2px 渐变金属环、`::after` 画地面接触阴影；底部 24cqw 高的暗色铭板（画在 `.minion-art::after` 里，跟随圆角）承载攻/血裸数字 + 遮罩字形（`--glyph-blade/heart/shield`），两颗宝石与稀有度色带不再绘制（DOM 保留，`.stat.atk` 右边 = `.stat.hp` 左边的契约不变）。可攻击 = 余烬边（`.ready-dot`）；嘲讽 = 暖石环；目标 = 朱红环。
+- 桌面英雄座席：156×231 不变，改 `78px 78px 14px 14px` 拱形；名字刻在拱内底部 42px（左右 17.8% 对称内缩，`ui-alignment` 契约）；脚部 34px 铭板放攻（仅持武器时显示，`.is-zero` 隐藏，血格随之占满）与血；护甲是左肩盾形芯片（右侧留给武器槽）；阶段 / 契约进度是拱顶右上的小药丸。牌库计数改为座席正下方的"牌堆 + 数字 + 说明"芯片（36,338 / 36,748）。
+- 手牌扇形（仅桌面）：`ui.js` 写 `--r = 中心偏移 × 2.8°`、`--y = 偏移² × 3 − 8px`（中央微抬），悬停 / 选中时转正抬起 78px；触屏坞不转。
+- 结束回合：黑曜石药丸 + 铜边 + 铜字；`.ready-end` 余烬填充深字；敌方回合暗灰 + 转圈。技能节点：黑曜石环 + 余烬核心，标签为裸文字，费用为小圆芯片。
+- 触屏三档（compact-desktop / 竖屏 / 横屏）用同一套：头像 / 迷你卡的铜或铁边（迷你卡同为拱形）、芯片改黑曜石 + 字形、圆形结束回合、竖屏六边形晶体。
+- 敌方在右上（2026-09-23）：桌面座席 `left:1412 / top:94`，牌库芯片贴右缘，首领情报面板改到左侧、战斗记录面板到右侧座席之下；触屏三档由 `mobile-view.js` 把敌方主机台放到右上（横屏 `x = W − padR − rail`，竖屏头像盒贴右缘），arena.css §10 把头像/迷你卡镜像到右端、芯片向左排。
+- 3D 场景「断裂王庭」（`presentation/arena-3d.js`，2026-09-23 按设计画布 https://claude.ai/artifact/HyVAsg2simBqazVxQJaiYc 重做）：场地是一座压制火山灰石台基（顶面 y=0、高 30、倒角 7），夹在左右两条熔岩河之间。台面图形层由 `courtArt()` 按 HX/HZ 在运行时画进一张 RGBA 遮罩（R 刻线深度 / G 黑曜石 / B 暗铜 / A 黑曜石流纹光泽；桌面 1792、触屏 1408，生成约 70ms，`EmberArena3D.board.artMs` 可查）：流纹刻线、斜贯台面的彩虹黑曜石笔触（发丝裂缝留在笔触内，两端撕裂成碎片）、断冠徽记（R246、刻度环、双环）、两排随从之间的中线、左右竖排铭文、上缘「断裂王庭」、下缘关卡铭牌；铭文用系统衬线字体，没有位图。光：暖色聚光池只照台面（`pool()`），其余是冷月光（`PAL.key`），暖色只来自聚光与熔岩。熔岩河按屏幕可见边界放在台面与屏幕边缘之间约 55% 处（远端宽、近端窄，随透视收窄），绕开英雄座台；河心是流动的熔体（流纹、气泡），结壳推向河岸。座台按 `.hero-card-inner` 头像底边反投影放置（触屏的 `.hero` 是整条信息栏，不能用），阵营色只在透镜细环。环境：Voronoi 柱状玄武岩（远岸成墙、近岸低簇）、黑曜晶簇、焦草、从河里升起的余烬；砖墙残垣与要塞已移除。阴影 pass 改用光源矩阵（旧版误用了相机矩阵，阴影贴图实际无效）。实测（隐藏 HUD、同尺，旧版在括号里）：台心 L* 56（42）、明度比 3.7（1.9）、暗部 45%（19%）、环境/台心细节比 0.25（0.98）；彩色面积 15%、高光 8% 超出原设计目标，都来自按要求加强的熔岩河，是有意放宽的两项。
+- 验收：`battle-hud-layout`、`ui-alignment`、`action-feedback`、`ui-polish`、`mobile-craft`、`remaining-reference`、`hand-drag`、`hand-reading`、`card-motion`、`mobile-hand-layout`、`motion-semantics`、`combat-motion`、`boss-scenes` 全过；`card-motion` 里压缩抽牌的代理卡断言改为逐帧观察（代理卡只活约 90ms，100ms 轮询碰运气）。
 
 ### 5.5 过场与对话 dialogs（T4 / T6）— `src/application/screens/campaign.js`（`.rewards-box` `.relic-choice` `.campaign-refit`、`.result-box` `.result-stats`、发现 `.discover-options` `.discover-card`），`src/application/screens/heroes.js`（`.mulligan-box`），`src/ui.js`（`.confirm-box`），`src/enhancements.js`（卡牌详情 `.card-detail-layout` `.card-detail-copy`），`src/mobile-ui.js`（`.tactical-sheet` `.touch-menu-grid` `.touch-hand-grid` `.touch-hero-info`，桌面下也可打开的菜单/记录/手牌总览），`src/atelier-ui.js`（`.atelier-box` 画廊）
 - 起手换牌 `mulligan`：浮层壳 1060；标题「命运的第一手」26px/700 + 副标；三张牌保留；「保留 / 替换」改药丸（替换 = 蓝底）；发丝线；主药丸；提示 15px ink-2。

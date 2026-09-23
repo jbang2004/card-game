@@ -21,7 +21,7 @@ html[data-skin="slate"]
   .help-box
   > .folio-pane {
   flex: 1 1 auto;
-  margin: 18px 0 0;
+  margin: 30px 0 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -29,11 +29,11 @@ html[data-skin="slate"]
   .help-box
   .modal-scroll {
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
-  column-gap: 60px;
+  grid-template-columns: 240px minmax(0, 1fr);
+  column-gap: 48px;
   align-items: start;
   padding: 0;
-  min-height: 100%;
+  min-height: 0;
 }
 
 /* ---------- .help-toc: same node-rail language as .settings-nav ---------- */
@@ -53,7 +53,7 @@ html[data-skin="slate"]
   align-self: stretch;
   height: auto;
   margin: 0;
-  padding: 34px 0 0;
+  padding: 20px 0 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -219,7 +219,7 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="help"]
   .help-section
   h3 {
-  border-bottom: 1px solid var(--slate-line);
+  border-bottom: 0;
   font: 700 26px/1.2 var(--slate-font);
   color: #fff;
   letter-spacing: 1px;
@@ -263,7 +263,7 @@ html[data-skin="slate"]
   body
   #modal.folio-host[data-type="help"]
   .help-basic-rules {
-  border-top: 1px solid var(--slate-line);
+  border-top: 0;
   color: var(--slate-ink-2);
 }
 html[data-skin="slate"]
@@ -380,10 +380,10 @@ html[data-skin="slate"]
   body
   #modal.folio-host[data-type="help"]
   :is(.help-turn-flow, .help-card-anatomy, .help-key-preview) {
-  border: 1px solid var(--slate-line);
-  border-radius: 12px;
-  background: #0f141d80;
-  box-shadow: none;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  background: var(--glass-fill-2);
+  box-shadow: inset 0 1px 0 #ffffff1f;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -575,8 +575,9 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="help"]
   .help-card-labels
   b {
-  border: 1px solid var(--slate-line-strong);
+  border: 1px solid transparent;
   border-radius: 6px;
+  background: var(--glass-fill-2);
   font: 600 14px/1.6 var(--slate-font);
   color: #fff;
 }
@@ -596,7 +597,7 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="help"]
   .help-key-preview
   > div {
-  border-top: 1px solid var(--slate-line);
+  border-top: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -716,7 +717,7 @@ html[data-skin="slate"]
   .key-table
   > div {
   border: 0;
-  border-bottom: 1px solid var(--slate-line);
+  border-bottom: 0;
   font: 400 15px/1.7 var(--slate-font);
   color: var(--slate-ink-2);
 }
@@ -807,7 +808,7 @@ html[data-skin="slate"]
   height: auto;
   margin: 0;
   padding: 0;
-  border-bottom: 1px solid var(--slate-line);
+  border-bottom: 0;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -1326,4 +1327,157 @@ html[data-skin="slate"]
     flex: 1 0 44%;
     padding: 0 6px 10px;
   }
+}
+
+/* the floating guide's 240px rail: 22px labels stop short of the pane edge */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="help"]
+  .help-toc
+  button {
+  font-size: 22px;
+  padding-right: 12px;
+}
+
+/* ==========================================================================
+   touch sheet polish (2026-09-22): the chapter uses the whole pane, the three
+   reference panels stack below 1000px and sit side by side above it, the
+   anatomy labels never draw connector lines, the tab strip breathes.
+   ========================================================================== */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  :is(.help-section, .help-content, .modal-scroll) {
+  width: 100%;
+  max-width: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-toc {
+  margin: 0 0 10px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-toc
+  button {
+  padding: 0 16px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-section
+  h3 {
+  margin: 6px 0 8px;
+  padding: 0;
+  font-size: 22px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-reference-overview {
+  grid-template-columns: minmax(0, 1fr);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  :is(.help-turn-flow, .help-card-anatomy, .help-key-preview) {
+  grid-column: auto;
+  padding: 18px 20px 20px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-card-labels
+  p::before,
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-card-labels
+  p::after {
+  content: none;
+}
+/* the anatomy: card on the left, the four labels in a 2×2 grid beside it */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-card-diagram {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-card-diagram
+  > .card {
+  flex: 0 0 150px;
+  width: 150px;
+  height: 218px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-card-labels {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+  width: auto;
+  height: auto;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-card-labels
+  p {
+  position: static;
+  font-size: 13px;
+  line-height: 1.6;
+}
+@media (min-width: 1000px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .help-reference-overview {
+    grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr);
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .help-turn-flow {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 560px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .help-card-diagram {
+    flex-direction: column;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="help"]
+    .help-card-labels {
+    width: 100%;
+  }
+}
+/* the chapter owns the whole pane on touch: no rail column, no measure cap */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-box
+  .modal-scroll {
+  display: block;
+  grid-template-columns: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="help"]
+  .help-columns {
+  width: 100%;
+  max-width: none;
 }

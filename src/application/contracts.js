@@ -179,7 +179,9 @@ const EmberContractUI = (() => {
     function stageCardWidth(shape, count) {
       const v = V();
       const base = !v.mobile
-        ? 340
+        ? /* The stage is the ceremony: on a desktop the card is as tall as
+           * the room allows, capped so the ritual column keeps its width. */
+          Math.round(Math.min(480, Math.max(340, ((v.height - 120) * 5) / 7.4)))
         : v.portrait
           ? /* Portrait stacks card over label, so the card may claim only the
              * height the ritual typography does not need — otherwise a short
@@ -434,10 +436,15 @@ const EmberContractUI = (() => {
        * where the thickness shows. The back of each is seated that far behind its
        * face (card-relief.css). */
       stageCtx.cards.forEach((node) => {
-        const slab = EmberCardRelief.slab(node.querySelector(".god-card-front .card"));
+        const slab = EmberCardRelief.slab(
+          node.querySelector(".god-card-front .card"),
+        );
         if (!slab) return;
         node.style.setProperty("--relief-depth", slab.depth + "px");
-        node.style.setProperty("--relief-flange", slab.flange.toFixed(2) + "px");
+        node.style.setProperty(
+          "--relief-flange",
+          slab.flange.toFixed(2) + "px",
+        );
       });
       /* FLIP: the slot's measured rect is the take-off pose. Every `.god-card`
        * is `inset: 0` inside `.god-cards`, so they all share one untransformed
@@ -465,7 +472,10 @@ const EmberContractUI = (() => {
           node.style.setProperty("--fly-delay", i * 70 + "ms"),
         );
         el.classList.add("flying");
-        setTimeout(() => el.classList.remove("flying"), 620 + (ids.length - 1) * 70);
+        setTimeout(
+          () => el.classList.remove("flying"),
+          620 + (ids.length - 1) * 70,
+        );
       } else el.classList.add("instant");
       el.querySelector(".god-scrim").onclick = () => closeStage();
       document.addEventListener("keydown", stageKey, true);
@@ -474,17 +484,21 @@ const EmberContractUI = (() => {
           /* Cards taking off from the slot pass under the pointer that just
            * clicked it, and the browser reports each as an enter: hover picks
            * a card only once the stack has landed. */
+          /* The tilted card's box shifts under a resting pointer and the
+           * browser reports re-entries; refocusing the same card would
+           * rebuild the ritual panel and remount the relief every time. */
           if (
             document.body.classList.contains("pointer-fine") &&
             !stageCtx?.pinned &&
-            !el.classList.contains("flying")
+            !el.classList.contains("flying") &&
+            stageCtx.focus !== i
           )
             stageFocus(i);
         });
         node.addEventListener("click", () => {
           if (!stageCtx) return;
           stageCtx.pinned = true;
-          stageFocus(i);
+          if (stageCtx.focus !== i) stageFocus(i);
         });
       });
       bindStageDrag(el);
@@ -498,7 +512,11 @@ const EmberContractUI = (() => {
       const move = (e) => {
         if (!stageCtx || calm()) return;
         const card = stageCtx.cards[stageCtx.focus];
-        if (e.pointerType === "touch" && (!e.isPrimary || !card?.contains(e.target))) return;
+        if (
+          e.pointerType === "touch" &&
+          (!e.isPrimary || !card?.contains(e.target))
+        )
+          return;
         const r = card?.getBoundingClientRect();
         if (!r?.width) return;
         const px = (e.clientX - (r.x + r.width / 2)) / (r.width / 2),
@@ -508,10 +526,11 @@ const EmberContractUI = (() => {
         card.style.setProperty("--tilt-x", (-clamp(py) * 6).toFixed(2) + "deg");
       };
       el.addEventListener("pointermove", move, { passive: true });
-      for (const card of stageCtx.cards) EmberCardRelief.bindTouch(card, () => {
-        card.style.removeProperty("--tilt-x");
-        card.style.removeProperty("--tilt-y");
-      });
+      for (const card of stageCtx.cards)
+        EmberCardRelief.bindTouch(card, () => {
+          card.style.removeProperty("--tilt-x");
+          card.style.removeProperty("--tilt-y");
+        });
       el.addEventListener(
         "pointerleave",
         () => {

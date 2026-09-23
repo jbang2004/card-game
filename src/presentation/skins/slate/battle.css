@@ -48,7 +48,7 @@
 html[data-skin="slate"] body #app.battle-view .topbar {
   background: linear-gradient(#0d1420cc, #0d142000);
   border: 0;
-  border-bottom: 1px solid var(--slate-line);
+  border-bottom: 0;
   box-shadow: none;
   color: var(--slate-ink);
   font-family: var(--slate-font);
@@ -191,14 +191,14 @@ html[data-skin="slate"]
   /* legacy `refinement.css` pins .log-panel to 246px; the shell hugs content */
   height: auto;
   padding: 18px 20px 20px;
-  border: 1px solid var(--slate-line-strong);
-  border-radius: 12px;
-  background: var(--slate-material);
-  background-attachment: scroll;
-  box-shadow: 0 24px 60px #000a;
+  border: 0;
+  border-radius: 20px;
+  background: var(--glass-fill);
+  box-shadow: var(--glass-rim), var(--glass-shadow);
   color: var(--slate-ink);
   font-family: var(--slate-font);
-  backdrop-filter: none;
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   clip-path: none;
 }
 html[data-skin="slate"]
@@ -219,7 +219,7 @@ html[data-skin="slate"]
   display: block;
   margin: 0 0 10px;
   padding: 0 0 10px;
-  border-bottom: 1px solid var(--slate-line);
+  border-bottom: 0;
   color: #fff;
   font: 700 16px/1.3 var(--slate-font);
   letter-spacing: 2px;
@@ -246,7 +246,7 @@ html[data-skin="slate"]
   .log-line {
   margin: 0;
   padding: 9px 0;
-  border-bottom: 1px solid var(--slate-line);
+  border-bottom: 0;
   color: var(--slate-ink-2);
   font: 400 13px/1.6 var(--slate-font);
   letter-spacing: 0;
@@ -308,7 +308,7 @@ html[data-skin="slate"]
   margin: 0;
   padding: 14px 0 0;
   border: 0;
-  border-top: 1px solid var(--slate-line);
+  border-top: 0;
   font: 400 13px/1.7 var(--slate-font);
 }
 html[data-skin="slate"]

@@ -43,23 +43,22 @@ test("desktop workspaces and compact dialogs use their semantic dimensions", asy
     centered: true,
   });
 
-  // Settings is a page shell: it owns the whole viewport instead of a
-  // 1100px float.
+  // Settings floats on the desktop (design system §1, 2026-09-22): a 920px
+  // glass pane that hugs its rows instead of owning the whole viewport. On
+  // touch it stays a page shell.
   await page.evaluate(() => Emberfall.showSettings());
   expect(await dialogMetrics(page)).toMatchObject({
     size: "settings",
-    width: 1600,
-    height: 940,
+    width: 920,
     centered: true,
   });
 
-  // The traveller's handbook is a page shell too, so it owns the viewport
-  // rather than the 1552px inset workspace silverblue gave it.
+  // The traveller's handbook floats too, at 1240px, capped to the viewport
+  // and scrolling inside.
   await page.evaluate(() => Emberfall.showHelp());
   expect(await dialogMetrics(page)).toMatchObject({
     size: "help",
-    width: 1600,
-    height: 940,
+    width: 1240,
     centered: true,
   });
 

@@ -297,9 +297,9 @@ body .battle-view #action-status {
    size (`console.css` §6) so they no longer follow the hand card width. */
 body:not(.touch-layout) .arena {
   left: 270px;
-  top: 212px;
+  top: 150px;
   width: 1060px;
-  height: 414px;
+  height: 540px;
 }
 body:not(.touch-layout) .enemy-hand {
   left: 380px;
@@ -599,6 +599,26 @@ body.mobile-portrait .mana-caption > span {
    #app 就是舞台本身，在它这里裁掉。 */
 #app {
   overflow: hidden;
+}
+
+/* ------------------------------------------------------------ 3D 战场
+   #arena-gl 是熔岩要塞的 WebGL2 画布（presentation/arena-3d.js），紧贴在
+   #world-canvas 之上、#battle 之下；只在战斗视图显示，随触屏布局铺满视口。 */
+#arena-gl {
+  position: absolute;
+  inset: 0;
+  width: 1600px;
+  height: 940px;
+  z-index: 0;
+  pointer-events: none;
+  display: none;
+}
+#app.battle-view #arena-gl {
+  display: block;
+}
+body.touch-layout #arena-gl {
+  width: 100%;
+  height: 100%;
 }
 
 #fx-gl, #fx-3d {

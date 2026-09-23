@@ -275,7 +275,7 @@ html[data-skin="slate"] body.touch-layout #battle .hero-phase {
   top: 6px;
   height: 18px;
   padding: 0 6px;
-  border: 1px solid var(--slate-line);
+  border: 1px solid transparent;
   border-radius: 999px;
   background: #0f141d99;
   color: var(--slate-ink-3);
@@ -441,7 +441,7 @@ html[data-skin="slate"] body.touch-layout #battle .hand-zone::before {
   right: 0;
   top: var(--hand-lift, 0px);
   height: 1px;
-  background: var(--slate-line);
+  background: none;
   pointer-events: none;
 }
 html[data-skin="slate"] body.touch-layout #battle .hand-zone.hand-fits,
@@ -2369,10 +2369,12 @@ html[data-skin="slate"] body #battle .hero .weapon-slot {
   box-sizing: border-box;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--slate-line-strong);
+  border: 1px solid transparent;
   border-radius: 8px;
   background: var(--slate-pill);
-  box-shadow: 0 3px 10px #0008;
+  box-shadow:
+    inset 0 1px 0 #ffffff26,
+    0 3px 10px #0008;
   transform: none;
   pointer-events: none;
 }
@@ -2390,7 +2392,7 @@ html[data-skin="slate"] body #battle .hero .weapon-slot b {
   bottom: -4px;
   min-width: 16px;
   padding: 1px 3px;
-  border: 1px solid var(--slate-line-strong);
+  border: 1px solid transparent;
   border-radius: 6px;
   background: var(--slate-card-base);
   box-shadow: none;

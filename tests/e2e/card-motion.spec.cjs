@@ -689,11 +689,18 @@ async function drawHandoffGeometry(
     g.emit();
     return { uid: targetUid };
   }, { useCompressed: compressed, lateMode: late });
-  await expect(
-    page.locator(
-      `.card-motion-proxy[data-motion-kind="draw"][data-motion-side="p"][data-motion-uid="${uid}"]`,
-    ),
-  ).toHaveCount(1);
+  /* A compressed draw's proxy lives for roughly 90ms (it appears ~100ms after
+   * the emit and hands off ~190ms after it). `expect().toHaveCount()` polls
+   * at 100ms steps, so whether it ever lands inside that window is down to
+   * the round trip; observe the DOM at frame rate instead. */
+  await page.waitForFunction(
+    (uid) =>
+      !!document.querySelector(
+        `.card-motion-proxy[data-motion-kind="draw"][data-motion-side="p"][data-motion-uid="${uid}"]`,
+      ),
+    uid,
+    { polling: "raf", timeout: 5000 },
+  );
   return page.evaluate(
     ({ uid, useCompressed, lateMode }) =>
       new Promise((resolve) => {

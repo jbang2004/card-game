@@ -3072,9 +3072,11 @@ const EmberFX = (() => {
     worldDirty = false;
   }
   let worldLast = 0;
+  const arena3d = () => (typeof EmberArena3D !== "undefined" ? EmberArena3D : null);
   function resizeCanvas() {
     W = EmberViewport.width;
     H = EmberViewport.height;
+    arena3d()?.resize();
     const d = EmberViewport.mobile
       ? Math.min(devicePixelRatio || 1, quality.low ? 1 : 2)
       : 1;
@@ -3114,12 +3116,15 @@ const EmberFX = (() => {
       paintWorld(quality.reduced ? 0 : t / 1000);
       worldLast = t;
     }
+    // The 3D arena animates on its own clock while a battle is on screen.
+    if (view === "battle") arena3d()?.frame(t / 1000, quality);
     // The effect backend has no rAF of its own; idle frames draw nothing.
     fx2()?.draw?.(t);
   }
   function setView(v) {
     view = v;
     EmberAudio.setScene(v);
+    arena3d()?.setActive(v === "battle");
     worldDirty = true;
     if (v !== "battle") cancel();
   }
@@ -3133,6 +3138,7 @@ const EmberFX = (() => {
   function configure(reduced, low) {
     quality = { reduced: !!reduced, low: !!low };
     fx2()?.setQuality?.(quality);
+    arena3d()?.setQuality(quality);
     app.classList.toggle("fx-low", quality.low);
     app.classList.toggle("fx-reduced", quality.reduced);
     worldDirty = true;
