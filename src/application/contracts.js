@@ -318,7 +318,7 @@ const EmberContractUI = (() => {
       /* The relief face belongs to the card in front, like the tilt: it follows
        * the stage's own tilt rather than adding a second one. */
       const front = stageCtx.cards[stageCtx.focus];
-      EmberCardRelief.mountCard(front.querySelector(".god-card-front .card"), {
+      EmberLiveArt.mountCard(front.querySelector(".god-card-front .card"), {
         id: c.id,
         rarity: c.rarity,
         steer: "follow",

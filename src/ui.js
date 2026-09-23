@@ -1288,7 +1288,7 @@
       el.classList.add("open");
     });
     if (!detail.pinned) placeHoverDetail();
-    EmberCardRelief.mountCard(el.querySelector(".card"), {
+    EmberLiveArt.mountCard(el.querySelector(".card"), {
       id: c.id,
       rarity: c.rarity,
       anchor: pinned ? el.querySelector(".card") : detail.source,

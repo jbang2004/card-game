@@ -100,10 +100,10 @@
   "CARD_RELIEF_MAPS": "card-relief-maps.js",
   "CARD_RELIEF": "presentation/card-relief.js",
   "SKIN_SLATE_CARD_RELIEF": "presentation/skins/slate/card-relief.css",
-  "HERO_LIVE_MAPS": "hero-live-maps.js",
-  "HERO_LIVE_RIGS": "presentation/hero-live-rigs.js",
-  "HERO_LIVE": "presentation/hero-live.js",
-  "SKIN_SLATE_HERO_LIVE": "presentation/skins/slate/hero-live.css",
+  "LIVE_ART_MAPS": "live-art-maps.js",
+  "LIVE_ART_RIGS": "presentation/live-art-rigs.js",
+  "LIVE_ART": "presentation/live-art.js",
+  "SKIN_SLATE_LIVE_ART": "presentation/skins/slate/live-art.css",
   "CARD_STAGE": "presentation/card-stage.js",
   "SKIN_SLATE_CARD_STAGE": "presentation/skins/slate/card-stage.css"
 }

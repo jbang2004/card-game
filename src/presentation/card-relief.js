@@ -740,6 +740,8 @@ void main(){
       wake();
     },
     has: (id) => !!MAPS[id],
+    /* Whether `element` is the one currently mounted (tilted and steered). */
+    holds: (element) => !!element && host === element,
     /* The presented element's current turn in radians ({ x: about the horizontal
      * axis, y: about the vertical axis }, as written to --relief-rx/ry), for a
      * painter that follows the same tilt. */

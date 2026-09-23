@@ -1,15 +1,17 @@
-/* Living hero portrait for the hero-select preview card. The card illustration
- * itself is the model: three baked layers (background, figure, held prop), each
+/* Live artwork: the hero-select preview card, and the card presented on its own
+ * (magnified detail, god stage, library stage) when that card has one. The
+ * illustration itself is the model: three baked layers (background, figure, held prop), each
  * a depth-displaced mesh, are placed along the rest camera's sight lines, so the
  * portrait at rest is the card pixel for pixel. Idle motion (breathing, glances,
  * blinks, hair and cloth, the prop's own swing) is one smooth displacement field
- * per hero from EmberHeroLiveRigs. The card's tilt stays with EmberCardRelief
- * (mounted with `face: false`); the camera here follows those same angles so the
- * scene turns inside the tilted card. Presentation only: without WebGL2 or a
- * baked hero, mount() resolves false and the caller keeps the relief face. */
-const EmberHeroLive = (() => {
-  const MAPS = EmberHeroLiveMaps,
-    RIGS = EmberHeroLiveRigs;
+ * per illustration from EmberLiveArtRigs. The card's tilt stays with
+ * EmberCardRelief (mounted with `face: false`); the camera here follows those
+ * same angles so the scene turns inside the tilted card, and the portrait lives
+ * exactly as long as that mount. Presentation only: without WebGL2 or a baked
+ * illustration, mount() resolves false and the caller keeps the relief face. */
+const EmberLiveArt = (() => {
+  const MAPS = EmberLiveArtMaps,
+    RIGS = EmberLiveArtRigs;
   const IMG_W = 1086,
     IMG_H = 1448;
   const TAN_Y = Math.tan((11 * Math.PI) / 180),
@@ -68,6 +70,21 @@ const vec2 IMG = vec2(${IMG_W}., ${IMG_H}.);
 const float TAU = 6.2831853;
 float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7)))*43758.5453); }
 float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3. - 2.*f); return mix(mix(h21(i), h21(i + vec2(1, 0)), f.x), mix(h21(i + vec2(0, 1)), h21(i + vec2(1, 1)), f.x), f.y); }
+// Drifting points (snow, embers) moving with velocity vel in cells per second;
+// density is the share of cells that hold one.
+float particles(vec2 uv, float t, vec2 vel, float scale, float size, float density){
+  vec2 p = uv*vec2(1., IMG.y/IMG.x)*scale - vel*t;
+  vec2 i = floor(p), f = fract(p);
+  float h = h21(i);
+  vec2 o = .2 + .6*vec2(h21(i + 3.1), h21(i + 7.7)) + vec2(.12*sin(t*1.3 + h*6.28), 0.);
+  return step(1. - density, h)*smoothstep(size, size*.3, length(f - o))*(.6 + .4*sin(t*3. + h*20.));
+}
+// Slanted rain streaks falling through the picture.
+float rain(vec2 uv, float t){
+  vec2 p = vec2(uv.x*90. + uv.y*18., uv.y*14. - t*9.);
+  vec2 i = floor(p), f = fract(p);
+  return step(.82, h21(i))*smoothstep(.12, 0., abs(f.x - .5))*smoothstep(0., .3, f.y)*smoothstep(1., .6, f.y);
+}
 vec2 toL(vec2 p, vec2 c, float a){ p -= c; float s = sin(-a), k = cos(-a); return vec2(k*p.x - s*p.y, s*p.x + k*p.y); }
 vec2 toW(vec2 p, vec2 c, float a){ float s = sin(a), k = cos(a); return vec2(k*p.x - s*p.y, s*p.x + k*p.y) + c; }
 // A blink: the lid closes as skin taken from just under the lower lid (stretching
@@ -144,7 +161,7 @@ ${rig.fx}
     if (gl) return true;
     if (stats.status === "fallback") return false;
     canvas = document.createElement("canvas");
-    canvas.className = "hero-live-canvas";
+    canvas.className = "live-art-canvas";
     canvas.setAttribute("aria-hidden", "true");
     gl = canvas.getContext("webgl2", { alpha: false, antialias: true, premultipliedAlpha: true });
     if (!gl) {
@@ -273,7 +290,7 @@ ${rig.fx}
     cancelAnimationFrame(raf);
     raf = 0;
     observer?.disconnect();
-    host?.classList.remove("hero-live-ready");
+    host?.classList.remove("live-art-ready");
     canvas?.remove();
     host = null;
     current = null;
@@ -388,7 +405,8 @@ ${rig.fx}
   function frame(now) {
     raf = 0;
     if (!host) return;
-    if (!host.isConnected) return release();
+    // Gone from the page, or the card was put down (its tilt mount released).
+    if (!host.isConnected || !EmberCardRelief.holds(host)) return release();
     const dt = Math.min((now - last) / 1000, 0.05);
     last = now;
     clock += dt;
@@ -446,7 +464,7 @@ ${rig.fx}
       observer.observe(element);
       last = lastPaint = performance.now();
       paint();
-      element.classList.add("hero-live-ready");
+      element.classList.add("live-art-ready");
       stats.status = "ready";
       wake();
       return true;
@@ -456,8 +474,25 @@ ${rig.fx}
     }
   }
 
+  /* A rendered `.card` presented on its own: its `.card-art` shows the live
+   * artwork when the card has one, cropped like the <img> underneath; otherwise
+   * (or if WebGL gives out) the relief face as before. Options as for
+   * EmberCardRelief.mountCard. */
+  function mountCard(card, options) {
+    const art = card?.querySelector(".card-art"),
+      image = art?.querySelector("img");
+    const face = () => card.isConnected && EmberCardRelief.mountCard(card, options);
+    if (!image || !MAPS[options.id] || !RIGS[options.id]) return face();
+    const [x = 50, y = 22] = getComputedStyle(image).objectPosition.split(" ").map(parseFloat);
+    EmberCardRelief.mountCard(card, { ...options, face: false });
+    return mount(art, { id: options.id, focus: [x / 100, y / 100], onFail: face }).then(
+      (ok) => ok || face(),
+    );
+  }
+
   return Object.freeze({
     mount,
+    mountCard,
     release,
     has: (id) => !!(MAPS[id] && RIGS[id]),
     diagnostics: () => ({ ...stats }),

@@ -10,7 +10,7 @@ async function openHeroes(page) {
   await page.locator("#start-btn").click();
   // The preview card shows the hero's live portrait; relief only tilts the card.
   await expect(page.locator("#modal .scene-showcase")).toHaveClass(
-    /hero-live-ready/,
+    /live-art-ready/,
     { timeout: 15000 },
   );
 }
@@ -30,10 +30,10 @@ function errorsFor(page) {
 const liveDiff = (page, a, b) =>
   page.evaluate(
     ([a, b]) => {
-      const canvas = document.querySelector(".hero-live-canvas");
+      const canvas = document.querySelector(".live-art-canvas");
       const grab = ([x, y, t, blink]) => {
         EmberCardRelief.pose(x, y);
-        EmberHeroLive.pose(t, blink);
+        EmberLiveArt.pose(t, blink);
         const copy = document.createElement("canvas");
         copy.width = canvas.width;
         copy.height = canvas.height;
@@ -44,7 +44,7 @@ const liveDiff = (page, a, b) =>
       const first = grab(a),
         second = grab(b);
       EmberCardRelief.pose();
-      EmberHeroLive.pose();
+      EmberLiveArt.pose();
       let sum = 0;
       for (let i = 0; i < first.length; i++) sum += Math.abs(first[i] - second[i]);
       return sum / first.length;
@@ -60,8 +60,8 @@ test("hero preview card is the live portrait: idle motion, blink, and a turn wit
   const card = page.locator("#modal .scene-showcase");
   // Tilt only: the relief face is not painted underneath the portrait.
   expect(await page.locator(".card-relief-canvas").count()).toBe(0);
-  expect(await page.locator(".hero-live-canvas").count()).toBe(1);
-  await expect(page.locator(".hero-live-canvas")).toHaveCSS("opacity", "1");
+  expect(await page.locator(".live-art-canvas").count()).toBe(1);
+  await expect(page.locator(".live-art-canvas")).toHaveCSS("opacity", "1");
   // Idle motion changes the picture over time; a blink changes it at once.
   expect(await liveDiff(page, [0, 0, 0, 0], [0, 0, 2.4, 0])).toBeGreaterThan(1);
   expect(await liveDiff(page, [0, 0, 0, 0], [0, 0, 0, 1])).toBeGreaterThan(0.02);
@@ -73,9 +73,9 @@ test("hero preview card is the live portrait: idle motion, blink, and a turn wit
   ).toMatch(/^1\d\.\d+deg$/);
   await page.evaluate(() => EmberCardRelief.pose());
   // It keeps drawing while the page is open.
-  const before = (await page.evaluate(() => EmberHeroLive.diagnostics())).frames;
+  const before = (await page.evaluate(() => EmberLiveArt.diagnostics())).frames;
   await page.waitForTimeout(400);
-  expect((await page.evaluate(() => EmberHeroLive.diagnostics())).frames).toBeGreaterThan(before + 5);
+  expect((await page.evaluate(() => EmberLiveArt.diagnostics())).frames).toBeGreaterThan(before + 5);
 
   // Every selectable hero has a portrait; switching re-mounts onto the new element.
   const heroes = await page.evaluate(() =>
@@ -83,17 +83,17 @@ test("hero preview card is the live portrait: idle motion, blink, and a turn wit
   );
   for (const { id, portrait } of heroes) {
     await page.locator(`#modal [data-hero="${id}"]`).click();
-    await expect(page.locator("#modal .scene-showcase")).toHaveClass(/hero-live-ready/);
-    expect((await page.evaluate(() => EmberHeroLive.diagnostics())).id).toBe(portrait);
+    await expect(page.locator("#modal .scene-showcase")).toHaveClass(/live-art-ready/);
+    expect((await page.evaluate(() => EmberLiveArt.diagnostics())).id).toBe(portrait);
     await page.evaluate(() => EmberCardRelief.pose(0.8, 0.3));
     await page.screenshot({ path: path.join(out, `page-${id}.png`) });
     await page.evaluate(() => EmberCardRelief.pose());
   }
-  expect(await page.locator(".hero-live-canvas").count()).toBe(1);
+  expect(await page.locator(".live-art-canvas").count()).toBe(1);
   // Leaving the page stops it.
   await page.keyboard.press("Escape");
-  await expect(page.locator(".hero-live-canvas")).toHaveCount(0);
-  await expect.poll(async () => (await page.evaluate(() => EmberHeroLive.diagnostics())).status).toBe("idle");
+  await expect(page.locator(".live-art-canvas")).toHaveCount(0);
+  await expect.poll(async () => (await page.evaluate(() => EmberLiveArt.diagnostics())).status).toBe("idle");
   expect(errors).toEqual([]);
 });
 
@@ -103,10 +103,10 @@ test("reduced motion keeps the card flat and the portrait still", async ({ page 
   await page.mouse.move(1500, 100);
   await page.waitForTimeout(400);
   const frames = (await page.evaluate(() => EmberCardRelief.diagnostics())).frames,
-    live = (await page.evaluate(() => EmberHeroLive.diagnostics())).frames;
+    live = (await page.evaluate(() => EmberLiveArt.diagnostics())).frames;
   await page.waitForTimeout(400);
   expect((await page.evaluate(() => EmberCardRelief.diagnostics())).frames).toBe(frames);
-  expect((await page.evaluate(() => EmberHeroLive.diagnostics())).frames).toBe(live);
+  expect((await page.evaluate(() => EmberLiveArt.diagnostics())).frames).toBe(live);
   expect(
     await page
       .locator("#modal .scene-showcase")
@@ -311,7 +311,34 @@ test("a held card draws only when the picture changes", async ({ page }) => {
   expect(elapsed).toBeLessThan(80);
 });
 
-test("the god stage's front card carries the relief and keeps the stage's own tilt", async ({
+/* A card with live artwork shows it instead of the relief face: black out the flat
+ * artwork underneath and check the art window is still lit by the canvas. */
+async function expectLiveVisible(page, art) {
+  await expect(art).toHaveClass(/live-art-ready/);
+  await expect(art.locator(".live-art-canvas")).toHaveCSS("opacity", "1");
+  await expect(art.locator(".card-relief-canvas")).toHaveCount(0);
+  await art.evaluate((el) => (el.querySelector("img").style.filter = "brightness(0)"));
+  const clip = await art.boundingBox();
+  const shot = (await page.screenshot({ clip })).toString("base64");
+  const seen = await page.evaluate(async (base64) => {
+    const image = new Image();
+    image.src = "data:image/png;base64," + base64;
+    await image.decode();
+    const copy = document.createElement("canvas");
+    copy.width = image.naturalWidth;
+    copy.height = image.naturalHeight;
+    const g = copy.getContext("2d");
+    g.drawImage(image, 0, 0);
+    const data = g.getImageData(0, 0, copy.width, copy.height).data;
+    let total = 0;
+    for (let i = 0; i < data.length; i += 4) total += data[i] + data[i + 1] + data[i + 2];
+    return total / (data.length / 4) / 3;
+  }, shot);
+  expect(seen).toBeGreaterThan(25);
+  await art.evaluate((el) => (el.querySelector("img").style.filter = ""));
+}
+
+test("the god stage's front card carries its live artwork (or relief) and keeps the stage's own tilt", async ({
   page,
 }) => {
   const errors = errorsFor(page);
@@ -319,16 +346,41 @@ test("the god stage's front card carries the relief and keeps the stage's own ti
   await page.locator("#contract-open").click();
   const art = page.locator("#god-stage .god-card-front .card-art").first();
   await page.waitForTimeout(900); // entrance flight
-  await expectReliefVisible(page, art);
+  const id = await page.evaluate(() => document.querySelector("#god-stage .god-card.focused").dataset.cid);
+  const live = await page.evaluate((id) => !!EmberLiveArtMaps[id], id);
+  if (live) {
+    await expectLiveVisible(page, page.locator("#god-stage .god-card.focused .card-art"));
+    expect((await page.evaluate(() => EmberLiveArt.diagnostics())).id).toBe(id);
+  } else await expectReliefVisible(page, art);
   const state = await page.evaluate(() => EmberCardRelief.diagnostics());
   expect(state.steer).toBe("follow");
-  expect(state.id).toBe(
-    await page.evaluate(() => document.querySelector("#god-stage .card-relief-canvas").closest(".god-card").dataset.cid),
-  );
+  expect(state.id).toBe(id);
   // The stage tilts the card; the relief must not add a second transform to it.
   await expect(page.locator(".card-relief-tilt")).toHaveCount(0);
   await page.keyboard.press("Escape");
-  await expect(page.locator("#god-stage .card-relief-canvas")).toHaveCount(0);
+  await expect(page.locator("#god-stage .card-relief-canvas, #god-stage .live-art-canvas")).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test("library: a card with live artwork flies up alive, then lets go when the stage closes", async ({
+  page,
+}) => {
+  const errors = errorsFor(page);
+  await page.goto("./?debug=1");
+  await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
+  await page.locator("#lobby-library-btn").click();
+  for (const id of ["nyx", "frostking", "ashdragon", "storm"]) {
+    await page.evaluate((id) => {
+      const item = document.querySelector(`[data-library-inspect="${id}"]`);
+      item.scrollIntoView({ block: "center" });
+      item.click();
+    }, id);
+    await expect(page.locator("#card-stage.flying")).toHaveCount(0);
+    await expectLiveVisible(page, page.locator("#card-stage .card-art"));
+    expect((await page.evaluate(() => EmberLiveArt.diagnostics())).id).toBe(id);
+    await page.keyboard.press("Escape");
+    await expect(page.locator(".live-art-canvas")).toHaveCount(0);
+  }
   expect(errors).toEqual([]);
 });
 

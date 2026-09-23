@@ -73,9 +73,9 @@ const EmberHeroScreens = (() => {
           color: A.character(hero),
           focus,
         });
-      if (EmberHeroLive.has(hero.portraitId)) {
+      if (EmberLiveArt.has(hero.portraitId)) {
         EmberCardRelief.mount(showcase, { id: hero.portraitId, focus, face: false });
-        EmberHeroLive.mount(showcase, {
+        EmberLiveArt.mount(showcase, {
           id: hero.portraitId,
           focus,
           onFail: reliefFace,
