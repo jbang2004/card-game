@@ -28,6 +28,19 @@ uv run --python 3.12 --no-project --with pillow --with numpy --with onnxruntime 
 
 新增卡牌或英雄时重跑烘焙脚本。`tests/card-relief.test.cjs` 要求注册表、`art/relief/` 文件与 `src/content/cards.js` 的卡牌 ID 三者完全一致，可选英雄的肖像必须带法线贴图，每个稀有度必须有材质档。
 
+### 英雄活立绘（hero-live）
+
+英雄选择页的预览卡不再画浮雕卡面，而是英雄的"活立绘"（`presentation/hero-live.js`，2026-09-23 用户要求"建模必须和卡片上的图片完全一致"）。模型就是卡面原画本身：`assets/anime/overrides/<portraitId>.png`（1086×1448）拆成背景、人物、手持道具（星盘与手、长剑与手、弓箭与手、提灯）三层，每层有自己的深度并重建为网格；镜头回正、动作归零时画面与原画逐像素一致（离线测得平均差约 1/255）。被遮挡处用 push-pull 插值补底，只在镜头转动时露出窄边。
+
+`art/hero-live/<portraitId>-{bg,body,front,depth,ctrl,flags}.webp` 共四位约 1.3 MB：`bg` 背景（人物区已补底）；`body` 人物颜色＋alpha（道具区已补底）；`front` 道具颜色＋alpha；`depth` 半尺寸，RGB 分别是三层深度（白 = 近）；`ctrl` 半尺寸，R 星光/流水、G 金属流光、B 辉光遮罩；`flags` 半尺寸，B 为道具遮罩（顶点着色器据此让剑、弓、灯保持刚性）。注册表 `src/hero-live-maps.js` 是生成物，不手改：
+
+```bash
+uv run --python 3.12 --no-project --with pillow --with numpy --with onnxruntime \
+  tools/bake_hero_live.py            # 全部可选英雄；可只写一个 portraitId
+```
+
+每位英雄的分层规则（道具多边形、特效遮罩）写在脚本的 `RIGS` 里；待机动作（呼吸、转头、眨眼、发丝、披风、道具摆动、辉光）写在 `src/presentation/hero-live-rigs.js`，以原画像素为坐标。眨眼不拉伸眼睑上方像素（眉毛近的角色会被一起拉下），闭合处取下眼睑下方的皮肤色，只有睫毛线下移。WebP 以 `exact` 保存，补底区域的颜色才不会因 alpha 为 0 被丢掉。`tests/hero-live.test.cjs` 要求注册表、文件、动作配置与可选英雄的 `portraitId` 一致。
+
 # v0.12 素材与加工
 
 运行时保留原 56 张已确认卡图，并新增六张酒馆誓约扩展卡图、6 张遗物、当前完整酒馆图和山谷原画档案。角色明确复用卡图；不加载旧程序化人物、旧 Three.js 场景、旧卡框缓存或旧酒馆背景。

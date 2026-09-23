@@ -37,7 +37,7 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 844, height: 390 }
     await boot(page);
     await page.locator('#start-btn').click();
     const hero = page.locator('.scene-showcase');
-    await expect(hero).toHaveClass(/card-relief-ready/);
+    await expect(hero).toHaveClass(/hero-live-ready/);
     await rub(page, cdp, hero, '--relief-ry');
     await page.keyboard.press('Escape');
     await page.locator('#lobby-library-btn').click();

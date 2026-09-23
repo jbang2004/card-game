@@ -8,8 +8,9 @@ async function openHeroes(page) {
   await page.goto("./?debug=1");
   await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
   await page.locator("#start-btn").click();
+  // The preview card shows the hero's live portrait; relief only tilts the card.
   await expect(page.locator("#modal .scene-showcase")).toHaveClass(
-    /card-relief-ready/,
+    /hero-live-ready/,
     { timeout: 15000 },
   );
 }
@@ -25,13 +26,14 @@ function errorsFor(page) {
   });
   return errors;
 }
-// Mean absolute pixel difference between two canvas frames, 0..255.
-const faceDiff = (page, a, b) =>
+// Mean absolute pixel difference between two live-portrait frames, 0..255.
+const liveDiff = (page, a, b) =>
   page.evaluate(
     ([a, b]) => {
-      const canvas = document.querySelector(".card-relief-canvas");
-      const grab = (pose) => {
-        EmberCardRelief.pose(...pose);
+      const canvas = document.querySelector(".hero-live-canvas");
+      const grab = ([x, y, t, blink]) => {
+        EmberCardRelief.pose(x, y);
+        EmberHeroLive.pose(t, blink);
         const copy = document.createElement("canvas");
         copy.width = canvas.width;
         copy.height = canvas.height;
@@ -41,6 +43,8 @@ const faceDiff = (page, a, b) =>
       };
       const first = grab(a),
         second = grab(b);
+      EmberCardRelief.pose();
+      EmberHeroLive.pose();
       let sum = 0;
       for (let i = 0; i < first.length; i++) sum += Math.abs(first[i] - second[i]);
       return sum / first.length;
@@ -48,52 +52,61 @@ const faceDiff = (page, a, b) =>
     [a, b],
   );
 
-test("hero preview card paints a relief face that responds to tilt", async ({
+test("hero preview card is the live portrait: idle motion, blink, and a turn with the card", async ({
   page,
 }) => {
   const errors = errorsFor(page);
   await openHeroes(page);
   const card = page.locator("#modal .scene-showcase");
-  for (const [name, pose] of [
-    ["front", [0, 0]],
-    ["left", [-0.75, -0.4]],
-    ["right", [0.85, 0.4]],
-  ]) {
-    await page.evaluate((p) => EmberCardRelief.pose(...p), pose);
-    await card.screenshot({ path: path.join(out, `paladin-or-first-${name}.png`) });
-  }
-  expect(await faceDiff(page, [-1, 0], [1, 0])).toBeGreaterThan(3);
-  // Tilt is mirrored onto the element so the DOM frame turns with the face.
+  // Tilt only: the relief face is not painted underneath the portrait.
+  expect(await page.locator(".card-relief-canvas").count()).toBe(0);
+  expect(await page.locator(".hero-live-canvas").count()).toBe(1);
+  await expect(page.locator(".hero-live-canvas")).toHaveCSS("opacity", "1");
+  // Idle motion changes the picture over time; a blink changes it at once.
+  expect(await liveDiff(page, [0, 0, 0, 0], [0, 0, 2.4, 0])).toBeGreaterThan(1);
+  expect(await liveDiff(page, [0, 0, 0, 0], [0, 0, 0, 1])).toBeGreaterThan(0.02);
+  // The card still turns (DOM frame) and the scene inside turns with it.
+  expect(await liveDiff(page, [-1, 0, 0, 0], [1, 0, 0, 0])).toBeGreaterThan(3);
   await page.evaluate(() => EmberCardRelief.pose(1, 0));
   expect(
     await card.evaluate((el) => el.style.getPropertyValue("--relief-ry")),
   ).toMatch(/^1\d\.\d+deg$/);
   await page.evaluate(() => EmberCardRelief.pose());
+  // It keeps drawing while the page is open.
+  const before = (await page.evaluate(() => EmberHeroLive.diagnostics())).frames;
+  await page.waitForTimeout(400);
+  expect((await page.evaluate(() => EmberHeroLive.diagnostics())).frames).toBeGreaterThan(before + 5);
 
-  // Every selectable hero has maps; switching re-mounts onto the new element.
-  const ids = await page.evaluate(() => EmberData.heroes.map((h) => h.id));
-  for (const id of ids) {
+  // Every selectable hero has a portrait; switching re-mounts onto the new element.
+  const heroes = await page.evaluate(() =>
+    EmberData.heroes.map((h) => ({ id: h.id, portrait: h.portraitId })),
+  );
+  for (const { id, portrait } of heroes) {
     await page.locator(`#modal [data-hero="${id}"]`).click();
-    await expect(page.locator("#modal .scene-showcase")).toHaveClass(
-      /card-relief-ready/,
-    );
+    await expect(page.locator("#modal .scene-showcase")).toHaveClass(/hero-live-ready/);
+    expect((await page.evaluate(() => EmberHeroLive.diagnostics())).id).toBe(portrait);
     await page.evaluate(() => EmberCardRelief.pose(0.8, 0.3));
     await page.screenshot({ path: path.join(out, `page-${id}.png`) });
     await page.evaluate(() => EmberCardRelief.pose());
   }
-  expect(await page.locator(".card-relief-canvas").count()).toBe(1);
+  expect(await page.locator(".hero-live-canvas").count()).toBe(1);
+  // Leaving the page stops it.
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".hero-live-canvas")).toHaveCount(0);
+  await expect.poll(async () => (await page.evaluate(() => EmberHeroLive.diagnostics())).status).toBe("idle");
   expect(errors).toEqual([]);
 });
 
-test("reduced motion keeps the card flat and still", async ({ page }) => {
+test("reduced motion keeps the card flat and the portrait still", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await openHeroes(page);
   await page.mouse.move(1500, 100);
   await page.waitForTimeout(400);
-  const frames = (await page.evaluate(() => EmberCardRelief.diagnostics())).frames;
+  const frames = (await page.evaluate(() => EmberCardRelief.diagnostics())).frames,
+    live = (await page.evaluate(() => EmberHeroLive.diagnostics())).frames;
   await page.waitForTimeout(400);
-  const after = await page.evaluate(() => EmberCardRelief.diagnostics());
-  expect(after.frames).toBe(frames);
+  expect((await page.evaluate(() => EmberCardRelief.diagnostics())).frames).toBe(frames);
+  expect((await page.evaluate(() => EmberHeroLive.diagnostics())).frames).toBe(live);
   expect(
     await page
       .locator("#modal .scene-showcase")

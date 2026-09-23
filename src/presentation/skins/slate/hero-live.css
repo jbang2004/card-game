@@ -1,0 +1,20 @@
+/* Test skin "slate" — the hero-select living portrait (EmberHeroLive).
+ * The canvas replaces the flat artwork inside the preview card; the card's frame
+ * line (::before) and bottom scrim (::after) stay above it, and the card itself
+ * keeps its relief tilt (`.card-relief-tilt`, card-relief.css). */
+html[data-skin="slate"] .hero-live-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 320ms ease;
+  pointer-events: none;
+}
+html[data-skin="slate"] .hero-live-ready > .hero-live-canvas {
+  opacity: 1;
+}
+html[data-skin="slate"] body #modal.folio-host .scene-showcase.hero-live-ready::before {
+  z-index: 1;
+}
