@@ -303,13 +303,45 @@ def card_types():
     return dict(re.findall(r'id:\s*"([\w-]+)",[\s\S]*?type:\s*"(\w+)"', text))
 
 
-def auto_rig(p):
+# Auto cards that also get a rigid prop layer (a held shield or sword): the prop
+# region, in source pixels, kept to what is nearer than the figure behind it.
+# Blinking eyes for auto cards are in src/presentation/live-art-rigs.js.
+AUTO_PROPS = {
+    "solaris": [(651, 383), (765, 350), (912, 407), (920, 912), (863, 960), (765, 960), (667, 912), (635, 684)],
+    "moonguard": [(366, 488), (488, 420), (560, 380), (630, 400), (700, 488), (700, 912), (586, 1205), (488, 1205), (374, 912)],
+    "aurion": [(140, 440), (340, 440), (345, 600), (290, 780), (430, 800), (430, 915), (290, 930), (290, 1448),
+               (140, 1448), (145, 930), (30, 915), (30, 800), (170, 780), (150, 600)],
+}
+
+
+def auto_eyes():
+    """Blinking eyes that src/presentation/live-art-rigs.js adds to auto cards."""
+    text = (ROOT / "src/presentation/live-art-rigs.js").read_text()
+    found = {}
+    for key, body in re.findall(r"(\w+): \{ auto: true, eyes: \[(.*?)\] \}", text):
+        found[key] = [(float(x), float(y)) for x, y in re.findall(r"c: \[([\d.]+), ([\d.]+)\]", body)]
+    return found
+
+
+def auto_rig(p, key=None):
     thr = otsu(p.depth[::4, ::4].ravel())
     share = (p.depth > thr).mean()
     if not 0.05 < share < 0.85:
         # no clear figure against a background: take the nearer part of the scene
         thr = float(np.percentile(p.depth, 55))
-    return dict(fig=thr, front=np.zeros_like(p.lum), ctrl=_auto_ctrl, auto=True)
+    front = p.near(p.poly(AUTO_PROPS[key]), 0.05) if key in AUTO_PROPS else np.zeros_like(p.lum)
+    rig = dict(fig=thr, front=front, plane=key in AUTO_PROPS, ctrl=_auto_ctrl, auto=True)
+    eyes = auto_eyes().get(key)
+    if eyes:
+        # A low-angle figure's head can sit farther back than its body, below the
+        # threshold: then it would not breathe with the body (a seam at the neck)
+        # and its eyes would not blink. Take in what is about as near as the eyes,
+        # within reach of them; sky and halo behind the head stay background.
+        ex, ey = np.mean(eyes, 0)
+        reach = max(90.0, 3.2 * (np.ptp([e[0] for e in eyes]) if len(eyes) > 1 else 40))
+        at = float(np.median([p.depth[int(y), int(x)] for x, y in eyes]))
+        rig["head"] = (1 - ss(reach, reach * 1.6, np.hypot(p.xx - ex, (p.yy - ey) * 0.8))) * ss(at - 0.12, at - 0.05, p.depth)
+    return rig
 
 
 def _auto_ctrl(p, figure, front, bgk, body):
@@ -367,13 +399,15 @@ RIGS = {"oracle": oracle, "paladin": paladin, "archer": archer, "soulguide": sou
 
 def bake(key, session):
     p = Portrait(key, session)
-    rig = RIGS[key](p) if key in RIGS else auto_rig(p)
+    rig = RIGS[key](p) if key in RIGS else auto_rig(p, key)
     rgb, depth = p.rgb, p.depth
     # Hard silhouettes with a ~1px edge: a wide soft edge shows the filled colour
     # behind it as a pale fringe.
     figure = p.blur((depth > rig["fig"]).astype(np.float32), 0.8)
     if "floor" in rig:
         figure *= 1 - rig["floor"]
+    if "head" in rig:
+        figure = np.maximum(figure, p.blur((rig["head"] > 0.5).astype(np.float32), 0.8))
     front = p.blur((rig["front"] > 0.5).astype(np.float32), 0.8)
     figure = np.maximum(figure, front)
     body = figure * (1 - front)
