@@ -1,0 +1,1037 @@
+{
+ "absolution": {
+  "kind": "effect",
+  "box": [
+   22,
+   768,
+   1062,
+   1438
+  ],
+  "centre": [
+   541,
+   1218
+  ],
+  "particles": "embers",
+  "phase": 2.644
+ },
+ "ambush": {
+  "kind": "effect",
+  "box": [
+   18,
+   234,
+   1074,
+   1432
+  ],
+  "centre": [
+   565,
+   991
+  ],
+  "particles": "leaves",
+  "phase": 3.404
+ },
+ "assassin": {
+  "kind": "creature",
+  "box": [
+   34,
+   130,
+   1016,
+   1430
+  ],
+  "centre": [
+   480,
+   857
+  ],
+  "particles": "none",
+  "phase": 0.449
+ },
+ "aurion": {
+  "kind": "creature",
+  "box": [
+   18,
+   618,
+   980,
+   1440
+  ],
+  "centre": [
+   331,
+   1153
+  ],
+  "particles": "embers",
+  "phase": 1.22
+ },
+ "battlecry": {
+  "kind": "effect",
+  "box": [
+   218,
+   230,
+   1066,
+   1272
+  ],
+  "centre": [
+   638,
+   728
+  ],
+  "particles": "embers",
+  "phase": 3.097
+ },
+ "berserker": {
+  "kind": "creature",
+  "box": [
+   54,
+   80,
+   1022,
+   1422
+  ],
+  "centre": [
+   565,
+   782
+  ],
+  "particles": "embers",
+  "phase": 2.53
+ },
+ "blessing": {
+  "kind": "effect",
+  "box": [
+   26,
+   332,
+   1014,
+   1430
+  ],
+  "centre": [
+   482,
+   937
+  ],
+  "particles": "embers",
+  "phase": 2.633
+ },
+ "bolt": {
+  "kind": "effect",
+  "box": [
+   12,
+   8,
+   1032,
+   1325
+  ],
+  "centre": [
+   461,
+   472
+  ],
+  "particles": "embers",
+  "phase": 3.824
+ },
+ "cleric": {
+  "kind": "creature",
+  "box": [
+   26,
+   230,
+   1046,
+   1428
+  ],
+  "centre": [
+   505,
+   963
+  ],
+  "particles": "embers",
+  "phase": 5.587
+ },
+ "coin": {
+  "kind": "effect",
+  "box": [
+   56,
+   192,
+   1026,
+   1428
+  ],
+  "centre": [
+   532,
+   865
+  ],
+  "particles": "embers",
+  "phase": 4.175
+ },
+ "colossus": {
+  "kind": "creature",
+  "box": [
+   36,
+   160,
+   852,
+   1430
+  ],
+  "centre": [
+   409,
+   848
+  ],
+  "particles": "embers",
+  "phase": 4.198
+ },
+ "counterspell": {
+  "kind": "effect",
+  "box": [
+   52,
+   184,
+   1030,
+   1434
+  ],
+  "centre": [
+   423,
+   925
+  ],
+  "particles": "embers",
+  "phase": 5.407
+ },
+ "dagger": {
+  "kind": "object",
+  "box": [
+   384,
+   94,
+   662,
+   1188
+  ],
+  "centre": [
+   529,
+   607
+  ],
+  "particles": "frost",
+  "phase": 5.937
+ },
+ "dawnvow": {
+  "kind": "effect",
+  "box": [
+   28,
+   222,
+   1056,
+   1436
+  ],
+  "centre": [
+   538,
+   1058
+  ],
+  "particles": "embers",
+  "phase": 2.251
+ },
+ "discovery": {
+  "kind": "effect",
+  "box": [
+   49,
+   354,
+   1034,
+   1434
+  ],
+  "centre": [
+   546,
+   935
+  ],
+  "particles": "embers",
+  "phase": 0.913
+ },
+ "dragon": {
+  "kind": "creature",
+  "box": [
+   18,
+   176,
+   1050,
+   1432
+  ],
+  "centre": [
+   486,
+   840
+  ],
+  "particles": "embers",
+  "phase": 2.837
+ },
+ "duskstag": {
+  "kind": "creature",
+  "box": [
+   60,
+   180,
+   940,
+   1436
+  ],
+  "centre": [
+   533,
+   978
+  ],
+  "particles": "frost",
+  "phase": 4.332
+ },
+ "eclipsewolf": {
+  "kind": "creature",
+  "box": [
+   48,
+   1208,
+   1004,
+   1444
+  ],
+  "centre": [
+   529,
+   1340
+  ],
+  "particles": "frost",
+  "phase": 5.643
+ },
+ "execute": {
+  "kind": "effect",
+  "box": [
+   6,
+   834,
+   1034,
+   1442
+  ],
+  "centre": [
+   278,
+   1236
+  ],
+  "particles": "embers",
+  "phase": 3.868
+ },
+ "fenlos": {
+  "kind": "creature",
+  "box": [
+   6,
+   588,
+   886,
+   1442
+  ],
+  "centre": [
+   329,
+   1252
+  ],
+  "particles": "embers",
+  "phase": 5.453
+ },
+ "fireball": {
+  "kind": "effect",
+  "box": [
+   16,
+   246,
+   978,
+   1430
+  ],
+  "centre": [
+   488,
+   856
+  ],
+  "particles": "embers",
+  "phase": 5.166
+ },
+ "frostbolt": {
+  "kind": "effect",
+  "box": [
+   4,
+   28,
+   410,
+   1432
+  ],
+  "centre": [
+   150,
+   820
+  ],
+  "particles": "frost",
+  "phase": 2.963
+ },
+ "golem": {
+  "kind": "creature",
+  "box": [
+   56,
+   216,
+   988,
+   1426
+  ],
+  "centre": [
+   528,
+   848
+  ],
+  "particles": "frost",
+  "phase": 4.989
+ },
+ "graveoffering": {
+  "kind": "effect",
+  "box": [
+   42,
+   688,
+   1042,
+   1438
+  ],
+  "centre": [
+   543,
+   1151
+  ],
+  "particles": "frost",
+  "phase": 3.172
+ },
+ "guard": {
+  "kind": "creature",
+  "box": [
+   120,
+   174,
+   1044,
+   1412
+  ],
+  "centre": [
+   611,
+   804
+  ],
+  "particles": "embers",
+  "phase": 1.106
+ },
+ "huntinghorn": {
+  "kind": "effect",
+  "box": [
+   22,
+   522,
+   926,
+   1430
+  ],
+  "centre": [
+   493,
+   1024
+  ],
+  "particles": "embers",
+  "phase": 0.709
+ },
+ "huntress": {
+  "kind": "creature",
+  "box": [
+   18,
+   154,
+   852,
+   1428
+  ],
+  "centre": [
+   421,
+   784
+  ],
+  "particles": "leaves",
+  "phase": 1.798
+ },
+ "icebarrier": {
+  "kind": "effect",
+  "box": [
+   17,
+   1060,
+   1062,
+   1442
+  ],
+  "centre": [
+   506,
+   1304
+  ],
+  "particles": "frost",
+  "phase": 4.395
+ },
+ "leech": {
+  "kind": "creature",
+  "box": [
+   30,
+   114,
+   984,
+   1428
+  ],
+  "centre": [
+   472,
+   869
+  ],
+  "particles": "none",
+  "phase": 0.323
+ },
+ "lifedrain": {
+  "kind": "effect",
+  "box": [
+   14,
+   120,
+   918,
+   1432
+  ],
+  "centre": [
+   436,
+   853
+  ],
+  "particles": "none",
+  "phase": 1.181
+ },
+ "mooncall": {
+  "kind": "effect",
+  "box": [
+   20,
+   1208,
+   1062,
+   1442
+  ],
+  "centre": [
+   541,
+   1325
+  ],
+  "particles": "frost",
+  "phase": 1.149
+ },
+ "moonfox": {
+  "kind": "creature",
+  "box": [
+   20,
+   1158,
+   1062,
+   1442
+  ],
+  "centre": [
+   534,
+   1299
+  ],
+  "particles": "frost",
+  "phase": 2.251
+ },
+ "moonguard": {
+  "kind": "creature",
+  "box": [
+   20,
+   1294,
+   1062,
+   1444
+  ],
+  "centre": [
+   539,
+   1370
+  ],
+  "particles": "frost",
+  "phase": 4.58
+ },
+ "moonlance": {
+  "kind": "effect",
+  "box": [
+   18,
+   158,
+   1064,
+   1422
+  ],
+  "centre": [
+   544,
+   826
+  ],
+  "particles": "frost",
+  "phase": 5.28
+ },
+ "muster": {
+  "kind": "effect",
+  "box": [
+   42,
+   200,
+   1050,
+   1434
+  ],
+  "centre": [
+   463,
+   990
+  ],
+  "particles": "embers",
+  "phase": 2.003
+ },
+ "necromancer": {
+  "kind": "creature",
+  "box": [
+   20,
+   102,
+   1044,
+   1424
+  ],
+  "centre": [
+   488,
+   844
+  ],
+  "particles": "frost",
+  "phase": 0.06
+ },
+ "nova": {
+  "kind": "effect",
+  "box": [
+   20,
+   1234,
+   1062,
+   1442
+  ],
+  "centre": [
+   535,
+   1338
+  ],
+  "particles": "frost",
+  "phase": 2.908
+ },
+ "phoenix": {
+  "kind": "creature",
+  "box": [
+   22,
+   106,
+   1050,
+   1212
+  ],
+  "centre": [
+   511,
+   644
+  ],
+  "particles": "embers",
+  "phase": 3.518
+ },
+ "polymorph": {
+  "kind": "effect",
+  "box": [
+   92,
+   378,
+   970,
+   1430
+  ],
+  "centre": [
+   552,
+   979
+  ],
+  "particles": "frost",
+  "phase": 1.696
+ },
+ "pup": {
+  "kind": "creature",
+  "box": [
+   16,
+   680,
+   952,
+   1438
+  ],
+  "centre": [
+   439,
+   1202
+  ],
+  "particles": "leaves",
+  "phase": 4.71
+ },
+ "rally": {
+  "kind": "effect",
+  "box": [
+   48,
+   258,
+   1022,
+   1434
+  ],
+  "centre": [
+   505,
+   880
+  ],
+  "particles": "embers",
+  "phase": 4.289
+ },
+ "reaper": {
+  "kind": "creature",
+  "box": [
+   150,
+   60,
+   956,
+   1434
+  ],
+  "centre": [
+   535,
+   888
+  ],
+  "particles": "none",
+  "phase": 5.804
+ },
+ "recruit": {
+  "kind": "creature",
+  "box": [
+   38,
+   194,
+   934,
+   1426
+  ],
+  "centre": [
+   497,
+   925
+  ],
+  "particles": "embers",
+  "phase": 2.601
+ },
+ "renew": {
+  "kind": "effect",
+  "box": [
+   36,
+   104,
+   1048,
+   1436
+  ],
+  "centre": [
+   574,
+   1055
+  ],
+  "particles": "leaves",
+  "phase": 5.205
+ },
+ "rider": {
+  "kind": "creature",
+  "box": [
+   50,
+   94,
+   962,
+   1430
+  ],
+  "centre": [
+   515,
+   784
+  ],
+  "particles": "frost",
+  "phase": 0.189
+ },
+ "sabotage": {
+  "kind": "effect",
+  "box": [
+   18,
+   24,
+   944,
+   996
+  ],
+  "centre": [
+   369,
+   435
+  ],
+  "particles": "embers",
+  "phase": 5.733
+ },
+ "sentinel": {
+  "kind": "creature",
+  "box": [
+   88,
+   42,
+   1050,
+   1066
+  ],
+  "centre": [
+   574,
+   576
+  ],
+  "particles": "frost",
+  "phase": 1.366
+ },
+ "sheep": {
+  "kind": "creature",
+  "box": [
+   24,
+   374,
+   1016,
+   1434
+  ],
+  "centre": [
+   429,
+   998
+  ],
+  "particles": "embers",
+  "phase": 2.589
+ },
+ "shield": {
+  "kind": "effect",
+  "box": [
+   14,
+   84,
+   960,
+   1426
+  ],
+  "centre": [
+   417,
+   818
+  ],
+  "particles": "embers",
+  "phase": 1.354
+ },
+ "silence": {
+  "kind": "effect",
+  "box": [
+   290,
+   166,
+   780,
+   1138
+  ],
+  "centre": [
+   534,
+   649
+  ],
+  "particles": "none",
+  "phase": 4.568
+ },
+ "skeleton": {
+  "kind": "creature",
+  "box": [
+   56,
+   226,
+   990,
+   1436
+  ],
+  "centre": [
+   538,
+   950
+  ],
+  "particles": "none",
+  "phase": 0.449
+ },
+ "solaris": {
+  "kind": "creature",
+  "box": [
+   40,
+   386,
+   1030,
+   1430
+  ],
+  "centre": [
+   565,
+   980
+  ],
+  "particles": "embers",
+  "phase": 5.001
+ },
+ "soultether": {
+  "kind": "effect",
+  "box": [
+   142,
+   146,
+   962,
+   1084
+  ],
+  "centre": [
+   500,
+   579
+  ],
+  "particles": "frost",
+  "phase": 4.344
+ },
+ "spark": {
+  "kind": "creature",
+  "box": [
+   30,
+   172,
+   894,
+   1424
+  ],
+  "centre": [
+   445,
+   884
+  ],
+  "particles": "embers",
+  "phase": 5.205
+ },
+ "spider": {
+  "kind": "creature",
+  "box": [
+   34,
+   280,
+   1040,
+   1408
+  ],
+  "centre": [
+   554,
+   869
+  ],
+  "particles": "none",
+  "phase": 5.453
+ },
+ "spiritwolf": {
+  "kind": "creature",
+  "box": [
+   36,
+   214,
+   858,
+   1428
+  ],
+  "centre": [
+   474,
+   803
+  ],
+  "particles": "embers",
+  "phase": 1.027
+ },
+ "squire": {
+  "kind": "creature",
+  "box": [
+   54,
+   38,
+   1062,
+   1432
+  ],
+  "centre": [
+   588,
+   824
+  ],
+  "particles": "embers",
+  "phase": 6.236
+ },
+ "starweave": {
+  "kind": "effect",
+  "box": [
+   18,
+   1244,
+   1064,
+   1442
+  ],
+  "centre": [
+   537,
+   1344
+  ],
+  "particles": "embers",
+  "phase": 2.747
+ },
+ "stillness": {
+  "kind": "effect",
+  "box": [
+   22,
+   640,
+   1062,
+   1436
+  ],
+  "centre": [
+   537,
+   1151
+  ],
+  "particles": "frost",
+  "phase": 4.446
+ },
+ "stone": {
+  "kind": "creature",
+  "box": [
+   32,
+   132,
+   1018,
+   1434
+  ],
+  "centre": [
+   498,
+   884
+  ],
+  "particles": "frost",
+  "phase": 4.855
+ },
+ "sunblade": {
+  "kind": "object",
+  "box": [
+   38,
+   222,
+   960,
+   1440
+  ],
+  "centre": [
+   499,
+   1050
+  ],
+  "particles": "embers",
+  "phase": 5.383
+ },
+ "thorn": {
+  "kind": "creature",
+  "box": [
+   34,
+   236,
+   990,
+   1434
+  ],
+  "centre": [
+   503,
+   1027
+  ],
+  "particles": "leaves",
+  "phase": 0.055
+ },
+ "titan": {
+  "kind": "creature",
+  "box": [
+   20,
+   158,
+   906,
+   1418
+  ],
+  "centre": [
+   433,
+   799
+  ],
+  "particles": "embers",
+  "phase": 1.322
+ },
+ "tracking": {
+  "kind": "effect",
+  "box": [
+   14,
+   760,
+   1060,
+   1436
+  ],
+  "centre": [
+   509,
+   1181
+  ],
+  "particles": "embers",
+  "phase": 5.949
+ },
+ "treant": {
+  "kind": "creature",
+  "box": [
+   20,
+   736,
+   704,
+   1356
+  ],
+  "centre": [
+   317,
+   1076
+  ],
+  "particles": "leaves",
+  "phase": 1.22
+ },
+ "wisdom": {
+  "kind": "effect",
+  "box": [
+   34,
+   440,
+   1048,
+   1428
+  ],
+  "centre": [
+   529,
+   961
+  ],
+  "particles": "embers",
+  "phase": 1.787
+ },
+ "wisp": {
+  "kind": "creature",
+  "box": [
+   48,
+   64,
+   864,
+   1302
+  ],
+  "centre": [
+   415,
+   645
+  ],
+  "particles": "embers",
+  "phase": 4.607
+ },
+ "wolf": {
+  "kind": "creature",
+  "box": [
+   24,
+   470,
+   1028,
+   1436
+  ],
+  "centre": [
+   520,
+   1061
+  ],
+  "particles": "frost",
+  "phase": 5.874
+ },
+ "wolves": {
+  "kind": "effect",
+  "box": [
+   6,
+   406,
+   826,
+   1440
+  ],
+  "centre": [
+   281,
+   1137
+  ],
+  "particles": "frost",
+  "phase": 2.003
+ }
+}

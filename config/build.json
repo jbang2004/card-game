@@ -102,6 +102,7 @@
   "SKIN_SLATE_CARD_RELIEF": "presentation/skins/slate/card-relief.css",
   "LIVE_ART_MAPS": "live-art-maps.js",
   "LIVE_ART_RIGS": "presentation/live-art-rigs.js",
+  "LIVE_ART_AUTO": "live-art-auto.js",
   "LIVE_ART": "presentation/live-art.js",
   "SKIN_SLATE_LIVE_ART": "presentation/skins/slate/live-art.css",
   "CARD_STAGE": "presentation/card-stage.js",

@@ -11,7 +11,8 @@
  * illustration, mount() resolves false and the caller keeps the relief face. */
 const EmberLiveArt = (() => {
   const MAPS = EmberLiveArtMaps,
-    RIGS = EmberLiveArtRigs;
+    RIGS = EmberLiveArtRigs,
+    AUTO = EmberLiveArtAuto;
   const IMG_W = 1086,
     IMG_H = 1448;
   const TAN_Y = Math.tan((11 * Math.PI) / 180),
@@ -35,7 +36,7 @@ uniform mat4 uView, uProj;
 out vec2 vUv;
 const vec2 IMG = vec2(${IMG_W}., ${IMG_H}.);
 const float TAU = 6.2831853;
-float FR;
+float FR, PER, CORE;
 float g2(vec2 p, vec2 c, vec2 r){ vec2 q = (p-c)/r; return exp(-dot(q, q)); }
 vec2 rot(vec2 p, vec2 c, float a){ float s = sin(a), k = cos(a); p -= c; return vec2(k*p.x - s*p.y, s*p.x + k*p.y) + c; }
 float segW(vec2 p, vec2 a, vec2 b, float r, out float along){ vec2 ab = b-a; float h = clamp(dot(p-a, ab)/dot(ab, ab), 0., 1.); along = h; return 1. - smoothstep(r*.45, r, length(p - a - ab*h)); }
@@ -49,7 +50,8 @@ ${rig.bgDisp || ""}
 void main(){
   vUv = aUv;
   vec3 dep = texture(uDepth, aUv).rgb;
-  FR = texture(uFlags, aUv).b;
+  vec3 fl = texture(uFlags, aUv).rgb;
+  FR = fl.b; PER = fl.r; CORE = fl.g;
   float z = uLayer == 0 ? dep.r : uLayer == 1 ? dep.g : dep.b;
   vec2 px = aUv*IMG;
   px += (uLayer == 0 ? bgDisp(px, uTime) : disp(px, uTime))*uMotion;
@@ -128,6 +130,69 @@ ${rig.fx}
   o = uLayer == 0 ? vec4(c.rgb, 1.) : c;
 }`;
 
+  /* The shared idle template for cards without a hand rig, from the numbers the
+   * bake measured (EmberLiveArtAuto): a creature breathes from its feet and its
+   * thin parts (PER: hair, cloth, wings) sway; an effect pulses and its edges
+   * flicker; an object floats and turns a little. Glow flows, sparkles twinkle,
+   * metal catches a sweep of light, and particles match the glow's colour. A
+   * hand entry marked `auto: true` only adds to this (eyes to blink). */
+  const PARTICLES = {
+    embers: { color: [1, 0.55, 0.15], a: [0.1, -0.8, 18, 0.08, 0.22], b: [-0.08, -0.55, 30, 0.07, 0.18] },
+    frost: { color: [0.85, 0.93, 1], a: [0.15, 0.45, 24, 0.075, 0.3], b: [0.08, 0.3, 40, 0.06, 0.25] },
+    motes: { color: [0.78, 0.72, 1], a: [0.05, -0.3, 20, 0.075, 0.22], b: [-0.04, -0.2, 34, 0.06, 0.2] },
+    leaves: { color: [0.72, 1, 0.62], a: [0.35, 0.28, 18, 0.075, 0.2], b: [0.25, 0.18, 30, 0.06, 0.16] },
+  };
+  const KINDS_FX = { creature: { glow: 0.35, dust: 0.7 }, effect: { glow: 0.6, dust: 1.1 }, object: { glow: 0.3, dust: 0.8 } };
+  function autoRig(a, extra = {}) {
+    const n = (v) => (+v).toFixed(1),
+      ph = a.phase.toFixed(3),
+      [cx, cy] = a.centre,
+      feet = a.box[3],
+      style = KINDS_FX[a.kind] || KINDS_FX.creature;
+    const motion = {
+      creature: [
+        `float b = breath(t + ${ph})*2. - 1.;`,
+        `d += (px - vec2(${n(cx)}, ${n(feet)}))*vec2(.0018, .0035)*b*(.35 + .65*CORE);`,
+        `float sway = sin(TAU*t/5.2 + ${ph}*3. + px.y*.004) + .45*sin(TAU*t/2.9 + ${ph}*5. + px.x*.009);`,
+        `d += PER*vec2(3.2*sway, 1.2*sin(TAU*t/4.1 + ${ph}*2. + px.x*.006));`,
+      ],
+      effect: [
+        `float pulse = sin(TAU*t/3.6 + ${ph});`,
+        `d += (px - vec2(${n(cx)}, ${n(cy)}))*.0035*pulse*(.4 + .6*CORE);`,
+        `d += PER*vec2(4.*sin(TAU*t/2.6 + px.y*.011 + ${ph}), 3.*sin(TAU*t/3.3 + px.x*.01 + ${ph}*2.));`,
+      ],
+      object: [
+        `d.y -= 3.*sin(TAU*t/4.4 + ${ph});`,
+        `d += rot(px, vec2(${n(cx)}, ${n(cy)}), radians(.35)*sin(TAU*t/6.1 + ${ph})) - px;`,
+        `d.x += PER*1.5*sin(TAU*t/3.1 + px.y*.01 + ${ph});`,
+      ],
+    }[a.kind] || [];
+    const dust = PARTICLES[a.particles];
+    const vec = (v) => `vec3(${v.map((x) => x.toFixed(2)).join(", ")})`;
+    const drift = (q, off) =>
+      `particles(vUv + ${off}, t, vec2(${q[0]}, ${q[1]}), ${n(q[2])}, ${q[3]}, ${q[4]})`;
+    const fx = [
+      `vec2 cell = floor(vUv*vec2(200., 266.));`,
+      `c.rgb += c.rgb*k.r*(.55*sin(t*(1. + h21(cell)*1.6) + h21(cell + 3.)*6.28) + .1)*uFx;`,
+      `float flow = vn(vec2(vUv.x*12. + ${ph}, vUv.y*12. - t*.4))*vn(vec2(vUv.x*27. - t*.25, vUv.y*23. + ${ph}));`,
+      `c.rgb += c.rgb*k.b*((flow - .2)*${style.glow.toFixed(2)} + .08*sin(t*TAU/3.3 + ${ph}))*uFx;`,
+      `float band = dot(vUv - vec2(.5), normalize(vec2(.35, -1.)));`,
+      `c.rgb += vec3(1., .97, .9)*exp(-pow((band - uGlint)/.03, 2.))*k.g*.45*c.a*uFx;`,
+      dust
+        ? `if (layer == 2) c.rgb += ${vec(dust.color)}*(${drift(dust.a, "0.")} + .7*${drift(dust.b, ".41")})*${style.dust.toFixed(2)}*uFx;`
+        : "",
+    ];
+    return { eyes: extra.eyes || [], disp: motion.join("\n"), fx: fx.join("\n") };
+  }
+  const rigs = new Map();
+  function rigFor(id) {
+    if (!rigs.has(id)) {
+      const hand = RIGS[id];
+      rigs.set(id, hand && !hand.auto ? hand : AUTO[id] ? autoRig(AUTO[id], hand) : null);
+    }
+    return rigs.get(id);
+  }
+
   let canvas = null,
     gl = null,
     mesh = null,
@@ -185,7 +250,7 @@ ${rig.fx}
   }
   function program(id) {
     if (programs.has(id)) return programs.get(id);
-    const rig = RIGS[id],
+    const rig = rigFor(id),
       handle = gl.createProgram();
     gl.attachShader(handle, compile(gl.VERTEX_SHADER, VERTEX(rig)));
     gl.attachShader(handle, compile(gl.FRAGMENT_SHADER, FRAGMENT(rig)));
@@ -446,7 +511,7 @@ ${rig.fx}
   async function mount(element, { id, focus = [0.5, 0.22], onFail } = {}) {
     if (host) release();
     const mine = ++token;
-    if (!element || !MAPS[id] || !RIGS[id] || !ensureContext()) return false;
+    if (!element || !MAPS[id] || !rigFor(id) || !ensureContext()) return false;
     stats.status = "loading";
     try {
       const dpr = Math.min(devicePixelRatio || 1, 2),
@@ -490,7 +555,7 @@ ${rig.fx}
     const art = card?.querySelector(".card-art"),
       image = art?.querySelector("img");
     const face = () => card.isConnected && EmberCardRelief.mountCard(card, options);
-    if (!image || !MAPS[options.id] || !RIGS[options.id]) return face();
+    if (!image || !MAPS[options.id] || !rigFor(options.id)) return face();
     const [x = 50, y = 22] = getComputedStyle(image).objectPosition.split(" ").map(parseFloat);
     EmberCardRelief.mountCard(card, { ...options, face: false });
     return mount(art, { id: options.id, focus: [x / 100, y / 100], onFail: face }).then(
@@ -502,7 +567,7 @@ ${rig.fx}
     mount,
     mountCard,
     release,
-    has: (id) => !!(MAPS[id] && RIGS[id]),
+    has: (id) => !!(MAPS[id] && rigFor(id)),
     diagnostics: () => ({ ...stats }),
     /* Review hook: hold the idle clock at `t` seconds with a blink amount 0..1, or
      * resume with no arguments. */

@@ -2,8 +2,20 @@
 the cards that have one.
 
     uv run --python 3.12 --no-project --with pillow --with numpy --with onnxruntime \
-        tools/bake_live_art.py            # every entry in RIGS
+        tools/bake_live_art.py            # every hand-rigged entry in RIGS
         tools/bake_live_art.py oracle     # just this illustration
+        tools/bake_live_art.py --auto     # every card without a hand rig
+        tools/bake_live_art.py --auto wolf fireball
+
+Hand-rigged entries (RIGS below, motion in src/presentation/live-art-rigs.js) name
+their layers and effect masks by hand. Every other card is rigged automatically
+(`auto_rig`): the figure is split from the background at a depth threshold found
+per image (Otsu), its "core" (the body mass) breathes or floats and its
+"periphery" (hair, cloth edges, wings, flames) sways, colour masks pick the glow,
+sparkles and metal, and the glow's hue picks the particles. The parameters go to
+art/live-art/auto.json and src/live-art-auto.js; the shared motion template is in
+src/presentation/live-art.js (`autoRig`). Auto cards are stored at 768x1024 (masks
+384x512) since a card's art window is never shown larger.
 
 The card illustration itself is the model: assets/anime/overrides/<id>.png
 (1086x1448) is split into three layers -- background, figure, and the prop held
@@ -19,11 +31,12 @@ src/live-art-maps.js. Maps:
   front  prop colour + alpha
   depth  R background, G figure, B prop depth (white = near), half size
   ctrl   R twinkle/flow, G metal glint, B glow mask, half size
-  flags  R background is original, G figure is original, B prop mask
-         (the vertex shader keeps the prop rigid with it), half size
+  flags  R periphery (sways), G core (breathes), B prop mask (the vertex
+         shader keeps the prop rigid with it), half size
 Depth comes from Depth Anything V2 Small (see tools/bake_card_relief.py).
 """
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -36,6 +49,9 @@ MODEL = ROOT / "tools/models/depth-anything-v2-small.onnx"
 SOURCE = ROOT / "assets/anime/overrides"
 OUT = ROOT / "art/live-art"
 REGISTRY = ROOT / "src/live-art-maps.js"
+AUTO_PARAMS = OUT / "auto.json"
+AUTO_REGISTRY = ROOT / "src/live-art-auto.js"
+CARDS = ROOT / "src/content/cards.js"
 KINDS = ("bg", "body", "front", "depth", "ctrl", "flags")
 HALF = {"depth", "ctrl", "flags"}
 
@@ -264,6 +280,86 @@ def _storm_ctrl(p, figure, front, bgk, body):
     return np.zeros_like(p.lum), np.zeros_like(p.lum), bolt
 
 
+def otsu(values):
+    hist, edges = np.histogram(values, bins=64, range=(0, 1))
+    w = hist.astype(np.float64) / hist.sum()
+    mids = (edges[:-1] + edges[1:]) / 2
+    best, at = -1, 0.2
+    for i in range(1, 63):
+        w0, w1 = w[:i].sum(), w[i:].sum()
+        if w0 < 1e-3 or w1 < 1e-3:
+            continue
+        between = w0 * w1 * ((w[:i] * mids[:i]).sum() / w0 - (w[i:] * mids[i:]).sum() / w1) ** 2
+        if between > best:
+            best, at = between, edges[i]
+    return float(at)
+
+
+KIND = {"minion": "creature", "spell": "effect", "weapon": "object"}
+
+
+def card_types():
+    text = CARDS.read_text()
+    return dict(re.findall(r'id:\s*"([\w-]+)",[\s\S]*?type:\s*"(\w+)"', text))
+
+
+def auto_rig(p):
+    thr = otsu(p.depth[::4, ::4].ravel())
+    share = (p.depth > thr).mean()
+    if not 0.05 < share < 0.85:
+        # no clear figure against a background: take the nearer part of the scene
+        thr = float(np.percentile(p.depth, 55))
+    return dict(fig=thr, front=np.zeros_like(p.lum), ctrl=_auto_ctrl, auto=True)
+
+
+def _auto_ctrl(p, figure, front, bgk, body):
+    sparkle = fine_points(p, np.ones_like(p.lum))
+    metal = ss(0.6, 0.9, p.lum) * ss(0.2, 0.07, p.sat) * body
+    # Glow is light that stands out from its surroundings: a bright sky or white
+    # robe as a whole would otherwise pulse in blotches.
+    local = ss(0.03, 0.14, p.lum - p.blur(p.lum, 24))
+    glow = np.maximum(ss(0.55, 0.85, p.lum) * ss(0.3, 0.6, p.sat), ss(0.85, 0.97, p.lum)) * local
+    return sparkle, metal, glow
+
+
+def auto_params(key, p, figure, glow):
+    """The numbers the shared motion template needs, in source pixels."""
+    solid = figure > 0.5
+    ys, xs = np.nonzero(solid[::2, ::2])
+    xs, ys = xs * 2, ys * 2
+    x0, x1 = np.percentile(xs, [2, 98]) if len(xs) else (0, p.W)
+    y0, y1 = np.percentile(ys, [2, 98]) if len(ys) else (0, p.H)
+    cx, cy = (float(xs.mean()), float(ys.mean())) if len(xs) else (p.W / 2, p.H / 2)
+    # The glow's colour picks the particles: embers, frost, arcane motes or leaves.
+    lit = glow > 0.5
+    particles = "none"
+    if lit.mean() > 0.004:
+        r, g, b = (p.rgb[lit] ** 1).mean(0)
+        hsv = np.asarray(Image.fromarray((p.rgb * 255).astype(np.uint8)).convert("HSV"), np.float32)[lit]
+        ang = hsv[:, 0] / 255 * 2 * np.pi
+        weight = hsv[:, 1] / 255 + 1e-3
+        hue = (np.degrees(np.arctan2((np.sin(ang) * weight).sum(), (np.cos(ang) * weight).sum())) + 360) % 360
+        sat = float(weight.mean())
+        if sat < 0.18:
+            particles = "frost" if b >= r else "embers"
+        elif hue < 55 or hue > 330:
+            particles = "embers"
+        elif hue < 165:
+            particles = "leaves"
+        elif hue < 215:
+            particles = "frost"
+        else:
+            particles = "motes"
+    return {
+        "kind": KIND.get(card_types().get(key), "creature"),
+        "box": [round(float(v)) for v in (x0, y0, x1, y1)],
+        "centre": [round(cx), round(cy)],
+        "particles": particles,
+        # a per-card phase so no two cards breathe or sway in step
+        "phase": round((sum(map(ord, key)) * 0.6180339) % 1 * 6.2832, 3),
+    }
+
+
 RIGS = {"oracle": oracle, "paladin": paladin, "archer": archer, "soulguide": soulguide,
         "jingchen": jingchen, "selmyra": selmyra, "nyx": nyx, "frostking": frostking,
         "ashdragon": ashdragon, "storm": storm}
@@ -271,7 +367,7 @@ RIGS = {"oracle": oracle, "paladin": paladin, "archer": archer, "soulguide": sou
 
 def bake(key, session):
     p = Portrait(key, session)
-    rig = RIGS[key](p)
+    rig = RIGS[key](p) if key in RIGS else auto_rig(p)
     rgb, depth = p.rgb, p.depth
     # Hard silhouettes with a ~1px edge: a wide soft edge shows the filled colour
     # behind it as a pale fringe.
@@ -312,22 +408,40 @@ def bake(key, session):
     else:
         d_front = p.blur(extend(depth, p.erode(solid, 13)), 6)
     twinkle, metal, glow = rig["ctrl"](p, figure, front, bgk, body)
+    # Where the figure breathes (its mass) and where it sways (its edges and thin
+    # parts), from the silhouette: worked at quarter size, the erosion is wide.
+    small = Image.fromarray((figure * 255).astype(np.uint8)).resize((p.W // 4, p.H // 4), Image.BILINEAR)
+    solid = (np.asarray(small, np.float32) / 255 > 0.5).astype(np.float32)
+    core_q = np.asarray(p.img(solid).filter(ImageFilter.MinFilter(15)).filter(ImageFilter.GaussianBlur(6)), np.float32) / 255
+    core = np.asarray(Image.fromarray((core_q * 255).astype(np.uint8)).resize((p.W, p.H), Image.BILINEAR), np.float32) / 255
+    periphery = p.blur(figure * (1 - ss(0.1, 0.9, core)), 10)
+    if rig.get("auto"):
+        params = auto_params(key, p, figure, glow)
+        store = json.loads(AUTO_PARAMS.read_text()) if AUTO_PARAMS.exists() else {}
+        store[key] = params
+        AUTO_PARAMS.write_text(json.dumps(dict(sorted(store.items())), indent=1) + "\n")
 
     OUT.mkdir(parents=True, exist_ok=True)
 
+    # Auto cards are only ever shown in a card's art window: 768 wide is plenty.
+    scale = 768 / p.W if rig.get("auto") else 1
+
     def save(kind, a, mode):
         im = Image.fromarray((np.clip(a, 0, 1) * 255 + 0.5).astype(np.uint8), mode)
+        size = (round(p.W * scale), round(p.H * scale))
         if kind in HALF:
-            im = im.resize((p.W // 2, p.H // 2), Image.BILINEAR)
+            size = (size[0] // 2, size[1] // 2)
+        if size != im.size:
+            im = im.resize(size, Image.LANCZOS if kind not in HALF else Image.BILINEAR)
         # exact: keep colour under zero alpha (filled areas are revealed by motion)
-        im.save(OUT / f"{key}-{kind}.webp", quality=88, method=6, exact=True)
+        im.save(OUT / f"{key}-{kind}.webp", quality=88 if scale == 1 else 84, method=6, exact=True)
 
     save("bg", bg, "RGB")
     save("body", np.concatenate([body_c, body_a[..., None]], -1), "RGBA")
     save("front", np.concatenate([rgb * (front > 0.004)[..., None], front[..., None]], -1), "RGBA")
     save("depth", np.stack([d_bg, d_body, d_front], -1), "RGB")
     save("ctrl", np.stack([twinkle, metal, glow], -1), "RGB")
-    save("flags", np.stack([bgk, body, p.blur(front, 6)], -1), "RGB")
+    save("flags", np.stack([periphery, core, p.blur(front, 6)], -1), "RGB")
     size = sum((OUT / f"{key}-{k}.webp").stat().st_size for k in KINDS)
     print(f"{key}: {size // 1024} KB")
 
@@ -340,10 +454,22 @@ def write_registry():
         "const EmberLiveArtMaps = Object.freeze(" + json.dumps(maps, indent=2) + ");\n"
         'if (typeof module !== "undefined") module.exports = EmberLiveArtMaps;\n'
     )
+    store = json.loads(AUTO_PARAMS.read_text()) if AUTO_PARAMS.exists() else {}
+    store = {k: v for k, v in store.items() if k in maps and k not in RIGS}
+    AUTO_REGISTRY.write_text(
+        "/* Generated by tools/bake_live_art.py --auto; do not edit. Parameters of the\n"
+        " * shared motion template (EmberLiveArt autoRig) for cards without a hand rig. */\n"
+        "const EmberLiveArtAuto = Object.freeze(" + json.dumps(store, indent=1) + ");\n"
+        'if (typeof module !== "undefined") module.exports = EmberLiveArtAuto;\n'
+    )
 
 
 if __name__ == "__main__":
-    wanted = sys.argv[1:] or list(RIGS)
+    args = sys.argv[1:]
+    if args[:1] == ["--auto"]:
+        wanted = args[1:] or [i for i in card_types() if i not in RIGS]
+    else:
+        wanted = args or list(RIGS)
     session = ort.InferenceSession(str(MODEL), providers=["CPUExecutionProvider"])
     for key in wanted:
         bake(key, session)
