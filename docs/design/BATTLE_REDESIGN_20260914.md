@@ -268,7 +268,7 @@ input = pointerType (coarse/fine)，与 form 正交
 |---|---|---|
 | 英雄水晶 | 删除 `.hero-mana` 徽章与无障碍串里的法力播报 | `src/ui.js` render() |
 | 指挥台 | 触屏下 `#enemy-hero` / `#player-hero` 就是整条指挥台（`l.enemyConsole` / `l.playerConsole`），头像改圆形，名字与芯片（血 / 甲 / 攻，敌方另有契约进度 `.hero-covenant` 与手牌数 `.hero-hand`）放在 `.hero-chips`；技能节点、法力点阵、结束回合由 `mobile-view.js` 直接盒进指挥台 | `mobile-view.js` 竖 / 横屏分支；`console.css` §1–2 |
-| 随从令牌 | 按行内数量分档（竖屏 96/84/70/58，横屏 88/80/70/58/54），平板与紧凑桌面 ×1.4；比例 1.25；放不下自动叠放 −10px（`data-stacked`）；竖屏在两行之间留 44px 给浮动提示 | `mobile-view.js minion()` |
+| 随从令牌 | 按行内数量分档（竖屏 82/82/82/76/66/58/54，横屏 88/80/70/58/54），平板与紧凑桌面 ×1.4；比例 1.25；放不下时竖屏先把间距收到 4px、宽度不低于 40px 并排，仍放不下才叠放 −10px（`data-stacked`），横屏直接叠放。2026-09-23 起竖屏战场全宽（`l.arena` 不再为神契竖栏右移 76px），两行随从改由 `l.rows` 给出：排在「战场顶 → 神契卡上沿 − 8」这一段的 25% / 75%，玩家行永远在神契卡之上；`minion()`、`lane()`、`--enemy-row-y / --player-row-y`、`#board-empty` 都读 `l.rows` | `mobile-view.js minion()` / `l.rows` |
 | 手牌坞 | 卡宽固定（竖 112/104/96、横 96/88，平板 140、紧凑桌面 118），露出 66%（真实牌面的名字带在 62% 处，55% 会把牌名藏掉），坞盒子伸到屏幕外；步进 `min(卡宽+12, (坞宽−卡宽)/(n−1))`，<28px 进入 `.hand-pan` 原生横滑，否则 `.hand-fits` 不滚动、选中卡升出坞外 | `ui.js` render()（`--hand-step`）、`console.css` §3 |
 | 神卡槽位 | `#contract-open` 在触屏下改成金色镭射钢面卡背（材质抄 `card-face.css` 的 `.card-back` 换金色色阶，画在子元素 `.contract-back` 上以满足 action-feedback 的 `background-image: none` 约束），停在坞右端；多张契约用 `::before` 叠一张、`::after` 显示数量；达成条件时金光呼吸 | `application/contracts.js render()`、`console.css` §4 |
 | 提示 | 竖屏浮在两行随从之间，横屏放到顶栏中央；`#touch-target-bar` 从 `#battle` 移到 `#app` 下，才能压过 z-index 55 的顶栏；触屏文案不再出现「右键 / ESC」 | `src/template.html`、`ui.js`、`console.css` §5 |

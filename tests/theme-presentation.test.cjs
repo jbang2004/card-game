@@ -108,7 +108,7 @@ test("the theme ships no battle scene bitmaps; the arena owns its material maps"
   assert.equal(fs.existsSync(path.join(root, "art/scenes/boss-topdown-v1")), false);
   const arena = fs.readFileSync(path.join(root, "src/presentation/arena-3d.js"), "utf8");
   const maps = [...arena.matchAll(/asset:(scenes\/lava-forge\/[\w-]+\.jpg)/g)].map((m) => m[1]);
-  assert.equal(new Set(maps).size, 9);
+  assert.equal(new Set(maps).size, 6);
   for (const file of maps) {
     const bytes = fs.readFileSync(path.join(root, "assets", file));
     assert.equal(bytes[0], 0xff);

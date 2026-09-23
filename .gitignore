@@ -41,4 +41,4 @@ tests/*-run.log
 /Card_Game_3D_VFX_Demo.html
 
 # Local depth-estimation weights for tools/bake_card_relief.py (99 MB).
-/tools/.scratch/card-relief/model/
+/tools/models/

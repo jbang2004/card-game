@@ -12,7 +12,8 @@ what make the layers separate), a 168x224 orm, and the shader derives normals. h
 B = metalness.
 Depth comes from Depth Anything V2 Small (ONNX, Apache-2.0). The 99 MB weight
 file is a local authoring input and is not tracked:
-tools/.scratch/card-relief/model/model.onnx
+tools/models/depth-anything-v2-small.onnx
+(huggingface.co/onnx-community/depth-anything-v2-small, onnx/model.onnx).
 """
 import json
 import re
@@ -24,7 +25,7 @@ import onnxruntime as ort
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
-MODEL = ROOT / "tools/.scratch/card-relief/model/model.onnx"
+MODEL = ROOT / "tools/models/depth-anything-v2-small.onnx"
 SOURCE = ROOT / "assets/anime"
 OUT = ROOT / "art/relief"
 REGISTRY = ROOT / "src/card-relief-maps.js"

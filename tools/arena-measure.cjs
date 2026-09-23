@@ -11,7 +11,7 @@
 //   light          share of the frame above L* 60
 //   colour         share of the frame with chroma C* above 20
 //   detail         mean L* gradient outside the court over inside its middle
-// The court's screen box comes from EmberArena3D.board and the arena camera.
+// The court's screen box comes from EmberArena3D.board.court.
 const { chromium } = require("@playwright/test");
 const fs = require("fs");
 const path = require("path");
@@ -25,17 +25,11 @@ const SIZES = [
   { name: "844", w: 844, h: 390, mobile: true },
 ];
 
-/* in-page: project the court's corners with the arena camera (pitch 57°, fov 27°) */
+/* in-page: the court's screen box, which the arena reports in stage pixels, in CSS pixels */
 function courtBox() {
-  const b = EmberArena3D.board, W = b.width, H = b.height, P = (57 * Math.PI) / 180, t = Math.tan((27 * Math.PI) / 360);
-  const eye = [0, Math.sin(P) * b.dist, b.tz + Math.cos(P) * b.dist], sub = (a, c) => a.map((v, i) => v - c[i]), dot = (a, c) => a[0] * c[0] + a[1] * c[1] + a[2] * c[2];
-  const norm = (a) => { const l = Math.hypot(...a); return a.map((v) => v / l); }, cross = (a, c) => [a[1] * c[2] - a[2] * c[1], a[2] * c[0] - a[0] * c[2], a[0] * c[1] - a[1] * c[0]];
-  const f = norm(sub([0, 0, b.tz], eye)), r = norm(cross(f, [0, 1, 0])), u = cross(r, f);
-  const project = (p) => { const d = sub(p, eye), zc = dot(d, f); return [((dot(d, r) / (zc * t * (W / H))) * 0.5 + 0.5) * W, (0.5 - (dot(d, u) / (zc * t)) * 0.5) * H]; };
-  const pts = [[-b.hx, 0, -b.hz], [b.hx, 0, -b.hz], [b.hx, 0, b.hz], [-b.hx, 0, b.hz]].map(project);
-  const app = document.getElementById("app").getBoundingClientRect(), sx = app.width / W, sy = app.height / H;
-  const xs = pts.map((p) => app.x + p[0] * sx), ys = pts.map((p) => app.y + p[1] * sy);
-  return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+  const b = EmberArena3D.board, app = document.getElementById("app").getBoundingClientRect(), sx = app.width / b.width, sy = app.height / b.height;
+  const [x0, y0, x1, y1] = b.court;
+  return [app.x + x0 * sx, app.y + y0 * sy, app.x + x1 * sx, app.y + y1 * sy];
 }
 
 /* in-page: the five numbers over a PNG (data url) and a court box in CSS px */
@@ -84,7 +78,7 @@ async function measure({ url, box, dpr }) {
     await page.screenshot({ path: file });
     const m = await page.evaluate(measure, { url: "data:image/png;base64," + fs.readFileSync(file).toString("base64"), box, dpr: 1 });
     const board = await page.evaluate(() => EmberArena3D.board);
-    rows.push({ layout: `${s.w}x${s.h}`, ...Object.fromEntries(Object.entries(m).map(([k, v]) => [k, +v.toFixed(k === "ratio" || k === "detail" ? 2 : 1)])), artMs: board.artMs, tier: board.tier });
+    rows.push({ layout: `${s.w}x${s.h}`, ...Object.fromEntries(Object.entries(m).map(([k, v]) => [k, +v.toFixed(k === "ratio" || k === "detail" ? 2 : 1)])), gems: board.gems, artMs: board.artMs, tier: board.tier });
     await page.close();
   }
   await browser.close();
