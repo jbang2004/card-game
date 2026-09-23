@@ -33,6 +33,9 @@ uniform sampler2D uDepth, uFlags;
 uniform int uLayer;
 uniform float uTime, uMotion;
 uniform mat4 uView, uProj;
+// auto template only (see autoRig): 0 creature, 1 effect, 2 object; anchor = centre x, y, feet y
+uniform float uKind, uPhase;
+uniform vec3 uAnchor;
 out vec2 vUv;
 const vec2 IMG = vec2(${IMG_W}., ${IMG_H}.);
 const float TAU = 6.2831853;
@@ -67,6 +70,11 @@ in vec2 vUv;
 uniform sampler2D uTex, uCtrl;
 uniform int uLayer;
 uniform float uTime, uBlink, uGlint, uFx;
+// auto template only (see autoRig)
+uniform float uPhase, uGlowAmt, uDustAmt;
+uniform vec3 uDustColor;
+uniform vec4 uDustA, uDustB;
+uniform vec2 uDustDensity;
 out vec4 o;
 const vec2 IMG = vec2(${IMG_W}., ${IMG_H}.);
 const float TAU = 6.2831853;
@@ -143,54 +151,69 @@ ${rig.fx}
     leaves: { color: [0.72, 1, 0.62], a: [0.35, 0.28, 18, 0.075, 0.2], b: [0.25, 0.18, 30, 0.06, 0.16] },
   };
   const KINDS_FX = { creature: { glow: 0.35, dust: 0.7 }, effect: { glow: 0.6, dust: 1.1 }, object: { glow: 0.3, dust: 0.8 } };
-  function autoRig(a, extra = {}) {
-    const n = (v) => (+v).toFixed(1),
-      ph = a.phase.toFixed(3),
-      [cx, cy] = a.centre,
-      feet = a.box[3],
-      style = KINDS_FX[a.kind] || KINDS_FX.creature;
-    const motion = {
-      creature: [
-        `float b = breath(t + ${ph})*2. - 1.;`,
-        `d += (px - vec2(${n(cx)}, ${n(feet)}))*vec2(.0018, .0035)*b*(.35 + .65*CORE);`,
-        `float sway = sin(TAU*t/5.2 + ${ph}*3. + px.y*.004) + .45*sin(TAU*t/2.9 + ${ph}*5. + px.x*.009);`,
-        `d += PER*vec2(3.2*sway, 1.2*sin(TAU*t/4.1 + ${ph}*2. + px.x*.006));`,
-      ],
-      effect: [
-        `float pulse = sin(TAU*t/3.6 + ${ph});`,
-        `d += (px - vec2(${n(cx)}, ${n(cy)}))*.0035*pulse*(.4 + .6*CORE);`,
-        `d += PER*vec2(4.*sin(TAU*t/2.6 + px.y*.011 + ${ph}), 3.*sin(TAU*t/3.3 + px.x*.01 + ${ph}*2.));`,
-      ],
-      object: [
-        `d.y -= 3.*sin(TAU*t/4.4 + ${ph});`,
-        `d += rot(px, vec2(${n(cx)}, ${n(cy)}), radians(.35)*sin(TAU*t/6.1 + ${ph})) - px;`,
-        `d.x += PER*1.5*sin(TAU*t/3.1 + px.y*.01 + ${ph});`,
-      ],
-    }[a.kind] || [];
-    const dust = PARTICLES[a.particles];
-    const vec = (v) => `vec3(${v.map((x) => x.toFixed(2)).join(", ")})`;
-    const drift = (q, off) =>
-      `particles(vUv + ${off}, t, vec2(${q[0]}, ${q[1]}), ${n(q[2])}, ${q[3]}, ${q[4]})`;
-    const fx = [
-      `vec2 cell = floor(vUv*vec2(200., 266.));`,
-      `c.rgb += c.rgb*k.r*(.55*sin(t*(1. + h21(cell)*1.6) + h21(cell + 3.)*6.28) + .1)*uFx;`,
-      `float flow = vn(vec2(vUv.x*12. + ${ph}, vUv.y*12. - t*.4))*vn(vec2(vUv.x*27. - t*.25, vUv.y*23. + ${ph}));`,
-      `c.rgb += c.rgb*k.b*((flow - .2)*${style.glow.toFixed(2)} + .08*sin(t*TAU/3.3 + ${ph}))*uFx;`,
-      `float band = dot(vUv - vec2(.5), normalize(vec2(.35, -1.)));`,
-      `c.rgb += vec3(1., .97, .9)*exp(-pow((band - uGlint)/.03, 2.))*k.g*.45*c.a*uFx;`,
-      dust
-        ? `if (layer == 2) c.rgb += ${vec(dust.color)}*(${drift(dust.a, "0.")} + .7*${drift(dust.b, ".41")})*${style.dust.toFixed(2)}*uFx;`
-        : "",
-    ];
-    return { eyes: extra.eyes || [], disp: motion.join("\n"), fx: fx.join("\n") };
+  const KIND_INDEX = { creature: 0, effect: 1, object: 2 };
+  /* One program serves every auto card: the template reads its card's numbers
+   * from uniforms (autoUniforms), so opening another card compiles nothing. */
+  const AUTO_MOTION = [
+    "float ph = uPhase;",
+    "if (uKind < .5) {",
+    "  float b = breath(t + ph)*2. - 1.;",
+    "  d += (px - uAnchor.xz)*vec2(.0018, .0035)*b*(.35 + .65*CORE);",
+    "  float sway = sin(TAU*t/5.2 + ph*3. + px.y*.004) + .45*sin(TAU*t/2.9 + ph*5. + px.x*.009);",
+    "  d += PER*vec2(3.2*sway, 1.2*sin(TAU*t/4.1 + ph*2. + px.x*.006));",
+    "} else if (uKind < 1.5) {",
+    "  float pulse = sin(TAU*t/3.6 + ph);",
+    "  d += (px - uAnchor.xy)*.0035*pulse*(.4 + .6*CORE);",
+    "  d += PER*vec2(4.*sin(TAU*t/2.6 + px.y*.011 + ph), 3.*sin(TAU*t/3.3 + px.x*.01 + ph*2.));",
+    "} else {",
+    "  d.y -= 3.*sin(TAU*t/4.4 + ph);",
+    "  d += rot(px, uAnchor.xy, radians(.35)*sin(TAU*t/6.1 + ph)) - px;",
+    "  d.x += PER*1.5*sin(TAU*t/3.1 + px.y*.01 + ph);",
+    "}",
+  ].join("\n");
+  const AUTO_FX = [
+    "float ph = uPhase;",
+    "vec2 cell = floor(vUv*vec2(200., 266.));",
+    "c.rgb += c.rgb*k.r*(.55*sin(t*(1. + h21(cell)*1.6) + h21(cell + 3.)*6.28) + .1)*uFx;",
+    "float flow = vn(vec2(vUv.x*12. + ph, vUv.y*12. - t*.4))*vn(vec2(vUv.x*27. - t*.25, vUv.y*23. + ph));",
+    "c.rgb += c.rgb*k.b*((flow - .2)*uGlowAmt + .08*sin(t*TAU/3.3 + ph))*uFx;",
+    "float band = dot(vUv - vec2(.5), normalize(vec2(.35, -1.)));",
+    "c.rgb += vec3(1., .97, .9)*exp(-pow((band - uGlint)/.03, 2.))*k.g*.45*c.a*uFx;",
+    "if (layer == 2 && uDustAmt > 0.) c.rgb += uDustColor*(particles(vUv, t, uDustA.xy, uDustA.z, uDustA.w, uDustDensity.x)",
+    "  + .7*particles(vUv + .41, t, uDustB.xy, uDustB.z, uDustB.w, uDustDensity.y))*uDustAmt*uFx;",
+  ].join("\n");
+  function autoRig(extra = {}) {
+    return { eyes: extra.eyes || [], disp: AUTO_MOTION, fx: AUTO_FX };
+  }
+  // The per-card numbers of the auto template.
+  function autoUniforms(a) {
+    const style = KINDS_FX[a.kind] || KINDS_FX.creature,
+      dust = PARTICLES[a.particles];
+    return {
+      kind: KIND_INDEX[a.kind] ?? 0,
+      phase: a.phase,
+      anchor: [a.centre[0], a.centre[1], a.box[3]],
+      glow: style.glow,
+      dust: dust ? style.dust : 0,
+      color: dust ? dust.color : [0, 0, 0],
+      a: dust ? dust.a.slice(0, 4) : [0, 0, 1, 0],
+      b: dust ? dust.b.slice(0, 4) : [0, 0, 1, 0],
+      density: dust ? [dust.a[4], dust.b[4]] : [0, 0],
+    };
   }
   const rigs = new Map();
   function rigFor(id) {
     if (!rigs.has(id)) {
       const hand = RIGS[id];
-      rigs.set(id, hand && !hand.auto ? hand : AUTO[id] ? autoRig(AUTO[id], hand) : null);
+      rigs.set(id, hand && !hand.auto ? hand : AUTO[id] ? autoRig(hand) : null);
     }
     return rigs.get(id);
+  }
+  // Which compiled program draws `id`: its own for a hand rig or an auto card with
+  // eyes of its own (blinks are compiled in), else the one shared auto program.
+  function programKey(id) {
+    const hand = RIGS[id];
+    return hand && !hand.auto ? id : hand?.eyes?.length ? "auto:" + id : "auto";
   }
 
   let canvas = null,
@@ -209,7 +232,7 @@ ${rig.fx}
   const programs = new Map(),
     textures = new Map();
   const blinkState = { at: 1.6, double: false };
-  const stats = { status: "idle", id: null, frames: 0, error: null, grid: 0, scale: 1 };
+  const stats = { status: "idle", id: null, frames: 0, error: null, grid: 0, scale: 1, programs: 0, textures: 0 };
 
   function fail(error) {
     stats.status = "fallback";
@@ -219,6 +242,7 @@ ${rig.fx}
     gl = null;
     programs.clear();
     textures.clear();
+    recent.length = 0;
     console.warn("Hero live portrait unavailable; using the relief face.", stats.error);
     owner?.onFail?.();
   }
@@ -249,7 +273,8 @@ ${rig.fx}
     return shader;
   }
   function program(id) {
-    if (programs.has(id)) return programs.get(id);
+    const key = programKey(id);
+    if (programs.has(key)) return programs.get(key);
     const rig = rigFor(id),
       handle = gl.createProgram();
     gl.attachShader(handle, compile(gl.VERTEX_SHADER, VERTEX(rig)));
@@ -260,10 +285,11 @@ ${rig.fx}
     if (!gl.getProgramParameter(handle, gl.LINK_STATUS))
       throw Error(gl.getProgramInfoLog(handle));
     const u = {};
-    for (const name of ["uDepth", "uFlags", "uLayer", "uTime", "uMotion", "uView", "uProj", "uTex", "uCtrl", "uBlink", "uGlint", "uFx"])
+    for (const name of ["uDepth", "uFlags", "uLayer", "uTime", "uMotion", "uView", "uProj", "uTex", "uCtrl", "uBlink", "uGlint", "uFx",
+      "uKind", "uPhase", "uAnchor", "uGlowAmt", "uDustAmt", "uDustColor", "uDustA", "uDustB", "uDustDensity"])
       u[name] = gl.getUniformLocation(handle, name);
     const entry = { handle, u };
-    programs.set(id, entry);
+    programs.set(key, entry);
     return entry;
   }
   /* One grid of texture coordinates serves every layer. Cells of about five
@@ -349,10 +375,19 @@ ${rig.fx}
     textures.set(key, handle);
     return handle;
   }
-  // Only the hero on screen stays on the GPU.
+  /* The maps of the last few illustrations stay on the GPU, so turning back to a
+   * card just seen is instant; older ones are deleted (about 6 MB per card, 13 MB
+   * per hero preview). */
+  const KEEP_RECENT = 4;
+  const recent = [];
   function trimTextures(keep) {
+    const at = recent.findIndex((keys) => keys[0] === keep[0]);
+    if (at >= 0) recent.splice(at, 1);
+    recent.unshift(keep);
+    recent.length = Math.min(recent.length, KEEP_RECENT);
+    const wanted = new Set(recent.flat());
     for (const [key, handle] of textures)
-      if (!keep.includes(key)) {
+      if (!wanted.has(key)) {
         gl.deleteTexture(handle);
         textures.delete(key);
       }
@@ -453,6 +488,18 @@ ${rig.fx}
     gl.uniform1f(u.uFx, still ? 0 : 1);
     gl.uniform1f(u.uBlink, blink);
     gl.uniform1f(u.uGlint, glint);
+    const a = current.auto;
+    if (a) {
+      gl.uniform1f(u.uKind, a.kind);
+      gl.uniform1f(u.uPhase, a.phase);
+      gl.uniform3fv(u.uAnchor, a.anchor);
+      gl.uniform1f(u.uGlowAmt, a.glow);
+      gl.uniform1f(u.uDustAmt, a.dust);
+      gl.uniform3fv(u.uDustColor, a.color);
+      gl.uniform4fv(u.uDustA, a.a);
+      gl.uniform4fv(u.uDustB, a.b);
+      gl.uniform2fv(u.uDustDensity, a.density);
+    }
     const [bg, body, front, depth, ctrl, flags] = current.maps;
     [[depth, u.uDepth, 1], [ctrl, u.uCtrl, 2], [flags, u.uFlags, 3]].forEach(([map, loc, unit]) => {
       gl.activeTexture(gl.TEXTURE0 + unit);
@@ -525,9 +572,19 @@ ${rig.fx}
       if (mine !== token || !element.isConnected) return false;
       trimTextures(wanted.map(([url, s]) => url + "@" + s));
       host = element;
-      current = { id, focus, maps, program: compiled, onFail, turn: EmberCardRelief.angles() };
+      current = {
+        id,
+        focus,
+        maps,
+        program: compiled,
+        auto: AUTO[id] && programKey(id) !== id ? autoUniforms(AUTO[id]) : null,
+        onFail,
+        turn: EmberCardRelief.angles(),
+      };
       stats.id = id;
       stats.scale = scale;
+      stats.programs = programs.size;
+      stats.textures = textures.size;
       element.append(canvas);
       observer ??= new IntersectionObserver((entries) => {
         visible = entries.some((e) => e.isIntersecting);
