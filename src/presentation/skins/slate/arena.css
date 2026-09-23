@@ -138,11 +138,6 @@ html[data-skin="slate"] body #app.battle-view .board-empty {
   color: var(--arena-ink-3);
   letter-spacing: 3px;
 }
-/* enemy turn: the arena hairline turns crimson instead of slate red */
-html[data-skin="slate"] body #battle .arena::after {
-  background: linear-gradient(90deg, #e0475a00, #e0475a 22% 78%, #e0475a00);
-  box-shadow: 0 0 10px #e0475a88;
-}
 
 /* ---------------------------------------------------------------------------
  * 2. Card backs — the enemy's fan and the draw-flight proxies. Obsidian with a

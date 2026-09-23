@@ -430,19 +430,12 @@ html[data-skin="slate"] body.touch-layout #battle .hand-zone {
    * pointer; the box itself lets it through. (Panning still works: a swipe on
    * a card scrolls the box that holds it.) */
   pointer-events: none;
+  /* no rule along the top: the legacy dock border (screens.css) would sit at
+   * the top of the headroom, a full-width line across the board or console */
+  border-top: 0;
 }
 html[data-skin="slate"] body.touch-layout #battle .hand-zone > .hand-card {
   pointer-events: auto;
-}
-html[data-skin="slate"] body.touch-layout #battle .hand-zone::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: var(--hand-lift, 0px);
-  height: 1px;
-  background: none;
-  pointer-events: none;
 }
 html[data-skin="slate"] body.touch-layout #battle .hand-zone.hand-fits,
 html[data-skin="slate"]
@@ -1548,24 +1541,9 @@ html[data-skin="slate"] body #app.is-targeting.placement-active #battle .hero {
   filter: none;
 }
 
-/* 9.3 Turn handover. The enemy's turn is a red hairline along the top of the
- * arena, and the end-turn control says what the opponent is doing. */
-html[data-skin="slate"] body #battle .arena::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  height: 2px;
-  opacity: 0;
-  background: linear-gradient(90deg, #e0566000, #e05660 22% 78%, #e0566000);
-  box-shadow: 0 0 10px #e0566088;
-  transition: opacity var(--m-stage) var(--e-std);
-  pointer-events: none;
-}
-html[data-skin="slate"] body #app.enemy-turn #battle .arena::after {
-  opacity: 1;
-}
+/* 9.3 Turn handover. The end-turn control says what the opponent is doing.
+ * The red hairline that used to run along the top of the arena box is gone:
+ * over the 3D court that box edge matches nothing and the line cut across it. */
 html[data-skin="slate"] body #battle .end-turn.thinking {
   position: relative;
 }
