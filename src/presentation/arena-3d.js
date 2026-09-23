@@ -201,7 +201,7 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
   float glint=pow(max(0.,sin(uTime*1.7+face*40.)),60.)*step(.6,face);
   alb=cg*.04;rough=.1;metal=0.;
   emis=(cg*body*thick*(.22+1.15*face*face)*veil+cc*(ridge*(.15+.85*h)*.5+tip*.75+glint*h*1.2))*pulse*uGemGain;
- }else{ /* ---- the court's plinth: chamfer, sides and the seat bridges ---- */
+ }else{ /* ---- the court's plinth: chamfer and sides ---- */
   vec3 p=vW;vec3 gn=n;n=triN(uRockN,p,n,w,1./300.,.35);float up=smoothstep(.3,.8,gn.y);float fall=smoothstep(uGround-14.,0.,p.y);
   alb=mix(uStoneA*.5,uStoneB*1.05,up)*(.5+.5*fall);rough=mix(.82,.6,up);ao=.55+.45*fall;
  }
@@ -236,7 +236,6 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
   function quad(o, a, b, c, d, n) { tri(o, a, b, c, n); tri(o, a, c, d, n); }
   /* a vertex with its own normal and extra attribute (smooth rims, pads) */
   const vtx = (o, p, n, x = 0, z = 0) => o.push(p[0], p[1], p[2], n[0], n[1], n[2], x, z);
-  function box(o, cx, cy, cz, sx, sy, sz) { const p = [[-0.5, -0.5, -0.5], [0.5, -0.5, -0.5], [0.5, 0.5, -0.5], [-0.5, 0.5, -0.5], [-0.5, -0.5, 0.5], [0.5, -0.5, 0.5], [0.5, 0.5, 0.5], [-0.5, 0.5, 0.5]].map((q) => [cx + q[0] * sx, cy + q[1] * sy, cz + q[2] * sz]); for (const f of [[0, 3, 2, 1], [4, 5, 6, 7], [0, 4, 7, 3], [1, 2, 6, 5], [3, 7, 6, 2], [0, 1, 5, 4]]) quad(o, p[f[0]], p[f[1]], p[f[2]], p[f[3]]); }
   /* a prism over a polygon (x,z ring), flat shaded, the top optionally tilted */
   function prism(o, ring, y0, y1, tilt = [0, 0]) {
     const n = ring.length, c = ring.reduce((a, p) => [a[0] + p[0] / n, a[1] + p[1] / n], [0, 0]); const yt = (p) => y1 + tilt[0] * (p[0] - c[0]) + tilt[1] * (p[1] - c[1]);
@@ -687,9 +686,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
       const t0 = ring(0, 0), t1 = ring(7, -7), b0 = ring(7, GROUND - 14), up = [0, 1, 0];
       for (let i = 0; i < n; i++) { const j = (i + 1) % n; tri(co, [0, 0, 0], [t0[j][0], 0, t0[j][2]], [t0[i][0], 0, t0[i][2]], up);
         const cn = (r) => V.norm([r[3] * 0.7071, 0.7071, r[4] * 0.7071]), sn = (r) => [r[3], 0, r[4]];
-        for (const [A, B, C, D, nf] of [[t0[i], t0[j], t1[j], t1[i], cn], [t1[i], t1[j], b0[j], b0[i], sn]]) { vtx(so, A, nf(A)); vtx(so, B, nf(B)); vtx(so, C, nf(C)); vtx(so, A, nf(A)); vtx(so, C, nf(C)); vtx(so, D, nf(D)); } }
-      /* stone bridges from each seat pad to the plinth */
-      for (const [, q] of padList) { const s = q[0] < 0 ? -1 : 1, az = Math.abs(q[1]), sz = HZ - RC; if (az > HZ - 20) continue; const edge = HX - RC + (az > sz ? Math.sqrt(Math.max(0, RC * RC - (az - sz) ** 2)) : RC); const x0 = s * (edge - 4), x1 = q[0] - s * 96 * ornK; if (s * (x1 - x0) <= 0) continue; box(so, (x0 + x1) / 2, (-8 + GROUND - 12) / 2, q[1], Math.abs(x1 - x0), -8 - (GROUND - 12), 34 * ornK); } }
+        for (const [A, B, C, D, nf] of [[t0[i], t0[j], t1[j], t1[i], cn], [t1[i], t1[j], b0[j], b0[i], sn]]) { vtx(so, A, nf(A)); vtx(so, B, nf(B)); vtx(so, C, nf(C)); vtx(so, A, nf(A)); vtx(so, C, nf(C)); vtx(so, D, nf(D)); } } }
     const board = mk(co), plinth = mk(so);
 
     /* Amethyst and emerald druses, the scene's accent colour. Landscape layouts
