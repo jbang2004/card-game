@@ -227,6 +227,7 @@ ${rig.fx}
     lastPaint = 0,
     clock = 0,
     frozen = null,
+    warnedMap = false,
     visible = true,
     observer = null;
   const programs = new Map(),
@@ -350,17 +351,22 @@ ${rig.fx}
     const image = new Image();
     image.src = url;
     await image.decode();
-    const source =
-      scale < 1
-        ? await createImageBitmap(image, {
-            resizeWidth: Math.round(image.naturalWidth * scale),
-            resizeHeight: Math.round(image.naturalHeight * scale),
-            resizeQuality: "high",
-            // keep colour under zero alpha: the filled areas are revealed by motion
-            premultiplyAlpha: "none",
-            colorSpaceConversion: "none",
-          })
-        : image;
+    let source = image;
+    if (scale < 1 && typeof createImageBitmap === "function")
+      try {
+        source = await createImageBitmap(image, {
+          resizeWidth: Math.round(image.naturalWidth * scale),
+          resizeHeight: Math.round(image.naturalHeight * scale),
+          resizeQuality: "high",
+          // keep colour under zero alpha: the filled areas are revealed by motion
+          premultiplyAlpha: "none",
+          colorSpaceConversion: "none",
+        });
+      } catch {
+        // Older Safari rejects the resize options: upload the full-size image,
+        // which only costs memory.
+        source = image;
+      }
     if (!gl) throw Error(stats.error || "context released");
     const handle = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, handle);
@@ -605,7 +611,10 @@ ${rig.fx}
       const wanted = mapsAt(id, scale);
       const compiled = program(id);
       ensureMesh(width || IMG_W);
-      const maps = await Promise.all(wanted.map(([url, s]) => texture(url, s)));
+      const maps = await Promise.all(wanted.map(([url, s]) => texture(url, s))).catch((cause) => {
+        if (!gl) throw cause;
+        throw Object.assign(Error("map"), { liveArtMap: true, cause });
+      });
       if (mine !== token || !element.isConnected) return false;
       trimTextures(wanted.map(([url, s]) => url + "@" + s));
       host = element;
@@ -636,7 +645,16 @@ ${rig.fx}
       wake();
       return true;
     } catch (error) {
-      if (mine === token) fail(error);
+      if (mine !== token) return false;
+      // One card's map that will not decode: that card keeps its relief face,
+      // every other card stays live. A shader or context failure is for good.
+      if (error?.liveArtMap) {
+        if (!warnedMap) console.warn("Live artwork skipped for " + id + ".", String(error.cause?.message || error.cause));
+        warnedMap = true;
+        stats.status = "idle";
+        return false;
+      }
+      fail(error);
       return false;
     }
   }

@@ -639,3 +639,49 @@ test("a held card has thickness, and sinks back when the player puts it down", a
   expect(fade.some((o) => o !== null && o > 0.05 && o < 0.95)).toBe(true);
   expect(errors).toEqual([]);
 });
+
+/* Older Safari rejects createImageBitmap's resize options: the live artwork must
+ * still come up, from the full-size image. */
+test("live artwork survives a browser without createImageBitmap resizing", async ({ page }) => {
+  const errors = errorsFor(page);
+  await page.addInitScript(() => {
+    window.createImageBitmap = () => Promise.reject(new TypeError("resize options unsupported"));
+  });
+  await page.goto("./?debug=1");
+  await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
+  await page.locator("#start-btn").click();
+  await expect(page.locator("#modal .scene-showcase")).toHaveClass(/live-art-ready/, { timeout: 15000 });
+  await page.keyboard.press("Escape");
+  await page.locator("#lobby-library-btn").click();
+  await page.evaluate(() => {
+    const item = document.querySelector('[data-library-inspect="fireball"]');
+    item.scrollIntoView({ block: "center" });
+    item.click();
+  });
+  await expect(page.locator("#card-stage .card-art")).toHaveClass(/live-art-ready/);
+  expect((await page.evaluate(() => EmberLiveArt.diagnostics())).status).toBe("ready");
+  expect(errors).toEqual([]);
+});
+
+/* One card whose map will not load keeps its relief face; the next card is live. */
+test("a card whose live artwork fails to load falls back alone", async ({ page }) => {
+  await page.goto("./?debug=1");
+  await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
+  const broken = await page.evaluate(() => new URL(EmberLiveArtMaps.fireball.body, location.href).pathname);
+  await page.route((url) => url.pathname === broken, (route) => route.abort());
+  await page.locator("#lobby-library-btn").click();
+  const open = (id) =>
+    page.evaluate((id) => {
+      const item = document.querySelector(`[data-library-inspect="${id}"]`);
+      item.scrollIntoView({ block: "center" });
+      item.click();
+    }, id);
+  await open("fireball");
+  await expect(page.locator("#card-stage .card-art")).toHaveClass(/card-relief-ready/);
+  await expect(page.locator("#card-stage .live-art-canvas")).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#card-stage")).toHaveCount(0);
+  await open("bolt");
+  await expect(page.locator("#card-stage .card-art")).toHaveClass(/live-art-ready/);
+  expect((await page.evaluate(() => EmberLiveArt.diagnostics())).status).toBe("ready");
+});
