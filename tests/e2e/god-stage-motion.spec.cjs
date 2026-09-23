@@ -36,8 +36,8 @@ for (const [width, height] of [
     await open(page);
     if (width < 1000) {
       const geometry = await page.evaluate(() => {
-        const { contract, player, arena, standingMage } = EmberViewport.layout;
-        return { contract, player, arena, standingMage };
+        const { contract, player, arena, standingMage, rows } = EmberViewport.layout;
+        return { contract, player, arena, standingMage, rows, portrait: EmberViewport.portrait };
       });
       if (geometry.standingMage) {
         /* A standing hero model takes the taller stage in the left rail and the
@@ -53,9 +53,18 @@ for (const [width, height] of [
           geometry.player.y,
         );
       }
-      expect(geometry.contract.x + geometry.contract.w).toBeLessThan(
-        geometry.arena.x,
-      );
+      if (geometry.portrait) {
+        /* Portrait runs the board the full width (2026-09-23): the covenant
+         * keeps clear of the units by sitting below both rows, not beside the
+         * board. The row band ends above it, and every token fits its band. */
+        expect(geometry.contract.y).toBeGreaterThanOrEqual(
+          geometry.rows.p + geometry.rows.band / 4,
+        );
+      } else {
+        expect(geometry.contract.x + geometry.contract.w).toBeLessThan(
+          geometry.arena.x,
+        );
+      }
     }
     await page.screenshot({
       path: path.join(output, `${width}x${height}-battle.png`),

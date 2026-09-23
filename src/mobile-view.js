@@ -174,11 +174,14 @@ const EmberViewport = (() => {
         };
         l.turn = { x: turnX, y: l.playerConsole.y + 12, w: 64, h: 64 };
         l.chip = { x: padL, y: l.header, w: 0, h: 0 };
+        /* The board takes the whole width between the two console strips;
+         * the covenant lane on the left is kept clear by lifting the rows
+         * (see `l.rows` below), not by pushing the board aside. */
         const top = l.enemyConsole.y + enemyH + 6;
         l.arena = {
-          x: padL + heroW + 16,
+          x: padL,
           y: top,
-          w: usableW - heroW - 14,
+          w: usableW,
           h: Math.max(120, l.playerConsole.y - 6 - top),
         };
       } else {
@@ -262,6 +265,15 @@ const EmberViewport = (() => {
       l.cardW = cardW;
       l.peek = peek;
       l.tokenScale = roomy ? 1.4 : 1;
+      /* The two unit rows. Landscape splits the board in quarters; portrait
+       * seats both rows above the covenant card so the player's row never
+       * covers it, which is what lets the board run the full width. */
+      const rowsTop = l.arena.y,
+        rowsBottom = portrait
+          ? Math.min(l.arena.y + l.arena.h, l.contract.y - 8)
+          : l.arena.y + l.arena.h,
+        band = rowsBottom - rowsTop;
+      l.rows = { e: rowsTop + band * 0.25, p: rowsTop + band * 0.75, band };
     }
     const before = state;
     state = {
@@ -302,18 +314,12 @@ const EmberViewport = (() => {
         "--header-h",
         safe.top + (portrait ? 52 : 44) + "px",
       );
-      app.style.setProperty(
-        "--enemy-row-y",
-        l.arena.y + l.arena.h * 0.25 + "px",
-      );
-      app.style.setProperty(
-        "--player-row-y",
-        l.arena.y + l.arena.h * 0.75 + "px",
-      );
+      app.style.setProperty("--enemy-row-y", l.rows.e + "px");
+      app.style.setProperty("--player-row-y", l.rows.p + "px");
       const empty = document.getElementById("board-empty");
       box(empty, {
         x: l.arena.x + 16,
-        y: l.arena.y + l.arena.h * 0.75 - 10,
+        y: l.rows.p - 10,
         w: l.arena.w - 32,
         h: 24,
       });
@@ -501,10 +507,13 @@ const EmberViewport = (() => {
      * still cannot fit unstacked overlaps its tokens by 10px. Notices now
      * live in the header, so the centre only needs a small visual gutter. */
     const a = state.layout.arena,
+      rows = state.layout.rows,
       count = Math.max(1, n),
-      rowH = a.h / 2,
+      rowH = rows.band / 2,
+      /* portrait tokens stay a size under the old 96: the board, not the
+       * cards, should own a narrow screen */
       tiers = state.portrait
-        ? [96, 96, 96, 84, 70, 58, 58]
+        ? [82, 82, 82, 76, 66, 58, 54]
         : [88, 88, 88, 80, 70, 58, 54],
       cap = Math.round(
         tiers[Math.min(count, 7) - 1] * (state.layout.tokenScale || 1),
@@ -514,7 +523,14 @@ const EmberViewport = (() => {
       w = Math.floor(Math.min(cap, (rowH - (state.portrait ? 16 : 10)) / 1.25));
     if (count * w + (count - 1) * gap > inner) {
       w = Math.floor((inner - (count - 1) * gap) / count);
-      if (w < 58) {
+      /* The full-width portrait board fits a crowded row side by side with a
+       * tighter gap; overlapping tokens would hide every health value but
+       * the last one. */
+      if (state.portrait && w < 58) {
+        gap = 4;
+        w = Math.floor((inner - (count - 1) * gap) / count);
+      }
+      if (w < (state.portrait ? 40 : 58)) {
         gap = -10;
         w = Math.min(cap, 58);
         if (count * w + (count - 1) * gap > inner)
@@ -526,7 +542,7 @@ const EmberViewport = (() => {
       total = count * w + (count - 1) * gap;
     return {
       x: a.x + (a.w - total) / 2 + i * (w + gap),
-      y: a.y + a.h * (side === "e" ? 0.25 : 0.75) - h / 2,
+      y: rows[side === "e" ? "e" : "p"] - h / 2,
       w,
       h,
       stacked: gap < 0,
@@ -550,9 +566,7 @@ const EmberViewport = (() => {
     state.mobile
       ? {
           x: state.layout.arena.x + state.layout.arena.w / 2,
-          y:
-            state.layout.arena.y +
-            state.layout.arena.h * (side === "e" ? 0.25 : 0.75),
+          y: state.layout.rows[side === "e" ? "e" : "p"],
         }
       : { x: 800, y: side === "e" ? 374 : 554 };
   function queue() {

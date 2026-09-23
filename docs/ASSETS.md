@@ -20,7 +20,7 @@ uv run --python 3.12 --no-project --with pillow --with numpy --with onnxruntime 
   tools/bake_card_relief.py wolf      # 单张；无参数则只重写注册表
 ```
 
-高度来自 Depth Anything V2 Small 的单目深度估计（ONNX，Apache-2.0，`huggingface.co/onnx-community/depth-anything-v2-small`）。99 MB 权重是本机制作输入，放在 `tools/.scratch/card-relief/model/model.onnx`，不入库、不进构建；贴图是它对本项目原画的推理结果。金属遮罩按金色色相与高对比低饱和区域启发式生成，并排除高饱和或过曝的同色相区域（火焰、光球是自发光，不是金属）。仍会误判的（例如金发）可手修 `-orm`。
+高度来自 Depth Anything V2 Small 的单目深度估计（ONNX，Apache-2.0，`huggingface.co/onnx-community/depth-anything-v2-small`）。99 MB 权重是本机制作输入，放在 `tools/models/depth-anything-v2-small.onnx`（即该仓库的 `onnx/model.onnx`，2026-09-23 从 `tools/.scratch/` 移出），不入库、不进构建；贴图是它对本项目原画的推理结果。金属遮罩按金色色相与高对比低饱和区域启发式生成，并排除高饱和或过曝的同色相区域（火焰、光球是自发光，不是金属）。仍会误判的（例如金发）可手修 `-orm`。
 
 材质按稀有度分档（`card-relief.js` 的 `FINISH`）：所有卡都有视差和清漆光带（转动时扫过卡面的反光是"手里是一张实体卡"的基本线索，2026-09-21 用户确认全员标配）；稀有度由金属与虹彩区分——普通无金属，稀有半强度金属反射，史诗全强度，传奇再加虹彩；英雄预览卡用满档。
 
@@ -228,7 +228,7 @@ uv run --python 3.12 --no-project --with pillow --with numpy --with onnxruntime 
 
 ## 2026-09-13 · 地图对应的俯视战场
 
-战场不再是一张位图。`presentation/arena-3d.js` 在 `#arena-gl`（WebGL2）里实时渲染「熔岩要塞」：黑曜石桌式棋盘、铜边、火盆与灯柱、熔岩河道与城门背景，随从的 DOM 包围盒每帧转成接触阴影。它只用 `assets/scenes/lava-forge/` 里的法线、粗糙度、AO 与熔岩自发光贴图（ambientCG CC0：Rock035、Lava001、Metal032，缩至 512–1024 并重新压缩），颜色全部由代码里的三色（黑曜石 / 余烬 / 旧铜）决定。旧的六张俯视场景图（`boss-topdown-v1`）已移除；六个 Boss 目前共用这一场景，`EmberArena3D.setEncounter` 保留了按 Boss 换调色板的入口。
+战场不再是一张位图。`presentation/arena-3d.js` 在 `#arena-gl`（WebGL2）里实时渲染「断裂王庭」（2026-09-23 重做，场景说明见 `docs/design/SLATE_DESIGN_SYSTEM.md` §5.4b）：火山灰石台基、左右熔岩河、柱状玄武岩与紫水晶/祖母绿晶簇，随从的 DOM 包围盒转成接触阴影。它只用 `assets/scenes/lava-forge/` 里的 6 张贴图（ambientCG CC0：Rock035 的法线、粗糙度、AO，Lava001 的法线、颜色、自发光，缩至 512–1024 并重新压缩），颜色由代码里的令牌决定。原来引入的 Lava001 粗糙度与 Metal032 法线/粗糙度三张图着色器从未采样，2026-09-23 已移除。旧的六张俯视场景图（`boss-topdown-v1`）已移除；六个 Boss 目前共用这一场景，`EmberArena3D.setEncounter` 保留了按 Boss 换调色板的入口。
 
 上一轮地面视角图保存在 `output/boss-topdown-20260913/ground-level-sources/`，旧桌面/横竖屏背景保存在 `output/boss-map-20260913/retired/`，均移出生产素材注册。官方参考仅作为研究证据，见 `output/boss-topdown-20260913/RESEARCH.md`，没有复制其图片到游戏。
 

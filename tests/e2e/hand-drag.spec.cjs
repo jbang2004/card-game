@@ -112,9 +112,15 @@ async function boxOf(page, uid) {
 async function emptyDropPoint(page) {
   return page.evaluate(() => {
     const a = EmberViewport.layout.arena;
+    /* An empty board point is one the board element itself receives (the
+     * play confirms on #arena's click): not a unit, not the lifted card, and
+     * not a HUD control lying over the board, like the portrait covenant in
+     * the full-width board's lower-left corner. */
     const unit = (x, y) => {
       const el = document.elementFromPoint(x, y);
-      return el?.closest?.("[data-uid],#hand-card-lift") ? 1 : 0;
+      return !el?.closest?.("#arena") || el.closest("[data-uid],#hand-card-lift")
+        ? 1
+        : 0;
     };
     let fallback = null;
     for (let fy = 0.8; fy >= 0.42; fy -= 0.12) {
