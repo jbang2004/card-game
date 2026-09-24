@@ -10,6 +10,7 @@ const EmberHeroFigure = (() => {
   const THREE = EmberVesperThree, R = EmberVoxelRender, C = EmberVoxelClips, KIT = EmberVoxelKit;
   // the figure fills the window's height up to HEAD (its floor is FLOOR above the window's bottom)
   const HEAD = 0.9, FLOOR = 0.05;
+  let floor = FLOOR;                // raised above the name when the plate engraves it inside the window (phones)
   const HOT = [1.55, 1.53, 1.5], GOLD = [1.0, 0.45, 0.1];
   let host = null, canvas = null, renderer = null, scene = null, camera = null, fig = null, figId = null, failed = false, building = false;
   let clip = "idle", t = 0, T = 0, raf = 0, last = 0, glow = -1, cheered = false;
@@ -27,7 +28,11 @@ const EmberHeroFigure = (() => {
     if (!host || !el || !win) return;
     let x = 0, y = 0;
     for (let n = win; n && n !== el.offsetParent; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; }
-    const cs = getComputedStyle(win);
+    const cs = getComputedStyle(win), name = el.querySelector(".hero-name");
+    const wr = win.getBoundingClientRect(), nr = name?.getBoundingClientRect();
+    const inside = nr && nr.height && nr.top < wr.bottom && nr.bottom > wr.top + wr.height / 2;
+    const f = inside ? Math.min(0.4, (wr.bottom - nr.top) / wr.height + 0.02) : FLOOR;
+    if (Math.abs(f - floor) > 0.005) { floor = f; if (canvas) canvas.width = 0; }   // refit the camera
     Object.assign(host.style, {
       left: x + "px", top: y + "px", width: win.offsetWidth + "px", height: win.offsetHeight + "px",
       borderRadius: cs.borderRadius,
@@ -104,7 +109,7 @@ const EmberHeroFigure = (() => {
       camera.aspect = w / h;
       // the figure stands on the window's floor and its head stays inside the arch
       const g = fig.mesh.geometry; if (!g.boundingBox) g.computeBoundingBox();
-      const H = g.boundingBox.max.y * fig.root.scale.y, span = H / (HEAD - FLOOR), cy = span / 2 - FLOOR * span;
+      const H = g.boundingBox.max.y * fig.root.scale.y, span = H / (HEAD - floor), cy = span / 2 - floor * span;
       const d = span / (2 * Math.tan((camera.fov * Math.PI) / 360));
       camera.position.set(0, cy, d); camera.lookAt(0, cy, 0); camera.updateProjectionMatrix();
     }
