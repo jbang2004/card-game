@@ -2338,6 +2338,7 @@ const EmberFX = (() => {
       at(ctx, beat.at, () => {
         const old = enterFrame(ctx, beat, i, beat.frame);
         if (!old) return;
+        if (typeof EmberMiniatures !== "undefined" && e.from?.uid !== "hero") EmberMiniatures.cue(e.from.side, e.from.uid, "attack", { toward: e.to });
         const { sequence } = ctx;
         const actorBox = resolveOrWarn(sequence, i, e.from, "actor"),
           targetBox = resolveOrWarn(sequence, i, e.to, "target");
@@ -2583,6 +2584,7 @@ const EmberFX = (() => {
         Object.assign(ctx.history, old);
         let soundBox = null;
         for (const e of beat.events) {
+          if (typeof EmberMiniatures !== "undefined") EmberMiniatures.cue(e.side, e.uid, "death");
           const key = refKey(e),
             owner = attackOwners.get(key);
           let visual = ctx.history[key];
@@ -2779,6 +2781,7 @@ const EmberFX = (() => {
       if (loss > 0) {
         if (ref.uid === "hero" && typeof EmberVesperHero !== "undefined" && EmberVesperHero.active(ref.side))
           EmberVesperHero.cue("hurt");
+        else if (ref.uid !== "hero" && typeof EmberMiniatures !== "undefined") EmberMiniatures.cue(ref.side, ref.uid, "hurt");
         if(!((cause?.benchmarkStyle||cause?.remasterKind) && contact.direction === "outgoing"))
           startReaction(sequence, ref, actorBox, timing);
         numberAt = number(numberSpot(contact, box, actorBox), loss, "damage", { key, tier });
