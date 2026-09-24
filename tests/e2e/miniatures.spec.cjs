@@ -28,7 +28,13 @@ test("minion miniatures follow tokens and combat cues", async ({ page }) => {
   await page.waitForFunction(() => { const c = EmberMiniatures.diagnostics().cues.map((x) => x.kind); return c.includes("attack") && c.includes("death"); });
   await page.waitForFunction(() => !EmberFX.busy);
   await page.waitForFunction(() => EmberMiniatures.diagnostics().dying === 0);
-  expect(await page.evaluate(() => EmberMiniatures.diagnostics().figures)).toBe(2);
+  // the wolf is gone; whatever its deathrattle leaves behind (a pup) stands as its own figure
+  const left = await page.evaluate(() => ({
+    expected: [...document.querySelectorAll("#minions .minion[data-cardid]")].filter((el) => EmberVoxelKit.forCard(el.dataset.cardid)).length,
+    figures: EmberMiniatures.diagnostics().figures,
+  }));
+  expect(left.figures).toBe(left.expected);
+  expect(left.expected).toBeGreaterThanOrEqual(2);
   await page.evaluate(() => Emberfall.home());
   await page.waitForFunction(() => !Emberfall.inBattle);
   expect(errors).toEqual([]);

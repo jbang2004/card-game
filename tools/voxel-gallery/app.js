@@ -24,13 +24,28 @@
     golem: { name: "符文石像", card: "golem", note: "巨拳，胸口一枚符文" },
     treant: { name: "古木守护者", card: "treant", note: "树皮身躯，枝臂" },
     dragon: { name: "烬喉幼龙", card: "dragon", note: "琥珀翼膜，火焰吐息" },
+    assassin: { name: "夜幕刺客", card: "assassin", note: "兜帽黑衣，银色匕首" },
+    reaper: { name: "黯月收割者", card: "reaper", note: "虚空之脸，红刃巨镰" },
+    leech: { name: "血月行者", card: "leech", note: "掌心托着血月之球" },
+    necromancer: { name: "亡者织梦师", card: "necromancer", note: "高举青色鬼灯" },
+    soulguide: { name: "渡魂引路人", card: "soulguide", note: "银发，提一盏魂灯" },
+    oracle: { name: "星界观测者", card: "oracle", note: "转动的星盘" },
+    moonfox: { name: "银灯灵狐", card: "moonfox", note: "新月大尾，尾尖一盏灯" },
+    eclipsewolf: { name: "蚀月狼王", card: "eclipsewolf", note: "背负一轮日蚀" },
+    rider: { name: "霜牙狼骑", card: "rider", note: "冰晶狼与骑士" },
+    pup: { name: "幽灵狼", card: "pup", note: "大头大爪的狼崽" },
+    spiritwolf: { name: "灵狼", card: "spiritwolf", note: "翠绿发光，焰尾" },
+    moonguard: { name: "守灯巨兽", card: "moonguard", note: "新月塔盾的银甲巨人" },
+    selmyra: { name: "冥月神·瑟弥拉", card: "selmyra", note: "脑后一轮日蚀" },
+    fenlos: { name: "荒猎神·芬洛斯", card: "fenlos", note: "狼首鹿角，绿叶披风" },
   };
   const GROUPS = [
-    ["人形 · 近战", ["huntress", "guard", "skeleton"]],
-    ["人形 · 远程", ["vesper", "spark"]],
+    ["人形 · 近战", ["huntress", "guard", "skeleton", "assassin", "reaper", "leech"]],
+    ["人形 · 远程", ["vesper", "spark", "necromancer", "soulguide", "oracle"]],
     ["有翼", ["sentinel", "dragon"]],
-    ["野兽与虫", ["wolf", "duskstag", "spider"]],
-    ["巨像", ["golem", "treant"]],
+    ["野兽与虫", ["wolf", "pup", "spiritwolf", "moonfox", "eclipsewolf", "duskstag", "rider", "spider"]],
+    ["巨像", ["golem", "treant", "moonguard"]],
+    ["神", ["selmyra", "fenlos"]],
   ];
   const ALL = GROUPS.flatMap((g) => g[1]).filter((id) => KIT.get(id));
   const groupOf = (id) => GROUPS.find((g) => g[1].includes(id))?.[0] || "";
@@ -110,7 +125,7 @@
   const unitsIn = () => { const out = []; arena.each((u) => out.push(u)); return out; };
   function clear() { for (const u of unitsIn()) arena.drop(u.side, u.uid, false); for (const s of shadows.values()) scene.remove(s); shadows.clear(); POS.clear(); }
   function stage(side, uid, id, at) { POS.set(A.key(side, uid), at); arena.set(side, uid, id); }
-  let lineup = 8;
+  let lineup = 8, rowsN = 3;
   /** frame each view for this screen: on a wide screen the roster covers the left, so the subject is centred in what
    *  is left; on a phone the roster and actions take the bottom, so the subject sits in the upper part */
   function fitAll() {
@@ -119,7 +134,7 @@
     const freeW = wide ? W - 256 : W, freeH = wide ? H : H * 0.62;
     // distance at which `span` world units fill `fill` of the free width (and the figure height fits the free height)
     const fit = (span, tall, fill) => Math.max((span / fill) * H / (2 * fovT * freeW), (tall / 0.8) * H / (2 * fovT * freeH));
-    VIEWS.all.dist = fit(lineup + 1.2, 3.1, 0.94);
+    VIEWS.all.dist = fit(lineup + 1.2, 1.9 + 0.55 * rowsN, 0.94);
     VIEWS.solo.dist = fit(narrow() ? 2.2 : 2.6, 1.3, 0.9);
     VIEWS.duel.dist = fit(narrow() ? 2.1 : 3.3, 1.3, 0.92);
     const base = { all: [0, 0.45], solo: [narrow() ? 0.45 : 0.8, 0.5], duel: [0, 0.5] };
@@ -136,16 +151,20 @@
     if (m === "all") {
       // a group photo in three rows by size: small ones in front, people in the middle, the big ones at the back; each
       // row sits in the gaps of the row in front of it
-      const ROWS = narrow()
-        ? [["wolf", "spider", "skeleton"], ["spark", "guard", "huntress"], ["vesper", "duskstag", "sentinel"], ["dragon", "golem", "treant"]]
-        : [["wolf", "spider", "skeleton", "spark"], ["guard", "huntress", "vesper", "duskstag"], ["dragon", "golem", "treant", "sentinel"]];
-      const placed = new Set(), gap = narrow() ? 1.25 : 1.5;
+      // small ones in front, the big ones and the gods at the back; a phone takes the same order in rows of four
+      const ORDER = [["wolf", "pup", "moonfox", "spider", "skeleton", "spark", "spiritwolf"],
+        ["huntress", "assassin", "leech", "vesper", "necromancer", "oracle", "soulguide"],
+        ["guard", "reaper", "duskstag", "rider", "eclipsewolf", "sentinel"],
+        ["dragon", "golem", "treant", "moonguard", "selmyra", "fenlos"]];
+      const flat = ORDER.flat();
+      const ROWS = narrow() ? Array.from({ length: Math.ceil(flat.length / 4) }, (_, r) => flat.slice(r * 4, r * 4 + 4)) : ORDER;
+      const placed = new Set(), gap = narrow() ? 1.25 : 1.5, dz = narrow() ? 1.0 : 1.3, r0 = (ROWS.length - 1) / 2;
       ROWS.forEach((row, r) => {
         const ids = row.filter((id) => ALL.includes(id)); ids.forEach((id) => placed.add(id));
-        ids.forEach((id, i) => stage(r ? "e" : "p", id, id, V3((i - (ids.length - 1) / 2) * gap + (r % 2 ? gap / 4 : -gap / 4), 0, 1.3 - r * (narrow() ? 1.15 : 1.35))));
+        ids.forEach((id, i) => stage(r ? "e" : "p", id, id, V3((i - (ids.length - 1) / 2) * gap + (r % 2 ? gap / 4 : -gap / 4), 0, (r0 - r) * dz)));
       });
       ALL.filter((id) => !placed.has(id)).forEach((id, i) => stage("e", id, id, V3((i - 1) * gap, 0, -2.8)));   // any figure added later
-      lineup = ROWS[0].length * gap; fitAll();
+      lineup = Math.max(...ROWS.map((r) => r.length)) * gap; rowsN = ROWS.length; fitAll();
     } else if (m === "solo") {
       // on a phone the dummy stands behind and to the side, so the pair fits a narrow screen
       const dp = narrow() ? V3(0.85, 0, -1.0) : V3(1.6, 0, -0.3);
