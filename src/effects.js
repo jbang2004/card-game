@@ -219,6 +219,9 @@ const EmberFX = (() => {
    * unavailable backend leaves DOM motion and numbers only. The calls are
    * guarded until the V2 engine interface (§3.3) is present. */
   const fx2 = () => (typeof EmberFx2 !== "undefined" ? EmberFx2 : null);
+  // a melee voxel figure draws its own weapon trail and contact burst (presentation/voxel/stage.js); ranged ones keep
+  // their fx2 projectile — one look, drawn in one place
+  const voxelMelee = (ref) => !!ref && ref.uid !== "hero" && typeof EmberMiniatures !== "undefined" && EmberMiniatures.owns(ref.side, ref.uid, true);
   const fxReady = () =>
     !quality.reduced && !!fx2()?.available && typeof fx2().attack === "function";
   function fxCall(name, ...args) {
@@ -2310,8 +2313,8 @@ const EmberFX = (() => {
       at(ctx, beat.at, () => {
         if (!enterFrame(ctx, beat, i, beat.frame)) return;
         const rec = castFlash(ctx, i, cast, beat.kind === "power" ? "power" : "cast");
-        if (beat.kind === "power" && typeof EmberVesperHero !== "undefined" && EmberVesperHero.active(e.side))
-          EmberVesperHero.cue("shot", 0.3 * (ctx.plan.scale || 1));
+        if (beat.kind === "power" && typeof EmberHeroFigure !== "undefined" && EmberHeroFigure.active(e.side))
+          EmberHeroFigure.cue("shot", 0.3 * (ctx.plan.scale || 1));
         rec.countered = !!beat.countered;
         if(!beat.countered&&card?.type==="weapon")lifeCue(ctx,e,"weapon-equip",heroFace(ctx,e.side));
         const from = anchors.resolve(cast.actor, ctx.sequence.anchors);
@@ -2338,7 +2341,14 @@ const EmberFX = (() => {
       at(ctx, beat.at, () => {
         const old = enterFrame(ctx, beat, i, beat.frame);
         if (!old) return;
-        if (typeof EmberMiniatures !== "undefined" && e.from?.uid !== "hero") EmberMiniatures.cue(e.from.side, e.from.uid, "attack", { toward: e.to });
+        // a minion whose battlefield figure was planned in (compile's figure hook) acts through it: a melee figure dashes
+        // to the target and back and draws its own trail and contact burst, so the DOM lunge and fx2 melee art stay out
+        const figMelee = !!m.figure && !m.ranged && voxelMelee(e.from);
+        if (typeof EmberMiniatures !== "undefined" && e.from?.uid !== "hero")
+          EmberMiniatures.cue(e.from.side, e.from.uid, "attack", {
+            toward: e.to, planned: !!m.figure, ranged: m.ranged, tier: beat.contacts[0]?.tier || 1,
+            liftMs: m.lift, contactMs: m.contact, releaseMs: m.release, durationMs: m.duration,
+          });
         const { sequence } = ctx;
         const actorBox = resolveOrWarn(sequence, i, e.from, "actor"),
           targetBox = resolveOrWarn(sequence, i, e.to, "target");
@@ -2372,21 +2382,21 @@ const EmberFX = (() => {
           if (art && !quality.reduced && fx2()?.available)
             fx2().cutin(art, { side: e.from.side });
         }
-        const skyStrike = fx2()?.renderer3dAvailable &&
+        const skyStrike = !figMelee && fx2()?.renderer3dAvailable &&
           EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid], beat.sourceCid)?.fx === "slash";
         // Skyfall comes from offscreen, not a second body colliding with the card.
         const swordStyle=EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid],beat.sourceCid)?.swordStyle;
         const benchmark=skyStrike&&typeof EmberBenchmarkArts!=="undefined"&&EmberBenchmarkArts.supports(swordStyle);
         const remasterKind=EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid],beat.sourceCid)?.fx;
-        const remastered=fx2()?.renderer3dAvailable&&typeof EmberRemasterArts!=="undefined"&&EmberRemasterArts.supports(remasterKind);
+        const remastered=!figMelee&&fx2()?.renderer3dAvailable&&typeof EmberRemasterArts!=="undefined"&&EmberRemasterArts.supports(remasterKind);
         if(benchmark) rec.benchmarkStyle=swordStyle;
         else if(remastered)rec.remasterKind=remasterKind;
         else if (m.ranged || skyStrike) rangedRecoil(sequence, beat, e.from, actorBox, targetBox);
-        else lunge(ctx, beat, i, e.from, actorBox, targetBox, old);
+        else if (!figMelee) lunge(ctx, beat, i, e.from, actorBox, targetBox, old);
         // R3: a weapon needs its anticipation; a dragon needs an inhalation.
         // These are the SAME instance later consumed at contact, not extra casts.
         const preSpec = EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid], beat.sourceCid);
-        if (fx2()?.renderer3dAvailable && (["slash", "breath"].includes(preSpec?.fx)||EmberRemasterArts.supports(preSpec?.fx))) {
+        if (fx2()?.renderer3dAvailable && !figMelee && (["slash", "breath"].includes(preSpec?.fx)||EmberRemasterArts.supports(preSpec?.fx))) {
           const started = fxCall("attack", preSpec.fx, {
             from: fxBox(actorBox), to: fxBox(targetBox),
             swordStyle: preSpec.swordStyle, sourceCid: beat.sourceCid, sourceRef: e.from, targetRef: e.to,
@@ -2412,7 +2422,7 @@ const EmberFX = (() => {
           targetBox = anchors.resolve(e.to, sequence.anchors);
         sound("swing", actorBox);
         const spec = EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid], beat.sourceCid);
-        const meshMelee = !m.ranged && spec?.fx === "slash" && fx2()?.renderer3dAvailable;
+        const meshMelee = !m.ranged && spec?.fx === "slash" && fx2()?.renderer3dAvailable && !voxelMelee(e.from);
         if ((m.ranged || meshMelee) && actorBox && targetBox && spec) {
           fxCall("attack", spec.fx, {
             from: fxBox(actorBox),
@@ -2584,7 +2594,8 @@ const EmberFX = (() => {
         Object.assign(ctx.history, old);
         let soundBox = null;
         for (const e of beat.events) {
-          if (typeof EmberMiniatures !== "undefined") EmberMiniatures.cue(e.side, e.uid, "death");
+          // a battlefield figure shatters into its own voxels (presentation/voxel/stage.js): that is its demise
+          const shattered = typeof EmberMiniatures !== "undefined" && EmberMiniatures.cue(e.side, e.uid, "death");
           const key = refKey(e),
             owner = attackOwners.get(key);
           let visual = ctx.history[key];
@@ -2597,7 +2608,7 @@ const EmberFX = (() => {
             releaseAttackOwner(key, false, owner);
           } else if (owner) releaseAttackOwner(key, false, owner);
           deathGhost(sequence, visual, schoolOf(EmberData.byId[e.cid]));
-          if(visual)fxCall("cue","demise",{at:fxBox(visual),sourceCid:e.cid,seed:sequence.id*71+i,timeScale:sequence.plan.scale});
+          if(visual&&!shattered)fxCall("cue","demise",{at:fxBox(visual),sourceCid:e.cid,seed:sequence.id*71+i,timeScale:sequence.plan.scale});
           dropNumbers(key, scaled(sequence, T.death.freeze + T.death.dissolve));
           sequence.anchors.delete(key);
           soundBox ||= visual;
@@ -2779,13 +2790,13 @@ const EmberFX = (() => {
         sound("armor", box);
       }
       if (loss > 0) {
-        if (ref.uid === "hero" && typeof EmberVesperHero !== "undefined" && EmberVesperHero.active(ref.side))
-          EmberVesperHero.cue("hurt");
-        else if (ref.uid !== "hero" && typeof EmberMiniatures !== "undefined") EmberMiniatures.cue(ref.side, ref.uid, "hurt");
+        if (ref.uid === "hero" && typeof EmberHeroFigure !== "undefined" && EmberHeroFigure.active(ref.side))
+          EmberHeroFigure.cue("hurt");
+        if (typeof EmberMiniatures !== "undefined") EmberMiniatures.contact(ref, { tier, from: contact.actor, direction: contact.direction });
         if(!((cause?.benchmarkStyle||cause?.remasterKind) && contact.direction === "outgoing"))
           startReaction(sequence, ref, actorBox, timing);
         numberAt = number(numberSpot(contact, box, actorBox), loss, "damage", { key, tier });
-        if (contact.direction === "outgoing" && cause && !cause.ranged && !cause.meshMelee) {
+        if (contact.direction === "outgoing" && cause && !cause.ranged && !cause.meshMelee && !voxelMelee(contact.actor)) {
           const spec = EmberFXProfiles.fx2Attack(EmberData.byId[contact.sourceCid], contact.sourceCid);
           if (spec) fxCall("attack", spec.fx, {
             from: fxBox(actorBox),
@@ -2967,6 +2978,7 @@ const EmberFX = (() => {
       castSpec: castSpecFor(s),
       card: (cid) => EmberData.byId[cid] || null,
       cutin: cutinAllowed(s),
+      figure: (ref) => (typeof EmberMiniatures !== "undefined" ? EmberMiniatures.plan(ref.side, ref.uid) : null),
     });
     if (!plan.beats.length) {
       const startGeneration = generation;

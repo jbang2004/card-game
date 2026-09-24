@@ -11,7 +11,9 @@ async function prime(page,{cid='guard',full=false,hand=false}={}){return page.ev
 for(const [name,viewport]of [['large',{width:1920,height:1080}],['portrait',{width:390,height:844}],['landscape',{width:844,height:390}],['compact',{width:568,height:320}]]){
  test(`first-load mesh and full-board readability: ${name}`,async({browser})=>{
   const context=await browser.newContext({viewport,isMobile:name!=='large',hasTouch:name!=='large'}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await demo(page);await prime(page,{full:true,hand:true});
+  // The attacker is a blade card without a voxel figure: on desktop a card with a battlefield figure attacks through
+  // the figure instead of the fx2 mesh (BATTLE_PRESENTATION_V2 R13), and this case covers the fx2 mesh's first load.
+  await demo(page);await prime(page,{cid:'squire',full:true,hand:true});
   // No quality reset or inspection tool: this is the original initialisation path.
   await expect(page.locator('#fx-3d')).toBeVisible();
   const canvas=await page.locator('#fx-3d').boundingBox();expect(canvas.width).toBeGreaterThan(300);expect(canvas.height).toBeGreaterThan(250);
