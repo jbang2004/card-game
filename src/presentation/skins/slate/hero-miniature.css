@@ -1,0 +1,24 @@
+/* Test skin "slate" — the ranger's live miniature (EmberVesperHero) over the
+ * player hero plate. The canvas never takes input: the plate below keeps
+ * clicks, targeting and focus. The portrait art dims to a dusk backdrop. */
+html[data-skin="slate"] #vesper-miniature {
+  position: absolute;
+  z-index: 14;
+  pointer-events: none;
+}
+html[data-skin="slate"] #vesper-miniature[hidden] {
+  display: none;
+}
+html[data-skin="slate"] #vesper-miniature > .vesper-miniature-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+html[data-skin="slate"] #player-hero.hero-miniature-ready .portrait-frame img {
+  opacity: 0.22;
+  filter: saturate(0.6) blur(1.5px);
+  transition: opacity 400ms ease;
+}
+html[data-skin="slate"] #player-hero.hero-miniature-ready .portrait-frame {
+  background: radial-gradient(ellipse at 50% 75%, #3a3a26 0%, #1a2019 55%, #0d1210 100%);
+}

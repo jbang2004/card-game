@@ -1049,6 +1049,7 @@
         attack +
         (p.armor ? " · 护甲 " + p.armor : "");
     }
+    if (typeof EmberVesperHero !== "undefined") EmberVesperHero.sync(s);
     syncHeroChips(s);
     $("power-btn").innerHTML =
       A.icon(hero.powerIcon) +

@@ -2310,6 +2310,8 @@ const EmberFX = (() => {
       at(ctx, beat.at, () => {
         if (!enterFrame(ctx, beat, i, beat.frame)) return;
         const rec = castFlash(ctx, i, cast, beat.kind === "power" ? "power" : "cast");
+        if (beat.kind === "power" && typeof EmberVesperHero !== "undefined" && EmberVesperHero.active(e.side))
+          EmberVesperHero.cue("shot", 0.3 * (ctx.plan.scale || 1));
         rec.countered = !!beat.countered;
         if(!beat.countered&&card?.type==="weapon")lifeCue(ctx,e,"weapon-equip",heroFace(ctx,e.side));
         const from = anchors.resolve(cast.actor, ctx.sequence.anchors);
@@ -2775,6 +2777,8 @@ const EmberFX = (() => {
         sound("armor", box);
       }
       if (loss > 0) {
+        if (ref.uid === "hero" && typeof EmberVesperHero !== "undefined" && EmberVesperHero.active(ref.side))
+          EmberVesperHero.cue("hurt");
         if(!((cause?.benchmarkStyle||cause?.remasterKind) && contact.direction === "outgoing"))
           startReaction(sequence, ref, actorBox, timing);
         numberAt = number(numberSpot(contact, box, actorBox), loss, "damage", { key, tier });
