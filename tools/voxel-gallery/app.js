@@ -38,14 +38,23 @@
     moonguard: { name: "守灯巨兽", card: "moonguard", note: "新月塔盾的银甲巨人" },
     selmyra: { name: "冥月神·瑟弥拉", card: "selmyra", note: "脑后一轮日蚀" },
     fenlos: { name: "荒猎神·芬洛斯", card: "fenlos", note: "狼首鹿角，绿叶披风" },
+    wisp: { name: "暮光精灵", card: "wisp", note: "翠绿蜻蜓翅，掌心法球" },
+    phoenix: { name: "不灭凤凰", card: "phoenix", note: "蓝白羽翼，胸口金焰" },
+    nyx: { name: "星陨女王·妮克丝", card: "nyx", note: "冰晶冠冕，星辰权杖" },
+    frostking: { name: "白霜之王", card: "frostking", note: "冰晶巨剑，白裘披肩" },
+    jingchen: { name: "星焰神·烬辰", card: "jingchen", note: "十六道日芒光环，掌上小太阳" },
+    squire: { name: "晨曦侍从", card: "squire", note: "马尾少女，太阳圆盾" },
+    paladin: { name: "圣光裁决者", card: "paladin", note: "日冕王冠，巨剑鸢盾" },
+    solaris: { name: "逐日者·索拉", card: "solaris", note: "脑后旋转的日轮" },
+    aurion: { name: "曙日神·奥瑞恩", card: "aurion", note: "日盘光环，双手巨剑" },
   };
   const GROUPS = [
-    ["人形 · 近战", ["huntress", "guard", "skeleton", "assassin", "reaper", "leech"]],
-    ["人形 · 远程", ["vesper", "spark", "necromancer", "soulguide", "oracle"]],
-    ["有翼", ["sentinel", "dragon"]],
+    ["人形 · 近战", ["huntress", "guard", "skeleton", "assassin", "reaper", "leech", "squire", "paladin", "solaris", "frostking"]],
+    ["人形 · 远程", ["vesper", "spark", "necromancer", "soulguide", "oracle", "nyx"]],
+    ["有翼", ["sentinel", "dragon", "phoenix", "wisp"]],
     ["野兽与虫", ["wolf", "pup", "spiritwolf", "moonfox", "eclipsewolf", "duskstag", "rider", "spider"]],
     ["巨像", ["golem", "treant", "moonguard"]],
-    ["神", ["selmyra", "fenlos"]],
+    ["神", ["selmyra", "fenlos", "jingchen", "aurion"]],
   ];
   const ALL = GROUPS.flatMap((g) => g[1]).filter((id) => KIT.get(id));
   const groupOf = (id) => GROUPS.find((g) => g[1].includes(id))?.[0] || "";
@@ -152,10 +161,11 @@
       // a group photo in three rows by size: small ones in front, people in the middle, the big ones at the back; each
       // row sits in the gaps of the row in front of it
       // small ones in front, the big ones and the gods at the back; a phone takes the same order in rows of four
-      const ORDER = [["wolf", "pup", "moonfox", "spider", "skeleton", "spark", "spiritwolf"],
-        ["huntress", "assassin", "leech", "vesper", "necromancer", "oracle", "soulguide"],
-        ["guard", "reaper", "duskstag", "rider", "eclipsewolf", "sentinel"],
-        ["dragon", "golem", "treant", "moonguard", "selmyra", "fenlos"]];
+      const ORDER = [["wolf", "pup", "moonfox", "spider", "spiritwolf", "wisp", "skeleton"],
+        ["spark", "squire", "huntress", "assassin", "leech", "vesper", "necromancer"],
+        ["oracle", "soulguide", "nyx", "paladin", "guard", "reaper", "solaris"],
+        ["duskstag", "rider", "eclipsewolf", "sentinel", "phoenix", "frostking", "dragon"],
+        ["golem", "treant", "moonguard", "selmyra", "fenlos", "jingchen", "aurion"]];
       const flat = ORDER.flat();
       const ROWS = narrow() ? Array.from({ length: Math.ceil(flat.length / 4) }, (_, r) => flat.slice(r * 4, r * 4 + 4)) : ORDER;
       const placed = new Set(), gap = narrow() ? 1.25 : 1.5, dz = narrow() ? 1.0 : 1.3, r0 = (ROWS.length - 1) / 2;
