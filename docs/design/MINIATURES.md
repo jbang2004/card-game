@@ -58,8 +58,8 @@ tools/voxel-gallery/               体素角色馆：同一个 arena 驱动的�
 ```
 
 - 三维库只有 `src/vendor/vesper-three.js`（全局 `EmberVesperThree`）一份。
-- 体素化在运行时进行，每个角色约 0.1–0.3 秒（英雄更重），按角色缓存，**在 worker 里做，不占主线程**；新角色的着色器用 `compileAsync` 并行编译完才出场；出场（拼合）只在两次行动之间开始，所以战斗序列里不会有角色突然出现或卡帧。棋子第一次上场时先显示平面令牌，烘焙完成后用“拼合”出场。
-- 角色永远不改变规则状态；卡名、费用、攻血仍是 DOM。令牌在角色站上去时把原画压暗成底座（`.miniature-ready`）。
+- 体素化在运行时进行，每个角色约 0.1–0.3 秒（英雄更重），按角色缓存，**在 worker 里做，不占主线程**；新角色的着色器用 `compileAsync` 并行编译完才出场，所以出场不会卡帧。**打出的牌直接变成角色（用户 2026-09-24 提议）：** 手牌里的牌（`#hand` 变化时）和一次行动将要召唤的牌（`EmberFX.present` 开始时）会提前在 worker 里烘焙（`EmberMiniatures.prewarm`）。卡牌飞到位后，令牌一出现就带上 `.miniature-pending`，原画立刻压暗成底座，从不显示平面卡图；角色随即在令牌上“拼合”出场（落位后约 0.65 秒站定），不再等整段序列结束。没预热到的角色（比如亡语召唤）也是一样：底座先暗，烘焙完就拼合。角色构建失败时去掉底座，退回平面令牌。
+- 角色永远不改变规则状态；卡名、费用、攻血仍是 DOM。令牌在角色将要出场（`.miniature-pending`）和站上去后（`.miniature-ready`）把原画压暗成底座。
 - 与导演层的接口（`src/effects.js`、`src/presentation/combat.js`）：`EmberMiniatures.plan(side, uid)` 供规划器决定近战 / 远程与前摇；`cue(attack | death)`、`contact(ref, {tier, from, direction})` 在对应的拍上调用；`owns(side, uid, melee)` 告诉导演层这一击由角色负责，导演层就不再做 DOM 突进、fx2 近战特效与 demise。详见 [BATTLE_PRESENTATION_V2.md](BATTLE_PRESENTATION_V2.md) R13。
 - 手机与“减少动态效果”下不启用，任何失败退回平面令牌。
 

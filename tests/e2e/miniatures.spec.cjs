@@ -39,3 +39,49 @@ test("minion miniatures follow tokens and combat cues", async ({ page }) => {
   await page.waitForFunction(() => !Emberfall.inBattle);
   expect(errors).toEqual([]);
 });
+
+// A played card turns straight into its figure: the token lands already dimmed to a backdrop (its flat art never
+// shows) and the figure, baked ahead from the hand, assembles on it within the same sequence.
+test("a played card becomes its figure without a flat token", async ({ page }) => {
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.goto("./?debug=1");
+  await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
+  await page.locator("#quick-btn").click();
+  await page.waitForFunction(() => !EmberFX.busy);
+  await page.evaluate(() => {
+    EmberFX.cancel(true);
+    const g = EmberDebug.game;
+    g.s.active = "p"; g.s.phase = "battle";
+    g.s.p.mana = g.s.p.maxMana = 10; g.s.p.board = []; g.s.e.board = [];
+    g.s.p.hand = [g.card("reaper")];
+    g.events = []; g.emit();
+  });
+  const spec = await page.evaluate(() => EmberVoxelKit.forCard("reaper").id);
+  await page.waitForFunction((id) => !!EmberVoxelRender.cached(id), spec);       // prewarmed from the hand
+  const seen = await page.evaluate(async () => {
+    const g = EmberDebug.game, live0 = EmberMiniatures.diagnostics().live, t0 = performance.now();
+    Emberfall.act(() => g.dispatch({ type: "play", side: "p", uid: g.s.p.hand[0].uid }));
+    let landed = null, flat = 0, liveAt = null;
+    await new Promise((done) => {
+      const tick = () => {
+        const t = performance.now() - t0, tok = document.querySelector('#minions .minion[data-cardid="reaper"]');
+        if (tok && getComputedStyle(tok).visibility !== "hidden") {
+          landed ??= t;
+          if (parseFloat(getComputedStyle(tok.querySelector(".minion-art img")).opacity) > 0.5) flat++;
+          if (liveAt == null && EmberMiniatures.diagnostics().live > live0) liveAt = t;
+        }
+        if (liveAt != null || t > 4000) return done();
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+    return { landed, flat, liveAt };
+  });
+  expect(seen.landed).not.toBeNull();
+  expect(seen.flat).toBe(0);
+  expect(seen.liveAt).not.toBeNull();
+  expect(seen.liveAt - seen.landed).toBeLessThan(1500);
+  await expect(page.locator('#minions .minion[data-cardid="reaper"]')).toHaveClass(/miniature-ready/);
+  expect(errors).toEqual([]);
+});

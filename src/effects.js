@@ -2968,6 +2968,8 @@ const EmberFX = (() => {
       if (result.reentered || presentationVersion !== version) return;
     }
     clearTurnCue();
+    // the figures this action summons start baking now (most are already warm from the hand)
+    if (typeof EmberMiniatures !== "undefined") EmberMiniatures.prewarm(events.filter((e) => e.type === "summon").map((e) => e.cid));
     const snapshot = captureAnchors();
     const plan = EmberCombat.compile(events, before, s, quality.reduced, "blade", {
       anchor: (ref, frame) =>

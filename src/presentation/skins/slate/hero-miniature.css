@@ -35,10 +35,12 @@ html[data-skin="slate"] #miniature-stage {
 html[data-skin="slate"] #miniature-stage[hidden] {
   display: none;
 }
-html[data-skin="slate"] #minions .minion.miniature-ready .minion-art img {
+html[data-skin="slate"] #minions .minion.miniature-ready .minion-art img,
+html[data-skin="slate"] #minions .minion.miniature-pending .minion-art img {
   opacity: 0.2;
   filter: saturate(0.5) blur(1px);
 }
-html[data-skin="slate"] #minions .minion.miniature-ready .minion-art {
+html[data-skin="slate"] #minions .minion.miniature-ready .minion-art,
+html[data-skin="slate"] #minions .minion.miniature-pending .minion-art {
   background: radial-gradient(ellipse at 50% 80%, #3c3a2c 0%, #1c211b 60%, #0f1311 100%);
 }

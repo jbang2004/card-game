@@ -14,7 +14,7 @@
  *     pixelRatio(),          for the figures' pixel dither
  *     shots,                 true = the arena flies shooters' projectiles itself (the gallery; in battle EmberFx2 does)
  *     bake(id),              → Promise of the figure's bake made off the main thread (EmberVoxelBaker.bake)
- *     ready(),               false while baking in the page or appearing would hurt (the battlefield: a sequence plays)
+ *     ready(),               false while baking in the page would hurt (the battlefield: a sequence plays)
  *     warm(root),            compile a new figure's shaders off the frame (→ Promise); it appears once they are ready
  *     wake(),                something started that needs frames
  *   });
@@ -45,6 +45,7 @@ const EmberVoxelArena = (() => {
     const shots = [];             // projectiles the arena flies itself (o.shots)
     const trail = { on: false, base: V3(), tip: V3(), heavy: false, freeze: 0 };   // latest posed weapon edge
     const stats = { figures: 0, cues: [], bakeMs: {} };
+    const broken = new Set();     // figure ids whose build failed: their tokens stay flat
     let frame = 0, acc = 0, T = 0, pumping = false, disposed = false;
     const wake = () => o.wake?.();
     const where = (ref) => (ref ? o.where?.(ref) ?? null : null);
@@ -58,7 +59,7 @@ const EmberVoxelArena = (() => {
       if (u && u.id !== id) { drop(side, uid, false); u = null; }
       if (!u) {
         const spec = KIT.get(id);
-        if (!spec) return null;
+        if (!spec || broken.has(id)) return null;
         u = { k, id, spec, side, uid: String(uid), info, fig: null, state: "baking", clip: "idle", t: 0, yaw: null, toward: null,
           atk: null, freeze: 0, glow: null, spawnAt: 0, lastFrom: null, pos: null };
         units.set(k, u); queue.push(u);
@@ -71,8 +72,9 @@ const EmberVoxelArena = (() => {
     }
     // the bake queue, one figure at a time. With a worker baker (o.bake → Promise of EmberVoxelKit.bakeData) the
     // voxels are made off the main thread; without one the bake runs in the page, and then only while the page says it
-    // is quiet (o.ready): 0.1–0.7 s of main thread must never land inside a combat sequence — a unit summoned
-    // mid-sequence keeps its flat token until the sequence ends. Building the mesh from a bake takes a few ms.
+    // is quiet (o.ready): 0.1–0.7 s of main thread must never land inside a combat sequence. Building the mesh from a
+    // bake takes a few ms, so a figure baked ahead (the page prewarms the cards in hand) assembles the moment its
+    // token lands — a played card turns straight into its figure.
     let worker = !!o.bake;
     function pump(delay = 0) {
       if (pumping || !queue.length || disposed) return;
@@ -81,7 +83,7 @@ const EmberVoxelArena = (() => {
         const u = queue[0];
         if (!u || units.get(u.k) !== u || disposed) { queue.shift(); pumping = false; pump(); return; }
         if (!R.cached(u.id) && worker) {
-          try { R.bake(u.id, await o.bake(u.id)); }
+          try { const data = await o.bake(u.id); if (!R.cached(u.id)) R.bake(u.id, data); }
           catch (error) { worker = false; console.warn("voxel worker unavailable; baking in the page.", String(error?.message || error)); }
           if (disposed) return;
         }
@@ -101,7 +103,7 @@ const EmberVoxelArena = (() => {
             Promise.resolve(o.warm ? o.warm(u.fig.root) : null).catch(() => {}).then(() => {
               if (units.get(u.k) === u && u.state === "compiling") { u.state = "arrive"; wake(); }
             });
-          } catch (error) { console.warn("voxel figure failed", u.id, error); units.delete(u.k); stats.figures = units.size; }
+          } catch (error) { console.warn("voxel figure failed", u.id, error); broken.add(u.id); units.delete(u.k); stats.figures = units.size; live(u, false); }
         }
         if (queue.length) pump();
         wake();
@@ -351,7 +353,7 @@ const EmberVoxelArena = (() => {
         if (!u.pos) continue;
         u.fig.root.position.copy(u.pos);
         if (u.state === "live" && u.atk?.dash) { const off = dashOffset(u, u.pos, now); if (off) u.fig.root.position.add(off); }
-        if (u.state === "arrive" && (!o.ready || o.ready())) {   // appear between actions, not mid-sequence
+        if (u.state === "arrive") {        // its token just landed: it assembles there (bake and compile were off-frame)
           facing(u, u.fig.root.position);
           C.pose(u.fig, "idle", 0, T);
           const { pts, cols, size } = R.voxelsWorld(u.fig);

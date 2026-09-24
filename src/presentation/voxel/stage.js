@@ -4,8 +4,9 @@
  * shakes carry it), the token's art dims to a backdrop while the figure stands, and the cues come from the effect
  * layer (attack · contact · death). A melee figure leaves its token for the attack and dashes to the target on the
  * director's timeline while the token stays home with its stats; a ranged figure shoots from its token and EmberFx2
- * flies the projectile. Figures are baked on first use (cached per figure) — until then the token stays flat. Rules
- * state is never read beyond the DOM; any failure falls back to flat tokens. */
+ * flies the projectile. Figures are baked in a worker ahead of use (the cards in hand, the cards an action summons;
+ * cached per figure), so a played card turns straight into its figure: its token lands as a dark backdrop and the
+ * figure assembles on it. Rules state is never read beyond the DOM; any failure falls back to flat tokens. */
 const EmberMiniatures = (() => {
   const THREE = EmberVesperThree, KIT = EmberVoxelKit;
   const SIZE = 1.25;            // board size of a figure (× its spec.scale): a miniature a head taller than its token
@@ -35,13 +36,13 @@ const EmberMiniatures = (() => {
       arena = EmberVoxelArena.create(scene, {
         size: SIZE, pixelRatio: dpr, wake,
         bake: (id) => EmberVoxelBaker.bake(id),                          // voxelize in a worker, off the main thread
-        ready: () => typeof EmberFX === "undefined" || !EmberFX.busy,       // appear between actions, never mid-sequence
+        ready: () => typeof EmberFX === "undefined" || !EmberFX.busy,       // a page-thread bake waits for a quiet moment
         warm: (root) => {                                  // compile its programs in parallel (KHR_parallel_shader_compile)
           root.visible = true;
           try { return renderer.compileAsync(scene, camera); } finally { root.visible = false; }
         },
         where: (ref) => { const el = refEl(ref); return el && el.isConnected && box ? footOf(el, box) : null; },
-        live: (u, on) => u.info.el?.classList.toggle("miniature-ready", on),
+        live: (u, on) => { const el = u.info.el; if (!el) return; el.classList.toggle("miniature-ready", on); if (!on) el.classList.remove("miniature-pending"); },
       });
       // the hit-feel's particle, star, beam and trail programs compile now, not on the first contact of the battle
       renderer.compileAsync(scene, camera).catch(() => {});
@@ -52,7 +53,7 @@ const EmberMiniatures = (() => {
   function fail(error) {
     failed = true; stats.status = "fallback"; stats.error = String(error?.message || error);
     cancelAnimationFrame(raf); raf = 0;
-    document.querySelectorAll("#minions .minion.miniature-ready").forEach((el) => el.classList.remove("miniature-ready"));
+    clearTokens();
     try { arena?.dispose(); renderer?.dispose(); } catch {}
     arena = null; renderer = null; canvas?.remove(); canvas = null;
     console.warn("Battle miniatures unavailable; using flat tokens.", stats.error);
@@ -85,7 +86,7 @@ const EmberMiniatures = (() => {
   function sync() {
     if (!enabled()) {
       if (canvas) canvas.hidden = true;
-      document.querySelectorAll("#minions .minion.miniature-ready").forEach((el) => el.classList.remove("miniature-ready"));
+      clearTokens();
       return;
     }
     const tokens = [...document.querySelectorAll("#minions .minion")].filter((el) => specOf(el.dataset.cardid) && el.dataset.compact !== "true");
@@ -95,12 +96,29 @@ const EmberMiniatures = (() => {
     for (const el of tokens) {
       const { side, uid, cardid } = el.dataset;
       seen.add(EmberVoxelArena.key(side, uid));
-      arena.set(side, uid, specOf(cardid).id, { el });    // a fresh token (renders replace them) gets its backdrop back
+      // a fresh token (renders replace them) gets its backdrop back at once — its card never shows as a flat token:
+      // the figure assembles on it as soon as it is built (at once when prewarmed)
+      const u = arena.set(side, uid, specOf(cardid).id, { el });
+      if (u && !el.classList.contains("miniature-ready")) el.classList.add("miniature-pending");
     }
     const gone = [];
     arena.each((u) => { if (!seen.has(u.k)) gone.push(u); });
     for (const u of gone) arena.drop(u.side, u.uid, true);
     wake();
+  }
+
+  const clearTokens = () => document.querySelectorAll("#minions .minion.miniature-ready, #minions .minion.miniature-pending").forEach((el) => el.classList.remove("miniature-ready", "miniature-pending"));
+
+  // ------------------------------------------------------------------ prewarm
+  /** bake these cards' figures ahead, in the worker (the cards in hand, the cards an action is about to summon), so a
+   *  played card's figure is ready when its token lands. Cheap to call again: cached and in-flight bakes are skipped */
+  function prewarm(cardIds) {
+    if (!enabled() || typeof EmberVoxelBaker === "undefined" || !EmberVoxelBaker.available) return;
+    for (const cid of cardIds || []) {
+      const spec = cid && specOf(cid);
+      if (!spec || EmberVoxelRender.cached(spec.id)) continue;
+      EmberVoxelBaker.bake(spec.id).then((data) => { if (!EmberVoxelRender.cached(spec.id)) EmberVoxelRender.bake(spec.id, data); }, () => {});
+    }
   }
 
   // ------------------------------------------------------------------ cues from the effect layer
@@ -136,12 +154,18 @@ const EmberMiniatures = (() => {
   let queued = false;
   const now = () => { try { sync(); } catch (error) { fail(error); } };
   const later = () => { if (queued) return; queued = true; requestAnimationFrame(() => { queued = false; now(); }); };
-  const watch = () => { const m = document.getElementById("minions"); if (!m) return false; new MutationObserver(now).observe(m, { childList: true, attributes: true, attributeFilter: ["data-cardid", "data-uid", "data-compact"] }); later(); return true; };
+  const handCards = () => prewarm([...document.querySelectorAll("#hand [data-cardid]")].map((el) => el.dataset.cardid));
+  const watch = () => {
+    const m = document.getElementById("minions"); if (!m) return false;
+    new MutationObserver(now).observe(m, { childList: true, attributes: true, attributeFilter: ["data-cardid", "data-uid", "data-compact"] });
+    const h = document.getElementById("hand"); if (h) new MutationObserver(() => { try { handCards(); } catch {} }).observe(h, { childList: true });
+    later(); return true;
+  };
   if (!watch()) document.addEventListener("DOMContentLoaded", watch, { once: true });
   addEventListener("ember:viewport", later);
 
   return Object.freeze({
-    sync, cue, contact, has, owns, plan,
+    sync, prewarm, cue, contact, has, owns, plan,
     diagnostics: () => ({ ...(arena ? arena.diagnostics() : { figures: 0, cues: [], bakeMs: {}, dying: 0, baking: 0, live: 0 }), ...stats }),
   });
 })();
