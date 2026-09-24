@@ -18,6 +18,21 @@ const EmberMiniatures = (() => {
   const desk = matchMedia("(hover: hover) and (pointer: fine)");
   const enabled = () => !failed && !(typeof EmberViewport !== "undefined" && EmberViewport.mobile && !desk.matches) && !reduced();
   const TOKEN_W = 116;          // a desktop token's layout width: figures keep their size relative to their token
+  /* A unit's station is its token box (the layout places tokens; they stay the click and focus targets): the figure
+   * stands at FOOT of its height on a pedestal of PED × its width, its stats sit in front of the pedestal, and it may
+   * rise at most RISE × the token's height above the token and be MAX_W × its width wide — so no figure reaches into
+   * the other line, the top bar or its neighbours. Sizes are measured through the camera at the unit's own spot, so
+   * the far line's figures are as large against their tokens as the near line's. */
+  const FOOT = 0.6, PED = 0.4, RISE = 0.5, MAX_W = 1.3;
+  const _a = new THREE.Vector3(), _b = new THREE.Vector3();
+  // screen px per world unit at a ground point: across (x) and upright (y)
+  function ppu(p) {
+    const h = box?.h || 1, w = box?.w || 1;
+    _a.copy(p).project(camera); _b.copy(p).add(new THREE.Vector3(1, 0, 0)).project(camera);
+    const across = Math.hypot((_b.x - _a.x) * w / 2, (_b.y - _a.y) * h / 2);
+    _b.copy(p).add(new THREE.Vector3(0, 1, 0)).project(camera);
+    return { across, up: Math.abs(_b.y - _a.y) * h / 2 };
+  }
   const battle = () => document.getElementById("battle");
   const specOf = (cid) => KIT.forCard(cid);
   const dpr = () => Math.min(devicePixelRatio || 1, 2);
@@ -44,7 +59,12 @@ const EmberMiniatures = (() => {
           root.visible = true;
           try { return renderer.compileAsync(scene, camera); } finally { root.visible = false; }
         },
-        scaleOf: (u) => { const w = u.info.el?.offsetWidth; return w ? Math.min(1.25, Math.max(0.5, w / TOKEN_W)) : 1; },
+        scaleOf: (u) => fit(u),
+        base: (u) => {
+          const el = u.info.el; if (!el?.isConnected || !el.offsetWidth) return null;
+          const c = el.classList;
+          return { r: (PED * el.offsetWidth) / (u.pos ? ppu(u.pos).across : 150), state: { ready: c.contains("ready"), taunt: c.contains("taunt"), frozen: c.contains("frozen"), shield: c.contains("shield"), target: c.contains("valid-target") } };
+        },
         where: (ref) => { const el = refEl(ref); return el && el.isConnected && box ? footOf(el, box) : null; },
         live: (u, on) => { const el = u.info.el; if (!el) return; el.classList.toggle("miniature-ready", on); if (!on) el.classList.remove("miniature-pending"); },
       });
@@ -82,8 +102,18 @@ const EmberMiniatures = (() => {
     ray.setFromCamera(ndc, camera);
     return ray.ray.intersectPlane(plane, hit) ? hit.clone() : null;
   }
-  // a unit stands at 80% of its token's height (the token's lower band keeps the stats readable)
-  const footOf = (el, bx) => { const r = el.getBoundingClientRect(); return r.width ? ground(r.left + r.width / 2, r.top + r.height * 0.8, bx) : null; };
+  // a unit stands at FOOT of its token's height; the token's lower band keeps the stats readable
+  const footOf = (el, bx) => { const r = el.getBoundingClientRect(); return r.width ? ground(r.left + r.width / 2, r.top + r.height * (el.dataset.uid === "hero" ? 0.8 : FOOT), bx) : null; };
+  // × the figure's board size so it fits its station: as wide against its token as a desktop token's figure at the
+  // board centre (150 px per unit), capped in height and width
+  function fit(u) {
+    const el = u.info.el, w = el?.offsetWidth, h = el?.offsetHeight;
+    if (!w || !u.fig || !u.pos) return 1;
+    const g = u.fig.mesh.geometry; if (!g.boundingBox) g.computeBoundingBox();
+    const bb = g.boundingBox, base = (u.spec.scale || 1) * SIZE, px = ppu(u.pos), k = (w / TOKEN_W) * (150 / px.across);
+    const tall = bb.max.y * base * k * px.up, wide = (bb.max.x - bb.min.x) * base * k * px.across;
+    return k * Math.min(1, ((FOOT + RISE) * h) / tall, (MAX_W * w) / wide);
+  }
   const refEl = (ref) => (ref.uid === "hero" ? document.getElementById(ref.side === "p" ? "player-hero" : "enemy-hero") : document.querySelector(`#minions .minion[data-side="${ref.side}"][data-uid="${ref.uid}"]`));
 
   // ------------------------------------------------------------------ tokens → units
@@ -137,6 +167,8 @@ const EmberMiniatures = (() => {
   /** EmberCombat.compile's figure hook: how this unit's figure attacks ({ melee, windup }) or null */
   const plan = (side, uid) => (arena ? arena.plan(side, uid) : null);
   const has = (side, uid) => !!arena && arena.has(side, uid);
+  /** a unit of this card stands as a voxel figure here (the effect layer then leaves out its card-shaped decorations) */
+  const stands = (cid) => enabled() && !!specOf(cid);
 
   // ------------------------------------------------------------------ frames
   function render(now) {
@@ -169,7 +201,7 @@ const EmberMiniatures = (() => {
   addEventListener("ember:viewport", later);
 
   return Object.freeze({
-    sync, prewarm, cue, contact, has, owns, plan,
+    sync, prewarm, cue, contact, has, owns, plan, stands,
     diagnostics: () => ({ ...(arena ? arena.diagnostics() : { figures: 0, cues: [], bakeMs: {}, dying: 0, baking: 0, live: 0 }), ...stats }),
   });
 })();

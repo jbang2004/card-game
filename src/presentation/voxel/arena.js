@@ -9,7 +9,9 @@
  * the character gallery uses the same arena, so it shows exactly what the battle shows):
  *   const arena = EmberVoxelArena.create(scene, {
  *     size,                  board size of a figure (× its spec.scale)
- *     scaleOf(unit),         × a figure's board size (the battlefield: its token's width against a desktop token's)
+ *     scaleOf(unit),         × a figure's board size (the battlefield: fitted to its token's station)
+ *     base(unit),            → { r, state } — the station it stands on: a stone pedestal of radius r whose rim tells
+ *                            its state (state: { ready, taunt, frozen, shield, target }); null = no pedestal (the gallery)
  *     where(ref),            → ground point (Vector3) of { side, uid } — any unit, figure or not; null = unknown
  *     live(unit, on),        a figure took over / left its unit (the battlefield dims the token art)
  *     pixelRatio(),          for the figures' pixel dither
@@ -33,6 +35,41 @@ const EmberVoxelArena = (() => {
   const TIER = { 1: { freeze: 0, star: 0.36, needles: 12, spd: 15 }, 2: { freeze: 3, star: 0.42, needles: 14, spd: 17 }, 3: { freeze: 5, star: 0.44, needles: 16, spd: 20 } };
   const key = (side, uid) => side + ":" + uid;
   const hex3 = (h, k) => { const c = new THREE.Color(h); return [c.r * k, c.g * k, c.b * k]; };
+  // the station a unit stands on: an octagonal stone slab (a flat edge to the camera) with a rim in its side's metal;
+  // the rim and a soft outer glow tell its state. Unit radius; the page scales it to its station
+  const RIM = { p: 0xc9a45c, e: 0x8a93a3, ready: 0x9fd755, taunt: 0xe8eef6, frozen: 0xa5e8ff, shield: 0xf8dd96, target: 0xff6a4d };
+  function pedestal() {
+    const g = new THREE.Group();
+    const top = new THREE.MeshBasicMaterial({ color: 0x2b2721 }), side = new THREE.MeshBasicMaterial({ color: 0x14120e });
+    const slab = new THREE.Mesh(new THREE.CylinderGeometry(1, 1.05, 0.12, 8), [side, top, side]);
+    slab.position.y = -0.062; slab.rotation.y = Math.PI / 8;
+    const rimMat = new THREE.MeshBasicMaterial({ color: RIM.p, side: THREE.DoubleSide });
+    const rim = new THREE.Mesh(new THREE.RingGeometry(0.86, 1.0, 8, 1), rimMat);
+    rim.rotation.set(-Math.PI / 2, 0, Math.PI / 8); rim.position.y = 0.001;
+    const glowMat = new THREE.MeshBasicMaterial({ color: RIM.ready, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+    const glow = new THREE.Mesh(new THREE.RingGeometry(1.0, 1.28, 8, 1), glowMat);
+    glow.rotation.copy(rim.rotation); glow.position.y = 0.002;
+    g.add(slab, rim, glow);
+    g.userData = { rim, rimMat, glowMat, key: "" };
+    return g;
+  }
+  function paintPedestal(g, side, st, T) {
+    const d = g.userData, want = st.target ? "target" : st.frozen ? "frozen" : st.shield ? "shield" : st.ready ? "ready" : "";
+    const k = side + want + (st.taunt ? "T" : "");
+    if (d.key !== k) {
+      d.key = k;
+      d.rimMat.color.setHex(st.taunt ? RIM.taunt : RIM[side] ?? RIM.p);
+      d.rim.geometry.dispose(); d.rim.geometry = new THREE.RingGeometry(st.taunt ? 0.72 : 0.86, 1.0, 8, 1);
+      if (want) d.glowMat.color.setHex(RIM[want]);
+    }
+    d.glowMat.opacity = want ? (want === "ready" ? 0.55 : 0.75) * (0.8 + 0.2 * Math.sin(T * 4)) : 0;
+  }
+  function dropPedestal(scene, u) {
+    if (!u.base) return;
+    scene.remove(u.base);
+    u.base.traverse((m) => { m.geometry?.dispose(); [].concat(m.material || []).forEach((x) => x.dispose()); });
+    u.base = null;
+  }
 
   function create(scene, o = {}) {
     const SIZE = o.size ?? 1;
@@ -121,6 +158,7 @@ const EmberVoxelArena = (() => {
       if (animate && shown(u)) { die(u, u.lastFrom); return; }
       if (u.state === "dying") return;                   // its death beat finishes on its own
       if (u.fig) { scene.remove(u.fig.root); R.dispose(u.fig); }
+      dropPedestal(scene, u);
     }
     function goLive(u) { u.state = "live"; u.fig.root.visible = true; live(u, true); }
 
@@ -231,7 +269,7 @@ const EmberVoxelArena = (() => {
       if (u.state === "dying") return;
       units.delete(u.k); stats.figures = units.size;
       live(u, false);
-      if (!u.fig || u.state === "baking") return;
+      if (!u.fig || u.state === "baking") { dropPedestal(scene, u); return; }
       u.state = "dying"; u.dieF = frame; dying.push(u);
       u.fig.root.visible = true;
       const p = u.fig.root.position, a = from && units.get(key(from.side, from.uid));
@@ -245,6 +283,7 @@ const EmberVoxelArena = (() => {
       fx.shatter(pts, cols, c, u.fly.dir, { n: 420, spd: 2.0 * S, up: [1.0 * S, 2.8 * S], size, life: [0.24, 0.34] });
       fx.dustPuff(c.x, c.z, 2, 1.6 * S, 0.36 * S, 0.08 * S, 0.3);
       u.fig.root.visible = false; u.shattered = frame;
+      dropPedestal(scene, u);
     }
 
     // ------------------------------------------------------------------ per frame
@@ -253,7 +292,9 @@ const EmberVoxelArena = (() => {
       if (u.toward && u.clip === "attack") target = where(u.toward);
       let want;
       if (target) { const dx = target.x - from.x, dz = target.z - from.z; want = Math.atan2(dx, dz); }
-      else want = u.side === "p" ? 0.35 : -0.35;            // idle: three-quarters toward the camera (faces read)
+      // idle: each side faces the other across the board (the player's own units show a three-quarter back), turned a
+      // little toward the middle of the opposing line
+      else want = Math.atan2(-0.3 * from.x, u.side === "p" ? -1 : 1);
       if (u.yaw == null) u.yaw = want;
       let d = want - u.yaw; d = Math.atan2(Math.sin(d), Math.cos(d));
       u.yaw += d * Math.min(1, target ? 0.45 : 0.1);
@@ -354,6 +395,12 @@ const EmberVoxelArena = (() => {
         if (!u.pos) continue;
         u.fig.root.position.copy(u.pos);
         if (o.scaleOf) u.fig.root.scale.setScalar((u.spec.scale || 1) * SIZE * o.scaleOf(u));
+        const b = o.base && (u.state === "live" || u.state === "assembling") ? o.base(u) : null;
+        if (b) {
+          if (!u.base) { u.base = pedestal(); scene.add(u.base); }
+          u.base.position.copy(u.pos); u.base.scale.setScalar(b.r);
+          paintPedestal(u.base, u.side, b.state || {}, T);
+        } else if (u.base) dropPedestal(scene, u);
         if (u.state === "live" && u.atk?.dash) { const off = dashOffset(u, u.pos, now); if (off) u.fig.root.position.add(off); }
         if (u.state === "arrive") {        // its token just landed: it assembles there (bake and compile were off-frame)
           facing(u, u.fig.root.position);
@@ -406,7 +453,7 @@ const EmberVoxelArena = (() => {
     function setPixelRatio(dpr) { for (const u of units.values()) if (u.fig) R.setPixelRatio(u.fig, dpr); }
     function dispose() {
       disposed = true;
-      for (const u of [...units.values(), ...dying]) if (u.fig) { scene.remove(u.fig.root); R.dispose(u.fig); }
+      for (const u of [...units.values(), ...dying]) { if (u.fig) { scene.remove(u.fig.root); R.dispose(u.fig); } dropPedestal(scene, u); }
       units.clear(); dying.length = 0; queue.length = 0; shots.length = 0;
     }
     return Object.freeze({

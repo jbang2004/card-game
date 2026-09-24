@@ -1,14 +1,15 @@
 /* EmberHeroFigure — the player hero's voxel figure on the hero plate (docs/design/MINIATURES.md).
- * A transparent canvas sits over the plate with a gutter so the figure can rise above the frame;
- * the portrait fades behind it. The plate's DOM (stats, targeting, accessibility) and the rules
+ * The hero has a fixed seat: a transparent canvas exactly over the plate's portrait window, clipped
+ * to its arch, with the figure standing on the window's floor — it never covers the board, the
+ * plate's health / armour / weapon chips or the hero power; the portrait fades behind it. The plate's DOM (stats, targeting, accessibility) and the rules
  * are untouched; any failure falls back to the plain portrait. Heroes with a figure are the
  * ones registered as card "hero:<heroId>" (EmberVoxelKit). Cues come from the effect layer:
  * hero power / hero attack → attack, damage → hurt (with the victim glow); victory from the
  * rendered state. */
 const EmberHeroFigure = (() => {
   const THREE = EmberVesperThree, R = EmberVoxelRender, C = EmberVoxelClips, KIT = EmberVoxelKit;
-  // gutter around the plate, in plate widths/heights
-  const PAD = { left: 0.7, right: 0.7, top: 0.55, bottom: 0.02 };
+  // the figure fills the window's height up to HEAD (its floor is FLOOR above the window's bottom)
+  const HEAD = 0.9, FLOOR = 0.05;
   const HOT = [1.55, 1.53, 1.5], GOLD = [1.0, 0.45, 0.1];
   let host = null, canvas = null, renderer = null, scene = null, camera = null, fig = null, figId = null, failed = false, building = false;
   let clip = "idle", t = 0, T = 0, raf = 0, last = 0, glow = -1, cheered = false;
@@ -20,13 +21,16 @@ const EmberHeroFigure = (() => {
   function wanted(s) {
     return !failed && !!specFor(s) && !(typeof EmberViewport !== "undefined" && EmberViewport.mobile && !matchMedia("(hover: hover) and (pointer: fine)").matches) && !reduced();
   }
+  // the seat: the portrait window's box in the plate's offset parent (layout px, so the desktop scale applies to both)
   function place() {
-    const el = plate();
-    if (!host || !el) return;
-    const w = el.offsetWidth, h = el.offsetHeight;
+    const el = plate(), win = el?.querySelector(".portrait-frame");
+    if (!host || !el || !win) return;
+    let x = 0, y = 0;
+    for (let n = win; n && n !== el.offsetParent; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; }
+    const cs = getComputedStyle(win);
     Object.assign(host.style, {
-      left: el.offsetLeft - w * PAD.left + "px", top: el.offsetTop - h * PAD.top + "px",
-      width: w * (1 + PAD.left + PAD.right) + "px", height: h * (1 + PAD.top + PAD.bottom) + "px",
+      left: x + "px", top: y + "px", width: win.offsetWidth + "px", height: win.offsetHeight + "px",
+      borderRadius: cs.borderRadius,
     });
   }
   function ensure(spec) {
@@ -98,10 +102,11 @@ const EmberHeroFigure = (() => {
     if (w && h && (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr))) {
       renderer.setPixelRatio(dpr); renderer.setSize(w, h, false); R.setPixelRatio(fig, dpr);
       camera.aspect = w / h;
-      // the figure stands on the plate's bottom edge and rises through the top gutter
-      const H = 1.05 * (fig.spec.scale || 1), tall = 1 + PAD.top + PAD.bottom, span = H * tall / 1.05;
+      // the figure stands on the window's floor and its head stays inside the arch
+      const g = fig.mesh.geometry; if (!g.boundingBox) g.computeBoundingBox();
+      const H = g.boundingBox.max.y * fig.root.scale.y, span = H / (HEAD - FLOOR), cy = span / 2 - FLOOR * span;
       const d = span / (2 * Math.tan((camera.fov * Math.PI) / 360));
-      camera.position.set(0, span / 2 - 0.02, d); camera.lookAt(0, span / 2 - 0.02, 0); camera.updateProjectionMatrix();
+      camera.position.set(0, cy, d); camera.lookAt(0, cy, 0); camera.updateProjectionMatrix();
     }
     if (!C.pose(fig, clip, t, T) && clip !== "idle") { clip = "idle"; t = 0; C.pose(fig, clip, t, T); }
     if (glow >= 0) {

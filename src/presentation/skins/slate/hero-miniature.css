@@ -4,6 +4,7 @@
 html[data-skin="slate"] #hero-figure {
   position: absolute;
   z-index: 14;
+  overflow: hidden;
   pointer-events: none;
 }
 html[data-skin="slate"] #hero-figure[hidden] {
@@ -23,24 +24,51 @@ html[data-skin="slate"] #player-hero.hero-miniature-ready .portrait-frame {
   background: radial-gradient(ellipse at 50% 75%, #3a3a26 0%, #1a2019 55%, #0d1210 100%);
 }
 
-/* Minion voxel figures (EmberMiniatures): one stage canvas over the board, above
- * the minion layer and below heroes, hand and overlays. */
+/* Minion voxel figures (EmberMiniatures): one stage canvas over the board, under
+ * the minion layer (#minions is 7) so a unit's stats and status marks stay on top
+ * of its figure; heroes, hand and overlays are above both. */
 html[data-skin="slate"] #miniature-stage {
   position: absolute;
   left: 0;
   top: 0;
-  z-index: 8;
+  z-index: 6;
   pointer-events: none;
 }
 html[data-skin="slate"] #miniature-stage[hidden] {
   display: none;
 }
-html[data-skin="slate"] #minions .minion.miniature-ready .minion-art img,
-html[data-skin="slate"] #minions .minion.miniature-pending .minion-art img {
-  opacity: 0.2;
-  filter: saturate(0.5) blur(1px);
+/* A unit with a figure is its figure: the card (art, frame, plate, drop shadow,
+ * state rings) is gone — the stage draws the pedestal and its state rim. The
+ * token stays as the click, drag and focus target and keeps its stats, which
+ * become two badges in front of the pedestal. */
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) {
+  box-shadow: none;
+  filter: none;
+  background: none;
 }
-html[data-skin="slate"] #minions .minion.miniature-ready .minion-art,
-html[data-skin="slate"] #minions .minion.miniature-pending .minion-art {
-  background: radial-gradient(ellipse at 50% 80%, #3c3a2c 0%, #1c211b 60%, #0f1311 100%);
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending)::before,
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending)::after,
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) .minion-art,
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) .unit-aura,
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) .ready-dot {
+  visibility: hidden;
+}
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) > .stat {
+  bottom: 2%;
+  width: 36%;                  /* room for two digits and the glyph */
+  height: 20cqw;
+  padding: 0;
+  gap: 2.5cqw;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #1d1a15f0, #0b0907f0);
+  box-shadow:
+    0 0 0 1.5px var(--tok-line, #8a7446),
+    0 3px 8px #000000b3;
+  font-size: clamp(11px, 13cqw, 22px);
+}
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) > .stat.atk {
+  left: 6%;
+}
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) > .stat.hp {
+  right: 6%;
 }

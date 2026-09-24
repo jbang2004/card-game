@@ -2526,8 +2526,10 @@ const EmberFX = (() => {
             sound("play", box, { gain: 0.8 });
           sound("summon", box);
           if(box){
+            // a voxel unit's arrival is its figure assembling on the pedestal: the card-shaped summon gate stays off
+            const figureArrives = typeof EmberMiniatures !== "undefined" && EmberMiniatures.stands(landed.cid);
             if(!landed.rebornFrom||!lifeCue(ctx,landed,"rebirth",box))
-              fxCall("cue","summon",{at:fxBox(box),targetRef:{side:landed.side,uid:landed.uid},sourceCid:landed.cid,seed:sequence.id*71+i,timeScale:sequence.plan.scale});
+              if(!figureArrives)fxCall("cue","summon",{at:fxBox(box),targetRef:{side:landed.side,uid:landed.uid},sourceCid:landed.cid,seed:sequence.id*71+i,timeScale:sequence.plan.scale});
             if(card?.tags?.includes("stealth"))lifeCue(ctx,landed,"stealth-in",box);
           }
           if (card?.rarity === "legendary") sound("legendary", box);
@@ -2607,7 +2609,7 @@ const EmberFX = (() => {
             visual = { ...(pos(owner.el) || owner.impact), el: owner.el, html: copy.outerHTML };
             releaseAttackOwner(key, false, owner);
           } else if (owner) releaseAttackOwner(key, false, owner);
-          deathGhost(sequence, visual, schoolOf(EmberData.byId[e.cid]));
+          if (!shattered) deathGhost(sequence, visual, schoolOf(EmberData.byId[e.cid]));   // a figure's death is its shatter
           if(visual&&!shattered)fxCall("cue","demise",{at:fxBox(visual),sourceCid:e.cid,seed:sequence.id*71+i,timeScale:sequence.plan.scale});
           dropNumbers(key, scaled(sequence, T.death.freeze + T.death.dissolve));
           sequence.anchors.delete(key);

@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-// The ranger hero's voxel figure stands on the player hero plate, follows the
+// The ranger hero's voxel figure stands in the player hero plate's portrait window, follows the
 // effect layer's cues and never changes the rules state.
 test("ranger voxel figure appears on the hero plate and answers power and damage", async ({ page }) => {
   const errors = [];
@@ -10,10 +10,10 @@ test("ranger voxel figure appears on the hero plate and answers power and damage
   await page.locator("#modal button", { hasText: "开始" }).click();
   await page.waitForFunction(() => Emberfall.inBattle && !Emberfall.modal && !EmberFX.busy);
   await page.waitForFunction(() => EmberHeroFigure.diagnostics().status === "ready");
+  // the hero's fixed seat: exactly its portrait window, never over the board or the plate's chips
   const box = await page.locator("#hero-figure").boundingBox();
-  const plate = await page.locator("#player-hero").boundingBox();
-  expect(box.x).toBeLessThan(plate.x + 1);
-  expect(box.x + box.width).toBeGreaterThan(plate.x + plate.width);
+  const win = await page.locator("#player-hero .portrait-frame").boundingBox();
+  for (const k of ["x", "y", "width", "height"]) expect(Math.abs(box[k] - win[k])).toBeLessThan(2);
   await expect(page.locator("#player-hero")).toHaveClass(/hero-miniature-ready/);
   // the overlay never takes input: clicking the plate still reaches the hero
   expect(await page.evaluate(() => getComputedStyle(document.getElementById("hero-figure")).pointerEvents)).toBe("none");

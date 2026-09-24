@@ -1237,6 +1237,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     for (const side of ["e", "p"]) {
       const els = document.querySelectorAll(`#minions .minion[data-side="${side}"]`), count = els.length;
       for (let i = 0; i < count && n < 16; i++) {
+        if (els[i].matches(".miniature-ready, .miniature-pending")) continue;   // a voxel unit stands on its own pedestal
         let cx, cy, w;
         if (busy) { const b = Vp.pos(els[i]); if (!b) continue; cx = b.x; cy = b.y + b.h * 0.42; w = b.w; }
         else { const g = Vp.minion(side, i, count); cx = g.x + g.w / 2; cy = g.y + g.h * 0.92; w = g.w; }
