@@ -85,3 +85,18 @@ test("a played card becomes its figure without a flat token", async ({ page }) =
   await expect(page.locator('#minions .minion[data-cardid="reaper"]')).toHaveClass(/miniature-ready/);
   expect(errors).toEqual([]);
 });
+
+// A narrow desktop window (mouse, compact battle layout) keeps its figures, sized to its tokens; only touch phones
+// go without them for now.
+test("a narrow desktop window keeps its figures", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("./?debug=1");
+  await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
+  await page.evaluate(() => Emberfall.startGame("ranger", 0));
+  await page.locator("#modal button", { hasText: "开始" }).click();
+  await page.waitForFunction(() => Emberfall.inBattle && !Emberfall.modal && !EmberFX.busy);
+  expect(await page.evaluate(() => EmberViewport.mobile)).toBe(true);
+  await page.evaluate(() => { EmberDebug.game.summon("p", "reaper"); EmberDebug.game.summon("e", "wolf"); Emberfall.renderNow(); });
+  await page.waitForFunction(() => EmberMiniatures.diagnostics().live === 2);
+  await expect(page.locator('#minions .minion[data-cardid="reaper"]')).toHaveClass(/miniature-ready/);
+});

@@ -9,6 +9,7 @@
  * the character gallery uses the same arena, so it shows exactly what the battle shows):
  *   const arena = EmberVoxelArena.create(scene, {
  *     size,                  board size of a figure (× its spec.scale)
+ *     scaleOf(unit),         × a figure's board size (the battlefield: its token's width against a desktop token's)
  *     where(ref),            → ground point (Vector3) of { side, uid } — any unit, figure or not; null = unknown
  *     live(unit, on),        a figure took over / left its unit (the battlefield dims the token art)
  *     pixelRatio(),          for the figures' pixel dither
@@ -352,6 +353,7 @@ const EmberVoxelArena = (() => {
         if (p) u.pos = p;
         if (!u.pos) continue;
         u.fig.root.position.copy(u.pos);
+        if (o.scaleOf) u.fig.root.scale.setScalar((u.spec.scale || 1) * SIZE * o.scaleOf(u));
         if (u.state === "live" && u.atk?.dash) { const off = dashOffset(u, u.pos, now); if (off) u.fig.root.position.add(off); }
         if (u.state === "arrive") {        // its token just landed: it assembles there (bake and compile were off-frame)
           facing(u, u.fig.root.position);

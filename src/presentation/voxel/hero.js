@@ -18,7 +18,7 @@ const EmberHeroFigure = (() => {
   const specFor = (s) => (s?.heroId ? KIT.forCard("hero:" + s.heroId) : null);
 
   function wanted(s) {
-    return !failed && !!specFor(s) && !(typeof EmberViewport !== "undefined" && EmberViewport.mobile) && !reduced();
+    return !failed && !!specFor(s) && !(typeof EmberViewport !== "undefined" && EmberViewport.mobile && !matchMedia("(hover: hover) and (pointer: fine)").matches) && !reduced();
   }
   function place() {
     const el = plate();

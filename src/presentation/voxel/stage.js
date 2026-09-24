@@ -14,7 +14,10 @@ const EmberMiniatures = (() => {
   const stats = { status: "idle", error: null, frameMs: 0 };
   const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), hit = new THREE.Vector3();
   const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches || document.body.classList.contains("reduced-motion");
-  const enabled = () => !failed && !(typeof EmberViewport !== "undefined" && EmberViewport.mobile) && !reduced();
+  // phones (touch) wait for a performance pass; a narrow desktop window gets the compact layout and keeps its figures
+  const desk = matchMedia("(hover: hover) and (pointer: fine)");
+  const enabled = () => !failed && !(typeof EmberViewport !== "undefined" && EmberViewport.mobile && !desk.matches) && !reduced();
+  const TOKEN_W = 116;          // a desktop token's layout width: figures keep their size relative to their token
   const battle = () => document.getElementById("battle");
   const specOf = (cid) => KIT.forCard(cid);
   const dpr = () => Math.min(devicePixelRatio || 1, 2);
@@ -41,6 +44,7 @@ const EmberMiniatures = (() => {
           root.visible = true;
           try { return renderer.compileAsync(scene, camera); } finally { root.visible = false; }
         },
+        scaleOf: (u) => { const w = u.info.el?.offsetWidth; return w ? Math.min(1.25, Math.max(0.5, w / TOKEN_W)) : 1; },
         where: (ref) => { const el = refEl(ref); return el && el.isConnected && box ? footOf(el, box) : null; },
         live: (u, on) => { const el = u.info.el; if (!el) return; el.classList.toggle("miniature-ready", on); if (!on) el.classList.remove("miniature-pending"); },
       });
