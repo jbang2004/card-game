@@ -55,6 +55,13 @@ html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending
 html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) .ready-dot {
   visibility: hidden;
 }
+/* no card-shaped frames either: the targeting, selection and class-colour outlines
+ * of a card token would draw a box round the figure (the pedestal rim shows the
+ * state); only the keyboard focus ring stays */
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending):not(:focus-visible),
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending):not(:focus-visible):hover {
+  outline: none !important;
+}
 html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) > .stat {
   bottom: 2%;
   width: 36%;                  /* room for two digits and the glyph */
