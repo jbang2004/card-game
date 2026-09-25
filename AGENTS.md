@@ -22,7 +22,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 - 组件样式遵循 `legacy → layout → theme → components` 层级；卡图容器与旧主题规则留在 `presentation/components.css`，新配色/材质一律放在 `src/presentation/skins/slate/`（base = 令牌与外壳，页面文件 = 各页几何），手机规则不要另外定义主题颜色。
 - 修改 `src/` 与素材源，然后构建；不要只改生成的 `index.html`。
-- `config/build.json` / `src/template.html` 决定模块顺序。只有当前注册表中的实现进入运行；不能因历史文档提及就恢复已经退役的旧 Three.js 预览、程序化插画或旧素材缓存。战场 3D 角色（体素风，见 `docs/design/MINIATURES.md`；角色馆 `tools/voxel-gallery/`）经用户 2026-09-24 确认使用固定版本的 three.js：唯一来源是 `src/vendor/vesper-three.js`（`npm run vendor:vesper` 生成，全局 `EmberVesperThree`），不经 CDN，不另开第二份 three。仍有引用的 `tavern-ui.js` / `atelier*` 承担当前 UI 和 Canvas 职责。
+- `config/build.json` / `src/template.html` 决定模块顺序。只有当前注册表中的实现进入运行；不能因历史文档提及就恢复已经退役的旧 Three.js 预览、程序化插画或旧素材缓存。战场 3D 角色（Q 版像素风：代码雕刻的 3D 角色渲染成像素精灵，2026-09-25 用户选定；见 `docs/design/MINIATURES.md`；角色馆 `tools/voxel-gallery/`）经用户 2026-09-24 确认使用固定版本的 three.js：唯一来源是 `src/vendor/vesper-three.js`（`npm run vendor:vesper` 生成，全局 `EmberVesperThree`），不经 CDN，不另开第二份 three。仍有引用的 `tavern-ui.js` / `atelier*` 承担当前 UI 和 Canvas 职责。
 - 79 个卡牌 ID 必须各有新动漫插画；保持严格映射，不让缺图静默回退到旧程序化角色图。
 - 磨砂青岩（slate）是**唯一**表现层，没有皮肤开关：`src/presentation/theme.js` 无条件写入 `html[data-skin="slate"]`，该属性是皮肤 CSS 的命名空间而不是切换点，必须保留。皮肤本体在 `src/presentation/skins/slate/`（`base.css` = 令牌与两套外壳，其余每页一文件 = 各页几何），规范见 `docs/design/SLATE_DESIGN_SYSTEM.md`；语义原画角色在 `src/presentation/themes/silverblue.js`（文件名沿用历史，内容是当前唯一的主题定义）。新配色/材质一律放皮肤层，不再往 components.css 添加。卡名、费用、攻血和规则文字保持实时 DOM，不烘焙进画面。
 - 手机端是专用横/竖屏布局，不退回到把 1600×940 桌面等比缩小；保留滑动、点牌确认、长按、旋转后的同局状态。

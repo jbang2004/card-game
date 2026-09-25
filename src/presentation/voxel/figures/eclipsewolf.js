@@ -16,6 +16,7 @@ EmberVoxelKit.define("eclipsewolf", (() => {
   };
   function wolfKing() {
     const sc = new Sculpture();
+    const PX = K.pixel;                                              // pixel-sprite variant: a few big mane spikes, a thick eclipse ring
     const Hs = 1.12 * k, Ps = 1.3;
     quadBones(sc, G);
     const ecl = P3(0, 0.54, 0.0);
@@ -30,7 +31,7 @@ EmberVoxelKit.define("eclipsewolf", (() => {
       corona: { c: 0x8fd0ff, rough: 0.3, emit: 1.8, cls: CLS.glow }, coronaHot: { c: 0xe6f6ff, rough: 0.3, emit: 2.4, cls: CLS.glow },
     });
     const furD = (amp, f = 70) => (x, yy, z) => { const u = z * f * 0.45 + 1.8 * vnoise(x * f * 0.35, yy * f * 0.35, 3.1); const fr = u - Math.floor(u); return amp * (fr * fr) * (0.6 + 0.4 * vnoise(x * f, yy * f, z * f)); };
-    const fk = (a, f) => ({ disp: furD(a, f), dispAmp: a });
+    const fk = (a, f) => (PX ? {} : { disp: furD(a, f), dispAmp: a });
     // torso: huge chest, lean waist, strong haunches
     sc.add(S.ell(0.08 * k, 0.1 * k, 0.115 * k), { mat: "fur", p: add(G.chest, P3(0, -0.02, 0)), bone: "chest", k: 0.04, ...fk(0.007) });
     sc.add(S.ell(0.062 * k, 0.072 * k, 0.11 * k), { mat: "fur", p: add(G.spine, P3(0, -0.01, 0)), bone: "spine", k: 0.05, sigma: 0.03, ...fk(0.006) });
@@ -45,13 +46,15 @@ EmberVoxelKit.define("eclipsewolf", (() => {
     sc.limb(add(hc, [0, -0.036 * Hs, 0.03 * Hs]), add(hc, [0, -0.038 * Hs, (0.03 + mzL * 0.85) * Hs]), 0.015 * Hs, 0.01 * Hs, { mat: "muzzle", bone: "jaw", k: 0.01 });
     sc.paint(S.ell(0.03 * Hs, 0.018 * Hs, 0.07 * Hs), { mat: "muzzle", p: add(hc, [0, -0.03 * Hs, 0.06 * Hs]), soft: 0.004 });
     for (const s of [1, -1]) {
-      sc.add(S.ell(0.011 * Hs, 0.0055 * Hs, 0.007 * Hs), { mat: "eye", p: add(hc, [s * 0.022 * Hs, 0.004 * Hs, 0.043 * Hs]), r: [0, s * 0.35, s * 0.3], bone: "head", k: 0.003, cs: 0.03 });
-      sc.limb(add(hc, [s * 0.008 * Hs, 0.015 * Hs, 0.047 * Hs]), add(hc, [s * 0.036 * Hs, 0.02 * Hs, 0.036 * Hs]), 0.006 * Hs, 0.005 * Hs, { mat: "furDark", bone: "head", k: 0.004 });
+      const eK = PX ? 1.5 : 1;
+      sc.add(S.ell(0.011 * Hs * eK, 0.0055 * Hs * eK, 0.007 * Hs), { mat: "eye", p: add(hc, [s * 0.022 * Hs, 0.004 * Hs, 0.043 * Hs]), r: [0, s * 0.35, s * 0.3], bone: "head", k: 0.003, cs: 0.03 });
+      if (!PX) sc.limb(add(hc, [s * 0.008 * Hs, 0.015 * Hs, 0.047 * Hs]), add(hc, [s * 0.036 * Hs, 0.02 * Hs, 0.036 * Hs]), 0.006 * Hs, 0.005 * Hs, { mat: "furDark", bone: "head", k: 0.004 });
     }
     // ears: tall, swept back
     for (const s of [1, -1]) {
-      const n = sideName(s), base = add(hc, [s * 0.028 * Hs, 0.026 * Hs, -0.01]), tip = add(base, [s * 0.014 * Hs, 0.066 * Hs, -0.024]);
-      sc.limb(base, tip, 0.024 * Hs, 0.002, { mat: "furFace", bone: "ear" + n, k: 0.012, sz: 0.42 });
+      const eK = PX ? 1.15 : 1;
+      const n = sideName(s), base = add(hc, [s * 0.028 * Hs, 0.026 * Hs, -0.01]), tip = add(base, [s * 0.014 * Hs * eK, 0.066 * Hs * eK, -0.024]);
+      sc.limb(base, tip, 0.024 * Hs * eK, PX ? 0.005 : 0.002, { mat: "furFace", bone: "ear" + n, k: 0.012, sz: 0.42 });
       sc.add(S.ell(0.012 * Hs, 0.028 * Hs, 0.0045), { mat: "earIn", op: "sub", p: add(lerp(base, tip, 0.38), [0, 0, 0.011]), R: rotY2(...sub(tip, base)), bone: "ear" + n, k: 0.004, cut: "earIn" });
     }
     // long powerful legs, big paws, pale claws
@@ -68,14 +71,27 @@ EmberVoxelKit.define("eclipsewolf", (() => {
       sc.add(S.ell(0.023 * Ps, 0.016 * Ps, 0.029 * Ps), { mat: "furLeg", p: add(B[3], [0, -0.004, 0.012]), bone: "bpaw" + n, k: 0.01 });
       for (const [P4, bn, big] of [[F[3], "fpaw" + n, 1], [B[3], "bpaw" + n, 0.8]]) for (let c = -1; c <= 1; c++) {
         const a = add(P4, [c * 0.011 * Ps, -0.004, 0.036 * Ps]);
-        sc.limb(a, add(a, [c * 0.002, -0.014 * big, 0.016 * big]), 0.0045, 0.0015, { mat: "claw", bone: bn, k: 0.002, vdil: 0.5 });
+        if (PX && c) continue;                                       // pixel: one fat pale claw per paw
+        sc.limb(a, add(a, [c * 0.002, -0.014 * big, 0.016 * big]), PX ? 0.009 : 0.0045, PX ? 0.004 : 0.0015, { mat: "claw", bone: bn, k: 0.002, vdil: 0.5 });
       }
       // shaggy feathering behind the forearms
-      for (let i = 0; i < 3; i++) { const b = lerp(F[1], F[0], 0.15 + 0.25 * i); sc.limb(add(b, [s * 0.01, 0, -0.02]), add(b, [s * 0.02, -0.035, -0.055]), 0.016, 0.002, { mat: "fur", bone: "scap" + n, k: 0.006 }); }
+      if (!PX) for (let i = 0; i < 3; i++) { const b = lerp(F[1], F[0], 0.15 + 0.25 * i); sc.limb(add(b, [s * 0.01, 0, -0.02]), add(b, [s * 0.02, -0.035, -0.055]), 0.016, 0.002, { mat: "fur", bone: "scap" + n, k: 0.006 }); }
     }
     // the mane: a thick silver ruff round the throat and chest, and spikes fanning out over the shoulders and neck
     sc.add(S.ell(0.08 * k, 0.1 * k, 0.07 * k), { mat: "mane", p: add(G.chest, P3(0, 0.02, 0.09)), bone: "chest", bones: [["chest", 0.55], ["neck", 0.45]], k: 0.035, ...fk(0.02, 50) });
-    const spike = (base, dir, len, r, mat, bone, bones) => { const t = sc.limb(base, add(base, mul(norm(dir), len)), r, 0.0015, { mat, bone, k: 0.007 }); if (bones) t.bones = bones.map(([b, w]) => [sc.boneIndex.get(b), w]); return t; };
+    const spike = (base, dir, len, r, mat, bone, bones) => { const t = sc.limb(base, add(base, mul(norm(dir), len)), r, PX ? 0.005 : 0.0015, { mat, bone, k: 0.007 }); if (bones) t.bones = bones.map(([b, w]) => [sc.boneIndex.get(b), w]); return t; };
+    if (PX) {
+      // pixel: the ruff as four big points, the collar as one ring of six broad spikes, one cheek tuft a side,
+      // three hackles — silver against the navy coat, no alternating shade specks
+      for (let i = 0; i < 4; i++) { const a = -0.9 + (i / 3) * 1.8; spike(add(G.chest, P3(0.055 * Math.sin(a), -0.04 + 0.03 * Math.cos(a), 0.13)), [Math.sin(a) * 0.5, -1, 0.3], 0.07 * k, 0.03 * k, "mane", "chest"); }
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 5) * Math.PI * 1.3 - Math.PI * 0.65, s = Math.sin(a), c = Math.cos(a);
+        const base = add(lerp(G.neck, G.chest, 0.45), P3(0.058 * s, 0.055 * c, 0));
+        spike(base, [s * 0.9, c * 0.5 + 0.1, -0.8], (0.085 + 0.025 * c) * k, 0.036 * k, "mane", "neck", [["neck", 0.4], ["chest", 0.6]]);
+      }
+      for (const s of [1, -1]) spike(add(hc, [s * 0.042 * Hs, -0.024 * Hs, -0.006]), [s, -0.4, -0.55], 0.045 * Hs, 0.018 * Hs, "mane", "head");
+      for (let i = 0; i < 3; i++) { const u = 0.3 + i * 0.3, p = lerp(G.chest, G.root, u); spike(add(p, [0, 0.08 * k - 0.012 * u, 0]), [0, 0.6, -1], (0.06 - 0.015 * u) * k, 0.028 * k, "furDark", u < 0.75 ? "spine" : "root"); }
+    } else {
     // throat and chest ruff hanging down in points
     for (let i = 0; i < 9; i++) { const a = -1.25 + (i / 8) * 2.5; spike(add(G.chest, P3(0.06 * Math.sin(a), -0.04 + 0.035 * Math.cos(a * 1.2), 0.13)), [Math.sin(a) * 0.6, -1, 0.3], 0.06 * k, 0.018 * k, i % 3 === 1 ? "maneShade" : "mane", "chest"); }
     // collar: a ring of spikes round the neck, sweeping back
@@ -91,6 +107,7 @@ EmberVoxelKit.define("eclipsewolf", (() => {
       const u = i / 5, p = lerp(G.chest, G.root, u), bone = u < 0.35 ? "chest" : u < 0.75 ? "spine" : "root";
       spike(add(p, [0, 0.085 * k - 0.012 * u, 0]), [0, 0.6, -1], (0.055 - 0.02 * u) * k, 0.02 * k, "furDark", bone);
     }
+    }
     // long brush tail carried low, silver underside
     const T0 = G.tail[0], tp = [];
     for (let i = 0; i <= 14; i++) { const u = i / 14; tp.push([0, T0[1] - 0.04 * u - 0.1 * u * u, T0[2] - 0.24 * u + 0.02 * u * u, (0.03 + 0.024 * Math.sin(u * 2.6)) * (1 - 0.7 * u * u) + 0.005]); }
@@ -101,6 +118,18 @@ EmberVoxelKit.define("eclipsewolf", (() => {
     sc.paint(S.ell(0.07 * k, 0.035 * k, 0.17 * k), { mat: "furDark", p: [0, G.spine[1] + 0.06 * k, -0.02], soft: 0.035, amt: 0.8 });
     sc.paint(S.ell(0.05 * k, 0.03 * k, 0.16 * k), { mat: "maneShade", p: [0, G.spine[1] - 0.075 * k, 0], soft: 0.03, amt: 0.7 });
     // the eclipse: black disc, blue corona with a hot inner rim and flares, facing forward over the shoulders
+    if (PX) {
+      // pixel: a thick glowing ring round a black disc, a hot inner rim, four broad flares
+      const Rr = [Math.PI / 2 - 0.25, 0, 0];
+      sc.add(S.cyl(0.01, 0.06 * k, 0.002), { mat: "disc", p: ecl, r: Rr, bone: "eclipse", k: 0.002 });
+      sc.add(S.torus(0.074 * k, 0.02), { mat: "corona", p: ecl, r: Rr, bone: "eclipse", k: 0.002 });
+      sc.add(S.torus(0.062 * k, 0.011), { mat: "coronaHot", p: add(ecl, [0, -0.003, 0.006]), r: Rr, bone: "eclipse", k: 0.002 });
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2 + Math.PI / 4, c = Math.cos(a), s = Math.sin(a);
+        const dir = [c, s * Math.cos(0.25), -s * Math.sin(0.25)], b = add(ecl, mul(dir, 0.085 * k));
+        sc.limb(b, add(b, mul(dir, 0.035 * k)), 0.016, 0.005, { mat: "corona", bone: "eclipse", k: 0.003 });
+      }
+    } else {
     sc.add(S.cyl(0.006, 0.062 * k, 0.002), { mat: "disc", p: ecl, r: [Math.PI / 2 - 0.25, 0, 0], bone: "eclipse", k: 0.002 });
     sc.add(S.torus(0.07 * k, 0.009), { mat: "corona", p: ecl, r: [Math.PI / 2 - 0.25, 0, 0], bone: "eclipse", k: 0.002 });
     sc.add(S.torus(0.063 * k, 0.005), { mat: "coronaHot", p: add(ecl, [0, -0.002, 0.004]), r: [Math.PI / 2 - 0.25, 0, 0], bone: "eclipse", k: 0.002 });
@@ -108,6 +137,7 @@ EmberVoxelKit.define("eclipsewolf", (() => {
       const a = (i / 8) * Math.PI * 2 + 0.2, L = (i % 2 ? 0.02 : 0.035) * k, c = Math.cos(a), s = Math.sin(a);
       const dir = [c, s * Math.cos(0.25), -s * Math.sin(0.25)], b = add(ecl, mul(dir, 0.072 * k));
       sc.limb(b, add(b, mul(dir, L)), 0.007, 0.0015, { mat: "corona", bone: "eclipse", k: 0.002, vdil: 0.5 });
+    }
     }
     sc.faceKind = "eclipsewolf";
     return { sc, kind: "quadruped", props: [], G, Hs };

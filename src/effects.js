@@ -2970,8 +2970,14 @@ const EmberFX = (() => {
       if (result.reentered || presentationVersion !== version) return;
     }
     clearTurnCue();
-    // the figures this action summons start baking now (most are already warm from the hand)
-    if (typeof EmberMiniatures !== "undefined") EmberMiniatures.prewarm(events.filter((e) => e.type === "summon").map((e) => e.cid));
+    // the figures this action summons bake first (most are already warm); then the player's hand and deck and the
+    // units on the board (never the enemy's hidden cards: those bake when they are played, or in idle time)
+    if (typeof EmberMiniatures !== "undefined") {
+      EmberMiniatures.prewarm(events.filter((e) => e.type === "summon").map((e) => e.cid), { urgent: true });
+      const cids = (list) => (Array.isArray(list) ? list.map((c) => c && c.cid).filter(Boolean) : []);
+      EmberMiniatures.prewarm([...cids(s?.p?.board), ...cids(s?.e?.board), ...cids(s?.p?.hand)]);
+      EmberMiniatures.prewarm(cids(s?.p?.deck), { pri: 2 });
+    }
     const snapshot = captureAnchors();
     const plan = EmberCombat.compile(events, before, s, quality.reduced, "blade", {
       anchor: (ref, frame) =>

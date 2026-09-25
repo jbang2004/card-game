@@ -1,4 +1,6 @@
 const { test, expect } = require("@playwright/test");
+// figures are baked in a worker as pixel sprites (0.1–2 s each): these tests wait for real bakes
+test.describe.configure({ timeout: 90000 });
 // Minion miniatures: one stage canvas; figures stand on tokens that have a spec,
 // answer attack / hurt / death cues and never change the rules state.
 test("minion miniatures follow tokens and combat cues", async ({ page }) => {
@@ -17,6 +19,8 @@ test("minion miniatures follow tokens and combat cues", async ({ page }) => {
     return { h: h.uid, d: d.uid, w: w.uid };
   });
   await page.waitForFunction(() => EmberMiniatures.diagnostics().figures === 3);
+  // pixel-sprite bakes take up to ~2 s each in the worker (longer on a loaded machine): wait for them to stand
+  await page.waitForFunction(() => EmberMiniatures.diagnostics().live === 3, null, { timeout: 60000 });
   expect(await page.locator("#miniature-stage").count()).toBe(1);
   expect(await page.evaluate(() => getComputedStyle(document.getElementById("miniature-stage")).pointerEvents)).toBe("none");
   await expect(page.locator(`#minions .minion[data-uid="${ids.h}"]`)).toHaveClass(/miniature-ready/);
@@ -58,7 +62,7 @@ test("a played card becomes its figure without a flat token", async ({ page }) =
     g.events = []; g.emit();
   });
   const spec = await page.evaluate(() => EmberVoxelKit.forCard("reaper").id);
-  await page.waitForFunction((id) => !!EmberVoxelRender.cached(id), spec);       // prewarmed from the hand
+  await page.waitForFunction((id) => !!EmberVoxelRender.cached(id), spec, { timeout: 30000 });   // prewarmed from the hand
   const seen = await page.evaluate(async () => {
     const g = EmberDebug.game, live0 = EmberMiniatures.diagnostics().live, t0 = performance.now();
     Emberfall.act(() => g.dispatch({ type: "play", side: "p", uid: g.s.p.hand[0].uid }));

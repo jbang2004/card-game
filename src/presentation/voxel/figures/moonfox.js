@@ -12,6 +12,7 @@ EmberVoxelKit.define("moonfox", (() => {
   })();
   function fox() {
     const sc = new Sculpture();
+    const PX = K.pixel;                                              // pixel-sprite variant: clean fur, a big bright lantern
     const Hs = 1.2, Ps = 1.1, Ls = 0.95;
     const y = (v) => v * Ls, bodyY = (v) => v - (1 - Ls) * 0.16;
     const G = {
@@ -27,11 +28,11 @@ EmberVoxelKit.define("moonfox", (() => {
       furLight: { c: 0xd0daff, rough: 0.85, cls: CLS.fur, vary: 0.04, fur: 0.8 }, furLeg: { c: 0xa4acea, rough: 0.85, cls: CLS.fur, vary: 0.05, fur: 0.3 },
       furFace: { c: 0xc6cff4, rough: 0.85, cls: CLS.fur, vary: 0.04, fur: 0.25 }, earTip: { c: 0x4a4460, rough: 0.8, cls: CLS.fur, vary: 0.05, fur: 0.3 },
       earIn: { c: 0x9f8fb4, rough: 0.8, cls: CLS.skin }, nose: { c: 0x1c1826, rough: 0.3, cls: CLS.skin }, claw: { c: 0x575070, rough: 0.4, cls: CLS.skin },
-      lantern: { c: 0xbfe0ff, rough: 0.4, emit: 1.1, cls: CLS.glow, vary: 0.05 }, flame: { c: 0xeef8ff, rough: 0.3, emit: 1.8, cls: CLS.glow },
+      lantern: { c: PX ? 0x7cc4ff : 0xbfe0ff, rough: 0.4, emit: 1.1, cls: CLS.glow, vary: 0.05 }, flame: { c: 0xeef8ff, rough: 0.3, emit: 1.8, cls: CLS.glow },
       mark: { c: 0xa9cfff, rough: 0.4, emit: 1.4, cls: CLS.glow },
     });
     const furD = (amp, f = 85) => (x, yy, z) => { const u = z * f * 0.45 + 1.8 * vnoise(x * f * 0.35, yy * f * 0.35, 3.1); const fr = u - Math.floor(u); return amp * (fr * fr) * (0.6 + 0.4 * vnoise(x * f, yy * f, z * f)); };
-    const fk = (a, f) => ({ disp: furD(a, f), dispAmp: a });
+    const fk = (a, f) => (PX ? {} : { disp: furD(a, f), dispAmp: a });
     // slim body
     sc.add(S.ell(0.052, 0.068, 0.085), { mat: "fur", p: add(G.chest, [0, -0.018, 0]), bone: "chest", k: 0.035, ...fk(0.006) });
     sc.add(S.ell(0.042, 0.05, 0.09), { mat: "fur", p: add(G.spine, [0, -0.006, 0]), bone: "spine", k: 0.045, sigma: 0.025, ...fk(0.005) });
@@ -50,10 +51,11 @@ EmberVoxelKit.define("moonfox", (() => {
     for (const s of [1, -1]) sc.add(S.ell(0.011 * Hs, 0.007 * Hs, 0.008 * Hs), { mat: "furFace", op: "sub", p: add(hc, [s * 0.019 * Hs, 0.004 * Hs, 0.039 * Hs]), bone: "head", k: 0.007 });
     // tall ears, dark tips, lilac hollow
     for (const s of [1, -1]) {
-      const n = sideName(s), base = add(hc, [s * 0.026 * Hs, 0.024 * Hs, -0.008]), tip = add(base, [s * 0.022 * Hs, 0.078 * Hs, -0.008]);
-      sc.limb(base, tip, 0.024 * Hs, 0.002, { mat: "furFace", bone: "ear" + n, k: 0.01, sz: 0.4 });
+      const eK = PX ? 1.15 : 1;
+      const n = sideName(s), base = add(hc, [s * 0.026 * Hs, 0.024 * Hs, -0.008]), tip = add(base, [s * 0.022 * Hs * eK, 0.078 * Hs * eK, -0.008]);
+      sc.limb(base, tip, 0.024 * Hs * eK, PX ? 0.005 : 0.002, { mat: "furFace", bone: "ear" + n, k: 0.01, sz: 0.4 });
       sc.add(S.ell(0.012 * Hs, 0.032 * Hs, 0.004), { mat: "earIn", op: "sub", p: add(lerp(base, tip, 0.36), [0, 0, 0.01]), R: rotY2(...sub(tip, base)), bone: "ear" + n, k: 0.004, cut: "earIn" });
-      sc.paint(S.sphere(0.022 * Hs), { mat: "earTip", p: add(tip, [0, 0.004, 0]), soft: 0.004 });
+      sc.paint(S.sphere((PX ? 0.028 : 0.022) * Hs), { mat: "earTip", p: add(tip, [0, 0.004, 0]), soft: 0.004 });
     }
     // slender legs, dainty paws
     for (const s of [1, -1]) {
@@ -66,20 +68,20 @@ EmberVoxelKit.define("moonfox", (() => {
       sc.limb(B[1], B[2], 0.018, 0.011, { mat: "furLeg", bone: "stif" + n, k: 0.012 });
       sc.limb(B[2], B[3], 0.011, 0.012, { mat: "furLeg", bone: "hock" + n, k: 0.008 });
       sc.add(S.ell(0.016 * Ps, 0.012 * Ps, 0.022 * Ps), { mat: "furLight", p: add(B[3], [0, -0.004, 0.01]), bone: "bpaw" + n, k: 0.008 });
-      for (const [P4, bn] of [[F[3], "fpaw" + n], [B[3], "bpaw" + n]]) for (let c = -1; c <= 1; c += 2) sc.add(S.ell(0.0028, 0.0028, 0.004), { mat: "claw", p: add(P4, [c * 0.005 * Ps, -0.007, 0.028 * Ps]), bone: bn, k: 0.002, cs: 0.05 });
+      if (!PX) for (const [P4, bn] of [[F[3], "fpaw" + n], [B[3], "bpaw" + n]]) for (let c = -1; c <= 1; c += 2) sc.add(S.ell(0.0028, 0.0028, 0.004), { mat: "claw", p: add(P4, [c * 0.005 * Ps, -0.007, 0.028 * Ps]), bone: bn, k: 0.002, cs: 0.05 });
     }
     // the great tail: skinned along its arc (root → tail1 → tail2 → tail3), a lavender shade on its underside,
     // the tip a pale-blue lantern flame
     const arcU = (x, yy, z) => { let best = 1e9, bi = 0; for (let i = 0; i < TAIL.length; i++) { const d = (x - TAIL[i][0]) ** 2 + (yy - TAIL[i][1]) ** 2 + (z - TAIL[i][2]) ** 2; if (d < best) { best = d; bi = i; } } return bi / (TAIL.length - 1); };
     const tailW = (x, yy, z) => { const u = arcU(x, yy, z); return [["root", 1 - sstep(0, 0.12, u)], ["tail1", Math.max(0, 1 - Math.abs(u - 0.15) * 3.2)], ["tail2", Math.max(0, 1 - Math.abs(u - 0.45) * 3.2)], ["tail3", sstep(0.5, 0.8, u)]]; };
-    const soft = (amp, f) => ({ disp: (x, yy, z) => amp * (0.5 + 0.5 * vnoise(x * f, yy * f * 0.5, z * f)), dispAmp: amp });
+    const soft = (amp, f) => PX ? {} : ({ disp: (x, yy, z) => amp * (0.5 + 0.5 * vnoise(x * f, yy * f * 0.5, z * f)), dispAmp: amp });
     const tail = sc.add(S.chain(TAIL, 0.85), { mat: "fur", p: [0, 0, 0], bone: "tail1", k: 0.02, ...soft(0.008, 70) });
     tail.wfn = tailW;
     sc.paint(S.custom((x, yy, z) => { let best = 1e9; for (const p of TAIL) best = Math.min(best, Math.hypot(x - p[0], yy - p[1] + p[3] * 0.9, z - p[2])); return best - 0.03; }, [-1, -1, -1, 1, 1, 1]), { mat: "furShade", soft: 0.01, amt: 0.55, only: ["fur"] });
     const tipC = TAIL[TAIL.length - 1];
-    sc.paint(S.sphere(0.07), { mat: "lantern", p: tipC.slice(0, 3), soft: 0.02 });
-    sc.paint(S.sphere(0.03), { mat: "flame", p: add(tipC.slice(0, 3), [0, 0.01, 0.01]), soft: 0.012 });
-    const fl = sc.add(S.chain(spline([add(tipC.slice(0, 3), [0, 0.01, 0]), add(tipC.slice(0, 3), [0, 0.04, 0.03]), add(tipC.slice(0, 3), [0, 0.075, 0.02])], 8).map((p, j) => [...p, mix(0.018, 0.002, j / 8)])), { mat: "flame", p: [0, 0, 0], bone: "tail3", k: 0.01 });
+    sc.paint(S.sphere(PX ? 0.085 : 0.07), { mat: "lantern", p: tipC.slice(0, 3), soft: PX ? 0.004 : 0.02 });
+    sc.paint(S.sphere(PX ? 0.04 : 0.03), { mat: "flame", p: add(tipC.slice(0, 3), [0, 0.01, 0.01]), soft: PX ? 0.004 : 0.012 });
+    const fl = sc.add(S.chain(spline([add(tipC.slice(0, 3), [0, 0.01, 0]), add(tipC.slice(0, 3), [0, 0.04, 0.03]), add(tipC.slice(0, 3), [0, 0.075, 0.02])].map((q) => PX ? add(tipC.slice(0, 3), mul(sub(q, tipC.slice(0, 3)), 1.3)) : q), 8).map((p, j) => [...p, PX ? mix(0.028, 0.006, j / 8) : mix(0.018, 0.002, j / 8)])), { mat: "flame", p: [0, 0, 0], bone: "tail3", k: 0.01 });
     fl.wfn = () => [["tail3", 1]];
     // markings: soft lavender shading on the back and flanks, white underside
     sc.paint(S.ell(0.045, 0.028, 0.13), { mat: "furShade", p: [0, bodyY(0.3), -0.02], soft: 0.035, amt: 0.4 });

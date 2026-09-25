@@ -26,7 +26,7 @@ EmberVoxelKit.define("moonguard", (() => {
   }
 
   function build(fam) {
-    const P = FAM[fam], sc = new Sculpture();
+    const P = FAM[fam], sc = new Sculpture(), PX = K.pixel;   // PX: pixel-sprite variant (few big hair locks, clean shield)
     humanoidBones(sc, P);
     const capeTop = P.shY - 0.01, capeBot = 0.08, capeZ = -0.115;
     K.capeBones(sc, P, capeTop, capeBot, capeZ);
@@ -34,7 +34,21 @@ EmberVoxelKit.define("moonguard", (() => {
     // shield grip at rest, in front of the left hip and clear of the body, on cube boundaries (symmetric emblem)
     const G = [10 * V, 34 * V, 13 * V];
     sc.bone("shield", "chest", ...G);
-    mats(sc, {
+    mats(sc, PX ? {
+      // matte and clearly stepped: steel plate, a dark joint tone, a bright trim, snow-white hair, deep blue cloth
+      skin: { c: 0x3a4152, rough: 0.6, cls: CLS.metal }, lips: { c: 0x3a4152, rough: 0.6, cls: CLS.metal },
+      plate: { c: 0x98a7c2, rough: 0.5, metal: 0.15, cls: CLS.metal },
+      plateM: { c: 0x8593b0, rough: 0.5, metal: 0.15, cls: CLS.metal },
+      plateD: { c: 0x535d76, rough: 0.55, metal: 0.15, cls: CLS.metal },
+      plateL: { c: 0xd2dcf0, rough: 0.45, metal: 0.15, cls: CLS.metal },
+      visor: { c: 0x8ec8ff, rough: 0.4, emit: 1.7, cls: CLS.glow },
+      hair: { c: 0xf4f6fb, rough: 0.7, cls: CLS.hair },
+      blue: { c: 0x2f4fb0, rough: 0.85, cls: CLS.cloth }, blueD: { c: 0x1c2f74, rough: 0.9, cls: CLS.cloth },
+      trim: { c: 0xd2dcf0, rough: 0.6, cls: CLS.cloth },
+      leather: { c: 0x3b3346, rough: 0.6, cls: CLS.leather },
+      field: { c: 0x2a44a2, rough: 0.7, metal: 0, cls: CLS.cloth },
+      moon: { c: 0xe4eeff, rough: 0.3, emit: 0.9, cls: CLS.glow },
+    } : {
       skin: { c: 0x3a4152, rough: 0.55, metal: 0.4, cls: CLS.metal, vary: 0.04 }, lips: { c: 0x3a4152, rough: 0.55, cls: CLS.metal },
       plate: { c: 0xa3b1c8, rough: 0.28, metal: 0.6, cls: CLS.metal, vary: 0.03 },
       plateM: { c: 0x8f9db6, rough: 0.3, metal: 0.6, cls: CLS.metal },
@@ -76,7 +90,7 @@ EmberVoxelKit.define("moonguard", (() => {
     sc.add(S.ell(0.013, 0.078, 0.02), { mat: "plateL", p: [0, P.chest[0] - 0.02, 0.078], bone: "chest", k: 0.004 });
     sc.limb([0, 0.588, -0.006], [0, 0.525, -0.006], 0.102, 0.11, { mat: "plate", bone: "spine", k: 0.003, sz: 0.8 });
     sc.limb([0, 0.53, -0.006], [0, 0.458, -0.006], 0.11, 0.12, { mat: "plate", bone: "root", k: 0.003, sz: 0.8 });
-    for (const j of [36, 38]) sc.paint(S.box(0.2, 0.004, 0.2), { mat: "plateD", p: [0, row(j), 0], soft: 0.001, only: ["plate"] });
+    if (!PX) for (const j of [36, 38]) sc.paint(S.box(0.2, 0.004, 0.2), { mat: "plateD", p: [0, row(j), 0], soft: 0.001, only: ["plate"] });
     wr(K.RG.box(-0.16, 0.16, row(42) - 0.006, row(43) + 0.006), "leather", 0.0055);
     sc.add(S.cyl(0.005, 0.024, 0.002), { mat: "plateL", p: [0, (row(42) + row(43)) / 2, 0.09], r: [Math.PI / 2, 0, 0], bone: "root", k: 0.001 });
 
@@ -94,23 +108,24 @@ EmberVoxelKit.define("moonguard", (() => {
     };
     sc.add(S.custom(beak, pad([-0.09, 0.79, 0, 0.09, 0.95, 0.14])), { mat: "plate", p: [0, 0, 0], bone: "head", k: 0.002 });
     const eyeRow = row(70);
-    const slit = (x, y, z) => Math.max(Math.abs(x) - 0.06, Math.abs(y - eyeRow) - 0.0058, 0.02 - z);
+    const slitH = PX ? 0.009 : 0.0058;   // a taller glowing slit on the sprite
+    const slit = (x, y, z) => Math.max(Math.abs(x) - 0.06, Math.abs(y - eyeRow) - slitH, 0.02 - z);
     sc.add(S.custom((x, y, z) => Math.max(slit(x, y, z), -(helmF(x, y, z) + 0.012)), [-0.07, 0.84, 0, 0.07, 0.9, 0.14]), { op: "sub", mat: "plate", p: [0, 0, 0], bone: "head", k: 0.001 });
-    sc.paint(S.custom((x, y, z) => (z < 0.02 ? 1 : Math.max(Math.abs(x) - 0.06, Math.abs(y - eyeRow) - 0.0058)), [-0.07, 0.84, 0, 0.07, 0.9, 0.14]), { mat: "visor", soft: 0.001 });
+    sc.paint(S.custom((x, y, z) => (z < 0.02 ? 1 : Math.max(Math.abs(x) - 0.06, Math.abs(y - eyeRow) - slitH)), [-0.07, 0.84, 0, 0.07, 0.9, 0.14]), { mat: "visor", soft: 0.001 });
     // breaths: a column of short dark slots under the slit on each cheek
-    sc.paint(S.custom((x, y, z) => (z < 0.03 || y > 0.855 || y < 0.8 ? 1 : Math.max(Math.abs(Math.abs(x) - 0.04) - 0.0058, Math.abs(((y - 0.8) % 0.025) - 0.0125) - 0.006)), [-0.1, 0.78, 0, 0.1, 0.87, 0.14]),
+    if (!PX) sc.paint(S.custom((x, y, z) => (z < 0.03 || y > 0.855 || y < 0.8 ? 1 : Math.max(Math.abs(Math.abs(x) - 0.04) - 0.0058, Math.abs(((y - 0.8) % 0.025) - 0.0125) - 0.006)), [-0.1, 0.78, 0, 0.1, 0.87, 0.14]),
       { mat: "plateD", soft: 0.001, only: ["plate"] });
     // brow band and a crest ridge over the crown
-    sc.paint(S.custom((x, y, z) => Math.max(Math.abs(y - row(72)) - 0.0058, -z - 0.03), [-0.1, 0.88, -0.05, 0.1, 0.92, 0.12]), { mat: "plateL", soft: 0.001, only: ["plate"] });
+    if (!PX) sc.paint(S.custom((x, y, z) => Math.max(Math.abs(y - row(72)) - 0.0058, -z - 0.03), [-0.1, 0.88, -0.05, 0.1, 0.92, 0.12]), { mat: "plateL", soft: 0.001, only: ["plate"] });
     const comb = [];
     for (let i = 0; i <= 16; i++) { const a = (i / 16) * Math.PI * 0.85 + 0.2, yy = 0.9 + (yTop - 0.9) * Math.sin(a); comb.push([0, yy + 0.004, hz + Math.cos(a) * hrz * Math.sqrt(Math.max(0, 1 - ((yy - 0.9) / (yTop - 0.9)) ** 2)) * 1.02, 0.008]); }
-    sc.add(S.chain(comb), { mat: "plateL", p: [0, 0, 0], bone: "head", k: 0.002, vdil: 0.5 });
+    if (!PX) sc.add(S.chain(comb), { mat: "plateL", p: [0, 0, 0], bone: "head", k: 0.002, vdil: 0.5 });
     // horns: from the temples of the helm, rising tall and sweeping back, thin at the tips
     for (const s of [1, -1]) {
       const pts = [];
       for (let i = 0; i <= 14; i++) {
         const u = i / 14;
-        pts.push([s * (0.062 + 0.02 * Math.sin(u * 2.2)), 0.95 + 0.16 * u + 0.02 * Math.sin(u * 3), hz + 0.03 - 0.075 * u * u, mix(0.017, 0.003, Math.pow(u, 0.9))]);
+        pts.push([s * (0.062 + 0.02 * Math.sin(u * 2.2)), 0.95 + 0.16 * u + 0.02 * Math.sin(u * 3), hz + 0.03 - 0.075 * u * u, PX ? mix(0.024, 0.01, Math.pow(u, 1.3)) : mix(0.017, 0.003, Math.pow(u, 0.9))]);
       }
       sc.add(S.chain(pts), { mat: "plateL", p: [0, 0, 0], bone: "head", k: 0.004, vdil: 0.55 });
     }
@@ -118,14 +133,17 @@ EmberVoxelKit.define("moonguard", (() => {
     // ---- hair: a white mane from under the helm's rim down the back, streaming a little to the right
     sc.part = "hair";
     const C = [0, 0.9, hz], R = [hrx, 0.1, hrz];
-    for (let i = 0; i < 9; i++) {
-      const u = (i / 8) * 2 - 1, az = Math.PI + u * 1.35;
+    // pixel: four big locks instead of nine wavy strands
+    const NH = PX ? 5 : 9;
+    for (let i = 0; i < NH; i++) {
+      const u = (i / (NH - 1)) * 2 - 1, az = Math.PI + u * (PX ? 1.0 : 1.35);
       const root = onEll(C, R, az, -0.5, 0.95);
       const out = onEll(C, R, az, -0.9, 1.25);
       const len = 0.24 + 0.04 * (1 - Math.abs(u)) + 0.02 * Math.sin(i * 2.1);
       const tip = [out[0] * 1.2 - 0.04 - 0.02 * u, P.neck[0] - len, -0.19 - 0.015 * (1 - Math.abs(u))];
       const mid = lerp(out, tip, 0.4); mid[2] -= 0.03;
-      const sp = strand(sc, [root, out, mid, tip], 0.018 - 0.004 * Math.abs(u), 0.004, { wave: 0.008, wd: [1, 0, 0], waves: 2, phase: i * 1.3, k: 0.01, wg: 5, swell: 0.2, bone: "hairB1", grooves: 0.0015 });
+      const sp = PX ? strand(sc, [root, out, mid, tip], 0.042 - 0.008 * Math.abs(u), 0.016, { k: 0.012, taper: 1.2, bone: "hairB1", grooves: 0 })
+        : strand(sc, [root, out, mid, tip], 0.018 - 0.004 * Math.abs(u), 0.004, { wave: 0.008, wd: [1, 0, 0], waves: 2, phase: i * 1.3, k: 0.01, wg: 5, swell: 0.2, bone: "hairB1", grooves: 0.0015 });
       sp.wfn = (x, y) => { const t = sstep(0.84, P.neck[0] - 0.24, y); return [["head", 1 - t], ["hairB1", 2 * t * (1 - t)], ["hairB2", t * t]]; };
     }
 
@@ -143,9 +161,9 @@ EmberVoxelKit.define("moonguard", (() => {
       { mat: "trim", soft: 0.001, only: ["blue"] });
     const ch = capeTop - capeBot, capeZc = (x, y) => {
       const u = clamp((capeTop - y) / ch, 0, 1), w = mix(0.08, 0.25, Math.pow(u, 0.75));
-      return { u, w, zc: mix(capeZ, capeZ - 0.11, u) - 0.02 * Math.sin((x / w) * 5 * 1.57 + 0.5) * (0.25 + u) + (0.55 - 0.25 * u) * (x * x) / w };
+      return { u, w, zc: mix(capeZ, capeZ - 0.11, u) - (PX ? 0 : 0.02 * Math.sin((x / w) * 5 * 1.57 + 0.5) * (0.25 + u)) + (0.55 - 0.25 * u) * (x * x) / w };
     };
-    const capeF = (x, y, z) => { const c = capeZc(x, y); return smax(Math.abs(z - c.zc) - 0.0065, Math.max(Math.abs(x) - c.w, y - capeTop, capeBot + 0.012 * (1 + Math.sin(x * 30 + 0.6)) - y), 0.006); };
+    const capeF = (x, y, z) => { const c = capeZc(x, y); return smax(Math.abs(z - c.zc) - 0.0065, Math.max(Math.abs(x) - c.w, y - capeTop, capeBot + (PX ? 0.006 : 0.012 * (1 + Math.sin(x * 30 + 0.6))) - y), 0.006); };
     const cp = sc.add(S.custom(capeF, [-0.33, capeBot, -0.3, 0.33, capeTop, 0.08]), { mat: "blue", p: [0, 0, 0], bone: "chest", k: 0.004, cs: 0.03, wg: 2 });
     cp.wfn = (x, y) => {
       const u = clamp((capeTop - y) / ch, 0, 1), sl = sstep(-0.05, 0.05, x);
@@ -159,25 +177,28 @@ EmberVoxelKit.define("moonguard", (() => {
     // ---- tower shield on its own bone (local: x across, y up, z out of the face), grip at G: a tall heater with a flat
     // top, one cube thick, the rim one cube proud; blue field, silver rim, a glowing crescent round a four-point star
     // and a silver spine down the middle to the tip
-    const W = 0.15, yT = 0.26, yS = -0.08, yB = -0.46, th = V / 2, zf = 4.5 * V, bul = 0.018, rimW = 0.018;
+    const W = 0.15, yT = 0.26, yS = -0.08, yB = -0.46, th = PX ? 0.016 : V / 2, zf = 4.5 * V, bul = PX ? 0.005 : 0.018, rimW = PX ? 0.024 : 0.018;
     const hw = (y) => (y >= yS ? W : W * Math.sqrt(Math.max(0, 1 - Math.pow((yS - y) / (yS - yB), 1.7))));
     const outl = (x, y) => Math.max(Math.abs(x) - hw(y), y - yT, yB - y, (Math.abs(x) + y - (W + yT - 0.03)) * Math.SQRT1_2);
     const zc = (x) => zf - bul * (x / W) ** 2;
     const SB = pad([-W, yB, zf - bul - th, W, yT, zf + 2 * th]);
-    sc.add(S.custom((x, y, z) => { const o = outl(x, y), rim = o > -rimW ? V / 2 : 0; return Math.max(o, Math.abs(z - zc(x) - rim) - th - rim); }, SB), { mat: "field", p: G, bone: "shield", k: 0.001, vdil: 0.3 });
+    if (PX) sc.add(S.custom((x, y, z) => { const o = outl(x, y), rim = o > -rimW ? 0.006 : 0; return Math.max(o, Math.abs(z - zc(x)) - th - rim); }, pad(SB, 0.01)), { mat: "field", p: G, bone: "shield", k: 0.001 });   // rim proud on both faces
+    else sc.add(S.custom((x, y, z) => { const o = outl(x, y), rim = o > -rimW ? V / 2 : 0; return Math.max(o, Math.abs(z - zc(x) - rim) - th - rim); }, SB), { mat: "field", p: G, bone: "shield", k: 0.001, vdil: 0.3 });
     const cy = 0.03;
     const emblem = (x, y) => {
       const Y = y - cy, X = Math.abs(x);
       // crescent, horns up: a disc minus a disc shifted up
       const cres = Math.max(Math.hypot(X, Y) - 0.118, -(Math.hypot(X, Y - 0.04) - 0.104));
       // four-point star in the crescent's cup
-      const sy = Y - 0.035, star = Math.min(X / 0.014 + Math.abs(sy) / 0.075, X / 0.055 + Math.abs(sy) / 0.014) * 0.014 - 0.014;
+      const sw = PX ? 0.022 : 0.014, sy = Y - 0.035, star = Math.min(X / sw + Math.abs(sy) / 0.075, X / 0.055 + Math.abs(sy) / sw) * sw - sw;
       return Math.min(cres, star);
     };
     const spine = (x, y) => Math.max(Math.abs(x) - V, y - (cy - 0.11), yB + 0.03 - y);
     const far = (x, y, z) => Math.abs(x) > W + 0.02 || y < yB - 0.02 || y > yT + 0.03 || Math.abs(z - zf) > 0.06;
-    sc.paint(S.custom((x, y, z) => { if (far(x, y, z)) return 1; const o = outl(x, y); return Math.min(Math.max(o, -(o + rimW)), Math.max(spine(x, y), zc(x) - V - z)); }, SB), { mat: "plateL", p: G, soft: 0.001, only: ["field"] });
-    sc.paint(S.custom((x, y, z) => (far(x, y, z) ? 1 : Math.max(emblem(x, y), zc(x) - V - z, outl(x, y) + rimW)), SB), { mat: "moon", p: G, soft: 0.001, only: ["field"] });
+    sc.paint(S.custom((x, y, z) => { if (far(x, y, z)) return 1; const o = outl(x, y); return PX ? Math.max(o, -(o + rimW)) : Math.min(Math.max(o, -(o + rimW)), Math.max(spine(x, y), zc(x) - V - z)); }, SB), { mat: "plateL", p: G, soft: 0.001, only: ["field"] });
+    // pixel: the emblem is raised relief, not paint — a flat painted plate lets the mesh simplifier smear its colour
+    if (PX) sc.add(S.custom((x, y, z) => (far(x, y, z) ? 1 : Math.max(emblem(x, y), Math.abs(z - zc(x) - th - 0.004) - 0.006)), SB), { mat: "moon", p: G, bone: "shield", k: 0.001 });
+    else sc.paint(S.custom((x, y, z) => (far(x, y, z) ? 1 : Math.max(emblem(x, y), zc(x) - V - z, outl(x, y) + rimW)), SB), { mat: "moon", p: G, soft: 0.001, only: ["field"] });
     for (let i = n0; i < sc.prims.length; i++) sc.prims[i].cs = Math.min(sc.prims[i].cs, 0.025);
     return { sc, P, kind: "humanoid", props: [] };
   }

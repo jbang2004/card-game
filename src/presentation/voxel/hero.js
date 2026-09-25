@@ -12,7 +12,7 @@ const EmberHeroFigure = (() => {
   const HEAD = 0.9, FLOOR = 0.05;
   let floor = FLOOR;                // raised above the name when the plate engraves it inside the window (phones)
   const HOT = [1.55, 1.53, 1.5], GOLD = [1.0, 0.45, 0.1];
-  let host = null, canvas = null, renderer = null, scene = null, camera = null, fig = null, figId = null, failed = false, building = false;
+  let host = null, canvas = null, renderer = null, pass = null, scene = null, camera = null, fig = null, figId = null, failed = false, building = false;
   let clip = "idle", t = 0, T = 0, raf = 0, last = 0, glow = -1, cheered = false;
   const stats = { status: "idle", error: null, cues: [] };
   const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches || document.body.classList.contains("reduced-motion");
@@ -49,10 +49,11 @@ const EmberHeroFigure = (() => {
         canvas = document.createElement("canvas");
         canvas.className = "hero-figure-canvas";
         host.appendChild(canvas);
-        renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false });     // a pixel sprite, like the board's
         renderer.setClearColor(0, 0);
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.NoToneMapping;
+        pass = EmberPixelPass.create(renderer);
         canvas.addEventListener("webglcontextlost", (e) => { e.preventDefault(); fail("WebGL context lost"); });
         scene = new THREE.Scene();
         camera = new THREE.PerspectiveCamera(20, 1, 0.1, 50);
@@ -103,13 +104,15 @@ const EmberHeroFigure = (() => {
     if (!renderer || !fig || stats.status !== "ready" || host.hidden || document.hidden) return;
     const dt = Math.min(0.05, (now - (last || now)) / 1000); last = now; T += dt; t += dt;
     place();
-    const w = host.clientWidth, h = host.clientHeight, dpr = Math.min(devicePixelRatio || 1, 2);
-    if (w && h && (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr))) {
-      renderer.setPixelRatio(dpr); renderer.setSize(w, h, false); R.setPixelRatio(fig, dpr);
+    const w = host.clientWidth, h = host.clientHeight, px = EmberPixelPass.PIX;
+    if (w && h && (canvas.width !== Math.round(w * px) || canvas.height !== Math.round(h * px))) {
+      renderer.setPixelRatio(px); renderer.setSize(w, h, false);
       camera.aspect = w / h;
       // the figure stands on the window's floor and its head stays inside the arch
       const g = fig.mesh.geometry; if (!g.boundingBox) g.computeBoundingBox();
-      const H = g.boundingBox.max.y * fig.root.scale.y, span = H / (HEAD - floor), cy = span / 2 - floor * span;
+      // the sprite's enlarged head rises above the bake's bounds (about a fifth of the head's growth)
+      const grow = fig.J.head ? 1 + (fig.J.head.scale.x - 1) * 0.2 : 1;
+      const H = g.boundingBox.max.y * fig.root.scale.y * grow, span = H / (HEAD - floor), cy = span / 2 - floor * span;
       const d = span / (2 * Math.tan((camera.fov * Math.PI) / 360));
       camera.position.set(0, cy, d); camera.lookAt(0, cy, 0); camera.updateProjectionMatrix();
     }
@@ -119,7 +122,7 @@ const EmberHeroFigure = (() => {
       if (glow === 0) R.setHit(fig, ...HOT); else R.setHit(fig, GOLD[0] * u * u, GOLD[1] * u * u, GOLD[2] * u * u);
       glow += dt * 60; if (glow > 12) { glow = -1; R.setHit(fig, 0, 0, 0); }
     }
-    renderer.render(scene, camera);
+    pass.render(scene, camera);
     wake();
   }
   function wake() { if (!raf && renderer && fig) raf = requestAnimationFrame(frame); }

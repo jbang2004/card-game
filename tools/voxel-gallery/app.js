@@ -1,4 +1,4 @@
-/* 体素角色馆 — every battlefield voxel figure in one room, driven by the battlefield's own behaviour
+/* 像素角色馆 — every battlefield figure (Q-version pixel sprites) in one room, driven by the battlefield's own behaviour
  * (EmberVoxelArena: bake → assemble, idle, the melee dash on the director's timeline, the contact burst, victim glow
  * and hitstop, the shatter death beat). Three views: 全员 (all figures, click one), 单人 (one figure, orbit, every
  * action), 对战 (two figures, normal / heavy / lethal hits with sound). The timings below mirror
@@ -60,28 +60,33 @@
   const groupOf = (id) => GROUPS.find((g) => g[1].includes(id))?.[0] || "";
 
   // ------------------------------------------------------------------ renderer, room
+  // two layers, as on the battlefield: the room (sky, floor, shadows) drawn smooth on a canvas behind, the figures
+  // drawn as pixel sprites on a transparent canvas in front (EmberPixelPass: low resolution, outlined)
   const canvas = $("#stage");
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.NoToneMapping;               // figures grade themselves
+  const roomCanvas = document.createElement("canvas"); roomCanvas.id = "room"; roomCanvas.setAttribute("aria-hidden", "true"); canvas.before(roomCanvas);
+  const roomRenderer = new THREE.WebGLRenderer({ canvas: roomCanvas, antialias: true, powerPreference: "high-performance" });
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: "high-performance" });
+  for (const r of [roomRenderer, renderer]) { r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.NoToneMapping; }
+  renderer.setClearColor(0, 0);
+  const pass = EmberPixelPass.create(renderer);
   const dpr = () => Math.min(devicePixelRatio || 1, 2);
-  renderer.setPixelRatio(dpr());
-  const scene = new THREE.Scene();
+  roomRenderer.setPixelRatio(dpr()); renderer.setPixelRatio(EmberPixelPass.PIX);
+  const scene = new THREE.Scene(), room = new THREE.Scene();
   const quad = (fs, extra = {}) => new THREE.ShaderMaterial({ vertexShader: "varying vec3 p; varying vec2 u; void main(){ p = position; u = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }", fragmentShader: fs, depthWrite: false, ...extra });
   {
     // dusk: a warm glow low behind the stage, mauve slate above (display-referred, like the figures)
     const sky = new THREE.Mesh(new THREE.SphereGeometry(60, 32, 16), quad("varying vec3 p; void main(){ vec3 d = normalize(p); float y = d.y; vec3 lo = vec3(0.075,0.068,0.07), hz = vec3(0.22,0.14,0.11), hi = vec3(0.045,0.05,0.075); vec3 c = mix(lo, hz, smoothstep(-0.1, 0.0, y)); c = mix(c, hi, smoothstep(0.0, 0.32, y)); float g = exp(-pow(atan(d.x, -d.z) * 0.9, 2.0)) * exp(-abs(y) * 8.0); c += vec3(0.5, 0.25, 0.11) * g * 0.3; gl_FragColor = vec4(c, 1.); }", { side: THREE.BackSide }));
-    scene.add(sky);
+    room.add(sky);
     // the board's dark stone, worn lighter where the figures stand, fading into the dusk
     const floor = new THREE.Mesh(new THREE.CircleGeometry(16, 120), quad("varying vec2 u; float h(vec2 p){ return fract(sin(dot(p, vec2(12.99, 78.23))) * 43758.5); } float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f); return mix(mix(h(i), h(i+vec2(1,0)), f.x), mix(h(i+vec2(0,1)), h(i+vec2(1,1)), f.x), f.y); } void main(){ float d = length(u); float s = n(u * 2.6) * 0.55 + n(u * 9.0) * 0.3 + n(u * 31.0) * 0.15; vec2 g = abs(fract(u * 1.25) - 0.5); float seam = smoothstep(0.47, 0.5, max(g.x, g.y)); vec3 c = mix(vec3(0.12,0.11,0.115), vec3(0.23,0.21,0.2), s); c *= 1.0 - 0.28 * seam; c *= 1.2 - 0.95 * smoothstep(1.2, 8.5, d); gl_FragColor = vec4(c, 1.); }"));
     floor.rotation.x = -Math.PI / 2;
-    scene.add(floor);
+    room.add(floor);
   }
   const shadowMat = quad("varying vec2 u; void main(){ float d = length(u); gl_FragColor = vec4(0.,0.,0., 0.55 * (1. - smoothstep(0.1, 1., d))); }", { transparent: true });
   const shadows = new Map();
   function shadowFor(u) {
     let s = shadows.get(u.k);
-    if (!s) { s = new THREE.Mesh(new THREE.CircleGeometry(1, 32), shadowMat); s.rotation.x = -Math.PI / 2; scene.add(s); shadows.set(u.k, s); }
+    if (!s) { s = new THREE.Mesh(new THREE.CircleGeometry(1, 32), shadowMat); s.rotation.x = -Math.PI / 2; room.add(s); shadows.set(u.k, s); }
     const k = u.fig.root.scale.x, wide = u.fig.kind !== "humanoid";
     s.scale.set(0.24 * k * (wide ? 1.35 : 1), 0.24 * k * (wide ? 1.6 : 1), 1);
     return s;
@@ -286,19 +291,19 @@
   }
   function statsOf(id) {
     const b = R.cached(id);
-    return b ? { vox: b.main.stats.voxels + b.props.reduce((n, p) => n + p.bake.stats.voxels, 0), tris: b.main.stats.tris + b.props.reduce((n, p) => n + p.bake.stats.tris, 0), ms: Math.round(b.ms) } : null;
+    return b ? { tris: b.main.stats.tris + b.props.reduce((n, p) => n + p.bake.stats.tris, 0), ms: Math.round(b.ms) } : null;
   }
   function card(id, role) {
     const spec = KIT.get(id), m = spec?.moves?.attack || {}, st = statsOf(id);
     const style = STYLE[m.style || (m.ranged ? "arrow" : "slash")] || "近战";
     return `<div class="card glass">${role ? `<div class="role">${role}</div>` : ""}<div class="name">${INFO[id]?.name || id}</div>
       <div class="meta"><span>${groupOf(id)}</span><span>${m.ranged ? "远程" : "近战"} · ${style}</span><span class="mono">${INFO[id]?.card || id}</span></div>
-      ${st ? `<dl class="nums"><div><dt>方块</dt><dd>${st.vox.toLocaleString("en-US")}</dd></div><div><dt>三角面</dt><dd>${st.tris.toLocaleString("en-US")}</dd></div><div><dt>烘焙</dt><dd>${st.ms} ms</dd></div></dl>` : `<div class="baking">正在烘焙体素…</div>`}</div>`;
+      ${st ? `<dl class="nums"><div><dt>三角面</dt><dd>${st.tris.toLocaleString("en-US")}</dd></div><div><dt>烘焙</dt><dd>${st.ms} ms</dd></div></dl>` : `<div class="baking">正在生成像素角色…</div>`}</div>`;
   }
   function renderInfo() {
     if (mode === "solo") info.innerHTML = card(sel);
     else if (mode === "duel") info.innerHTML = card(duel.a, "A · 我方") + card(duel.b, "B · 敌方");
-    else info.innerHTML = `<div class="card glass"><div class="role">全员</div><div class="name">${ALL.length} 个体素角色</div><div class="meta"><span>同一套方块尺寸</span><span>同一套光与调色</span><span>战场同款打击感</span></div></div>`;
+    else info.innerHTML = `<div class="card glass"><div class="role">全员</div><div class="name">${ALL.length} 个像素角色</div><div class="meta"><span>同一套像素尺寸</span><span>同一套三阶光影</span><span>战场同款打击感</span></div></div>`;
   }
   roster.addEventListener("click", (e) => { const b = e.target.closest("[data-id]"); if (b) choose(b.dataset.id, mode === "all"); });
   dock.addEventListener("click", (e) => {
@@ -330,8 +335,9 @@
     requestAnimationFrame(frame);
     const dt = Math.min(0.05, (now - (last || now)) / 1000); last = now;
     const w = canvas.clientWidth, h = canvas.clientHeight;
-    if (canvas.width !== Math.round(w * dpr()) || canvas.height !== Math.round(h * dpr())) {
-      renderer.setPixelRatio(dpr()); renderer.setSize(w, h, false); arena.setPixelRatio(dpr());
+    if (roomCanvas.width !== Math.round(w * dpr()) || roomCanvas.height !== Math.round(h * dpr())) {
+      roomRenderer.setPixelRatio(dpr()); roomRenderer.setSize(w, h, false);
+      renderer.setPixelRatio(EmberPixelPass.PIX); renderer.setSize(w, h, false); arena.setPixelRatio(dpr());
       const was = narrow();
       cam.aspect = w / Math.max(1, h);
       cam.updateProjectionMatrix();
@@ -357,7 +363,8 @@
       const s = shadowFor(u); s.position.set(u.fig.root.position.x, 0.004, u.fig.root.position.z); s.visible = true; seen.add(u.k);
     }
     for (const [k, s] of shadows) if (!seen.has(k)) s.visible = false;
-    renderer.render(scene, cam);
+    roomRenderer.render(room, cam);
+    pass.render(scene, cam);
     tags();
     if (now - lastInfo > 500) { lastInfo = now; if (info.querySelector(".baking")) renderInfo(); }
   }

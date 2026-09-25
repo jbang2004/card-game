@@ -1,6 +1,7 @@
-// Voxel battlefield figures (docs/design/MINIATURES.md): every figure registered in the build loads, stands for real
-// cards (or a real hero), declares an attack the stage and the planner understand, and bakes within the budget:
-// ≤ 12000 visible voxels and ≤ 45000 triangles for the body, ≤ 2000 voxels per prop.
+// Battlefield figures (docs/design/MINIATURES.md): every figure registered in the build loads, stands for real cards
+// (or a real hero), declares an attack the stage and the planner understand, and makes a pixel-sprite bake within the
+// budget: ≤ 24000 triangles for the body, ≤ 4000 per prop, a shard sample for the assembly and the shatter, a face
+// decal where the figure has a face.
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("fs");
@@ -10,6 +11,7 @@ const ROOT = path.join(__dirname, "..");
 const SRC = (f) => path.join(ROOT, "src", f);
 global.self = global;
 global.EmberSculpt = require(SRC("presentation/voxel/sculpt.js"));
+global.EmberMeshSimplify = require(SRC("presentation/voxel/simplify.js"));
 global.EmberVoxelKit = require(SRC("presentation/voxel/kit.js"));
 global.EmberVoxel = require(SRC("presentation/voxel/voxelize.js"));
 const D = require("../src/data.js");
@@ -19,7 +21,6 @@ const figureTokens = Object.keys(build).filter((k) => k.startsWith("VOXEL_FIG_")
 for (const token of figureTokens) require(SRC(build[token]));
 const KIT = global.EmberVoxelKit;
 const STYLES = new Set(["slash", "thrust", "blunt", "bite", "breath", "bolt", "arrow"]);
-const BODY_V = 0.0125, PROP_V = 0.0075;             // EmberVoxelRender.V / VPROP
 
 test("every figure file in the build is on the page, before the renderer, and registers one figure", () => {
   assert.ok(figureTokens.length >= 4);
@@ -63,16 +64,16 @@ test("each figure declares an attack the battlefield can play", () => {
 });
 
 for (const id of KIT.ids()) {
-  test(`${id} bakes within the voxel budget`, () => {
-    const spec = KIT.get(id), ch = spec.build(spec.fam);
-    const body = global.EmberVoxel.voxelize(ch.sc, { v: BODY_V });
-    assert.ok(body.stats.voxels > 800, `${id}: a real figure (${body.stats.voxels} voxels)`);
-    assert.ok(body.stats.voxels <= 12000, `${id}: ${body.stats.voxels} voxels ≤ 12000`);
-    assert.ok(body.stats.tris <= 45000, `${id}: ${body.stats.tris} triangles ≤ 45000`);
-    for (const [i, p] of (ch.props || []).entries()) {
-      const prop = global.EmberVoxel.voxelize(p.sc, { v: PROP_V, dilate: { body: 0.5 } });
-      assert.ok(prop.stats.voxels <= 2000, `${id} prop ${p.grip || i}: ${prop.stats.voxels} voxels ≤ 2000`);
-    }
+  test(`${id} makes a pixel-sprite bake within the budget`, () => {
+    const spec = KIT.get(id), d = KIT.bakeData(id);
+    assert.equal(d.look, "pixel", "the battlefield bake is the pixel sprite");
+    const body = d.main;
+    assert.ok(body.stats.tris > 800, `${id}: a real figure (${body.stats.tris} triangles)`);
+    assert.ok(body.stats.tris <= 24000, `${id}: ${body.stats.tris} triangles ≤ 24000`);
+    for (const [i, p] of d.props.entries()) assert.ok(p.bake.stats.tris <= 4000, `${id} prop ${p.grip || i}: ${p.bake.stats.tris} triangles ≤ 4000`);
+    assert.ok(body.vox.center.length / 3 >= 300, `${id}: a shard sample for the assembly and the shatter`);
+    if (spec.face) assert.ok(d.ch.faces && d.ch.faces.length, `${id}: the pixel build declares its face decal`);
+    assert.equal(KIT.pixel, false, "the pixel flag is reset after the build");
     if (spec.moves.attack.trail?.bone) assert.ok(body.bones.some((b) => b.name === spec.moves.attack.trail.bone), `${id}: trail bone exists`);
     if (spec.moves.attack.emitter) assert.ok(body.bones.some((b) => b.name === spec.moves.attack.emitter.bone), `${id}: emitter bone exists`);
   });

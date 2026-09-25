@@ -7,6 +7,7 @@ EmberVoxelKit.define("duskstag", (() => {
     spearProp, bowProp, quiverProp, QF, quadBones, scaleG } = K;
   function stag(fam) {
     const sc = new Sculpture();
+    const PX = K.pixel;                                              // pixel-sprite variant: fat crescent antlers, few mane locks
     const chib = fam === "chibi", chunky = fam === "chunky", anime = fam === "anime";
     const Hs = chib ? 1.8 : chunky ? 1.35 : anime ? 1.2 : 1.15;
     const Ls = chib ? 0.55 : chunky ? 0.8 : anime ? 1.06 : 1;
@@ -41,11 +42,12 @@ EmberVoxelKit.define("duskstag", (() => {
     const nk = sc.limb(add(G.chest, [0, 0.03, 0.05]), add(hc, [0, -0.025 * Hs, -0.028 * Hs]), 0.066, 0.042 * Hs, { mat: "hide", bone: "neck", k: 0.045, sz: 0.85 });
     nk.wfn = (x, y) => { const u = sstep(G.chest[1] + 0.03, hc[1], y); return [["chest", 1 - u], ["neck", 1 - Math.abs(u - 0.5) * 2], ["head", Math.max(0, u - 0.6) * 1.5]]; };
     // mane: a streaked fall of pale fur from the jaw down the throat to the chest
-    for (let i = 0; i < 7; i++) {
-      const u = i / 6, x0 = (u - 0.5) * 0.05;
+    const nMane = PX ? 3 : 7;
+    for (let i = 0; i < nMane; i++) {
+      const u = i / (nMane - 1), x0 = (u - 0.5) * 0.05;
       const top = add(hc, [x0 * 0.6, -0.035 * Hs, -0.005]), mid = [x0, mix(G.chest[1], hc[1], 0.5), mix(G.chest[2], hc[2], 0.5) + 0.045], bot = [x0 * 1.3, G.chest[1] - 0.05 - 0.02 * Math.sin(u * 3.1), G.chest[2] + 0.1];
-      const pts = spline([top, mid, bot], 14).map((p, j) => [p[0], p[1], p[2], mix(0.016, 0.004, Math.pow(j / 14, 1.4)) * (1 + 0.4 * Math.sin(Math.PI * j / 14))]);
-      const m = sc.add(S.chain(pts), { mat: "mane", p: [0, 0, 0], bone: "neck", k: 0.014, disp: furD(0.004, 70), dispAmp: 0.005 });
+      const pts = spline([top, mid, bot], 14).map((p, j) => [p[0], p[1], p[2], (PX ? mix(0.024, 0.009, Math.pow(j / 14, 1.4)) : mix(0.016, 0.004, Math.pow(j / 14, 1.4))) * (1 + 0.4 * Math.sin(Math.PI * j / 14))]);
+      const m = sc.add(S.chain(pts), { mat: "mane", p: [0, 0, 0], bone: "neck", k: 0.014, ...(PX ? {} : { disp: furD(0.004, 70), dispAmp: 0.005 }) });
       m.wfn = (x, y) => { const v = sstep(G.chest[1], hc[1], y); return [["chest", 1 - v], ["neck", v]]; };
     }
     // head: slim skull, long muzzle, glowing eyes
@@ -53,11 +55,11 @@ EmberVoxelKit.define("duskstag", (() => {
     sc.add(S.ell(0.034 * Hs, 0.036 * Hs, 0.043 * Hs), { mat: "hide", p: hc, bone: "head", k: 0.02 });
     sc.limb(add(hc, [0, -0.006 * Hs, 0.02 * Hs]), add(hc, [0, -0.03 * Hs, 0.09 * Hs * mzl]), 0.025 * Hs, 0.0145 * Hs, { mat: "hide", bone: "head", k: 0.022 });
     sc.add(S.ell(0.0125 * Hs, 0.0095 * Hs, 0.009 * Hs), { mat: "nose", p: add(hc, [0, -0.03 * Hs, 0.101 * Hs * mzl]), bone: "head", k: 0.008, cs: 0.05 });
-    const eS = chib ? 1.8 : anime ? 1.25 : 1;
+    const eS = (chib ? 1.8 : anime ? 1.25 : 1) * (PX ? 1.5 : 1);
     for (const s of [1, -1]) sc.add(S.ell(0.0055 * Hs * eS, 0.0075 * Hs * eS, 0.0105 * Hs * eS), { mat: "eye", p: add(hc, [s * 0.03 * Hs, 0.006 * Hs, 0.022 * Hs]), r: [0, s * 0.45, 0], bone: "head", k: 0.004, cs: 0.05 });
     for (const s of [1, -1]) {
       const n = sideName(s), base = add(hc, [s * 0.027 * Hs, 0.024 * Hs, -0.012 * Hs]), tip = add(base, [s * 0.048 * Hs, 0.028 * Hs, -0.012 * Hs]);
-      sc.limb(base, tip, 0.014 * Hs, 0.0028, { mat: "hide", bone: "ear" + n, k: 0.01, sx: 0.5 });
+      sc.limb(base, tip, 0.014 * Hs * (PX ? 1.2 : 1), PX ? 0.006 : 0.0028, { mat: "hide", bone: "ear" + n, k: 0.01, sx: PX ? 0.6 : 0.5 });
     }
     // antlers: each a great crescent — out and down from the skull, sweeping up the outside and curling back in over the head — with tines pointing into the curve
     const As = (chib ? 0.8 : chunky ? 1.05 : 1) * (anime ? 1.05 : 1);
@@ -66,15 +68,15 @@ EmberVoxelKit.define("duskstag", (() => {
       const cx = 0.062 * As, cy = 0.125 * As, R = 0.135 * As, beam = [];
       for (let i = 0; i <= 26; i++) {
         const u = i / 26, th = -2.0 + u * 3.45;
-        beam.push([b0[0] + s * (cx + R * Math.cos(th)), b0[1] + cy + R * Math.sin(th), b0[2] - 0.04 * As * Math.sin(u * Math.PI) - 0.015 * u * As, mix(0.01, 0.0022, Math.pow(u, 1.25)) * (chib ? 1.5 : 1)]);
+        beam.push([b0[0] + s * (cx + R * Math.cos(th)), b0[1] + cy + R * Math.sin(th), b0[2] - 0.04 * As * Math.sin(u * Math.PI) - 0.015 * u * As, (PX ? mix(0.02, 0.011, Math.pow(u, 1.25)) : mix(0.01, 0.0022, Math.pow(u, 1.25))) * (chib ? 1.5 : 1)]);
       }
       sc.add(S.chain(beam), { mat: "antler", p: [0, 0, 0], bone: "antler" + n, k: 0.004, cs: 0.03 });
       const ctr = [b0[0] + s * cx, b0[1] + cy, b0[2] - 0.02 * As];
-      for (const [u, len] of [[0.32, 0.07], [0.48, 0.09], [0.64, 0.095], [0.8, 0.075]]) {
+      for (const [u, len] of PX ? [[0.4, 0.075], [0.66, 0.085]] : [[0.32, 0.07], [0.48, 0.09], [0.64, 0.095], [0.8, 0.075]]) {
         const Bp = beam[Math.round(u * 26)], toC = norm(sub(ctr, Bp.slice(0, 3))), dir = norm(add(mul(toC, 0.55), [0, 1, 0])), pts = [];
         for (let j = 0; j <= 8; j++) {
           const v = j / 8;
-          pts.push([Bp[0] + dir[0] * len * v * As, Bp[1] + dir[1] * len * v * As, Bp[2] + dir[2] * len * v * As + 0.015 * v * v * As, mix(Bp[3] * 0.95, 0.0016, Math.pow(v, 0.8))]);
+          pts.push([Bp[0] + dir[0] * len * v * As, Bp[1] + dir[1] * len * v * As, Bp[2] + dir[2] * len * v * As + 0.015 * v * v * As, mix(Bp[3] * 0.95, PX ? 0.008 : 0.0016, Math.pow(v, 0.8))]);
         }
         sc.add(S.chain(pts), { mat: "antler", p: [0, 0, 0], bone: "antler" + n, k: 0.0035, cs: 0.03 });
       }
@@ -84,13 +86,14 @@ EmberVoxelKit.define("duskstag", (() => {
       const n = sideName(s), F = G.front.map((p) => X(p, s)), B = G.back.map((p) => X(p, s));
       sc.add(S.ell(0.036, 0.075, 0.05), { mat: "hide", p: add(F[0], [0, -0.04, -0.004]), bone: "scap" + n, bones: [["scap" + n, 0.7], ["chest", 0.3]], k: 0.035 });
       sc.limb(F[0], F[1], 0.03, 0.018, { mat: "hide", bone: "scap" + n, k: 0.025 });
-      sc.limb(F[1], F[2], 0.0155, 0.011, { mat: "hideDark", bone: "elb" + n, k: 0.012 });
-      sc.limb(F[2], F[3], 0.0105, 0.009, { mat: "hideDark", bone: "wri" + n, k: 0.008 });
-      sc.limb(add(F[3], [0, -0.01, -0.002]), add(F[3], [0, -0.042, 0.012]), 0.0095, 0.0135, { mat: "hoof", bone: "fpaw" + n, k: 0.004, cs: 0.03 });
+      const lk = PX ? 1.35 : 1;
+      sc.limb(F[1], F[2], 0.0155 * lk, 0.011 * lk, { mat: "hideDark", bone: "elb" + n, k: 0.012 });
+      sc.limb(F[2], F[3], 0.0105 * lk, 0.009 * lk, { mat: "hideDark", bone: "wri" + n, k: 0.008 });
+      sc.limb(add(F[3], [0, -0.01, -0.002]), add(F[3], [0, -0.042, 0.012]), 0.0095 * lk, 0.0135 * lk, { mat: "hoof", bone: "fpaw" + n, k: 0.004, cs: 0.03 });
       sc.add(S.ell(0.048, 0.085, 0.058), { mat: "hide", p: add(B[0], [0, -0.045, 0.012]), bone: "hip" + n, bones: [["hip" + n, 0.7], ["root", 0.3]], k: 0.035 });
-      sc.limb(B[1], B[2], 0.021, 0.0115, { mat: "hide", bone: "stif" + n, k: 0.016 });
-      sc.limb(B[2], B[3], 0.0105, 0.009, { mat: "hideDark", bone: "hock" + n, k: 0.008 });
-      sc.limb(add(B[3], [0, -0.01, -0.002]), add(B[3], [0, -0.042, 0.012]), 0.0095, 0.0135, { mat: "hoof", bone: "bpaw" + n, k: 0.004, cs: 0.03 });
+      sc.limb(B[1], B[2], 0.021, 0.0115 * lk, { mat: "hide", bone: "stif" + n, k: 0.016 });
+      sc.limb(B[2], B[3], 0.0105 * lk, 0.009 * lk, { mat: "hideDark", bone: "hock" + n, k: 0.008 });
+      sc.limb(add(B[3], [0, -0.01, -0.002]), add(B[3], [0, -0.042, 0.012]), 0.0095 * lk, 0.0135 * lk, { mat: "hoof", bone: "bpaw" + n, k: 0.004, cs: 0.03 });
       // glowing crescent marks, projected sideways onto shoulder and haunch
       const crescent = (c, r, rot) => sc.paint(S.custom((x, y, z) => {
         const cy = Math.cos(rot), sy = Math.sin(rot), Y = y * cy - z * sy, Z = y * sy + z * cy;
@@ -102,8 +105,8 @@ EmberVoxelKit.define("duskstag", (() => {
     }
     // wispy pale tail
     const T0 = G.tail[0], tp = [];
-    for (let i = 0; i <= 8; i++) { const u = i / 8; tp.push([0, T0[1] - 0.05 * u - 0.03 * u * u, T0[2] - 0.08 * u, mix(0.02, 0.006, u)]); }
-    const tail = sc.add(S.chain(tp), { mat: "mane", p: [0, 0, 0], bone: "tail1", k: 0.015, disp: furD(0.007, 70), dispAmp: 0.008 });
+    for (let i = 0; i <= 8; i++) { const u = i / 8; tp.push([0, T0[1] - 0.05 * u - 0.03 * u * u, T0[2] - 0.08 * u, mix(0.02, 0.006, u) * (PX ? 1.3 : 1)]); }
+    const tail = sc.add(S.chain(tp), { mat: "mane", p: [0, 0, 0], bone: "tail1", k: 0.015, ...(PX ? {} : { disp: furD(0.007, 70), dispAmp: 0.008 }) });
     tail.wfn = (x, y, z) => { const u = clamp((T0[2] - z) / 0.08, 0, 1); return [["root", 1 - sstep(0, 0.2, u)], ["tail1", Math.max(0, 1 - Math.abs(u - 0.25) * 2.5)], ["tail2", Math.max(0, 1 - Math.abs(u - 0.6) * 2.8)], ["tail3", sstep(0.6, 0.95, u)]]; };
     sc.faceKind = "stag";
     return { sc, kind: "quadruped", props: [], G, Hs };

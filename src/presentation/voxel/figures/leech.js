@@ -9,7 +9,10 @@ EmberVoxelKit.define("leech", (() => {
     FAM, CLS, mats, armJoints, legJoints, sideName, humanoidBones, body, RG, wrap, strand, onEll } = K;
   const pad = (b, m = 0.05) => [b[0] - m, b[1] - m, b[2] - m, b[3] + m, b[4] + m, b[5] + m];
   const hash = (k) => { const s = Math.sin(k * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
-  const tear = (u) => { const k = Math.floor(u), f = u - k; return (1 - Math.abs(2 * f - 1)) * (0.35 + 0.65 * hash(k)); };
+  const tearN = (u) => { const k = Math.floor(u), f = u - k; return (1 - Math.abs(2 * f - 1)) * (0.35 + 0.65 * hash(k)); };
+  // pixel sprite: a few big regular teeth instead (a third of the frequency); K.pixel is read per call
+  const tearPx = (u) => { const f = u / 3 - Math.floor(u / 3); return 0.8 * (1 - Math.abs(2 * f - 1)); };
+  const tear = (u) => (EmberVoxelKit.pixel ? tearPx(u) : tearN(u));
   const PF = FAM.chunky, AR = armJoints(PF, -1), AL = armJoints(PF, 1);
   const TALON = 0.075;                                   // talon length past the knuckles
   const ORB_AT = add(AL.W, mul(AL.dir, 0.105 * PF.hand));
@@ -24,14 +27,14 @@ EmberVoxelKit.define("leech", (() => {
     });
     sc.add(S.sphere(0.036), { bone: "p", mat: "blood", p: [0, 0, 0], k: 0.002 });
     // a dark swirl band and one hot glint
-    sc.paint(S.custom((x, y, z) => Math.abs(y - 0.012 * Math.sin(Math.atan2(z, x) * 2)) - 0.005, [-0.04, -0.04, -0.04, 0.04, 0.04, 0.04]), { mat: "bloodD", p: [0, 0, 0], soft: 0.001, only: ["blood"] });
-    sc.paint(S.sphere(0.012), { mat: "hot", p: [-0.016, 0.02, 0.022], soft: 0.001, only: ["blood"] });
+    if (!EmberVoxelKit.pixel) sc.paint(S.custom((x, y, z) => Math.abs(y - 0.012 * Math.sin(Math.atan2(z, x) * 2)) - 0.005, [-0.04, -0.04, -0.04, 0.04, 0.04, 0.04]), { mat: "bloodD", p: [0, 0, 0], soft: 0.001, only: ["blood"] });
+    sc.paint(S.sphere(EmberVoxelKit.pixel ? 0.016 : 0.012), { mat: "hot", p: [-0.016, 0.02, 0.022], soft: 0.001, only: ["blood"] });
     return sc;
   }
 
   // ------------------------------------------------------------ figure
   function build(fam) {
-    const P = FAM[fam], sc = new Sculpture(), q = 1.25;
+    const P = FAM[fam], sc = new Sculpture(), q = 1.25, PX = K.pixel;   // PX: pixel sprite — fat locks, regular teeth, no specks
     humanoidBones(sc, P);
     const capeTop = P.shY + 0.004, capeBot = 0.06, capeZ = -P.chest[3] - 0.035;
     K.capeBones(sc, P, capeTop, capeBot, capeZ);
@@ -57,9 +60,9 @@ EmberVoxelKit.define("leech", (() => {
     const vcut = S.custom((x, y, z) => (z > 0 ? Math.abs(x) - Math.max(0, (y - (P.chest[0] - 0.03)) * 0.55) : 1), [-0.3, -0.3, 0, 0.3, 1.2, 0.3]);
     wrap(sc, RG.box(-X0, X0, P.pelvis[0] - 0.03, P.neck[0] + 0.02), "vest", 0.004 * q);
     wrap(sc, RG.or(RG.minus(RG.box(-X0, X0, P.pelvis[0] - 0.03, P.neck[0] + 0.03), vcut), ...armRg), "coat", 0.0065 * q);
-    for (const y of [P.chest[0] - 0.02, P.waist[0] + 0.01]) sc.add(S.box(0.007, 0.004, 0.004, 0.001), { mat: "silver", p: [0, y, P.chest[3] + 0.03 - (y < P.chest[0] - 0.05 ? 0.012 : 0)], bone: y < P.chest[0] - 0.05 ? "spine" : "chest", k: 0.001 });
+    if (!PX) for (const y of [P.chest[0] - 0.02, P.waist[0] + 0.01]) sc.add(S.box(0.007, 0.004, 0.004, 0.001), { mat: "silver", p: [0, y, P.chest[3] + 0.03 - (y < P.chest[0] - 0.05 ? 0.012 : 0)], bone: y < P.chest[0] - 0.05 ? "spine" : "chest", k: 0.001 });
     wrap(sc, RG.box(-0.25, 0.25, P.waist[0] - 0.035, P.waist[0] - 0.015), "leather", 0.0085 * q);
-    sc.add(S.box(0.014, 0.012, 0.004, 0.002), { mat: "silver", p: [0, P.waist[0] - 0.025, P.waist[2] + 0.035], bone: "spine", k: 0.001 });
+    if (!PX) sc.add(S.box(0.014, 0.012, 0.004, 0.002), { mat: "silver", p: [0, P.waist[0] - 0.025, P.waist[2] + 0.035], bone: "spine", k: 0.001 });
     for (const s of [1, -1]) {
       const n = sideName(s), a = armJoints(P, s);
       wrap(sc, RG.ball(add(a.W, mul(a.dir, 0.035 * P.hand)), 0.07 * P.hand), "glove", 0.003 * q);
@@ -72,11 +75,12 @@ EmberVoxelKit.define("leech", (() => {
     // talons on the right glove: four hooked claws off the knuckles, glowing blood red
     {
       const a = AR, d = a.dir, n = norm([d[1], -d[0], 0]), z = [0, 0, 1];
-      for (let i = 0; i < 4; i++) {
-        const w = (i - 1.5) * 0.013, base = add(add(a.W, mul(d, 0.07 * P.hand)), add(mul(z, w), mul(n, 0.004)));
+      const nT = PX ? 3 : 4, tk = PX ? 1.7 : 1;   // pixel: three fat talons
+      for (let i = 0; i < nT; i++) {
+        const w = (i - (nT - 1) / 2) * (PX ? 0.017 : 0.013), base = add(add(a.W, mul(d, 0.07 * P.hand)), add(mul(z, w), mul(n, 0.004)));
         const tip = add(add(base, mul(d, TALON)), mul(n, -0.022));
-        sc.limb(base, lerp(base, tip, 0.6), 0.0058, 0.0042, { mat: "talon", bone: "handR", k: 0.002, vdil: 0.5 });
-        sc.limb(lerp(base, tip, 0.55), tip, 0.0045, 0.0015, { mat: "talon", bone: "handR", k: 0.002, vdil: 0.5 });
+        sc.limb(base, lerp(base, tip, 0.6), 0.0058 * tk, 0.0042 * tk, { mat: "talon", bone: "handR", k: 0.002, vdil: 0.5 });
+        sc.limb(lerp(base, tip, 0.55), tip, 0.0045 * tk, 0.0015 * tk, { mat: "talon", bone: "handR", k: 0.002, vdil: 0.5 });
       }
     }
     // ---- hair: fringe inside the hood, long straight locks spilling out down the chest
@@ -85,20 +89,26 @@ EmberVoxelKit.define("leech", (() => {
       const ey = P.eyeY, C = add(P.cranC, [0, 0.003, -0.004]), cr = P.cran, R = [cr[0] * 1.06, cr[1] * 1.06, cr[2] * 1.07];
       sc.add(S.minus(S.ell(...R), S.at(S.ell(cr[0] * 0.92, cr[1] * 0.78, cr[2] * 0.7), 0, -cr[1] * 0.48, cr[2] * 0.68), 0.012), { mat: "hair", p: C, bone: "head", k: 0.006 });
       // side-parted fringe sweeping to his right
-      for (let i = 0; i < 6; i++) {
+      if (PX) for (const u of [0, 0.5, 1]) {   // pixel: three fat locks sweeping to his right, tips beside the eyes
+        const root = [0.02, C[1] + R[1] * 0.64, C[2] + R[2] * 0.72];
+        const mid = [0.02 - R[0] * (0.25 + 0.35 * u), ey + 0.058 - 0.006 * u, P.faceZ + 0.002 * q];
+        const tip = [-R[0] * (0.7 + 0.4 * u), ey + 0.034 - 0.028 * u, P.faceZ - 0.016 * q - 0.014 * q * u];
+        strand(sc, [root, mid, tip], 0.019 * q, 0.004 * q, { k: 0.008, taper: 1.2, grooves: 0 });
+      }
+      else for (let i = 0; i < 6; i++) {
         const u = i / 5;
         const root = [0.02, C[1] + R[1] * 0.64, C[2] + R[2] * 0.72];
         const mid = [0.02 - R[0] * (0.25 + 0.35 * u), ey + 0.056 - 0.006 * u, P.faceZ + 0.002 * q];
         const tip = [-R[0] * (0.62 + 0.4 * u), ey + 0.03 - 0.02 * u, P.faceZ - 0.014 * q - 0.014 * q * u];
         strand(sc, [root, mid, tip], 0.012 * q, 0.0018 * q, { k: 0.007, taper: 1.2, grooves: 0.001 });
       }
-      for (const s of [1, -1]) for (let j = 0; j < 3; j++) {
-        const o = j - 1, n = sideName(s);
+      for (const s of [1, -1]) for (let j = 0; j < (PX ? 2 : 3); j++) {
+        const o = PX ? j - 0.5 : j - 1, n = sideName(s);
         const root = onEll(C, R, s * (1.15 + 0.12 * o), 0.2, 0.98);
         const a = [s * R[0] * (1.1 + 0.04 * o), ey - 0.02, C[2] + R[2] * (0.4 - 0.1 * o)];
         const b = [s * R[0] * (1.12 + 0.05 * o), P.chinY - 0.03, C[2] + R[2] * (0.5 - 0.12 * o)];
         const tip = [s * P.shX * (0.66 + 0.1 * o), P.chest[0] - 0.02 - 0.015 * Math.abs(o), P.chest[3] + 0.028 - 0.012 * o];
-        const sp = strand(sc, [root, a, b, lerp(b, tip, 0.5), tip], (0.014 - 0.002 * Math.abs(o)) * q, 0.0025 * q, { k: 0.01, wg: 4, taper: 1.3, bone: "hair" + n });
+        const sp = strand(sc, [root, a, b, lerp(b, tip, 0.5), tip], (PX ? 0.02 : 0.014 - 0.002 * Math.abs(o)) * q, (PX ? 0.006 : 0.0025) * q, { k: 0.01, wg: 4, taper: 1.3, bone: "hair" + n, grooves: PX ? 0 : undefined });
         sp.wfn = (x, y) => { const t = sstep(P.chinY, P.chest[0], y); return [["head", 1 - t], ["hair" + n, t * 0.5], ["chest", t * 0.5]]; };
       }
     }
@@ -121,19 +131,19 @@ EmberVoxelKit.define("leech", (() => {
     const slitW = (u) => 0.006 + 0.06 * u;
     const skF = (x, y, z) => {
       const u = clamp(-y / h, 0, 1), r = mix(r0, r1, Math.pow(u, 0.85)), a = Math.atan2(z / sz, x);
-      const rr = Math.hypot(x, z / sz) - r - 0.007 * u * Math.sin(a * 7 + 0.6);
+      const rr = Math.hypot(x, z / sz) - r - (PX ? 0 : 0.007) * u * Math.sin(a * 7 + 0.6);
       return smax(Math.max(rr, z > 0 ? slitW(u) - Math.abs(x) : -1), Math.max(-y - h + 0.03 * tear(a * 4 + 2), y), 0.004);
     };
     const sk = sc.add(S.custom(skF, pad([-r1 - 0.02, -h, -r1 * sz - 0.02, r1 + 0.02, 0, r1 * sz + 0.02], 0.02)), { mat: "coat", p: [0, y0, 0], bone: "root", k: 0.003, cs: 0.03, wg: 3 });
     sk.wfn = (x, y) => { const u = clamp((y0 - y) / h, 0, 1), b = u * 0.75, sl = sstep(-0.04, 0.04, x); return [["root", 1 - b], ["thighL", b * sl], ["thighR", b * (1 - sl)]]; };
-    sc.paint(S.custom((x, y, z) => { const u = clamp((y0 - y) / h, 0, 1); return z < 0 || y > y0 + 0.01 ? 1 : Math.abs(x) - slitW(u) - 0.013; }, [-0.3, 0, -0.3, 0.3, y0 + 0.02, 0.3]), { mat: "lining", p: [0, 0, 0], soft: 0.001, only: ["coat"] });
+    sc.paint(S.custom((x, y, z) => { const u = clamp((y0 - y) / h, 0, 1); return z < 0 || y > y0 + 0.01 ? 1 : Math.abs(x) - slitW(u) - (PX ? 0.024 : 0.013); }, [-0.3, 0, -0.3, 0.3, y0 + 0.02, 0.3]), { mat: "lining", p: [0, 0, 0], soft: 0.001, only: ["coat"] });
     // cloak: shoulders to the ankles, torn into tails, red inside
     const ch = capeTop - capeBot;
     const capeZc = (x, y) => {
       const u = clamp((capeTop - y) / ch, 0, 1), w = mix(0.12, 0.27, Math.pow(u, 0.75));
-      return { u, w, zc: mix(capeZ, capeZ - 0.08, u) - 0.018 * Math.sin((x / w) * 5 * 1.57 + 0.5) * (0.25 + u) + (0.7 - 0.3 * u) * (x * x) / w };
+      return { u, w, zc: mix(capeZ, capeZ - 0.08, u) - (PX ? 0.006 : 0.018) * Math.sin((x / w) * (PX ? 2 : 5) * 1.57 + 0.5) * (0.25 + u) + (0.7 - 0.3 * u) * (x * x) / w };
     };
-    const capeF = (x, y, z) => { const c = capeZc(x, y); return smax(Math.abs(z - c.zc) - 0.006, Math.max(Math.abs(x) - c.w, y - capeTop, capeBot + 0.11 * tear(x * 20 + 3) - y), 0.005); };
+    const capeF = (x, y, z) => { const c = capeZc(x, y); return smax(Math.abs(z - c.zc) - 0.006, Math.max(Math.abs(x) - c.w, y - capeTop, capeBot + (PX ? 0.07 * tear(x * 14 + 3) : 0.11 * tear(x * 20 + 3)) - y), 0.005); };
     const cp = sc.add(S.custom(capeF, pad([-0.3, capeBot, -0.3, 0.3, capeTop, 0.1])), { mat: "cloak", p: [0, 0, 0], bone: "chest", k: 0.004, cs: 0.03, wg: 2 });
     cp.wfn = (x, y) => {
       const u = clamp((capeTop - y) / ch, 0, 1), sl = sstep(-0.05, 0.05, x);

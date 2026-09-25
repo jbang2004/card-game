@@ -186,13 +186,91 @@ const EmberVoxelRender = (() => {
   }
   const EXPRESSIONS = { human: ["open", "closed", "fierce", "hurt", "focus"], wolf: ["open", "closed", "fierce", "hurt"] };
 
+  // ------------------------------------------------------------------ the pixel-sprite look
+  /* The battlefield draws figures as Q-version pixel sprites (docs/design/MINIATURES.md §1): three flat tones (lit ·
+   * mid · a cool violet shadow), a hard metal glint, glow, the victim glow; the figure is drawn at a fraction of the
+   * screen resolution and outlined by EmberPixelPass. Faces are painted on the sprite-pixel grid (spriteFace). */
+  const SPRITE = { head: 1.55, beastHead: 1.25, texel: 0.0105, sat: 1.22 };
+  const SFRAG = /* glsl */ `
+    uniform sampler2D uFace; uniform float uHasFace; uniform vec3 uHitC; uniform float uEmit; uniform float uExpo; uniform float uAlpha;
+    uniform float uDither; uniform float uPixS;
+    varying vec3 vN; varying vec3 vW; varying vec3 vAlb; varying vec4 vAux; varying vec4 vAux2; varying vec4 vFace;
+    void main() {
+      vec3 alb = vAlb; float ao = vAux.x, metal = vAux2.x, emit = vAux2.y;
+      float decal = 0.0;
+      if (uHasFace > 0.5 && vFace.z > 0.001) { vec4 dec = texture2D(uFace, vFace.xy); decal = dec.a * vFace.z; alb = mix(alb, dec.rgb, step(0.5, decal)); }
+      vec3 N = normalize(vN); if (!gl_FrontFacing) N = -N;
+      vec3 V = normalize(cameraPosition - vW), L = normalize(vec3(-0.45, 0.8, 0.55));
+      float lit = (dot(N, L) * 0.5 + 0.5) * mix(0.55, 1.0, smoothstep(0.35, 0.8, ao));
+      if (vFace.z > 0.3) lit = max(lit, 0.75);                         // the face stays in the light tone
+      vec3 tone = lit > 0.7 ? vec3(1.06, 1.02, 0.97) : lit > 0.42 ? vec3(0.86, 0.84, 0.88) : vec3(0.52, 0.49, 0.7);
+      float lm = dot(alb, vec3(0.299, 0.587, 0.114));
+      vec3 col = mix(vec3(lm), alb, ${SPRITE.sat.toFixed(2)}) * tone * 1.12;
+      vec3 H = normalize(L + V);
+      if (metal > 0.3 && pow(max(dot(N, H), 0.0), 30.0) > 0.45) col = mix(col, vec3(1.0, 0.97, 0.9), 0.65);
+      col += alb * emit * uEmit;
+      float hitA = max(uHitC.r, max(uHitC.g, uHitC.b));
+      if (hitA > 1.01) col = vec3(1.0); else if (hitA > 0.0) col = mix(col, uHitC / hitA, 0.45 * hitA);
+      gl_FragColor = vec4(clamp(col * uExpo, 0.0, 1.0), uAlpha);
+      #include <colorspace_fragment>
+    }`;
+  function spriteMaterial() {
+    const m = new THREE.ShaderMaterial({
+      uniforms: { uFace: { value: null }, uHasFace: { value: 0 }, uHitC: { value: new THREE.Vector3() }, uEmit: { value: 1.8 }, uExpo: { value: 1 },
+        uAlpha: { value: 1 }, uDither: { value: 0 }, uPixS: { value: 1 } },
+      vertexShader: VERT, fragmentShader: SFRAG,
+    });
+    m.toneMapped = false;
+    return m;
+  }
+  /* sprite faces: features on the figure's own sprite-pixel grid (one texel ≈ one screen sprite pixel on the enlarged
+   * head), sampled nearest — 2 × 3 eyes (lash row, a white catch-light, iris), a one-pixel brow, a one- or two-pixel
+   * mouth; transparent elsewhere so the skin shows. kind "human" (P = family landmarks) | "wolf" ({ cx, cy, dx }) */
+  function spriteFace(kind, box, P, look, expr) {
+    const T = SPRITE.texel, W = Math.max(8, Math.round((2 * box.size[0]) / T)), H = Math.max(8, Math.round((2 * box.size[1]) / T));
+    const col = (x) => Math.floor(((x - (box.c[0] - box.size[0])) / (2 * box.size[0])) * W);
+    const row = (y) => Math.floor((1 - (y - (box.c[1] - box.size[1])) / (2 * box.size[1])) * H);
+    const hex = (n, fb) => (typeof n === "number" ? "#" + n.toString(16).padStart(6, "0") : n || fb);
+    const shade = (h, k) => "#" + new THREE.Color(hex(h, "#445")).multiplyScalar(k).getHexString();
+    const c = document.createElement("canvas"); c.width = W; c.height = H;
+    const g = c.getContext("2d"); g.imageSmoothingEnabled = false;
+    const px = (x, y, css) => { g.fillStyle = css; g.fillRect(x, y, 1, 1); };
+    const ink = "#1b1322", shut = expr === "closed" || expr === "hurt";
+    if (kind === "human") {
+      const iris = shade(look.eye, 0.9), irisD = shade(look.eye, 0.5), lip = hex(look.lip, "#b86a62");
+      const ey = row(P.eyeY), my = row(P.chinY + (P.eyeY - P.chinY) * 0.3);
+      for (const s of [1, -1]) {
+        const a = s > 0 ? col(P.eyeX) : col(-P.eyeX) - 1, inner = s > 0 ? a : a + 1, outer = s > 0 ? a + 1 : a;
+        if (shut) { px(a, ey, ink); px(a + 1, ey, ink); if (expr === "hurt") px(outer, ey - 1, ink); continue; }
+        px(a, ey - 1, ink); px(a + 1, ey - 1, ink);
+        px(inner, ey, "#ffffff"); px(outer, ey, iris);
+        px(a, ey + 1, irisD); px(a + 1, ey + 1, irisD);
+        if (expr === "fierce" || expr === "focus") px(inner, ey - 2, hex(look.brow, ink));
+        else { px(a, ey - 3, hex(look.brow, ink)); px(a + 1, ey - 3, hex(look.brow, ink)); }
+      }
+      const m = col(0);
+      if (expr === "fierce" || expr === "hurt") { px(m - 1, my, shade(lip, 0.55)); px(m, my, shade(lip, 0.55)); }
+      else px(m - (W % 2 ? 0 : 1), my, shade(lip, 0.8));
+    } else {
+      const iris = hex(look.eye, "#8fd6ff");
+      for (const s of [1, -1]) {
+        const x = col(P.cx + s * P.dx), y = row(P.cy);
+        if (shut) { px(x - 1, y, "#141018"); px(x, y, "#141018"); continue; }
+        px(x - 1, y, s > 0 ? "#ffffff" : iris); px(x, y, s > 0 ? iris : "#ffffff"); px(x - 1, y + 1, "#141018"); px(x, y + 1, "#141018");
+      }
+    }
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+    t.magFilter = t.minFilter = THREE.NearestFilter; t.generateMipmaps = false;
+    return t;
+  }
+
   // ------------------------------------------------------------------ bake (cached)
   const baked = new Map();
   /** voxelize a figure (and its props); cached per figure id. `data` lets a worker's result be injected. */
   function bake(id, data) {
     if (data) { baked.set(id, data); return data; }
     if (baked.has(id)) return baked.get(id);
-    const out = K.bakeData(id, V, VPROP);                  // in the page: EmberVoxelBaker does the same in a worker
+    const out = K.bakeData(id, V, VPROP);                  // in the page: EmberVoxelBaker does the same in a worker (the pixel bake)
     baked.set(id, out);
     return out;
   }
@@ -238,14 +316,14 @@ const EmberVoxelRender = (() => {
 
   /** build a posable figure for figure id (opts: expo, dither, pixelRatio) */
   function build(id, opts = {}) {
-    const spec = K.get(id), B = bake(id), b = B.main, ch = B.ch;
+    const spec = K.get(id), B = bake(id), b = B.main, ch = B.ch, sprite = B.look === "pixel";
     const root = new THREE.Group();
     const bones = skeleton(b.bones);
     b.bones.forEach((bn, i) => { if (bn.parent < 0) root.add(bones[i]); });
     root.updateMatrixWorld(true);
     const skel = new THREE.Skeleton(bones);
     const J = {}; bones.forEach((bn) => (J[bn.name] = bn));
-    const mat = material(opts);
+    const mat = sprite ? spriteMaterial() : material(opts);
     const geo = geometry(b);
     const mesh = new THREE.SkinnedMesh(geo, mat);
     mesh.bind(skel, new THREE.Matrix4()); mesh.frustumCulled = false;
@@ -254,7 +332,7 @@ const EmberVoxelRender = (() => {
     // props: static meshes on bone holders, gripped in the fist for spear/bow
     for (const p of B.props) {
       const bone = J[p.bone];
-      const g = geometry(p.bake), pm = material(opts);
+      const g = geometry(p.bake), pm = sprite ? spriteMaterial() : material(opts);
       const holder = new THREE.Group();
       const head = b.bones.find((bn) => bn.name === p.bone).head;
       let at = p.at, quat = null;
@@ -272,12 +350,18 @@ const EmberVoxelRender = (() => {
       fig.props.push({ holder, grip: p.grip, bone: p.bone, mesh: m });
     }
     // faces
-    const grid = b.faceGrid && b.faceGrid[0];
-    if (spec.face && grid && typeof document !== "undefined") {
+    const grid = b.faceGrid && b.faceGrid[0], box = ch.faces && ch.faces[0];
+    if (sprite && spec.face && box && typeof document !== "undefined") {
+      const P = spec.face.kind === "human" ? ch.P : spec.face.params(ch);
+      fig.faces = {};
+      for (const e of EXPRESSIONS[spec.face.kind] || ["open"]) fig.faces[e] = spriteFace(spec.face.kind, box, P, spec.face.look, e);
+    } else if (spec.face && grid && typeof document !== "undefined") {
       const P = spec.face.kind === "human" ? ch.P : spec.face.params(ch);
       fig.faces = {};
       for (const e of EXPRESSIONS[spec.face.kind] || ["open"]) fig.faces[e] = pixelFace(grid, spec.face.kind, P, spec.face.look, e);
     }
+    // Q proportions: the sprite's head (hair, helmet and face ride on the head bone) is enlarged
+    if (sprite && J.head) J.head.scale.setScalar(spec.face?.kind === "human" || fig.kind === "humanoid" ? SPRITE.head : SPRITE.beastHead);
     fig.rest = new Map();
     root.traverse((o) => fig.rest.set(o, { p: o.position.clone(), q: o.quaternion.clone(), s: o.scale.clone() }));
     setFace(fig, "open");
@@ -310,5 +394,5 @@ const EmberVoxelRender = (() => {
 
   /** a figure's bake if it is already cached (never bakes) */
   const cached = (id) => baked.get(id) || null;
-  return { LIGHT, GRADE, GRADE_GLSL, gradeUniforms, V, VPROP, material, pixelFace, bake, cached, build, setFace, setHit, setEmit, setPixelRatio, dispose, voxelsWorld, gripQuat, geometry, skeleton };
+  return { LIGHT, GRADE, GRADE_GLSL, gradeUniforms, V, VPROP, SPRITE, material, spriteMaterial, spriteFace, pixelFace, bake, cached, build, setFace, setHit, setEmit, setPixelRatio, dispose, voxelsWorld, gripQuat, geometry, skeleton };
 })();

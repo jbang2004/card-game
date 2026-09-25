@@ -17,7 +17,7 @@ EmberVoxelKit.define("frostking", (() => {
   // ------------------------------------------------------------ prop: the ice greatsword (grip at 0, blade along +Y, flat in XY)
   const B0 = 0.075, BL = 0.56, BW = 0.034;
   function sword() {
-    const sc = new Sculpture();
+    const sc = new Sculpture(), PX = K.pixel;
     sc.bone("p", null, 0, 0, 0);
     mats(sc, {
       grip: { c: 0x243052, rough: 0.8, cls: CLS.leather }, silver: { c: 0xc6d2ea, rough: 0.22, metal: 1, cls: CLS.metal, vary: 0.03 },
@@ -41,7 +41,7 @@ EmberVoxelKit.define("frostking", (() => {
       return Math.max(Math.abs(x) - w, dz, B0 - y, y - B0 - BL);
     }, pad([-BW, B0, -0.012, BW, B0 + BL, 0.012], 0.02));
     sc.add(blade, { ...o, mat: "ice", k: 0.001, vdil: 0.3 });
-    sc.paint(S.custom((x, y, z) => Math.abs(x) - 0.006, [-1, -1, -1, 1, 1, 1]), { mat: "iceD", soft: 0.001, only: ["ice"] });
+    if (!PX) sc.paint(S.custom((x, y, z) => Math.abs(x) - 0.006, [-1, -1, -1, 1, 1, 1]), { mat: "iceD", soft: 0.001, only: ["ice"] });
     sc.paint(S.custom((x, y, z) => { const u = clamp((y - B0) / BL, 0, 1), w = BW * (1 - 0.12 * Math.sin(u * Math.PI)) * (u > 0.86 ? (1 - u) / 0.14 : 1); return y < B0 + 0.01 ? 1 : w - 0.009 - Math.abs(x); }, [-1, -1, -1, 1, 1, 1]), { mat: "iceL", soft: 0.001, only: ["ice"] });
     return sc;
   }
@@ -71,8 +71,31 @@ EmberVoxelKit.define("frostking", (() => {
     return { C, R };
   }
 
+  /* pixel sprite: long pale hair as a few big locks — a fringe swept off the eyes to the temples, a lock down each
+   * cheek and one solid back mass to the shoulder blades (no dripping strands, no gaps showing the neck) */
+  function hairPx(sc, P) {
+    const ey = P.eyeY, C = add(P.cranC, [0, 0.006, -0.006]), cr = P.cran, R = [cr[0] * 1.08, cr[1] * 1.07, cr[2] * 1.1];
+    sc.add(S.minus(S.ell(...R), S.at(S.ell(cr[0] * 0.92, cr[1] * 0.74, cr[2] * 0.7), 0, -cr[1] * 0.5, cr[2] * 0.68), 0.012), { mat: "hair", p: C, bone: "head", k: 0.006 });
+    const root = [0.01, C[1] + R[1] * 0.78, C[2] + R[2] * 0.55];
+    // fringe: three fat locks from the part, the middle one stops on the brow, the outer two sweep to the temples
+    strand(sc, [root, [0.004, ey + 0.058, P.faceZ + 0.006], [-0.012, ey + 0.034, P.faceZ + 0.004]], 0.02, 0.009, { k: 0.012, taper: 1.1, grooves: 0 });
+    for (const s of [1, -1]) strand(sc, [root, [s * 0.036, ey + 0.052, P.faceZ + 0.0], [s * 0.066, ey + 0.004, P.faceZ - 0.022]], 0.02, 0.008, { k: 0.012, taper: 1.1, grooves: 0 });
+    // a lock down each cheek, outside the eyes
+    for (const s of [1, -1]) strand(sc, [onEll(C, R, s * 1.15, 0.3, 0.98), [s * R[0] * 1.02, ey - 0.02, C[2] + R[2] * 0.35], [s * R[0] * 0.95, P.chinY - 0.03, C[2] + R[2] * 0.3]], 0.02, 0.011, { k: 0.012, taper: 1.2, grooves: 0 });
+    // the back: one broad mass from the crown to the shoulder blades, three rounded ends
+    const back = [];
+    for (const u of [-1, 0, 1]) {
+      const az = Math.PI + u * 0.75, top = onEll(C, R, az, 0.3, 0.9), out = onEll(C, R, az, -0.45, 1.12);
+      const tip = [u * 0.065, P.neck[0] - 0.13 - 0.02 * (1 - Math.abs(u)), -P.chest[3] - 0.055];
+      const sp = strand(sc, [top, out, lerp(out, tip, 0.5), tip], 0.05, 0.03, { k: 0.03, taper: 1.4, bone: "hairB1", wg: 5, grooves: 0 });
+      sp.wfn = (x, y) => { const t = sstep(C[1] - 0.02, P.neck[0] - 0.1, y); return [["head", 1 - t], ["hairB1", t]]; };
+      back.push(sp);
+    }
+    return { C, R };
+  }
+
   function build(fam) {
-    const P = FAM[fam], sc = new Sculpture(), q = 1.25;
+    const P = FAM[fam], sc = new Sculpture(), q = 1.25, PX = K.pixel;
     humanoidBones(sc, P);
     sc.bone("hairB1", "head", 0, P.eyeY - 0.02, -P.cran[2] * 0.9);
     const capeTop = P.shY + 0.004, capeBot = 0.06, capeZ = -P.chest[3] - 0.045;
@@ -81,10 +104,10 @@ EmberVoxelKit.define("frostking", (() => {
     mats(sc, {
       skin: { c: 0xe6dce8, rough: 0.55, cls: CLS.skin, vary: 0.015 }, skinDeep: { c: 0xd0b4b4, rough: 0.6, cls: CLS.skin },
       lips: { c: 0xb88480, rough: 0.4, cls: CLS.lips },
-      hair: { c: 0xbcc8ea, rough: 0.5, cls: CLS.hair, vary: 0.07 },
-      white: { c: 0xbccdf2, rough: 0.85, cls: CLS.cloth, vary: 0.035 }, whiteD: { c: 0xa6b4d2, rough: 0.9, cls: CLS.cloth },
+      hair: { c: PX ? 0xb0aede : 0xbcc8ea, rough: 0.5, cls: CLS.hair, vary: 0.07 },
+      white: { c: PX ? 0xcadcf6 : 0xbccdf2, rough: 0.85, cls: CLS.cloth, vary: 0.035 }, whiteD: { c: 0xa6b4d2, rough: 0.9, cls: CLS.cloth },
       blue: { c: 0x2f56b8, rough: 0.85, cls: CLS.cloth, vary: 0.05 }, cape: { c: 0x2f56b8, rough: 0.85, cls: CLS.cloth, vary: 0.05 }, lining: { c: 0xb4c6ee, rough: 0.9, cls: CLS.cloth, vary: 0.03 },
-      fur: { c: 0xd2e0ff, rough: 0.95, cls: CLS.fur, vary: 0.05, fur: 0.8, pattern: furry },
+      fur: { c: PX ? 0xf0f4ff : 0xd2e0ff, rough: 0.95, cls: CLS.fur, vary: 0.05, fur: 0.8, pattern: furry },
       plate: { c: 0xaebcd8, rough: 0.28, metal: 0.7, cls: CLS.metal, vary: 0.03 }, plateD: { c: 0x66748e, rough: 0.35, metal: 1, cls: CLS.metal },
       glove: { c: 0x262a36, rough: 0.5, cls: CLS.leather },
       leather: { c: 0x46557e, rough: 0.6, cls: CLS.leather },
@@ -99,9 +122,9 @@ EmberVoxelKit.define("frostking", (() => {
     sc.paint(S.custom((x, y, z) => (z > 0.02 ? Math.abs(x) - 0.04 : 1), [-1, -1, -1, 1, 1, 1]), { mat: "blue", soft: 0.001, only: ["white"] });
     sc.add(S.custom((x, y, z) => Math.max(Math.hypot(x / 0.112, (y) / 0.075, (z + 0.012) / 0.098) - 1, 0.004 - y), pad([-0.12, -0.08, -0.12, 0.12, 0.08, 0.1])), { mat: "plate", p: [0, P.chest[0] - 0.035, 0], bone: "chest", k: 0.003 });
     sc.add(star4(0.036, 0.009, 0.005), { mat: "plate", p: [0, P.chest[0] + 0.0, P.chest[3] + 0.034], bone: "chest", k: 0.001, vdil: 0.5 });
-    sc.add(S.sphere(0.011), { mat: "ice", p: [0, P.chest[0], P.chest[3] + 0.04], bone: "chest", k: 0.001 });
+    sc.add(S.sphere(PX ? 0.015 : 0.011), { mat: "ice", p: [0, P.chest[0], P.chest[3] + 0.04], bone: "chest", k: 0.001 });
     wrap(sc, RG.box(-0.25, 0.25, P.waist[0] - 0.024, P.waist[0] - 0.002), "leather", 0.01 * q);
-    sc.add(S.box(0.018, 0.014, 0.005, 0.002), { mat: "plate", p: [0, P.waist[0] - 0.013, P.waist[2] + 0.046], bone: "spine", k: 0.001 });
+    if (!PX) sc.add(S.box(0.018, 0.014, 0.005, 0.002), { mat: "plate", p: [0, P.waist[0] - 0.013, P.waist[2] + 0.046], bone: "spine", k: 0.001 });
     // ---- arms and legs: silver vambraces, black gauntlets, dark breeches, silver greaves and sabatons
     for (const s of [1, -1]) {
       const n = sideName(s), a = armJoints(P, s), l = legJoints(P, s), side = s > 0 ? [0, 0.2] : [-0.2, 0];
@@ -112,7 +135,7 @@ EmberVoxelKit.define("frostking", (() => {
       wrap(sc, RG.box(...side, P.ankY + 0.02, l.K[1] - 0.01), "plate", 0.009);
       wrap(sc, RG.box(...side, -0.03, P.ankY + 0.02), "plateD", 0.007);
       sc.add(S.ell(0.04, 0.036, 0.026), { mat: "plate", p: add(l.K, [0, 0.004, 0.038]), bone: "shin" + n, k: 0.003 });
-      sc.add(star4(0.026, 0.007, 0.004), { mat: "ice", p: add(l.K, [0, 0.004, 0.066]), bone: "shin" + n, k: 0.001, vdil: 0.5 });
+      if (!PX) sc.add(star4(0.026, 0.007, 0.004), { mat: "ice", p: add(l.K, [0, 0.004, 0.066]), bone: "shin" + n, k: 0.001, vdil: 0.5 });
     }
     // ---- cloth: the white robe split at the front, blue lining showing along the split, silver hem; blue cape
     sc.part = "cloth";
@@ -120,13 +143,15 @@ EmberVoxelKit.define("frostking", (() => {
     const slit = (u) => 0.012 + 0.085 * Math.pow(u, 0.9);
     const sk = sc.add(S.custom((x, y, z) => {
       const u = clamp(-y / h, 0, 1), r = mix(r0, r1, Math.pow(u, 0.8)), a = Math.atan2(z / szs, x);
-      const rr = Math.hypot(x, z / szs) - r - 0.004 * u * Math.sin(a * 6 + 0.6);
-      return Math.max(rr, y, -y - h, z > 0 ? slit(u) - Math.abs(x) : -1);
+      const rr = Math.hypot(x, z / szs) - r - (PX ? 0 : 0.004 * u * Math.sin(a * 6 + 0.6));
+      return Math.max(rr, y, -y - h, z > 0 && !PX ? slit(u) - Math.abs(x) : -1);
     }, pad([-r1 - 0.02, -h, -r1 * szs - 0.02, r1 + 0.02, 0, r1 * szs + 0.02], 0.02)), { mat: "white", p: [0, y0, 0], bone: "root", k: 0.003, cs: 0.03, wg: 3 });
     sk.wfn = (x, y) => { const u = clamp((y0 - y) / h, 0, 1), b = u * 0.75, sl = sstep(-0.04, 0.04, x); return [["root", 1 - b], ["thighL", b * sl], ["thighR", b * (1 - sl)]]; };
     sc.paint(S.custom((x, y, z) => { const u = clamp((y0 - y) / h, 0, 1); return z > 0.03 && y < y0 - 0.01 ? Math.abs(x) - slit(u) - 0.024 : 1; }, [-1, -1, -1, 1, 1, 1]), { mat: "blue", soft: 0.001, only: ["white"] });
-    sc.paint(S.custom((x, y, z) => { const u = clamp((y0 - y) / h, 0, 1); return z > 0.03 && y < y0 - 0.01 ? Math.abs(Math.abs(x) - slit(u) - 0.03) - 0.006 : 1; }, [-1, -1, -1, 1, 1, 1]), { mat: "plate", soft: 0.001, only: ["white", "blue"] });
-    sc.paint(S.custom((x, y, z) => Math.abs(y - 0.016) - 0.0065, [-1, -1, -1, 1, 1, 1]), { mat: "plate", soft: 0.001, only: ["white", "blue"] });
+    if (!PX) {
+      sc.paint(S.custom((x, y, z) => { const u = clamp((y0 - y) / h, 0, 1); return z > 0.03 && y < y0 - 0.01 ? Math.abs(Math.abs(x) - slit(u) - 0.03) - 0.006 : 1; }, [-1, -1, -1, 1, 1, 1]), { mat: "plate", soft: 0.001, only: ["white", "blue"] });
+      sc.paint(S.custom((x, y, z) => Math.abs(y - 0.016) - 0.0065, [-1, -1, -1, 1, 1, 1]), { mat: "plate", soft: 0.001, only: ["white", "blue"] });
+    }
     // cape: from the shoulders to the floor, wide, blue outside, white lining
     const ch = capeTop - capeBot, capeZc = (x, y) => {
       const u = clamp((capeTop - y) / ch, 0, 1), w = mix(0.13, 0.24, Math.pow(u, 0.7));
@@ -142,11 +167,16 @@ EmberVoxelKit.define("frostking", (() => {
     // the lining faces forward; only the cape's own voxels take it (the robe is a different material)
     const capeB = [-0.34, capeBot, -0.32, 0.34, capeTop, 0.12];
     sc.paint(S.custom((x, y, z) => (y > capeTop + 0.01 ? 1 : capeZc(x, y).zc - z + 0.001), capeB), { mat: "lining", soft: 0.001, only: ["cape"] });
-    sc.paint(S.custom((x, y, z) => (z > capeZ + 0.02 ? 1 : y - capeBot - 0.014), capeB), { mat: "plate", soft: 0.001, only: ["cape", "lining"] });
+    if (!PX) sc.paint(S.custom((x, y, z) => (z > capeZ + 0.02 ? 1 : y - capeBot - 0.014), capeB), { mat: "plate", soft: 0.001, only: ["cape", "lining"] });
     // fur mantle: a thick shaggy collar over the shoulders, falling in a short bell
     const my0 = P.neck[0] + 0.035, myH = 0.12, mr0 = P.neck[2] * 2.1, mr1 = P.shX + P.delt * 1.7, msz = 0.85;
     const shag = (x, y, z) => 0.005 * Math.pow(Math.abs(vnoise(x * 60, y * 30, z * 60)), 0.5);
-    sc.add(S.custom((x, y, z) => {
+    if (PX) sc.add(S.custom((x, y, z) => {
+      // a clean rounded fur collar: a thick shell with a smooth rolled hem, no shag
+      const u = clamp(-y / myH, 0, 1), r = mix(mr0, mr1, Math.pow(u, 0.5)), rr = Math.hypot(x, z / msz) - r;
+      return K.smax(Math.abs(rr) - 0.02 - 0.006 * (1 - u), Math.max(-y - myH + 0.02, y - 0.01), 0.016);
+    }, pad([-mr1 - 0.04, -myH - 0.02, -mr1 * msz - 0.04, mr1 + 0.04, 0.04, mr1 * msz + 0.04], 0.02)), { mat: "fur", p: [0, my0, -0.012], bone: "chest", k: 0.006, cs: 0.03, bones: [["chest", 1]] });
+    else sc.add(S.custom((x, y, z) => {
       const u = clamp(-y / myH, 0, 1), r = mix(mr0, mr1, Math.pow(u, 0.5));
       const rr = Math.hypot(x, z / msz) - r;
       return Math.max(Math.abs(rr) - 0.011 - 0.006 * (1 - u), -y - myH + 0.02 * Math.abs(Math.sin(Math.atan2(z, x) * 7)), y - 0.01);
@@ -155,17 +185,23 @@ EmberVoxelKit.define("frostking", (() => {
 
     // ---- hair and the ice crown
     sc.part = "hair";
-    const { C, R } = hairOf(sc, P);
+    const { C, R } = PX ? hairPx(sc, P) : hairOf(sc, P);
     sc.part = "body";
     const cy = C[1] + R[1] * 0.4, cz = C[2] + 0.004, crx = R[0] * 1.04, crz = R[2] * 1.04;
-    sc.add(S.custom((x, y, z) => Math.max(Math.abs(Math.hypot(x / crx, (z - cz) / crz) - 1) * crx - 0.006, Math.abs(y - cy) - 0.009), pad([-crx, cy - 0.02, cz - crz, crx, cy + 0.02, cz + crz])), { mat: "plate", bone: "head", k: 0.002 });
-    for (let i = -4; i <= 4; i++) {
+    sc.add(S.custom((x, y, z) => Math.max(Math.abs(Math.hypot(x / crx, (z - cz) / crz) - 1) * crx - (PX ? 0.009 : 0.006), Math.abs(y - cy) - (PX ? 0.012 : 0.009)), pad([-crx, cy - 0.02, cz - crz, crx, cy + 0.02, cz + crz])), { mat: "plate", bone: "head", k: 0.002 });
+    // pixel sprite: five fat ice spikes, the tallest in the middle
+    if (PX) for (let i = -2; i <= 2; i++) {
+      const az = i * 0.55, front = Math.cos(az), len = 0.035 + 0.035 * front * front + (i === 0 ? 0.04 : 0);
+      const base = [crx * Math.sin(az), cy + 0.008, cz + crz * Math.cos(az)];
+      sc.limb(base, add(base, [Math.sin(az) * 0.014, len, Math.cos(az) * 0.006]), i === 0 ? 0.02 : 0.015, 0.004, { mat: "ice", bone: "head", k: 0.002, vdil: 0.6, sz: 0.7 });
+    }
+    else for (let i = -4; i <= 4; i++) {
       const az = i * 0.36, front = Math.cos(az);
       const len = 0.02 + 0.04 * front * front + (i === 0 ? 0.04 : 0);
       const base = [crx * Math.sin(az), cy + 0.006, cz + crz * Math.cos(az)];
       sc.limb(base, add(base, [Math.sin(az) * 0.012, len, Math.cos(az) * 0.006]), i === 0 ? 0.014 : 0.01, 0.0015, { mat: i % 2 ? "plate" : "ice", bone: "head", k: 0.002, vdil: 0.6, sz: 0.65 });
     }
-    sc.add(S.sphere(0.009), { mat: "ice", p: [0, cy, cz + crz + 0.004], bone: "head", k: 0.001 });
+    if (!PX) sc.add(S.sphere(0.009), { mat: "ice", p: [0, cy, cz + crz + 0.004], bone: "head", k: 0.001 });
     for (let i = n0; i < sc.prims.length; i++) sc.prims[i].cs = Math.min(sc.prims[i].cs, 0.03);
     return { sc, P, kind: "humanoid", props: [{ sc: sword(), bone: "handR", at: armJoints(P, -1).W, grip: "spear" }] };
   }

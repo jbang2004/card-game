@@ -19,7 +19,7 @@ EmberVoxelKit.define("spark", (() => {
 
   // the fire star: a hot white star through an orange heart, one swirling ember arc (prop, 0.75 cm cubes)
   function orbProp() {
-    const sc = new Sculpture();
+    const sc = new Sculpture(), PX = K.pixel;
     sc.bone("p", null, 0, 0, 0);
     mats(sc, {
       // mid-value albedo + moderate emit stays saturated through the grade; only the core is meant to bleach white
@@ -29,6 +29,13 @@ EmberVoxelKit.define("spark", (() => {
       ember: { c: 0xa8461a, rough: 0.4, emit: 0.6, cls: CLS.glow },
     });
     const o = { bone: "p" }, g = 1.25;
+    if (PX) {
+      // pixel sprite: a bright blob — an orange ball round a white-hot heart, four fat rays
+      sc.add(S.sphere(0.042 * g), { ...o, mat: "star", p: [0, 0, 0], k: 0.004 });
+      sc.add(S.sphere(0.026 * g), { ...o, mat: "core", p: [0, 0, 0.02 * g], k: 0.004 });
+      for (const d of [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0]]) sc.limb(mul(d, 0.02 * g), mul(d, 0.078 * g), 0.018 * g, 0.004, { ...o, mat: "core", k: 0.008, cs: 0.05 });
+      return sc;
+    }
     sc.add(S.sphere(0.034 * g), { ...o, mat: "fire", p: [0, 0, 0], k: 0.004 });
     // hot star through the heart: four long rays, two short ones front and back, small diagonals
     const spike = (d, len, r0, mat) => sc.limb(mul(norm(d), 0.01 * g), mul(norm(d), len * g), r0 * g, 0.0016, { ...o, mat, k: 0.006, cs: 0.05 });
@@ -53,6 +60,21 @@ EmberVoxelKit.define("spark", (() => {
     for (const s of [1, -1]) { spike(s * 1.45, 0.3, s * 1.62, -0.28, 1.3, 0.02); spike(s * 2.05, 0.2, s * 2.2, -0.45, 1.3, 0.02); }
     [[2.7, -0.1, 2.75, -0.72, 1.26], [3.14, -0.05, 3.14, -0.8, 1.26], [3.58, -0.1, 3.53, -0.72, 1.26]].forEach(([a, e, a2, e2, l]) => spike(a, e, a2, e2, l, 0.022));
     // messy fringe: locks falling over the forehead to the brows, tips kicked alternately left and right
+    const PX = K.pixel;
+    if (PX) {
+      // pixel sprite: four fat fringe locks ending above the brow, a fat lock before each ear
+      [[-0.85, 0.016, -1], [-0.3, 0.022, 1], [0.25, 0.018, -1], [0.8, 0.014, 1]].forEach(([u, dy, j]) => {
+        const root = onEll(C, R, u * 0.5, 0.86, 0.94);
+        const tip = [R[0] * (0.75 * u + 0.1 * j), ey + (0.026 + dy) * q, P.faceZ + (0.01 - 0.014 * Math.abs(u)) * q];
+        const mid = add(lerp(root, tip, 0.45), mul(norm(sub(lerp(root, tip, 0.45), C)), 0.014 * q));
+        strand(sc, [root, mid, tip], 0.021, 0.008, { k: 0.01, taper: 1.05, grooves: 0 });
+      });
+      for (const s of [1, -1]) {
+        const root = onEll(C, R, s * 1.05, 0.45, 0.96), tip = [s * R[0] * 1.04, P.chinY + 0.022 * q, C[2] + R[2] * 0.42];
+        strand(sc, [root, add(lerp(root, tip, 0.5), [s * 0.008 * q, 0, 0]), tip], 0.02, 0.008, { k: 0.01, taper: 1.05, grooves: 0 });
+      }
+      return;
+    }
     const fr = [[-0.92, 0.012, -1], [-0.56, 0.004, 1], [-0.2, 0.016, -1], [0.14, 0.0, 1], [0.48, 0.014, -1], [0.86, 0.006, 1]];
     fr.forEach(([u, dy, j], i) => {
       const root = onEll(C, R, u * 0.5, 0.86, 0.94);
@@ -68,7 +90,7 @@ EmberVoxelKit.define("spark", (() => {
   }
 
   function build(fam) {
-    const P = FAM[fam], sc = new Sculpture(), q = fam === "chunky" ? 1.25 : 1;
+    const P = FAM[fam], sc = new Sculpture(), q = fam === "chunky" ? 1.25 : 1, PX = K.pixel;
     humanoidBones(sc, P);
     const aR = armJoints(P, -1), orbAt = add(aR.W, mul(aR.dir, 0.128));
     sc.bone("orb", "handR", ...orbAt);       // the fire star rides on the right hand (posed explicitly by pose())
@@ -91,11 +113,11 @@ EmberVoxelKit.define("spark", (() => {
     const upArm = [1, -1].map((s) => { const a = armJoints(P, s); return RG.seg(add(a.S, mul(sub(a.S, a.E), 0.55)), lerp(a.S, a.E, 1.02), 0.085); });
     wrap(sc, RG.box(-X0, X0, P.pelvis[0] - 0.03, P.neck[0] + 0.045), "shirt", 0.003 * q);
     wrap(sc, RG.minus(RG.or(RG.box(-X0, X0, P.pelvis[0] - 0.03, P.neck[0] + 0.045), ...upArm), vcut), "robe", 0.006 * q);
-    sc.paint(S.custom((x, y, z) => (z > 0.02 && y < P.neck[0] + 0.02 ? Math.abs(Math.abs(x) - vw(y) - 0.0058) - 0.0058 : 1), [-0.3, -0.3, -0.3, 0.3, 1.2, 0.3]), { mat: "gold", soft: 0.001, only: ["robe"] });
+    if (!PX) sc.paint(S.custom((x, y, z) => (z > 0.02 && y < P.neck[0] + 0.02 ? Math.abs(Math.abs(x) - vw(y) - 0.0058) - 0.0058 : 1), [-0.3, -0.3, -0.3, 0.3, 1.2, 0.3]), { mat: "gold", soft: 0.001, only: ["robe"] });
     // gold star on the right breast, gold seams round the upper arms
-    sc.paint(star4(0.024, 0.0075, 0.03), { mat: "gold", p: [-0.056, P.chest[0] + 0.024, P.chest[3] + 0.012], soft: 0.001, only: ["robe"] });
+    sc.paint(PX ? star4(0.032, 0.011, 0.03) : star4(0.024, 0.0075, 0.03), { mat: "gold", p: [-0.056, P.chest[0] + 0.024, P.chest[3] + 0.012], soft: 0.001, only: ["robe"] });
     sc.paint(star4(0.036, 0.011, 0.03), { mat: "gold", p: [0.00625, 0.68125, -P.chest[3] - 0.012], soft: 0.001, only: ["robe"] });   // and a big one between the shoulder blades (on a voxel centre, so both arms land)
-    for (const s of [1, -1]) { const a = armJoints(P, s), d = norm(sub(a.E, a.S)); sc.paint(ring(lerp(a.S, a.E, 0.42), d, 0.0058, 0.09), { mat: "gold", soft: 0.001, only: ["robe"] }); }
+    if (!PX) for (const s of [1, -1]) { const a = armJoints(P, s), d = norm(sub(a.E, a.S)); sc.paint(ring(lerp(a.S, a.E, 0.42), d, 0.0058, 0.09), { mat: "gold", soft: 0.001, only: ["robe"] }); }
     // wide sleeves from above the elbow to the wrist: solid bells with a gold band, the linen under-sleeve showing at the mouth
     for (const s of [1, -1]) {
       const n = sideName(s), a = armJoints(P, s);
@@ -106,7 +128,7 @@ EmberVoxelKit.define("spark", (() => {
       const tE = dot(sub(a.E, top), d) / L;
       sl.wfn = (x, y, z) => { const t = dot(sub([x, y, z], top), d) / L, w = sstep(tE - 0.12, tE + 0.1, t); return [["arm" + n, 1 - w], ["fore" + n, w]]; };
       sc.paint(S.custom((x, y, z) => Math.max(L - 0.007 - y, inS(x, z)), [-1, -1, -1, 1, 1, 1]), { mat: "shirt", p: top, R: Rs, soft: 0.001, only: ["robe"] });
-      sc.paint(S.custom((x, y, z) => Math.max(Math.abs(y - (L - 0.022)) - 0.0055, inS(x, z)), [-1, -1, -1, 1, 1, 1]), { mat: "gold", p: top, R: Rs, soft: 0.001, only: ["robe"] });
+      sc.paint(S.custom((x, y, z) => Math.max(Math.abs(y - (L - 0.022)) - (PX ? 0.008 : 0.0055), inS(x, z)), [-1, -1, -1, 1, 1, 1]), { mat: "gold", p: top, R: Rs, soft: 0.001, only: ["robe"] });
     }
     // ---- legs: dark trousers, brown boots with a dark turned cuff
     const bootTop = 0.215;
@@ -121,7 +143,7 @@ EmberVoxelKit.define("spark", (() => {
     const rAt = (u) => mix(r0, r1, Math.pow(u, 0.55));
     const skirtS = S.custom((x, y, z) => {
       const u = clamp(-y / h, 0, 1), r = rAt(u), a = Math.atan2(z / szs, x);
-      const rr = Math.hypot(x, z / szs) - r - 0.008 * u * Math.sin(a * 9 + 0.6);
+      const rr = Math.hypot(x, z / szs) - r - (PX ? 0 : 0.008 * u * Math.sin(a * 9 + 0.6));
       return Math.max(rr * 0.85, y, -y - h);
     }, [-r1 - 0.02, -h, -(r1 + 0.02) * szs, r1 + 0.02, 0, (r1 + 0.02) * szs]);
     const sk = sc.add(skirtS, { mat: "robe", p: [0, y0, zc], bone: "root", k: 0.003, cs: 0.03, wg: 3 });
@@ -129,19 +151,24 @@ EmberVoxelKit.define("spark", (() => {
     // open front showing the linen under-robe, gold piping, gold hem, dark underside
     const panel = (x, y, z) => { const u = clamp((y0 - y) / h, 0, 1); return 0.014 + 0.03 * u; };
     sc.paint(S.custom((x, y, z) => (z > 0.02 ? Math.abs(x) - panel(x, y, z) : 1), [-1, -1, -1, 1, 1, 1]), { mat: "shirt", soft: 0.001, only: ["robe"] });
-    sc.paint(S.custom((x, y, z) => (z > 0.02 ? Math.abs(Math.abs(x) - panel(x, y, z) - 0.0058) - 0.0058 : 1), [-1, -1, -1, 1, 1, 1]), { mat: "gold", soft: 0.001, only: ["robe"] });
-    sc.paint(S.custom((x, y, z) => Math.abs(y - (y1 + 0.009)) - 0.0062, [-1, -1, -1, 1, 1, 1]), { mat: "gold", soft: 0.001, only: ["robe", "shirt"] });
-    sc.paint(S.custom((x, y, z) => Math.max(y - (y1 + 0.004), Math.hypot(x, (z - zc) / szs) - (r1 - 0.016)), [-1, -1, -1, 1, 1, 1]), { mat: "robeIn", soft: 0.001 });
+    if (!PX) sc.paint(S.custom((x, y, z) => (z > 0.02 ? Math.abs(Math.abs(x) - panel(x, y, z) - 0.0058) - 0.0058 : 1), [-1, -1, -1, 1, 1, 1]), { mat: "gold", soft: 0.001, only: ["robe"] });
+    if (PX) {
+      // pixel sprite: the gold hem is its own band standing proud of the skirt (a clean edge, not a painted one)
+      const hb = sc.add(S.custom((x, y, z) => { const u = clamp(-y / h, 0, 1); return Math.max(Math.hypot(x, z / szs) - rAt(u) - 0.005, y + h - 0.024, -y - h - 0.002); }, [-r1 - 0.03, -h - 0.01, -(r1 + 0.03) * szs, r1 + 0.03, -h + 0.03, (r1 + 0.03) * szs]),
+        { mat: "gold", p: [0, y0, zc], bone: "root", k: 0.002, cs: 0.03, wg: 3 });
+      hb.wfn = (x, y) => { const u = clamp((y0 - y) / h, 0, 1), b = u * 0.7, sl = sstep(-0.03, 0.03, x); return [["root", 1 - b], ["thighL", b * sl], ["thighR", b * (1 - sl)]]; };
+    } else sc.paint(S.custom((x, y, z) => Math.abs(y - (y1 + 0.009)) - 0.0062, [-1, -1, -1, 1, 1, 1]), { mat: "gold", soft: 0.001, only: ["robe", "shirt"] });
+    if (!PX) sc.paint(S.custom((x, y, z) => Math.max(y - (y1 + 0.004), Math.hypot(x, (z - zc) / szs) - (r1 - 0.016)), [-1, -1, -1, 1, 1, 1]), { mat: "robeIn", soft: 0.001 });
     // belt: a leather band over the skirt's waist, star buckle, a hanging tail
     const yb = y0 - 0.002, belt = S.custom((x, y, z) => Math.max(Math.hypot(x, z / 0.82) - 0.1, Math.abs(y) - 0.016), [-0.11, -0.02, -0.1, 0.11, 0.02, 0.1]);
     sc.add(belt, { mat: "belt", p: [0, yb, zc], bone: "spine", bones: [["spine", 0.5], ["root", 0.5]], k: 0.003, cs: 0.03, wg: 3 });
-    sc.paint(S.custom((x, y, z) => Math.abs(Math.abs(y - yb) - 0.0125) - 0.003, [-1, -1, -1, 1, 1, 1]), { mat: "beltD", soft: 0.001, only: ["belt"] });
+    if (!PX) sc.paint(S.custom((x, y, z) => Math.abs(Math.abs(y - yb) - 0.0125) - 0.003, [-1, -1, -1, 1, 1, 1]), { mat: "beltD", soft: 0.001, only: ["belt"] });
     sc.add(star4(0.026, 0.0085, 0.004), { mat: "gold", p: [0.006, yb, zc + 0.082 + 0.004], bone: "spine", bones: [["spine", 0.5], ["root", 0.5]], k: 0.002, cs: 0.02, vdil: 0.55, wg: 3 });
     const tailX = -0.034, tailZ = (y) => zc + rAt(clamp((y0 - y) / h, 0, 1)) * szs * 0.97 + 0.004;
     const tail = sc.add(S.custom((x, y, z) => Math.max(Math.abs(x - tailX) - 0.0105, Math.abs(z - tailZ(y)) - 0.0042, y - (yb - 0.012), (yb - 0.1) - y), [tailX - 0.012, yb - 0.1, 0, tailX + 0.012, yb, 0.2]),
       { mat: "belt", p: [0, 0, 0], bone: "root", k: 0.002, cs: 0.02, wg: 3 });
     tail.wfn = sk.wfn;
-    sc.add(star4(0.016, 0.0055, 0.0035), { mat: "gold", p: [tailX, yb - 0.09, tailZ(yb - 0.09) + 0.004], bone: "root", k: 0.002, cs: 0.02, vdil: 0.55, wg: 3 }).wfn = sk.wfn;
+    if (!PX) sc.add(star4(0.016, 0.0055, 0.0035), { mat: "gold", p: [tailX, yb - 0.09, tailZ(yb - 0.09) + 0.004], bone: "root", k: 0.002, cs: 0.02, vdil: 0.55, wg: 3 }).wfn = sk.wfn;
     // stand collar, open at the front, gold rim and a star on the right flap
     const cy0 = P.neck[0] - 0.012, cy1 = P.chinY + 0.014, crx = 0.054, crz = 0.05;
     const collar = S.custom((x, y, z) => {
@@ -155,7 +182,7 @@ EmberVoxelKit.define("spark", (() => {
     const inCol = (x, y, z) => Math.max(Math.hypot(x, z + 0.004) - 0.09, cy0 - 0.012 - y);
     sc.paint(S.custom((x, y, z) => Math.max(cy1 - 0.005 - y, inCol(x, y, z)), [-1, -1, -1, 1, 1, 1]), { mat: "gold", soft: 0.001, only: ["robe"] });
     sc.paint(S.custom((x, y, z) => Math.max(Math.hypot(x, (z + 0.004) * 1.08) - crx * 0.98, cy0 - 0.012 - y), [-1, -1, -1, 1, 1, 1]), { mat: "robeIn", soft: 0.001, only: ["robe"] });
-    sc.paint(star4(0.015, 0.005, 0.03), { mat: "gold", p: [-0.03, mix(cy0, cy1, 0.45), 0.05], soft: 0.001, only: ["robe"] });
+    if (!PX) sc.paint(star4(0.015, 0.005, 0.03), { mat: "gold", p: [-0.03, mix(cy0, cy1, 0.45), 0.05], soft: 0.001, only: ["robe"] });
     sc.part = "hair";
     sparkHair(sc, P, q);
     sc.part = "body";

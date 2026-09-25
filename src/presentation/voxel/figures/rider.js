@@ -50,6 +50,7 @@ EmberVoxelKit.define("rider", (() => {
 
   function build() {
     const sc = new Sculpture();
+    const PX = K.pixel;                                              // pixel-sprite variant: clean wolf, a bigger, simpler knight
     const Hs = 1.12 * k, Ps = 1.3;
     quadBones(sc, G);
     // rider chain
@@ -64,15 +65,15 @@ EmberVoxelKit.define("rider", (() => {
       fang: { c: 0xdde6ff, rough: 0.3, cls: CLS.skin }, claw: { c: 0x2c3456, rough: 0.4, cls: CLS.skin }, earIn: { c: 0x3c4a80, rough: 0.8, cls: CLS.skin },
       eye: { c: 0xbfeaff, rough: 0.2, emit: 2.2, cls: CLS.glow },
       crystal: { c: 0x8cc8ff, rough: 0.2, metal: 0.3, emit: 0.35, cls: CLS.glow, vary: 0.05 }, crystalHi: { c: 0xdff4ff, rough: 0.15, emit: 0.8, cls: CLS.glow },
-      steel: { c: 0x5c6f9c, rough: 0.3, metal: 0.7, cls: CLS.metal, vary: 0.03 }, steelD: { c: 0x2c3658, rough: 0.35, metal: 0.8, cls: CLS.metal },
+      steel: { c: PX ? 0x3a4f8e : 0x5c6f9c, rough: 0.3, metal: 0.7, cls: CLS.metal, vary: 0.03 }, steelD: { c: PX ? 0x1e2548 : 0x2c3658, rough: 0.35, metal: 0.8, cls: CLS.metal },
       steelL: { c: 0x8ea6e0, rough: 0.25, metal: 0.8, cls: CLS.metal }, strap: { c: 0x232a44, rough: 0.7, cls: CLS.leather },
       // rider
       mantle: { c: 0xc8d6ff, rough: 0.9, cls: CLS.fur, vary: 0.05, fur: 0.9 }, cape: { c: 0x3c5eb4, rough: 0.8, cls: CLS.cloth, vary: 0.05 }, capeIn: { c: 0x22356e, rough: 0.8, cls: CLS.cloth },
       visor: { c: 0x9fe4ff, rough: 0.2, emit: 2.0, cls: CLS.glow }, under: { c: 0x1c2240, rough: 0.6, cls: CLS.cloth },
     });
     const furD = (amp, f = 70) => (x, yy, z) => { const u = z * f * 0.45 + 1.8 * vnoise(x * f * 0.35, yy * f * 0.35, 3.1); const fr = u - Math.floor(u); return amp * (fr * fr) * (0.6 + 0.4 * vnoise(x * f, yy * f, z * f)); };
-    const fk = (a, f) => ({ disp: furD(a, f), dispAmp: a });
-    const spike = (base, dir, len, r, mat, bone, o = {}) => sc.limb(base, add(base, mul(norm(dir), len)), r, 0.0015, Object.assign({ mat, bone, k: 0.004, vdil: 0.5 }, o));
+    const fk = (a, f) => (PX ? {} : { disp: furD(a, f), dispAmp: a });
+    const spike = (base, dir, len, r, mat, bone, o = {}) => sc.limb(base, add(base, mul(norm(dir), len)), r, PX ? 0.005 : 0.0015, Object.assign({ mat, bone, k: 0.004, vdil: 0.5 }, o));
 
     // ================= mount: frost wolf
     sc.add(S.ell(0.08 * k, 0.098 * k, 0.115 * k), { mat: "fur", p: add(G.chest, P3(0, -0.02, 0)), bone: "chest", k: 0.04, ...fk(0.007) });
@@ -89,12 +90,13 @@ EmberVoxelKit.define("rider", (() => {
     sc.add(S.ell(0.012 * Hs, 0.009 * Hs, 0.009 * Hs), { mat: "nose", p: add(hc, [0, -0.009 * Hs, (0.036 + mzL) * Hs + 0.002 * Hs]), bone: "head", k: 0.006, cs: 0.05 });
     sc.limb(add(hc, [0, -0.038 * Hs, 0.03 * Hs]), add(hc, [0, -0.044 * Hs, (0.03 + mzL * 0.8) * Hs]), 0.015 * Hs, 0.01 * Hs, { mat: "furLight", bone: "jaw", k: 0.01 });
     sc.paint(S.ell(0.022 * Hs, 0.007 * Hs, 0.034 * Hs), { mat: "mouth", p: add(hc, [0, -0.03 * Hs, (0.03 + mzL * 0.55) * Hs]), soft: 0.002 });
-    for (const s of [1, -1]) spike(add(hc, [s * 0.013 * Hs, -0.024 * Hs, (0.03 + mzL * 0.8) * Hs]), [0, -1, 0.1], 0.016 * Hs, 0.0042, "fang", "head", { k: 0.002 });
-    for (const s of [1, -1]) sc.add(S.ell(0.011 * Hs, 0.0055 * Hs, 0.007 * Hs), { mat: "eye", p: add(hc, [s * 0.022 * Hs, 0.004 * Hs, 0.043 * Hs]), r: [0, s * 0.35, s * 0.3], bone: "head", k: 0.003, cs: 0.03 });
+    for (const s of [1, -1]) spike(add(hc, [s * 0.013 * Hs, -0.024 * Hs, (0.03 + mzL * 0.8) * Hs]), [0, -1, 0.1], 0.016 * Hs, PX ? 0.008 : 0.0042, "fang", "head", { k: 0.002 });
+    const eK = PX ? 1.5 : 1;
+    for (const s of [1, -1]) sc.add(S.ell(0.011 * Hs * eK, 0.0055 * Hs * eK, 0.007 * Hs), { mat: "eye", p: add(hc, [s * 0.022 * Hs, 0.004 * Hs, 0.043 * Hs]), r: [0, s * 0.35, s * 0.3], bone: "head", k: 0.003, cs: 0.03 });
     // chamfron: a crystal plate down the brow and nose, an ice horn on the forehead
     sc.add(S.box(0.022 * Hs, 0.006, 0.05 * Hs, 0.004), { mat: "crystal", p: add(hc, [0, 0.024 * Hs, 0.05 * Hs]), r: [0.28, 0, 0], bone: "head", k: 0.003 });
     spike(add(hc, [0, 0.03 * Hs, 0.02 * Hs]), [0, 1, 0.35], 0.06 * Hs, 0.012 * Hs, "crystal", "head");
-    for (const s of [1, -1]) spike(add(hc, [s * 0.03 * Hs, 0.022 * Hs, 0.02 * Hs]), [s * 0.5, 0.8, -0.2], 0.035 * Hs, 0.008 * Hs, "crystal", "head");
+    if (!PX) for (const s of [1, -1]) spike(add(hc, [s * 0.03 * Hs, 0.022 * Hs, 0.02 * Hs]), [s * 0.5, 0.8, -0.2], 0.035 * Hs, 0.008 * Hs, "crystal", "head");
     for (const s of [1, -1]) {
       const n = sideName(s), base = add(hc, [s * 0.03 * Hs, 0.024 * Hs, -0.012]), tip = add(base, [s * 0.016 * Hs, 0.058 * Hs, -0.03]);
       sc.limb(base, tip, 0.022 * Hs, 0.002, { mat: "furFace", bone: "ear" + n, k: 0.012, sz: 0.42 });
@@ -113,13 +115,14 @@ EmberVoxelKit.define("rider", (() => {
       sc.limb(B[1], B[2], 0.026 * k, 0.016 * k, { mat: "furLeg", bone: "stif" + n, k: 0.014 });
       sc.limb(B[2], B[3], 0.016 * k, 0.018 * k, { mat: "furLeg", bone: "hock" + n, k: 0.01 });
       sc.add(S.ell(0.024 * Ps, 0.016 * Ps, 0.029 * Ps), { mat: "furLight", p: add(B[3], [0, -0.004, 0.012]), bone: "bpaw" + n, k: 0.01 });
-      for (const [P4, bn] of [[F[3], "fpaw" + n], [B[3], "bpaw" + n]]) for (let c = -1; c <= 1; c++) sc.add(S.ell(0.0035, 0.0035, 0.005), { mat: "claw", p: add(P4, [c * 0.011 * Ps, -0.008, 0.036 * Ps]), bone: bn, k: 0.002 });
+      if (!PX) for (const [P4, bn] of [[F[3], "fpaw" + n], [B[3], "bpaw" + n]]) for (let c = -1; c <= 1; c++) sc.add(S.ell(0.0035, 0.0035, 0.005), { mat: "claw", p: add(P4, [c * 0.011 * Ps, -0.008, 0.036 * Ps]), bone: bn, k: 0.002 });
       // crystal spikes over the shoulder
-      for (let i = 0; i < 3; i++) spike(add(F[0], [s * 0.035, 0.025 - 0.02 * i, -0.01 - 0.025 * i]), [s * 0.8, 0.6, -0.3], (0.05 - 0.01 * i) * k, 0.011 * k, i ? "crystal" : "crystalHi", "scap" + n);
+      if (PX) spike(add(F[0], [s * 0.035, 0.02, -0.02]), [s * 0.8, 0.6, -0.3], 0.055 * k, 0.018 * k, "crystal", "scap" + n);
+      else for (let i = 0; i < 3; i++) spike(add(F[0], [s * 0.035, 0.025 - 0.02 * i, -0.01 - 0.025 * i]), [s * 0.8, 0.6, -0.3], (0.05 - 0.01 * i) * k, 0.011 * k, i ? "crystal" : "crystalHi", "scap" + n);
     }
     // blue streaks through the white coat (as the card: blue saddle, cheek and shoulder markings)
     sc.paint(S.ell(0.075 * k, 0.04 * k, 0.2 * k), { mat: "furBlue", p: [0, G.spine[1] + 0.06 * k, -0.02], soft: 0.03, amt: 0.85, only: ["fur"] });
-    for (const s of [1, -1]) sc.paint(S.ell(0.01, 0.018 * Hs, 0.03 * Hs), { mat: "furBlue", p: add(hc, [s * 0.042 * Hs, 0.008 * Hs, -0.006]), soft: 0.006, only: ["furFace"] });
+    if (!PX) for (const s of [1, -1]) sc.paint(S.ell(0.01, 0.018 * Hs, 0.03 * Hs), { mat: "furBlue", p: add(hc, [s * 0.042 * Hs, 0.008 * Hs, -0.006]), soft: 0.006, only: ["furFace"] });
     // tail
     const T0 = G.tail[0], tp = [];
     for (let i = 0; i <= 12; i++) { const u = i / 12; tp.push([0, T0[1] - 0.03 * u - 0.09 * u * u, T0[2] - 0.22 * u, (0.028 + 0.022 * Math.sin(u * 2.6)) * (1 - 0.7 * u * u) + 0.005]); }
@@ -139,34 +142,35 @@ EmberVoxelKit.define("rider", (() => {
       sc.add(S.ell(0.022, 0.018, 0.022), { mat: "steelL", p: add(R.knee(s), [0, 0.004, 0.012]), k: 0.004, ...rb("rHip") });
       sc.limb(R.knee(s), R.ank(s), 0.023, 0.02, { mat: "steel", k: 0.005, ...rb("rHip") });
       sc.add(S.ell(0.022, 0.018, 0.038), { mat: "steelD", p: add(R.ank(s), [0, -0.01, 0.02]), k: 0.004, ...rb("rHip") });
-      spike(add(R.knee(s), [s * 0.015, 0.01, 0.01]), [s * 0.6, 0.5, 0.6], 0.03, 0.008, "crystal", "rHip", { bones: [["rHip", 1]] });
+      if (!PX) spike(add(R.knee(s), [s * 0.015, 0.01, 0.01]), [s * 0.6, 0.5, 0.6], 0.03, 0.008, "crystal", "rHip", { bones: [["rHip", 1]] });
     }
     // torso: under-armour, breastplate, faulds
     sc.add(S.ell(0.062, 0.04, 0.05), { mat: "under", p: R.hip, k: 0.01, ...rb("rHip") });
     sc.add(S.ell(0.058, 0.05, 0.048), { mat: "steelD", p: R.waist, k: 0.012, ...rb("rTorso") });
     sc.add(S.ell(0.074, 0.062, 0.056), { mat: "steel", p: add(R.chest, [0, -0.01, 0.004]), k: 0.014, ...rb("rChest") });
-    sc.add(S.box(0.012, 0.045, 0.012, 0.004), { mat: "steelL", p: add(R.chest, [0, -0.012, 0.052]), r: [0.2, 0, Math.PI / 4], k: 0.004, ...rb("rChest") });
+    if (PX) sc.paint(S.box(0.03, 0.03, 0.02), { mat: "crystalHi", p: add(R.chest, [0, -0.005, 0.055]), r: [0.2, 0, Math.PI / 4], soft: 0.002, only: ["steel"] });   // a big ice gem on the breastplate
+    else sc.add(S.box(0.012, 0.045, 0.012, 0.004), { mat: "steelL", p: add(R.chest, [0, -0.012, 0.052]), r: [0.2, 0, Math.PI / 4], k: 0.004, ...rb("rChest") });
     // white fur mantle round the shoulders
     sc.add(S.ell(0.09, 0.03, 0.068), { mat: "mantle", p: add(R.neck, [0, -0.028, -0.004]), k: 0.012, ...rb("rChest"), ...fk(0.012, 60) });
     // pauldrons: steel domes crowned with ice crystals
     for (const s of [1, -1]) {
       const n = sideName(s), sh = R.sh(s);
       sc.add(S.ell(0.04, 0.032, 0.044), { mat: "steel", p: add(sh, [s * 0.012, 0.006, 0]), k: 0.006, ...rb("rChest") });
-      spike(add(sh, [s * 0.02, 0.025, 0]), [s * 0.35, 1, -0.15], 0.075, 0.014, "crystal", "rChest", { bones: [["rChest", 1]] });
-      spike(add(sh, [s * 0.04, 0.012, -0.012]), [s * 0.9, 0.6, -0.3], 0.045, 0.01, "crystalHi", "rChest", { bones: [["rChest", 1]] });
+      spike(add(sh, [s * 0.02, 0.025, 0]), [s * 0.35, 1, -0.15], 0.075, PX ? 0.022 : 0.014, "crystal", "rChest", { bones: [["rChest", 1]] });
+      if (!PX) spike(add(sh, [s * 0.04, 0.012, -0.012]), [s * 0.9, 0.6, -0.3], 0.045, 0.01, "crystalHi", "rChest", { bones: [["rChest", 1]] });
       // arms: steel upper arm, gauntleted forearm, fist
       sc.limb(sh, R.el(s), 0.024, 0.02, { mat: "steelD", k: 0.006, ...rb("rArm" + n) });
       sc.limb(R.el(s), R.wr(s), 0.022, 0.02, { mat: "steel", k: 0.006, ...rb("rFore" + n) });
       sc.add(S.ell(0.022, 0.022, 0.024), { mat: "steelD", p: add(R.wr(s), mul(norm(sub(R.wr(s), R.el(s))), 0.012)), k: 0.004, ...rb("rHand" + n) });
     }
     // helm: rounded steel helm, glowing visor slit, cheek guards, tall crystal crest
-    const hd = add(R.neck, [0, 0.055, 0.002]);
-    sc.add(S.ell(0.046, 0.052, 0.05), { mat: "steel", p: hd, k: 0.008, ...rb("rHead") });
-    sc.add(S.box(0.034, 0.006, 0.02), { mat: "visor", p: add(hd, [0, -0.002, 0.042]), k: 0.002, ...rb("rHead") });
-    sc.add(S.ell(0.038, 0.018, 0.04), { mat: "steelD", p: add(hd, [0, -0.034, 0.014]), k: 0.006, ...rb("rHead") });
-    spike(add(hd, [0, 0.04, -0.004]), [0, 1, -0.25], 0.1, 0.017, "crystal", "rHead", { bones: [["rHead", 1]] });
-    for (const s of [1, -1]) spike(add(hd, [s * 0.03, 0.03, -0.004]), [s * 0.45, 1, -0.35], 0.055, 0.01, "crystalHi", "rHead", { bones: [["rHead", 1]] });
-    sc.paint(S.box(0.004, 0.06, 0.06), { mat: "steelL", p: add(hd, [0, 0.03, 0.01]), soft: 0.002, only: ["steel"] });
+    const hK = PX ? 1.3 : 1, hd = add(R.neck, [0, 0.055 * (PX ? 1.2 : 1), 0.002]);
+    sc.add(S.ell(0.046 * hK, 0.052 * hK, 0.05 * hK), { mat: "steel", p: hd, k: 0.008, ...rb("rHead") });
+    sc.add(S.box(0.034 * hK, PX ? 0.011 : 0.006, 0.02), { mat: "visor", p: add(hd, [0, -0.002, 0.042 * hK]), k: 0.002, ...rb("rHead") });
+    sc.add(S.ell(0.038 * hK, 0.018 * hK, 0.04 * hK), { mat: "steelD", p: add(hd, [0, -0.034 * hK, 0.014 * hK]), k: 0.006, ...rb("rHead") });
+    spike(add(hd, [0, 0.04 * hK, -0.004]), [0, 1, -0.25], 0.1, PX ? 0.024 : 0.017, "crystal", "rHead", { bones: [["rHead", 1]] });
+    if (!PX) for (const s of [1, -1]) spike(add(hd, [s * 0.03, 0.03, -0.004]), [s * 0.45, 1, -0.35], 0.055, 0.01, "crystalHi", "rHead", { bones: [["rHead", 1]] });
+    if (!PX) sc.paint(S.box(0.004, 0.06, 0.06), { mat: "steelL", p: add(hd, [0, 0.03, 0.01]), soft: 0.002, only: ["steel"] });
     // cape: streaming back over the wolf's haunches (cloth: skinned smoothly from the rider's chest to the wolf's rump)
     sc.inPart("cloth", () => {
       const cTop = [0, seatY + 0.19, seatZ - 0.055], cBot = [0, seatY + 0.02, seatZ - 0.22];

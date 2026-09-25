@@ -10,7 +10,7 @@ EmberVoxelKit.define("fenlos", (() => {
   const tri = (x) => 1 - 2 * Math.abs(x - Math.floor(x) - 0.5);          // triangle wave 0..1..0
 
   function build(fam) {
-    const P = FAM[fam], sc = new Sculpture();
+    const P = FAM[fam], sc = new Sculpture(), PX = K.pixel;   // PX: pixel-sprite variant (bold wolf head, fat antlers, clean leaf hems)
     humanoidBones(sc, P);
     const capeTop = P.shY + 0.006, capeBot = P.kneeY - 0.06, capeZ = -P.chest[3] - 0.03;
     K.capeBones(sc, P, capeTop, capeBot, capeZ);
@@ -20,7 +20,17 @@ EmberVoxelKit.define("fenlos", (() => {
       c[0] *= k; c[1] *= k; c[2] *= k;
     };
     const barky = (x, y, z, nx, ny, nz, c) => { const g = Math.sin((x + z) * 90 + y * 40 + 2 * vnoise(x * 30, y * 30, z * 30)); const k = g > 0.6 ? 0.75 : 1; c[0] *= k; c[1] *= k; c[2] *= k; };
-    mats(sc, {
+    mats(sc, PX ? {
+      // flat, clearly stepped: white fur, a cool grey underside, pale-green mane, three leaf greens, brown bark/antler
+      skin: { c: 0xdfe7f5, rough: 0.85, cls: CLS.fur }, lips: { c: 0xdfe7f5, rough: 0.85, cls: CLS.fur },
+      furS: { c: 0x9aa8bf, rough: 0.9, cls: CLS.fur },
+      mane: { c: 0x9ed286, rough: 0.9, cls: CLS.fur },
+      leaf: { c: 0x4c9a3a, rough: 0.75, cls: CLS.plant }, leafD: { c: 0x2c5f28, rough: 0.8, cls: CLS.plant },
+      leafL: { c: 0x8ccc58, rough: 0.7, cls: CLS.plant },
+      bark: { c: 0x6e5436, rough: 0.9, cls: CLS.wood }, antler: { c: 0x8a6c46, rough: 0.8, cls: CLS.wood },
+      claw: { c: 0x26221f, rough: 0.4, cls: CLS.leather }, nose: { c: 0x1d1a1c, rough: 0.35, cls: CLS.skin },
+      eye: { c: 0x46e21e, rough: 0.2, emit: 0.8, cls: CLS.glow }, rune: { c: 0x9ef07a, rough: 0.4, emit: 1.1, cls: CLS.glow },
+    } : {
       skin: { c: 0xcfdbef, rough: 0.85, cls: CLS.fur, vary: 0.04, fur: 0.3 }, lips: { c: 0xcfdbef, rough: 0.85, cls: CLS.fur },
       furS: { c: 0xadb9ca, rough: 0.9, cls: CLS.fur, vary: 0.05, fur: 0.5 },
       mane: { c: 0x93c77e, rough: 0.9, cls: CLS.fur, vary: 0.06, fur: 1 },
@@ -45,7 +55,7 @@ EmberVoxelKit.define("fenlos", (() => {
     for (const s of [1, -1]) {
       const n = sideName(s), a = armJoints(P, s), { d, n: nn, z } = handFrame(P, s, a), q = P.hand;
       const at = (u, v, w) => add(a.W, add(mul(d, u * q), add(mul(nn, v * q), mul(z, w * q))));
-      for (const w of [-0.009, 0, 0.009]) sc.limb(at(0.05, 0.004, w), at(0.078, -0.006, w * 1.2), 0.0055 * q, 0.0014, { mat: "claw", bone: "hand" + n, k: 0.002, vdil: 0.55 });
+      for (const w of PX ? [-0.008, 0.008] : [-0.009, 0, 0.009]) sc.limb(at(0.05, 0.004, w), at(0.078, -0.006, w * 1.2), (PX ? 0.008 : 0.0055) * q, PX ? 0.004 : 0.0014, { mat: "claw", bone: "hand" + n, k: 0.002, vdil: 0.55 });
     }
     // ---- fur: pale shaded underside of the arms and chest, a ruff round the neck and shoulders
     sc.paint(S.custom((x, y, z) => (y > 0.3 && y < 0.72 ? -z + 0.03 : 1), [-1, -1, -1, 1, 1, 1]), { mat: "furS", soft: 0.004, only: ["skin"] });
@@ -57,7 +67,7 @@ EmberVoxelKit.define("fenlos", (() => {
       const A = [s * P.shX * 0.8, P.shY + 0.01, 0], B0 = [-s * P.pelvis[1] * 0.9, P.pelvis[0], 0];
       const dir = norm(sub(B0, A)), nrm = norm(cross(dir, [0, 0, 1]));
       if (s > 0) wrap(sc, RG.band(A, nrm, 0.034, RG.box(-P.shX - 0.03, P.shX + 0.03, P.pelvis[0] - 0.05, P.shY + 0.06)), "leaf", 0.011);
-      else wrap(sc, RG.band(A, nrm, 0.009, RG.box(-P.shX, P.shX, P.pelvis[0] - 0.03, P.shY + 0.03)), "bark", 0.006);
+      else if (!PX) wrap(sc, RG.band(A, nrm, 0.009, RG.box(-P.shX, P.shX, P.pelvis[0] - 0.03, P.shY + 0.03)), "bark", 0.006);
       const a = armJoints(P, s), l = legJoints(P, s);
       wrap(sc, RG.band(lerp(a.E, a.W, 0.5), add(a.dir, [0, 0.6, 0]), 0.012, RG.seg(lerp(a.E, a.W, 0.15), lerp(a.E, a.W, 0.9), 0.07)), "bark", 0.006);
       wrap(sc, RG.band(lerp(l.K, l.A, 0.5), [s * 0.5, 1, 0.3], 0.013, RG.box(s > 0 ? 0 : -0.2, s > 0 ? 0.2 : 0, P.ankY + 0.02, l.K[1] - 0.01)), "bark", 0.006);
@@ -73,39 +83,45 @@ EmberVoxelKit.define("fenlos", (() => {
     sc.add(S.ell(0.068, 0.066, 0.076), { ...hk, mat: "skin", p: HC, k: 0.02 });
     sc.limb(add(HC, [0, -0.012, 0.035]), add(HC, [0, -0.032, 0.14]), 0.044, 0.027, { ...hk, mat: "skin", k: 0.02, sx: 1.05 });
     sc.limb(add(HC, [0, -0.06, 0.02]), add(HC, [0, -0.058, 0.115]), 0.03, 0.018, { ...hk, mat: "furS", k: 0.014 });
-    sc.add(S.ell(0.013, 0.01, 0.01), { ...hk, mat: "nose", p: add(HC, [0, -0.028, 0.168]), k: 0.004 });
-    sc.paint(S.custom((x, y, z) => Math.max(Math.abs(y - (HC[1] - 0.048)) - 0.003, HC[2] + 0.06 - z, 0.018 - Math.abs(x), Math.abs(x) - 0.034), [-1, -1, -1, 1, 1, 1]), { mat: "nose", soft: 0.001, only: ["skin", "furS"] });
+    sc.add(PX ? S.ell(0.02, 0.015, 0.014) : S.ell(0.013, 0.01, 0.01), { ...hk, mat: "nose", p: add(HC, [0, -0.028, 0.168]), k: 0.004 });
+    if (!PX) sc.paint(S.custom((x, y, z) => Math.max(Math.abs(y - (HC[1] - 0.048)) - 0.003, HC[2] + 0.06 - z, 0.018 - Math.abs(x), Math.abs(x) - 0.034), [-1, -1, -1, 1, 1, 1]), { mat: "nose", soft: 0.001, only: ["skin", "furS"] });
     for (const s of [1, -1]) {
       sc.add(S.ell(0.035, 0.04, 0.04), { ...hk, mat: "skin", p: add(HC, [s * 0.058, -0.04, -0.005]), k: 0.02, disp: spiky(0.01, 90), dispAmp: 0.01 });
       // ears: tall, pointed, set back on the skull, a green tuft inside
       const base = add(HC, [s * 0.042, 0.045, -0.025]), tip = add(base, [s * 0.03, 0.085, -0.025]);
-      sc.limb(base, tip, 0.028, 0.003, { ...hk, mat: "skin", k: 0.008, sz: 0.45, vdil: 0.6 });
-      sc.limb(add(base, [0, 0.01, 0.01]), add(tip, [-s * 0.006, -0.03, 0.014]), 0.012, 0.002, { ...hk, mat: "mane", k: 0.004, sz: 0.5 });
+      sc.limb(base, tip, PX ? 0.032 : 0.028, PX ? 0.008 : 0.003, { ...hk, mat: "skin", k: 0.008, sz: PX ? 0.55 : 0.45, vdil: 0.6 });
+      sc.limb(add(base, [0, 0.01, 0.01]), add(tip, [-s * 0.006, -0.03, 0.014]), PX ? 0.016 : 0.012, PX ? 0.006 : 0.002, { ...hk, mat: "mane", k: 0.004, sz: 0.5 });
       // eyes: slanted glowing slits either side of the muzzle root
-      sc.paint(S.custom((x, y, z) => Math.max(Math.abs(x - s * 0.036) - 0.009, Math.abs(y - HC[1] - 0.012 + 0.25 * (s * x - 0.036)) - 0.0055, 0.035 - z), [-1, -1, -1, 1, 1, 1]), { mat: "eye", soft: 0.001, only: ["skin"] });
+      const eh = PX ? 0.009 : 0.0055, ew = PX ? 0.012 : 0.009;   // pixel: bigger glowing eyes, raised so they catch the eye
+      if (PX) {   // a dark socket with a saturated glowing slit in it: reads against the white fur
+        sc.add(S.ell(0.022, 0.014, 0.01), { ...hk, mat: "claw", p: add(HC, [s * 0.04, 0.008, 0.054]), r: [0, s * 0.5, -s * 0.25], k: 0.002 });
+        sc.add(S.ell(0.013, 0.0065, 0.008), { ...hk, mat: "eye", p: add(HC, [s * 0.041, 0.008, 0.058]), r: [0, s * 0.5, -s * 0.25], k: 0.001 });
+      }
+      sc.paint(S.custom((x, y, z) => Math.max(Math.abs(x - s * 0.036) - ew, Math.abs(y - HC[1] - 0.012 + 0.25 * (s * x - 0.036)) - eh, 0.035 - z), [-1, -1, -1, 1, 1, 1]), { mat: "eye", soft: 0.001, only: ["skin"] });
     }
     // green-white mane from the brow back over the skull and down the nape
-    for (let i = 0; i < 5; i++) {
-      const u = (i / 4) * 2 - 1;
-      strand(sc, [add(HC, [u * 0.02, 0.055, 0.05]), add(HC, [u * 0.035, 0.08, -0.03]), add(HC, [u * 0.05, 0.02, -0.1]), [u * 0.06, P.neck[0] - 0.01, -0.09]],
-        0.016, 0.004, { mat: "mane", k: 0.008, grooves: 0.0015, bone: "head" }).wfn = (x, y) => { const t = sstep(HC[1], P.neck[0], y); return [["head", 1 - t], ["neck", t * 0.5], ["chest", t * 0.5]]; };
+    const NM = PX ? 3 : 5;   // pixel: three fat locks
+    for (let i = 0; i < NM; i++) {
+      const u = (i / (NM - 1)) * 2 - 1;
+      strand(sc, [add(HC, PX ? [u * 0.02, 0.064, 0.01] : [u * 0.02, 0.055, 0.05]), add(HC, [u * 0.035, 0.08, -0.03]), add(HC, [u * 0.05, 0.02, -0.1]), [u * 0.06, P.neck[0] - 0.01, -0.09]],
+        PX ? 0.026 : 0.016, PX ? 0.01 : 0.004, { mat: "mane", k: PX ? 0.012 : 0.008, grooves: PX ? 0 : 0.0015, bone: "head" }).wfn = (x, y) => { const t = sstep(HC[1], P.neck[0], y); return [["head", 1 - t], ["neck", t * 0.5], ["chest", t * 0.5]]; };
     }
     // antlers: bare branches rising up and out from behind the ears, two tines each, tufts of leaves at the tips
     for (const s of [1, -1]) {
       const beam = [], tips = [];
       for (let i = 0; i <= 18; i++) {
         const u = i / 18;
-        beam.push([s * (0.035 + 0.17 * u + 0.03 * Math.sin(u * 5)), HC[1] + 0.05 + 0.22 * u - 0.05 * u * u, HC[2] - 0.035 - 0.05 * u + 0.03 * Math.sin(u * 4), mix(0.014, 0.004, Math.pow(u, 0.9))]);
+        beam.push([s * (0.035 + 0.17 * u + 0.03 * Math.sin(u * 5)), HC[1] + 0.05 + 0.22 * u - 0.05 * u * u, HC[2] - 0.035 - 0.05 * u + 0.03 * Math.sin(u * 4), PX ? mix(0.02, 0.01, u) : mix(0.014, 0.004, Math.pow(u, 0.9))]);
       }
       sc.add(S.chain(beam), { mat: "antler", bone: "head", k: 0.004, vdil: 0.55 });
       tips.push(beam[18].slice(0, 3));
-      for (const [u, dir, len] of [[0.35, [s * 0.15, 1, 0.35], 0.09], [0.65, [-s * 0.35, 1, -0.1], 0.085]]) {
+      for (const [u, dir, len] of PX ? [[0.45, [s * 0.1, 1, 0.25], 0.1]] : [[0.35, [s * 0.15, 1, 0.35], 0.09], [0.65, [-s * 0.35, 1, -0.1], 0.085]]) {
         const B = beam[Math.round(u * 18)], dd = norm(dir), pts = [];
-        for (let j = 0; j <= 7; j++) { const v = j / 7; pts.push([B[0] + dd[0] * len * v, B[1] + dd[1] * len * v, B[2] + dd[2] * len * v + 0.01 * v * v, mix(B[3] * 0.9, 0.0035, v)]); }
+        for (let j = 0; j <= 7; j++) { const v = j / 7; pts.push([B[0] + dd[0] * len * v, B[1] + dd[1] * len * v, B[2] + dd[2] * len * v + 0.01 * v * v, mix(B[3] * 0.9, PX ? 0.009 : 0.0035, v)]); }
         sc.add(S.chain(pts), { mat: "antler", bone: "head", k: 0.003, vdil: 0.55 });
         tips.push(pts[7].slice(0, 3));
       }
-      for (const tp of tips) sc.add(S.ell(0.022, 0.014, 0.018), { mat: "leafL", p: add(tp, [0, 0.004, 0]), r: [0.3, s * 0.5, s * 0.4], bone: "head", k: 0.006 });
+      for (const tp of tips) sc.add(PX ? S.ell(0.032, 0.022, 0.026) : S.ell(0.022, 0.014, 0.018), { mat: "leafL", p: add(tp, [0, 0.004, 0]), r: [0.3, s * 0.5, s * 0.4], bone: "head", k: 0.006 });
     }
 
     // ---- cloth: the leaf mantle (a jagged-hemmed capelet over the shoulders) and the long leaf cape streaming right
@@ -113,19 +129,19 @@ EmberVoxelKit.define("fenlos", (() => {
     const my0 = P.neck[0] + 0.012, my1 = P.shY - 0.07, mh = my0 - my1, mr0 = 0.08, mr1 = P.shX + P.delt * 1.35;
     const mantle = S.custom((x, y, z) => {
       const u = clamp(-y / mh, 0, 1), r = mix(mr0, mr1, Math.pow(u, 0.45)), a = Math.atan2(z, x);
-      const rr = Math.hypot(x, z / 0.82) - r - 0.006 * u * Math.sin(a * 11);
+      const rr = Math.hypot(x, z / 0.82) - r - (PX ? 0 : 0.006 * u * Math.sin(a * 11));
       const hem = -y - mh + 0.028 * tri(a * 2.2) - 0.05 * Math.max(0, -x / mr1) * Math.max(0, z / mr1 + 0.3);
       return smax(Math.abs(rr) - 0.0075, Math.max(hem, y), 0.006);
     }, [-mr1 - 0.02, -mh - 0.01, -(mr1 + 0.02) * 0.82, mr1 + 0.02, 0.01, (mr1 + 0.02) * 0.82]);
     sc.add(mantle, { mat: "leaf", p: [0, my0, -0.012], bone: "chest", k: 0.004, cs: 0.03, wg: 2 });
-    sc.paint(S.custom((x, y, z) => Math.abs(y - (my0 - mh * 0.45)) - 0.006, [-1, -1, -1, 1, 1, 1]), { mat: "leafD", soft: 0.001, only: ["leaf"], part: "cloth" });
+    if (!PX) sc.paint(S.custom((x, y, z) => Math.abs(y - (my0 - mh * 0.45)) - 0.006, [-1, -1, -1, 1, 1, 1]), { mat: "leafD", soft: 0.001, only: ["leaf"], part: "cloth" });
     const ch = capeTop - capeBot, capeZc = (x, y) => {
       const u = clamp((capeTop - y) / ch, 0, 1), w = mix(0.11, 0.3, Math.pow(u, 0.7)), xc = -0.16 * u * u;
-      return { u, w, xc, zc: mix(capeZ, capeZ - 0.12, u) - 0.02 * Math.sin(((x - xc) / w) * 6 + 0.4) * (0.25 + u) + (0.5 - 0.2 * u) * ((x - xc) ** 2) / w };
+      return { u, w, xc, zc: mix(capeZ, capeZ - 0.12, u) - (PX ? 0.008 * Math.sin(((x - xc) / w) * 2.5 + 0.4) * (0.25 + u) : 0.02 * Math.sin(((x - xc) / w) * 6 + 0.4) * (0.25 + u)) + (0.5 - 0.2 * u) * ((x - xc) ** 2) / w };
     };
     const capeF = (x, y, z) => {
       const c = capeZc(x, y);
-      return smax(Math.abs(z - c.zc) - 0.0065, Math.max(Math.abs(x - c.xc) - c.w, y - capeTop, capeBot + 0.05 * tri((x - c.xc) * 14) + 0.03 * (x - c.xc) - y), 0.006);
+      return smax(Math.abs(z - c.zc) - (PX ? 0.009 : 0.0065), Math.max(Math.abs(x - c.xc) - c.w, y - capeTop, capeBot + (PX ? 0.06 * tri((x - c.xc) * 6) : 0.05 * tri((x - c.xc) * 14)) + 0.03 * (x - c.xc) - y), 0.006);
     };
     const cp = sc.add(S.custom(capeF, [-0.52, capeBot - 0.02, -0.34, 0.32, capeTop, 0.1]), { mat: "leaf", bone: "chest", k: 0.004, cs: 0.03, wg: 2 });
     cp.wfn = (x, y) => {

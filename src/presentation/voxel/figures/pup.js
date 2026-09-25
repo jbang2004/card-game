@@ -5,6 +5,7 @@ EmberVoxelKit.define("pup", (() => {
   const { S, Sculpture, vnoise, clamp, mix, sstep, rotY2, add, sub, mul, lerp, norm, X, CLS, mats, sideName, quadBones } = K;
   function pup() {
     const sc = new Sculpture();
+    const PX = K.pixel;                                              // pixel-sprite variant: clean big shapes, no fur noise
     const Hs = 1.5, Ps = 1.5, Ls = 0.78;
     const y = (v) => v * Ls, bodyY = (v) => v - (1 - Ls) * 0.16;
     const G = {
@@ -24,7 +25,7 @@ EmberVoxelKit.define("pup", (() => {
     });
     // blocky layered tufts pointing back (the chunky family's fur)
     const furD = (amp, f = 85) => (x, yy, z) => { const u = z * f * 0.45 + 1.8 * vnoise(x * f * 0.35, yy * f * 0.35, 3.1); const fr = u - Math.floor(u); return amp * (fr * fr) * (0.6 + 0.4 * vnoise(x * f, yy * f, z * f)); };
-    const fk = (a, f) => ({ disp: furD(a, f), dispAmp: a });
+    const fk = (a, f) => (PX ? {} : { disp: furD(a, f), dispAmp: a });
     // round puppy body
     sc.add(S.ell(0.066, 0.078, 0.085), { mat: "fur", p: add(G.chest, [0, -0.02, 0]), bone: "chest", k: 0.035, ...fk(0.007) });
     sc.add(S.ell(0.058, 0.062, 0.085), { mat: "fur", p: add(G.spine, [0, -0.012, 0]), bone: "spine", k: 0.045, sigma: 0.025, ...fk(0.007) });
@@ -43,8 +44,9 @@ EmberVoxelKit.define("pup", (() => {
     for (const s of [1, -1]) sc.add(S.ell(0.012 * Hs, 0.0075 * Hs, 0.008 * Hs), { mat: "furFace", op: "sub", p: add(hc, [s * 0.021 * Hs, 0.004 * Hs, 0.045 * Hs]), bone: "head", k: 0.008 });
     // tall ears with a pale hollow
     for (const s of [1, -1]) {
-      const n = sideName(s), base = add(hc, [s * 0.032 * Hs, 0.026 * Hs, -0.006]), tip = add(base, [s * 0.02 * Hs, 0.064 * Hs, -0.01]);
-      sc.limb(base, tip, 0.026 * Hs, 0.0022, { mat: "furFace", bone: "ear" + n, k: 0.012, sz: 0.42 });
+      const eK = PX ? 1.15 : 1;
+      const n = sideName(s), base = add(hc, [s * 0.032 * Hs, 0.026 * Hs, -0.006]), tip = add(base, [s * 0.02 * Hs * eK, 0.064 * Hs * eK, -0.01]);
+      sc.limb(base, tip, 0.026 * Hs * eK, PX ? 0.005 : 0.0022, { mat: "furFace", bone: "ear" + n, k: 0.012, sz: 0.42 });
       sc.add(S.ell(0.014 * Hs, 0.028 * Hs, 0.0045), { mat: "earIn", op: "sub", p: add(lerp(base, tip, 0.38), [0, 0, 0.011]), R: rotY2(...sub(tip, base)), bone: "ear" + n, k: 0.004, cut: "earIn" });
     }
     // stubby legs, big pale paws
@@ -58,23 +60,30 @@ EmberVoxelKit.define("pup", (() => {
       sc.limb(B[1], B[2], 0.022, 0.016, { mat: "furLeg", bone: "stif" + n, k: 0.014 });
       sc.limb(B[2], B[3], 0.016, 0.017, { mat: "furLeg", bone: "hock" + n, k: 0.01 });
       sc.add(S.ell(0.021 * Ps, 0.015 * Ps, 0.026 * Ps), { mat: "paw", p: add(B[3], [0, -0.004, 0.012]), bone: "bpaw" + n, k: 0.01 });
-      for (const [P4, bn] of [[F[3], "fpaw" + n], [B[3], "bpaw" + n]]) for (let c = -1; c <= 1; c++) sc.add(S.ell(0.003, 0.003, 0.004), { mat: "claw", p: add(P4, [c * 0.009 * Ps, -0.008, 0.033 * Ps]), bone: bn, k: 0.003, cs: 0.05 });
+      if (!PX) for (const [P4, bn] of [[F[3], "fpaw" + n], [B[3], "bpaw" + n]]) for (let c = -1; c <= 1; c++) sc.add(S.ell(0.003, 0.003, 0.004), { mat: "claw", p: add(P4, [c * 0.009 * Ps, -0.008, 0.033 * Ps]), bone: bn, k: 0.003, cs: 0.05 });
     }
     // short fluffy tail, carried up a little
     const tp = [], T0 = G.tail[0];
-    for (let i = 0; i <= 10; i++) { const u = i / 10; tp.push([0, T0[1] + 0.02 * u - 0.05 * u * u, T0[2] - 0.13 * u, (0.026 + 0.016 * Math.sin(u * 2.5)) * (1 - 0.7 * u * u) + 0.004]); }
+    for (let i = 0; i <= 10; i++) { const u = i / 10; tp.push([0, T0[1] + 0.02 * u - 0.05 * u * u, T0[2] - 0.13 * u, ((0.026 + 0.016 * Math.sin(u * 2.5)) * (1 - 0.7 * u * u) + 0.004) * (PX ? 1.2 : 1)]); }
     const tail = sc.add(S.chain(tp), { mat: "fur", p: [0, 0, 0], bone: "tail1", k: 0.02, ...fk(0.014, 60) });
     tail.wfn = (x, yy, z) => { const u = clamp((T0[2] - z) / 0.13, 0, 1); return [["root", 1 - sstep(0, 0.15, u)], ["tail1", Math.max(0, 1 - Math.abs(u - 0.2) * 2.5)], ["tail2", Math.max(0, 1 - Math.abs(u - 0.55) * 2.8)], ["tail3", sstep(0.6, 0.95, u)]]; };
     // silhouette tufts: chest ruff, cheek fluff, a cowlick on the crown
     const tuft = (base, dir, len, r, mat, bone) => sc.limb(base, add(base, mul(norm(dir), len)), r, 0.0012, { mat, bone, k: 0.006 });
+    if (PX) {
+      // pixel: a three-point chest ruff, one big cheek tuft a side, a single cowlick
+      const tf = (base, dir, len, r, mat, bone) => sc.limb(base, add(base, mul(norm(dir), len)), r, 0.004, { mat, bone, k: 0.008 });
+      for (let i = 0; i < 3; i++) { const a = -0.7 + i * 0.7; tf(add(G.chest, [0.04 * Math.sin(a), -0.028, 0.095]), [Math.sin(a) * 0.6, -0.8, 0.3], 0.042, 0.02, "furLight", "chest"); }
+      for (const s of [1, -1]) tf(add(hc, [s * 0.05 * Hs, -0.022 * Hs, 0.0]), [s, -0.45, -0.4], 0.03 * Hs, 0.015 * Hs, "muzzle", "head");
+    } else {
     for (let i = 0; i < 6; i++) { const a = -1.1 + (i / 5) * 2.2; tuft(add(G.chest, [0.045 * Math.sin(a), -0.03 + 0.03 * Math.cos(a * 1.3), 0.09]), [Math.sin(a) * 0.8, -0.6, 0.35], 0.032, 0.012, "furLight", "chest"); }
     for (const s of [1, -1]) for (let i = 0; i < 3; i++) tuft(add(hc, [s * 0.056 * Hs, -0.018 * Hs - 0.01 * i, 0.004 - 0.008 * i]), [s, -0.4 - 0.2 * i, -0.4], 0.024 * Hs, 0.01 * Hs, "muzzle", "head");
     for (let i = 0; i < 3; i++) tuft(add(hc, [(i - 1) * 0.012, 0.042 * Hs, -0.004]), [(i - 1) * 0.5, 1, -0.6], 0.03, 0.01, "furFace", "head");
+    }
     // markings: darker saddle, cream belly, pale brow spots and blaze
     sc.paint(S.ell(0.055, 0.03, 0.13), { mat: "furDark", p: [0, bodyY(0.32), -0.05], soft: 0.035, amt: 0.7 });
     sc.paint(S.ell(0.09, 0.05, 0.2), { mat: "furLight", p: [0, bodyY(0.15), 0], soft: 0.035 });
-    sc.paint(S.rcone(0.05 * Hs, 0.008 * Hs, 0.004 * Hs), { mat: "muzzle", p: add(hc, [0, -0.004 * Hs, 0.045 * Hs]), R: rotY2(0, 1, -0.55), soft: 0.005, fur: 0.25 });
-    for (const s of [1, -1]) sc.paint(S.sphere(0.008 * Hs), { mat: "muzzle", p: add(hc, [s * 0.02 * Hs, 0.022 * Hs, 0.04 * Hs]), soft: 0.003 });
+    if (!PX) sc.paint(S.rcone(0.05 * Hs, 0.008 * Hs, 0.004 * Hs), { mat: "muzzle", p: add(hc, [0, -0.004 * Hs, 0.045 * Hs]), R: rotY2(0, 1, -0.55), soft: 0.005, fur: 0.25 });
+    if (!PX) for (const s of [1, -1]) sc.paint(S.sphere(0.008 * Hs), { mat: "muzzle", p: add(hc, [s * 0.02 * Hs, 0.022 * Hs, 0.04 * Hs]), soft: 0.003 });
     sc.face({ bone: "head", cls: [5], c: add(hc, [0, 0.0, 0.045 * Hs]), size: [0.05 * Hs, 0.04 * Hs], depth: 0.03, nz: 0.2 });
     sc.faceKind = "wolf";
     return { sc, kind: "quadruped", props: [], G, Hs };

@@ -12,6 +12,7 @@ html[data-skin="slate"] #hero-figure[hidden] {
 }
 html[data-skin="slate"] #hero-figure > .hero-figure-canvas {
   display: block;
+  image-rendering: pixelated;             /* a pixel sprite drawn at EmberPixelPass.PIX */
   width: 100%;
   height: 100%;
 }
@@ -29,6 +30,7 @@ html[data-skin="slate"] #player-hero.hero-miniature-ready .portrait-frame {
  * of its figure; heroes, hand and overlays are above both. */
 html[data-skin="slate"] #miniature-stage {
   position: absolute;
+  image-rendering: pixelated;             /* the pixel sprite layer (EmberPixelPass) */
   left: 0;
   top: 0;
   z-index: 6;

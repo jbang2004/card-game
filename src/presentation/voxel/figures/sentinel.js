@@ -14,6 +14,7 @@ EmberVoxelKit.define("sentinel", (() => {
 
   function sentinelHair(sc, P, q) {
     const ey = P.eyeY, C = add(P.cranC, [0, 0.008, -0.008]), cr = P.cran, R = [cr[0] * 1.07, cr[1] * 1.05, cr[2] * 1.08];
+    if (K.pixel) return pixelHair(sc, P, q, C, R);
     sc.add(S.minus(S.ell(...R), S.at(S.ell(cr[0] * 0.92, cr[1] * 0.76, cr[2] * 0.7), 0, -cr[1] * 0.52, cr[2] * 0.7), 0.012), { mat: "hair", p: C, bone: "head", k: 0.006 });
     const spike = (az, el, az2, el2, len, r0, dy = 0) => sc.limb(onEll(C, R, az, el, 0.55), add(onEll(C, R, az2, el2, len), [0, dy, 0]), r0 * q, 0.0015 * q, { mat: "hair", bone: "head", k: 0.005 });
     // windswept: long spikes streaming back from the crown and temples
@@ -35,8 +36,29 @@ EmberVoxelKit.define("sentinel", (() => {
     }
   }
 
+  // pixel sprite: the same windswept silhouette from a few fat spikes; the fringe stops above the eye band
+  function pixelHair(sc, P, q, C, R) {
+    const ey = P.eyeY, cr = P.cran;
+    sc.add(S.minus(S.ell(...R), S.at(S.ell(cr[0] * 0.92, cr[1] * 0.76, cr[2] * 0.7), 0, -cr[1] * 0.52, cr[2] * 0.7), 0.012), { mat: "hair", p: C, bone: "head", k: 0.006 });
+    const spike = (az, el, az2, el2, len, r0) => sc.limb(onEll(C, R, az, el, 0.55), onEll(C, R, az2, el2, len), r0 * q, 0.009 * q, { mat: "hair", bone: "head", k: 0.012 });
+    for (const [a, e, a2, e2, l, r] of [[0, 1.3, 3.14, 0.7, 1.55, 0.04], [0.9, 1.1, 2.6, 0.45, 1.5, 0.036], [-0.9, 1.1, -2.6, 0.45, 1.5, 0.036], [2.3, 0.8, 2.95, 0.05, 1.45, 0.034], [-2.3, 0.8, -2.95, 0.05, 1.45, 0.034]])
+      spike(a, e, a2, e2, l, r);
+    for (const s of [1, -1]) spike(s * 1.3, 0.6, s * 1.8, 0.05, 1.4, 0.032);
+    // fringe: three broad locks swept to his right, tips above the eyes
+    [[0.7, -0.2], [0.1, -0.3], [-0.6, -0.15]].forEach(([u, sw]) => {
+      const root = onEll(C, R, u * 0.5 + 0.1, 0.9, 0.94);
+      const tip = [R[0] * (0.78 * u + sw * 0.5), ey + 0.034 * q, P.faceZ + 0.01 * q];
+      const mid = add(lerp(root, tip, 0.45), mul(norm(sub(lerp(root, tip, 0.45), C)), 0.016 * q));
+      strand(sc, [root, mid, tip], 0.026 * q, 0.009 * q, { k: 0.01, taper: 1.2, grooves: 0 });
+    });
+    for (const s of [1, -1]) {
+      const root = onEll(C, R, s * 1.1, 0.45, 0.96), tip = [s * R[0] * 1.06, P.chinY + 0.03 * q, C[2] + R[2] * 0.3];
+      strand(sc, [root, add(lerp(root, tip, 0.5), [s * 0.008 * q, 0, 0]), tip], 0.022 * q, 0.01 * q, { k: 0.01, taper: 1.2, grooves: 0 });
+    }
+  }
+
   function build(fam) {
-    const P = FAM[fam], sc = new Sculpture(), q = fam === "chunky" ? 1.25 : 1;
+    const P = FAM[fam], sc = new Sculpture(), q = fam === "chunky" ? 1.25 : 1, PX = K.pixel;   // PX: pixel-sprite variant
     humanoidBones(sc, P);
     for (const s of [1, -1]) {
       const n = sideName(s), X = (p) => [s * p[0], p[1], p[2]];
@@ -45,7 +67,21 @@ EmberVoxelKit.define("sentinel", (() => {
       for (let k = 0; k < BLADES; k++) sc.bone("blade" + (k + 1) + n, "wing2" + n, ...X(WING.hub));
     }
     sc.bone("scarf1", "chest", 0, 0.782, -0.07); sc.bone("scarf2", "scarf1", 0, 0.7, -0.2);
-    mats(sc, {
+    mats(sc, PX ? {
+      // flat and clearly apart: bright silver hair, pale armour, darker steel wings with a blue inlay, navy suit
+      skin: { c: 0xf1cfbd, rough: 0.55, cls: CLS.skin }, skinDeep: { c: 0xd9a993, rough: 0.6, cls: CLS.skin },
+      lips: { c: 0xc98c80, rough: 0.4, cls: CLS.lips },
+      hair: { c: 0xe8edf7, rough: 0.6, cls: CLS.hair },
+      suit: { c: 0x1f2438, rough: 0.8, cls: CLS.cloth },
+      armor: { c: 0xb0bdd6, rough: 0.5, metal: 0.2, cls: CLS.metal }, armorD: { c: 0x5c6682, rough: 0.5, metal: 0.2, cls: CLS.metal },
+      inlay: { c: 0x2a4aa6, rough: 0.5, metal: 0.1, cls: CLS.metal },
+      strap: { c: 0x6a4228, rough: 0.6, cls: CLS.leather }, gold: { c: 0xd2ab5a, rough: 0.4, metal: 0.3, cls: CLS.metal },
+      glove: { c: 0x24262f, rough: 0.6, cls: CLS.leather }, boot: { c: 0x2a2d3b, rough: 0.6, cls: CLS.leather },
+      scarf: { c: 0x2d4088, rough: 0.85, cls: CLS.cloth }, scarfD: { c: 0x2d4088, rough: 0.85, cls: CLS.cloth },
+      wing: { c: 0x8793b2, rough: 0.45, metal: 0.25, cls: CLS.metal }, wingD: { c: 0x4e5874, rough: 0.5, metal: 0.2, cls: CLS.metal },
+      wingIn: { c: 0x3858c0, rough: 0.5, metal: 0.1, cls: CLS.metal },
+      amber: { c: 0xd07a22, rough: 0.3, emit: 0.9, cls: CLS.glow }, amberHot: { c: 0xffe6b0, rough: 0.3, emit: 1.8, cls: CLS.glow },
+    } : {
       skin: { c: 0xf1cfbd, rough: 0.55, cls: CLS.skin, vary: 0.02 }, skinDeep: { c: 0xd9a993, rough: 0.6, cls: CLS.skin },
       lips: { c: 0xc98c80, rough: 0.4, cls: CLS.lips },
       hair: { c: 0xbfc8e2, rough: 0.5, cls: CLS.hair, vary: 0.07 },
@@ -68,13 +104,13 @@ EmberVoxelKit.define("sentinel", (() => {
     sc.paint(S.custom((x, y, z) => (z > 0.02 ? Math.max(Math.abs(x) - 0.0065, y - (P.neck[0] - 0.005)) : 1), [-1, -1, -1, 1, 1, 1]), { mat: "inlay", soft: 0.001, only: ["armor"] });
     sc.paint(S.custom((x, y, z) => Math.max(Math.abs(y - (P.waist[0] + 0.018)) - 0.0062, Math.abs(x) - X0 * 1.05), [-1, -1, -1, 1, 1, 1]), { mat: "inlay", soft: 0.001, only: ["armor"] });
     wrap(sc, RG.box(-0.2, 0.2, P.waist[0] - 0.03 * q, P.waist[0] - 0.006 * q), "strap", 0.005 * q);
-    sc.add(S.box(0.012 * q, 0.01 * q, 0.004, 0.002), { mat: "gold", p: [0, P.waist[0] - 0.018 * q, P.waist[2] + 0.022 * q], bone: "spine", k: 0.002 });
+    if (!PX) sc.add(S.box(0.012 * q, 0.01 * q, 0.004, 0.002), { mat: "gold", p: [0, P.waist[0] - 0.018 * q, P.waist[2] + 0.022 * q], bone: "spine", k: 0.002 });
     {   // bandolier across the chest from the right shoulder to the left hip
       const A = [-P.shX * 0.72, P.shY + 0.012, 0], B0 = [P.pelvis[1] * 0.8, P.waist[0] - 0.02, 0];
       const dir = norm(sub(B0, A)), nrm = norm([dir[1], -dir[0], 0]);
       wrap(sc, RG.band(A, nrm, 0.0072 * q, RG.box(-X0 * 1.1, X0 * 1.1, P.waist[0] - 0.04, P.shY + 0.05)), "strap", 0.012 * q);
       const bk = lerp(A, B0, 0.36);
-      sc.add(S.box(0.01 * q, 0.0085 * q, 0.004, 0.002), { mat: "gold", p: [bk[0], bk[1], P.chest[3] + 0.028 * q], r: [0, 0, Math.atan2(dir[1], dir[0]) + Math.PI / 2], bone: "chest", k: 0.002 });
+      if (!PX) sc.add(S.box(0.01 * q, 0.0085 * q, 0.004, 0.002), { mat: "gold", p: [bk[0], bk[1], P.chest[3] + 0.028 * q], r: [0, 0, Math.atan2(dir[1], dir[0]) + Math.PI / 2], bone: "chest", k: 0.002 });
     }
     // ---- pauldrons: two stacked plates per shoulder, blue rim
     for (const s of [1, -1]) {
@@ -124,18 +160,20 @@ EmberVoxelKit.define("sentinel", (() => {
       sc.add(S.sphere(0.022), { ...wo, mat: "armorD", p: M, bone: "wing1" + n });
       // hub: a drum through the blade roots, amber lens facing forward, dark rings
       sc.add(S.cyl(hz, 0.03, 0.006), { ...wo, mat: "wing", p: hc, r: [Math.PI / 2, 0, 0], bone: "wing2" + n });
-      for (const zr of [zf - 0.006, zb + 0.006]) sc.paint(S.custom((x, y, z) => Math.max(Math.abs(z - zr) - 0.004, Math.hypot(x - H[0], y - H[1]) - 0.04), [-1, -1, -1, 1, 1, 1]), { mat: "wingD", soft: 0.001, only: ["wing"] });
+      if (!PX) for (const zr of [zf - 0.006, zb + 0.006]) sc.paint(S.custom((x, y, z) => Math.max(Math.abs(z - zr) - 0.004, Math.hypot(x - H[0], y - H[1]) - 0.04), [-1, -1, -1, 1, 1, 1]), { mat: "wingD", soft: 0.001, only: ["wing"] });
       sc.add(S.cyl(0.004, 0.024, 0.002), { ...wo, mat: "wingD", p: [H[0], H[1], zf + 0.001], r: [Math.PI / 2, 0, 0], bone: "wing2" + n });
       sc.add(S.cyl(0.004, 0.0155, 0.002), { ...wo, mat: "amber", p: [H[0], H[1], zf + 0.006], r: [Math.PI / 2, 0, 0], bone: "wing2" + n });
-      sc.add(S.cyl(0.003, 0.0075, 0.001), { ...wo, mat: "amberHot", p: [H[0], H[1], zf + 0.011], r: [Math.PI / 2, 0, 0], bone: "wing2" + n });
+      if (!PX) sc.add(S.cyl(0.003, 0.0075, 0.001), { ...wo, mat: "amberHot", p: [H[0], H[1], zf + 0.011], r: [Math.PI / 2, 0, 0], bone: "wing2" + n });
       // blades: flat steel plates two voxels thick, a blue fuller down the middle, a darker trailing edge
       for (let k = 0; k < BLADES; k++) {
-        const L = WING.len[k], w = WING.w, z0 = bladeZ(k), x0 = H[0], y0 = H[1];
+        // pixel: broader, thicker plates (a flat membrane-like fan), no painted fuller or edge
+        const L = WING.len[k], w = PX ? 0.058 : WING.w, z0 = bladeZ(k), x0 = H[0], y0 = H[1], bt = PX ? 0.0085 : 0.004;
         // blade frame: u up the blade (+Y), v across it (outward = +s·X), sharp asymmetric tip
         const top = (u) => (u < 0.72 * L ? w : mix(w, -0.2 * w, (u - 0.72 * L) / (0.28 * L)));
         const bot = (u) => (u < 0.52 * L ? -w : mix(-w, -0.2 * w, (u - 0.52 * L) / (0.48 * L)));
-        const f = (x, y, z) => { const u = y - y0, v = s * (x - x0), ww = u < 0.07 ? 0.72 : 1; return Math.max(v - top(u) * ww, bot(u) * ww - v, -u, u - L, Math.abs(z - z0) - 0.004); };
-        sc.add(S.custom(f, [x0 - w - 0.01, y0 - 0.01, z0 - 0.006, x0 + w + 0.01, y0 + L + 0.01, z0 + 0.006]), { ...wo, mat: "wing", p: [0, 0, 0], bone: "blade" + (k + 1) + n });
+        const f = (x, y, z) => { const u = y - y0, v = s * (x - x0), ww = u < 0.07 ? 0.72 : 1; return Math.max(v - top(u) * ww, bot(u) * ww - v, -u, u - L, Math.abs(z - z0) - bt); };
+        sc.add(S.custom(f, [x0 - w - 0.01, y0 - 0.01, z0 - bt - 0.002, x0 + w + 0.01, y0 + L + 0.01, z0 + bt + 0.002]), { ...wo, mat: "wing", p: [0, 0, 0], bone: "blade" + (k + 1) + n });
+        if (PX) continue;   // the overlapping fan hides most of a fuller: it only speckled
         const fuller = (x, y, z) => { const u = y - y0, v = s * (x - x0); return Math.max(Math.abs(v - 0.12 * w) - 0.0105, 0.12 * L - u, u - 0.62 * L, Math.abs(z - z0) - 0.01); };
         sc.paint(S.custom(fuller, [-1, -1, -1, 1, 1, 1]), { mat: "wingIn", soft: 0.001, only: ["wing"] });
         const edge = (x, y, z) => { const u = y - y0, v = s * (x - x0); return Math.max(v - bot(u) - 0.0115, bot(u) - 0.004 - v, 0.06 - u, Math.abs(z - z0) - 0.01); };

@@ -77,7 +77,7 @@ EmberVoxelKit.define("dragon", (() => {
   }
 
   function dragon() {
-    const sc = new Sculpture();
+    const sc = new Sculpture(), PX = K.pixel;   // PX: pixel-sprite variant (thick flat membranes, fat horns, plain belly)
     quadBones(sc, G);
     sc.bone("tail4", "tail3", ...TAIL[0]); sc.bone("tail5", "tail4", ...TAIL[1]);
     for (const s of [1, -1]) {
@@ -87,7 +87,7 @@ EmberVoxelKit.define("dragon", (() => {
     }
     mats(sc, {
       scale: { c: 0x3f3d54, rough: 0.55, cls: CLS.skin, vary: 0.05 }, scaleDk: { c: 0x2a2939, rough: 0.5, cls: CLS.skin, vary: 0.03 },
-      belly: { c: 0xb4a898, rough: 0.7, cls: CLS.skin, vary: 0.03 }, bellySeam: { c: 0x877c78, rough: 0.7, cls: CLS.skin },
+      belly: { c: 0xb4a898, rough: 0.7, cls: CLS.skin, vary: 0.03 }, bellySeam: { c: PX ? 0x6a5e5c : 0x877c78, rough: 0.7, cls: CLS.skin },
       horn: { c: 0x5c5667, rough: 0.45, cls: CLS.skin, vary: 0.03 }, hornTip: { c: 0xb8aeb8, rough: 0.4, cls: CLS.skin },
       claw: { c: 0x8a8290, rough: 0.4, cls: CLS.skin }, wingBone: { c: 0x2c2a3a, rough: 0.5, cls: CLS.skin },
       membrane: { c: 0xd0732a, rough: 0.75, emit: 0.12, cls: CLS.skin, vary: 0.04 }, membraneDk: { c: 0x9c4c1c, rough: 0.75, emit: 0.05, cls: CLS.skin, vary: 0.04 },
@@ -124,7 +124,8 @@ EmberVoxelKit.define("dragon", (() => {
     const eyeC = [0.037 * q, row(HC[1] + 0.005 * q), (Math.round(HC[2] / V + 0.038 * q / V - 0.5) + 0.5) * V];
     for (const s of [1, -1]) {
       const ec = [s * eyeC[0], eyeC[1], eyeC[2]];
-      sc.add(S.ell(0.015 * q, 0.011 * q, 0.005 * q), { mat: "eye", p: ec, r: [0, s * 0.95, 0], bone: "head", k: 0.003, cs: 0.05, vdil: 0.55 });
+      const ek = PX ? 1.35 : 1;   // bigger eyes on the sprite
+      sc.add(S.ell(0.015 * q * ek, 0.011 * q * ek, 0.005 * q * ek), { mat: "eye", p: ec, r: [0, s * 0.95, 0], bone: "head", k: 0.003, cs: 0.05, vdil: 0.55 });
       sc.paint(S.box(0.03, 0.02, 0.0045), { mat: "pupil", p: [s * (eyeC[0] + 0.015), eyeC[1], eyeC[2]], soft: 0.001, only: ["eye"] });
       sc.limb(hp(s * 0.014, 0.028, 0.052), hp(s * 0.05, 0.035, 0.014), 0.011 * q, 0.009 * q, { mat: "scaleDk", bone: "head", k: 0.01 });
     }
@@ -132,10 +133,10 @@ EmberVoxelKit.define("dragon", (() => {
     for (const s of [1, -1]) {
       const hq = q * 1.15;
       const horn = spline([hp(s * 0.026, 0.03, -0.012), add(HC, [s * 0.046 * hq, 0.058 * hq, -0.052 * hq]), add(HC, [s * 0.062 * hq, 0.076 * hq, -0.098 * hq]), add(HC, [s * 0.072 * hq, 0.102 * hq, -0.138 * hq]), add(HC, [s * 0.076 * hq, 0.134 * hq, -0.16 * hq])], 10)
-        .map((p, i) => [...p, mix(0.017 * q, 0.003, Math.pow(i / 10, 0.9))]);
+        .map((p, i) => [...p, PX ? mix(0.022 * q, 0.008, Math.pow(i / 10, 1.2)) : mix(0.017 * q, 0.003, Math.pow(i / 10, 0.9))]);
       sc.add(S.chain(horn), { mat: "horn", p: [0, 0, 0], bone: "head", k: 0.006, vdil: 0.5 });
       sc.paint(S.sphere(0.04), { mat: "hornTip", p: horn[10].slice(0, 3), soft: 0.004, only: ["horn"] });
-      const h2 = spline([hp(s * 0.042, 0.012, -0.022), hp(s * 0.066, 0.016, -0.066), hp(s * 0.078, 0.034, -0.108)], 6).map((p, i) => [...p, mix(0.011 * q, 0.0025, i / 6)]);
+      const h2 = spline([hp(s * 0.042, 0.012, -0.022), hp(s * 0.066, 0.016, -0.066), hp(s * 0.078, 0.034, -0.108)], 6).map((p, i) => [...p, PX ? mix(0.015 * q, 0.007, i / 6) : mix(0.011 * q, 0.0025, i / 6)]);
       sc.add(S.chain(h2), { mat: "horn", p: [0, 0, 0], bone: "head", k: 0.005, vdil: 0.5 });
       sc.paint(S.sphere(0.02), { mat: "hornTip", p: h2[6].slice(0, 3), soft: 0.004, only: ["horn"] });
       // cheek frills (ear bones): three dark spines fanning back with amber webbing
@@ -143,9 +144,9 @@ EmberVoxelKit.define("dragon", (() => {
       for (let i = 0; i < 3; i++) {
         const b0 = hp(s * 0.042, -0.018 - 0.006 * i, -0.006 - 0.008 * i), d = norm([s * 0.55, 0.12 - 0.32 * i, -0.85]);
         sp.push([b0, add(b0, mul(d, (0.056 - 0.012 * i) * q))]);
-        sc.limb(sp[i][0], sp[i][1], 0.009, 0.0015, { mat: "scaleDk", bone: en, k: 0.004, vdil: 0.5 });
+        sc.limb(sp[i][0], sp[i][1], PX ? 0.012 : 0.009, PX ? 0.006 : 0.0015, { mat: "scaleDk", bone: en, k: 0.004, vdil: 0.5 });
       }
-      for (let i = 0; i < 2; i++) sc.add(panel(sp[i][0], lerp(sp[i][0], sp[i][1], 0.85), lerp(sp[i + 1][0], sp[i + 1][1], 0.85), 0.003, 0.006), { mat: "membrane", p: [0, 0, 0], bone: en, k: 0.002, vdil: 0.55 });
+      for (let i = 0; i < 2; i++) sc.add(panel(sp[i][0], lerp(sp[i][0], sp[i][1], 0.85), lerp(sp[i + 1][0], sp[i + 1][1], 0.85), PX ? 0.006 : 0.003, 0.006), { mat: "membrane", p: [0, 0, 0], bone: en, k: 0.002, vdil: 0.55 });
     }
     // ---- legs: big shoulders and haunches, thick forearms, clawed feet
     for (const s of [1, -1]) {
@@ -155,12 +156,12 @@ EmberVoxelKit.define("dragon", (() => {
       sc.limb(F[1], F[2], 0.025, 0.02, { ...B, bone: "elb" + n, k: 0.014 });
       sc.limb(F[2], F[3], 0.02, 0.021, { ...B, bone: "wri" + n, k: 0.01 });
       sc.add(S.ell(0.03, 0.016, 0.034), { ...B, p: add(F[3], [0, -0.004, 0.012]), bone: "fpaw" + n, k: 0.01 });
-      sc.limb(add(F[1], [s * 0.012, 0.006, -0.012]), add(F[1], [s * 0.02, 0.018, -0.042]), 0.008, 0.0015, { mat: "scaleDk", bone: "elb" + n, k: 0.004, vdil: 0.5 });   // elbow spur
+      if (!PX) sc.limb(add(F[1], [s * 0.012, 0.006, -0.012]), add(F[1], [s * 0.02, 0.018, -0.042]), 0.008, 0.0015, { mat: "scaleDk", bone: "elb" + n, k: 0.004, vdil: 0.5 });   // elbow spur
       sc.add(S.ell(0.052, 0.064, 0.08), { ...B, p: add(lerp(Bk[0], Bk[1], 0.42), [0, 0.004, 0]), r: [0.1, 0, 0], bone: "hip" + n, bones: [["hip" + n, 0.7], ["root", 0.3]], k: 0.03 });
       sc.limb(Bk[1], Bk[2], 0.025, 0.017, { ...B, bone: "stif" + n, k: 0.014 });
       sc.limb(Bk[2], Bk[3], 0.017, 0.019, { ...B, bone: "hock" + n, k: 0.01 });
       sc.add(S.ell(0.027, 0.014, 0.03), { ...B, p: add(Bk[3], [0, -0.004, 0.012]), bone: "bpaw" + n, k: 0.01 });
-      for (const [P4, bn] of [[F[3], "fpaw" + n], [Bk[3], "bpaw" + n]]) for (let c = -1; c <= 1; c++) {
+      if (!PX) for (const [P4, bn] of [[F[3], "fpaw" + n], [Bk[3], "bpaw" + n]]) for (let c = -1; c <= 1; c++) {
         const a = add(P4, [c * 0.014, -0.004, 0.032]);
         sc.limb(a, add(a, [c * 0.004, -0.013, 0.017]), 0.0065, 0.0015, { mat: "claw", bone: bn, k: 0.003, vdil: 0.5 });
       }
@@ -177,25 +178,28 @@ EmberVoxelKit.define("dragon", (() => {
       [[0, 0.265, -0.082], [0, 0.35, -1], 0.026, "spine"], [[0, 0.22, -0.1], [0, 0.35, -1], 0.024, "spine"], [[0, 0.172, -0.126], [0, 0.4, -1], 0.022, "root"],
     ];
     for (let i = 3; i <= 21; i += 3) { const p = tp[i], r = tp[i + 1], d = norm(sub(r, p)); ridge.push([[p[0], p[1] + p[3] * 0.8, p[2]], [d[0] * 0.5, 1, d[2] * 0.5], 0.012 + p[3] * 0.35, TBN[Math.min(5, Math.floor(i / 4))]]); }
-    for (const [p, d, L, bone] of ridge) sc.limb(p, add(p, mul(norm(d), L)), L * 0.36, 0.0015, { mat: "scaleDk", bone, k: 0.005, vdil: 0.5 });
+    for (const [p, d, L, bone] of ridge) sc.limb(p, add(p, mul(norm(d), L)), L * (PX ? 0.42 : 0.36), PX ? 0.006 : 0.0015, { mat: "scaleDk", bone, k: 0.005, vdil: 0.5 });
     // ---- belly plates: pale chevron bands from under the jaw down to the belly
     const halfW = (y) => (y < 0.2 ? mix(0.03, 0.046, clamp((y - 0.08) / 0.1, 0, 1)) : y < 0.33 ? 0.054 : mix(0.052, 0.03, clamp((y - 0.33) / 0.1, 0, 1)));
     const zFront = (y) => (y < 0.34 ? mix(-0.05, 0.05, clamp((y - 0.08) / 0.26, 0, 1)) : mix(0.05, 0.075, clamp((y - 0.34) / 0.12, 0, 1)));
     const front = (x, y, z) => Math.max(Math.abs(x) - halfW(y), zFront(y) - z, y - (YM - 0.03), 0.07 - y);
     sc.paint(S.custom(front, [-0.1, 0, -0.2, 0.1, 0.6, 0.3]), { mat: "belly", soft: 0.002, only: ["scale"] });
-    sc.paint(S.custom((x, y, z) => (Math.floor((y - 0.3 * Math.abs(x)) / V) % 3 === 0 ? front(x, y, z) : 1), [-0.1, 0, -0.2, 0.1, 0.6, 0.3]), { mat: "bellySeam", soft: 0.002, only: ["scale"] });
+    // pixel: a few broad chevron seams (one every ~3 sprite pixels, each a full pixel wide)
+    if (PX) sc.paint(S.custom((x, y, z) => { const u = (y - 0.3 * Math.abs(x)) / 0.045; return u - Math.floor(u) < 0.3 ? front(x, y, z) : 1; }, [-0.1, 0, -0.2, 0.1, 0.6, 0.3]), { mat: "bellySeam", soft: 0.002, only: ["scale"] });
+    else sc.paint(S.custom((x, y, z) => (Math.floor((y - 0.3 * Math.abs(x)) / V) % 3 === 0 ? front(x, y, z) : 1), [-0.1, 0, -0.2, 0.1, 0.6, 0.3]), { mat: "bellySeam", soft: 0.002, only: ["scale"] });
     // ---- wings (cloth: world lattice, skinned smoothly across arm, fingers and body)
     sc.inPart("cloth", () => {
       for (const s of [1, -1]) {
         const n = sideName(s), w = wingOf(s);
         const seg = { body: ["chest", w.S, w.B], w1: ["wing1" + n, w.S, w.E], w2: ["wing2" + n, w.E, w.W], th: ["wing3" + n, w.W, w.T], f: w.F.map((F, i) => ["wf" + (i + 1) + n, w.W, F]) };
         const rig = (pr, list) => { pr.wfn = segWeights(list); return pr; };
-        rig(sc.limb(w.S, w.E, 0.015, 0.012, { mat: "wingBone", bone: "wing1" + n, k: 0.006 }), [seg.body, seg.w1, seg.w2]);
-        rig(sc.limb(w.E, w.W, 0.012, 0.01, { mat: "wingBone", bone: "wing2" + n, k: 0.006 }), [seg.w1, seg.w2, seg.th]);
+        const wb = PX ? 1.3 : 1;   // pixel: thicker wing bones
+        rig(sc.limb(w.S, w.E, 0.015 * wb, 0.012 * wb, { mat: "wingBone", bone: "wing1" + n, k: 0.006 }), [seg.body, seg.w1, seg.w2]);
+        rig(sc.limb(w.E, w.W, 0.012 * wb, 0.01 * wb, { mat: "wingBone", bone: "wing2" + n, k: 0.006 }), [seg.w1, seg.w2, seg.th]);
         rig(sc.add(S.sphere(0.014), { mat: "wingBone", p: w.W, bone: "wing3" + n, k: 0.004 }), [seg.w2, seg.th]);
         rig(sc.add(S.chain(spline([w.W, lerp(w.W, w.T, 0.6), w.T, add(w.T, [s * 0.004, -0.004, 0.02])], 8).map((p, i) => [...p, mix(0.01, 0.002, i / 8)])), { mat: "claw", p: [0, 0, 0], bone: "wing3" + n, k: 0.004 }), [seg.th]);
-        w.F.forEach((F, i) => rig(sc.limb(w.W, add(F, mul(norm(sub(F, w.W)), 0.018)), 0.0095, 0.003, { mat: "wingBone", bone: "wf" + (i + 1) + n, k: 0.004 }), [seg.w2, seg.f[i]]));
-        const t = 0.0035, P = [
+        w.F.forEach((F, i) => rig(sc.limb(w.W, add(F, mul(norm(sub(F, w.W)), 0.018)), PX ? 0.012 : 0.0095, PX ? 0.007 : 0.003, { mat: "wingBone", bone: "wf" + (i + 1) + n, k: 0.004 }), [seg.w2, seg.f[i]]));
+        const t = PX ? 0.0075 : 0.0035, P = [
           [[w.W, w.F[0], w.F[1]], 0.042, [seg.f[0], seg.f[1]]],
           [[w.W, w.F[1], w.F[2]], 0.036, [seg.f[1], seg.f[2]]],
           [[w.W, w.F[2], w.B], 0.034, [seg.f[2], seg.w2, seg.w1, seg.body]],
@@ -204,7 +208,7 @@ EmberVoxelKit.define("dragon", (() => {
         ];
         for (const [[a, b, c], dip, list] of P) rig(sc.add(panel(a, b, c, t, dip), { mat: "membrane", p: [0, 0, 0], bone: "wing2" + n, k: 0.003 }), list);
         // the membrane darkens toward the arm and the body, glows toward the trailing edge
-        sc.paint(S.custom((x, y, z) => { const p = [x, y, z]; return Math.min(segDist(p, w.S, w.E), segDist(p, w.E, w.W), segDist(p, w.S, w.B)) - 0.03; }, [-1, -1, -1, 1, 1, 1]), { mat: "membraneDk", soft: 0.002, only: ["membrane"] });
+        if (!PX) sc.paint(S.custom((x, y, z) => { const p = [x, y, z]; return Math.min(segDist(p, w.S, w.E), segDist(p, w.E, w.W), segDist(p, w.S, w.B)) - 0.03; }, [-1, -1, -1, 1, 1, 1]), { mat: "membraneDk", soft: 0.002, only: ["membrane"] });
       }
     });
     return { sc, kind: "quadruped", props: [], G };

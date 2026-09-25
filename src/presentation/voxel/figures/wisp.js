@@ -24,7 +24,7 @@ EmberVoxelKit.define("wisp", (() => {
 
   // the spirit orb (prop, 0.75 cm cubes): a hot core in a green glow, one swirling ring and a spark
   function orbProp() {
-    const sc = new Sculpture();
+    const sc = new Sculpture(), PX = K.pixel;
     sc.bone("p", null, 0, 0, 0);
     mats(sc, {
       core: { c: 0xeafff0, rough: 0.3, emit: 1.8, cls: CLS.glow },
@@ -32,6 +32,12 @@ EmberVoxelKit.define("wisp", (() => {
       swirl: { c: 0x8ff0b0, rough: 0.3, emit: 1.2, cls: CLS.glow },
     });
     const o = { bone: "p" };
+    if (PX) {
+      // pixel sprite: a bright blob — a green glow ball round a big white-hot heart, no thin swirls
+      sc.add(S.sphere(0.05), { ...o, mat: "glow", k: 0.002 });
+      sc.add(S.sphere(0.033), { ...o, mat: "core", p: [0, 0.004, 0.022], k: 0.004 });
+      return sc;
+    }
     sc.add(S.sphere(0.046), { ...o, mat: "glow", k: 0.002 });
     sc.paint(S.sphere(0.028), { mat: "core", soft: 0.002 });
     sc.add(S.arc(0.064, 0.005, 2.3), { ...o, mat: "swirl", r: [1.2, 0.4, 0.3], k: 0.002, vdil: 0.6 });
@@ -79,8 +85,40 @@ EmberVoxelKit.define("wisp", (() => {
     sc.add(leaf(0.034 * q, 0.01 * q, 0.004), { mat: "leaf", p: lr, r: [-0.4, -0.5, 0.7], bone: "head", k: 0.002, vdil: 0.55 });
   }
 
+  /* pixel sprite: four fat fringe locks above the brows, a fat lock before each ear, the back mass with three broad
+   * locks, a leaf crown of three bigger leaves and a bigger gem */
+  function hairPx(sc, P) {
+    const ey = P.eyeY, C = add(P.cranC, [0, 0.006, -0.006]), cr = P.cran, R = [cr[0] * 1.08, cr[1] * 1.06, cr[2] * 1.1];
+    sc.add(S.minus(S.ell(...R), S.at(S.ell(cr[0] * 0.92, cr[1] * 0.76, cr[2] * 0.7), 0, -cr[1] * 0.5, cr[2] * 0.68), 0.012), { mat: "hair", p: C, bone: "head", k: 0.006 });
+    [[-0.85, 0.022, -0.25], [-0.3, 0.03, 0.1], [0.3, 0.03, -0.1], [0.85, 0.022, 0.25]].forEach(([u, dy, sw]) => {
+      const root = onEll(C, R, u * 0.45, 0.88, 0.94);
+      const tip = [R[0] * (0.8 * u + sw * 0.3), ey + 0.032 + dy, P.faceZ + 0.01 - 0.02 * Math.abs(u)];
+      const mid = add(lerp(root, tip, 0.45), mul(norm(sub(lerp(root, tip, 0.45), C)), 0.016));
+      strand(sc, [root, mid, tip], 0.021, 0.008, { k: 0.01, taper: 1.1, grooves: 0 });
+    });
+    for (const s of [1, -1]) {
+      const n = sideName(s);
+      const sp = strand(sc, [onEll(C, R, s * 1.2, 0.3, 0.98), [s * R[0] * 1.05, ey - 0.025, C[2] + R[2] * 0.3], [s * R[0] * 1.1, P.chinY - 0.035, C[2] + R[2] * 0.2], [s * P.shX * 0.8, P.neck[0] - 0.12, P.chest[3] * 0.4]],
+        0.021, 0.011, { k: 0.012, taper: 1.3, wg: 4, bone: "hair" + n, grooves: 0 });
+      sp.wfn = (x, y) => { const t = sstep(P.chinY, P.chinY - 0.1, y); return [["head", 1 - t], ["hair" + n, t]]; };
+    }
+    const top = C[1] - R[1] * 0.2, bot = P.chest[0] - 0.08;
+    const bwf = (x, y) => { const t = sstep(C[1], top - 0.06, y), t2 = sstep(P.neck[0], bot, y); return [["head", 1 - t], ["hairB1", t * (1 - t2)], ["hairB2", t * t2]]; };
+    sc.add(S.ell(R[0] * 1.02, R[1] * 0.9, R[2] * 0.62), { mat: "hair", p: add(C, [0, -R[1] * 0.4, -R[2] * 0.44]), bone: "head", k: 0.03, wg: 5 }).wfn = bwf;
+    for (const u of [-1, 0, 1]) {
+      const az = Math.PI + u * 0.9, root = onEll(C, R, az, -0.3, 1.0);
+      const tip = [u * 0.06, bot - 0.02 * (1 - Math.abs(u)), -P.chest[3] - 0.065];
+      strand(sc, [root, [u * 0.058, mix(root[1], tip[1], 0.45), -P.chest[3] - 0.06], tip], 0.05, 0.024, { k: 0.03, bone: "hairB1", wg: 5, taper: 1.3, grooves: 0 }).wfn = bwf;
+    }
+    const lc = onEll(C, R, 0.75, 0.62, 1.0);
+    [[0, 0.7, -0.5, 0.058], [0.3, 1.0, 0.4, 0.052], [-0.3, 0.3, -0.9, 0.048]].forEach(([dx, rx, rz, L], i) =>
+      sc.add(leaf(L * 1.25, 0.016 * 1.25, 0.005), { mat: i % 2 ? "leafL" : "leaf", p: add(lc, [dx * 0.02, 0, 0]), r: [rx - 0.6, 0.6, rz - 0.4], bone: "head", k: 0.002, vdil: 0.55 }));
+    sc.add(S.sphere(0.014), { mat: "gem", p: add(lc, [0.004, 0.004, 0.014]), bone: "head", k: 0.002, vdil: 0.6 });
+    sc.add(leaf(0.045, 0.015, 0.005), { mat: "leaf", p: onEll(C, R, -0.95, 0.7, 1.0), r: [-0.4, -0.5, 0.7], bone: "head", k: 0.002, vdil: 0.55 });
+  }
+
   function build(fam) {
-    const P = FAM[fam], sc = new Sculpture(), q = fam === "chunky" ? 1.25 : 1;
+    const P = FAM[fam], sc = new Sculpture(), q = fam === "chunky" ? 1.25 : 1, PX = K.pixel;
     humanoidBones(sc, P);
     sc.bone("hairL", "head", 0.05, P.eyeY - 0.03, 0.03); sc.bone("hairR", "head", -0.05, P.eyeY - 0.03, 0.03);
     sc.bone("hairB1", "head", 0, P.chinY, -0.07); sc.bone("hairB2", "hairB1", 0, P.chest[0] - 0.02, -0.1);
@@ -103,12 +141,14 @@ EmberVoxelKit.define("wisp", (() => {
     const X0 = P.shX * 0.93, legX = 0.17, yTop = P.bust[0] + 0.03;
     // ---- strapless leaf bodice: dark leaves with pale leaf-tip chevrons, gold edge and a gem at the neckline
     wrap(sc, RG.box(-X0 * 1.05, X0 * 1.05, P.hipY - 0.03, yTop), "leaf", 0.006 * q);
-    sc.paint(S.custom((x, y, z) => { const v = y - P.waist[0] + 0.7 * Math.abs(x); return Math.abs(((v % 0.05) + 0.05) % 0.05 - 0.025) - 0.007; }, [-1, -1, -1, 1, 1, 1]), { mat: "leafL", soft: 0.001, only: ["leaf"] });
-    sc.paint(S.custom((x, y, z) => Math.abs(y - yTop + 0.006) - 0.0062, [-1, -1, -1, 1, 1, 1]), { mat: "gold", soft: 0.001, only: ["leaf", "leafL"] });
+    if (!PX) {
+      sc.paint(S.custom((x, y, z) => { const v = y - P.waist[0] + 0.7 * Math.abs(x); return Math.abs(((v % 0.05) + 0.05) % 0.05 - 0.025) - 0.007; }, [-1, -1, -1, 1, 1, 1]), { mat: "leafL", soft: 0.001, only: ["leaf"] });
+      sc.paint(S.custom((x, y, z) => Math.abs(y - yTop + 0.006) - 0.0062, [-1, -1, -1, 1, 1, 1]), { mat: "gold", soft: 0.001, only: ["leaf", "leafL"] });
+    }
     sc.add(S.sphere(0.011 * q), { mat: "gem", p: [0, yTop - 0.004, P.bust[2] + P.bust[3] * 0.4 + 0.012], bone: "chest", k: 0.002, vdil: 0.6 });
     // choker with a gem
     wrap(sc, RG.box(-0.1, 0.1, P.neck[0] + 0.028, P.neck[0] + 0.044), "leaf", 0.004 * q);
-    sc.add(S.sphere(0.0075 * q), { mat: "gem", p: [0, P.neck[0] + 0.03, P.neck[2] + 0.01], bone: "neck", k: 0.002, vdil: 0.6 });
+    if (!PX) sc.add(S.sphere(0.0075 * q), { mat: "gem", p: [0, P.neck[0] + 0.03, P.neck[2] + 0.01], bone: "neck", k: 0.002, vdil: 0.6 });
     // ---- leaf bracers and greaves, gold cuffs, a leaf point at each elbow and knee
     for (const s of [1, -1]) {
       const n = sideName(s), a = armJoints(P, s), l = legJoints(P, s);
@@ -138,9 +178,9 @@ EmberVoxelKit.define("wisp", (() => {
     };
     const ys = P.waist[0] - 0.02;
     petals(ys, 0.11, 0.06, 0.085, 0.17, 5, 0.2, "veil", 0.25);
-    sc.paint(S.custom((x, y, z) => y - (ys - 0.2) + 0.03 * Math.sin(x * 60), [-1, -1, -1, 1, 1, 1]), { mat: "veilD", soft: 0.002, only: ["veil"] });
+    if (!PX) sc.paint(S.custom((x, y, z) => y - (ys - 0.2) + 0.03 * Math.sin(x * 60), [-1, -1, -1, 1, 1, 1]), { mat: "veilD", soft: 0.002, only: ["veil"] });
     const sk = petals(ys + 0.004, 0.08, 0.07, 0.09, 0.19, 9, 0.0, "leaf", 0);
-    sc.paint(S.custom((x, y, z) => { const a = Math.atan2(z, x); return Math.sin(a * 9) > 0.3 ? -1 : 1; }, [-1, -1, -1, 1, 1, 1]), { mat: "leafL", soft: 0.001, only: ["leaf"] });
+    if (!PX) sc.paint(S.custom((x, y, z) => { const a = Math.atan2(z, x); return Math.sin(a * 9) > 0.3 ? -1 : 1; }, [-1, -1, -1, 1, 1, 1]), { mat: "leafL", soft: 0.001, only: ["leaf"] });
     void sk;
     // wings (bounds padded ±9 cm in z: the voxelizer's block cull samples block centres through the prim grid, a thin plate's
     // tight bounds would miss them): flat panels two voxels thick in the plane z = WZ, a darker inner field, gold veins and a pale glowing rim
@@ -161,14 +201,15 @@ EmberVoxelKit.define("wisp", (() => {
         sc.add(S.custom(shape, [bx[0], by[0], WZ - 0.09, bx[1], by[1], WZ + 0.09]), { ...wo, mat: "wing", p: [0, 0, 0], bone: "wing" + w.key + n });
         // paints stay inside their own panel (every panel is the same material, so an unbounded paint would colour the others)
         const at = (fn) => S.custom((x, y, z) => { const [u, v] = loc(x, y), uu = clamp(u / L, 0, 1); return Math.max(fn(u, v * s + 0.25 * prof(uu), prof(uu), uu), shape(x, y, WZ) - 0.012); }, [-1, -1, -1, 1, 1, 1]);
-        sc.paint(at((u, v, p, uu) => Math.max(Math.abs(v) - p * 0.55, 0.05 - u)), { mat: "wingIn", soft: 0.001, only: ["wing"] });
-        sc.paint(at((u, v, p) => p - 0.0085 - Math.abs(v)), { mat: "rim", soft: 0.001, only: ["wing"] });
-        sc.paint(at((u, v, p, uu) => Math.min(Math.abs(v - 0.2 * p) - 0.004, Math.abs(v + 0.45 * p * uu) - 0.004, Math.abs(u - 0.62 * L) + Math.abs(v) * 0.2 - 0.005)), { mat: "vein", soft: 0.001, only: ["wing", "wingIn"] });
+        // pixel sprite: one flat green panel with a wide glowing rim, no inner field or veins
+        if (!PX) sc.paint(at((u, v, p, uu) => Math.max(Math.abs(v) - p * 0.55, 0.05 - u)), { mat: "wingIn", soft: 0.001, only: ["wing"] });
+        sc.paint(at((u, v, p) => p - (PX ? 0.013 : 0.0085) - Math.abs(v)), { mat: "rim", soft: 0.001, only: ["wing"] });
+        if (!PX) sc.paint(at((u, v, p, uu) => Math.min(Math.abs(v - 0.2 * p) - 0.004, Math.abs(v + 0.45 * p * uu) - 0.004, Math.abs(u - 0.62 * L) + Math.abs(v) * 0.2 - 0.005)), { mat: "vein", soft: 0.001, only: ["wing", "wingIn"] });
       }
       sc.add(S.sphere(0.014), { mat: "gold", p: [s * 0.03, 0.67, WZ + 0.004], bone: "wingU" + n, k: 0.002, wg: 3, sigma: 0.003, cs: 0.03 });
     }
     sc.part = "hair";
-    hair(sc, P, q);
+    if (PX) hairPx(sc, P); else hair(sc, P, q);
     sc.part = "body";
     return { sc, P, kind: "humanoid", props: [{ sc: orbProp(), bone: "orb", at: orbAt }] };
   }

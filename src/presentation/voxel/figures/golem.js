@@ -30,7 +30,7 @@ EmberVoxelKit.define("golem", (() => {
   const boxSd = (x, y, z, c, h) => Math.max(Math.abs(x - c[0]) - h[0], Math.abs(y - c[1]) - h[1], Math.abs(z - c[2]) - h[2]);
 
   function golem() {
-    const sc = new Sculpture();
+    const sc = new Sculpture(), PX = K.pixel;   // PX: the pixel-sprite variant (bold blocks, one fat rune, no carving)
     // stout proportions: short thick legs, wide high shoulders, long arms, a small head sunk between the shoulders
     const P = { ...FAM.chunky,
       pelvis: [V(32.5), 0.13, 0.06, 0.1], waist: [V(39), 0.11, 0.085], chest: [V(50), 0.17, 0.12, 0.11],
@@ -41,7 +41,14 @@ EmberVoxelKit.define("golem", (() => {
     humanoidBones(sc, P);
     // weathered stone: brightness steps in 3-voxel patches (blocky mottling, no per-voxel speckle)
     const blot = (x, y, z, nx, ny, nz, c) => { const k = 1 + 0.05 * vnoise(Math.floor(x / V(3)), Math.floor(y / V(3)), Math.floor(z / V(3))); c[0] *= k; c[1] *= k; c[2] *= k; };
-    mats(sc, {
+    mats(sc, PX ? {
+      // wider tonal steps between the three stones, so the blocks read as separate masses at sprite size
+      stone: { c: 0x6c7280, rough: 0.85, metal: 0.1, cls: CLS.metal },
+      stoneL: { c: 0x959dab, rough: 0.8, metal: 0.1, cls: CLS.metal },
+      stoneD: { c: 0x464a55, rough: 0.9, metal: 0.1, cls: CLS.metal },
+      seam: { c: 0x23262d, rough: 0.95, metal: 0, cls: CLS.metal },
+      rune: { c: 0x4ef2b2, rough: 0.4, emit: 1.8, cls: CLS.glow },
+    } : {
       stone: { c: 0x646a74, rough: 0.85, metal: 0.1, cls: CLS.metal, vary: 0, pattern: blot, vox: 0.25 },
       stoneL: { c: 0x79808b, rough: 0.8, metal: 0.1, cls: CLS.metal, vary: 0, pattern: blot, vox: 0.25 },
       stoneD: { c: 0x4d525c, rough: 0.9, metal: 0.1, cls: CLS.metal, vary: 0, pattern: blot, vox: 0.25 },
@@ -60,7 +67,7 @@ EmberVoxelKit.define("golem", (() => {
       [-V(12), V(42), V(-14), V(12), V(62), V(5)]), { mat: "stone", bone: "chest", k: 0.002, cs: 0.02 });
     blk("neck", WORLD, O0, [0, V(61), V(-1)], [V(4), V(2), V(4)], { r: V(0.8), mat: "stoneD" });
     // masonry seams across the back
-    sc.paint(S.custom((x, y, z) => {
+    if (!PX) sc.paint(S.custom((x, y, z) => {
       if (z > V(-9)) return 1;
       const hz = Math.abs(y - V(55.5)) - V(0.5), a = y > V(55) ? Math.abs(x - V(3.5)) - V(0.5) : Math.abs(x + V(4.5)) - V(0.5);
       return Math.min(hz, Math.max(a, V(46) - y));
@@ -79,7 +86,13 @@ EmberVoxelKit.define("golem", (() => {
     sc.paint(S.custom((x, y, z) => Math.max(Math.hypot(x, y - yc) - rI, zF - V(3.5) - z), [-rI, yc - rI, 0, rI, yc + rI, zF + V(1)]), { mat: "seam", soft: 0.001 });
     // the rune: a diamond outline round a small solid diamond, and a stem from its lower tip down the shield
     const dy = yc + V(1), ra = V(4.6), rb = V(5.6), nrm = Math.hypot(1 / ra, 1 / rb);
-    const rune = (x, y, z) => {
+    const rune = PX ? (x, y, z) => {
+      // one fat solid diamond and a thick stem: survives at ~70 sprite pixels
+      const ax = Math.abs(x), yy = y - dy;
+      const core = (ax / V(4) + Math.abs(yy) / V(5) - 1) / Math.hypot(1 / V(4), 1 / V(5));
+      const stem = Math.max(ax - V(1.1), yy + V(3), yB + V(5.5) - y);
+      return Math.max(Math.min(core, stem), zF - V(3.5) - z);
+    } : (x, y, z) => {
       const ax = Math.abs(x), yy = y - dy;
       const outline = Math.abs(ax / ra + Math.abs(yy) / rb - 1) / nrm - V(0.62);
       const core = (ax / V(1.9) + Math.abs(yy) / V(2.4) - 1) / Math.hypot(1 / V(1.9), 1 / V(2.4));
@@ -95,8 +108,9 @@ EmberVoxelKit.define("golem", (() => {
     blk("head", WORLD, O0, [0, V(73.5), V(0.5)], [V(1), V(1.5), V(4.5)], { r: V(0.4), mat: "stoneL" });
     blk("head", WORLD, O0, [0, V(65.5), V(6.5)], [V(1), V(2.5), V(0.5)], { r: V(0.2), mat: "stoneL" });
     blk("head", WORLD, O0, [0, V(70), V(6.5)], [V(6), V(1), V(0.5)], { r: V(0.2), mat: "stoneL" });   // brow over the visor
-    sc.add(S.box(V(4), V(0.5), V(2)), { op: "sub", p: [0, V(68.5), V(7)], bone: "head", k: 0.001 });
-    sc.paint(S.box(V(4), V(0.5), V(0.5)), { mat: "rune", p: [0, V(68.5), V(4.5)], soft: 0.001 });
+    const slitH = PX ? V(1) : V(0.5);   // a taller visor slit: a solid glowing bar on the sprite
+    sc.add(S.box(V(4), slitH, V(2)), { op: "sub", p: [0, V(68.5), V(7)], bone: "head", k: 0.001 });
+    sc.paint(S.box(V(4), slitH, V(0.5)), { mat: "rune", p: [0, V(68.5), V(4.5)], soft: 0.001 });
 
     for (const s of [1, -1]) {
       const n = sideName(s), a = armJoints(P, s);
@@ -108,14 +122,16 @@ EmberVoxelKit.define("golem", (() => {
         (Math.abs(z - pc[2]) - ph[2] + y - V(64) + V(1.5)) * Math.SQRT1_2, (Math.abs(z - pc[2]) - ph[2] + Math.abs(X - V(18.5)) - ph[0] + V(2)) * Math.SQRT1_2); },
         s > 0 ? [V(11), V(51), V(-7), V(26), V(64), V(6)] : [-V(26), V(51), V(-7), -V(11), V(64), V(6)]), { mat: "stone", bone: "clav" + n, k: 0.002, cs: 0.02 });
       const sq = [V(55.5), V(-0.5)];
-      sc.paint(S.custom((x, y, z) => Math.max(Math.abs(Math.max(Math.abs(y - sq[0]), Math.abs(z - sq[1])) - V(3)) - V(0.5), V(25) - s * x), [-0.4, V(50), -0.2, 0.4, V(70), 0.2]), { mat: "seam", soft: 0.001 });
-      sc.paint(S.custom((x, y, z) => Math.max(Math.abs(y - sq[0]) + Math.abs(z - sq[1]) - V(1), V(25) - s * x), [-0.4, V(50), -0.2, 0.4, V(70), 0.2]), { mat: "stoneL", soft: 0.001 });
+      if (!PX) sc.paint(S.custom((x, y, z) => Math.max(Math.abs(Math.max(Math.abs(y - sq[0]), Math.abs(z - sq[1])) - V(3)) - V(0.5), V(25) - s * x), [-0.4, V(50), -0.2, 0.4, V(70), 0.2]), { mat: "seam", soft: 0.001 });
+      if (!PX) sc.paint(S.custom((x, y, z) => Math.max(Math.abs(y - sq[0]) + Math.abs(z - sq[1]) - V(1), V(25) - s * x), [-0.4, V(50), -0.2, 0.4, V(70), 0.2]), { mat: "stoneL", soft: 0.001 });
       // ---- arm: upper block, a two-block forearm, a huge block fist with knuckled fingers and a thumb
       blk("arm" + n, Fa, a.S, [0, V(9), 0], [V(4), V(5), V(4)], { r: V(0.8), mat: "stoneD" });
       blk("fore" + n, Ff, a.E, [0, V(3), 0], [V(5), V(3), V(5)], { r: V(1.2) });
       blk("fore" + n, Ff, a.E, [0, V(9.5), 0], [V(6), V(3.5), V(6)], { r: V(1.5), mat: "stoneL" });
       blk("hand" + n, Ff, a.W, [0, V(6), 0], [V(7), V(6), V(7)], { r: V(1.8) });
-      for (const x of [5, 2, -1, -4]) blk("hand" + n, Ff, a.W, [s * V(x), V(8.5), V(-7)], [V(1), V(3.5), V(1)], { r: V(0.3), mat: "stoneD" });
+      // fist: four knuckled fingers (pixel: two fat ones — thin gaps only speckle)
+      if (PX) for (const x of [3.5, -2.5]) blk("hand" + n, Ff, a.W, [s * V(x), V(8.5), V(-7)], [V(2.5), V(3.5), V(1)], { r: V(0.4), mat: "stoneD" });
+      else for (const x of [5, 2, -1, -4]) blk("hand" + n, Ff, a.W, [s * V(x), V(8.5), V(-7)], [V(1), V(3.5), V(1)], { r: V(0.3), mat: "stoneD" });
       blk("hand" + n, Ff, a.W, [-s * V(7), V(5.5), V(-3.5)], [V(1), V(2.5), V(2.5)], { r: V(0.4), mat: "stoneD" });
       // ---- leg: thigh block, a bulky shin with a knee plate, a big flat foot
       blk("thigh" + n, WORLD, O0, [s * V(7), V(23), V(-1)], [V(4.5), V(7), V(5)], { r: V(1), mat: "stoneD" });

@@ -15,30 +15,31 @@ EmberVoxelKit.define("soulguide", (() => {
 
   // ------------------------------------------------------------ prop: the soul lantern (origin at the hanging ring)
   function lanternProp() {
-    const sc = new Sculpture();
+    const sc = new Sculpture(), PX = K.pixel;
     sc.bone("p", null, 0, 0, 0);
     mats(sc, {
       silver: { c: 0x9ea6ba, rough: 0.28, metal: 1, cls: CLS.metal, vary: 0.03 }, silverD: { c: 0x4c5264, rough: 0.35, metal: 1, cls: CLS.metal },
       core: { c: 0xf4f2ff, rough: 0.3, emit: 1.8, cls: CLS.glow }, glass: { c: 0xa9b4ec, rough: 0.3, emit: 1.05, cls: CLS.glow },
     });
     const o = { bone: "p" }, g = 1.25;
-    sc.add(S.torus(0.011 * g, 0.0032), { ...o, mat: "silver", p: [0, -0.008 * g, 0], r: [Math.PI / 2, 0, 0], k: 0.001, vdil: 0.6 });
+    sc.add(S.torus(0.011 * g, PX ? 0.005 : 0.0032), { ...o, mat: "silver", p: [0, -0.008 * g, 0], r: [Math.PI / 2, 0, 0], k: 0.001, vdil: 0.6 });
     // spired cap
     sc.add(S.custom((x, y, z) => Math.max(hex(x, z, 0.008 * g + (-0.018 * g - y) * 1.05), y + 0.018 * g, -0.046 * g - y), pad([-0.045, -0.05, -0.045, 0.045, -0.015, 0.045], 0.01)), { ...o, mat: "silverD", k: 0.001 });
     // cage: a tall hexagon of glass, silver posts, gothic arches at the top of each pane (painted), rims
     const y0 = -0.047 * g, y1 = -0.135 * g, ap = 0.032 * g;
     sc.add(S.custom((x, y, z) => Math.max(hex(x, z, ap - 0.004), y - y0, y1 - y), pad([-0.04, y1, -0.04, 0.04, y0, 0.04], 0.01)), { ...o, mat: "glass", k: 0.001 });
-    sc.add(S.cyl(0.022 * g, 0.017 * g), { ...o, mat: "core", p: [0, (y0 + y1) / 2 - 0.004, 0], k: 0.002 });
-    for (let i = 0; i < 6; i++) {
+    // pixel sprite: the soul-light fills the cage — one bright blob, no posts or arches over it
+    sc.add(PX ? S.cyl(0.036 * g, 0.026 * g) : S.cyl(0.022 * g, 0.017 * g), { ...o, mat: "core", p: [0, (y0 + y1) / 2 - 0.004, 0], k: 0.002 });
+    if (!PX) for (let i = 0; i < 6; i++) {
       const a = (i / 6) * Math.PI * 2 + Math.PI / 6, rr = ap / 0.866;
       sc.limb([Math.cos(a) * rr, y0, Math.sin(a) * rr], [Math.cos(a) * rr, y1, Math.sin(a) * rr], 0.0042, 0.0042, { ...o, mat: "silver", k: 0.001, vdil: 0.6 });
     }
-    sc.paint(S.custom((x, y, z) => Math.max(y0 - 0.016 - y, y - y0), [-1, -1, -1, 1, 1, 1]), { mat: "silverD", soft: 0.001, only: ["glass"] });
+    if (!PX) sc.paint(S.custom((x, y, z) => Math.max(y0 - 0.016 - y, y - y0), [-1, -1, -1, 1, 1, 1]), { mat: "silverD", soft: 0.001, only: ["glass"] });
     for (const [y, m] of [[y0, "silver"], [y1, "silver"]]) sc.add(S.custom((x, yy, z) => Math.max(hex(x, z, ap + 0.005), Math.abs(yy - y) - 0.005), pad([-0.05, y - 0.006, -0.05, 0.05, y + 0.006, 0.05], 0.01)), { ...o, mat: m, k: 0.001 });
     // tapering base, a crescent and a point hanging under it
     sc.add(S.custom((x, y, z) => Math.max(hex(x, z, 0.004 + (y - (y1 - 0.03)) * 0.9), y - y1, y1 - 0.03 - y), pad([-0.04, y1 - 0.035, -0.04, 0.04, y1, 0.04], 0.01)), { ...o, mat: "silverD", k: 0.001 });
-    sc.add(S.arc(0.016, 0.0036, 2.2), { ...o, mat: "silver", p: [0, y1 - 0.05, 0], r: [0, 0, Math.PI], k: 0.001, vdil: 0.6 });
-    sc.add(S.custom((x, y, z) => Math.max(diamond(x, z, 0.006 * (1 - clamp((y1 - 0.052 - y) / 0.03, 0, 1))), y - (y1 - 0.052), y1 - 0.085 - y), pad([-0.01, y1 - 0.09, -0.01, 0.01, y1 - 0.05, 0.01], 0.01)), { ...o, mat: "silver", k: 0.001, vdil: 0.6 });
+    if (!PX) sc.add(S.arc(0.016, 0.0036, 2.2), { ...o, mat: "silver", p: [0, y1 - 0.05, 0], r: [0, 0, Math.PI], k: 0.001, vdil: 0.6 });
+    if (!PX) sc.add(S.custom((x, y, z) => Math.max(diamond(x, z, 0.006 * (1 - clamp((y1 - 0.052 - y) / 0.03, 0, 1))), y - (y1 - 0.052), y1 - 0.085 - y), pad([-0.01, y1 - 0.09, -0.01, 0.01, y1 - 0.05, 0.01], 0.01)), { ...o, mat: "silver", k: 0.001, vdil: 0.6 });
     return sc;
   }
 
@@ -76,8 +77,33 @@ EmberVoxelKit.define("soulguide", (() => {
     }
   }
 
+  /* pixel sprite: the long silver hair as a few big locks — three fringe locks swept to his right above the brow, one
+   * lock before each ear, three broad locks behind blowing back (no thin strands, no waves) */
+  function hairPx(sc, P) {
+    const ey = P.eyeY, C = add(P.cranC, [0, 0.004, -0.006]), cr = P.cran, R = [cr[0] * 1.08, cr[1] * 1.07, cr[2] * 1.1];
+    sc.add(S.minus(S.ell(...R), S.at(S.ell(cr[0] * 0.92, cr[1] * 0.76, cr[2] * 0.7), 0, -cr[1] * 0.48, cr[2] * 0.68), 0.012), { mat: "hair", p: C, bone: "head", k: 0.006 });
+    const root = [0.022, C[1] + R[1] * 0.74, C[2] + R[2] * 0.6];
+    strand(sc, [root, [-0.01, ey + 0.058, P.faceZ + 0.006], [-0.05, ey + 0.036, P.faceZ - 0.006]], 0.021, 0.009, { k: 0.012, taper: 1.1, grooves: 0 });
+    strand(sc, [root, [-0.04, ey + 0.062, P.faceZ + 0.0], [-0.07, ey + 0.004, P.faceZ - 0.024]], 0.02, 0.008, { k: 0.012, taper: 1.1, grooves: 0 });
+    strand(sc, [root, [0.05, ey + 0.058, P.faceZ - 0.004], [0.072, ey + 0.03, P.faceZ - 0.03]], 0.018, 0.008, { k: 0.012, taper: 1.1, grooves: 0 });
+    for (const s of [1, -1]) {
+      const n = sideName(s);
+      const sp = strand(sc, [onEll(C, R, s * 1.2, 0.25, 0.98), [s * R[0] * 1.06, ey - 0.025, C[2] + R[2] * 0.45], [s * R[0] * 1.08, P.chinY - 0.03, C[2] + R[2] * 0.4], [s * P.shX * 0.8, P.neck[0] - 0.09, P.chest[3] * 0.7]], 0.021, 0.011, { k: 0.012, wg: 4, bone: "hair" + n, taper: 1.3, grooves: 0 });
+      sp.wfn = (x, y) => { const t = sstep(P.chinY, P.chinY - 0.1, y); return [["head", 1 - t], ["hair" + n, t]]; };
+    }
+    const len = 0.27;
+    for (const u of [-1, 0, 1]) {
+      const az = Math.PI + u * 0.8, root2 = onEll(C, R, az, 0.35, 0.9), out = onEll(C, R, az, -0.35, 1.14);
+      const l = len * (0.88 + 0.12 * (1 - Math.abs(u)));
+      const tip = [out[0] * 1.1 + 0.05 + u * 0.03, P.neck[0] - l, -P.chest[3] - 0.08 - 0.02 * (1 - Math.abs(u))];
+      const mid = lerp(out, tip, 0.45); mid[2] -= 0.02;
+      const sp = strand(sc, [root2, out, mid, tip], 0.042, 0.016, { k: 0.024, wg: 5, taper: 1.3, bone: "hairB1", grooves: 0 });
+      sp.wfn = (x, y) => { const t = sstep(C[1] - 0.01, P.neck[0] - l, y); return [["head", 1 - t], ["hairB1", 2 * t * (1 - t)], ["hairB2", t * t]]; };
+    }
+  }
+
   function build(fam) {
-    const P = FAM[fam], sc = new Sculpture(), q = fam === "chunky" ? 1.25 : 1;
+    const P = FAM[fam], sc = new Sculpture(), q = fam === "chunky" ? 1.25 : 1, PX = K.pixel;
     humanoidBones(sc, P);
     const capeTop = P.shY + 0.012, capeBot = 0.02, capeZ = -P.chest[3] - 0.036;
     K.capeBones(sc, P, capeTop, capeBot, capeZ);
@@ -88,9 +114,9 @@ EmberVoxelKit.define("soulguide", (() => {
     mats(sc, {
       skin: { c: 0xf0d8c8, rough: 0.55, cls: CLS.skin, vary: 0.015 }, skinDeep: { c: 0xd6b0a0, rough: 0.6, cls: CLS.skin },
       lips: { c: 0xbc8a80, rough: 0.4, cls: CLS.lips },
-      hair: { c: 0xaab4d2, rough: 0.5, cls: CLS.hair, vary: 0.08 },
+      hair: { c: PX ? 0xa6aacb : 0xaab4d2, rough: 0.5, cls: CLS.hair, vary: 0.08 },
       robe: { c: 0x2c2d3a, rough: 0.85, cls: CLS.cloth, vary: 0.05 }, robeD: { c: 0x1b1b24, rough: 0.9, cls: CLS.cloth },
-      white: { c: 0xb4bcd6, rough: 0.9, cls: CLS.cloth, vary: 0.035 }, whiteD: { c: 0x7a82a0, rough: 0.9, cls: CLS.cloth },
+      white: { c: PX ? 0xdfe3ee : 0xb4bcd6, rough: 0.9, cls: CLS.cloth, vary: 0.035 }, whiteD: { c: 0x7a82a0, rough: 0.9, cls: CLS.cloth },
       silver: { c: 0xa8b0c4, rough: 0.28, metal: 1, cls: CLS.metal, vary: 0.03 }, silverD: { c: 0x5e6476, rough: 0.35, metal: 1, cls: CLS.metal },
       glove: { c: 0x25242d, rough: 0.55, cls: CLS.leather, vary: 0.06 },
       sash: { c: 0x3a3a48, rough: 0.6, cls: CLS.leather, vary: 0.06 },
@@ -100,7 +126,7 @@ EmberVoxelKit.define("soulguide", (() => {
     // ---- torso: black tunic with a silver-edged high collar opening
     const upArm = [1, -1].map((s) => { const a = armJoints(P, s); return RG.seg(add(a.S, mul(sub(a.S, a.E), 0.55)), lerp(a.S, a.E, 1.02), 0.085); });
     wrap(sc, RG.or(RG.box(-X0 * 1.3, X0 * 1.3, P.hipY - 0.12, P.neck[0] + 0.03), ...upArm), "robe", 0.006 * q);
-    sc.paint(S.custom((x, y, z) => (z > 0.02 && y > P.waist[0] ? Math.abs(x - 0.022) - 0.006 : 1), [-0.3, -0.3, -0.3, 0.3, 1.2, 0.3]), { mat: "silverD", soft: 0.001, only: ["robe"] });
+    if (!PX) sc.paint(S.custom((x, y, z) => (z > 0.02 && y > P.waist[0] ? Math.abs(x - 0.022) - 0.006 : 1), [-0.3, -0.3, -0.3, 0.3, 1.2, 0.3]), { mat: "silverD", soft: 0.001, only: ["robe"] });
     // fitted sleeves with long black gloves, silver cuffs
     for (const s of [1, -1]) {
       const n = sideName(s), a = armJoints(P, s);
@@ -123,25 +149,33 @@ EmberVoxelKit.define("soulguide", (() => {
     const rAt = (u) => mix(r0, r1, Math.pow(u, 0.62));
     const skirtS = S.custom((x, y, z) => {
       const u = clamp(-y / h, 0, 1), a = Math.atan2(z / szs, x);
-      return Math.max((Math.hypot(x, z / szs) - rAt(u) - 0.008 * u * Math.sin(a * 8 + 0.6)) * 0.85, y, -y - h);
+      return Math.max((Math.hypot(x, z / szs) - rAt(u) - (PX ? 0 : 0.008 * u * Math.sin(a * 8 + 0.6))) * 0.85, y, -y - h);
     }, [-r1 - 0.02, -h, -(r1 + 0.02) * szs, r1 + 0.02, 0, (r1 + 0.02) * szs]);
     const sk = sc.add(skirtS, { mat: "robe", p: [0, y0, zc], bone: "root", k: 0.003, cs: 0.03, wg: 3 });
     sk.wfn = (x, y) => { const u = clamp((y0 - y) / h, 0, 1), b = u * 0.6, sl = sstep(-0.03, 0.03, x); return [["root", 1 - b], ["thighL", b * sl], ["thighR", b * (1 - sl)]]; };
     // a silver-edged front panel and hem
     const panel = (y) => 0.024 + 0.028 * clamp((y0 - y) / h, 0, 1);
-    sc.paint(S.custom((x, y, z) => (z > 0.03 ? Math.abs(Math.abs(x) - panel(y)) - 0.006 : 1), [-1, -1, -1, 1, 1, 1]), { mat: "silverD", soft: 0.001, only: ["robe"] });
-    sc.paint(S.custom((x, y, z) => Math.abs(y - (y1 + 0.022)) - 0.006, [-1, -1, -1, 1, 1, 1]), { mat: "silverD", soft: 0.001, only: ["robe"] });
+    // pixel sprite: one broad silver hem band is the robe's only trim
+    if (!PX) sc.paint(S.custom((x, y, z) => (z > 0.03 ? Math.abs(Math.abs(x) - panel(y)) - 0.006 : 1), [-1, -1, -1, 1, 1, 1]), { mat: "silverD", soft: 0.001, only: ["robe"] });
+    if (PX) {
+      // a band standing proud of the skirt, so the hem edge stays clean
+      const hb = sc.add(S.custom((x, y, z) => { const u = clamp(-y / h, 0, 1); return Math.max(Math.hypot(x, z / szs) - rAt(u) - 0.005, y + h - 0.026, -y - h - 0.002); }, [-r1 - 0.03, -h - 0.01, -(r1 + 0.03) * szs, r1 + 0.03, -h + 0.03, (r1 + 0.03) * szs]),
+        { mat: "silverD", p: [0, y0, zc], bone: "root", k: 0.002, cs: 0.03, wg: 3 });
+      hb.wfn = sk.wfn;
+    } else sc.paint(S.custom((x, y, z) => Math.abs(y - (y1 + 0.022)) - 0.006, [-1, -1, -1, 1, 1, 1]), { mat: "silverD", soft: 0.001, only: ["robe"] });
     // sash with a silver diamond clasp and a hanging silver charm
     const yb = y0 + 0.004, sash = S.custom((x, y, z) => Math.max(Math.hypot(x, (z - zc) / 0.84) - 0.1, Math.abs(y - yb) - 0.02), pad([-0.11, yb - 0.03, -0.1, 0.11, yb + 0.03, 0.1], 0.01));
     sc.add(sash, { mat: "sash", p: [0, 0, 0], bone: "spine", bones: [["spine", 0.5], ["root", 0.5]], k: 0.003, cs: 0.03, wg: 3 });
     sc.add(S.custom((x, y, z) => Math.max((Math.abs(x) + Math.abs(y)) * 0.7071 - 0.014, Math.abs(z) - 0.004), [-0.022, -0.022, -0.006, 0.022, 0.022, 0.006]), { mat: "silver", p: [0, yb, zc + 0.088], bone: "spine", bones: [["spine", 0.5], ["root", 0.5]], k: 0.001, vdil: 0.6 });
+    if (!PX) {
     const ch0 = sc.add(S.chain([[0.024, yb - 0.01, zc + 0.086, 0.0035], [0.03, yb - 0.08, zc + 0.1, 0.0035]]), { mat: "silver", p: [0, 0, 0], bone: "root", k: 0.001, vdil: 0.6 });
     ch0.wfn = sk.wfn;
     sc.add(S.custom((x, y, z) => Math.max((Math.abs(x) + Math.abs(y) * 0.6) * 0.7071 - 0.01, Math.abs(z) - 0.004), [-0.02, -0.03, -0.006, 0.02, 0.03, 0.006]), { mat: "silver", p: [0.031, yb - 0.1, zc + 0.104], bone: "root", k: 0.001, vdil: 0.6 }).wfn = sk.wfn;
+    }
     // white mantle over the shoulders, open at the front, a grey hem
     const mTop = P.neck[0] + 0.018 * q, mBot = P.chest[0] - 0.035 * q;
-    bell(sc, mTop, mBot, P.neck[2] * 2.0, P.shX + P.delt * 1.35, "white", { t: 0.0075, sz: (P.chest[3] * 1.8) / (P.shX + P.delt), folds: 8, amp: 0.008 * q, z: -0.014, slit: 0.05 * q, pw: 0.45, bones: [["chest", 1]] });
-    sc.paint(S.custom((x, y, z) => Math.max(y - (mBot + 0.01), mBot - 0.012 - y, Math.hypot(x, z) - 0.26, 0.1 - Math.hypot(x, z * 1.3)), [-1, -1, -1, 1, 1, 1]), { mat: "whiteD", soft: 0.001, only: ["white"] });
+    bell(sc, mTop, mBot, P.neck[2] * 2.0, P.shX + P.delt * 1.35, "white", { t: PX ? 0.01 : 0.0075, sz: (P.chest[3] * 1.8) / (P.shX + P.delt), folds: 8, amp: PX ? 0.0001 : 0.008 * q, z: -0.014, slit: 0.05 * q, pw: 0.45, bones: [["chest", 1]] });
+    if (!PX) sc.paint(S.custom((x, y, z) => Math.max(y - (mBot + 0.01), mBot - 0.012 - y, Math.hypot(x, z) - 0.26, 0.1 - Math.hypot(x, z * 1.3)), [-1, -1, -1, 1, 1, 1]), { mat: "whiteD", soft: 0.001, only: ["white"] });
     // cowl: the fallen hood bunched round the neck, its bag lying on the upper back
     sc.add(S.custom((x, y, z) => Math.hypot(Math.hypot(x, (z + 0.016) / 0.95) - 0.064, (y - (P.neck[0] + 0.016)) * 1.2) - 0.02, pad([-0.1, P.neck[0], -0.1, 0.1, P.neck[0] + 0.06, 0.08])),
       { mat: "white", p: [0, 0, 0], bone: "chest", k: 0.004, bones: [["chest", 0.75], ["neck", 0.25]] });
@@ -149,13 +183,13 @@ EmberVoxelKit.define("soulguide", (() => {
     sc.add(S.minus(S.ell(0.085, 0.075, 0.05), S.at(S.ell(0.07, 0.06, 0.04), 0, 0.03, 0.02), 0.01), { mat: "white", p: bagC, r: [-0.35, 0, 0], bone: "chest", k: 0.006 });
     sc.paint(S.ell(0.07, 0.06, 0.04), { mat: "whiteD", p: add(bagC, [0, 0.03, 0.016]), soft: 0.004, only: ["white"] });
     // silver clasps at the collar
-    for (const s of [1, -1]) sc.add(S.cyl(0.004, 0.012, 0.002), { mat: "silver", p: [s * 0.05, P.neck[0] + 0.004, P.chest[3] + 0.03], r: [Math.PI / 2 - 0.3, 0, 0], bone: "chest", k: 0.001 });
+    if (!PX) for (const s of [1, -1]) sc.add(S.cyl(0.004, 0.012, 0.002), { mat: "silver", p: [s * 0.05, P.neck[0] + 0.004, P.chest[3] + 0.03], r: [Math.PI / 2 - 0.3, 0, 0], bone: "chest", k: 0.001 });
     // white cloak from the shoulders to the floor, wrapping round the sides; grey lining, silver hem band
     const ch = capeTop - capeBot, capeZc = (x, y) => {
       const u = clamp((capeTop - y) / ch, 0, 1), w = mix(0.13, 0.255, Math.pow(u, 0.7));
-      return { u, w, zc: mix(capeZ, capeZ - 0.09, u) - 0.018 * Math.sin((x / w) * 5 * 1.57 + 0.5) * (0.25 + u) + (0.75 - 0.3 * u) * (x * x) / w };
+      return { u, w, zc: mix(capeZ, capeZ - 0.09, u) - (PX ? 0.01 : 0.018) * Math.sin((x / w) * 5 * 1.57 + 0.5) * (0.25 + u) + (0.75 - 0.3 * u) * (x * x) / w };
     };
-    const capeF = (x, y, z) => { const c = capeZc(x, y); return smax(Math.abs(z - c.zc) - 0.0065, Math.max(Math.abs(x) - c.w, y - capeTop, capeBot + 0.01 * (1 + Math.sin(x * 34 + 0.6)) - y), 0.006); };
+    const capeF = (x, y, z) => { const c = capeZc(x, y); return smax(Math.abs(z - c.zc) - 0.0065, Math.max(Math.abs(x) - c.w, y - capeTop, capeBot + (PX ? 0.01 : 0.01 * (1 + Math.sin(x * 34 + 0.6))) - y), 0.006); };
     const cp = sc.add(S.custom(capeF, [-0.31, capeBot, -0.28, 0.31, capeTop, 0.1]), { mat: "white", p: [0, 0, 0], bone: "chest", k: 0.004, cs: 0.03, wg: 2 });
     cp.wfn = (x, y) => {
       const u = clamp((capeTop - y) / ch, 0, 1), sl = sstep(-0.05, 0.05, x);
@@ -163,9 +197,9 @@ EmberVoxelKit.define("soulguide", (() => {
       return [["chest", top], ["cape1L", mid * sl], ["cape1R", mid * (1 - sl)], ["cape2L", low * sl], ["cape2R", low * (1 - sl)]];
     };
     sc.paint(S.custom((x, y, z) => (z > 0.07 || y > capeTop + 0.01 ? 1 : capeZc(x, y).zc - z + 0.001), [-0.31, capeBot, -0.28, 0.31, capeTop, 0.1]), { mat: "whiteD", soft: 0.001, only: ["white"] });
-    sc.paint(S.custom((x, y, z) => (z > 0.07 ? 1 : y - capeBot - 0.01 * (1 + Math.sin(x * 34 + 0.6)) - 0.014), [-0.31, capeBot, -0.28, 0.31, capeTop, 0.1]), { mat: "silverD", soft: 0.001, only: ["white"] });
+    if (!PX) sc.paint(S.custom((x, y, z) => (z > 0.07 ? 1 : y - capeBot - 0.01 * (1 + Math.sin(x * 34 + 0.6)) - 0.014), [-0.31, capeBot, -0.28, 0.31, capeTop, 0.1]), { mat: "silverD", soft: 0.001, only: ["white"] });
     sc.part = "hair";
-    hair(sc, P, q);
+    if (PX) hairPx(sc, P); else hair(sc, P, q);
     sc.part = "body";
     return { sc, P, kind: "humanoid", props: [{ sc: lanternProp(), bone: "lantern", at: hang }] };
   }

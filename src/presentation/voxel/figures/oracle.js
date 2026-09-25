@@ -19,7 +19,7 @@ EmberVoxelKit.define("oracle", (() => {
 
   // ------------------------------------------------------------ props: the astrolabe (rim + turning dial), centre origin, face +Z
   function rimProp() {
-    const sc = new Sculpture();
+    const sc = new Sculpture(), PX = K.pixel;
     sc.bone("p", null, 0, 0, 0);
     mats(sc, {
       silver: { c: 0xb4bccf, rough: 0.28, metal: 1, cls: CLS.metal, vary: 0.03 }, silverD: { c: 0x6a7186, rough: 0.35, metal: 1, cls: CLS.metal },
@@ -27,15 +27,15 @@ EmberVoxelKit.define("oracle", (() => {
     });
     const o = { bone: "p" };
     sc.add(band(RIM, 0.011, 0.0075), { ...o, mat: "silver", k: 0.001 });
-    sc.paint(S.custom((x, y, z) => Math.max(Math.abs(Math.hypot(x, y) - RIM) - 0.004, -z), [-1, -1, -1, 1, 1, 1]), { mat: "silverD", soft: 0.001, only: ["silver"] });
-    sc.add(band(RIM - 0.02, 0.004, 0.004), { ...o, mat: "gold", k: 0.001, vdil: 0.6 });
+    if (!PX) sc.paint(S.custom((x, y, z) => Math.max(Math.abs(Math.hypot(x, y) - RIM) - 0.004, -z), [-1, -1, -1, 1, 1, 1]), { mat: "silverD", soft: 0.001, only: ["silver"] });
+    sc.add(band(RIM - 0.02, PX ? 0.007 : 0.004, PX ? 0.005 : 0.004), { ...o, mat: "gold", k: 0.001, vdil: 0.6 });
     // orbs set in the rim, a crescent finial at the bottom
     for (const a of [0.5, 2.1, 3.7, 5.2]) sc.add(S.sphere(0.013), { ...o, mat: "silver", p: [Math.cos(a) * RIM, Math.sin(a) * RIM, 0.004], k: 0.001 });
-    sc.add(S.arc(0.02, 0.004, 2.0), { ...o, mat: "gold", p: [0, -RIM - 0.03, 0], r: [0, 0, Math.PI], k: 0.001, vdil: 0.6 });
+    if (!PX) sc.add(S.arc(0.02, 0.004, 2.0), { ...o, mat: "gold", p: [0, -RIM - 0.03, 0], r: [0, 0, Math.PI], k: 0.001, vdil: 0.6 });
     return sc;
   }
   function dialProp() {
-    const sc = new Sculpture();
+    const sc = new Sculpture(), PX = K.pixel;
     sc.bone("p", null, 0, 0, 0);
     mats(sc, {
       sky: { c: 0x2a3a82, rough: 0.5, emit: 0.18, cls: CLS.glow, vary: 0.05 }, dot: { c: 0xc8d4ff, rough: 0.4, emit: 0.9, cls: CLS.glow },
@@ -45,15 +45,18 @@ EmberVoxelKit.define("oracle", (() => {
     const o = { bone: "p" }, Rd = RIM - 0.026;
     sc.add(S.custom((x, y, z) => Math.max(Math.hypot(x, y) - Rd, Math.abs(z) - 0.003), [-Rd, -Rd, -0.004, Rd, Rd, 0.004]), { ...o, mat: "sky", k: 0.001 });
     // a scatter of pale star points on the sky
-    [[0.07, 0.03], [-0.05, 0.08], [-0.085, -0.03], [0.03, -0.09], [0.09, -0.05], [-0.02, 0.1]].forEach(([x, y]) =>
-      sc.paint(S.box(0.004, 0.004, 0.02), { mat: "dot", p: [x, y, 0], soft: 0.001, only: ["sky"] }));
-    sc.add(band(0.066, 0.0035, 0.005), { ...o, mat: "silver", k: 0.001, vdil: 0.6 });
-    sc.add(band(0.034, 0.003, 0.005), { ...o, mat: "silver", k: 0.001, vdil: 0.6 });
+    // pixel sprite: no star specks or hairline rings on the sky — the gold star and its bright heart carry the dial
+    if (!PX) {
+      [[0.07, 0.03], [-0.05, 0.08], [-0.085, -0.03], [0.03, -0.09], [0.09, -0.05], [-0.02, 0.1]].forEach(([x, y]) =>
+        sc.paint(S.box(0.004, 0.004, 0.02), { mat: "dot", p: [x, y, 0], soft: 0.001, only: ["sky"] }));
+      sc.add(band(0.066, 0.0035, 0.005), { ...o, mat: "silver", k: 0.001, vdil: 0.6 });
+      sc.add(band(0.034, 0.003, 0.005), { ...o, mat: "silver", k: 0.001, vdil: 0.6 });
+    }
     // the eight-pointed star: four long rays, four short diagonals, proud of the dial
     sc.add(star4(Rd - 0.004, 0.013, 0.006), { ...o, mat: "gold", p: [0, 0, 0.004], k: 0.001, vdil: 0.5 });
     sc.add(star4(0.07, 0.01, 0.005), { ...o, mat: "gold", p: [0, 0, 0.004], r: [0, 0, Math.PI / 4], k: 0.001, vdil: 0.5 });
-    sc.add(S.sphere(0.013), { ...o, mat: "core", p: [0, 0, 0.008], k: 0.001 });
-    sc.add(S.sphere(0.009), { ...o, mat: "silver", p: [0.066, 0, 0.006], k: 0.001 });
+    sc.add(S.sphere(PX ? 0.022 : 0.013), { ...o, mat: "core", p: [0, 0, 0.008], k: 0.001 });
+    if (!PX) sc.add(S.sphere(0.009), { ...o, mat: "silver", p: [0.066, 0, 0.006], k: 0.001 });
     return sc;
   }
 
@@ -85,8 +88,28 @@ EmberVoxelKit.define("oracle", (() => {
     sc.add(star4(0.022, 0.0075, 0.004), { mat: "gold", p: add(knot, [0.04, 0.012, 0.01]), r: [0, Math.PI / 2 - 0.3, 0.4], bone: "head", k: 0.001, vdil: 0.55 });
   }
 
+  /* pixel sprite: the knot, two fat fringe locks swept to her right above the brow, a lock at the left temple, one fat
+   * lock each side down over the collar, a bigger gold star pin */
+  function hairPx(sc, P) {
+    const ey = P.eyeY, C = add(P.cranC, [0, 0.004, -0.006]), cr = P.cran, R = [cr[0] * 1.07, cr[1] * 1.06, cr[2] * 1.08];
+    sc.add(S.minus(S.ell(...R), S.at(S.ell(cr[0] * 0.92, cr[1] * 0.76, cr[2] * 0.7), 0, -cr[1] * 0.48, cr[2] * 0.68), 0.012), { mat: "hair", p: C, bone: "head", k: 0.006 });
+    const knot = onEll(C, R, Math.PI, 0.55, 1.12);
+    sc.add(S.ell(0.05, 0.044, 0.044), { mat: "hair", p: knot, bone: "head", k: 0.012 });
+    const o = { k: 0.012, taper: 1.1, grooves: 0 }, root = [0.02, C[1] + R[1] * 0.7, C[2] + R[2] * 0.62];
+    strand(sc, [root, [-0.004, ey + 0.062, P.faceZ + 0.006], [-0.04, ey + 0.04, P.faceZ - 0.004]], 0.021, 0.009, o);
+    strand(sc, [root, [-0.036, ey + 0.06, P.faceZ - 0.002], [-0.066, ey + 0.012, P.faceZ - 0.026]], 0.02, 0.008, o);
+    strand(sc, [onEll(C, R, 0.7, 0.75, 1.0), [R[0] * 0.88, ey + 0.045, P.faceZ - 0.03], [R[0] * 1.02, ey + 0.006, P.faceZ - 0.045]], 0.019, 0.009, o);
+    for (const s of [1, -1]) {
+      const n = sideName(s);
+      const sp = strand(sc, [onEll(C, R, s * 1.25, 0.25, 0.98), [s * R[0] * 1.07, ey - 0.025, C[2] + R[2] * 0.42], [s * R[0] * 1.12, P.chinY - 0.025, C[2] + R[2] * 0.38], [s * P.shX * 0.82, P.neck[0] - 0.13, P.chest[3] * 0.8]],
+        0.02, 0.011, { k: 0.012, taper: 1.3, wg: 4, bone: "hair" + n, grooves: 0 });
+      sp.wfn = (x, y) => { const t = sstep(P.chinY, P.chinY - 0.12, y); return [["head", 1 - t], ["hair" + n, t]]; };
+    }
+    sc.add(star4(0.032, 0.011, 0.005), { mat: "gold", p: add(knot, [0.044, 0.014, 0.012]), r: [0, Math.PI / 2 - 0.3, 0.4], bone: "head", k: 0.001, vdil: 0.55 });
+  }
+
   function build(fam) {
-    const P = FAM[fam], sc = new Sculpture(), q = fam === "chunky" ? 1.25 : 1;
+    const P = FAM[fam], sc = new Sculpture(), q = fam === "chunky" ? 1.25 : 1, PX = K.pixel;
     humanoidBones(sc, P);
     const capeTop = P.shY + 0.01, capeBot = 0.02, capeZ = -P.chest[3] - 0.032;
     K.capeBones(sc, P, capeTop, capeBot, capeZ);
@@ -119,14 +142,14 @@ EmberVoxelKit.define("oracle", (() => {
     const rAt = (u) => mix(r0, r1, Math.pow(u, 0.62));
     const skirtS = S.custom((x, y, z) => {
       const u = clamp(-y / h, 0, 1), a = Math.atan2(z / szs, x);
-      return Math.max((Math.hypot(x, z / szs) - rAt(u) - 0.008 * u * Math.sin(a * 8 + 0.6)) * 0.85, y, -y - h);
+      return Math.max((Math.hypot(x, z / szs) - rAt(u) - (PX ? 0 : 0.008 * u * Math.sin(a * 8 + 0.6))) * 0.85, y, -y - h);
     }, [-r1 - 0.02, -h, -(r1 + 0.02) * szs, r1 + 0.02, 0, (r1 + 0.02) * szs]);
     const sk = sc.add(skirtS, { mat: "gown", p: [0, y0, zc], bone: "root", k: 0.003, cs: 0.03, wg: 3 });
     sk.wfn = (x, y) => { const u = clamp((y0 - y) / h, 0, 1), b = u * 0.6, sl = sstep(-0.03, 0.03, x); return [["root", 1 - b], ["thighL", b * sl], ["thighR", b * (1 - sl)]]; };
     // the gown parts over the pale under-robe in a widening front panel, gold edging
     const panel = (y) => 0.02 + 0.07 * clamp((y0 - y) / h, 0, 1);
     sc.paint(S.custom((x, y, z) => (z > 0.02 ? Math.abs(x) - panel(y) : 1), [-1, -1, -1, 1, 1, 1]), { mat: "pale", soft: 0.001, only: ["gown"] });
-    sc.paint(S.custom((x, y, z) => (z > 0.02 ? Math.abs(Math.abs(x) - panel(y) - 0.005) - 0.005 : 1), [-1, -1, -1, 1, 1, 1]), { mat: "gold", soft: 0.001, only: ["gown"] });
+    if (!PX) sc.paint(S.custom((x, y, z) => (z > 0.02 ? Math.abs(Math.abs(x) - panel(y) - 0.005) - 0.005 : 1), [-1, -1, -1, 1, 1, 1]), { mat: "gold", soft: 0.001, only: ["gown"] });
     // sash with a gold star clasp
     const yb = y0 + 0.004, sash = S.custom((x, y, z) => Math.max(Math.hypot(x, (z - zc) / 0.84) - 0.098, Math.abs(y - yb) - 0.016), pad([-0.11, yb - 0.03, -0.1, 0.11, yb + 0.03, 0.1], 0.01));
     sc.add(sash, { mat: "navy", p: [0, 0, 0], bone: "spine", bones: [["spine", 0.5], ["root", 0.5]], k: 0.003, cs: 0.03, wg: 3 });
@@ -136,18 +159,22 @@ EmberVoxelKit.define("oracle", (() => {
     const col = sc.add(S.custom((x, y, z) => { const rr = (Math.hypot(x / 0.052, (z + 0.004) / 0.048) - 1) * 0.05; return Math.max(Math.abs(rr) - 0.005, cy0 - y, y - cy1); }, pad([-0.07, cy0, -0.07, 0.07, cy1, 0.07], 0.01)),
       { mat: "gown", p: [0, 0, 0], bone: "chest", k: 0.003, cs: 0.03, wg: 4 });
     col.wfn = (x, y) => { const u = sstep(cy0, cy1, y); return [["chest", 1 - 0.5 * u], ["neck", 0.5 * u]]; };
-    sc.paint(S.custom((x, y, z) => cy1 - 0.005 - y, [-1, -1, -1, 1, 1, 1]), { mat: "gold", soft: 0.001, only: ["gown"] });
+    if (!PX) sc.paint(S.custom((x, y, z) => cy1 - 0.005 - y, [-1, -1, -1, 1, 1, 1]), { mat: "gold", soft: 0.001, only: ["gown"] });
     sc.add(star4(0.028, 0.009, 0.004), { mat: "gold", p: [0, P.neck[0] - 0.03, P.chest[3] + 0.034], bone: "chest", k: 0.001, vdil: 0.55 });
     // navy mantle over the shoulders, open at the front, gold hem
     const mTop = P.neck[0] + 0.012 * q, mBot = P.chest[0] - 0.03 * q;
-    bell(sc, mTop, mBot, P.neck[2] * 2.0, P.shX + P.delt * 1.35, "navy", { t: 0.0075, sz: (P.chest[3] * 1.8) / (P.shX + P.delt), folds: 8, amp: 0.008 * q, z: -0.014, slit: 0.05 * q, pw: 0.45, bones: [["chest", 1]] });
-    sc.paint(S.custom((x, y, z) => Math.max(y - (mBot + 0.01), mBot - 0.012 - y, Math.hypot(x, z) - 0.26, 0.1 - Math.hypot(x, z * 1.3)), [-1, -1, -1, 1, 1, 1]), { mat: "gold", soft: 0.001, only: ["navy"] });
+    bell(sc, mTop, mBot, P.neck[2] * 2.0, P.shX + P.delt * 1.35, "navy", { t: 0.0075, sz: (P.chest[3] * 1.8) / (P.shX + P.delt), folds: 8, amp: PX ? 0.0001 : 0.008 * q, z: -0.014, slit: 0.05 * q, pw: 0.45, bones: [["chest", 1]] });
+    if (PX) {
+      // pixel sprite: the gold hem is a short band of its own round the mantle's lower edge (paint would bleed onto the cloak)
+      const r0m = P.neck[2] * 2.0, r1m = P.shX + P.delt * 1.35, yA = mBot + 0.016, uA = (mTop - yA) / (mTop - mBot), rA = mix(r0m, r1m, Math.pow(uA, 0.45));
+      bell(sc, yA, mBot - 0.002, rA, r1m + 0.002, "gold", { t: 0.0105, sz: (P.chest[3] * 1.8) / (P.shX + P.delt), folds: 8, amp: 0.0001, z: -0.014, slit: 0.05 * q, pw: 1, bones: [["chest", 1]] });
+    } else sc.paint(S.custom((x, y, z) => Math.max(y - (mBot + 0.01), mBot - 0.012 - y, Math.hypot(x, z) - 0.26, 0.1 - Math.hypot(x, z * 1.3)), [-1, -1, -1, 1, 1, 1]), { mat: "gold", soft: 0.001, only: ["navy"] });
     // star cloak to the floor, wrapping the sides; darker lining, gold hem
     const ch = capeTop - capeBot, capeZc = (x, y) => {
       const u = clamp((capeTop - y) / ch, 0, 1), w = mix(0.13, 0.26, Math.pow(u, 0.7));
-      return { u, w, zc: mix(capeZ, capeZ - 0.08, u) - 0.016 * Math.sin((x / w) * 5 * 1.57 + 0.5) * (0.25 + u) + (0.75 - 0.3 * u) * (x * x) / w };
+      return { u, w, zc: mix(capeZ, capeZ - 0.08, u) - (PX ? 0.009 : 0.016) * Math.sin((x / w) * 5 * 1.57 + 0.5) * (0.25 + u) + (0.75 - 0.3 * u) * (x * x) / w };
     };
-    const capeF = (x, y, z) => { const c = capeZc(x, y); return smax(Math.abs(z - c.zc) - 0.0065, Math.max(Math.abs(x) - c.w, y - capeTop, capeBot + 0.008 * (1 + Math.sin(x * 34 + 0.6)) - y), 0.006); };
+    const capeF = (x, y, z) => { const c = capeZc(x, y); return smax(Math.abs(z - c.zc) - 0.0065, Math.max(Math.abs(x) - c.w, y - capeTop, capeBot + (PX ? 0.008 : 0.008 * (1 + Math.sin(x * 34 + 0.6))) - y), 0.006); };
     const cp = sc.add(S.custom(capeF, [-0.3, capeBot, -0.27, 0.3, capeTop, 0.1]), { mat: "navy", p: [0, 0, 0], bone: "chest", k: 0.004, cs: 0.03, wg: 2 });
     cp.wfn = (x, y) => {
       const u = clamp((capeTop - y) / ch, 0, 1), sl = sstep(-0.05, 0.05, x);
@@ -155,13 +182,18 @@ EmberVoxelKit.define("oracle", (() => {
       return [["chest", top], ["cape1L", mid * sl], ["cape1R", mid * (1 - sl)], ["cape2L", low * sl], ["cape2R", low * (1 - sl)]];
     };
     sc.paint(S.custom((x, y, z) => (z > 0.07 || y > capeTop + 0.01 ? 1 : capeZc(x, y).zc - z + 0.001), [-0.3, capeBot, -0.27, 0.3, capeTop, 0.1]), { mat: "navyD", soft: 0.001, only: ["navy"] });
-    sc.paint(S.custom((x, y, z) => (z > 0.07 ? 1 : y - capeBot - 0.008 * (1 + Math.sin(x * 34 + 0.6)) - 0.012), [-0.3, capeBot, -0.27, 0.3, capeTop, 0.1]), { mat: "gold", soft: 0.001, only: ["navy"] });
-    // gold stars strewn over the back of the cloak and the mantle's shoulders (projected along Z / X)
-    [[0.06, 0.62, 5], [-0.1, 0.5, 4], [0.14, 0.34, 4], [-0.04, 0.26, 5], [0.02, 0.44, 3], [-0.16, 0.14, 4], [0.1, 0.12, 3]].forEach(([x, y, sz]) =>
+    if (!PX) sc.paint(S.custom((x, y, z) => (z > 0.07 ? 1 : y - capeBot - 0.008 * (1 + Math.sin(x * 34 + 0.6)) - 0.012), [-0.3, capeBot, -0.27, 0.3, capeTop, 0.1]), { mat: "gold", soft: 0.001, only: ["navy"] });
+    // gold stars strewn over the back of the cloak and the mantle's shoulders (projected along Z / X); the pixel sprite
+    // has four bigger ones, laid on the cloak as flat gold pieces (painted specks smear on the simplified mesh)
+    if (PX) [[0.07, 0.56, 9], [-0.09, 0.42, 9], [0.1, 0.26, 8], [-0.06, 0.14, 8]].forEach(([x, y, sz]) => {
+      const st = sc.add(star4(sz * 0.0055, sz * 0.0021, 0.003), { mat: "gold", p: [x, y, capeZc(x, y).zc - 0.007], bone: "chest", k: 0.001, vdil: 0.5, wg: 2 });
+      st.wfn = cp.wfn;
+    });
+    else [[0.06, 0.62, 5], [-0.1, 0.5, 4], [0.14, 0.34, 4], [-0.04, 0.26, 5], [0.02, 0.44, 3], [-0.16, 0.14, 4], [0.1, 0.12, 3]].forEach(([x, y, sz]) =>
       sc.paint(star4(sz * 0.0055, sz * 0.0019, 0.3), { mat: "gold", p: [x, y, -0.2], soft: 0.001, only: ["navy"] }));
-    for (const s of [1, -1]) sc.paint(star4(0.022, 0.0075, 0.3), { mat: "gold", p: [s * 0.2, P.shY - 0.02, -0.01], r: [0, Math.PI / 2, 0], soft: 0.001, only: ["navy"] });
+    for (const s of [1, -1]) sc.paint(PX ? star4(0.028, 0.01, 0.3) : star4(0.022, 0.0075, 0.3), { mat: "gold", p: [s * 0.2, P.shY - 0.02, -0.01], r: [0, Math.PI / 2, 0], soft: 0.001, only: ["navy"] });
     sc.part = "hair";
-    hair(sc, P, q);
+    if (PX) hairPx(sc, P); else hair(sc, P, q);
     sc.part = "body";
     return { sc, P, kind: "humanoid", props: [{ sc: rimProp(), bone: "astro", at: A0 }, { sc: dialProp(), bone: "dial", at: A0 }] };
   }

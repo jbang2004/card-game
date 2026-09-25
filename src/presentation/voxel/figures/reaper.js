@@ -10,45 +10,52 @@ EmberVoxelKit.define("reaper", (() => {
   const pad = (b, m = 0.05) => [b[0] - m, b[1] - m, b[2] - m, b[3] + m, b[4] + m, b[5] + m];
   const hash = (k) => { const s = Math.sin(k * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
   // torn hem: triangular teeth of random depth (0..1)
-  const tear = (u) => { const k = Math.floor(u), f = u - k; return (1 - Math.abs(2 * f - 1)) * (0.35 + 0.65 * hash(k)); };
+  const tearN = (u) => { const k = Math.floor(u), f = u - k; return (1 - Math.abs(2 * f - 1)) * (0.35 + 0.65 * hash(k)); };
+  // pixel sprite: a few big regular teeth instead (a third of the frequency, full depth); K.pixel is read per call
+  const tearPx = (u) => { const f = u / 3 - Math.floor(u / 3); return 1 - Math.abs(2 * f - 1); };
+  const tear = (u) => (EmberVoxelKit.pixel ? tearPx(u) : tearN(u));
 
   // ------------------------------------------------------------ prop: the scythe (grip at 0, shaft along +Y, blade along +Z)
   const TOP = 0.46, BL = 0.4;
   const spine = (z) => { const u = clamp(z / BL, 0, 1); return TOP + 0.035 + 0.05 * Math.sin(u * 2.2) - 0.16 * u * u * u; };   // top edge of the blade
   const width = (z) => { const u = clamp(z / BL, 0, 1); return 0.058 * Math.pow(1 - u, 0.75) + 0.004; };
   function scythe() {
-    const sc = new Sculpture();
+    const sc = new Sculpture(), PX = EmberVoxelKit.pixel;   // pixel: thicker shaft and blade, no rings or thorns
     sc.bone("p", null, 0, 0, 0);
     mats(sc, {
       shaft: { c: 0x6a5656, rough: 0.7, cls: CLS.wood, vary: 0.08 }, iron: { c: 0x5a5e6c, rough: 0.35, metal: 0.9, cls: CLS.metal, vary: 0.03 },
       silver: { c: 0xa8b0bc, rough: 0.3, metal: 1, cls: CLS.metal }, blade: { c: 0x7c8390, rough: 0.25, metal: 1, cls: CLS.metal, vary: 0.02 },
       edge: { c: 0xd8202a, rough: 0.3, emit: 0.9, cls: CLS.glow },
     });
-    const o = { bone: "p" }, R = 0.0105, bot = -0.44;
+    const o = { bone: "p" }, R = PX ? 0.013 : 0.0105, bot = -0.44;
     // the shaft is thin and long: padded bounds so every voxel block along it is visited
     const ym = (bot + TOP + 0.02) / 2, yh = (TOP + 0.02 - bot) / 2;
     sc.add(S.custom((x, y, z) => Math.max(Math.hypot(x, z) - R, Math.abs(y - ym) - yh), pad([-R, bot, -R, R, TOP + 0.02, R])), { ...o, mat: "shaft", p: [0, 0, 0], k: 0.001, vdil: 0.4 });
-    for (const y of [-0.3, 0.12, 0.3]) sc.add(S.cyl(0.005, R * 1.4, 0.002), { ...o, mat: "silver", p: [0, y, 0], k: 0.001 });
+    if (!PX) for (const y of [-0.3, 0.12, 0.3]) sc.add(S.cyl(0.005, R * 1.4, 0.002), { ...o, mat: "silver", p: [0, y, 0], k: 0.001 });
     sc.limb([0, bot - 0.03, 0], [0, bot + 0.02, 0], 0.004, R * 1.3, { ...o, mat: "iron", k: 0.002 });
     // head: iron socket with a back spike and two short thorns
     sc.limb([0, TOP - 0.05, 0], [0, TOP + 0.075, 0], R * 1.3, R * 1.5, { ...o, mat: "iron", k: 0.002 });
+    if (PX) sc.limb([0, TOP + 0.05, -0.01], [0, TOP + 0.085, -0.08], 0.015, 0.005, { ...o, mat: "iron", k: 0.002 });
+    else {
     sc.limb([0, TOP + 0.05, -0.01], [0, TOP + 0.09, -0.09], 0.01, 0.002, { ...o, mat: "iron", k: 0.002, vdil: 0.5 });
     sc.limb([0, TOP + 0.07, 0], [0, TOP + 0.13, 0.004], 0.008, 0.002, { ...o, mat: "iron", k: 0.002, vdil: 0.5 });
     for (const s of [1, -1]) sc.limb([s * 0.01, TOP - 0.02, 0], [s * 0.045, TOP + 0.01, 0], 0.006, 0.002, { ...o, mat: "iron", k: 0.002, vdil: 0.5 });
+    }
     // blade: a long crescent in the YZ plane, thick at the spine, the hooked tip dropping; lower edge glows red
     const blade = S.custom((x, y, z) => {
       const top = spine(z), w = width(z), u = clamp((top - y) / w, 0, 1);
-      return Math.max(y - top, top - w - y, -z, z - BL, Math.abs(x) - (0.0065 * (1 - u) + 0.0022));
-    }, [-0.01, TOP - 0.2, 0, 0.01, TOP + 0.12, BL]);
+      return Math.max(y - top, top - w - y, -z, z - BL, Math.abs(x) - (PX ? 0.011 * (1 - 0.4 * u) + 0.004 : 0.0065 * (1 - u) + 0.0022));
+    }, [-0.016, TOP - 0.2, 0, 0.016, TOP + 0.12, BL]);
     sc.add(blade, { ...o, mat: "blade", p: [0, 0, 0], k: 0.001, vdil: 0.4 });
-    sc.paint(S.custom((x, y, z) => (z < 0.01 || z > BL + 0.01 ? 1 : y - (spine(z) - width(z) + 0.011)), [-0.02, TOP - 0.22, -0.01, 0.02, TOP + 0.12, BL + 0.01]),
+    sc.paint(S.custom((x, y, z) => (z < 0.01 || z > BL + 0.01 ? 1 : y - (spine(z) - width(z) + (PX ? 0.016 : 0.011))), [-0.02, TOP - 0.22, -0.01, 0.02, TOP + 0.12, BL + 0.01]),
       { mat: "edge", p: [0, 0, 0], soft: 0.0005, only: ["blade"] });
     return sc;
   }
 
   // ------------------------------------------------------------ figure
   function build(fam) {
-    const P = FAM[fam], sc = new Sculpture(), q = 1.25;
+    const P = FAM[fam], sc = new Sculpture(), q = 1.25, PX = K.pixel;   // PX: pixel sprite — big regular teeth, calm folds
+    const wv = PX ? 0.3 : 1;                                                // wavy-fold amplitude
     humanoidBones(sc, P);
     const capeTop = P.shY + 0.006, capeBot = 0.02, capeZ = -P.chest[3] - 0.04;
     K.capeBones(sc, P, capeTop, capeBot, capeZ);
@@ -70,7 +77,7 @@ EmberVoxelKit.define("reaper", (() => {
     const armRg = [1, -1].map((s) => { const a = armJoints(P, s); return RG.seg(add(a.S, mul(sub(a.S, a.E), 0.3)), lerp(a.E, a.W, 0.9), 0.09); });
     wrap(sc, RG.or(RG.box(-X0, X0, P.pelvis[0] - 0.04, P.neck[0] + 0.03), ...armRg), "robe", 0.006 * q);
     wrap(sc, RG.box(-0.25, 0.25, P.waist[0] - 0.02, P.waist[0] - 0.002), "leather", 0.009 * q);
-    sc.add(S.box(0.013, 0.012, 0.004, 0.002), { mat: "silver", p: [0, P.waist[0] - 0.011, P.waist[2] + 0.035], bone: "spine", k: 0.001 });
+    if (!PX) sc.add(S.box(0.013, 0.012, 0.004, 0.002), { mat: "silver", p: [0, P.waist[0] - 0.011, P.waist[2] + 0.035], bone: "spine", k: 0.001 });
     for (const s of [1, -1]) {
       const n = sideName(s), a = armJoints(P, s);
       wrap(sc, RG.ball(add(a.W, mul(a.dir, 0.035 * P.hand)), 0.07 * P.hand), "iron", 0.004 * q);
@@ -86,16 +93,17 @@ EmberVoxelKit.define("reaper", (() => {
       sc.add(sleeve, { mat: "robe", p: [0, 0, 0], bone: "fore" + n, k: 0.002, part: "cloth" });
     }
     // ---- silver gothic cross on a chain down the front, gold studs on the collar
-    sc.add(S.box(0.004, 0.06, 0.004), { mat: "silver", p: [0, P.chest[0] + 0.02, P.chest[3] + 0.044], r: [-0.08, 0, 0], bone: "chest", k: 0.001, vdil: 0.5 });
+    if (!PX) sc.add(S.box(0.004, 0.06, 0.004), { mat: "silver", p: [0, P.chest[0] + 0.02, P.chest[3] + 0.044], r: [-0.08, 0, 0], bone: "chest", k: 0.001, vdil: 0.5 });
     {
       const c = [0, P.waist[0] + 0.02, P.waist[2] + 0.05];
-      sc.add(S.box(0.007, 0.038, 0.005, 0.001), { mat: "silver", p: c, bone: "spine", k: 0.001 });
-      sc.add(S.box(0.026, 0.007, 0.005, 0.001), { mat: "silver", p: add(c, [0, 0.014, 0]), bone: "spine", k: 0.001 });
-      for (const [dx, dy] of [[0.026, 0.014], [-0.026, 0.014], [0, 0.04], [0, -0.04]]) sc.add(S.sphere(0.0065), { mat: "gold", p: add(c, [dx, dy, 0.001]), bone: "spine", k: 0.001 });
+      const cw = PX ? 1.6 : 1;   // pixel: a bolder cross, no studs
+      sc.add(S.box(0.007 * cw, 0.038 * (PX ? 1.2 : 1), 0.005, 0.001), { mat: "silver", p: c, bone: "spine", k: 0.001 });
+      sc.add(S.box(0.026 * (PX ? 1.2 : 1), 0.007 * cw, 0.005, 0.001), { mat: "silver", p: add(c, [0, 0.014, 0]), bone: "spine", k: 0.001 });
+      if (!PX) for (const [dx, dy] of [[0.026, 0.014], [-0.026, 0.014], [0, 0.04], [0, -0.04]]) sc.add(S.sphere(0.0065), { mat: "gold", p: add(c, [dx, dy, 0.001]), bone: "spine", k: 0.001 });
     }
     // ---- head: void face, ember eyes (the field is scaled so each eye stays one bright cube)
     const ember = S.custom((x, y, z) => (Math.hypot(x * 0.7, y, z) - 0.0045) * 6, [-0.008, -0.005, -0.005, 0.008, 0.005, 0.005]);
-    for (const s of [1, -1]) sc.add(ember, { mat: "eyeGlow", p: [s * 0.028, P.eyeY - 0.004, P.faceZ - 0.004], bone: "head", k: 0.001, cs: 0.01, vdil: 0.6 });
+    for (const s of [1, -1]) sc.add(ember, { mat: "eyeGlow", p: [s * 0.028, P.eyeY - 0.004, P.faceZ - 0.004], bone: "head", k: 0.001, cs: 0.01, vdil: 0.6, s: PX ? 1.8 : 1 });
     // ---- cloth: deep pointed cowl, torn mantle, floor-length robe skirt, ragged cloak
     sc.part = "cloth";
     const hc = add(P.cranC, [0, -P.cran[1] * 0.02, -P.cran[2] * 0.02]), hr = [P.cran[0] * 1.36, P.cran[1] * 1.26, P.cran[2] * 1.4], ht = 0.008;
@@ -110,25 +118,25 @@ EmberVoxelKit.define("reaper", (() => {
     const my0 = P.neck[0] + 0.03, myH = 0.13, mr0 = P.neck[2] * 2, mr1 = P.shX + P.delt * 1.35, msz = (P.chest[3] * 1.9) / mr1;
     const mant = sc.add(S.custom((x, y, z) => {
       const u = clamp(-y / myH, 0, 1), r = mix(mr0, mr1, Math.pow(u, 0.45)), a = Math.atan2(z / msz, x);
-      const rr = Math.hypot(x, z / msz) - r - 0.006 * u * Math.sin(a * 9 + 0.4);
+      const rr = Math.hypot(x, z / msz) - r - 0.006 * wv * u * Math.sin(a * 9 + 0.4);
       return smax(Math.abs(rr) - 0.0075, Math.max(-y - myH + 0.035 * tear(a * 4 + 7), y), 0.006);
     }, pad([-mr1 - 0.02, -myH, -mr1 * msz - 0.02, mr1 + 0.02, 0, mr1 * msz + 0.02], 0.02)), { mat: "robe", p: [0, my0, -0.012], bone: "chest", k: 0.004, cs: 0.03, wg: 2, bones: [["chest", 1]] });
     // robe skirt: waist to the floor, flaring, torn hem (solid: the legs inside are never seen, and a solid cone has no inner surface to pay for); weights from the root down to the thighs
     const y0 = P.waist[0] - 0.01, h = y0 - 0.01, r0 = P.pelvis[1] * 1.12, r1 = 0.165, sz = 0.8;
     const sk = sc.add(S.custom((x, y, z) => {
       const u = clamp(-y / h, 0, 1), r = mix(r0, r1, Math.pow(u, 0.9)), a = Math.atan2(z / sz, x);
-      const rr = Math.hypot(x, z / sz) - r - 0.009 * u * Math.sin(a * 8 + 0.6);
-      return smax(rr, Math.max(-y - h + 0.07 * tear(a * 3.5 + 1) * u, y), 0.006);
+      const rr = Math.hypot(x, z / sz) - r - 0.009 * wv * u * Math.sin(a * 8 + 0.6);
+      return smax(rr, Math.max(-y - h + (PX ? 0.04 * tear(a * 2.6 + 1) : 0.07 * tear(a * 3.5 + 1)) * u, y), 0.006);
     }, pad([-r1 - 0.02, -h, -r1 * sz - 0.02, r1 + 0.02, 0, r1 * sz + 0.02], 0.02)), { mat: "robe", p: [0, y0, 0], bone: "root", k: 0.003, cs: 0.03, wg: 3 });
     sk.wfn = (x, y) => { const u = clamp((y0 - y) / h, 0, 1), b = u * 0.75, sl = sstep(-0.04, 0.04, x); return [["root", 1 - b], ["thighL", b * sl], ["thighR", b * (1 - sl)]]; };
-    sc.paint(S.custom((x, y, z) => y - 0.17 - 0.05 * tear(Math.atan2(z, x) * 3.5 + 1), [-0.3, 0, -0.3, 0.3, 0.3, 0.3]), { mat: "robeD", p: [0, 0, 0], soft: 0.001, only: ["robe"] });
+    if (!PX) sc.paint(S.custom((x, y, z) => y - 0.17 - 0.05 * tear(Math.atan2(z, x) * 3.5 + 1), [-0.3, 0, -0.3, 0.3, 0.3, 0.3]), { mat: "robeD", p: [0, 0, 0], soft: 0.001, only: ["robe"] });
     // cloak: from the shoulders to the floor, wide, deep folds, torn into tails
     const ch = capeTop - capeBot;
     const capeZc = (x, y) => {
       const u = clamp((capeTop - y) / ch, 0, 1), w = mix(0.13, 0.25, Math.pow(u, 0.7));
-      return { u, w, zc: mix(capeZ, capeZ - 0.07, u) - 0.02 * Math.sin((x / w) * 6 * 1.57 + 0.5) * (0.25 + u) + (0.7 - 0.3 * u) * (x * x) / w };
+      return { u, w, zc: mix(capeZ, capeZ - 0.07, u) - 0.02 * wv * Math.sin((x / w) * (PX ? 3 : 6) * 1.57 + 0.5) * (0.25 + u) + (0.7 - 0.3 * u) * (x * x) / w };
     };
-    const capeF = (x, y, z) => { const c = capeZc(x, y); return smax(Math.abs(z - c.zc) - 0.006, Math.max(Math.abs(x) - c.w + 0.03 * tear(y * 20 + 2) * c.u, y - capeTop, capeBot + 0.14 * tear(x * 18 + 5) - y), 0.005); };
+    const capeF = (x, y, z) => { const c = capeZc(x, y); return smax(Math.abs(z - c.zc) - 0.006, Math.max(Math.abs(x) - c.w + (PX ? 0 : 0.03 * tear(y * 20 + 2) * c.u), y - capeTop, capeBot + (PX ? 0.07 * tear(x * 14 + 5) : 0.14 * tear(x * 18 + 5)) - y), 0.005); };
     const cp = sc.add(S.custom(capeF, pad([-0.35, capeBot, -0.34, 0.35, capeTop, 0.1])), { mat: "cloak", p: [0, 0, 0], bone: "chest", k: 0.004, cs: 0.03, wg: 2 });
     cp.wfn = (x, y) => {
       const u = clamp((capeTop - y) / ch, 0, 1), sl = sstep(-0.05, 0.05, x);

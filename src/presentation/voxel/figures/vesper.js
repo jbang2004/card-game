@@ -56,9 +56,34 @@ EmberVoxelKit.define("vesper", (() => {
       { mat: "leaf", p: onEll(C, R, 1.9, 0.3, 1.05), r: [0.9, 0.2, -0.5], s: q, bone: "head", k: 0.002 });
   }
 
+  /* pixel sprite: the dark hair as a few big locks — a curtain fringe parted in the middle and kept above the brow,
+   * one lock framing each cheek to the collarbone, three broad locks down the back, a bigger leaf clip */
+  function vesperHairPx(sc, P) {
+    const ey = P.eyeY, C = add(P.cranC, [0, 0.003, -0.004]), cr = P.cran, R = [cr[0] * 1.08, cr[1] * 1.07, cr[2] * 1.1];
+    sc.add(S.minus(S.ell(...R), S.at(S.ell(cr[0] * 0.92, cr[1] * 0.78, cr[2] * 0.7), 0, -cr[1] * 0.48, cr[2] * 0.68), 0.012), { mat: "hair", p: C, bone: "head", k: 0.006 });
+    const o = { k: 0.012, taper: 1.1, grooves: 0 };
+    for (const s of [1, -1]) {
+      const root = [s * 0.006, C[1] + R[1] * 0.72, C[2] + R[2] * 0.62];
+      strand(sc, [root, [s * 0.026, ey + 0.056, P.faceZ + 0.004], [s * 0.05, ey + 0.036, P.faceZ - 0.008]], 0.02, 0.009, o);
+      strand(sc, [root, [s * 0.05, ey + 0.05, P.faceZ - 0.004], [s * 0.07, ey + 0.004, P.faceZ - 0.026]], 0.019, 0.008, o);
+      const sp = strand(sc, [onEll(C, R, s * 1.15, 0.25, 1.0), [s * R[0] * 1.07, ey - 0.012, C[2] + R[2] * 0.35], [s * R[0] * 1.04, P.chinY - 0.02, C[2] + R[2] * 0.28], [s * P.shX * 0.62, P.neck[0] - 0.03, P.chest[3] * 0.5]],
+        0.02, 0.012, { k: 0.012, taper: 1.3, wg: 4, bone: "head", grooves: 0 });
+      sp.wfn = (x, y) => { const t = sstep(ey, P.neck[0] - 0.02, y); return [["head", 1 - t * 0.5], ["neck", t * 0.5]]; };
+    }
+    const backLen = 0.18;
+    for (const u of [-1, 0, 1]) {
+      const az = Math.PI + u * 0.8, root = onEll(C, R, az, 0.35, 0.9), out = onEll(C, R, az, -0.35, 1.14);
+      const tip = [out[0] * 1.05 + u * 0.03, P.neck[0] - backLen * (0.9 + 0.1 * (1 - Math.abs(u))), -P.chest[3] - 0.02];
+      const sp = strand(sc, [root, out, lerp(out, tip, 0.5), tip], 0.042, 0.018, { k: 0.024, taper: 1.3, wg: 5, bone: "hairB1", grooves: 0 });
+      sp.wfn = (x, y) => { const t = sstep(C[1] - 0.01, P.neck[0] - backLen, y); return [["head", 1 - t], ["hairB1", 2 * t * (1 - t)], ["hairB2", t * t]]; };
+    }
+    sc.add(S.custom((x, y, z) => { const u = clamp((y + 0.018) / 0.036, 0, 1), w = 0.009 * Math.sin(Math.PI * u); return Math.max(Math.abs(z) - w, Math.abs(x) - 0.0025, -(y + 0.018), y - 0.018); }, [-0.003, -0.018, -0.01, 0.003, 0.018, 0.01]),
+      { mat: "leaf", p: onEll(C, R, 1.9, 0.3, 1.06), r: [0.9, 0.2, -0.5], s: 1.9, bone: "head", k: 0.002 });
+  }
+
   // chibi hair: a helmet-like mass that hugs the big head, a few big pointed locks
   function vesper(fam) {
-    const P = FAM[fam], sc = new Sculpture();
+    const P = FAM[fam], sc = new Sculpture(), PX = K.pixel;
     humanoidBones(sc, P);
     const chib = fam === "chibi", q = chib ? 1.7 : fam === "chunky" ? 1.25 : 1;
     const capeTop = P.shY + 0.004, capeBot = chib ? P.ankY + 0.08 : mix(P.ankY, P.kneeY, 0.3);
@@ -70,12 +95,12 @@ EmberVoxelKit.define("vesper", (() => {
       hair: { c: 0x2e2018, rough: 0.58, cls: CLS.hair, vary: 0.12 },
       cloak: { c: 0x3f6d36, rough: 0.85, cls: CLS.cloth, vary: 0.06 }, cloakIn: { c: 0x27431f, rough: 0.9, cls: CLS.cloth },
       shirt: { c: 0xd8ccae, rough: 0.9, cls: CLS.cloth, vary: 0.04 },
-      jerkin: { c: 0x3e281b, rough: 0.6, cls: CLS.leather, vary: 0.1 },
+      jerkin: { c: PX ? 0x5c3a24 : 0x3e281b, rough: 0.6, cls: CLS.leather, vary: 0.1 },
       bracer: { c: 0x6c4529, rough: 0.5, cls: CLS.leather, vary: 0.12 },
       glove: { c: 0x2a1c14, rough: 0.6, cls: CLS.leather },
       belt: { c: 0x4d3020, rough: 0.6, cls: CLS.leather, vary: 0.08 },
-      pants: { c: 0x3a3428, rough: 0.85, cls: CLS.cloth, vary: 0.05 },
-      boots: { c: 0x3b271a, rough: 0.55, cls: CLS.leather, vary: 0.1 },
+      pants: { c: PX ? 0x6a6450 : 0x3a3428, rough: 0.85, cls: CLS.cloth, vary: 0.05 },
+      boots: { c: PX ? 0x2e1e14 : 0x3b271a, rough: 0.55, cls: CLS.leather, vary: 0.1 },
       brass: { c: 0xb8935a, rough: 0.32, metal: 1, cls: CLS.metal },
       leaf: { c: 0x6f9a3c, rough: 0.6, cls: CLS.plant },
     });
@@ -95,13 +120,13 @@ EmberVoxelKit.define("vesper", (() => {
       const dir = norm(sub(B0, A)), n = norm(cross(dir, [0, 0, 1]));
       wrap(sc, RG.band(A, n, 0.0075 * q, RG.box(-X0, X0, P.pelvis[0] - 0.02, P.shY + 0.05)), "belt", 0.004 * q);
     }
-    sc.add(S.box(0.011 * q, 0.009 * q, 0.003, 0.002), { mat: "brass", p: [0, P.waist[0] - 0.012 * q, P.waist[2] + 0.02 * q], bone: "spine", k: 0.002 });
+    if (!PX) sc.add(S.box(0.011 * q, 0.009 * q, 0.003, 0.002), { mat: "brass", p: [0, P.waist[0] - 0.012 * q, P.waist[2] + 0.02 * q], bone: "spine", k: 0.002 });
     for (const s of [1, -1]) sc.add(S.box(0.016 * q, 0.018 * q, 0.01 * q, 0.005), { mat: "belt", p: [s * (P.pelvis[1] * 0.78), P.pelvis[0] - 0.005, P.pelvis[3] * 0.6], r: [0, s * 0.5, 0], bone: "root", k: 0.004, cs: 0.03 });
     // bracers, gloves, trousers, knee boots
     for (const s of [1, -1]) {
       const n = sideName(s), a = armJoints(P, s), l = legJoints(P, s);
       wrap(sc, RG.seg(lerp(a.E, a.W, 0.1), a.W, 0.07), "bracer", 0.005 * q);
-      for (const u of [0.12, 0.92]) wrap(sc, RG.seg(lerp(a.E, a.W, u - 0.03), lerp(a.E, a.W, u + 0.03), 0.07), "belt", 0.003 * q);
+      if (!PX) for (const u of [0.12, 0.92]) wrap(sc, RG.seg(lerp(a.E, a.W, u - 0.03), lerp(a.E, a.W, u + 0.03), 0.07), "belt", 0.003 * q);
       wrap(sc, RG.ball(add(a.W, mul(a.dir, 0.035 * P.hand)), 0.05 * P.hand), "glove", 0.002 * q);
     }
     wrap(sc, RG.box(-legX, legX, -0.02, jBot + 0.03), "pants", 0.003 * q);
@@ -111,17 +136,17 @@ EmberVoxelKit.define("vesper", (() => {
     wrap(sc, RG.box(-legX, legX, -0.02, 0.012 * q), "belt", 0.003 * q);
     // cloak: long cape + thick cowl round the neck + folded hood
     sc.part = "cloth";
-    cape(sc, P, capeTop, capeBot, P.shX * 1.0, P.shX * (chib ? 1.55 : 2.1), "cloak", { folds: 7, amp: chib ? 0.014 : 0.012, t: chib ? 0.009 : 0.0065 });
+    cape(sc, P, capeTop, capeBot, P.shX * 1.0, P.shX * (chib ? 1.55 : 2.1), "cloak", { folds: 7, amp: PX ? 0.007 : chib ? 0.014 : 0.012, t: chib ? 0.009 : 0.0065 });
     // shoulder mantle: a shell over the shoulders, open at the front below the collar
-    bell(sc, P.neck[0] + 0.014 * q, P.chest[0] - 0.012 * q, P.neck[2] * 1.85, P.shX + P.delt * 1.25, "cloak", { t: chib ? 0.011 : 0.0075, sz: (P.chest[3] * 1.75) / (P.shX + P.delt), folds: 9, amp: 0.006 * q, z: -0.012, slit: 0.045 * q, pw: 0.45, bones: [["chest", 1]] });
+    bell(sc, P.neck[0] + 0.014 * q, P.chest[0] - 0.012 * q, P.neck[2] * 1.85, P.shX + P.delt * 1.25, "cloak", { t: chib ? 0.011 : 0.0075, sz: (P.chest[3] * 1.75) / (P.shX + P.delt), folds: 9, amp: PX ? 0.0001 : 0.006 * q, z: -0.012, slit: 0.045 * q, pw: 0.45, bones: [["chest", 1]] });
     sc.add(S.ell(P.shX * 0.55, 0.035 * q, 0.03 * q), { mat: "cloak", p: [0, P.neck[0] + 0.005, -P.chest[3] - 0.03], r: [0.4, 0, 0], bone: "chest", k: 0.012, cs: 0.03 });
     sc.paint(S.ell(P.shX * 0.5, 0.02 * q, 0.012 * q), { mat: "cloakIn", p: [0, P.neck[0] + 0.03, -P.chest[3] - 0.012], soft: 0.006, only: ["cloak"] });
     sc.part = "body";
     const lb = S.custom((x, y, z) => { const u = clamp((y + 0.02) / 0.04, 0, 1), w = 0.012 * Math.sin(Math.PI * u); return Math.max(Math.abs(x) - w, Math.abs(z) - 0.003, -(y + 0.02), y - 0.02); }, [-0.013, -0.02, -0.004, 0.013, 0.02, 0.004]);
-    sc.add(lb, { mat: "brass", p: [P.shX * 0.5, P.shY - 0.03, P.chest[3] + 0.022 * q], r: [-0.2, 0, 0.5], s: q, bone: "chest", k: 0.002 });
+    sc.add(lb, { mat: "brass", p: [P.shX * 0.5, P.shY - 0.03, P.chest[3] + 0.022 * q], r: [-0.2, 0, 0.5], s: PX ? q * 1.4 : q, bone: "chest", k: 0.002 });
     // hair: clumped strands (cap, combed crown, curtain fringe, framing strands, wavy back mass)
     sc.part = "hair";
-    vesperHair(sc, P, fam);
+    if (PX && fam !== "chibi") vesperHairPx(sc, P); else vesperHair(sc, P, fam);
     sc.part = "body";
     sc.faceKind = "vesper";
     return {

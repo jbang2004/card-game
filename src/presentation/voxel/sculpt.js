@@ -238,16 +238,23 @@
     const s = p.s; out[0] = lx / s; out[1] = ly / s; out[2] = lz / s;
   }
   const L = [0, 0, 0];
+  // bake switches (set for the length of one bake): PLAIN leaves out surface displacement (hair grooves, bark), FLAT
+  // the colour jitter and patterns of the materials — the clean, flat-shaded shapes the pixel-sprite look wants
+  let PLAIN = false, FLAT = false;
   function primDist(p, x, y, z) {
     local(p, x, y, z, L);
     let d = p.f(L[0], L[1], L[2]) * p.s;
-    if (p.disp) d += p.disp(x, y, z, L);
+    if (p.disp && !PLAIN) d += p.disp(x, y, z, L);
     return d;
   }
 
   // ------------------------------------------------------------------ bake
-  /* opts: { h: voxel size, ao: [radii], faceBone } → mesh arrays */
+  /* opts: { h: voxel size, ao: [radii], faceBone, plain, flat } → mesh arrays */
   function bake(sc, opts = {}) {
+    PLAIN = !!opts.plain; FLAT = !!opts.flat;
+    try { return bakeMesh(sc, opts); } finally { PLAIN = FLAT = false; }
+  }
+  function bakeMesh(sc, opts) {
     const t0 = Date.now();
     const h = opts.h || 0.005, BS = 8;
     const part = opts.part || "body";
@@ -469,8 +476,8 @@
         }
       }
       // material pattern / variation
-      if (M && M.vary) { const n = fbm(x * 38, y * 38, z * 38, 2); cr *= 1 + M.vary * n; cg *= 1 + M.vary * n; cb *= 1 + M.vary * n; }
-      if (M && M.pattern) { col[0] = cr; col[1] = cg; col[2] = cb; M.pattern(x, y, z, nx_, ny_, nz_, col); cr = col[0]; cg = col[1]; cb = col[2]; }
+      if (M && M.vary && !FLAT) { const n = fbm(x * 38, y * 38, z * 38, 2); cr *= 1 + M.vary * n; cg *= 1 + M.vary * n; cb *= 1 + M.vary * n; }
+      if (M && M.pattern && !FLAT) { col[0] = cr; col[1] = cg; col[2] = cb; M.pattern(x, y, z, nx_, ny_, nz_, col); cr = col[0]; cg = col[1]; cb = col[2]; }
       // paints
       for (const pt of paints) {
         local(pt, x, y, z, L);

@@ -33,14 +33,25 @@ EmberVoxelKit.define("guard", (() => {
 
   // ------------------------------------------------------------ props
   function guardSpear() {
-    const sc = new Sculpture();
+    const sc = new Sculpture(), PX = EmberVoxelKit.pixel;
     sc.bone("p", null, 0, 0, 0);
     mats(sc, {
       shaft: { c: 0x3b2b20, rough: 0.7, cls: CLS.wood, vary: 0.08 }, grip: { c: 0x223158, rough: 0.8, cls: CLS.leather },
       steel: { c: 0xb4c5e0, rough: 0.25, metal: 1, cls: CLS.metal }, steelD: { c: 0x72819a, rough: 0.35, metal: 1, cls: CLS.metal },
     });
-    const R = 0.0105, top = 0.5, bot = -0.46;
+    const R = PX ? 0.013 : 0.0105, top = 0.5, bot = -0.46;
     sc.limb([0, bot, 0], [0, top, 0], R * 1.05, R * 0.92, { mat: "shaft", bone: "p", k: 0.002 });
+    if (PX) {
+      // pixel: one fat grip wrap, a plain socket and a broad two-cube-thick leaf blade
+      sc.add(S.cyl(0.04, R * 1.3, 0.004), { mat: "grip", p: [0, 0, 0], bone: "p", k: 0.002 });
+      sc.limb([0, top - 0.04, 0], [0, top + 0.03, 0], R * 1.25, R * 1.6, { mat: "steelD", bone: "p", k: 0.002 });
+      const bl = 0.2, bw = 0.034;
+      sc.add(S.custom((x, y, z) => {
+        const u = clamp(y / bl, 0, 1), w = bw * Math.sin(Math.PI * Math.pow(u, 0.62)) * (1 - 0.25 * u) + 0.004;
+        return Math.max(Math.abs(x) - w, Math.abs(z) - (0.012 * (1 - 0.5 * u) + 0.004), -y, y - bl);
+      }, [-bw - 0.004, 0, -0.018, bw + 0.004, bl, 0.018]), { mat: "steel", p: [0, top + 0.028, 0], bone: "p", k: 0.001 });
+      return sc;
+    }
     for (const y of [-0.036, 0.036]) sc.add(S.cyl(0.018, R * 1.3, 0.003), { mat: "grip", p: [0, y, 0], bone: "p", k: 0.002 });
     sc.add(S.cyl(0.014, R * 1.3, 0.004), { mat: "steelD", p: [0, bot + 0.01, 0], bone: "p", k: 0.002 });
     // socket, collar, two short lugs under the blade
@@ -61,7 +72,7 @@ EmberVoxelKit.define("guard", (() => {
 
   // ------------------------------------------------------------ figure
   function build(fam) {
-    const P = FAM[fam], sc = new Sculpture();
+    const P = FAM[fam], sc = new Sculpture(), PX = K.pixel;   // PX: pixel-sprite variant — flat plates, clean cloth
     humanoidBones(sc, P);
     const capeTop = P.shY - 0.01, capeBot = 0.1, capeZ = -0.11;
     K.capeBones(sc, P, capeTop, capeBot, capeZ);
@@ -81,7 +92,7 @@ EmberVoxelKit.define("guard", (() => {
       blue: { c: 0x3d63c0, rough: 0.85, cls: CLS.cloth, vary: 0.05 }, blueD: { c: 0x233a82, rough: 0.9, cls: CLS.cloth },
       trim: { c: 0x9db3dc, rough: 0.6, cls: CLS.cloth },
       leather: { c: 0x563923, rough: 0.6, cls: CLS.leather, vary: 0.08 },
-      shieldBlue: { c: 0x2c4fa6, rough: 0.45, metal: 0.35, cls: CLS.metal, vary: 0.03 }, shieldBack: { c: 0x3e2e22, rough: 0.7, cls: CLS.wood },
+      shieldBlue: { c: 0x2c4fa6, rough: 0.45, metal: PX ? 0 : 0.35, cls: CLS.metal, vary: 0.03 }, shieldBack: { c: 0x3e2e22, rough: 0.7, cls: CLS.wood },
     });
     body(sc, P, fam, { elf: false });
     const n0 = sc.prims.length;
@@ -99,14 +110,14 @@ EmberVoxelKit.define("guard", (() => {
       sc.limb(lerp(a.E, a.W, 0.84), add(a.W, mul(a.dir, 0.008)), 0.034, 0.039, { mat: "plateD", bone: "fore" + n, k: 0.002 });
       sc.add(S.ell(0.03, 0.03, 0.026), { mat: "plate", p: add(a.E, [s * 0.006, 0.004, -0.018]), bone: "fore" + n, k: 0.003 });
       sc.add(S.ell(0.037, 0.034, 0.024), { mat: "plate", p: add(l.K, [0, 0.004, 0.036]), bone: "shin" + n, k: 0.003 });
-      sc.add(S.ell(0.012, 0.028, 0.026), { mat: "plateD", p: add(l.K, [s * 0.045, 0.004, 0.012]), bone: "shin" + n, k: 0.002 });
+      if (!PX) sc.add(S.ell(0.012, 0.028, 0.026), { mat: "plateD", p: add(l.K, [s * 0.045, 0.004, 0.012]), bone: "shin" + n, k: 0.002 });
       // pauldron: big dome on the shoulder (rides the torso) + two lames on the upper arm
       const pc = [s * 0.165, P.shY - 0.002, -0.008], pe = S.ell(0.08, 0.068, 0.088);
       sc.add(S.custom((x, y, z) => Math.max(pe.f(x, y, z), -0.032 - y), [-0.08, -0.032, -0.088, 0.08, 0.068, 0.088]),
         { mat: "plate", p: pc, bone: "chest", k: 0.003 });   // the clavicles never move: riding the chest saves a bake pass
       const d = norm(sub(a.E, a.S)), ref = norm(sub([s, 0, 0], mul(d, s * d[0])));
       sc.add(ringPlate(a.S, d, ref, 0.062, 0.03, 0.058, 0, 1.95, 0.0055, 0.006), { mat: "plate", bone: "arm" + n, k: 0.002 });
-      sc.add(ringPlate(a.S, d, ref, 0.058, 0.054, 0.082, 0, 1.85, 0.0055, 0.006), { mat: "plateD", bone: "arm" + n, k: 0.002 });
+      if (!PX) sc.add(ringPlate(a.S, d, ref, 0.058, 0.054, 0.082, 0, 1.85, 0.0055, 0.006), { mat: "plateD", bone: "arm" + n, k: 0.002 });
       // tassets over the thighs (two lames)
       const tc = [s * 0.064, 0, 0.004];
       sc.add(ringPlate([tc[0], P.hipY + 0.012, tc[2]], [0, -1, 0], [0, 0, 1], 0.082, 0, 0.05, s * 0.55, 1.25, 0.0055, 0.008), { mat: "plate", bone: "thigh" + n, k: 0.002 });
@@ -117,9 +128,9 @@ EmberVoxelKit.define("guard", (() => {
     sc.add(S.ell(0.012, 0.075, 0.02), { mat: "plate", p: [0, P.chest[0] - 0.02, 0.075], bone: "chest", k: 0.004 });
     sc.limb([0, 0.588, -0.006], [0, 0.525, -0.006], 0.1, 0.108, { mat: "plate", bone: "spine", k: 0.003, sz: 0.8 });
     sc.limb([0, 0.53, -0.006], [0, 0.458, -0.006], 0.108, 0.118, { mat: "plate", bone: "root", k: 0.003, sz: 0.8 });
-    for (const j of [36, 38]) sc.paint(S.box(0.2, 0.004, 0.2), { mat: "plateD", p: [0, row(j), 0], soft: 0.001, only: ["plate"] });
+    if (!PX) for (const j of [36, 38]) sc.paint(S.box(0.2, 0.004, 0.2), { mat: "plateD", p: [0, row(j), 0], soft: 0.001, only: ["plate"] });
     wr(K.RG.box(-0.16, 0.16, row(42) - 0.006, row(43) + 0.006), "leather", 0.0055);
-    sc.add(S.cyl(0.005, 0.021, 0.002), { mat: "plateL", p: [0, (row(42) + row(43)) / 2, 0.088], r: [Math.PI / 2, 0, 0], bone: "root", k: 0.001 });
+    if (!PX) sc.add(S.cyl(0.005, 0.021, 0.002), { mat: "plateL", p: [0, (row(42) + row(43)) / 2, 0.088], r: [Math.PI / 2, 0, 0], bone: "root", k: 0.001 });
     // ---- great helm: barrel + sugarloaf dome, comb ridge, T visor (carved one cube deep, painted dark)
     // sugarloaf: a barrel that flares a little at the bottom, an ogive dome that comes to a blunt point
     const hz = -0.01, hrx = 0.086, hrz = 0.094, yMid = 0.918, yBot = 0.78, dry = 0.1;
@@ -138,15 +149,15 @@ EmberVoxelKit.define("guard", (() => {
     sc.paint(S.custom((x, y, z) => (y < 0.815 || y > 0.89 || z < 0 ? 1 : Math.max(Math.min(Math.max(Math.abs(x) - 0.058, Math.abs(y - eyeRow) - 0.0058), Math.max(Math.abs(x) - V, Math.abs(y - 0.848) - 0.027)), -z, helmF(x, y, z) + 0.03 < 0 ? 1 : -1)), [-0.07, 0.8, 0, 0.07, 0.9, 0.12]),
       { mat: "visor", p: [0, 0, 0], soft: 0.001 });
     // brow band just above the slit
-    sc.paint(S.custom((x, y, z) => Math.max(Math.abs(y - row(71)) - 0.0058, -z - 0.03), [-0.1, 0.87, -0.05, 0.1, 0.9, 0.12]), { mat: "plateL", p: [0, 0, 0], soft: 0.001, only: ["plate"] });
+    if (!PX) sc.paint(S.custom((x, y, z) => Math.max(Math.abs(y - row(71)) - 0.0058, -z - 0.03), [-0.1, 0.87, -0.05, 0.1, 0.9, 0.12]), { mat: "plateL", p: [0, 0, 0], soft: 0.001, only: ["plate"] });
     // ---- cloth: rolled cowl round the neck with a short mantle, tabard (front panel), cape
     sc.part = "cloth";
     sc.add(S.custom((x, y, z) => Math.hypot(Math.hypot(x, z / 0.92) - 0.06, (y - 0.766) * 1.15) - 0.022, pad([-0.085, 0.74, -0.08, 0.085, 0.79, 0.08])),
       { mat: "blue", p: [0, 0, 0], bone: "chest", k: 0.004, bones: [["chest", 0.7], ["neck", 0.3]] });
-    K.bell(sc, 0.772, 0.7, 0.056, 0.086, "blue", { t: 0.007, sz: 1.05, folds: 8, amp: 0.004, pw: 0.5, z: 0.004, bones: [["chest", 1]] });
-    sc.add(S.cyl(0.004, 0.018, 0.002), { mat: "plateL", p: [0.028, 0.735, 0.086], r: [Math.PI / 2 - 0.35, 0, 0], bone: "chest", k: 0.001, part: "cloth" });
+    K.bell(sc, 0.772, 0.7, 0.056, 0.086, "blue", { t: 0.007, sz: 1.05, folds: 8, amp: PX ? 1e-6 : 0.004, pw: 0.5, z: 0.004, bones: [["chest", 1]] });
+    if (!PX) sc.add(S.cyl(0.004, 0.018, 0.002), { mat: "plateL", p: [0.028, 0.735, 0.086], r: [Math.PI / 2 - 0.35, 0, 0], bone: "chest", k: 0.001, part: "cloth" });
     const tab = (x, y, z) => {
-      const u = clamp((0.528 - y) / 0.33, 0, 1), w = mix(0.06, 0.074, u), zc = mix(0.098, 0.108, u) + 0.004 * u * Math.sin((x / w) * 4.7 + 0.4);
+      const u = clamp((0.528 - y) / 0.33, 0, 1), w = mix(0.06, 0.074, u), zc = mix(0.098, 0.108, u) + (PX ? 0 : 0.004) * u * Math.sin((x / w) * 4.7 + 0.4);
       return smax(Math.abs(z - zc) - 0.0055, Math.max(Math.abs(x) - w, y - 0.528, 0.198 - y), 0.004);
     };
     const tp = sc.add(S.custom(tab, pad([-0.08, 0.19, 0.08, 0.08, 0.53, 0.12])), { mat: "blue", p: [0, 0, 0], bone: "tabard", k: 0.003, wg: 1 });
@@ -156,9 +167,10 @@ EmberVoxelKit.define("guard", (() => {
     // cape: hangs from between the pauldrons, wraps a little round the sides, darker lining
     const ch = capeTop - capeBot, capeZc = (x, y) => {
       const u = clamp((capeTop - y) / ch, 0, 1), w = mix(0.075, 0.25, Math.pow(u, 0.8));
-      return { u, w, zc: mix(capeZ, capeZ - 0.085, u) - 0.017 * Math.sin((x / w) * 5 * 1.57 + 0.5) * (0.25 + u) + (0.55 - 0.25 * u) * (x * x) / w };
+      return { u, w, zc: mix(capeZ, capeZ - 0.085, u) - (PX ? 0.006 : 0.017) * Math.sin((x / w) * (PX ? 2 : 5) * 1.57 + 0.5) * (0.25 + u) + (0.55 - 0.25 * u) * (x * x) / w };
     };
-    const capeF = (x, y, z) => { const c = capeZc(x, y); return smax(Math.abs(z - c.zc) - 0.0065, Math.max(Math.abs(x) - c.w, y - capeTop, capeBot + 0.011 * (1 + Math.sin(x * 36 + 0.6)) - y), 0.006); };
+    const hem = (x) => (PX ? 0.006 : 0.011 * (1 + Math.sin(x * 36 + 0.6)));   // pixel: a straight hem
+    const capeF = (x, y, z) => { const c = capeZc(x, y); return smax(Math.abs(z - c.zc) - (PX ? 0.008 : 0.0065), Math.max(Math.abs(x) - c.w, y - capeTop, capeBot + hem(x) - y), 0.006); };
     const cp = sc.add(S.custom(capeF, [-0.28, capeBot, -0.24, 0.28, capeTop, 0.06]), { mat: "blue", p: [0, 0, 0], bone: "chest", k: 0.004, cs: 0.03, wg: 2 });
     cp.wfn = (x, y) => {
       const u = clamp((capeTop - y) / ch, 0, 1), sl = sstep(-0.05, 0.05, x);
@@ -167,13 +179,13 @@ EmberVoxelKit.define("guard", (() => {
     };
     sc.paint(S.custom((x, y, z) => (z > 0.07 || y > capeTop + 0.01 ? 1 : capeZc(x, y).zc - z + 0.001), [-0.28, capeBot, -0.24, 0.28, capeTop, 0.06]), { mat: "blueD", p: [0, 0, 0], soft: 0.001, only: ["blue"] });
     // pale trim along the wavy hem, silver clasps where the cape meets the pauldrons
-    sc.paint(S.custom((x, y, z) => (z > 0.02 || y > capeBot + 0.05 ? 1 : y - capeBot - 0.011 * (1 + Math.sin(x * 36 + 0.6)) - 0.0135), [-0.28, capeBot, -0.24, 0.28, capeTop, 0.06]), { mat: "trim", p: [0, 0, 0], soft: 0.001, only: ["blue"] });
-    for (const s of [1, -1]) sc.add(S.cyl(0.005, 0.013, 0.002), { mat: "plateL", p: [s * 0.062, capeTop - 0.016, capeZc(s * 0.062, capeTop - 0.016).zc - 0.009], r: [Math.PI / 2, 0, 0], bone: "chest", k: 0.001, part: "cloth" });
+    if (!PX) sc.paint(S.custom((x, y, z) => (z > 0.02 || y > capeBot + 0.05 ? 1 : y - capeBot - hem(x) - (PX ? 0.02 : 0.0135)), [-0.28, capeBot, -0.24, 0.28, capeTop, 0.06]), { mat: "trim", p: [0, 0, 0], soft: 0.001, only: ["blue"] });
+    if (!PX) for (const s of [1, -1]) sc.add(S.cyl(0.005, 0.013, 0.002), { mat: "plateL", p: [s * 0.062, capeTop - 0.016, capeZc(s * 0.062, capeTop - 0.016).zc - 0.009], r: [Math.PI / 2, 0, 0], bone: "chest", k: 0.001, part: "cloth" });
     sc.part = "body";
     // ---- kite shield on its own bone (local: x across, y up, z out of the face), grip at G. The face is two cubes
     // thick with its mid-surface on a cube boundary, the rim one cube proud of it; star and wings are painted on the
     // front layer, the back layer is wood.
-    const W = 0.138, yT = 0.27, yB = -0.3, H = yT - yB, th = V, zf = 4 * V, bul = 0.02, rimW = 0.017;
+    const W = 0.138, yT = 0.27, yB = -0.3, H = yT - yB, th = V, zf = 4 * V, bul = PX ? 0 : 0.02, rimW = PX ? 0.022 : 0.017;
     const hw = (y) => W * Math.pow(Math.max(0, 1 - Math.pow(clamp((yT - y) / H, 0, 1), 2.1)), 0.62);
     const outl = (x, y) => Math.max(Math.abs(x) - hw(y), y - (yT + 0.014 * (1 - (x / W) ** 2)), yB - y);
     const zc = (x) => zf - bul * (x / W) ** 2;
@@ -182,8 +194,13 @@ EmberVoxelKit.define("guard", (() => {
     // winged four-point star: arms two cubes wide (long lower arm), three feathers a side sweeping up and out
     const ey = 2 * V;
     const emblem = (x, y) => {
-      const Y = y - ey, X = Math.abs(x), b = Y > 0 ? 0.15 : 0.215, a = 0.086;
-      const wv = V + (0.034 - V) * Math.pow(Math.max(0, 1 - Math.abs(Y) / b), 3), wh = V + (0.03 - V) * Math.pow(Math.max(0, 1 - X / a), 3);
+      const Y = y - ey, X = Math.abs(x);
+      if (PX) {   // pixel: one bold four-point star, no wings
+        const b = Y > 0 ? 0.09 : 0.13, a = 0.07, w = (t) => 0.008 + 0.022 * Math.pow(Math.max(0, 1 - t), 2);
+        return Math.min(Math.max(X - w(Math.abs(Y) / b), Math.abs(Y) - b), Math.max(Math.abs(Y) - w(X / a), X - a));
+      }
+      const b = Y > 0 ? 0.15 : 0.215, a = 0.086;
+      const w0 = PX ? 1.6 * V : V, wv = w0 + (0.034 - w0) * Math.pow(Math.max(0, 1 - Math.abs(Y) / b), 3), wh = w0 + (0.03 - w0) * Math.pow(Math.max(0, 1 - X / a), 3);
       let d = Math.min(Math.max(X - wv, Math.abs(Y) - b), Math.max(Math.abs(Y) - wh, X - a));
       // feathers: two-row bars climbing one row per two columns (clean pixel steps), one row thick at the tip
       for (const [yb, xe] of [[-0.022, 0.104], [-0.06, 0.096], [-0.098, 0.084]]) d = Math.min(d, Math.max(Math.abs(Y - yb - 0.5 * (X - 0.018)) - (X < xe - 0.02 ? V : V / 2), X - xe, 0.018 - X));

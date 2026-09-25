@@ -10,7 +10,7 @@
 const EmberMiniatures = (() => {
   const THREE = EmberVesperThree, KIT = EmberVoxelKit;
   const SIZE = 1.25;            // board size of a figure (× its spec.scale): a miniature a head taller than its token
-  let renderer = null, scene = null, camera = null, canvas = null, arena = null, failed = false, raf = 0, last = 0, box = null;
+  let renderer = null, pass = null, scene = null, camera = null, canvas = null, arena = null, failed = false, raf = 0, last = 0, box = null;
   const stats = { status: "idle", error: null, frameMs: 0 };
   const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), hit = new THREE.Vector3();
   const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches || document.body.classList.contains("reduced-motion");
@@ -44,10 +44,12 @@ const EmberMiniatures = (() => {
       canvas.id = "miniature-stage";
       canvas.setAttribute("aria-hidden", "true");
       battle().appendChild(canvas);
-      renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: "high-performance" });
+      // a pixel sprite layer: no antialiasing, drawn at EmberPixelPass.PIX of the CSS size and outlined by the pass
+      renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: "high-performance" });
       renderer.setClearColor(0, 0);
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.NoToneMapping;          // figures grade themselves (EmberVoxelRender)
+      pass = EmberPixelPass.create(renderer);
       canvas.addEventListener("webglcontextlost", (e) => { e.preventDefault(); fail("WebGL context lost"); });
       scene = new THREE.Scene();
       camera = new THREE.PerspectiveCamera(18, 1, 1, 200);
@@ -85,9 +87,9 @@ const EmberMiniatures = (() => {
 
   // camera: looks down onto the board like the arena; one world unit ≈ 150 px at the board centre
   function fitCamera() {
-    const b = battle(), w = b.clientWidth, h = b.clientHeight, d = dpr();
-    if (canvas.width !== Math.round(w * d) || canvas.height !== Math.round(h * d)) {
-      renderer.setPixelRatio(d); renderer.setSize(w, h, false);
+    const b = battle(), w = b.clientWidth, h = b.clientHeight, d = dpr(), px = EmberPixelPass.PIX;
+    if (canvas.width !== Math.round(w * px) || canvas.height !== Math.round(h * px)) {
+      renderer.setPixelRatio(px); renderer.setSize(w, h, false);
       canvas.style.width = w + "px"; canvas.style.height = h + "px";
       arena.setPixelRatio(d);
     }
@@ -111,7 +113,8 @@ const EmberMiniatures = (() => {
     if (!w || !u.fig || !u.pos) return 1;
     const g = u.fig.mesh.geometry; if (!g.boundingBox) g.computeBoundingBox();
     const bb = g.boundingBox, base = (u.spec.scale || 1) * SIZE, px = ppu(u.pos), k = (w / TOKEN_W) * (150 / px.across);
-    const tall = bb.max.y * base * k * px.up, wide = (bb.max.x - bb.min.x) * base * k * px.across;
+    const grow = u.fig.J.head ? 1 + (u.fig.J.head.scale.x - 1) * 0.2 : 1;     // the sprite's enlarged head
+    const tall = bb.max.y * grow * base * k * px.up, wide = (bb.max.x - bb.min.x) * base * k * px.across;
     return k * Math.min(1, ((FOOT + RISE) * h) / tall, (MAX_W * w) / wide);
   }
   const refEl = (ref) => (ref.uid === "hero" ? document.getElementById(ref.side === "p" ? "player-hero" : "enemy-hero") : document.querySelector(`#minions .minion[data-side="${ref.side}"][data-uid="${ref.uid}"]`));
@@ -144,15 +147,40 @@ const EmberMiniatures = (() => {
   const clearTokens = () => document.querySelectorAll("#minions .minion.miniature-ready, #minions .minion.miniature-pending").forEach((el) => el.classList.remove("miniature-ready", "miniature-pending"));
 
   // ------------------------------------------------------------------ prewarm
-  /** bake these cards' figures ahead, in the worker (the cards in hand, the cards an action is about to summon), so a
-   *  played card's figure is ready when its token lands. Cheap to call again: cached and in-flight bakes are skipped */
-  function prewarm(cardIds) {
+  /* Figures are baked ahead in the worker (a pixel-sprite bake takes 0.1–2 s of worker time), one at a time from a
+   * queue: urgent ones first (what an action is about to summon), then the cards in hand and deck, and once the queue
+   * is empty, while a battle shows, every other figure in idle time — so an enemy's figure is rarely still baking
+   * when it lands. The arena asks the baker directly for a unit that is already on the board. */
+  const want = [], asked = new Set();          // want: [{ id, pri }] by priority (0 urgent · 1 hand/board · 2 deck)
+  let baking = false, idle = 0;
+  function prewarm(cardIds, opts = {}) {
     if (!enabled() || typeof EmberVoxelBaker === "undefined" || !EmberVoxelBaker.available) return;
+    const pri = opts.urgent ? 0 : opts.pri ?? 1;
     for (const cid of cardIds || []) {
       const spec = cid && specOf(cid);
-      if (!spec || EmberVoxelRender.cached(spec.id)) continue;
-      EmberVoxelBaker.bake(spec.id).then((data) => { if (!EmberVoxelRender.cached(spec.id)) EmberVoxelRender.bake(spec.id, data); }, () => {});
+      if (!spec || EmberVoxelRender.cached(spec.id) || (asked.has(spec.id) && pri > 0)) continue;
+      const at = want.findIndex((w) => w.id === spec.id);
+      if (at >= 0) { if (want[at].pri <= pri) continue; want.splice(at, 1); }
+      let i = want.findIndex((w) => w.pri > pri); if (i < 0) i = want.length;
+      want.splice(i, 0, { id: spec.id, pri });
     }
+    next();
+  }
+  function next() {
+    if (baking) return;
+    const id = want.shift()?.id;
+    if (!id) { background(); return; }
+    if (EmberVoxelRender.cached(id)) { next(); return; }
+    baking = true; asked.add(id);
+    EmberVoxelBaker.bake(id).then((data) => { if (!EmberVoxelRender.cached(id)) EmberVoxelRender.bake(id, data); }, () => {})
+      .finally(() => { baking = false; next(); });
+  }
+  function background() {
+    if (idle || !enabled() || !battle()?.offsetParent) return;
+    const rest = KIT.ids().find((id) => !EmberVoxelRender.cached(id) && !asked.has(id));
+    if (!rest) return;
+    const later = globalThis.requestIdleCallback || ((fn) => setTimeout(fn, 400));
+    idle = later(() => { idle = 0; if (!want.length) want.push({ id: rest, pri: 3 }); next(); });
   }
 
   // ------------------------------------------------------------------ cues from the effect layer
@@ -178,7 +206,7 @@ const EmberMiniatures = (() => {
     const dt = Math.min(0.05, (now - (last || now)) / 1000); last = now;
     box = fitCamera();
     const busy = arena.step(now, camera, dt);
-    renderer.render(scene, camera);
+    pass.render(scene, camera);
     stats.frameMs = performance.now() - start;
     if (busy) wake();
     else if (canvas) canvas.hidden = true;

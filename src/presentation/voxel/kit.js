@@ -508,16 +508,81 @@
   }
   /** a figure's voxel bake — pure data (typed arrays and plain objects), so it can be made in a worker and posted:
    *  { id, ch: { kind, P, G, Hs, faces, fam }, main, props: [{ bone, at, grip, rot, bake }], ms } */
-  function bakeData(id, V, VPROP) {
+  function bakeVoxel(id, V, VPROP) {
     const VX = root.EmberVoxel || (typeof require !== "undefined" ? require("./voxelize.js") : null);
     const spec = figures.get(id);
     if (!spec) throw new Error("unknown voxel figure " + id);
     const clock = typeof performance !== "undefined" ? performance : Date, t0 = clock.now();
+    api.pixel = false;
     const ch = spec.build(spec.fam);
     const main = VX.voxelize(ch.sc, { v: V });
     const props = (ch.props || []).map((p) => ({ bone: p.bone, at: p.at, grip: p.grip, rot: p.rot, bake: VX.voxelize(p.sc, { v: VPROP, dilate: { body: 0.5 } }) }));
-    return { id, ch: { kind: ch.kind, P: ch.P, G: ch.G, Hs: ch.Hs, faces: ch.sc.faces, fam: spec.fam }, main, props, ms: clock.now() - t0 };
+    return { id, look: "voxel", ch: { kind: ch.kind, P: ch.P, G: ch.G, Hs: ch.Hs, faces: ch.sc.faces, fam: spec.fam }, main, props, ms: clock.now() - t0 };
   }
+
+  /* ------------------------------------------------------------------ the pixel-sprite bake (the battlefield look)
+   * The figure is built in its pixel variant (K.pixel: no surface noise, fatter shapes, eyes clear), each part is
+   * polygonised with surface nets at its own grain (thick body coarse, hair and cloth fine enough not to tear), with
+   * no displacement and no colour jitter, then simplified to a few percent of its triangles (never below a floor,
+   * so a thin ring or blade keeps its shape), its paint flattened within colour regions (paint edges kept) and its
+   * AO / curvature / normals relaxed, so the three-tone shade draws clean bands. A sample of its vertices stands in
+   * for the voxels of the old bake (the assembly and the shatter throw them). docs/design/MINIATURES.md §4. */
+  const PX = { body: 0.008, hair: 0.006, cloth: 0.0048, other: 0.006, prop: 0.004, keep: 0.07, propKeep: 0.18, floor: 260, propFloor: 120, shards: 900 };
+  function mergeMeshes(ms) {
+    ms = ms.filter((m) => m && m.index && m.index.length);
+    if (!ms.length) return null;
+    const nv = ms.reduce((a, m) => a + m.position.length / 3, 0), ni = ms.reduce((a, m) => a + m.index.length, 0);
+    const out = { position: new Float32Array(nv * 3), normal: new Float32Array(nv * 3), color: new Float32Array(nv * 3), aux: new Float32Array(nv * 4), aux2: new Float32Array(nv * 4),
+      face: new Float32Array(nv * 4), skinIndex: new Uint16Array(nv * 4), skinWeight: new Float32Array(nv * 4), index: new Uint32Array(ni), bones: ms[0].bones };
+    let v = 0, i = 0;
+    for (const m of ms) {
+      const n = m.position.length / 3;
+      for (const [k, w] of [["position", 3], ["normal", 3], ["color", 3], ["aux", 4], ["aux2", 4], ["face", 4], ["skinIndex", 4], ["skinWeight", 4]]) if (m[k]) out[k].set(m[k], v * w);
+      for (let j = 0; j < m.index.length; j++) out.index[i + j] = m.index[j] + v;
+      v += n; i += m.index.length;
+    }
+    return out;
+  }
+  function pixelPart(sc, part, h, keep, floor) {
+    const MS = root.EmberMeshSimplify || (typeof require !== "undefined" ? require("./simplify.js") : null);
+    let m = K.bake(sc, { h, part, plain: true, flat: true });
+    if (!m.index.length) return null;
+    const tris = m.index.length / 3;
+    m = MS.simplify(m, { target: Math.max(Math.min(tris, floor), Math.round(tris * keep)) });
+    MS.flatten(m, 0.07, 4, 0.75);
+    MS.relax(m, "aux", 4, 0, 2, 0.6); MS.relax(m, "aux", 4, 2, 2, 0.6);
+    for (let c = 0; c < 3; c++) MS.relax(m, "normal", 3, c, 3, 0.6);
+    return m;
+  }
+  const partsOf = (sc) => [...new Set(sc.prims.map((p) => p.part))];
+  function bakePixel(id) {
+    const spec = figures.get(id);
+    if (!spec) throw new Error("unknown voxel figure " + id);
+    const clock = typeof performance !== "undefined" ? performance : Date, t0 = clock.now();
+    let ch;
+    api.pixel = true;
+    try { ch = spec.build(spec.fam); } finally { api.pixel = false; }
+    const main = mergeMeshes(partsOf(ch.sc).map((part) => pixelPart(ch.sc, part, PX[part] ?? PX.other, PX.keep, PX.floor)));
+    if (!main) throw new Error("empty pixel bake " + id);
+    // shard / assembly points: an even sample of the surface, each on its vertex's dominant bone
+    const nv = main.position.length / 3, step = Math.max(1, Math.ceil(nv / PX.shards)), n = Math.ceil(nv / step);
+    const center = new Float32Array(n * 3), color = new Float32Array(n * 3), bone = new Uint16Array(n);
+    for (let q = 0, v = 0; v < nv; v += step, q++) {
+      for (let c = 0; c < 3; c++) { center[q * 3 + c] = main.position[v * 3 + c]; color[q * 3 + c] = main.color[v * 3 + c]; }
+      let b = 0, w = -1; for (let k = 0; k < 4; k++) if (main.skinWeight[v * 4 + k] > w) { w = main.skinWeight[v * 4 + k]; b = main.skinIndex[v * 4 + k]; }
+      bone[q] = b;
+    }
+    main.vox = { center, color, bone, cls: new Uint8Array(n), size: 0.022 };
+    main.stats = { verts: nv, tris: main.index.length / 3 };
+    const props = (ch.props || []).map((p) => {
+      const b = mergeMeshes(partsOf(p.sc).map((part) => pixelPart(p.sc, part, PX.prop, PX.propKeep, PX.propFloor)));
+      if (b) b.stats = { verts: b.position.length / 3, tris: b.index.length / 3 };
+      return { bone: p.bone, at: p.at, grip: p.grip, rot: p.rot, bake: b };
+    }).filter((p) => p.bake);
+    return { id, look: "pixel", ch: { kind: ch.kind, P: ch.P, G: ch.G, Hs: ch.Hs, faces: ch.sc.faces, fam: spec.fam }, main, props, ms: clock.now() - t0 };
+  }
+  /** the bake the battlefield draws (the pixel sprite); V / VPROP are the old voxel sizes, kept for the call shape */
+  const bakeData = (id) => bakePixel(id);
 
   const api = {
     S, Sculpture, lin, vnoise, fbm, clamp, mix, sstep, rotm, rotY2, smax, TAU,
@@ -525,7 +590,10 @@
     FAM, CLS, mats, armJoints, legJoints, sideName, humanoidBones, body, handFrame, hand, foot, head,
     RG, wrap, bell, skirt, cape, capeBones, lock, cuff, spline, strand, onEll, chibiHair,
     spearProp, bowProp, quiverProp, QF, quadBones, scaleG,
-    define, bakeData, scripts, get: (id) => figures.get(id), ids: () => [...figures.keys()],
+    define, bakeData, bakePixel, bakeVoxel, PX, scripts, get: (id) => figures.get(id), ids: () => [...figures.keys()],
+    /* the look a figure is being built for: false = the voxel/painted sculpt, true = the pixel sprite (build() reads
+     * K.pixel and may simplify — no surface noise, fewer and fatter strands, bigger signature shapes, eyes clear) */
+    pixel: false,
     forCard: (cardId) => (byCard.has(cardId) ? figures.get(byCard.get(cardId)) : null),
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;

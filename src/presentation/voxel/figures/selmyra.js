@@ -27,43 +27,48 @@ EmberVoxelKit.define("selmyra", (() => {
   }
 
   function hairOf(sc, P) {
-    const q = 1.25, ey = P.eyeY, C = add(P.cranC, [0, 0.004, -0.004]), cr = P.cran, R = [cr[0] * 1.07, cr[1] * 1.07, cr[2] * 1.08];
+    const PX = K.pixel, q = 1.25, ey = P.eyeY, C = add(P.cranC, [0, 0.004, -0.004]), cr = P.cran, R = [cr[0] * 1.07, cr[1] * 1.07, cr[2] * 1.08];
     // cap with the face cut out
     sc.add(S.minus(S.ell(...R), S.at(S.ell(cr[0] * 0.92, cr[1] * 0.78, cr[2] * 0.7), 0, -cr[1] * 0.48, cr[2] * 0.68), 0.012), { mat: "hair", p: C, bone: "head", k: 0.006 });
     // centre-parted curtain fringe sweeping to the temples
-    for (const s of [1, -1]) for (let i = 0; i < 4; i++) {
-      const u = i / 3;
+    // (pixel: two fat locks a side instead of four)
+    const NF = PX ? 2 : 4;
+    for (const s of [1, -1]) for (let i = 0; i < NF; i++) {
+      const u = i / (NF - 1);
       const root = [s * 0.004, C[1] + R[1] * (0.62 - 0.08 * u), C[2] + R[2] * (0.72 + 0.1 * u)];
       const mid = [s * R[0] * (0.34 + 0.12 * u), ey + 0.048 + 0.006 * u, P.faceZ + 0.002 * q];
       const tip = [s * R[0] * (0.78 + 0.12 * u), ey + 0.012 - 0.018 * u, P.faceZ - 0.014 * q - 0.012 * q * u];
-      strand(sc, [root, mid, tip], (0.011 + 0.002 * (1 - u)) * q, 0.0018 * q, { k: 0.007, taper: 1.2, grooves: 0.001 });
+      if (PX) strand(sc, [root, mid, tip], 0.02 * q, 0.008 * q, { k: 0.01, taper: 1.2, grooves: 0 });
+      else strand(sc, [root, mid, tip], (0.011 + 0.002 * (1 - u)) * q, 0.0018 * q, { k: 0.007, taper: 1.2, grooves: 0.001 });
     }
     // long locks in front of the shoulders, down over the chest
-    for (const s of [1, -1]) for (let j = 0; j < 2; j++) {
+    for (const s of [1, -1]) for (let j = 0; j < (PX ? 1 : 2); j++) {
       const n = sideName(s);
       const root = onEll(C, R, s * (1.15 + 0.15 * j), 0.2, 0.98);
       const a = [s * R[0] * (1.08 + 0.05 * j), ey - 0.02, C[2] + R[2] * (0.4 - 0.12 * j)];
       const b = [s * R[0] * (1.12 + 0.06 * j), P.chinY - 0.04, C[2] + R[2] * (0.45 - 0.15 * j)];
       const tip = [s * (P.shX * 0.55 + 0.02 * j), P.chest[0] - 0.08 - 0.03 * j, P.chest[3] + 0.028 - 0.02 * j];
-      const sp = strand(sc, [root, a, b, lerp(b, tip, 0.5), tip], 0.0125 * q, 0.003 * q, { wave: 0.006, wd: [s, 0, 0.3], waves: 2.2, phase: j * 1.7, k: 0.01, wg: 4, bone: "head" });
+      const sp = PX ? strand(sc, [root, a, b, lerp(b, tip, 0.5), tip], 0.022 * q, 0.01 * q, { k: 0.012, wg: 4, bone: "head", taper: 1.2, grooves: 0 })
+        : strand(sc, [root, a, b, lerp(b, tip, 0.5), tip], 0.0125 * q, 0.003 * q, { wave: 0.006, wd: [s, 0, 0.3], waves: 2.2, phase: j * 1.7, k: 0.01, wg: 4, bone: "head" });
       sp.wfn = (x, y) => { const t = sstep(P.chinY, P.chest[0] - 0.05, y); return [["head", 1 - t * 0.7], ["chest", t * 0.7]]; };
     }
     // the fall down the back to the waist, over the gown
-    const N = 11;
+    const N = PX ? 5 : 11;   // pixel: five broad locks
     for (let i = 0; i < N; i++) {
-      const u = (i / (N - 1)) * 2 - 1, az = Math.PI + u * 1.6, el = 0.35 - 0.25 * Math.abs(u);
+      const u = (i / (N - 1)) * 2 - 1, az = Math.PI + u * (PX ? 1.3 : 1.6), el = 0.35 - 0.25 * Math.abs(u);
       const root = onEll(C, R, az, el, 0.98), out = onEll(C, R, az, -0.4, 1.2);
       const len = 0.4 + 0.06 * (1 - Math.abs(u)) + 0.02 * Math.sin(i * 2.3);
       const tip = [out[0] * 1.25 + u * 0.03, P.neck[0] - len, -P.chest[3] - 0.065 - 0.015 * (1 - Math.abs(u))];
       const mid = lerp(out, tip, 0.35); mid[2] = Math.min(mid[2], -P.chest[3] - 0.05);
-      const sp = strand(sc, [root, out, mid, tip], (0.019 - 0.004 * Math.abs(u)) * q, 0.004 * q, { wave: 0.007, wd: [Math.cos(az), 0, 0], waves: 2.2, phase: i * 1.7, k: 0.012, wg: 5, swell: 0.2, bone: "hairB1", grooves: 0.0012 });
+      const sp = PX ? strand(sc, [root, out, mid, tip], (0.036 - 0.006 * Math.abs(u)) * q, 0.014 * q, { k: 0.014, wg: 5, bone: "hairB1", taper: 1.2, grooves: 0 })
+        : strand(sc, [root, out, mid, tip], (0.019 - 0.004 * Math.abs(u)) * q, 0.004 * q, { wave: 0.007, wd: [Math.cos(az), 0, 0], waves: 2.2, phase: i * 1.7, k: 0.012, wg: 5, swell: 0.2, bone: "hairB1", grooves: 0.0012 });
       sp.wfn = (x, y) => { const t = sstep(C[1] - 0.01, P.neck[0] - 0.4, y); return [["head", 1 - t], ["hairB1", 2 * t * (1 - t)], ["hairB2", t * t]]; };
     }
     return { C, R };
   }
 
   function build(fam) {
-    const P = FAM[fam], sc = new Sculpture(), q = 1.25;
+    const P = FAM[fam], sc = new Sculpture(), q = 1.25, PX = K.pixel;   // PX: pixel-sprite variant
     humanoidBones(sc, P);
     sc.bone("hairB1", "head", 0, P.eyeY - 0.02, -P.cran[2] * 0.9); sc.bone("hairB2", "hairB1", 0, P.neck[0] - 0.05, -P.cran[2] * 1.1);
     const aR = armJoints(P, -1), EMIT = mul(aR.dir, 0.13);
@@ -72,7 +77,18 @@ EmberVoxelKit.define("selmyra", (() => {
     sc.bone("halo", "chest", ...HC);
     const capeTop = P.shY + 0.004, capeBot = 0.02;
     K.capeBones(sc, P, capeTop, capeBot, -P.chest[3] - 0.03);
-    mats(sc, {
+    mats(sc, PX ? {
+      // flat, clearly stepped: pale silver hair, a darker moon-grey panel/lining, bright silver trim, black gown
+      skin: { c: 0xf0e2ea, rough: 0.55, cls: CLS.skin }, skinDeep: { c: 0xd4c0c4, rough: 0.6, cls: CLS.skin },
+      lips: { c: 0x9a6c7c, rough: 0.4, cls: CLS.lips },
+      hair: { c: 0xd4daee, rough: 0.6, cls: CLS.hair },
+      gown: { c: 0x1e1b2a, rough: 0.8, cls: CLS.cloth }, gownD: { c: 0x121019, rough: 0.9, cls: CLS.cloth },
+      veil: { c: 0x747c9e, rough: 0.85, cls: CLS.cloth },
+      silver: { c: 0xeef2ff, rough: 0.4, metal: 0.2, cls: CLS.metal },
+      moonG: { c: 0xd8e8ff, rough: 0.3, emit: 1.1, cls: CLS.glow },
+      corona: { c: 0x74aaff, rough: 0.3, emit: 1.15, cls: CLS.glow },
+      void: { c: 0x0d0c14, rough: 0.9, cls: CLS.cloth },
+    } : {
       skin: { c: 0xf0e2ea, rough: 0.55, cls: CLS.skin, vary: 0.015 }, skinDeep: { c: 0xd4c0c4, rough: 0.6, cls: CLS.skin },
       lips: { c: 0x9a6c7c, rough: 0.4, cls: CLS.lips },
       hair: { c: 0xbac2dc, rough: 0.55, cls: CLS.hair, vary: 0.07 },
@@ -90,7 +106,7 @@ EmberVoxelKit.define("selmyra", (() => {
     const arms = [1, -1].map((s) => { const a = armJoints(P, s); return RG.seg(add(a.S, mul(sub(a.S, a.E), 0.5)), a.W, 0.085); });
     wrap(sc, RG.or(RG.box(-X0, X0, P.pelvis[0] - 0.04, P.neck[1] - 0.03), ...arms), "gown", 0.005 * q);
     sc.add(S.ell(0.07, 0.06, 0.03), { mat: "gown", p: [0, P.chest[0] + 0.012, P.chest[3] + 0.004], bone: "chest", k: 0.01 });
-    sc.add(crescent(0.026, 0.021, 0.012, 0.004), { mat: "silver", p: [0, P.chest[0] + 0.035, P.chest[3] + 0.034], bone: "chest", k: 0.001, vdil: 0.55 });
+    sc.add(PX ? crescent(0.03, 0.023, 0.013, 0.008) : crescent(0.026, 0.021, 0.012, 0.004), { mat: "silver", p: [0, P.chest[0] + 0.035, P.chest[3] + 0.034], bone: "chest", k: 0.001, vdil: 0.55 });
     // collar ring
     sc.add(S.custom((x, y, z) => Math.max(Math.abs(Math.hypot(x, z / 0.95) - 0.05) - 0.006, Math.abs(y - (P.neck[0] + 0.02)) - 0.012), pad([-0.06, P.neck[0], -0.06, 0.06, P.neck[0] + 0.04, 0.06])),
       { mat: "silver", bone: "chest", bones: [["chest", 0.6], ["neck", 0.4]], k: 0.002 });
@@ -114,17 +130,17 @@ EmberVoxelKit.define("selmyra", (() => {
     const rAt = (u) => mix(r0, r1, Math.pow(u, 0.7));
     const skirtS = S.custom((x, y, z) => {
       const u = clamp(-y / h, 0, 1), r = rAt(u), a = Math.atan2(z / szs, x);
-      const rr = Math.hypot(x, z / szs) - r - 0.01 * u * Math.sin(a * 7 + 0.6) - 0.02 * u * u * Math.max(0, -Math.sin(a));
+      const rr = Math.hypot(x, z / szs) - r - (PX ? 0 : 0.01 * u * Math.sin(a * 7 + 0.6)) - 0.02 * u * u * Math.max(0, -Math.sin(a));
       return Math.max(rr * 0.85, y, -y - h);
     }, [-r1 - 0.04, -h, -(r1 + 0.05) * szs, r1 + 0.04, 0, (r1 + 0.04) * szs]);
     const sk = sc.add(skirtS, { mat: "gown", p: [0, y0, zc], bone: "root", k: 0.004, cs: 0.03, wg: 3 });
     sk.wfn = (x, y) => { const u = clamp((y0 - y) / h, 0, 1), b = u * 0.45, sl = sstep(-0.03, 0.03, x); return [["root", 1 - b], ["thighL", b * sl], ["thighR", b * (1 - sl)]]; };
     const panel = (y) => 0.02 + 0.05 * clamp((y0 - y) / h, 0, 1);
     sc.paint(S.custom((x, y, z) => (z > 0.02 ? Math.abs(x) - panel(y) : 1), [-1, -1, -1, 1, 1, 1]), { mat: "veil", soft: 0.001, only: ["gown"] });
-    sc.paint(S.custom((x, y, z) => (z > 0.02 && y < y0 - 0.01 ? Math.abs(Math.abs(x) - panel(y) - 0.0058) - 0.0058 : 1), [-1, -1, -1, 1, 1, 1]), { mat: "silver", soft: 0.001, only: ["gown", "veil"] });
+    if (!PX) sc.paint(S.custom((x, y, z) => (z > 0.02 && y < y0 - 0.01 ? Math.abs(Math.abs(x) - panel(y) - 0.0058) - 0.0058 : 1), [-1, -1, -1, 1, 1, 1]), { mat: "silver", soft: 0.001, only: ["gown", "veil"] });
     sc.paint(S.custom((x, y, z) => Math.abs(y - 0.012) - 0.0065, [-1, -1, -1, 1, 1, 1]), { mat: "silver", soft: 0.001, only: ["gown", "veil"] });
     // mantle: a floor-length black cape falling from the shoulders, lined in moon-grey, silver hem
-    K.cape(sc, P, capeTop, capeBot, P.shX * 1.05, P.shX * 2.1, "gown", { folds: 7, amp: 0.012, t: 0.0065 });
+    K.cape(sc, P, capeTop, capeBot, P.shX * 1.05, P.shX * 2.1, "gown", PX ? { folds: 3, amp: 0.006, t: 0.009 } : { folds: 7, amp: 0.012, t: 0.0065 });
     sc.paint(S.custom((x, y, z) => (z > -0.06 ? 1 : Math.abs(y - capeBot - 0.008) - 0.0065), [-1, -1, -1, 1, 1, 1]), { mat: "silver", soft: 0.001, only: ["gown"] });
     // sash: a silver girdle at the waist
     const yb = y0 + 0.004;
@@ -139,20 +155,30 @@ EmberVoxelKit.define("selmyra", (() => {
     sc.add(S.custom((x, y, z) => Math.max(Math.abs(Math.hypot(x / crx, (z - cz) / crz) - 1) * crx - 0.005, Math.abs(y - cy) - 0.006 - 0.004 * Math.max(0, (z - cz) / crz)), pad([-crx, cy - 0.02, cz - crz, crx, cy + 0.02, cz + crz])),
       { mat: "silver", bone: "head", k: 0.002 });
     // the great crescent rising from the brow, and spikes fanning back along the circlet
-    sc.add(crescent(0.052, 0.042, 0.03, 0.0065), { mat: "moonG", p: [0, cy + 0.058, cz + crz * 0.8], r: [-0.2, 0, 0], bone: "head", k: 0.001, vdil: 0.6 });
+    sc.add(PX ? crescent(0.06, 0.046, 0.034, 0.012) : crescent(0.052, 0.042, 0.03, 0.0065), { mat: "moonG", p: [0, cy + (PX ? 0.066 : 0.058), cz + crz * 0.8], r: [-0.2, 0, 0], bone: "head", k: 0.001, vdil: 0.6 });
     sc.add(S.custom((x, y, z) => Math.max(Math.abs(x) * 1.6 + Math.abs(y - 0.012) * 0.9 - 0.02, Math.abs(z) - 0.005), [-0.02, -0.01, -0.006, 0.02, 0.035, 0.006]), { mat: "silver", p: [0, cy + 0.006, cz + crz * 0.98], r: [-0.2, 0, 0], bone: "head", k: 0.001 });
-    for (const s of [1, -1]) for (const [az, len, el] of [[0.55, 0.07, 1.05], [1.0, 0.06, 0.95], [1.45, 0.045, 0.8]]) {
+    for (const s of [1, -1]) for (const [az, len, el] of PX ? [[0.7, 0.07, 1.0], [1.3, 0.055, 0.85]] : [[0.55, 0.07, 1.05], [1.0, 0.06, 0.95], [1.45, 0.045, 0.8]]) {
       const base = [s * crx * Math.sin(az), cy + 0.004, cz + crz * Math.cos(az)];
       const dir = norm([s * Math.sin(az) * Math.cos(el) * 0.9, Math.sin(el), Math.cos(az) * Math.cos(el) * 0.4 - 0.25]);
-      sc.limb(base, add(base, mul(dir, len)), 0.009, 0.0015, { mat: "silver", bone: "head", k: 0.002, vdil: 0.55 });
+      sc.limb(base, add(base, mul(dir, len)), PX ? 0.013 : 0.009, PX ? 0.006 : 0.0015, { mat: "silver", bone: "head", k: 0.002, vdil: 0.55 });
     }
 
     // ---- the eclipse: a one-cube black disc ringed by a thick glowing corona with a few flares, on its own bone
     const Rh = 0.155;
+    if (PX) {
+      // pixel: a black disc set well back inside a broad, deeper corona ring with six fat flares (the step between them
+      // keeps the mesh simplifier from smearing the ring's glow across the flat disc)
+      // it is sized to frame the sprite's enlarged (×1.55) head: a smaller ring would sit hidden behind it
+      const Rp = 0.225, fl = (x, y) => 0.045 * Math.pow(Math.max(0, Math.cos(Math.atan2(y, x) * 3 + Math.PI / 2)), 4);
+      sc.add(S.custom((x, y, z) => Math.max(Math.hypot(x, y) - Rp, Math.abs(z) - 0.007), pad([-Rp, -Rp, -0.015, Rp, Rp, 0.015])), { mat: "void", p: HC, bone: "halo", k: 0.001 });
+      sc.add(S.custom((x, y, z) => Math.max(Math.abs(Math.hypot(x, y) - Rp - 0.017) - 0.017 - fl(x, y), Math.abs(z) - 0.017), pad([-Rp - 0.08, -Rp - 0.08, -0.016, Rp + 0.08, Rp + 0.08, 0.016])),
+        { mat: "corona", p: HC, bone: "halo", k: 0.001 });
+    } else {
     sc.add(S.custom((x, y, z) => Math.max(Math.hypot(x, y) - Rh, Math.abs(z) - 0.004), pad([-Rh, -Rh, -0.01, Rh, Rh, 0.01])), { mat: "void", p: HC, bone: "halo", k: 0.001, vdil: 0.3 });
     const flare = (x, y) => { const a = Math.atan2(y, x); return 0.008 * Math.pow(Math.max(0, Math.cos(a * 6)), 8) + 0.004 * Math.pow(Math.max(0, Math.cos(a * 11 + 0.7)), 6); };
     sc.add(S.custom((x, y, z) => Math.max(Math.abs(Math.hypot(x, y) - Rh - 0.009) - 0.009 - flare(x, y), Math.abs(z) - 0.007), pad([-Rh - 0.04, -Rh - 0.04, -0.01, Rh + 0.04, Rh + 0.04, 0.01])),
       { mat: "corona", p: HC, bone: "halo", k: 0.001, vdil: 0.4 });
+    }
     for (let i = n0; i < sc.prims.length; i++) sc.prims[i].cs = Math.min(sc.prims[i].cs, 0.03);
     return { sc, P, kind: "humanoid", props: [{ sc: moonProp(), bone: "moon", at: add(aR.W, EMIT) }] };
   }

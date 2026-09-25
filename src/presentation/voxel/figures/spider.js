@@ -47,6 +47,7 @@ EmberVoxelKit.define("spider", (() => {
 
   function spider() {
     const sc = new Sculpture();
+    const PX = K.pixel;                                              // pixel-sprite variant: thick legs, no fins/seams, big eyes and gem
     sc.bone("root", null, ...PRO);
     sc.bone("head", "root", ...HEAD);
     sc.bone("abdomen", "root", ...PED);
@@ -72,7 +73,11 @@ EmberVoxelKit.define("spider", (() => {
     sc.add(S.ell(0.052, 0.02, 0.052), { mat: "armorDk", p: [0, PRO[1] - 0.03, PRO[2] + 0.005], bone: "root", k: 0.02 });                   // sternum
     // eyes: six green beads on the voxel lattice with dark gaps — two in front, two flanking lower, two above
     const cv = (m) => (m + 0.5) * V;
-    for (const s of [1, -1]) for (const [i, j] of [[1, 11], [3, 11], [1, 13]]) {
+    if (PX) for (const s of [1, -1]) for (const [ex, ey, r] of [[0.017, 0.148, 0.009], [0.036, 0.14, 0.007]]) {
+      const zs = HEAD[2] + HR[2] * Math.sqrt(Math.max(0, 1 - (ex / HR[0]) ** 2 - ((ey - HEAD[1]) / HR[1]) ** 2));
+      sc.add(S.sphere(r), { mat: "eye", p: [s * ex, ey, zs - 0.002], bone: "head", k: 0.001 });
+    }
+    else for (const s of [1, -1]) for (const [i, j] of [[1, 11], [3, 11], [1, 13]]) {
       const x = cv(i), y = cv(j), zs = HEAD[2] + HR[2] * Math.sqrt(Math.max(0, 1 - (x / HR[0]) ** 2 - ((y - HEAD[1]) / HR[1]) ** 2));
       sc.add(S.sphere(0.0035), { mat: "eye", p: [s * x, y, cv(Math.round((zs + 0.005) / V - 0.5))], bone: "head", k: 0.001, vdil: 0.62 });
     }
@@ -80,11 +85,11 @@ EmberVoxelKit.define("spider", (() => {
     for (const s of [1, -1]) {
       const n = sideName(s), b0 = [s * 0.021, 0.12, 0.108];
       sc.add(S.ell(0.019, 0.032, 0.02), { mat: "fang", p: add(b0, [0, -0.02, 0.016]), r: [-0.35, 0, 0], bone: "fang" + n, k: 0.01 });
-      const fp = spline([add(b0, [0, -0.046, 0.026]), add(b0, [s * 0.003, -0.072, 0.03]), add(b0, [-s * 0.009, -0.094, 0.014])], 6).map((p, i) => [...p, mix(0.0115, 0.003, i / 6)]);
+      const fp = spline([add(b0, [0, -0.046, 0.026]), add(b0, [s * 0.003, -0.072, 0.03]), add(b0, [-s * 0.009, -0.094, 0.014])], 6).map((p, i) => [...p, mix(PX ? 0.014 : 0.0115, PX ? 0.007 : 0.003, i / 6)]);
       sc.add(S.chain(fp), { mat: "fangHi", p: [0, 0, 0], bone: "fang" + n, k: 0.004, vdil: 0.5 });
       sc.paint(S.sphere(0.012), { mat: "venom", p: fp[6].slice(0, 3), soft: 0.002, only: ["fangHi"] });
       // pedipalps: short feelers beside the fangs
-      sc.limb([s * 0.036, 0.112, 0.098], [s * 0.054, 0.072, 0.162], 0.0085, 0.0055, { ...A, bone: "palp" + n, k: 0.004, vdil: 0.5 });
+      sc.limb([s * 0.036, 0.112, 0.098], [s * 0.054, 0.072, 0.162], PX ? 0.011 : 0.0085, PX ? 0.009 : 0.0055, { ...A, bone: "palp" + n, k: 0.004, vdil: 0.5 });
     }
     // ---- abdomen: emerald crystal inside an armour shell that opens in a window over the front
     const tilt = [ABT, 0, 0], Rt = K.rotm(...tilt), WD = applyRT(Rt, WDW);  // window direction in the abdomen frame
@@ -99,9 +104,9 @@ EmberVoxelKit.define("spider", (() => {
     sc.add(oct, { mat: "gem", p: wc, R: K.rotY2(...WDW), bone: "abdomen", k: 0.004, vdil: 0.3 });
     sc.paint(S.box(0.0095, 0.06, 0.032), { mat: "gemHi", p: add(wc, mul(WDW, 0.02)), R: K.rotY2(...WDW), soft: 0.002, only: ["gem"] });
     // petal seams: dark lines radiating over the shell from the window
-    sc.paint(S.custom((x, y, z) => { const a = Math.atan2(x, z), b = Math.abs(((a / Math.PI) * 3 + 8.5) % 1 - 0.5); return (b - 0.07) * 0.2; }, [-1, -1, -1, 1, 1, 1]), { mat: "armorDk", p: ABC, r: tilt, soft: 0.001, only: ["armor"] });
+    if (!PX) sc.paint(S.custom((x, y, z) => { const a = Math.atan2(x, z), b = Math.abs(((a / Math.PI) * 3 + 8.5) % 1 - 0.5); return (b - 0.07) * 0.2; }, [-1, -1, -1, 1, 1, 1]), { mat: "armorDk", p: ABC, r: tilt, soft: 0.001, only: ["armor"] });
     // raised petal edges along the seams, from the window rim round to the spinnerets
-    for (let k = 1; k < 6; k++) {
+    if (!PX) for (let k = 1; k < 6; k++) {
       const az = (k / 6) * 2 * Math.PI, pts = [];
       for (let j = 0; j <= 8; j++) {
         const pol = (0.2 + 0.78 * (j / 8)) * Math.PI, e = [Math.sin(pol) * Math.sin(az), Math.cos(pol), Math.sin(pol) * Math.cos(az)];
@@ -113,25 +118,28 @@ EmberVoxelKit.define("spider", (() => {
     }
     // thorns on the petal tips round the rim of the window
     const WX = [1, 0, 0], WY = norm(cross(WD, WX));
-    for (let i = 0; i < 7; i++) {
-      const be = (-0.78 + (i / 6) * 1.56) * Math.PI, ca = 0.62, sa = Math.sqrt(1 - ca * ca);
+    const nTh = PX ? 4 : 7;
+    for (let i = 0; i < nTh; i++) {
+      const be = (-0.78 + (i / (nTh - 1)) * 1.56) * Math.PI, ca = 0.62, sa = Math.sqrt(1 - ca * ca);
       const e = add(mul(WD, ca), add(mul(WX, sa * Math.sin(be)), mul(WY, sa * Math.cos(be))));
       const p0 = add(ABC, applyR(Rt, [e[0] * ABR[0], e[1] * ABR[1], e[2] * ABR[2]]));
       const dir = norm(add(applyR(Rt, [e[0] / ABR[0], e[1] / ABR[1], e[2] / ABR[2]]), [0, 16, 0]));
-      sc.limb(p0, add(p0, mul(dir, 0.04 - 0.012 * Math.abs(Math.cos(be)))), 0.01, 0.0015, { mat: "armorHi", bone: "abdomen", k: 0.004, vdil: 0.5 });
+      sc.limb(p0, add(p0, mul(dir, (PX ? 0.05 : 0.04) - 0.012 * Math.abs(Math.cos(be)))), PX ? 0.016 : 0.01, PX ? 0.004 : 0.0015, { mat: "armorHi", bone: "abdomen", k: 0.004, vdil: 0.5 });
     }
     // ---- legs: armoured rods with blade fins, pale joint collars, a thorn at every knee, needle tarsi
     for (const L of LEGS) {
       const up = [0, 1, 0];
-      sc.add(S.sphere(0.018), { ...A, p: L.base, bone: L.n + "a", k: 0.008 });
-      sc.limb(L.base, L.knee, 0.017, 0.0135, { ...A, bone: L.n + "a", k: 0.006 });
-      sc.add(fin(lerp(L.base, L.knee, 0.12), lerp(L.base, L.knee, 0.92), sub(up, mul(L.u, 1.2)), L.lift, 0.02, 0.004), { mat: "armorDk", p: [0, 0, 0], bone: L.n + "a", k: 0.003, vdil: 0.45 });
-      sc.add(S.sphere(0.015), { mat: "armorHi", p: L.knee, bone: L.n + "b", k: 0.004 });
-      sc.limb(L.knee, add(L.knee, mul(norm(add(up, mul(L.u, -0.5))), 0.038)), 0.0085, 0.0015, { mat: "armorDk", bone: L.n + "b", k: 0.004, vdil: 0.5 });   // knee thorn
-      sc.limb(L.knee, L.ankle, 0.0135, 0.01, { ...A, bone: L.n + "b", k: 0.005 });
-      sc.add(fin(lerp(L.knee, L.ankle, 0.1), lerp(L.knee, L.ankle, 0.9), add(up, mul(L.u, 0.6)), L.lift, 0.014, 0.0035), { mat: "armorDk", p: [0, 0, 0], bone: L.n + "b", k: 0.003, vdil: 0.45 });
-      sc.add(S.sphere(0.011), { mat: "armorHi", p: L.ankle, bone: L.n + "c", k: 0.003 });
-      sc.limb(L.ankle, L.foot, 0.0095, 0.003, { ...A, bone: L.n + "c", k: 0.004, vdil: 0.5 });
+      const lk = PX ? 1.3 : 1;
+      sc.add(S.sphere(0.018 * lk), { ...A, p: L.base, bone: L.n + "a", k: 0.008 });
+      sc.limb(L.base, L.knee, 0.017 * lk, 0.0135 * lk, { ...A, bone: L.n + "a", k: 0.006 });
+      if (!PX) sc.add(fin(lerp(L.base, L.knee, 0.12), lerp(L.base, L.knee, 0.92), sub(up, mul(L.u, 1.2)), L.lift, 0.02, 0.004), { mat: "armorDk", p: [0, 0, 0], bone: L.n + "a", k: 0.003, vdil: 0.45 });
+      sc.add(S.sphere(0.015 * lk), { mat: "armorHi", p: L.knee, bone: L.n + "b", k: 0.004 });
+      if (PX) sc.limb(L.knee, add(L.knee, mul(norm(add(up, mul(L.u, -0.5))), 0.04)), 0.012, 0.004, { mat: "armorDk", bone: L.n + "b", k: 0.004 });   // one fat knee thorn
+      else sc.limb(L.knee, add(L.knee, mul(norm(add(up, mul(L.u, -0.5))), 0.038)), 0.0085, 0.0015, { mat: "armorDk", bone: L.n + "b", k: 0.004, vdil: 0.5 });   // knee thorn
+      sc.limb(L.knee, L.ankle, 0.0135 * lk, 0.01 * lk, { ...A, bone: L.n + "b", k: 0.005 });
+      if (!PX) sc.add(fin(lerp(L.knee, L.ankle, 0.1), lerp(L.knee, L.ankle, 0.9), add(up, mul(L.u, 0.6)), L.lift, 0.014, 0.0035), { mat: "armorDk", p: [0, 0, 0], bone: L.n + "b", k: 0.003, vdil: 0.45 });
+      sc.add(S.sphere(0.011 * lk), { mat: "armorHi", p: L.ankle, bone: L.n + "c", k: 0.003 });
+      sc.limb(L.ankle, L.foot, 0.0095 * lk, PX ? 0.006 : 0.003, { ...A, bone: L.n + "c", k: 0.004, vdil: 0.5 });
     }
     return { sc, kind: "spider", props: [] };
   }
