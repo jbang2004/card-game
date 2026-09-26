@@ -504,13 +504,14 @@ test("every on-board minion shows its own decoded illustration across roster pag
   }
 });
 
+// (a card without a voxel figure: a figure's token dims its art to a backdrop by design, MINIATURES.md)
 test("a summoned minion lands with its illustration visible and unobscured", async ({
   page,
 }) => {
   await demo(page);
-  await prepare(page, { hand: ["solaris"] });
-  await cast(page, "solaris");
-  const art = page.locator('#minions [data-cardid="solaris"] .minion-art');
+  await prepare(page, { hand: ["ashdragon"] });
+  await cast(page, "ashdragon");
+  const art = page.locator('#minions [data-cardid="ashdragon"] .minion-art');
   await expect(art).toHaveCount(1);
   await expect(art.locator("img")).toHaveCSS("opacity", "1");
   await expect

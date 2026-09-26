@@ -121,7 +121,7 @@ void main(){vW=aPos;vN=aN;vX=aX;vSh=uLightVP*vec4(aPos,1.);gl_Position=uVP*vec4(
 precision highp float;precision highp sampler2DShadow;
 in vec3 vW,vN;in vec2 vX;in vec4 vSh;layout(location=0) out vec4 o;
 uniform sampler2DShadow uShadow;uniform sampler2D uRockN,uRockR,uRockAO,uLavaC,uLavaN,uLavaE,uCourt;
-uniform float uMode,uTime,uLavaY,uGround,uK,uFogStart,uFogK,uSoft,uRadius,uEngrave;uniform vec2 uArena;uniform vec4 uRiv,uBulge,uStroke;
+uniform float uMode,uTime,uLavaY,uGround,uK,uFogStart,uFogK,uSoft,uRadius,uEngrave,uStage;uniform vec2 uArena;uniform vec4 uRiv,uBulge,uStroke;
 uniform vec3 uEye,uLightDir,uKey,uPool,uSky,uGroundAmb,uFog,uTint,uEmber,uStoneA,uStoneB,uRockA,uRockB,uLacquer,uInlay;uniform float uScene;uniform vec3 uInlayMat;
 uniform vec3 uLightPos[16],uLightCol[16];uniform float uLightRad[16];uniform vec3 uGemGlow[2],uGemCore[2];uniform float uGemGain;
 uniform vec4 uCards[16];uniform vec4 uDecals[8];
@@ -190,12 +190,14 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
   float ob=cm.g,shn=cm.a;
   if(ob>.003){vec2 sa=uStroke.xy,sd=uStroke.zw-uStroke.xy;float along=clamp(dot(p-sa,sd)/dot(sd,sd),0.,1.);
    float zone=.22+.78*pow(cos((along-.3)*PI*3.2),2.);vec3 fc=film(fract(along*1.3+shn*.45+.06*sin(p.x*.05+p.y*.03)));float wht=smoothstep(.45,.75,shn);
-   alb=mix(alb,vec3(.012,.012,.016),ob);rough=mix(rough,.06,ob);metal=mix(metal,0.,ob);n=normalize(mix(n,normalize(vec3(0.,1.,0.)+en*.7),ob));ao=mix(ao,1.,ob*.6);
+   alb=mix(alb,vec3(.012,.012,.016),ob*.74);rough=mix(rough,.06,ob);   /* (dark glass, not a black hole: the units stand on it) */metal=mix(metal,0.,ob);n=normalize(mix(n,normalize(vec3(0.,1.,0.)+en*.7),ob));ao=mix(ao,1.,ob*.6);
    float sweep=exp(-pow((fract(uTime*.045)*1.5-.25-along)*9.,2.));
    fc=mix(vec3(dot(fc,vec3(.333))),fc,.7);
    gloss+=ob*(fc*shn*(1.-wht)*zone*.3+vec3(1.,.97,.92)*wht*.8+fc*sweep*.22*(.25+shn));}
   float bz=cm.b;if(bz>.003){alb=mix(alb,vec3(.64,.5,.3),bz);metal=mix(metal,1.,bz);rough=mix(rough,.32,bz);}
   }
+  /* the court's rim: one thin cool line of light just inside its edge (the stage's edge reads at a glance) */
+  {float ed=rrect(p,uArena,uRadius),lw=fwidth(ed);emis+=vec3(.5,.78,1.)*.22*(1.-smoothstep(.4,.4+lw*1.5,abs(ed+6.)));}
   /* the units stand here: their footprints shade the ash */
   float occ=1.;for(int i=0;i<16;i++){vec4 c=uCards[i];if(c.z<=0.)continue;vec2 dd=abs(p-c.xy+vec2(-.18,.15)*c.z)-c.zw;float sdc=length(max(dd,0.))+min(max(dd.x,dd.y),0.)-8.;float blur=12.+c.z*.25;occ*=1.-(1.-smoothstep(-2.,blur,sdc))*.62;}
   ao*=occ;
@@ -259,18 +261,32 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
  }else if(uMode<4.5){ /* ---- dry grass: dark at the root, straw at the tip, the odd ember ---- */
   float t=smoothstep(.05,1.,vX.x);float v=hash(vec2(vX.y,1.7));alb=mix(vec3(.05,.042,.032),mix(vec3(.22,.18,.12),vec3(.3,.25,.17),v),t);rough=.85;
   float fl=.5+.5*sin(uTime*3.+vX.y*7.);emis+=uEmber*step(.965,v)*t*t*(.4+.6*fl)*.5;
- }else if(uMode<5.5){ /* ---- seat pads: dark metal, a ticked rim, one thin lens ring in the side's colour ---- */
-  vec2 q=vW.xz-vX;float r=length(q)/uK;alb=vec3(.05,.05,.056);rough=.4;metal=.7;
-  float rim=smoothstep(97.,99.,r);alb=mix(alb,vec3(.42,.4,.37),rim);metal=mix(metal,.95,rim);rough=mix(rough,.28,rim);
-  float tk=step(.82,fract(atan(q.y,q.x)*48./6.2831853))*step(99.5,r)*(1.-step(104.5,r));alb*=1.-tk*.55;
-  float inner=1.-smoothstep(64.,67.,r);alb=mix(alb,vec3(.012,.012,.015),inner);rough=mix(rough,.08,inner);metal=mix(metal,0.,inner);
-  float lens=1.-smoothstep(1.,2.4,abs(r-78.));float halo=1.-smoothstep(3.,14.,abs(r-78.));
-  emis+=uTint*(lens*1.25+halo*.18)*(.92+.08*sin(uTime*1.8));
-  if(abs(n.y)<.5){alb=vec3(.035,.035,.04);metal=.5;emis=vec3(0.);}
-  if(abs(uScene-1.)<.5){ /* pavilion: a gilt medallion on a lacquer drum */
+ }else if(uMode<5.5){ /* ---- seat pads: a stepped dais — its top dark metal, a ticked rim, one thin lens ring in the
+  side's colour and its emblem; the step dark stone, a trim at its edge; the walls dark metal with a line of the side's
+  light round the top's lip (it reads as standing on its own) ---- */
+  vec2 q=vW.xz-vX;float r=length(q)/uK,an=atan(q.y,q.x);alb=vec3(.05,.05,.056);rough=.4;metal=.7;
+  bool wall=abs(n.y)<.5,upper=vW.y>-1.;
+  if(!wall&&r<105.){
+   float rim=smoothstep(96.,98.,r);alb=mix(alb,vec3(.42,.4,.37),rim);metal=mix(metal,.95,rim);rough=mix(rough,.28,rim);
+   float fw=max(fwidth(r),1e-3),wa=48./6.2831853*fw/max(r,1.);  /* ticks a pixel soft: a hard step shimmers */
+   float tk=(1.-smoothstep(.09-wa,.09+wa,abs(fract(an*48./6.2831853)-.91)))*smoothstep(99.-fw,99.+fw,r)*(1.-smoothstep(104.-fw,104.+fw,r));alb*=1.-tk*.55;
+   float inner=1.-smoothstep(62.,65.,r);alb=mix(alb,vec3(.012,.012,.015),inner);rough=mix(rough,.08,inner);metal=mix(metal,0.,inner);
+   float lens=1.-smoothstep(1.,2.4,abs(r-78.)),halo=1.-smoothstep(3.,14.,abs(r-78.));
+   /* the emblem: eight rays and a ring on the dark glass, faint in the side's colour */
+   float ray=(1.-smoothstep(.0,.06,abs(fract(an*8./6.2831853+.5)-.5)))*step(18.,r)*(1.-step(58.,r)),ring=1.-smoothstep(.6,1.6,abs(r-24.));
+   emis+=uTint*(lens*1.25+halo*.18+(ray*.16+ring*.3)*(1.-smoothstep(50.,60.,r)))*(.92+.08*sin(uTime*1.8));
+  }else if(!wall){ /* the step */
+   alb=vec3(.045,.042,.04);rough=.75;metal=.1;float edge=smoothstep(127.,129.5,r);alb=mix(alb,vec3(.3,.28,.25),edge);metal=mix(metal,.85,edge);rough=mix(rough,.3,edge);
+   emis+=uTint*(1.-smoothstep(0.,7.,r-105.))*.35;
+  }else{
+   alb=vec3(.035,.035,.04);metal=.5;rough=.45;
+   if(upper){float lip=1.-smoothstep(.0,2.2,abs(vW.y-11.));emis+=uTint*lip*.9;alb=mix(alb,vec3(.3,.28,.26),smoothstep(13.,15.,vW.y));metal=mix(metal,.9,smoothstep(13.,15.,vW.y));}
+  }
+  if(abs(uScene-1.)<.5&&!wall&&r<105.){ /* pavilion: a gilt medallion on a lacquer drum */
+   float rim=smoothstep(96.,98.,r),lens=1.-smoothstep(1.,2.4,abs(r-78.));
    float gr=1.-smoothstep(.5,1.5,abs(r-92.))+1.-smoothstep(.5,1.2,abs(r-72.));float disc=1.-smoothstep(96.,98.,r);
-   alb=mix(uLacquer,uInlay,max(rim,gr));metal=max(rim,gr);rough=mix(.2,.3,metal);if(abs(n.y)<.5){alb=uLacquer*.8;metal=0.;}
-   float petal=smoothstep(.6,.9,cos(atan(q.y,q.x)*8.))*(1.-smoothstep(40.,62.,r))*step(14.,r);alb=mix(alb,uInlay,petal*disc);metal=max(metal,petal*disc);
+   alb=mix(uLacquer,uInlay,max(rim,gr));metal=max(rim,gr);rough=mix(.2,.3,metal);
+   float petal=smoothstep(.6,.9,cos(an*8.))*(1.-smoothstep(40.,62.,r))*step(14.,r);alb=mix(alb,uInlay,petal*disc);metal=max(metal,petal*disc);
    emis=uTint*lens*.35;}
  }else if(uMode<6.5){ /* ---- crystals: amethyst and emerald druses, lit from within ---- */
   float ci=floor(vX.x*.5),h=vX.x-2.*ci,ac=clamp((fract(vX.y)-.01)/.97,0.,1.);bool am=vX.y<1.;
@@ -306,6 +322,11 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
   else if(uScene>1.5){alb=mix(uStoneA*.72,uInlay,up*.85);metal=up*uInlayMat.x;rough=mix(.3,.24,up);ao=.7+.3*fall;emis+=uInlay*up*uInlayMat.y*.5;if(uScene>4.5)alb*=mix(.8,1.,up);}
  }
  o=lit(alb,rough,metal,ao,n,vW,emis);o.rgb+=gloss;if(abs(uMode-6.)<.5)o.a*=-.85;
+ /* the stage light: the court and the daises keep their light; the world round them sinks back — darker, greyer, its
+    glow held down — the further from the court the more, so the eye stays on the fight */
+ if(uStage>0.&&uMode>.5&&abs(uMode-5.)>.5&&abs(uMode-7.)>.5){float f=uStage*smoothstep(-30.,170.,rrect(vW.xz,uArena,uRadius));
+  float hot=abs(uMode-2.)<.5||abs(uMode-6.)<.5?1.:0.;   /* molten rock and crystal light are HDR: they sink twice as far */
+  float k=(1.-f)*(1.-f*hot*.8);o.rgb=mix(o.rgb,vec3(dot(o.rgb,vec3(.3,.5,.2))),f*.75)*k;o.a*=k*k;}
  if(uMode>10.5){vec3 v=normalize(uEye-vW);float ndv=abs(dot(n,v)),fr=pow(1.-ndv,2.2);
   if(uMode<11.5){ /* soap-film bubble; with vX.x = 1 the spirit whale */
    vec3 R=reflect(-v,n);vec3 env=mix(uSky*1.2,uSky*2.6+.1,smoothstep(-.3,.8,R.y))+uKey*pow(max(dot(R,normalize(uLightDir)),0.),160.)*2.5;
@@ -372,6 +393,10 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
    * picture, closer to the court near the camera where the view narrows; it
    * swings round a seat pad instead of drowning it. Mirrors rivC(). */
   let RIV = { a: 760, b: 0.147, w: 100 }, BULGE = [0, 0, 0, 0], PADS = {};
+  // a hero's seat: a stepped dais standing on its own outside the court, the hero's figure on it (EmberMiniatures) —
+  // its top (radius r, raised to `top` above the court's plane), a wide low step round it (to r2, at `step`)
+  const SEAT = { r: 104, r2: 132, top: 16, step: -2 };
+  let seatK = 1;                          // the touch layouts' consoles are small: their daises are too
   function riverC(z, s) { let c = RIV.a - RIV.b * z + 40 * Math.sin(z * 0.0045 + (s > 0 ? 0.6 : 2.3)) + 22 * Math.sin(z * 0.0017 + (s > 0 ? 1.9 : 4.1)); const bz = s > 0 ? BULGE[2] : BULGE[0], bm = s > 0 ? BULGE[3] : BULGE[1]; c += bm * Math.exp(-(((z - bz) / 210) ** 2)); return s * c; }
   function riverW(z, s) { return RIV.w * (1 + 0.16 * Math.sin(z * 0.006 + (s > 0 ? 3 : 1))); }
   const riverSD = (x, z) => { const s = x < 0 ? -1 : 1; return Math.abs(x - riverC(z, s)) - riverW(z, s); };
@@ -774,7 +799,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
       /* the portrait itself: on touch layouts the .hero element is a whole console bar */
       const q = Vp.pos(document.querySelector(sel + " .hero-card-inner") || document.querySelector(sel)); if (!q) continue;
       const f = floorAt(q.x, q.top + q.h); if (!f) continue;
-      let x = f[0], z = f[1] - 36 * ornK; const want = 118 * ornK, sd = rrectSD(x, z, HX, HZ, RC);
+      let x = f[0], z = f[1] - 36 * ornK; const want = (SEAT.r2 + 22) * ornK * seatK, sd = rrectSD(x, z, HX, HZ, RC);
       if (sd < want) { const gx = rrectSD(x + 1, z, HX, HZ, RC) - rrectSD(x - 1, z, HX, HZ, RC), gz = rrectSD(x, z + 1, HX, HZ, RC) - rrectSD(x, z - 1, HX, HZ, RC), gl2 = Math.hypot(gx, gz) || 1; x += (gx / gl2) * (want - sd); z += (gz / gl2) * (want - sd); }
       out[k] = [x, z];
     }
@@ -799,13 +824,20 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
      * still rims both edges, and a near edge that stops at the player's
      * console instead of running under it. */
     const tall = Vp.portrait;
-    const yTop = bar ? bar.top + bar.h + 4 : 92, yBot = tall ? arena.top + arena.h - 2 : hand ? hand.top + 6 : H * 0.78;
-    const targetSpan = arena.w - (tall ? 40 : 0), targetMid = (yE + yP) / 2, xMid = arena.left + arena.w / 2;
+    /* (portrait with the heroes on daises: the court's far edge stops at the enemy console, whose card slot holds the
+     * enemy's dais, as its near edge stops at the player's) */
+    const daises = tall && document.body.classList.contains("hero-daises");
+    const yTop = daises ? arena.top + 4 : bar ? bar.top + bar.h + 4 : 92, yBot = tall ? arena.top + arena.h - 2 : hand ? hand.top + 6 : H * 0.78;
+    /* Portrait with the heroes on daises (2026-09-26): the board fills the screen — edge to edge where the far (enemy)
+     * row stands, so every unit of both rows stands on it — and runs from under the enemy console down to the player's,
+     * centred on that band. */
+    const targetSpan = daises ? W - 8 : arena.w - (tall ? 40 : 0), targetMid = daises ? (yTop + yBot) / 2 : (yE + yP) / 2, xMid = arena.left + arena.w / 2;
     HX = 560;
     cam.pitch = tall ? 64 : PITCH; cam.dist = 2600; cam.tz = 0;
     for (let i = 0; i < 14; i++) {
       updateCamera();
-      const span = project([HX, 0, 0])[0] - project([-HX, 0, 0])[0];
+      const zE = daises ? (floorAt(xMid, yE) || [0, 0])[1] : 0;
+      const span = project([HX, 0, zE])[0] - project([-HX, 0, zE])[0];
       cam.dist *= Math.pow(span / targetSpan, 0.9);
       updateCamera();
       const y0 = project([0, 0, 0])[1], k = (project([0, 0, 50])[1] - project([0, 0, -50])[1]) / 100;
@@ -814,7 +846,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     updateCamera();
     const zTop = floorAt(xMid, yTop), zBot = floorAt(xMid, yBot);
     const laneHalf = Math.abs(((floorAt(xMid, yP) || [0, 0])[1] - (floorAt(xMid, yE) || [0, 0])[1]) / 2);
-    HZ = clamp(Math.min(zTop ? -zTop[1] : 600, zBot ? zBot[1] : 600) - (tall ? 8 : 30), laneHalf + 110, tall ? 1250 : 640);
+    HZ = clamp(Math.min(zTop ? -zTop[1] : 600, zBot ? zBot[1] : 600) - (daises ? 2 : tall ? 8 : 30), laneHalf + 110, tall ? 1250 : 640);
     RC = Math.min(HX, HZ) * 0.42;
     ornK = clamp(Math.min(HX, HZ) / 500, 0.55, 1.2);
     /* the druses keep a readable size on screen: larger in the world where the camera stands further off */
@@ -827,9 +859,10 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
       const xT = edgeX(project([0, 0, -HZ])[1]), xB = edgeX(project([0, 0, HZ])[1]);
       const cT = Math.max(HX + rw + gapMin, HX + 0.55 * (xT - HX)), cB = Math.max(HX + rw + (tall ? 18 : 25), HX + 0.55 * (xB - HX));
       RIV = SC === SCENES.lava ? { a: (cT + cB) / 2, b: (cT - cB) / (2 * HZ), w: rw } : { a: 1e5, b: 0, w: 1 }; }
+    seatK = Vp.mobile ? 0.72 : 1;
     PADS = seats(); BULGE = [0, 0, 0, 0];
     HUD = [...document.querySelectorAll(HUD_BOXES)].map((el) => Vp.pos(el)).filter(Boolean);
-    for (const pd of Object.values(PADS)) { const s = pd[0] < 0 ? -1 : 1, need = Math.abs(pd[0]) + 118 * ornK + riverW(pd[1], s) + 18 - Math.abs(riverC(pd[1], s)); if (need > 0) { if (s < 0) BULGE[0] = pd[1], BULGE[1] = need; else BULGE[2] = pd[1], BULGE[3] = need; } }
+    for (const pd of Object.values(PADS)) { const s = pd[0] < 0 ? -1 : 1, need = Math.abs(pd[0]) + (SEAT.r2 + 12) * ornK * seatK + riverW(pd[1], s) + 18 - Math.abs(riverC(pd[1], s)); if (need > 0) { if (s < 0) BULGE[0] = pd[1], BULGE[1] = need; else BULGE[2] = pd[1], BULGE[3] = need; } }
     layoutDirty = false; stillDrawn = false;
     /* the hero consoles may not be laid out yet on the very first frame of a battle */
     if (Object.keys(PADS).length < 2 && seatTries++ < 40) layoutDirty = true;
@@ -1031,7 +1064,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     const all = []; const mk = (arr) => { const m = mesh(arr); all.push(m); return m; };
     const rnd = rng(1234 + Math.round(HZ));
     const padList = Object.entries(PADS);
-    const nearSeat = (x, z, m) => padList.some(([, q]) => Math.hypot(x - q[0], z - q[1]) < 106 * ornK + m);
+    const nearSeat = (x, z, m) => padList.some(([, q]) => Math.hypot(x - q[0], z - q[1]) < SEAT.r2 * ornK * seatK + m);
 
     /* terrain: finer across the rivers and near the court, a hole under the plinth */
     const to = [];
@@ -1126,9 +1159,17 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     }
     const reeds = mk(ro);
 
-    /* seat pads: a low metal drum at each hero's feet */
+    /* seat pads: a stepped dais at each hero's feet — a raised drum (its top a hand above the court), a wide low
+     * step round it, both walls down into the ground */
     const pads = {};
-    for (const [k, q] of padList) { const o = [], r = 106 * ornK, y = -8, n = 64; for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2, b = ((i + 1) / n) * Math.PI * 2, A = [q[0] + Math.cos(a) * r, y, q[1] + Math.sin(a) * r], B = [q[0] + Math.cos(b) * r, y, q[1] + Math.sin(b) * r]; vtx(o, [q[0], y, q[1]], [0, 1, 0], q[0], q[1]); vtx(o, B, [0, 1, 0], q[0], q[1]); vtx(o, A, [0, 1, 0], q[0], q[1]); const na = [Math.cos(a), 0, Math.sin(a)], nb = [Math.cos(b), 0, Math.sin(b)], A2 = [A[0], SC.deep ? -90 : GROUND - 12, A[2]], B2 = [B[0], SC.deep ? -90 : GROUND - 12, B[2]]; vtx(o, A, na, q[0], q[1]); vtx(o, B, nb, q[0], q[1]); vtx(o, B2, nb, q[0], q[1]); vtx(o, A, na, q[0], q[1]); vtx(o, B2, nb, q[0], q[1]); vtx(o, A2, na, q[0], q[1]); } pads[k] = mk(o); }
+    for (const [k, q] of padList) {
+      const o = [], n = 72, bot = SC.deep ? -90 : GROUND - 12, c = (a, r, y) => [q[0] + Math.cos(a) * r, y, q[1] + Math.sin(a) * r];
+      const disc = (r0, r1, y) => { for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2, b = ((i + 1) / n) * Math.PI * 2; if (r0 <= 0) { vtx(o, [q[0], y, q[1]], [0, 1, 0], q[0], q[1]); vtx(o, c(b, r1, y), [0, 1, 0], q[0], q[1]); vtx(o, c(a, r1, y), [0, 1, 0], q[0], q[1]); } else { const A0 = c(a, r0, y), B0 = c(b, r0, y), A1 = c(a, r1, y), B1 = c(b, r1, y); vtx(o, A0, [0, 1, 0], q[0], q[1]); vtx(o, B1, [0, 1, 0], q[0], q[1]); vtx(o, A1, [0, 1, 0], q[0], q[1]); vtx(o, A0, [0, 1, 0], q[0], q[1]); vtx(o, B0, [0, 1, 0], q[0], q[1]); vtx(o, B1, [0, 1, 0], q[0], q[1]); } } };
+      const wall = (r, y0, y1) => { for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2, b = ((i + 1) / n) * Math.PI * 2, na = [Math.cos(a), 0, Math.sin(a)], nb = [Math.cos(b), 0, Math.sin(b)], A = c(a, r, y0), B = c(b, r, y0), A2 = c(a, r, y1), B2 = c(b, r, y1); vtx(o, A, na, q[0], q[1]); vtx(o, B, nb, q[0], q[1]); vtx(o, B2, nb, q[0], q[1]); vtx(o, A, na, q[0], q[1]); vtx(o, B2, nb, q[0], q[1]); vtx(o, A2, na, q[0], q[1]); } };
+      const R = SEAT.r * ornK * seatK, R2 = SEAT.r2 * ornK * seatK;
+      disc(0, R, SEAT.top); wall(R, SEAT.top, SEAT.step); disc(R, R2, SEAT.step); wall(R2, SEAT.step, bot);
+      pads[k] = mk(o);
+    }
 
     /* one sheet of melt under everything; the terrain hides it outside the channels */
     const lo = [], E = SC.deep ? 5200 : 1900, Y = SC.under; if (Y != null) quad(lo, [-(HX + E), Y, -(HZ + E)], [-(HX + E), Y, HZ + E], [HX + E, Y, HZ + E], [HX + E, Y, -(HZ + E)], [0, 1, 0]); const lava = mk(lo);
@@ -1174,9 +1215,11 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
 
   /* --------------------------------------------------------------- render */
   const U3 = ["key", "pool", "sky", "groundAmb", "fog"];
+  // the stage light (SURF_FS): how far the world round the court sinks back (0 = not at all; a scene may set its own)
+  const STAGE = 0.6;
   function setSurfUniforms(P, t, vp) {
     gl.useProgram(P.p); const u = P.u; gl.uniformMatrix4fv(u.uVP, false, vp || VP); gl.uniformMatrix4fv(u.uLightVP, false, lightVP); if (!u.uEye) return;
-    gl.uniform1f(u.uTime, t); gl.uniform1f(u.uLavaY, SC === SCENES.lava ? LAVA_Y : -9999); gl.uniform1f(u.uGround, GROUND); gl.uniform1f(u.uK, ornK); gl.uniform1f(u.uSoft, effTier() >= 2 ? 0 : 1); gl.uniform1f(u.uFogStart, cam.dist * 0.654); gl.uniform1f(u.uFogK, 2.0e-7 * Math.pow(2600 / cam.dist, 2) * (SC.fogK ?? 1)); gl.uniform1f(u.uRadius, RC); gl.uniform1f(u.uEngrave, art ? art.engrave : 1);
+    gl.uniform1f(u.uTime, t); gl.uniform1f(u.uLavaY, SC === SCENES.lava ? LAVA_Y : -9999); gl.uniform1f(u.uGround, GROUND); gl.uniform1f(u.uK, ornK); gl.uniform1f(u.uSoft, effTier() >= 2 ? 0 : 1); gl.uniform1f(u.uFogStart, cam.dist * 0.654); gl.uniform1f(u.uFogK, 2.0e-7 * Math.pow(2600 / cam.dist, 2) * (SC.fogK ?? 1)); gl.uniform1f(u.uRadius, RC); gl.uniform1f(u.uEngrave, art ? art.engrave : 1); gl.uniform1f(u.uStage, SC.stage ?? STAGE);
     gl.uniform3fv(u.uEye, eye); gl.uniform3fv(u.uLightDir, LIGHT_DIR); gl.uniform2f(u.uArena, HX, HZ); gl.uniform4f(u.uRiv, RIV.a, RIV.b, RIV.w, 0); gl.uniform4fv(u.uBulge, BULGE); if (art) gl.uniform4fv(u.uStroke, art.stroke);
     for (const k of U3) gl.uniform3fv(u["u" + k[0].toUpperCase() + k.slice(1)], SC.pal[k]);
     gl.uniform3fv(u.uEmber, SC.ember); gl.uniform3fv(u.uStoneA, SC.stone); gl.uniform3fv(u.uStoneB, SC.stone2); gl.uniform3fv(u.uRockA, SC.rock); gl.uniform3fv(u.uRockB, SC.rock2); gl.uniform3fv(u.uLacquer, SC.lacquer); gl.uniform3fv(u.uInlay, SC.inlay); gl.uniform1f(u.uScene, SC.id); gl.uniform3f(u.uInlayMat, SC.inlayMetal || 0, SC.inlayGlow || 0, SC.accentGlow || 0);
@@ -1192,7 +1235,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     const draw = (m, mode, tint) => { if (u.uMode) { gl.uniform1f(u.uMode, mode); gl.uniform3fv(u.uTint, tint || [1, 1, 1]); } gl.bindVertexArray(m.vao); gl.drawArrays(gl.TRIANGLES, 0, m.n); };
     draw(g.terrain, 1); if (!depthPass) draw(g.lava, 2); draw(g.board, 0); draw(g.plinth, 7); draw(g.columns, 3); draw(g.crystals, 6); draw(g.rail, 8); draw(g.leaves, 9); draw(g.rocks, 3); if (!depthPass) draw(g.cards, 9);
     if (!depthPass) draw(g.reeds, 4);
-    for (const [k, m] of Object.entries(g.pads)) draw(m, 5, SC.seat[k]);
+    gl.uniform1f(u.uK, ornK * seatK); for (const [k, m] of Object.entries(g.pads)) draw(m, 5, SC.seat[k]); gl.uniform1f(u.uK, ornK);   // (the dais's rings scale with it)
   }
   /* Translucent things after the opaque scene: bubbles and the whale (11), shafts of light (12). Alpha is masked: they bloom by brightness and never shimmer. */
   function drawGlass(t) {
@@ -1237,6 +1280,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     for (const side of ["e", "p"]) {
       const els = document.querySelectorAll(`#minions .minion[data-side="${side}"]`), count = els.length;
       for (let i = 0; i < count && n < 16; i++) {
+        if (els[i].matches(".miniature-ready, .miniature-pending")) continue;   // a voxel unit stands on its own pedestal
         let cx, cy, w;
         if (busy) { const b = Vp.pos(els[i]); if (!b) continue; cx = b.x; cy = b.y + b.h * 0.42; w = b.w; }
         else { const g = Vp.minion(side, i, count); cx = g.x + g.w / 2; cy = g.y + g.h * 0.92; w = g.w; }
@@ -1317,6 +1361,13 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     get active() { return active; },
     get ready() { return !!gl && pending === 0 && !!geom; },
     get failed() { return failed; },
+    /** Where a hero's seat stands on screen (stage pixels): its top's centre, its radius across and its light's colour — the hero's figure
+     *  stands there (EmberMiniatures); null before the layout is solved */
+    seat(side) {
+      const q = PADS[side]; if (!VP || !q) return null;
+      const r = SEAT.r * ornK * seatK, c = project([q[0], SEAT.top, q[1]]), e = project([q[0] + r, SEAT.top, q[1]]), f = project([q[0], SEAT.top, q[1] + r]);
+      return { x: c[0], y: c[1], rx: Math.abs(e[0] - c[0]), ry: Math.abs(f[1] - c[1]), tint: SC.seat?.[side] || null };
+    },
     /** Diagnostics: the solved court and camera, the court's screen box in stage pixels, the render tier. */
     get board() {
       const c = VP && [[-HX, -HZ], [HX, -HZ], [HX, HZ], [-HX, HZ]].map(([x, z]) => project([x, 0, z])), xs = c && c.map((p) => p[0]), ys = c && c.map((p) => p[1]);

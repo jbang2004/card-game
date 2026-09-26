@@ -1,7 +1,7 @@
 const {test,expect}=require('@playwright/test');
 const path=require('node:path');
 const output=path.resolve('artifacts/animation-improvement-20260919');
-async function demo(page){await page.goto('./?debug=1');await page.waitForFunction(()=>window.Emberfall&&!AtelierWorld.loading);await page.locator('#quick-btn').click();await page.waitForFunction(()=>!EmberFX.busy);}
+async function demo(page,query=''){await page.goto('./?debug=1'+query);await page.waitForFunction(()=>window.Emberfall&&!AtelierWorld.loading);await page.locator('#quick-btn').click();await page.waitForFunction(()=>!EmberFX.busy);}
 async function prime(page,{cid='guard',full=false,hand=false}={}){return page.evaluate(({cid,full,hand})=>{
  EmberFX.cancel(true);const g=EmberDebug.game;g.aiStep=()=>({ok:true});g.s.active='p';g.s.phase='battle';g.s.p.board=[];g.s.e.board=[];g.s.p.hand=[];g.s.p.mana=g.s.p.maxMana=10;g.s.p.hp=g.s.e.hp=30;g.s.e.armor=0;g.s.e.secrets=[];
  for(let i=0;i<(full?7:2);i++){g.summon('p',i?'archer':cid,{sick:false});g.summon('e','treant');}
@@ -11,7 +11,10 @@ async function prime(page,{cid='guard',full=false,hand=false}={}){return page.ev
 for(const [name,viewport]of [['large',{width:1920,height:1080}],['portrait',{width:390,height:844}],['landscape',{width:844,height:390}],['compact',{width:568,height:320}]]){
  test(`first-load mesh and full-board readability: ${name}`,async({browser})=>{
   const context=await browser.newContext({viewport,isMobile:name!=='large',hasTouch:name!=='large'}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await demo(page);await prime(page,{full:true,hand:true});
+  // The attacker is a blade card on a battlefield without figures (?figures=0 — as when WebGL fails or motion is
+  // reduced): a card with a battlefield figure attacks through the figure instead of the fx2 mesh (BATTLE_PRESENTATION_V2
+  // R13), every blade card has one now, and this case covers the fx2 mesh's first load.
+  await demo(page,'&figures=0');await prime(page,{cid:'recruit',full:true,hand:true});
   // No quality reset or inspection tool: this is the original initialisation path.
   await expect(page.locator('#fx-3d')).toBeVisible();
   const canvas=await page.locator('#fx-3d').boundingBox();expect(canvas.width).toBeGreaterThan(300);expect(canvas.height).toBeGreaterThan(250);

@@ -1,0 +1,153 @@
+<title>写实角色试作</title>
+<meta name="description" content="战场 3D 模型（圣光裁决者、暮光精灵）在战场代码里的全部动作与打击效果：待机、攻击或施法、受击、碎裂、拼合登场、胜利，可慢放、换视角、切换像素化。">
+<style>
+  /* The voxel gallery's look (the battlefield at dusk): obsidian glass, ember for what you can press, brass for
+   * labels, crimson for the lethal blows. */
+  :root {
+    color-scheme: dark;
+    --ground: #0d0b09;
+    --glass: rgba(26, 21, 17, 0.8);
+    --glass-2: rgba(255, 255, 255, 0.055);
+    --rim: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+    --ink: #f6efe2;
+    --ink-2: #cdbfa6;
+    --ink-3: #8f8471;
+    --ember: #ff9b3d;
+    --ember-hi: #ffd39a;
+    --brass: #c9a45c;
+    --crimson: #e0475a;
+    --serif: "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", "SimSun", serif;
+    --sans: "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+    --gutter: 20px;
+  }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: 14px/1.5 var(--sans); overflow: hidden; }
+  button { font: inherit; color: inherit; }
+  button:focus-visible { outline: 2px solid var(--ember-hi); outline-offset: 2px; }
+  #app { position: relative; height: 100%; overflow: hidden; }
+  #stage, #room { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #stage { touch-action: none; cursor: grab; }
+  #stage:active { cursor: grabbing; }
+  #room { pointer-events: none; }
+  .glass { background: var(--glass); box-shadow: var(--rim), 0 18px 50px rgba(0, 0, 0, 0.45); backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%); border-radius: 18px; }
+
+  /* what sits over the stage stays small and at the edges: the name (the character picker) top left, one gear
+   * (every viewing option) top right, one row of actions at the bottom, and a caption that fades */
+  .top { position: absolute; left: var(--gutter); top: 16px; display: flex; flex-direction: column; gap: 2px; }
+  .eyebrow { font-size: 11px; letter-spacing: 0.28em; color: var(--brass); font-weight: 500; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7); }
+  #pick { border: 0; background: transparent; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: 8px; text-align: left; }
+  h1 { margin: 0; font: 900 28px/1.15 var(--serif); letter-spacing: 0.06em; text-shadow: 0 2px 14px rgba(0, 0, 0, 0.7); }
+  #pick::after { content: ""; width: 9px; height: 9px; border-right: 2px solid var(--ember); border-bottom: 2px solid var(--ember); transform: translateY(-3px) rotate(45deg); transition: transform 0.2s; }
+  #pick[aria-expanded="true"]::after { transform: translateY(2px) rotate(-135deg); }
+  .seg { display: flex; gap: 4px; padding: 3px; background: var(--glass-2); border-radius: 12px; }
+  .seg button { border: 0; background: transparent; padding: 5px 10px; border-radius: 10px; color: var(--ink-2); cursor: pointer; font-size: 13px; font-weight: 500; white-space: nowrap; }
+  .seg button[aria-pressed="true"] { background: var(--ember); color: #1c0f05; font-weight: 700; }
+  .seg button:not([aria-pressed="true"]):hover { background: var(--glass-2); color: var(--ink); }
+
+  .pop { position: absolute; top: 64px; padding: 14px; max-height: calc(100% - 150px); overflow-y: auto; scrollbar-width: thin; z-index: 3; }
+  .pop[hidden] { display: none; }
+  #picker { left: var(--gutter); width: min(560px, calc(100% - 2 * var(--gutter))); }
+  .group + .group { margin-top: 12px; }
+  .role { font-size: 11px; letter-spacing: 0.22em; color: var(--brass); margin-bottom: 6px; }
+  .who { display: flex; flex-wrap: wrap; gap: 4px; }
+  .who button { border: 0; cursor: pointer; padding: 6px 11px; border-radius: 10px; background: var(--glass-2); color: var(--ink-2); font-size: 13px; white-space: nowrap; }
+  .who button:hover { color: var(--ink); background: rgba(255, 155, 61, 0.16); }
+  .who button[aria-pressed="true"] { background: var(--ember); color: #1c0f05; font-weight: 700; }
+  .who button .tag { margin-left: 5px; font-size: 10px; color: var(--ember); letter-spacing: 0.05em; }
+  .who button[aria-pressed="true"] .tag { color: #3a1d06; }
+
+  #gear { position: absolute; right: var(--gutter); top: 16px; width: 40px; height: 40px; border: 0; border-radius: 12px; cursor: pointer; display: grid; place-items: center; color: var(--ink-2); }
+  #gear:hover, #gear[aria-expanded="true"] { color: var(--ember-hi); }
+  #gear svg { width: 20px; height: 20px; }
+  #panel { right: var(--gutter); width: 350px; max-width: calc(100% - 2 * var(--gutter)); }
+  .opt { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .opt + .opt { margin-top: 8px; }
+  .opt > span { color: var(--ink-2); font-size: 13px; white-space: nowrap; }
+  .opt .seg { flex-wrap: wrap; justify-content: flex-end; }
+  #panel hr { border: 0; border-top: 1px solid rgba(255, 255, 255, 0.08); margin: 14px 0 12px; }
+  .note { margin: 0; color: var(--ink-2); font-size: 12.5px; }
+  .nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 10px 0 0; }
+  .nums div { background: var(--glass-2); border-radius: 9px; padding: 5px 7px; }
+  .nums dt { font-size: 10.5px; color: var(--ink-3); }
+  .nums dd { margin: 0; font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .hint { color: var(--ink-3); font-size: 12px; margin-top: 10px; }
+  #sound { border: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; padding: 5px 10px; border-radius: 10px; background: var(--glass-2); color: var(--ink-2); font-size: 13px; }
+  #sound::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ink-3); }
+  #sound[aria-pressed="true"] { color: var(--ember-hi); }
+  #sound[aria-pressed="true"]::before { background: var(--ember); box-shadow: 0 0 8px var(--ember); }
+
+  #now { position: absolute; left: 50%; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 6px); width: min(520px, calc(100% - 2 * var(--gutter))); text-align: center; pointer-events: none; opacity: 0; transition: opacity 0.35s, transform 0.35s; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0, 0, 0, 0.9); }
+  #now.show { opacity: 1; transform: translate(-50%, 0); }
+  #now .name { font: 900 18px/1.3 var(--serif); letter-spacing: 0.08em; color: var(--ember-hi); }
+  #now .note { font-size: 12.5px; color: var(--ink); }
+
+  .dock { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; gap: 4px; padding: 6px; border-radius: 999px; max-width: calc(100% - 2 * var(--gutter)); overflow-x: auto; scrollbar-width: none; }
+  .dock::-webkit-scrollbar { display: none; }
+  .act { border: 0; cursor: pointer; padding: 8px 14px; border-radius: 999px; background: transparent; color: var(--ink); font-weight: 500; white-space: nowrap; font-size: 14px; }
+  .act:hover { background: rgba(255, 155, 61, 0.18); }
+  .act:active { background: var(--ember); color: #1c0f05; }
+  .act.lethal { color: #ffc2ca; }
+  .act.lethal:hover { background: rgba(224, 71, 90, 0.26); }
+  .act.all { color: var(--ember-hi); font-weight: 700; }
+  .sep { width: 1px; height: 18px; background: rgba(255, 255, 255, 0.12); margin: 0 4px; flex: none; }
+
+  @media (max-width: 700px) {
+    :root { --gutter: 12px; }
+    h1 { font-size: 22px; }
+    .eyebrow { display: none; }
+    .pop { top: 52px; }
+    .act { padding: 7px 10px; font-size: 13px; }
+    #now { bottom: calc(66px + env(safe-area-inset-bottom, 0px)); }
+  }
+</style>
+<div id="app">
+  <canvas id="stage" aria-label="模型舞台：拖动旋转，滚轮缩放"></canvas>
+  <div class="top">
+    <span class="eyebrow">风起之境 · 写实比例试作</span>
+    <button id="pick" type="button" aria-expanded="false" aria-controls="picker"><h1 id="who-name">圣光裁决者</h1></button>
+  </div>
+  <section class="pop glass" id="picker" hidden aria-label="选择角色">
+    <div class="group"><div class="role">人形</div><div class="who" id="who"></div></div>
+    <div class="group"><div class="role">兽类</div><div class="who" id="who-beast"></div></div>
+  </section>
+  <button id="gear" class="glass" type="button" aria-label="观看设置" aria-expanded="false" aria-controls="panel">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+  </button>
+  <section class="pop glass" id="panel" hidden aria-label="观看设置">
+    <div class="opt"><span>视角</span><div class="seg" role="group" aria-label="视角" id="views">
+      <button type="button" data-view="ours" aria-pressed="false">我方</button><button type="button" data-view="theirs" aria-pressed="true">敌方</button><button type="button" data-view="side" aria-pressed="false">侧面</button><button type="button" data-view="close" aria-pressed="false">特写</button></div></div>
+    <div class="opt"><span>动作</span><div class="seg" role="group" aria-label="动作" id="mocap">
+      <button type="button" data-mocap="1" aria-pressed="true">动捕</button><button type="button" data-mocap="0" aria-pressed="false">代码</button></div></div>
+    <div class="opt"><span>招牌</span><div class="seg" role="group" aria-label="招牌动作" id="sig">
+      <button type="button" data-sig="1" aria-pressed="true">重构版</button><button type="button" data-sig="0" aria-pressed="false">原版</button></div></div>
+    <div class="opt"><span>速度</span><div class="seg" role="group" aria-label="速度" id="speed">
+      <button type="button" data-speed="1" aria-pressed="true">1×</button><button type="button" data-speed="0.5" aria-pressed="false">½×</button><button type="button" data-speed="0.25" aria-pressed="false">¼×</button></div></div>
+    <div class="opt"><span>光影</span><div class="seg" role="group" aria-label="光影" id="shade">
+      <button type="button" data-shade="0" aria-pressed="false">原贴图</button><button type="button" data-shade="1" aria-pressed="false">暖光</button><button type="button" data-shade="2" aria-pressed="false">柔光</button><button type="button" data-shade="3" aria-pressed="false">赛璐珞</button><button type="button" data-shade="4" aria-pressed="true">圣光</button></div></div>
+    <div class="opt"><span>画面</span><div class="seg" role="group" aria-label="画面" id="look">
+      <button type="button" data-look="full" aria-pressed="true">原模型</button><button type="button" data-look="pixel" aria-pressed="false">像素化</button></div></div>
+    <div class="opt"><span>镜头</span><div class="seg" role="group" aria-label="镜头" id="spin">
+      <button type="button" data-spin="0" aria-pressed="true">固定</button><button type="button" data-spin="1" aria-pressed="false">自动旋转</button></div></div>
+    <div class="opt"><span>声音</span><button id="sound" type="button" aria-pressed="false"><span>关</span></button></div>
+    <hr>
+    <div class="role">模型</div>
+    <p class="note">Tripo 生成、减面；人形用 Mixamo 骨骼，兽类套用体素角色自己的骨架。标「动捕」的角色播放 Mixamo 动作捕捉，其余由代码驱动。</p>
+    <dl class="nums" id="stats"></dl>
+    <div class="hint">拖动旋转 · 滚轮缩放 · 双击回到当前视角</div>
+  </section>
+  <div id="now" aria-live="polite"><div class="name"></div><p class="note"></p></div>
+  <div class="dock glass" role="toolbar" aria-label="动作">
+    <button class="act" type="button" data-act="attack" id="act-attack">攻击</button>
+    <button class="act" type="button" data-act="heavy" id="act-heavy">重击</button>
+    <button class="act lethal" type="button" data-act="kill">致命一击</button>
+    <button class="act" type="button" data-act="victory">胜利</button>
+    <span class="sep" aria-hidden="true"></span>
+    <button class="act" type="button" data-act="hurt">受击</button>
+    <button class="act" type="button" data-act="hurt3">重创</button>
+    <button class="act lethal" type="button" data-act="die">碎裂</button>
+    <button class="act" type="button" data-act="enter">登场</button>
+    <span class="sep" aria-hidden="true"></span>
+    <button class="act all" type="button" data-act="all">连播</button>
+  </div>
+</div>
+<!--SCRIPTS-->

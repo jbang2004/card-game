@@ -76,9 +76,10 @@ for (const [width, height] of [
           heroes.map((hero) => {
             hero.classList.remove("ready", "selected", "valid-target");
             if (status) hero.classList.add(status);
+            /* a hero standing on its dais shows its state on its name plaque (its card frame is gone) */
             const outer = getComputedStyle(hero),
               portrait = getComputedStyle(
-                hero.querySelector(".portrait-frame"),
+                hero.querySelector(hero.classList.contains("hero-station") ? ".hero-name" : ".portrait-frame"),
               );
             return {
               border: outer.borderTopWidth,

@@ -277,6 +277,9 @@ for (const viewport of [
       /card-relief-ready|live-art-ready/,
     );
     await expect(page.locator(".card-relief-canvas")).toHaveCount(1);
+    // released off the board (a cancel): the phone's risen card is smaller now, and a release on the board with the
+    // mana short would open the card's detail, which has its own relief
+    await page.mouse.move(box.x + box.width / 2 + 60, 4, { steps: 3 });
     await page.mouse.up();
     await expect(page.locator(".card-relief-canvas, .card-relief-tilt")).toHaveCount(0);
     expect(errors).toEqual([]);

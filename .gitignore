@@ -42,3 +42,6 @@ tests/*-run.log
 
 # Local depth-estimation weights for tools/bake_card_relief.py (99 MB).
 /tools/models/
+
+# Disposable working files (captures, probes, one-off scripts); never tracked.
+/tools/.scratch/

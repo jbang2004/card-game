@@ -1389,3 +1389,124 @@ html[data-skin="slate"] body.touch-layout #battle .hero.enemy .secret-indicator 
   left: auto;
   right: 38px;
 }
+
+/* ---------------------------------------------------------------------------
+ * Damage numbers (after 万象棋): no blood splat over the figure — a small crisp
+ * number, outlined in its kind's colour with a faint glow, that pops (1.7 →
+ * 1) and rises as it fades. Heavy hits are larger and warm; heals green; a
+ * block reads as a short word. Same element, box and 620 ms life as before
+ * (effects.js number(); the phone layout still sizes the box inline) — only
+ * how it paints changes.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body .damage-number {
+  --num-ink: #fff4ee;
+  --num-edge: #7a0c10;
+  --num-glow: #ff3a2e8c;
+  --num-k: 0.78;
+  animation: slate-number 620ms cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+html[data-skin="slate"] body .damage-number .dmg-splat {
+  display: none;
+}
+html[data-skin="slate"] body .damage-number .dmg-value {
+  font: 900 calc(var(--splat-font) * var(--num-k)) / 1 var(--sans);
+  letter-spacing: 0;
+  color: var(--num-ink);
+  -webkit-text-stroke: 3px var(--num-edge);
+  paint-order: stroke fill;
+  text-shadow:
+    0 0 10px var(--num-glow),
+    0 2px 3px #000000a6;
+}
+html[data-skin="slate"] body .damage-number.crit {
+  --num-ink: #ffe38c;
+  --num-edge: #6e1a04;
+  --num-glow: #ff8a2ea6;
+  --num-k: 0.86;
+  animation-name: slate-number-heavy;
+}
+html[data-skin="slate"] body .damage-number.heal {
+  --num-ink: #eaffe6;
+  --num-edge: #0e5222;
+  --num-glow: #4be07a8c;
+}
+html[data-skin="slate"] body .damage-number.block {
+  --num-ink: #f6ead0;
+  --num-edge: #3a2d18;
+  --num-glow: #ffd98a66;
+  --num-k: 1;
+}
+html[data-skin="slate"] body .damage-number.block .dmg-value {
+  font-weight: 800;
+  letter-spacing: 2px;
+  -webkit-text-stroke-width: 2.5px;
+}
+@keyframes slate-number {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(1.7); }
+  14% { opacity: 1; transform: translate(-50%, -50%) scale(0.94); }
+  22% { transform: translate(-50%, calc(-50% - 2px)) scale(1); }
+  72% { opacity: 1; transform: translate(-50%, calc(-50% - 16px)) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, calc(-50% - 28px)) scale(0.92); }
+}
+@keyframes slate-number-heavy {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(2.3) rotate(-7deg); }
+  12% { opacity: 1; transform: translate(-50%, -50%) scale(0.9) rotate(2deg); }
+  20% { transform: translate(-50%, calc(-50% - 2px)) scale(1.06) rotate(0deg); }
+  28% { transform: translate(-50%, calc(-50% - 4px)) scale(1); }
+  74% { opacity: 1; transform: translate(-50%, calc(-50% - 16px)) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, calc(-50% - 28px)) scale(0.94); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="slate"] body .damage-number {
+    animation: none;
+  }
+}
+html[data-skin="slate"] body.reduced-motion .damage-number,
+html[data-skin="slate"] .fx-reduced .damage-number {
+  animation: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * The crystals round the end-turn disc (touch layouts; after 万象棋's gold
+ * disc): one arc per crystal round the round button, the ones left to spend
+ * lit ice-blue, the spent ones dark glass — the turn's key resource read at a
+ * glance where the thumb already is. The 法力 panel keeps its number.
+ * ------------------------------------------------------------------------ */
+.mana-ring {
+  display: none;
+}
+html[data-skin="slate"] body.touch-layout #battle .mana-ring {
+  --seg: calc(1turn / var(--mana-m, 1));
+  display: block;
+  position: absolute;
+  z-index: 2;
+  inset: -7px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: conic-gradient(#b8e6ff 0, #6fbdf5 calc(var(--seg) * var(--mana-a, 0)), #2a3446 0);
+  -webkit-mask:
+    radial-gradient(farthest-side, #0000 calc(100% - 5px), #000 calc(100% - 4.5px) calc(100% - 0.5px), #0000 100%),
+    repeating-conic-gradient(#000 0 calc(var(--seg) - 6deg), #0000 0 var(--seg));
+  -webkit-mask-composite: source-in;
+  mask:
+    radial-gradient(farthest-side, #0000 calc(100% - 5px), #000 calc(100% - 4.5px) calc(100% - 0.5px), #0000 100%),
+    repeating-conic-gradient(#000 0 calc(var(--seg) - 6deg), #0000 0 var(--seg));
+  mask-composite: intersect;
+  filter: drop-shadow(0 0 3px #8cc4ffaa);
+  transition: filter var(--m-base, 200ms);
+}
+
+/* The status rail at rest (the round) is text on the scene, not a pill (after
+ * 万象棋's top bar); a message still gets its pane, so it reads over anything. */
+html[data-skin="slate"] body #app.battle-view #battle-status:not(.has-message) {
+  border-color: transparent;
+  background: radial-gradient(closest-side, #0b0d1266, #0b0d1200);
+  backdrop-filter: none;
+  box-shadow: none;
+}
+html[data-skin="slate"] body #app.battle-view #battle-status {
+  transition:
+    background 200ms,
+    border-color 200ms,
+    box-shadow 200ms;
+}

@@ -46,6 +46,15 @@ for (const [width, height] of [
         expect(geometry.contract.y).toBeGreaterThanOrEqual(
           geometry.player.y + geometry.player.h - 1,
         );
+      } else if (geometry.portrait) {
+        /* Portrait (2026-09-26): the covenant is a medallion in the console
+         * row beside the hero power, so the board keeps its full height and
+         * the column above the hero stays open. */
+        const power = await page.evaluate(() => EmberViewport.layout.power);
+        expect(geometry.contract.w).toBe(44);
+        expect(geometry.contract.y).toBe(power.y);
+        expect(geometry.contract.x).toBeGreaterThanOrEqual(power.x + power.w);
+        expect(geometry.contract.y).toBeGreaterThan(geometry.arena.y + geometry.arena.h);
       } else {
         expect(geometry.contract.w).toBe(geometry.player.w);
         expect(geometry.contract.h).toBe(geometry.player.h);
@@ -53,14 +62,7 @@ for (const [width, height] of [
           geometry.player.y,
         );
       }
-      if (geometry.portrait) {
-        /* Portrait runs the board the full width (2026-09-23): the covenant
-         * keeps clear of the units by sitting below both rows, not beside the
-         * board. The row band ends above it, and every token fits its band. */
-        expect(geometry.contract.y).toBeGreaterThanOrEqual(
-          geometry.rows.p + geometry.rows.band / 4,
-        );
-      } else {
+      if (!geometry.portrait) {
         expect(geometry.contract.x + geometry.contract.w).toBeLessThan(
           geometry.arena.x,
         );

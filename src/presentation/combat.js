@@ -346,7 +346,8 @@ const EmberCombat = (() => {
    *   plan(kind, args)    → {hitAt[], duration}; EmberFx2Engine.plan when present
    *   castSpec(ctx)       → {kind, tint, tintGrad} | null for play/power/battlecry
    *   card(cid)           → card definition (rarity, onPlay selectors)
-   *   cutin(ctx)          → boolean; only asked for hero or legendary attackers */
+   *   cutin(ctx)          → boolean; only asked for hero or legendary attackers
+   *   figure(ref)         → {melee, windup} | null; a minion attacker's battlefield figure */
   function compile(
     events,
     before,
@@ -593,7 +594,12 @@ const EmberCombat = (() => {
             cid = sourceCid(group.frame, attack.from),
             resolvedFamily =
               attack.attack || sourceFamily(group.frame, attack.from, attackFamily),
-            ranged = profiles.ranged(resolvedFamily),
+            // a minion with a battlefield figure attacks the way its figure does (melee dash or ranged shot)
+            figure =
+              attack.from?.uid !== "hero" && typeof o.figure === "function"
+                ? o.figure({ side: attack.from?.side, uid: attack.from?.uid, cid }) || null
+                : null,
+            ranged = figure ? !figure.melee : profiles.ranged(resolvedFamily),
             matches = (e, direction) => {
               if (!["damage", "shield"].includes(e.type) || !sameParent(attack, e))
                 return false;
@@ -635,9 +641,12 @@ const EmberCombat = (() => {
                 T.attack.rangedMax,
               )
             : 0;
+          // a shooting figure draws before the shot leaves (bow, staff, breath); a melee figure with a signature
+          // attack coils before it springs (its anticipation: the lift grows by its windup)
+          const windup = figure ? Math.max(0, figure.windup || 0) : 0;
           let lead = ranged
-            ? T.attack.rangedRecoil + flight
-            : T.attack.lift + T.attack.lunge;
+            ? T.attack.rangedRecoil + windup + flight
+            : T.attack.lift + windup + T.attack.lunge;
           if (group.cutin) lead = Math.max(lead, T.cutin.lead);
           const stop = stopMs(tier),
             recover = ranged ? 0 : T.attack.recover;
@@ -651,7 +660,7 @@ const EmberCombat = (() => {
           group.motion = {
             family: resolvedFamily,
             ranged,
-            lift: ranged ? T.attack.rangedRecoil : lead - T.attack.lunge,
+            lift: ranged ? T.attack.rangedRecoil + windup : lead - T.attack.lunge,
             lunge: ranged ? 0 : T.attack.lunge,
             flight,
             contact: lead,
@@ -661,6 +670,8 @@ const EmberCombat = (() => {
             duration: lead + stop + recover,
             recoilPx: T.tiers[outgoingTier].recoilPx,
             tier,
+            figure: !!figure,
+            figureShots: !!figure?.shots,         // the figure flies its own projectile (a signature caster)
           };
           group.markers = {
             start: at,

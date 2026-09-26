@@ -1410,6 +1410,11 @@ html[data-skin="slate"] body #target-lines #target-ground-shadow {
   animation: none;
 }
 html[data-skin="slate"] body .drag-ghost { z-index: 65; }
+/* A figure's attack aims on the ground (EmberMiniatures.aim: a line of light and
+ * a reticle under the figures): the cue keeps its geometry, not its paint. */
+html[data-skin="slate"] body #target-lines.ground-aim > * {
+  opacity: 0 !important;
+}
 /* Retain the centerline's geometry for targeting; only segmented tiles paint. */
 html[data-skin="slate"] body #target-lines :is(#target-under, #target-path, #target-flow) {
   opacity: 0;

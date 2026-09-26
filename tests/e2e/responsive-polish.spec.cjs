@@ -47,8 +47,11 @@ for (const [width, height] of [
         const god = document.getElementById("contract-open"),
           r = god.getBoundingClientRect(),
           hand = document.getElementById("hand").getBoundingClientRect();
+        /* portrait: a medallion in the console row beside the hero power (the hand's lift headroom reaches over
+         * that row); landscape: a card in the rail above the hero */
+        const power = document.getElementById("power-btn").getBoundingClientRect();
         if (
-          r.bottom > hand.top ||
+          (EmberViewport.portrait ? Math.abs(r.top - power.top) > 1 : r.bottom > hand.top) ||
           r.width < 44 ||
           r.height < 44 ||
           r.x < 0 ||
