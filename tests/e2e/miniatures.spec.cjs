@@ -14,17 +14,17 @@ test("minion miniatures follow tokens and combat cues", async ({ page }) => {
   const ids = await page.evaluate(() => {
     const g = EmberDebug.game;
     const h = g.summon("p", "huntress"), d = g.summon("p", "duskstag"), w = g.summon("e", "wolf");
-    g.summon("p", "recruit"); // no spec: stays a flat token
+    g.summon("p", "sheep"); // no spec: stays a flat token
     Emberfall.renderNow();
     return { h: h.uid, d: d.uid, w: w.uid };
   });
-  await page.waitForFunction(() => EmberMiniatures.diagnostics().figures === 3);
+  await page.waitForFunction(() => EmberMiniatures.diagnostics().figures === 5);   // three minions, two heroes
   // pixel-sprite bakes take up to ~2 s each in the worker (longer on a loaded machine): wait for them to stand
-  await page.waitForFunction(() => EmberMiniatures.diagnostics().live === 3, null, { timeout: 60000 });
+  await page.waitForFunction(() => EmberMiniatures.diagnostics().live === 5, null, { timeout: 60000 });
   expect(await page.locator("#miniature-stage").count()).toBe(1);
   expect(await page.evaluate(() => getComputedStyle(document.getElementById("miniature-stage")).pointerEvents)).toBe("none");
   await expect(page.locator(`#minions .minion[data-uid="${ids.h}"]`)).toHaveClass(/miniature-ready/);
-  await expect(page.locator('#minions .minion[data-cardid="recruit"]')).not.toHaveClass(/miniature-ready/);
+  await expect(page.locator('#minions .minion[data-cardid="sheep"]')).not.toHaveClass(/miniature-ready/);
   const before = await page.evaluate(() => JSON.stringify(EmberDebug.game.s.e.board.map((m) => [m.uid, m.hp])));
   await page.waitForTimeout(300);
   expect(await page.evaluate(() => JSON.stringify(EmberDebug.game.s.e.board.map((m) => [m.uid, m.hp])))).toBe(before);
@@ -35,7 +35,7 @@ test("minion miniatures follow tokens and combat cues", async ({ page }) => {
   // the wolf is gone; whatever its deathrattle leaves behind (a pup) stands as its own figure
   const left = await page.evaluate(() => ({
     expected: [...document.querySelectorAll("#minions .minion[data-cardid]")].filter((el) => EmberVoxelKit.forCard(el.dataset.cardid)).length,
-    figures: EmberMiniatures.diagnostics().figures,
+    figures: EmberMiniatures.diagnostics().figures - ["p", "e"].filter((side) => EmberMiniatures.hero(side)).length,
   }));
   expect(left.figures).toBe(left.expected);
   expect(left.expected).toBeGreaterThanOrEqual(2);
@@ -91,20 +91,25 @@ test("a played card becomes its figure without a flat token", async ({ page }) =
   expect(errors).toEqual([]);
 });
 
-// A narrow desktop window (mouse, compact battle layout) keeps its figures, sized to its tokens; only touch phones
-// go without them for now.
-test("a narrow desktop window keeps its figures", async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto("./?debug=1");
-  await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
-  await page.evaluate(() => Emberfall.startGame("ranger", 0));
-  await page.locator("#modal button", { hasText: "开始" }).click();
-  await page.waitForFunction(() => Emberfall.inBattle && !Emberfall.modal && !EmberFX.busy);
-  expect(await page.evaluate(() => EmberViewport.mobile)).toBe(true);
-  await page.evaluate(() => { EmberDebug.game.summon("p", "reaper"); EmberDebug.game.summon("e", "wolf"); Emberfall.renderNow(); });
-  await page.waitForFunction(() => EmberMiniatures.diagnostics().live === 2);
-  await expect(page.locator('#minions .minion[data-cardid="reaper"]')).toHaveClass(/miniature-ready/);
-});
+// A narrow desktop window (mouse, compact battle layout) and a touch phone keep their figures, sized to their tokens,
+// and their heroes stand on daises in their consoles' card slots.
+for (const [name, opts] of [["a narrow desktop window", { viewport: { width: 1280, height: 800 } }], ["a phone", { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }]]) {
+  test(`${name} keeps its figures`, async ({ browser }) => {
+    const context = await browser.newContext(opts), page = await context.newPage();
+    await page.goto("./?debug=1");
+    await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
+    await page.evaluate(() => Emberfall.startGame("ranger", 0));
+    await page.locator("#modal button", { hasText: "开始" }).click();
+    await page.waitForFunction(() => Emberfall.inBattle && !Emberfall.modal && !EmberFX.busy);
+    expect(await page.evaluate(() => EmberViewport.mobile)).toBe(true);
+    await page.evaluate(() => { EmberDebug.game.summon("p", "reaper"); EmberDebug.game.summon("e", "wolf"); Emberfall.renderNow(); });
+    await page.waitForFunction(() => EmberMiniatures.diagnostics().live === 4, null, { timeout: 60000 });   // two minions, two heroes
+    await expect(page.locator('#minions .minion[data-cardid="reaper"]')).toHaveClass(/miniature-ready/);
+    await expect(page.locator("#player-hero")).toHaveClass(/hero-dais/);
+    await expect(page.locator("#enemy-hero")).toHaveClass(/hero-dais/);
+    await context.close();
+  });
+}
 
 // A unit is its figure: no card on the board, stats as badges above the figure's layer, each side facing the other,
 // and the hero's figure seated inside its portrait window.
@@ -115,7 +120,7 @@ test("figure units drop their card and face the other side", async ({ page }) =>
   await page.locator("#modal button", { hasText: "开始" }).click();
   await page.waitForFunction(() => Emberfall.inBattle && !Emberfall.modal && !EmberFX.busy);
   const ids = await page.evaluate(() => { const g = EmberDebug.game; const a = g.summon("p", "reaper"), b = g.summon("e", "paladin"); Emberfall.renderNow(); return { a: a.uid, b: b.uid }; });
-  await page.waitForFunction(() => EmberMiniatures.diagnostics().live === 2);
+  await page.waitForFunction(() => EmberMiniatures.diagnostics().live === 4);   // (the two heroes stand too)
   await page.waitForTimeout(600);
   const r = await page.evaluate(({ a, b }) => {
     const tok = document.querySelector(`#minions .minion[data-uid="${a}"]`), st = (e) => getComputedStyle(e);

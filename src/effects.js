@@ -221,7 +221,8 @@ const EmberFX = (() => {
   const fx2 = () => (typeof EmberFx2 !== "undefined" ? EmberFx2 : null);
   // a melee voxel figure draws its own weapon trail and contact burst (presentation/voxel/stage.js); ranged ones keep
   // their fx2 projectile — one look, drawn in one place
-  const voxelMelee = (ref) => !!ref && ref.uid !== "hero" && typeof EmberMiniatures !== "undefined" && EmberMiniatures.owns(ref.side, ref.uid, true);
+  // a unit whose battlefield figure draws its own melee (a hero on its dais draws its own blow, whatever its weapon)
+  const voxelMelee = (ref) => !!ref && typeof EmberMiniatures !== "undefined" && (ref.uid === "hero" ? !!EmberMiniatures.hero?.(ref.side) : EmberMiniatures.owns(ref.side, ref.uid, true));
   const fxReady = () =>
     !quality.reduced && !!fx2()?.available && typeof fx2().attack === "function";
   function fxCall(name, ...args) {
@@ -255,6 +256,10 @@ const EmberFX = (() => {
           top: box.top ?? box.y - box.h / 2,
         }
       : null;
+  /** the unit stands on the board as a figure (minion on its base, hero on its dais), not as a card */
+  const figureRef = (ref) =>
+    !!ref && typeof EmberMiniatures !== "undefined" &&
+    (ref.uid === "hero" ? !!EmberMiniatures.hero?.(ref.side) : !!EmberMiniatures.has?.(ref.side, ref.uid));
   /** §2.3: a single target's contact never exceeds its box × contactScale
    * (≤ 1.25); an AOE contact stays inside the union of its targets + 24px. */
   function contactBoxes(boxes, tiers, aoe) {
@@ -2314,7 +2319,7 @@ const EmberFX = (() => {
         if (!enterFrame(ctx, beat, i, beat.frame)) return;
         const rec = castFlash(ctx, i, cast, beat.kind === "power" ? "power" : "cast");
         if (beat.kind === "power" && typeof EmberHeroFigure !== "undefined" && EmberHeroFigure.active(e.side))
-          EmberHeroFigure.cue("shot", 0.3 * (ctx.plan.scale || 1));
+          EmberHeroFigure.cue("shot", 0.3 * (ctx.plan.scale || 1), e.side);
         rec.countered = !!beat.countered;
         if(!beat.countered&&card?.type==="weapon")lifeCue(ctx,e,"weapon-equip",heroFace(ctx,e.side));
         const from = anchors.resolve(cast.actor, ctx.sequence.anchors);
@@ -2343,8 +2348,10 @@ const EmberFX = (() => {
         if (!old) return;
         // a minion whose battlefield figure was planned in (compile's figure hook) acts through it: a melee figure dashes
         // to the target and back and draws its own trail and contact burst, so the DOM lunge and fx2 melee art stay out
-        const figMelee = !!m.figure && !m.ranged && voxelMelee(e.from);
-        if (typeof EmberMiniatures !== "undefined" && e.from?.uid !== "hero")
+        // a hero on its dais strikes from it: its figure swings where it stands, no plate lunges
+        const heroFig = e.from?.uid === "hero" && voxelMelee(e.from);
+        const figMelee = (!!m.figure && !m.ranged && voxelMelee(e.from)) || heroFig;
+        if (typeof EmberMiniatures !== "undefined" && (e.from?.uid !== "hero" || heroFig))
           EmberMiniatures.cue(e.from.side, e.from.uid, "attack", {
             toward: e.to, planned: !!m.figure, ranged: m.ranged, tier: beat.contacts[0]?.tier || 1,
             liftMs: m.lift, contactMs: m.contact, releaseMs: m.release, durationMs: m.duration,
@@ -2382,13 +2389,13 @@ const EmberFX = (() => {
           if (art && !quality.reduced && fx2()?.available)
             fx2().cutin(art, { side: e.from.side });
         }
-        const skyStrike = !figMelee && fx2()?.renderer3dAvailable &&
+        const skyStrike = !figMelee && !m.figureShots && fx2()?.renderer3dAvailable &&
           EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid], beat.sourceCid)?.fx === "slash";
         // Skyfall comes from offscreen, not a second body colliding with the card.
         const swordStyle=EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid],beat.sourceCid)?.swordStyle;
         const benchmark=skyStrike&&typeof EmberBenchmarkArts!=="undefined"&&EmberBenchmarkArts.supports(swordStyle);
         const remasterKind=EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid],beat.sourceCid)?.fx;
-        const remastered=!figMelee&&fx2()?.renderer3dAvailable&&typeof EmberRemasterArts!=="undefined"&&EmberRemasterArts.supports(remasterKind);
+        const remastered=!figMelee&&!m.figureShots&&fx2()?.renderer3dAvailable&&typeof EmberRemasterArts!=="undefined"&&EmberRemasterArts.supports(remasterKind);
         if(benchmark) rec.benchmarkStyle=swordStyle;
         else if(remastered)rec.remasterKind=remasterKind;
         else if (m.ranged || skyStrike) rangedRecoil(sequence, beat, e.from, actorBox, targetBox);
@@ -2396,7 +2403,7 @@ const EmberFX = (() => {
         // R3: a weapon needs its anticipation; a dragon needs an inhalation.
         // These are the SAME instance later consumed at contact, not extra casts.
         const preSpec = EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid], beat.sourceCid);
-        if (fx2()?.renderer3dAvailable && !figMelee && (["slash", "breath"].includes(preSpec?.fx)||EmberRemasterArts.supports(preSpec?.fx))) {
+        if (fx2()?.renderer3dAvailable && !figMelee && !m.figureShots && (["slash", "breath"].includes(preSpec?.fx)||EmberRemasterArts.supports(preSpec?.fx))) {
           const started = fxCall("attack", preSpec.fx, {
             from: fxBox(actorBox), to: fxBox(targetBox),
             swordStyle: preSpec.swordStyle, sourceCid: beat.sourceCid, sourceRef: e.from, targetRef: e.to,
@@ -2423,7 +2430,8 @@ const EmberFX = (() => {
         sound("swing", actorBox);
         const spec = EmberFXProfiles.fx2Attack(EmberData.byId[beat.sourceCid], beat.sourceCid);
         const meshMelee = !m.ranged && spec?.fx === "slash" && fx2()?.renderer3dAvailable && !voxelMelee(e.from);
-        if ((m.ranged || meshMelee) && actorBox && targetBox && spec) {
+        // (a signature caster's figure flies its own bolt: fx2 draws none)
+        if ((m.ranged || meshMelee) && !m.figureShots && actorBox && targetBox && spec) {
           fxCall("attack", spec.fx, {
             from: fxBox(actorBox),
             to: fxBox(targetBox),
@@ -2472,8 +2480,9 @@ const EmberFX = (() => {
             impactTier = 0;
           const boxes = [];
           for (const index of bucket.contacts) {
-            const box = contactStep(ctx, beat, i, index);
-            if (box) boxes.push(box);
+            const box = contactStep(ctx, beat, i, index), who = beat.contacts[index]?.targetRef;
+            // a unit standing as a figure (a minion on its base, a hero on its dais) is not a card: no card-shaped edge flash
+            if (box) boxes.push(figureRef(who) ? { ...box, edge: false } : box);
             const event = beat.events[index];
             if (box && event.type === "damage" && (event.loss ?? event.amount) > 0 && beat.contacts[index].tier >= impactTier) {
               impactBox = box;
@@ -2484,7 +2493,7 @@ const EmberFX = (() => {
             const causeIndex = beat.contacts[bucket.contacts[0]].castBeat,
               cause = causeIndex !== null ? ctx.plan.beats[causeIndex] : null;
             if(!ctx.sequence.records.get(causeIndex)?.benchmarkStyle&&!ctx.sequence.records.get(causeIndex)?.remasterKind) fxCall("impulse", {
-              at: boxes.map(fxBox),
+              at: boxes.map((b) => ({ ...fxBox(b), edge: b.edge })),
               tier: beat.tier,
               cinematic: !!(cause?.cutin || (cause?.battlecry && cause.legendary)),
             });
@@ -2793,7 +2802,7 @@ const EmberFX = (() => {
       }
       if (loss > 0) {
         if (ref.uid === "hero" && typeof EmberHeroFigure !== "undefined" && EmberHeroFigure.active(ref.side))
-          EmberHeroFigure.cue("hurt");
+          EmberHeroFigure.cue("hurt", 0, ref.side);
         if (typeof EmberMiniatures !== "undefined") EmberMiniatures.contact(ref, { tier, from: contact.actor, direction: contact.direction });
         if(!((cause?.benchmarkStyle||cause?.remasterKind) && contact.direction === "outgoing"))
           startReaction(sequence, ref, actorBox, timing);

@@ -266,6 +266,6 @@ EmberVoxelKit.define("jingchen", (() => {
   return {
     cards: ["jingchen"], kind: "humanoid", build, pose, scale: 1.4,
     face: { kind: "human", look: { eye: 0xe8a838, brow: "#c8ccdc", lash: "#221c24", lip: "#b07c72", skinD: "#d0b4ae" } },
-    moves: { attack: { clip: "sunfall", hit: HIT, length: LEN, style: "bolt", ranged: true, windup: 340, emitter: { bone: "sun", offset: [0, 0, 0] } } },
+    moves: { attack: { clip: "sunfall", hit: HIT, length: LEN, style: "bolt", fire: true, ranged: true, windup: 340, emitter: { bone: "sun", offset: [0, 0, 0] } } },
   };
 })());

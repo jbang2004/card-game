@@ -269,6 +269,6 @@ EmberVoxelKit.define("aurion", (() => {
   return {
     cards: ["aurion"], kind: "humanoid", build, pose, scale: 1.42,
     face: { kind: "human", look: { eye: 0xc89a3a, brow: "#a88040", lash: "#3a2412", lip: "#b87a6c", skinD: "#d4a288" } },
-    moves: { attack: { clip: "godcleave", hit: HIT, length: LEN, style: "slash", trail: { prop: "spear", from: [0, B0 + 0.16, 0], to: [0, B0 + BL, 0] } } },
+    moves: { attack: { clip: "godcleave", hit: HIT, length: LEN, style: "slash", smite: true, trail: { prop: "spear", from: [0, B0 + 0.16, 0], to: [0, B0 + BL, 0] } } },
   };
 })());

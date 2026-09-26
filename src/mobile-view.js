@@ -65,11 +65,16 @@ const EmberViewport = (() => {
      * because it changes both the body class and the strip heights. */
     const shortLandscape = mobile && !portrait && H < 380,
       mini = mobile && W > 320 && !shortLandscape;
+    /* The heroes stand as figures on daises (EmberMiniatures sets the class): a figure stands a head taller than the
+     * card it replaces, so the enemy's console drops below the top bar's reach and the covenant lane lifts clear of
+     * the player's figure. */
+    const daises = mobile && document.body.classList.contains("hero-daises");
     const signature = [
       mobile,
       compactDesktop,
       portrait,
       mini,
+      daises,
       W,
       H,
       rawW,
@@ -143,7 +148,7 @@ const EmberViewport = (() => {
         /* §12.1: the hero is the SAME card at every size, just three scales.
          * A mini card needs a taller strip than a 56px avatar did. */
         const consoleH = 96,
-          enemyH = mini ? 78 : 56;
+          enemyH = (mini ? 78 : 56) + (daises ? 18 : 0);
         l.hand.x = padL - 6;
         l.hand.w = usableW + 6;
         l.enemyConsole = { x: padL, y: l.header + 4, w: usableW, h: enemyH };
@@ -157,7 +162,7 @@ const EmberViewport = (() => {
          * 12px out of the console band, like a name plate pulled from a slot;
          * the enemy's mirrors it downwards so it never hits the top bar. */
         l.enemy = mini
-          ? { x: W - padR - 6 - heroW, y: l.enemyConsole.y + 2, w: heroW, h: heroH }
+          ? { x: W - padR - 6 - heroW, y: l.enemyConsole.y + 2 + (daises ? 18 : 0), w: heroW, h: heroH }
           : { x: W - padR - 6 - 44, y: l.enemyConsole.y + 6, w: 44, h: 44 };
         l.player = mini
           ? { x: padL + 8, y: l.playerConsole.y - 12, w: heroW, h: heroH }
@@ -201,7 +206,7 @@ const EmberViewport = (() => {
          * player's console at the bottom-left (2026-09-22). */
         l.enemyConsole = {
           x: W - padR - rail,
-          y: l.header + 4,
+          y: l.header + 4 + (daises ? Math.round(heroH * 0.3) : 0),
           w: rail,
           h: railH,
         };
@@ -241,14 +246,19 @@ const EmberViewport = (() => {
           h: Math.max(100, dockTop - 8 - (l.header + 4)),
         };
       }
-      // Reserve a hero-width lane: covenant above, hero below. Landscape
-      // uses the full-height left rail because its hand starts beside it.
-      l.contract = {
-        x: l.player.x,
-        y: l.player.y - l.player.h - 12,
-        w: l.player.w,
-        h: l.player.h,
-      };
+      /* The covenant. Portrait: a medallion in the console row, beside the
+       * hero power — both are the hero's abilities — so the column above the
+       * hero stays open and the board keeps its full height (2026-09-26).
+       * Landscape: a card in the rail above the hero (the rail is otherwise
+       * empty there), lifted clear of a hero standing on its dais. */
+      l.contract = portrait
+        ? { x: l.power.x + l.power.w + 10, y: l.power.y, w: 44, h: 44 }
+        : {
+            x: l.player.x,
+            y: l.player.y - l.player.h - 12 - (daises ? Math.round(l.player.h * 0.5) : 0),
+            w: l.player.w,
+            h: l.player.h,
+          };
       l.handHints = { x: l.hand.x, y: dockTop + 10, w: l.hand.w, h: peek };
       // Brand / shared round-notice slot / compact menu. Portrait secondary
       // actions remain available in the menu instead of crowding the message.
@@ -265,13 +275,10 @@ const EmberViewport = (() => {
       l.cardW = cardW;
       l.peek = peek;
       l.tokenScale = roomy ? 1.4 : 1;
-      /* The two unit rows. Landscape splits the board in quarters; portrait
-       * seats both rows above the covenant card so the player's row never
-       * covers it, which is what lets the board run the full width. */
+      /* The two unit rows split the board in quarters (the covenant no longer
+       * sits on the board in portrait, so the rows have its whole height). */
       const rowsTop = l.arena.y,
-        rowsBottom = portrait
-          ? Math.min(l.arena.y + l.arena.h, l.contract.y - 8)
-          : l.arena.y + l.arena.h,
+        rowsBottom = l.arena.y + l.arena.h,
         band = rowsBottom - rowsTop;
       l.rows = { e: rowsTop + band * 0.25, p: rowsTop + band * 0.75, band };
     }

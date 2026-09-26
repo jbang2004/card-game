@@ -15,9 +15,11 @@ live/<id>.json, and fails if any file or the file count breaks those limits.
 Run `python3 build.py` first so the embedded art in art/ is current.
 """
 import base64
+import io
 import json
 import re
 import sys
+import zlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -26,7 +28,7 @@ TOKEN = re.compile(r"/\*([A-Z_]+)\*/")
 MIME = {".png": "png", ".webp": "webp", ".jpg": "jpeg"}
 FILE_LIMIT = 15 * 1024 * 1024
 COUNT_LIMIT = 255
-TITLE = "烬域 · 风起之境"
+TITLE = "烬域 · 战场试玩"
 
 
 def data_uri(rel):
@@ -38,6 +40,42 @@ def data_uri(rel):
 
 def embed(text):
     return re.sub(r"asset:([\w/.-]+)", lambda m: data_uri(m[1]), text)
+
+
+# The realistic figures (EmberModelArt, tools/model_art.cjs) are too large to ship as made: each model's mesh is
+# deflated (`z`: EmberModelFigures inflates it with DecompressionStream) and its texture re-encoded as WebP of at most
+# TEX_MAX px (with Pillow when it is installed; without it the texture stays as made and the build may exceed the limit).
+TEX_MAX = 1024
+TEX_QUALITY = 75
+MODEL_LINE = re.compile(r"^(  )(\w+): (\{.*\})(,?)$", re.M)
+
+
+def shrink_texture(uri):
+    try:
+        from PIL import Image
+    except ImportError:
+        return uri
+    img = Image.open(io.BytesIO(base64.b64decode(uri.split(",", 1)[1]))).convert("RGB")
+    k = min(1, TEX_MAX / max(img.size))
+    if k < 1:
+        img = img.resize((round(img.width * k), round(img.height * k)), Image.LANCZOS)
+    out = io.BytesIO()
+    img.save(out, "WEBP", quality=TEX_QUALITY, method=6)
+    return "data:image/webp;base64," + base64.b64encode(out.getvalue()).decode()
+
+
+def shrink_models(text):
+    def one(m):
+        entry = json.loads(m[3])
+        if "bin" not in entry or entry.get("z"):
+            return m[0]
+        deflate = zlib.compressobj(9, zlib.DEFLATED, -15)
+        entry["bin"] = base64.b64encode(deflate.compress(base64.b64decode(entry["bin"])) + deflate.flush()).decode()
+        entry["z"] = 1
+        if entry.get("tex", "").startswith("data:image/"):
+            entry["tex"] = shrink_texture(entry["tex"])
+        return f"{m[1]}{m[2]}: {json.dumps(entry, separators=(',', ':'))}{m[4]}"
+    return MODEL_LINE.sub(one, text)
 
 
 def main(out):
@@ -54,6 +92,7 @@ def main(out):
         target.write_text(text)
         files[rel] = target.stat().st_size
 
+
     # Live artwork: one JSON pack per illustration, the registry points into them.
     maps_src = (SRC / registry["LIVE_ART_MAPS"]).read_text()
     maps = json.loads(re.search(r"Object\.freeze\((\{.*?\})\);", maps_src, re.S)[1])
@@ -66,6 +105,7 @@ def main(out):
         sources[token] = (
             "const EmberLiveArtMaps = Object.freeze(" + json.dumps(packed) + ");\n"
             if token == "LIVE_ART_MAPS"
+            else shrink_models((SRC / rel).read_text()) if token.startswith("VOXEL_MODEL_ART")
             else embed((SRC / rel).read_text())
         )
 

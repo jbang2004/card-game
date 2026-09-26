@@ -94,6 +94,44 @@ const EmberGallerySfx = (() => {
     const n = src(t, 0.12, 1.6), hp = filt("highpass", 2600), g2 = perc(t, 0.001, 0.03, 0.2); n.connect(hp).connect(g2); send(g2, buses.under);
   }
 
+  function charge(t, len) {                                 // light gathering: partials gliding up under a swelling air
+    for (const [f, a] of [[520, 0.05], [780, 0.04], [1040, 0.03], [1560, 0.02]]) {
+      const o = osc("sine", t, len, f), g = ctx.createGain(); o.frequency.exponentialRampToValueAtTime(f * 1.9, t + len);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(a, t + len * 0.85); g.gain.linearRampToValueAtTime(0, t + len);
+      o.connect(g); send(g, buses.under, 0.35);
+    }
+    const n = src(t, len, 1.2), hp = filt("bandpass", 2400, 0.9), g = ctx.createGain();
+    hp.frequency.setValueAtTime(1200, t); hp.frequency.exponentialRampToValueAtTime(6000, t + len);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.12, t + len * 0.9); g.gain.linearRampToValueAtTime(0, t + len);
+    n.connect(hp).connect(g); send(g, buses.under, 0.3);
+  }
+  function holy(t, heavy) {                                 // the blow's light: a bright bell chord ringing out, a low swell
+    for (const [f, a] of [[784, 0.07], [988, 0.05], [1175, 0.05], [1568, 0.04], [2350, 0.025], [3136, 0.015]]) {
+      const o = osc("sine", t, 2.2, f * r(0.997, 1.003)), g = perc(t, 0.004, heavy ? 0.7 : 0.5, a * (heavy ? 1.3 : 1)); o.connect(g); send(g, buses.sfx, 0.6);
+    }
+    const o = osc("sine", t, 1.2, 98), g = perc(t, 0.03, 0.35, heavy ? 0.3 : 0.2); o.frequency.exponentialRampToValueAtTime(65, t + 0.8); o.connect(g); send(g, buses.sfx, 0.3);
+  }
+  // a signature's blow, by its element (its palette): what rings, roars, cracks or wails over the impact
+  function elem(t, kind, heavy) {
+    const K = heavy ? 1.3 : 1;
+    const bell = (fs, tau, a, rev = 0.6) => { for (const [f, g] of fs) { const o = osc("sine", t, tau * 4, f * r(0.997, 1.003)), e = perc(t, 0.004, tau, g * a * K); o.connect(e); send(e, buses.sfx, rev); } };
+    const noiseHit = (f0, f1, len, a, q = 0.8, rev = 0.25) => { const n = src(t, len), bp = filt("bandpass", f0, q), e = ctx.createGain(); bp.frequency.setValueAtTime(f0, t); bp.frequency.exponentialRampToValueAtTime(f1, t + len); e.gain.setValueAtTime(0, t); e.gain.linearRampToValueAtTime(a * K, t + 0.01); e.gain.exponentialRampToValueAtTime(0.001, t + len); n.connect(bp).connect(e); send(e, buses.sfx, rev); };
+    const sub = (f0, f1, len, a) => { const o = osc("sine", t, len, f0), e = perc(t, 0.01, len * 0.35, a * K); o.frequency.exponentialRampToValueAtTime(f1, t + len); o.connect(e); send(e, buses.sfx, 0.2); };
+    if (kind === "holy" || kind === "dawn") return holy(t, heavy);
+    if (kind === "sun" || kind === "fire") { noiseHit(300, 1800, 0.7, 0.5, 0.6, 0.35); sub(110, 45, 0.8, 0.4); for (let i = 0; i < 12; i++) { const tt = t + r(0.02, 0.5), n = src(tt, 0.02), bp = filt("bandpass", r(2000, 5000), 4), g = perc(tt, 0.0005, 0.004, r(0.05, 0.15)); n.connect(bp).connect(g); send(g, buses.sfx, 0.2); } return; }
+    if (kind === "frost") { bell([[2093, 0.05], [2637, 0.04], [3136, 0.035], [4186, 0.02]], 0.35, 1, 0.5); noiseHit(5000, 2500, 0.25, 0.35, 2, 0.3); for (let i = 0; i < 8; i++) { const tt = t + r(0.05, 0.4), o = osc("triangle", tt, 0.1, r(2500, 5000)), g = perc(tt, 0.001, 0.015, r(0.03, 0.07)); o.connect(g); send(g, buses.sfx, 0.4); } return; }
+    if (kind === "moon" || kind === "void") { sub(90, 30, 1.0, 0.55); const n = src(t - 0.2 > 0 ? t : t, 0.5, 0.6), lp = filt("lowpass", 500), e = ctx.createGain(); e.gain.setValueAtTime(0.001, t); e.gain.exponentialRampToValueAtTime(0.35 * K, t + 0.12); e.gain.exponentialRampToValueAtTime(0.001, t + 0.6); n.connect(lp).connect(e); send(e, buses.sfx, 0.6); bell([[233, 0.05], [277, 0.04], [349, 0.03]], 0.6, 1, 0.7); return; }
+    if (kind === "star" || kind === "astral") { bell([[1319, 0.05], [1760, 0.045], [2217, 0.04], [2637, 0.03], [3520, 0.02]], 0.45, 1, 0.65); for (let i = 0; i < 10; i++) { const tt = t + r(0, 0.6), o = osc("sine", tt, 0.15, r(2500, 6000)), g = perc(tt, 0.001, 0.03, r(0.02, 0.05)); o.connect(g); send(g, buses.sfx, 0.6); } return; }
+    if (kind === "wild" || kind === "verdant") { noiseHit(1200, 400, 0.12, 0.45, 1.5, 0.15); sub(160, 70, 0.35, 0.35); noiseHit(3000, 6000, 0.9, 0.12, 0.7, 0.4); return; }
+    if (kind === "earth") { sub(70, 28, 1.4, 0.8); noiseHit(200, 80, 1.1, 0.55, 0.5, 0.3); for (let i = 0; i < 16; i++) { const tt = t + r(0.05, 0.9), n = src(tt, 0.03), bp = filt("bandpass", r(600, 1800), 3), g = perc(tt, 0.001, 0.012, r(0.08, 0.2)); n.connect(bp).connect(g); send(g, buses.sfx, 0.2); } return; }
+    if (kind === "necro") { for (const f of [330, 349, 415]) { const o = osc("sawtooth", t, 1.0, f), lp = filt("lowpass", 900), e = perc(t, 0.08, 0.35, 0.05 * K); o.frequency.exponentialRampToValueAtTime(f * 0.5, t + 1.0); o.connect(lp).connect(e); send(e, buses.sfx, 0.7); } noiseHit(800, 200, 0.8, 0.2, 0.7, 0.5); return; }
+    holy(t, heavy);
+  }
+  function block(t) {                                       // a shield takes it: a metal clang
+    for (const [f, a] of [[610, 0.18], [1370, 0.12], [2260, 0.08], [3480, 0.05]]) { const o = osc("triangle", t, 0.6, f), g = perc(t, 0.001, 0.09, a); o.connect(g); send(g, buses.sfx, 0.25); }
+    const n = src(t, 0.03, 1.4), hp = filt("highpass", 2200), g = perc(t, 0.0008, 0.006, 0.4); n.connect(hp).connect(g); send(g, buses.sfx, 0.15);
+  }
+
   return {
     get on() { return on; },
     enable(v = true) {
@@ -102,7 +140,8 @@ const EmberGallerySfx = (() => {
       if (ctx && v && ctx.state === "suspended") ctx.resume();
       return on;
     },
-    /** kind: swing | swingHeavy | hit | hitHeavy | shatter | assemble | zap | breath | twang; delay in seconds */
+    /** kind: swing | swingHeavy | hit | hitHeavy | shatter | assemble | zap | breath | twang | charge | holy |
+     *  holyHeavy | block | elem ({ kind: a signature's palette, heavy }); delay in seconds */
     play(kind, delay = 0, opts = {}) {
       if (!on || !ctx) return;
       const t = ctx.currentTime + Math.max(0, delay) + 0.01;
@@ -115,6 +154,11 @@ const EmberGallerySfx = (() => {
       else if (kind === "zap") zap(t, false);
       else if (kind === "breath") zap(t, true);
       else if (kind === "twang") twang(t);
+      else if (kind === "charge") charge(t, opts.len || 0.5);
+      else if (kind === "holy") holy(t, false);
+      else if (kind === "holyHeavy") holy(t, true);
+      else if (kind === "block") block(t);
+      else if (kind === "elem") elem(t, opts.kind, !!opts.heavy);
     },
   };
 })();

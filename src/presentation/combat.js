@@ -641,11 +641,12 @@ const EmberCombat = (() => {
                 T.attack.rangedMax,
               )
             : 0;
-          // a shooting figure draws before the shot leaves (bow, staff, breath)
-          const windup = figure && ranged ? Math.max(0, figure.windup || 0) : 0;
+          // a shooting figure draws before the shot leaves (bow, staff, breath); a melee figure with a signature
+          // attack coils before it springs (its anticipation: the lift grows by its windup)
+          const windup = figure ? Math.max(0, figure.windup || 0) : 0;
           let lead = ranged
             ? T.attack.rangedRecoil + windup + flight
-            : T.attack.lift + T.attack.lunge;
+            : T.attack.lift + windup + T.attack.lunge;
           if (group.cutin) lead = Math.max(lead, T.cutin.lead);
           const stop = stopMs(tier),
             recover = ranged ? 0 : T.attack.recover;
@@ -670,6 +671,7 @@ const EmberCombat = (() => {
             recoilPx: T.tiers[outgoingTier].recoilPx,
             tier,
             figure: !!figure,
+            figureShots: !!figure?.shots,         // the figure flies its own projectile (a signature caster)
           };
           group.markers = {
             start: at,

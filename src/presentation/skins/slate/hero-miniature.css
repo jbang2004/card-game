@@ -39,6 +39,16 @@ html[data-skin="slate"] #miniature-stage {
 html[data-skin="slate"] #miniature-stage[hidden] {
   display: none;
 }
+/* A god's blow dims the board round it (EmberSkillFx via the stage): a vignette over the board and its tokens, under
+ * the figures and their effects, which stay bright. */
+html[data-skin="slate"] #miniature-dim {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(ellipse at 50% 50%, rgb(6 4 10 / 0.45) 0%, rgb(6 4 10 / 0.72) 60%, rgb(3 2 6 / 0.9) 100%);
+}
 /* A unit with a figure is its figure: the card (art, frame, plate, drop shadow,
  * state rings) is gone — the stage draws the pedestal and its state rim. The
  * token stays as the click, drag and focus target and keeps its stats, which
@@ -62,22 +72,401 @@ html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending
 html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending):not(:focus-visible):hover {
   outline: none !important;
 }
-html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) > .stat {
-  bottom: 2%;
-  width: 36%;                  /* room for two digits and the glyph */
-  height: 20cqw;
-  padding: 0;
-  gap: 2.5cqw;
+/* The unit plate (after 万象棋's unit bars): one pill — attack | health — in
+ * front of the figure's halo, a thin health bar under it in the side's colour
+ * (ours green, theirs red) filled to its health left, and its keywords as
+ * small round chips above it. The plate and bar exist only on a figure's token
+ * (ui.js renders them with the figure's class). */
+html[data-skin="slate"] #minions .minion :is(.unit-plate, .unit-hpbar, .kw-ward) {
+  display: none;
+}
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) {
+  --plate-bottom: calc(2% + 6px);
+  --plate-h: max(19cqw, 17px);   /* (a numeral's glyph box, 16px at the smallest type, stays inside it) */
+  --bar: #52c85e;
+  --bar-hi: #b4f7a4;
+}
+html[data-skin="slate"] #minions .minion.enemy:is(.miniature-ready, .miniature-pending) {
+  --bar: #d9412f;
+  --bar-hi: #ff9d86;
+}
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) > .unit-plate {
+  display: block;
+  position: absolute;
+  z-index: 1;
+  left: 12%;
+  right: 12%;
+  bottom: var(--plate-bottom);
+  height: var(--plate-h);
   border-radius: 999px;
-  background: linear-gradient(180deg, #1d1a15f0, #0b0907f0);
+  background: linear-gradient(180deg, #1d1a15f2, #0b0907f2);
   box-shadow:
     0 0 0 1.5px var(--tok-line, #8a7446),
     0 3px 8px #000000b3;
+  pointer-events: none;
+}
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) > .unit-plate::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 24%;
+  bottom: 24%;
+  width: 1px;
+  background: #ffffff2e;
+}
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) > .unit-hpbar {
+  display: block;
+  position: absolute;
+  z-index: 1;
+  left: 20%;
+  right: 20%;
+  bottom: 2%;
+  height: 4px;
+  border-radius: 2px;
+  background: #0b0907e6;
+  box-shadow: 0 0 0 1px #000000b3;
+  overflow: hidden;
+  pointer-events: none;
+}
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) > .unit-hpbar::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--hp, 1) * 100%);
+  border-radius: inherit;
+  background: linear-gradient(180deg, var(--bar-hi), var(--bar) 60%);
+  box-shadow: 0 0 6px var(--bar);
+}
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) > .stat {
+  z-index: 2;
+  bottom: var(--plate-bottom);
+  width: 38%;                  /* room for two digits and the glyph */
+  height: var(--plate-h);
+  padding: 0;
+  gap: 2cqw;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
   font-size: clamp(11px, 13cqw, 22px);
 }
 html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) > .stat.atk {
-  left: 6%;
+  left: 12%;
 }
 html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) > .stat.hp {
-  right: 6%;
+  right: 12%;
+}
+html[data-skin="slate"] #minions .minion.enemy:is(.miniature-ready, .miniature-pending) > .stat.hp .stat-value {
+  color: #ffd9d2;
+}
+/* the keyword chips: a row above the plate (the status box stops being the
+ * chips' frame, so they place against the token; the sleep Zs keep theirs) */
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) .minion-status {
+  position: static;
+}
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) .minion-sleep {
+  top: -18cqw;
+  right: 4cqw;
+}
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) .minion-status > :is(.special, .kw) {
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--plate-bottom) + var(--plate-h) + 3px);
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+  pointer-events: none;
+}
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) .minion-status .kw {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: clamp(14px, 14cqw, 20px);
+  height: clamp(14px, 14cqw, 20px);
+  margin: 0 auto;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #2a241c, #0b0907);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--kw, #e6f3ff) 70%, transparent),
+    0 2px 5px #000000b3;
+  color: var(--kw, #e6f3ff);
+  font-size: clamp(8px, 8.5cqw, 12px);
+  font-style: normal;
+  line-height: 1;
+  text-shadow: 0 0 4px color-mix(in srgb, var(--kw, #e6f3ff) 60%, transparent);
+}
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) .minion-status .special .kw {
+  margin: 0;
+}
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) .minion-status .kw svg {
+  width: 64%;
+  height: 64%;
+}
+html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending) .minion-status .kw-ward {
+  display: grid;
+}
+html[data-skin="slate"] #minions .minion .kw[data-kw="taunt"] { --kw: #e8eef6; }
+html[data-skin="slate"] #minions .minion .kw[data-kw="shield"] { --kw: #ffd66e; }
+html[data-skin="slate"] #minions .minion .kw[data-kw="poison"] { --kw: #86e05a; }
+html[data-skin="slate"] #minions .minion .kw[data-kw="lifesteal"] { --kw: #ff7a86; }
+html[data-skin="slate"] #minions .minion .kw[data-kw="reborn"] { --kw: #ffd479; }
+html[data-skin="slate"] #minions .minion .kw[data-kw="windfury"] { --kw: #8fe3ff; }
+html[data-skin="slate"] #minions .minion .kw[data-kw="spellpower"] { --kw: #cfa6ff; }
+html[data-skin="slate"] #minions .minion .kw[data-kw="frozen"] { --kw: #a5e8ff; }
+
+/* ---------------------------------------------------------------------------
+ * Heroes on their daises (desktop). EmberMiniatures stands each hero as the
+ * figure of its portrait's card on the dais the battlefield scene raises
+ * outside the court (EmberArena3D seats): the player's in the bottom-left
+ * corner, the enemy's in the top-right. While the stage has the heroes
+ * (`body.hero-daises`) a hero plate is a station: a transparent box round the
+ * figure (it keeps clicks, targeting and focus; the scene reads its figure
+ * box, `.hero-card-inner`, to place the dais at its foot) and a nameplate in
+ * front of the dais — name, then health (attack when armed, armour). The
+ * portrait goes at once (`.hero-station`: the figure assembles on the
+ * dais); a hero with no figure keeps its card. Readiness, targeting and frost show on the ring the
+ * stage draws round the figure's feet.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero.player.hero-station {
+  left: 16px;
+  top: 560px;
+  width: 190px;
+  height: 340px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero.enemy.hero-station {
+  left: 1396px;
+  top: 58px;
+  width: 190px;
+  height: 300px;
+}
+html[data-skin="slate"] body.hero-daises:not(.touch-layout) #app.battle-view .player-deck {
+  left: 56px;
+  top: 904px;
+}
+html[data-skin="slate"] body.hero-daises:not(.touch-layout) #app.battle-view .enemy-deck {
+  left: 1436px;
+  top: 366px;
+}
+html[data-skin="slate"]
+  body.hero-daises:not(.touch-layout)
+  #battle
+  :is(.hero.enemy, .hero.player).hero-station {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero.hero-station:not(:focus-visible) {
+  outline: none;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero.hero-station::before,
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero.hero-station .hero-card-plaque,
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero.hero-station .hero-card-inner::after {
+  display: none;
+}
+/* the figure's box: the dais stands at its foot */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  :is(.hero.enemy, .hero.player).hero-station
+  .hero-card-inner {
+  inset: 0 0 76px 0;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero.enemy.hero-station .hero-card-inner {
+  bottom: 66px;
+}
+html[data-skin="slate"]
+  body.hero-daises:not(.touch-layout)
+  #battle
+  .hero.hero-station
+  .hero-card-inner {
+  background: none;
+  box-shadow: none !important;
+  border-radius: 0;
+  overflow: visible;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero.hero-station .portrait-frame {
+  visibility: hidden;
+}
+/* the nameplate: the name engraved on a glass plaque, the stats in a row below */
+html[data-skin="slate"]
+  body.hero-daises:not(.touch-layout)
+  #battle
+  .hero.hero-station
+  .hero-name {
+  inset: auto 0 -40px;
+  margin: 0 auto;
+  width: max-content;
+  min-width: 96px;
+  height: 26px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 1.5px solid var(--seat-line, #8a7446);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #16120ee8, #0a0806f0);
+  box-shadow: 0 6px 14px #000c;
+  font-size: 13px;
+  letter-spacing: 3px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero.hero-station .hero-chips {
+  position: absolute;
+  inset: auto 0 0;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero.hero-station .hero-stat {
+  position: static;
+  width: auto;
+  min-width: 58px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #1d1a15f0, #0b0907f0);
+  box-shadow:
+    0 0 0 1.5px var(--seat-line, #8a7446),
+    0 4px 10px #000b;
+  font-size: 18px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero.hero-station .hero-attack.is-zero {
+  display: none;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero.hero-station .hero-armor {
+  border: 0;
+  font-size: 15px;
+}
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero.hero-station .hero-health.damaged {
+  color: #ff9aa4;
+}
+/* targeted: the plaque takes the aim's gold (the ring round the feet does too) */
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero.hero-station.valid-target .hero-stat {
+  box-shadow:
+    0 0 0 2px #e0b455,
+    0 0 16px #f0cf8299;
+}
+/* the enemy's chips (covenant, phase) sit above its nameplate, clear of the figure's head */
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero.enemy.hero-station :is(.hero-covenant, .hero-phase) {
+  top: auto;
+  bottom: 70px;
+  right: -6px;
+  left: auto;
+}
+/* the weapon: beside the figure, between the hero power above and the hand below */
+html[data-skin="slate"] body:not(.touch-layout) #battle .hero.player.hero-station .weapon-slot {
+  top: auto;
+  bottom: 160px;
+}
+/* the divine contract moves up the player's column, above the hero (the hero's weapon would reach its old place); the
+ * hero power stays at the hero's shoulder */
+html[data-skin="slate"] body.hero-daises:not(.touch-layout) #battle #contract-open {
+  left: 50px;
+  top: 356px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Heroes on their daises — touch layouts (phones, tablets, compact windows).
+ * The console strips stay as they are (chips, skill, mana, end turn); the
+ * hero's card slot in its console becomes the figure's slot: the portrait and
+ * its frame go, the dais stands at the slot's foot and the figure on it, a
+ * head taller than the card was; the name stays as a plaque at the dais's
+ * front. The layout (mobile-view.js) lifts the contract card above the
+ * player's slot clear of the figure's head and drops the enemy's console
+ * below the top bar's reach.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body.touch-layout #battle .hero.hero-station .hero-card-inner,
+html[data-skin="slate"] body.touch-layout #battle .hero.hero-station .hero-card-inner .portrait-frame,
+html[data-skin="slate"] body.touch-layout #battle .hero.hero-station:is(.ready, .valid-target, .selected) .hero-card-inner .portrait-frame {
+  border-color: transparent;
+  background: none;
+  box-shadow: none;
+  outline: none;               /* (a card-shaped state ring round the figure: its dais's halo shows the state) */
+  overflow: visible;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero.hero-station .hero-card-inner .portrait-frame img,
+html[data-skin="slate"] body.touch-layout #battle .hero.hero-station .hero-card-plaque {
+  visibility: hidden;
+}
+html[data-skin="slate"] body.touch-layout #battle .hero.hero-station .hero-card-inner::before,
+html[data-skin="slate"] body.touch-layout #battle .hero.hero-station .hero-card-inner::after,
+html[data-skin="slate"] body.touch-layout #battle .hero.hero-station .portrait-frame::before,
+html[data-skin="slate"] body.touch-layout #battle .hero.hero-station .portrait-frame::after {
+  display: none;
+}
+/* the name: a plaque at the dais's front; its rim carries the hero's state in the court's palette (the card frame
+ * used to): ember "can act", brass "chosen", amber "a target" */
+html[data-skin="slate"] body.touch-layout #battle .hero.hero-station .hero-card-inner .hero-name {
+  box-sizing: border-box;
+  border: 1.5px solid var(--seat-line, #8a7446);
+  border-radius: 999px;
+  box-shadow: 0 3px 8px #000c;
+}
+html[data-skin="slate"] body #battle .hero.hero-station.ready .hero-card-inner .hero-name {
+  border-color: #ffb35a;
+  box-shadow: 0 0 10px #ff9b3d99;
+}
+html[data-skin="slate"] body #battle .hero.hero-station.selected .hero-card-inner .hero-name {
+  border-color: var(--arena-brass-hi);
+  box-shadow: 0 0 10px #c9a45c88;
+}
+html[data-skin="slate"] body #battle .hero.hero-station.valid-target .hero-card-inner .hero-name {
+  border-color: #e0b455;
+  box-shadow: 0 0 10px #f0cf8299;
+}
+/* portrait: the enemy's chips keep to the left of its figure */
+html[data-skin="slate"] body.touch-layout.mobile-portrait #battle .hero.enemy.hero-station .hero-chips {
+  left: 6px;
+  right: calc(var(--mini-x, 8px) + var(--mini-w, 60px) + 14px);
+  justify-content: flex-end;
+}
+
+/* ---------------------------------------------------------------------------
+ * Portrait covenant: a medallion in the console row beside the hero power
+ * (mobile-view.js places it). The gold back becomes a disc with the starfire
+ * crest; a thin ring round it fills with the ritual's progress; the count of
+ * contracts is a small badge; it breathes when a contract can be woken.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body.mobile-portrait #battle .contract-open {
+  border-radius: 50%;
+}
+html[data-skin="slate"] body.mobile-portrait #battle .contract-open .contract-back {
+  border-radius: 50%;
+}
+html[data-skin="slate"] body.mobile-portrait #battle .contract-open .contract-back::after {
+  inset: 3px;
+  border-radius: 50%;
+}
+html[data-skin="slate"] body.mobile-portrait #battle .contract-open .contract-seal {
+  top: 50%;
+  width: 74%;
+}
+html[data-skin="slate"] body.mobile-portrait #battle .contract-open .contract-sigil {
+  display: none;
+}
+/* the progress ring (the card stack behind the desktop card is not drawn here) */
+html[data-skin="slate"] body.mobile-portrait #battle .contract-open::before {
+  content: "";
+  inset: -4px;
+  z-index: 0;
+  transform: none;
+  filter: none;
+  border-radius: 50%;
+  background: conic-gradient(#f6e3a1 var(--ritual-progress, 0deg), #f6e3a126 0);
+  box-shadow: none;
+  -webkit-mask: radial-gradient(circle, transparent calc(50% - 2px), #000 calc(50% - 1.5px));
+  mask: radial-gradient(circle, transparent calc(50% - 2px), #000 calc(50% - 1.5px));
+}
+html[data-skin="slate"] body.mobile-portrait #battle .contract-open .contract-back {
+  z-index: 1;
+}
+html[data-skin="slate"] body.mobile-portrait #battle .contract-open:not([data-count="1"])::after {
+  right: -5px;
+  top: -5px;
+  width: 16px;
+  height: 16px;
+  font-size: 9px;
 }

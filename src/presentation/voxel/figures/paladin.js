@@ -256,6 +256,6 @@ EmberVoxelKit.define("paladin", (() => {
   return {
     cards: ["paladin"], kind: "humanoid", build, pose, scale: 1.1,
     face: { kind: "human", look: { eye: 0xb08a3e, brow: "#b08848", lash: "#3a2412", lip: "#c07a70", skinD: "#dcae98" } },
-    moves: { attack: { clip: "cleave", hit: HIT, length: LEN, style: "slash", trail: { prop: "spear", from: [0, B0 + 0.12, 0], to: [0, B0 + BL, 0] } } },
+    moves: { attack: { clip: "cleave", hit: HIT, length: LEN, style: "slash", smite: true, trail: { prop: "spear", from: [0, B0 + 0.12, 0], to: [0, B0 + BL, 0] } } },
   };
 })());

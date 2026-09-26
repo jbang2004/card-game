@@ -4024,7 +4024,7 @@ const EmberFx2Engine = (() => {
     const h = b.h > 0 ? b.h : DEFAULT_BOX.h;
     const x = Number.isFinite(b.x) ? b.x : Number.isFinite(b.left) ? b.left + w / 2 : 0;
     const y = Number.isFinite(b.y) ? b.y : Number.isFinite(b.top) ? b.top + h / 2 : 0;
-    return { x, y, w, h };
+    return { x, y, w, h, edge: b.edge !== false };
   }
 
   function targetsOf(o, fallback) {
@@ -4735,7 +4735,7 @@ const EmberFx2Engine = (() => {
       }
       if (tt.hitStopMs > 0) sim.freeze = Math.max(sim.freeze, tt.hitStopMs);
       const amt = Math.min(EDGE_AMT[tier], T.flashMaxLuma - 1);
-      for (const b of boxes) edges.push({ box: b, age: 0, dur: EDGE_MS, amt });
+      for (const b of boxes) if (b.edge) edges.push({ box: b, age: 0, dur: EDGE_MS, amt });   // (a figure on its dais has no card edge to flash)
       if (tier === 3 && opt.cinematic && boxes.length) {
         pushes.push({ age: 0, dur: PUSH_MS, focus: { x: boxes[0].x, y: boxes[0].y } });
       }

@@ -223,6 +223,7 @@ EmberVoxelKit.define("leech", (() => {
   return {
     cards: ["leech"], kind: "humanoid", build, pose, scale: 1.0,
     face: { kind: "human", look: { eye: 0xc0202e, brow: "#1c1a22", lash: "#0e0c12", lip: "#9a6a70", skinD: "#cdb4ae" } },
-    moves: { attack: { clip: "rake", hit: HIT, length: LEN, style: "slash", trail: { bone: "handR", from: mul(AR.dir, 0.06 * PF.hand), to: add(mul(AR.dir, 0.07 * PF.hand + TALON), [0, 0, 0]) } } },
+    // the realistic model casts a blood bolt from the orb in its left hand (EmberModelFigures); this sculpt rakes in place
+    moves: { attack: { clip: "rake", hit: HIT, length: LEN, style: "bolt", ranged: true, windup: 280, tint: 0xd0203a, emitter: { bone: "handL", offset: [0, 0, 0] } } },
   };
 })());

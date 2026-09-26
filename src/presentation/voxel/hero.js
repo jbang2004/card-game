@@ -6,6 +6,8 @@
  * ones registered as card "hero:<heroId>" (EmberVoxelKit). Cues come from the effect layer:
  * hero power / hero attack → attack, damage → hurt (with the victim glow); victory from the
  * rendered state. */
+/* On the desktop layout both heroes stand as figures on their daises (EmberMiniatures): this module then stands down
+ * and passes its cues on (power → the hero's cast, victory; damage reaches the dais figure through the stage). */
 const EmberHeroFigure = (() => {
   const THREE = EmberVesperThree, R = EmberVoxelRender, C = EmberVoxelClips, KIT = EmberVoxelKit;
   // the figure fills the window's height up to HEAD (its floor is FLOOR above the window's bottom)
@@ -19,8 +21,10 @@ const EmberHeroFigure = (() => {
   const plate = () => document.getElementById("player-hero");
   const specFor = (s) => (s?.heroId ? KIT.forCard("hero:" + s.heroId) : null);
 
+  const desk = () => typeof EmberMiniatures !== "undefined" && !!EmberMiniatures.heroDesk?.();
+  let won = null;
   function wanted(s) {
-    return !failed && !!specFor(s) && !(typeof EmberViewport !== "undefined" && EmberViewport.mobile && !matchMedia("(hover: hover) and (pointer: fine)").matches) && !reduced();
+    return !desk() && !failed && !!specFor(s) && !(typeof EmberViewport !== "undefined" && EmberViewport.mobile && !matchMedia("(hover: hover) and (pointer: fine)").matches) && !reduced();
   }
   // the seat: the portrait window's box in the plate's offset parent (layout px, so the desktop scale applies to both)
   function place() {
@@ -104,7 +108,7 @@ const EmberHeroFigure = (() => {
     if (!renderer || !fig || stats.status !== "ready" || host.hidden || document.hidden) return;
     const dt = Math.min(0.05, (now - (last || now)) / 1000); last = now; T += dt; t += dt;
     place();
-    const w = host.clientWidth, h = host.clientHeight, px = EmberPixelPass.PIX;
+    const w = host.clientWidth, h = host.clientHeight, px = EmberPixelPass.ratio(Math.min(devicePixelRatio || 1, 2));
     if (w && h && (canvas.width !== Math.round(w * px) || canvas.height !== Math.round(h * px))) {
       renderer.setPixelRatio(px); renderer.setSize(w, h, false);
       camera.aspect = w / h;
@@ -122,11 +126,19 @@ const EmberHeroFigure = (() => {
       if (glow === 0) R.setHit(fig, ...HOT); else R.setHit(fig, GOLD[0] * u * u, GOLD[1] * u * u, GOLD[2] * u * u);
       glow += dt * 60; if (glow > 12) { glow = -1; R.setHit(fig, 0, 0, 0); }
     }
-    pass.render(scene, camera);
+    if (EmberPixelPass.settings.on) pass.render(scene, camera); else renderer.render(scene, camera);
     wake();
   }
   function wake() { if (!raf && renderer && fig) raf = requestAnimationFrame(frame); }
   function sync(s) {
+    if (desk()) {                                      // the stage has the heroes: only victories pass through
+      if (host) host.hidden = true;
+      plate()?.classList.remove("hero-miniature-ready");
+      // (the winner cheers once the blow that won has landed)
+      if (s.winner && won !== s.winner) { won = s.winner; const side = s.winner, cheer = () => (typeof EmberFX !== "undefined" && EmberFX.busy ? setTimeout(cheer, 120) : won === side && cue("victory", 0, side)); cheer(); }
+      else if (!s.winner) won = null;
+      return;
+    }
     const spec = specFor(s);
     if (!wanted(s)) {
       if (host) host.hidden = true;
@@ -141,9 +153,16 @@ const EmberHeroFigure = (() => {
     else if (!s.winner) cheered = false;
     wake();
   }
-  function active(side) { return side === "p" && !!fig && stats.status === "ready" && !!host && !host.hidden; }
-  /** kind: 'shot' | 'volley' | 'hurt' | 'victory' */
-  function cue(kind) {
+  function active(side) { return desk() ? EmberMiniatures.hero(side) : side === "p" && !!fig && stats.status === "ready" && !!host && !host.hidden; }
+  /** kind: 'shot' | 'volley' | 'hurt' | 'victory' (side: whose hero; the plate's figure is the player's) */
+  function cue(kind, delay = 0, side = "p") {
+    if (desk()) {
+      stats.cues.push({ kind, side, at: Math.round(performance.now()) });
+      if (stats.cues.length > 20) stats.cues.shift();
+      if (kind === "victory") EmberMiniatures.cue(side, "hero", "victory");
+      else if (kind !== "hurt") EmberMiniatures.cue(side, "hero", "cast");        // (a hurt reaches it through the stage's contact)
+      return;
+    }
     if (!fig || host?.hidden) return;
     stats.cues.push({ kind, at: Math.round(performance.now()) });
     if (stats.cues.length > 20) stats.cues.shift();
@@ -154,5 +173,5 @@ const EmberHeroFigure = (() => {
   }
   document.addEventListener("visibilitychange", () => { if (!document.hidden) wake(); });
   window.addEventListener("resize", place, { passive: true });
-  return Object.freeze({ sync, cue, active, get figure() { return fig; }, diagnostics: () => ({ ...stats, cues: stats.cues.slice() }) });
+  return Object.freeze({ sync, cue, active, get figure() { return fig; }, diagnostics: () => ({ ...stats, status: desk() ? (EmberMiniatures.hero("p") ? "ready" : "warming") : stats.status, dais: desk(), cues: stats.cues.slice() }) });
 })();

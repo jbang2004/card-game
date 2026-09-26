@@ -150,6 +150,15 @@
       .forEach((el) => (el.innerHTML = A.icon(el.dataset.icon)));
   }
   let actionGuide = { text: "", mode: null };
+  // a unit that stands as a figure is born with its miniature class: a render replaces the tokens, and a style
+  // computed before the stage claims them would fade the card's drop shadow out round the figure on every render
+  // the chips of a figure's wards (currentColor; the plate colours them)
+  const WARD_ICON = {
+    taunt: '<svg viewBox="0 0 100 100" focusable="false"><path d="M50 8 L86 24 V56 Q86 64 80 69 L50 92 L20 69 Q14 64 14 56 V24 Z" fill="currentColor"/><path d="M50 22 V78 M32 40 H68" stroke="#0d0b09" stroke-width="7" stroke-linecap="round"/></svg>',
+    shield: '<svg viewBox="0 0 100 100" focusable="false"><circle cx="50" cy="50" r="38" fill="none" stroke="currentColor" stroke-width="11"/><path d="M33 40 Q40 27 55 26" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" opacity=".75"/></svg>',
+  };
+  const figureToken = (c, geo) =>
+    geo.w >= 30 && typeof EmberMiniatures !== "undefined" && !!EmberMiniatures.stands?.(c.id);
   function clearFeedbackMarks() {
     document
       .querySelectorAll(
@@ -222,6 +231,7 @@
   }
   function clearActionCue() {
     hideLandingSlot();
+    groundAim(null);
     const svg = $("target-lines");
     if (!svg) return;
     svg.style.display = "none";
@@ -1105,16 +1115,19 @@
               )
               .map(
                 (t) =>
-                  ({
+                  `<span class="kw" data-kw="${t}">${({
                     poison: "◆",
                     lifesteal: "♥",
                     reborn: "↻",
                     windfury: "»",
                     spellpower: "✦",
-                  })[t],
+                  })[t]}</span>`,
               )
               .join("");
-            return `<button class="minion ${side === "e" ? "enemy" : "friendly"} ${m.tags.join(" ")} ${ready ? "ready" : ""} ${m.frozen ? "frozen" : ""} ${c.rarity}" style="left:${x}px;top:${y}px;width:${geo.w}px;height:${geo.h}px;--unit-w:${geo.w}px" data-compact="${geo.w < 50}" data-stacked="${!!geo.stacked}" data-side="${side}" data-uid="${m.uid}" data-cardid="${c.id}" data-class="${c.class}" aria-label="${c.name}，攻击 ${m.atk}，生命 ${m.hp}，${m.tags.map((t) => D.kw[t]).join("、")}${m.frozen ? "，被冻结" : sleeping ? "，召唤疲劳，休息中" : ""}"><div class="minion-art"><img src="${A.card(c)}" alt="" draggable="false" data-art-key="${artKeyForCard(c)}" style="${artStyleForCard(c, "minion")}"></div><span class="unit-aura" aria-hidden="true"></span><div class="minion-band"><span>${bandLabel(c)}</span></div><span class="stat atk">${A.statGem("blade")}<span class="stat-value">${m.atk}</span></span><span class="stat hp ${m.hp < m.maxHp ? "hurt" : ""}">${A.statGem("heart")}<span class="stat-value">${Math.max(0, m.hp)}</span></span><span class="minion-status">${m.frozen ? "❄" : specials ? '<span class="special">' + specials + "</span>" : ""}${sleeping ? '<span class="minion-sleep" aria-hidden="true"><span class="sleep-z">Z</span><span class="sleep-z">Z</span><span class="sleep-z">Z</span></span>' : ""}</span>${ready ? '<span class="ready-dot"></span>' : ""}</button>`;
+            // a figure's plate: its taunt and divine shield as chips too (a card token shows them in its frame)
+            const fig = figureToken(c, geo),
+              wards = fig ? ["taunt", "shield"].filter((t) => m.tags.includes(t)).map((t) => `<span class="kw kw-ward" data-kw="${t}" aria-hidden="true">${WARD_ICON[t]}</span>`).join("") : "";
+            return `<button class="minion ${side === "e" ? "enemy" : "friendly"} ${m.tags.join(" ")} ${ready ? "ready" : ""} ${m.frozen ? "frozen" : ""} ${c.rarity}${fig ? " miniature-pending" : ""}" style="left:${x}px;top:${y}px;width:${geo.w}px;height:${geo.h}px;--unit-w:${geo.w}px;--hp:${Math.max(0, Math.min(1, m.hp / Math.max(1, m.maxHp))).toFixed(3)}" data-compact="${geo.w < 50}" data-stacked="${!!geo.stacked}" data-side="${side}" data-uid="${m.uid}" data-cardid="${c.id}" data-class="${c.class}" aria-label="${c.name}，攻击 ${m.atk}，生命 ${m.hp}，${m.tags.map((t) => D.kw[t]).join("、")}${m.frozen ? "，被冻结" : sleeping ? "，召唤疲劳，休息中" : ""}"><div class="minion-art"><img src="${A.card(c)}" alt="" draggable="false" data-art-key="${artKeyForCard(c)}" style="${artStyleForCard(c, "minion")}"></div><span class="unit-aura" aria-hidden="true"></span><div class="minion-band"><span>${bandLabel(c)}</span></div>${fig ? '<span class="unit-plate" aria-hidden="true"></span><span class="unit-hpbar" aria-hidden="true"></span>' : ""}<span class="stat atk">${A.statGem("blade")}<span class="stat-value">${m.atk}</span></span><span class="stat hp ${m.hp < m.maxHp ? "hurt" : ""}">${A.statGem("heart")}<span class="stat-value">${Math.max(0, m.hp)}</span></span><span class="minion-status">${m.frozen ? '<span class="kw" data-kw="frozen">❄</span>' : specials || wards ? '<span class="special">' + wards + specials + "</span>" : ""}${sleeping ? '<span class="minion-sleep" aria-hidden="true"><span class="sleep-z">Z</span><span class="sleep-z">Z</span><span class="sleep-z">Z</span></span>' : ""}</span>${ready ? '<span class="ready-dot"></span>' : ""}</button>`;
           })
           .join(""),
       )
@@ -1176,6 +1189,10 @@
       ? "SPACE · 结束回合"
       : "正在选择行动…";
     $("mana-value").textContent = s.p.mana + " / " + s.p.maxMana;
+    // the touch layouts ring the end-turn disc with the crystals (after 万象棋's gold disc): one lit arc each
+    const turnBox = document.querySelector(".turn-controls");
+    turnBox?.style.setProperty("--mana-a", Math.max(0, s.p.mana));
+    turnBox?.style.setProperty("--mana-m", Math.max(1, s.p.maxMana));
     /* On the first render of our own turn the pips light left to right, 40ms
      * apart, so the refreshed resource is noticed without a banner (§13.3). */
     $("mana-gems").innerHTML = Array.from(
@@ -1678,31 +1695,61 @@
     const mobile = EmberViewport.mobile;
     const bottom =
       EmberViewport.height - (mobile ? EmberViewport.safe.bottom : 0) - 12;
-    const height = Math.min(
+    let height = Math.min(
       354,
       bottom - (mobile ? EmberViewport.layout.header : 80) - 12,
     );
-    const width = Math.min(240, height / 1.35);
+    let width = Math.min(240, height / 1.35);
+    /* On a phone the card rises out of the hand a little larger than it sits
+     * there (×1.22), its whole face and rules in view, rather than a reading
+     * card over half the screen (it covered the hero on its dais). */
+    const maxH = height, maxW = width;
+    let ratio = 1.35;
+    if (mobile) {
+      const sw = source.offsetWidth || 112;
+      ratio = (source.offsetHeight || sw * 1.48) / sw;
+      width = Math.max(128, Math.min(200, sw * 1.22));
+      height = Math.min(height, width * ratio);
+      width = Math.min(width, height / ratio);
+    }
     const origin = centerOf(source);
     const insetL = 12 + (mobile ? EmberViewport.safe.left : 0),
       insetR = 12 + (mobile ? EmberViewport.safe.right : 0);
-    const x = Math.max(
-      insetL,
-      Math.min(EmberViewport.width - width - insetR, origin.x - width / 2),
-    );
-    Object.assign(lift.style, {
-      left: x + "px",
-      top: bottom - height + "px",
-      width: width + "px",
-      height: height + "px",
-    });
-    // Reserve rules by their actual line count, rather than hiding overflow.
+    // in portrait the first cards sit under the hero's console: the risen card steps aside, clear of the hero
+    const hero = mobile && EmberViewport.portrait && EmberViewport.layout?.player;
     const copy = lift.querySelector(".card-copy"),
-      text = lift.querySelector(".card-text");
-    const rulesHeight = Math.max(42, copy.scrollHeight);
-    const rulesTop = height - width * 0.24 - rulesHeight - 8;
+      text = lift.querySelector(".card-text"),
+      title = lift.querySelector(".card-title");
+    let rulesTop = 0;
+    for (let pass = 0; pass < 6; pass++) {
+      let x = Math.max(
+        insetL,
+        Math.min(EmberViewport.width - width - insetR, origin.x - width / 2),
+      );
+      if (hero && bottom - height < hero.y + hero.h + 24)
+        x = Math.min(EmberViewport.width - width - insetR, Math.max(x, hero.x + hero.w + 14));
+      Object.assign(lift.style, {
+        left: x + "px",
+        top: bottom - height + "px",
+        width: width + "px",
+        height: height + "px",
+      });
+      // Reserve rules by their actual line count, rather than hiding overflow.
+      const rulesHeight = Math.max(42, copy.scrollHeight);
+      rulesTop = height - width * 0.24 - rulesHeight - 8;
+      // the phone's risen card grows (in proportion) until its name clears the top and its rules all show
+      if (!mobile || rulesTop - 36 >= 32 || height >= maxH - 0.5) break;
+      height = Math.min(maxH, height * 1.12);
+      width = Math.min(maxW, height / ratio);
+    }
     text.style.top = rulesTop + "px";
-    lift.querySelector(".card-title").style.top = rulesTop - 36 + "px";
+    title.style.top = rulesTop - 36 + "px";
+    // a long name on the phone's smaller risen card steps its type down until it fits the face
+    if (mobile) {
+      title.style.fontSize = "";
+      let fs = parseFloat(getComputedStyle(title).fontSize) || 14;
+      while (fs > 9 && title.getBoundingClientRect().width > width - 8) title.style.fontSize = (fs -= 0.5) + "px";
+    }
     lift.querySelector(".card-art").style.height = rulesTop - 20 + "px";
     if (
       fresh &&
@@ -1970,12 +2017,29 @@
     }
     /* The reticle only locks on when the aim is actually resting on something
      * that can be chosen, so "big circle" reads as "release here". */
-    drawActionCue(
-      from,
-      pointer,
-      "target",
-      !!document.querySelector(".aim-focus.valid-target"),
+    const focus = document.querySelector(".aim-focus"),
+      locked = !!focus?.classList.contains("valid-target");
+    drawActionCue(from, pointer, "target", locked);
+    // a figure's attack aims on the ground (a line of light and a reticle, after 万象棋): the cue's geometry stays
+    // (tests and tools read it), its paint steps aside
+    groundAim(
+      selection.type === "attack" ? { side: "p", uid: selection.uid } : null,
+      focus?.dataset.uid ? { side: focus.dataset.side || (focus.id === "enemy-hero" ? "e" : "p"), uid: focus.dataset.uid } : null,
+      locked,
     );
+  }
+  function groundAim(from, focus = null, locked = false) {
+    const on =
+      !!from &&
+      typeof EmberMiniatures !== "undefined" &&
+      !!EmberMiniatures.aim?.(from, toClient(pointer), focus, locked);
+    if (!on && typeof EmberMiniatures !== "undefined") EmberMiniatures.aim?.(null);
+    $("target-lines")?.classList.toggle("ground-aim", on);
+  }
+  // design space (the app's EmberViewport pixels) → client pixels
+  function toClient(p) {
+    const r = app.getBoundingClientRect();
+    return { x: r.left + (p.x * r.width) / EmberViewport.width, y: r.top + (p.y * r.height) / EmberViewport.height };
   }
   function dropZone() {
     if (!EmberViewport.mobile) return { x0: 270, x1: 1330, y1: 730 };

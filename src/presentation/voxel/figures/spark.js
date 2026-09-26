@@ -314,7 +314,7 @@ EmberVoxelKit.define("spark", (() => {
   return {
     cards: ["spark"], kind: "humanoid", build, scale: 0.9,
     face: { kind: "human", look: { eye: 0xd8952f, brow: "#2e1d14", lash: "#1a0f0a", lip: "#c98a78", skinD: "#dfae94" } },
-    moves: { attack: { clip: "cast", hit: 0.45, length: 1.2, style: "bolt", ranged: true, emitter: { bone: "handR", offset: [0, 0, 0.06] } } },
+    moves: { attack: { clip: "cast", hit: 0.45, length: 1.2, style: "bolt", fire: true, ranged: true, emitter: { bone: "handR", offset: [0, 0, 0.06] } } },
     pose,
   };
 })());
