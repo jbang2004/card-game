@@ -187,6 +187,9 @@ html[data-skin="slate"] {
   --lg-title-sheet: 700 24px/32px var(--slate-font);
   --lg-headline: 600 17px/24px var(--slate-font);
   --lg-radius-sheet: 28px;
+  /* the one selection mark for a chosen tile, card or node: a 2px accent
+   * ring and a soft accent halo, drawn outside the element */
+  --lg-select-ring: 0 0 0 2px var(--slate-blue), 0 0 0 6px #0a84ff29;
   --lg-radius-group: 18px;
   --slate-material: var(--glass-fill);
   /* battlefield material (2026-09-22, skins/slate/arena.css). One key for the
@@ -527,10 +530,10 @@ html[data-skin="slate"] body #modal.folio-host .crafted-panel > .panel-actions {
   border-top: 0;
 }
 
-/* ---------- pill buttons (all dialogs) ---------- */
+/* ---------- pill buttons (all dialogs and the card stage) ---------- */
 html[data-skin="slate"]
   body
-  #modal.folio-host
+  :is(#modal.folio-host, #card-stage)
   :is(.gold-btn, .ghost-btn, .text-btn, .library-inspect) {
   display: inline-flex;
   align-items: center;
@@ -557,7 +560,7 @@ html[data-skin="slate"]
 }
 html[data-skin="slate"]
   body
-  #modal.folio-host
+  :is(#modal.folio-host, #card-stage)
   :is(.gold-btn, .ghost-btn, .text-btn, .library-inspect):active:not(
     :disabled
   ) {
@@ -577,15 +580,15 @@ html[data-skin="slate"]
 }
 html[data-skin="slate"]
   body
-  #modal.folio-host
+  :is(#modal.folio-host, #card-stage)
   :is(.gold-btn, .ghost-btn, .text-btn, .library-inspect)::before,
 html[data-skin="slate"]
   body
-  #modal.folio-host
+  :is(#modal.folio-host, #card-stage)
   :is(.gold-btn, .ghost-btn, .text-btn, .library-inspect)::after,
 html[data-skin="slate"]
   body
-  #modal.folio-host
+  :is(#modal.folio-host, #card-stage)
   :is(.gold-btn, .ghost-btn)
   > img {
   content: none;
@@ -593,20 +596,34 @@ html[data-skin="slate"]
 }
 html[data-skin="slate"]
   body
-  #modal.folio-host
+  :is(#modal.folio-host, #card-stage)
   :is(.ghost-btn, .text-btn, .library-inspect):hover {
   background: var(--lg-fill-control-hover);
 }
-html[data-skin="slate"] body #modal.folio-host .gold-btn {
+html[data-skin="slate"] body :is(#modal.folio-host, #card-stage) .gold-btn {
   background: var(--lg-prominent);
   border-color: transparent;
   box-shadow: var(--lg-prominent-rim);
   font-weight: 600;
 }
-html[data-skin="slate"] body #modal.folio-host .gold-btn:hover {
+html[data-skin="slate"] body :is(#modal.folio-host, #card-stage) .gold-btn:hover {
   background: var(--lg-prominent-hover);
 }
-html[data-skin="slate"] body #modal.folio-host .gold-btn svg {
+/* disabled: a quiet grey fill, no rim, tertiary text; components.css also
+ * dims its old disabled button with filter and opacity, both reset */
+html[data-skin="slate"]
+  body
+  :is(#modal.folio-host, #card-stage)
+  :is(.gold-btn, .ghost-btn, .text-btn, .library-inspect):disabled {
+  background: #78788029;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--slate-ink-3);
+  filter: none;
+  opacity: 1;
+  cursor: default;
+}
+html[data-skin="slate"] body :is(#modal.folio-host, #card-stage) .gold-btn svg {
   width: 18px;
   height: 18px;
 }

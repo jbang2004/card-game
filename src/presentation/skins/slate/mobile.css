@@ -92,7 +92,7 @@ html[data-skin="slate"] body.touch-layout #app.battle-view .turn-number {
   box-shadow: none;
   color: #fff;
   font: 600 13px/1 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   text-shadow: none;
   white-space: nowrap;
   overflow: hidden;
@@ -125,7 +125,7 @@ html[data-skin="slate"] body.touch-layout #battle #touch-match-chip {
 html[data-skin="slate"] body.touch-layout #battle #touch-match-chip strong {
   color: #fff;
   font: 600 13px/1 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -189,7 +189,7 @@ html[data-skin="slate"] body.mobile-landscape #battle .contract-open {
 html[data-skin="slate"] body.touch-layout #battle .contract-label {
   color: #fff;
   font: 600 12px/1.3 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
 }
 /* the landscape chip is 48px wide: the four-character label only fits without
  * tracking, and it must not spill past the pill rim */
@@ -266,7 +266,7 @@ html[data-skin="slate"]
   clip-path: none;
   color: #fff;
   font: 600 clamp(9px, 7cqw, 18px) / 1.15 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   text-shadow: none;
 }
 html[data-skin="slate"]
@@ -280,7 +280,7 @@ html[data-skin="slate"]
   background: var(--slate-pill);
   color: var(--slate-ink-2);
   font: 500 10px/1.3 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
 }
 /* The weapon slot rides beside the player card on touch; same pill language. */
 html[data-skin="slate"] body.touch-layout #battle .weapon-slot {
@@ -361,7 +361,7 @@ html[data-skin="slate"] body.touch-layout #battle .power-button > b {
 html[data-skin="slate"] body.touch-layout #battle .power-button > span {
   color: var(--slate-ink-3);
   font: 500 11px/1.3 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   text-shadow: 0 2px 8px #000a;
 }
 html[data-skin="slate"] body.touch-layout #battle .power-button:disabled {
@@ -415,7 +415,7 @@ html[data-skin="slate"] body.touch-layout #battle .end-turn {
   box-shadow: none;
   color: #fff;
   font: 600 13px/1.25 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   text-shadow: none;
   transition: border-color 0.15s;
 }
@@ -477,7 +477,7 @@ html[data-skin="slate"] body.touch-layout #battle .mana-panel {
 html[data-skin="slate"] body.touch-layout #battle .mana-caption > span {
   color: var(--slate-ink-3);
   font: 400 11px/1.4 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
 }
 html[data-skin="slate"] body.touch-layout #battle .mana-caption strong {
   color: #fff;
@@ -500,7 +500,7 @@ html[data-skin="slate"] body.touch-layout #battle .hand-label {
   box-shadow: none;
   color: var(--slate-ink-2);
   font: 500 12px/1 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   text-shadow: none;
 }
 html[data-skin="slate"] body.touch-layout #battle .hand-label::before {
@@ -533,7 +533,7 @@ html[data-skin="slate"]
 html[data-skin="slate"] body.touch-layout #app.battle-view .board-empty {
   color: var(--slate-ink-3);
   font: 400 12px/1.5 var(--slate-font);
-  letter-spacing: 2px;
+  letter-spacing: 0;
   opacity: 1;
   text-shadow: 0 2px 10px #0009;
 }
@@ -597,7 +597,7 @@ html[data-skin="slate"] body.touch-layout #app.battle-view #touch-cancel {
   box-shadow: none;
   color: var(--slate-ink-2);
   font: 500 13px/1 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   text-shadow: none;
   transition:
     background 0.15s,
@@ -723,7 +723,7 @@ html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host:has(> .folio-dialog[data-dialog-size="choice"]) {
   padding: 0;
-  background: #1b2230;
+  background: #05070a;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -811,7 +811,7 @@ html[data-skin="slate"]
   h2 {
   font-size: 22px;
   line-height: 1.3;
-  letter-spacing: 2px;
+  letter-spacing: 0;
 }
 html[data-skin="slate"]
   body.mobile-landscape
@@ -1069,19 +1069,8 @@ html[data-skin="slate"]
   min-height: 38px;
   margin: 0 auto;
   padding: 0 18px;
-  border: 1px solid var(--slate-pill-line);
-  border-radius: 999px;
-  background: var(--slate-pill);
-  box-shadow: none;
-  text-shadow: none;
-  clip-path: none;
-  color: var(--slate-ink-2);
-  font: 500 14px/1 var(--slate-font);
-  letter-spacing: 1px;
-  transition:
-    background 0.15s,
-    border-color 0.15s,
-    color 0.15s;
+  /* material: dialogs.css (every layout) */
+  font-size: 14px;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1101,16 +1090,6 @@ html[data-skin="slate"]
   width: 16px;
   height: 16px;
   color: currentColor;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .mulligan-card.replace
-  .mulligan-choice-state {
-  border-color: #8cc4ff99;
-  background: linear-gradient(180deg, #4a8be6, #2c66c4);
-  color: #fff;
-  font-weight: 600;
 }
 /* `components.css` paints a second selection ring on the replaced card face */
 html[data-skin="slate"]
@@ -1275,9 +1254,13 @@ html[data-skin="slate"]
   #modal.folio-host
   .rewards-box
   .relic-options {
+  /* 6px of air so the selected tile's ring and halo are not clipped by the
+   * scroll surface */
+  box-sizing: border-box;
   gap: 12px;
   width: 100%;
-  margin: 14px 0 0;
+  margin: 8px 0 0;
+  padding: 6px;
 }
 html[data-skin="slate"]
   body.mobile-portrait
@@ -1298,16 +1281,8 @@ html[data-skin="slate"]
   #modal.folio-host
   .rewards-box
   .relic-choice {
+  /* material: dialogs.css option tile (`.lg-group`), every layout */
   height: auto;
-  border: 1.5px solid var(--slate-card-line);
-  border-radius: 14px;
-  background: var(--slate-card-base);
-  box-shadow: 0 8px 20px #0007;
-  color: var(--slate-ink);
-  transition:
-    background 0.15s,
-    border-color 0.15s,
-    box-shadow 0.15s;
 }
 html[data-skin="slate"]
   body.mobile-portrait
@@ -1347,14 +1322,6 @@ html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host
   .rewards-box
-  .relic-choice[aria-pressed="true"] {
-  border-color: var(--slate-blue);
-  background: #16243a;
-  box-shadow:
-    inset 0 0 0 1px var(--slate-blue),
-    0 0 28px #8cc4ff40,
-    0 8px 20px #0007;
-}
 /* the art sits in a `.relic-art` wrapper (campaign.js), so the wrapper is the
  * grid child that spans the three text rows; the img only sizes itself */
 html[data-skin="slate"]
@@ -1403,7 +1370,7 @@ html[data-skin="slate"]
   h3 {
   margin: 0;
   font: 700 17px/1.35 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   color: #fff;
 }
 html[data-skin="slate"]
@@ -1444,17 +1411,8 @@ html[data-skin="slate"]
   width: auto;
   min-height: 34px;
   padding: 0 18px;
-  border: 1px solid var(--slate-pill-line);
-  border-radius: 999px;
-  background: var(--slate-pill);
-  box-shadow: none;
-  color: var(--slate-ink-2);
-  font: 500 13px/1 var(--slate-font);
-  letter-spacing: 1px;
-  transition:
-    background 0.15s,
-    border-color 0.15s,
-    color 0.15s;
+  /* material: dialogs.css (every layout) */
+  font-size: 13px;
 }
 html[data-skin="slate"]
   body.mobile-portrait
@@ -1469,17 +1427,6 @@ html[data-skin="slate"]
   .rewards-box
   .relic-pick-label {
   margin: auto auto 0;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box
-  .relic-choice[aria-pressed="true"]
-  .relic-pick-label {
-  border-color: #8cc4ff99;
-  background: linear-gradient(180deg, #4a8be6, #2c66c4);
-  color: #fff;
-  font-weight: 600;
 }
 /* 「酒馆整备」 becomes a hairline section, as on the desktop rewards page */
 html[data-skin="slate"]
@@ -1514,7 +1461,7 @@ html[data-skin="slate"]
   list-style: none;
   color: #fff;
   font: 700 16px/1.4 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   cursor: pointer;
 }
 html[data-skin="slate"]
@@ -1579,7 +1526,7 @@ html[data-skin="slate"]
   .reward-next {
   display: block;
   font: 600 14px/1.4 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   color: var(--slate-ink);
 }
 html[data-skin="slate"]
@@ -1840,7 +1787,7 @@ html[data-skin="slate"]
   .result-title {
   margin: 0;
   font: 700 30px/1.25 var(--slate-font);
-  letter-spacing: 4px;
+  letter-spacing: 0;
   color: #fff;
   text-shadow: 0 2px 14px #0007;
 }
@@ -1851,7 +1798,7 @@ html[data-skin="slate"]
   .boss-quote {
   margin: 10px 0 0;
   font: 400 13px/1.7 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   color: var(--slate-ink-2);
 }
 html[data-skin="slate"]
@@ -1899,7 +1846,7 @@ html[data-skin="slate"]
   .result-stats
   strong {
   font: 700 28px/1.1 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   color: #fff;
   text-shadow: none;
 }
@@ -1910,7 +1857,7 @@ html[data-skin="slate"]
   .result-stats
   span {
   font: 500 12px/1.4 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   color: var(--slate-ink-2);
 }
 /* Short landscape: the sigil is the first decoration to go, never the numbers
@@ -2043,13 +1990,9 @@ html[data-skin="slate"]
   gap: 10px;
   min-height: 52px;
   padding: 0 16px;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  background: #ffffff14;
-  box-shadow: inset 0 1px 0 #ffffff2e;
-  color: var(--slate-ink);
+  /* material: dialogs.css `.menu-action` (every layout) */
   font: 500 15px/1.25 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   text-align: left;
   text-shadow: none;
   white-space: nowrap;
@@ -2064,13 +2007,6 @@ html[data-skin="slate"]
   width: 20px;
   height: 20px;
   color: var(--slate-blue);
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .touch-menu-grid
-  .menu-action:hover {
-  background: #ffffff24;
 }
 html[data-skin="slate"] body.touch-layout #modal.folio-host .touch-menu-note {
   margin: 12px 0 0;
@@ -2096,7 +2032,7 @@ html[data-skin="slate"]
   border-radius: 0;
   background: none;
   font: 400 14px/1.65 var(--slate-font);
-  letter-spacing: 0.5px;
+  letter-spacing: 0;
   color: var(--slate-ink-2);
 }
 html[data-skin="slate"]
@@ -2227,7 +2163,7 @@ html[data-skin="slate"]
   background: none;
   box-shadow: none;
   font: 600 15px/1.5 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   color: var(--slate-ink);
 }
 html[data-skin="slate"]
@@ -2264,7 +2200,7 @@ html[data-skin="slate"]
   display: block;
   margin-bottom: 4px;
   font: 700 15px/1.5 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   color: #fff;
 }
 html[data-skin="slate"]

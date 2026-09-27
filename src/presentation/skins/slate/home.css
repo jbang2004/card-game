@@ -203,7 +203,7 @@ html[data-skin="slate"] body #app.lobby-view #settings-btn {
 /* ---------- title block ---------- */
 html[data-skin="slate"] body #lobby .lobby-chinese {
   font: 700 28px/1.35 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   color: var(--slate-ink);
   text-shadow: var(--home-caption-shadow);
 }
@@ -237,14 +237,14 @@ html[data-skin="slate"] body #lobby #start-btn {
   background: var(--lg-prominent);
   color: #fff;
   font: 700 21px/1 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   box-shadow: var(--lg-prominent-rim);
 }
 html[data-skin="slate"] body #lobby #quick-btn {
   /* material: base.css `.lg-glass` */
   color: var(--slate-ink);
   font: 600 19px/1 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
 }
 html[data-skin="slate"] body #lobby .home-action-symbol,
 html[data-skin="slate"] body #lobby #quick-btn .home-action-symbol {
@@ -360,7 +360,7 @@ html[data-skin="slate"] body #lobby .home-collection-note {
 /* ---------- verse + footer ---------- */
 html[data-skin="slate"] body #lobby .home-verse {
   font: 400 15px/1.8 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   color: var(--slate-ink-2);
   text-shadow: var(--home-caption-shadow);
 }
@@ -388,12 +388,12 @@ html[data-skin="slate"] body #lobby .home-footer-emblem {
 }
 html[data-skin="slate"] body #lobby .lobby-bottom small {
   font: 400 12px/1.4 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   color: var(--slate-ink-3);
 }
 html[data-skin="slate"] body #lobby #atelier-open {
   font: 400 12px/1.4 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   color: var(--slate-ink-3);
 }
 
@@ -863,7 +863,7 @@ html[data-skin="slate"]
   .lobby-chinese {
   margin: 0;
   font-size: 26px;
-  letter-spacing: 1px;
+  letter-spacing: 0;
 }
 html[data-skin="slate"]
   body.touch-layout.mobile-portrait
@@ -1031,7 +1031,7 @@ html[data-skin="slate"]
   .lobby-chinese {
   margin: 0;
   font-size: 22px;
-  letter-spacing: 3px;
+  letter-spacing: 0;
 }
 html[data-skin="slate"]
   body.touch-layout.mobile-landscape
@@ -1256,7 +1256,7 @@ html[data-skin="slate"]
     #lobby
     .lobby-chinese {
     font-size: 20px;
-    letter-spacing: 2px;
+    letter-spacing: 0;
   }
   html[data-skin="slate"]
     body.touch-layout.mobile-portrait

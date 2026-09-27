@@ -572,7 +572,7 @@ html[data-skin="slate"]
   > .atlas-wordmark
   > span {
   font: 700 20px/1.2 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   text-shadow:
     0 1px 2px #00000099,
     0 2px 14px #0000008c;
@@ -584,7 +584,7 @@ html[data-skin="slate"]
   > .atlas-wordmark
   > small {
   font: 600 10px/1.2 var(--slate-font);
-  letter-spacing: 2px;
+  letter-spacing: 0;
   color: var(--slate-ink-2);
   text-shadow: 0 1px 6px #000000b3;
 }

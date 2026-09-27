@@ -155,7 +155,7 @@ html[data-skin="slate"] body #app.battle-view #touch-cancel:hover {
 }
 html[data-skin="slate"] body #app.battle-view .board-empty {
   color: var(--slate-ink-3);
-  letter-spacing: 1px;
+  letter-spacing: 0;
 }
 
 /* ---------------------------------------------------------------------------
@@ -542,7 +542,7 @@ html[data-skin="slate"]
   box-shadow: none;
   color: var(--arena-brass-hi);
   font: 600 13px/1.25 var(--slate-font);
-  letter-spacing: 3px;
+  letter-spacing: 0;
   text-shadow:
     0 1px 2px #000,
     0 0 10px #000c;
@@ -658,7 +658,7 @@ html[data-skin="slate"] body:not(.touch-layout) #battle .hero-covenant {
   background: var(--arena-glass);
   box-shadow: 0 4px 10px #000a;
   color: var(--arena-brass-hi);
-  letter-spacing: 1px;
+  letter-spacing: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -684,7 +684,7 @@ html[data-skin="slate"]
   box-shadow: 0 4px 10px #000a;
   color: var(--arena-ink-2);
   font: 600 10px/1 var(--slate-font);
-  letter-spacing: 2px;
+  letter-spacing: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -861,7 +861,7 @@ html[data-skin="slate"] body:not(.touch-layout) #battle .end-turn {
   border: 0;
   color: var(--slate-ink);
   font: 600 18px/1 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   text-shadow: 0 1px 2px #00000080;
   transition:
     color var(--m-fast),
@@ -1557,7 +1557,7 @@ html[data-skin="slate"] body .turn-cue small {
 }
 html[data-skin="slate"] body .turn-cue strong {
   font: 700 23px/1.2 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
 }
 html[data-skin="slate"] body .turn-cue-gem {
   color: var(--arena-ember);
@@ -1599,7 +1599,7 @@ html[data-skin="slate"] body .summon-seal {
     0 4px 12px #00000080;
   color: var(--slate-ink);
   font-weight: 600;
-  letter-spacing: 1px;
+  letter-spacing: 0;
   text-shadow: none;
 }
 html[data-skin="slate"] body .combat-cue {

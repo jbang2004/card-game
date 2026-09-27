@@ -317,7 +317,7 @@ html[data-skin="slate"]
   color: var(--slate-ink);
   font-size: 14px;
   font-weight: 600;
-  letter-spacing: 1px;
+  letter-spacing: 0;
 }
 html[data-skin="slate"] body:not(.touch-layout) #battle .hero.hero-station .hero-chips {
   position: absolute;
