@@ -1544,3 +1544,97 @@ html[data-skin="slate"] body #app.battle-view #battle-status #touch-cancel {
 html[data-skin="slate"] body .combat-cue {
   white-space: nowrap;
 }
+
+/* ---------------------------------------------------------------------------
+ * Event labels in liquid glass (2026-09-27). The turn banner, the summon seal
+ * and the short combat cues were leather-and-gold strips; they are now the
+ * HUD's glass capsule with white type. Side and kind live in a small tint:
+ * the banner's stars are ember for our turn and crimson for theirs, a combat
+ * cue keeps its kind colour on the text and a faint ring. No blur on the
+ * cues — several can be on screen at once.
+ * ------------------------------------------------------------------------ */
+html[data-skin="slate"] body .turn-cue {
+  gap: 18px;
+  width: auto;
+  min-width: 260px;
+  height: 64px;
+  padding: 0 28px;
+  border: 0;
+  border-block: 0;
+  border-radius: 999px;
+  background: var(--lg-hud);
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
+  box-shadow: var(--glass-rim), var(--glass-shadow);
+  color: var(--slate-ink);
+  text-shadow: 0 1px 2px #00000080;
+}
+html[data-skin="slate"] body .turn-cue.theirs {
+  color: var(--slate-ink);
+}
+html[data-skin="slate"] body .turn-cue small {
+  color: var(--slate-ink-2);
+  font: 600 10px/1.4 var(--slate-font);
+  letter-spacing: 2px;
+}
+html[data-skin="slate"] body .turn-cue strong {
+  font: 700 23px/1.2 var(--slate-font);
+  letter-spacing: 1px;
+}
+html[data-skin="slate"] body .turn-cue-gem {
+  color: var(--arena-ember);
+  font-size: 18px;
+  text-shadow: 0 0 10px #ff9b3d99;
+}
+html[data-skin="slate"] body .turn-cue.theirs .turn-cue-gem {
+  color: var(--arena-crimson);
+  text-shadow: 0 0 10px #e0475a99;
+}
+html[data-skin="slate"] body.touch-layout .turn-cue {
+  min-width: 200px;
+  width: auto;
+  height: 44px;
+  gap: 12px;
+  padding: 0 18px;
+}
+html[data-skin="slate"] body.touch-layout .turn-cue strong {
+  font-size: 16px;
+  letter-spacing: 0.5px;
+}
+html[data-skin="slate"] body .turn-cue.compact {
+  height: 24px;
+  min-width: 0;
+  padding: 0 12px;
+}
+html[data-skin="slate"] body .turn-cue.compact strong {
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+html[data-skin="slate"] body .summon-seal {
+  padding: 5px 14px;
+  border: 0;
+  border-block: 0;
+  border-radius: 999px;
+  background: #16181ee0;
+  box-shadow:
+    var(--lg-rim-soft),
+    0 4px 12px #00000080;
+  color: var(--slate-ink);
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-shadow: none;
+}
+html[data-skin="slate"] body .combat-cue {
+  padding: 4px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: #16181ee6;
+  box-shadow:
+    var(--lg-rim-soft),
+    inset 0 0 0 1px color-mix(in srgb, currentColor 40%, transparent),
+    0 4px 12px #00000080;
+  text-shadow: none;
+}
+html[data-skin="slate"] body.touch-layout .combat-cue {
+  padding: 3px 8px;
+}
