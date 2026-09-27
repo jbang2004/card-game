@@ -1,47 +1,76 @@
-/* Test skin "slate" — 诸神契约 / contracts page (brief 5.3, template T5 + T1 preview column).
+/* Skin "slate" — 诸神契约 / contracts page (brief 5.3, template T5 + T1 preview column).
  *
  * Tokens, the full-bleed page shell (this page is `[data-dialog-size="covenant"]`),
  * the back chevron and the pill buttons live in base.css; this file only adds
  * contract-specific selectors.
  *
- * Composition kept from the existing desktop layout: the deity artwork stays a
- * full-bleed scene (`.scene-showcase`), only the selected contract is shown, and
- * the contract thumbnails stay a strip beside the panel. What changes is the
- * material: text tabs with an underline bar, a frameless hairline-sectioned
- * panel, bar-and-number progress rows, and 10px bordered thumbnail cards.
+ * Liquid glass (2026-09-27, design system 「液态玻璃 v2」): the deity artwork is
+ * the content and stays full bleed (`.scene-showcase`); the contract reads in a
+ * floating regular-glass INSPECTOR inset from the screen edges, headed by a
+ * segmented control (我方契约 / 敌方契约) and ending in the 唤醒 pill. The
+ * thumbnails stay a strip over the artwork.
+ *
+ * WHERE THE GLASS LIVES. The inspector pane is `.covenant-box::after`, not the
+ * `.folio-pane` that holds the copy:
+ *   - `backdrop-filter` makes its element the containing block of absolutely
+ *     positioned descendants, and on the desktop the thumbnail strip is an
+ *     absolutely positioned child of the pane's subtree anchored to the dialog
+ *     — glass on the pane (or anything around the roster) would drag the strip
+ *     into the pane and clip it;
+ *   - the glass must not scroll: the copy scrolls inside `.folio-viewport`,
+ *     which starts BELOW the segmented control, so text never slides under it;
+ *   - `contracts.spec.cjs` pins the touch pane to one even inset on left,
+ *     right and bottom, while in landscape the inspector is only the right
+ *     column. A pseudo-element lets the glass take the inspector's geometry and
+ *     the pane keep its own.
+ * `.covenant-box` is `isolation: isolate` (screens.css), so `z-index: -1` puts
+ * the glass above the artwork (the earlier `z-index: -1` sibling) and below
+ * every in-flow and positioned child.
  *
  * ---------------------------------------------------------------------------
- * FILE SHAPE (phase 2, 2026-09-14), three sections in this order:
+ * FILE SHAPE, three sections in this order:
  *
- *   1. MATERIAL — `html[data-skin="slate"] body`, no layout guard: one rim, one
- *      matte, one tab language, one progress bar, one pill for desktop,
+ *   1. MATERIAL — `html[data-skin="slate"] body`, no layout guard: one glass,
+ *      one segmented control, one progress track, one pill for desktop,
  *      portrait and landscape. `tests/e2e/responsive-component-style.spec.cjs`
  *      compares `.covenant-box`, `.modal-close`, `.covenant-tabs button`,
  *      `.covenant-tabs button[aria-pressed="true"]`, `.covenant-card`,
  *      `.covenant-card.divine` and `.covenant-copy .gold-btn` across
- *      viewports, so nothing here may be restated per layout. Structure that is
- *      genuinely identical in every layout (source order, `display: contents`
- *      unwrapping, the hide rules for the inactive contract) rides along here
- *      rather than being duplicated three times.
- *   2. DESKTOP GEOMETRY — `body:not(.touch-layout)`. Unchanged from phase 1.
+ *      viewports, so nothing here may be restated per layout.
+ *   2. DESKTOP GEOMETRY — `body:not(.touch-layout)`.
  *   3. TOUCH GEOMETRY — `body.touch-layout`: portrait puts the deity above and
- *      the panel below; landscape keeps the desktop reading (art left, panel
- *      right) at phone paddings with an independently scrolling column.
+ *      the inspector sheet below; landscape keeps the desktop reading (art
+ *      left, inspector right).
  *
- * `--covenant-col` moved into base.css on 2026-09-14 (the tabs and the panel
- * live in different subtrees and have to share one column edge, so the value
- * cannot sit on either of them); `--slate-cov-*` stay page-local geometry
- * values, not design tokens.
+ * Borders that must disappear are `1px solid transparent`, never `0`: the
+ * components layer animates some of these boxes, and a border width that
+ * changes between states makes Playwright's stability wait never settle
+ * (the pantheon 1600 case once hung for 45s).
  *
- * The `.scene-showcase` scrim is the one thing that legitimately differs per
- * layout: it is scene treatment, not component chrome, and it has to run along
- * whichever edge the panel sits on (rightwards on desktop/landscape, downwards
- * in portrait).
+ * `--covenant-col` lives in base.css; `--cov-panel` and `--slate-cov-*` are
+ * page-local geometry values, not design tokens.
  */
 
 /* =========================================================================
  * 1. MATERIAL — one contract for desktop, portrait and landscape
  * ====================================================================== */
+
+/* ---------- the inspector glass ---------- */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="contracts"]
+  > .covenant-box::after {
+  content: "";
+  display: block;
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: var(--lg-radius-sheet);
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-rim), var(--glass-shadow);
+}
 
 /* ---------- title row ---------- */
 /* `.covenant-heading` is not a `.modal-heading`, so the base title row does not
@@ -55,10 +84,15 @@ html[data-skin="slate"]
   box-shadow: none;
   color: var(--slate-ink);
 }
+/* No rule under the title: the glass groups by air (design system v2). */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="contracts"]
-  .covenant-heading::before {
+  .covenant-heading::before,
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="contracts"]
+  .covenant-heading::after {
   content: none;
 }
 html[data-skin="slate"]
@@ -67,25 +101,32 @@ html[data-skin="slate"]
   .covenant-heading
   h2 {
   margin: 0;
-  font: 700 32px/44px var(--slate-font);
-  letter-spacing: 3px;
+  font: var(--lg-title-page);
+  letter-spacing: 0;
   color: #fff;
-  text-shadow: 0 2px 12px #000c;
+  text-shadow:
+    0 1px 2px #00000080,
+    0 2px 16px #0000008c;
 }
 
-/* ---------- 我方契约 | 敌方契约 as text tabs ---------- */
+/* ---------- 我方契约 / 敌方契约 as a segmented control ---------- */
+/* Track: control-fill capsule, 3px inset, a faint inner shadow. Segments:
+ * transparent capsules; the selected one is the lighter thumb with the small
+ * rim (design system v2, 分段控件). The track sits inside the glass, so it is a
+ * fill, not a second sheet of glass. */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="contracts"]
   .covenant-tabs {
   display: flex;
-  align-items: flex-end;
+  align-items: stretch;
   gap: 0;
   margin: 0;
-  padding: 0;
+  padding: 3px;
   border: 0;
-  border-bottom: 1px solid transparent;
-  background: none;
+  border-radius: 999px;
+  background: var(--lg-fill-control);
+  box-shadow: inset 0 1px 2px #00000026;
 }
 html[data-skin="slate"]
   body
@@ -93,31 +134,34 @@ html[data-skin="slate"]
   .covenant-tabs
   button {
   position: relative;
-  flex: 0 0 auto;
+  flex: 1 1 0;
+  min-width: 0;
   margin: 0;
-  border: 0;
-  border-radius: 0;
-  background: none;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
   box-shadow: none;
-  font: 500 20px/1.2 var(--slate-font);
-  letter-spacing: 2px;
-  color: var(--slate-ink-3);
-  text-shadow: 0 2px 10px #000a;
-  transition: color 0.15s;
+  font: 500 15px/20px var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink-2);
+  text-align: center;
+  text-shadow: none;
+  transition:
+    background-color var(--m-fast),
+    box-shadow var(--m-fast),
+    color var(--m-fast);
 }
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="contracts"]
   .covenant-tabs
-  button
-  + button::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 8px;
-  width: 1px;
-  height: 22px;
-  background: none;
+  button::before,
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="contracts"]
+  .covenant-tabs
+  button::after {
+  content: none;
 }
 html[data-skin="slate"]
   body
@@ -131,23 +175,12 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="contracts"]
   .covenant-tabs
   button[aria-pressed="true"] {
+  background: #ffffff24;
+  box-shadow:
+    var(--lg-rim-soft),
+    0 2px 8px #00000026;
   color: #fff;
-  font-weight: 700;
-  background: none;
-  border: 0;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="contracts"]
-  .covenant-tabs
-  button[aria-pressed="true"]::after {
-  content: "";
-  position: absolute;
-  bottom: -1px;
-  height: 3px;
-  border-radius: 2px;
-  background: #fff;
-  box-shadow: 0 0 10px #fff8;
+  font-weight: 600;
 }
 html[data-skin="slate"]
   body
@@ -158,7 +191,7 @@ html[data-skin="slate"]
   outline-offset: 2px;
 }
 
-/* ---------- the preview panel: no frame, hairline sections ---------- */
+/* ---------- the contract copy: no frame of its own, it sits on the glass ---------- */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="contracts"]
@@ -208,10 +241,10 @@ html[data-skin="slate"]
   h4 {
   order: 1;
   margin: 0;
-  font: 700 26px/1.3 var(--slate-font);
-  letter-spacing: 1px;
+  font: 700 26px/34px var(--slate-font);
+  letter-spacing: 0;
   color: #fff;
-  text-shadow: 0 2px 10px #000a;
+  text-shadow: none;
 }
 html[data-skin="slate"]
   body
@@ -219,9 +252,10 @@ html[data-skin="slate"]
   .covenant-copy
   > small {
   order: 2;
-  font: 400 14px/1.5 var(--slate-font);
-  letter-spacing: 1px;
+  font: 400 14px/20px var(--slate-font);
+  letter-spacing: 0;
   color: var(--slate-ink-3);
+  font-variant-numeric: tabular-nums;
 }
 html[data-skin="slate"]
   body
@@ -230,8 +264,9 @@ html[data-skin="slate"]
   > p {
   order: 3;
   border-top: 1px solid transparent;
-  font: 400 15px/1.8 var(--slate-font);
-  color: var(--slate-ink-2);
+  font: 400 15px/1.6 var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink);
   overflow-wrap: anywhere;
 }
 html[data-skin="slate"]
@@ -266,7 +301,7 @@ html[data-skin="slate"]
   body
   #modal.folio-host[data-type="contracts"]
   .ritual-ledger {
-  font: 400 14px/1.7 var(--slate-font);
+  font: 400 14px/1.6 var(--slate-font);
   color: var(--slate-ink-3);
 }
 html[data-skin="slate"]
@@ -278,7 +313,7 @@ html[data-skin="slate"]
   cursor: pointer;
 }
 
-/* ---------- progress rows: label / 6px track / value ---------- */
+/* ---------- progress: a grouped section of label / 6px track / value ---------- */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="contracts"]
@@ -286,6 +321,8 @@ html[data-skin="slate"]
   display: flex;
   flex-direction: column;
   border-top: 1px solid transparent;
+  border-radius: var(--lg-radius-group);
+  background: var(--glass-fill-2);
 }
 html[data-skin="slate"]
   body
@@ -296,16 +333,22 @@ html[data-skin="slate"]
   margin: 0;
   padding: 0;
   border: 0;
-  font: 400 15px/1.4 var(--slate-font);
-  letter-spacing: 1px;
+  font: 500 15px/20px var(--slate-font);
+  letter-spacing: 0;
   color: var(--slate-ink-2);
 }
-/* the label and the value ship inside one wrapper, so unwrap it into the grid */
+/* The label and the value ship inside one wrapper, so unwrap it into the
+ * grid. A `display: contents` box still passes its inherited properties to the
+ * label text, and the components layer sizes `.ritual-count` up, so it takes
+ * the row's type explicitly. */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="contracts"]
   :is(.ritual-count, .covenant-mana-gate > span) {
   display: contents;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
 }
 html[data-skin="slate"]
   body
@@ -315,9 +358,9 @@ html[data-skin="slate"]
   grid-row: 1;
   grid-column: 3;
   justify-self: end;
-  font: 700 20px/1 var(--slate-font);
+  font: 600 15px/20px var(--slate-font);
   letter-spacing: 0;
-  color: var(--slate-blue);
+  color: var(--slate-ink);
   font-variant-numeric: tabular-nums;
 }
 html[data-skin="slate"]
@@ -325,8 +368,8 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="contracts"]
   :is(.ritual-count, .covenant-mana-gate > span)
   > b
-  small {
-  font: 400 14px/1 var(--slate-font);
+  > small {
+  font: 400 13px/20px var(--slate-font);
   color: var(--slate-ink-3);
 }
 html[data-skin="slate"]
@@ -335,6 +378,7 @@ html[data-skin="slate"]
   .ritual-stones {
   display: none;
 }
+/* the 6px capsule track of the range slider (base.css), filled with the accent */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="contracts"]
@@ -347,8 +391,8 @@ html[data-skin="slate"]
   height: 6px;
   margin: 0;
   border: 0;
-  border-radius: 3px;
-  background: #ffffff1f;
+  border-radius: 999px;
+  background: #7878805c;
   appearance: none;
 }
 html[data-skin="slate"]
@@ -358,18 +402,28 @@ html[data-skin="slate"]
   meter::-webkit-meter-bar {
   height: 6px;
   border: 0;
-  border-radius: 3px;
-  background: #ffffff1f;
+  border-radius: 999px;
+  background: #7878805c;
   box-shadow: none;
 }
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="contracts"]
   .covenant-progress
-  meter::-webkit-meter-optimum-value {
-  border-radius: 3px;
-  background: linear-gradient(90deg, var(--slate-blue-deep), var(--slate-blue));
-  box-shadow: 0 0 10px #4d93ff55;
+  meter::-webkit-meter-optimum-value,
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="contracts"]
+  .covenant-progress
+  meter::-webkit-meter-suboptimum-value,
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="contracts"]
+  .covenant-progress
+  meter::-webkit-meter-even-less-good-value {
+  border-radius: 999px;
+  background: var(--slate-blue-deep);
+  box-shadow: none;
 }
 
 /* ---------- requirement line + primary pill ---------- */
@@ -380,9 +434,9 @@ html[data-skin="slate"]
   > p:is(.covenant-status, .enemy-covenant-status) {
   order: 6;
   border-top: 1px solid transparent;
-  font: 400 15px/1.7 var(--slate-font);
-  letter-spacing: 1px;
-  color: var(--slate-ink-3);
+  font: 400 14px/20px var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink-2);
   background: none;
 }
 html[data-skin="slate"]
@@ -390,17 +444,23 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="contracts"]
   .covenant-copy
   .gold-btn {
-  font: 600 18px/1 var(--slate-font);
-  letter-spacing: 1px;
+  font: 600 17px/1 var(--slate-font);
+  letter-spacing: 0;
 }
+/* disabled: the capsule keeps its shape but loses the tint and the lens edge,
+ * and the label drops to the tertiary ink (Apple's disabled button) */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="contracts"]
   .covenant-copy
   .gold-btn:disabled {
-  border-color: #ffffff1a;
-  background: none;
+  border-color: transparent;
+  background: #78788033;
+  box-shadow: none;
   color: var(--slate-ink-3);
+  /* components.css dims its own disabled plaque with a filter and opacity */
+  filter: none;
+  opacity: 1;
 }
 html[data-skin="slate"]
   body
@@ -412,7 +472,7 @@ html[data-skin="slate"]
   border-radius: 0;
   background: none;
   box-shadow: none;
-  font: 400 16px/1.7 var(--slate-font);
+  font: 400 15px/1.6 var(--slate-font);
   color: var(--slate-ink-3);
 }
 
@@ -432,6 +492,8 @@ html[data-skin="slate"]
   .covenant-roster:has(button:only-child) {
   display: none;
 }
+/* Rounded art tiles, no drawn border: the selected one takes the system
+ * selection ring (2px accent + 6px halo). */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="contracts"]
@@ -443,33 +505,34 @@ html[data-skin="slate"]
   padding: 0;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: flex-end;
   overflow: hidden;
-  border: 1px solid var(--slate-line-strong);
-  border-radius: 10px;
+  text-align: center;
+  border: 1px solid transparent;
+  border-radius: 14px;
   background: var(--slate-card-base);
-  box-shadow: 0 8px 20px #0007;
+  box-shadow: 0 6px 18px #00000066;
   transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
+    box-shadow var(--m-fast),
+    filter var(--m-fast);
 }
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="contracts"]
   .covenant-roster
   button:hover {
-  border-color: #ffffff73;
+  filter: brightness(1.08);
 }
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="contracts"]
   .covenant-roster
   button[aria-pressed="true"] {
-  border: 1px solid var(--slate-blue);
   box-shadow:
-    inset 0 0 0 1px #8cc4ff66,
-    0 0 18px #8cc4ff55,
-    0 8px 20px #0007;
+    0 0 0 2px var(--slate-blue),
+    0 0 0 6px #0a84ff29,
+    0 6px 18px #00000066;
 }
 html[data-skin="slate"]
   body
@@ -477,7 +540,7 @@ html[data-skin="slate"]
   .covenant-roster
   button:focus-visible {
   outline: 2px solid var(--slate-blue);
-  outline-offset: 3px;
+  outline-offset: 8px;
 }
 html[data-skin="slate"]
   body
@@ -490,51 +553,98 @@ html[data-skin="slate"]
   body
   #modal.folio-host[data-type="contracts"]
   .covenant-roster
-  strong {
+  button
+  > strong {
   z-index: 1;
-  font: 700 15px/1.35 var(--slate-font);
+  font: 600 14px/1.3 var(--slate-font);
   letter-spacing: 0;
   color: #fff;
-  text-shadow: 0 2px 6px #000c;
+  text-shadow:
+    0 1px 2px #000000b3,
+    0 0 10px #00000099;
 }
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="contracts"]
   .covenant-roster
-  span {
+  button
+  > span {
   z-index: 1;
-  font: 400 13px/1.35 var(--slate-font);
+  font: 400 12px/1.3 var(--slate-font);
+  letter-spacing: 0;
   color: var(--slate-ink-2);
-  text-shadow: 0 2px 6px #000c;
+  font-variant-numeric: tabular-nums;
+  text-shadow:
+    0 1px 2px #000000b3,
+    0 0 10px #00000099;
 }
 
 /* =========================================================================
  * 2. DESKTOP GEOMETRY — body:not(.touch-layout)
+ *
+ * The inspector is `--cov-panel` wide and inset 24px from the top, right and
+ * bottom of the screen. The heading box starts at the shell's 26px top and
+ * `--slate-page-x` side padding, so the offsets below convert screen insets
+ * into heading / pane coordinates.
  * ====================================================================== */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="contracts"]
+  > .covenant-box {
+  --cov-panel: min(var(--covenant-col), 520px);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="contracts"]
+  > .covenant-box::after {
+  top: 24px;
+  right: 24px;
+  bottom: 24px;
+  left: auto;
+  width: var(--cov-panel);
+}
 
-/* ---------- scene scrim: keep the goddess, buy legibility on the right ---------- */
+/* ---------- scene scrim: keep the goddess, let colour reach the glass ---------- */
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="contracts"]
   .covenant-box
   > .scene-showcase::after {
   background:
-    linear-gradient(90deg, #0d142000 32%, #0d1420b8 54%, #0d1420e8 74%),
+    linear-gradient(90deg, #0d142000 34%, #0d142080 56%, #0d1420b3 78%),
     linear-gradient(0deg, #0b101ad9 0%, #0b101a00 28%);
 }
 
-/* On the wide composition the inherited full-width rule under the title row
- * would run straight across the goddess, so desktop drops it. The touch layouts
- * keep a (shortened) one — see section 3. */
+/* The components layer draws the deity at `auto 100%` from `15% center`, so the
+ * painting ends in a hard vertical edge a few hundred pixels short of the
+ * inspector. Its sides are faded out instead, so the painting melts into the
+ * night and the glass floats over the same dark. The card art is ~3:4, so the
+ * painting spans 75vh from `(100vw − 75vh) × 15%`. */
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="contracts"]
-  .covenant-heading::after {
-  content: none;
+  .covenant-portrait
+  > .scene-showcase {
+  --cov-art-l: calc((100vw - 75vh) * 0.15);
+  --cov-art-r: calc(var(--cov-art-l) + 75vh);
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent var(--cov-art-l),
+    #000 calc(var(--cov-art-l) + 120px),
+    #000 calc(var(--cov-art-r) - 240px),
+    transparent var(--cov-art-r)
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent var(--cov-art-l),
+    #000 calc(var(--cov-art-l) + 120px),
+    #000 calc(var(--cov-art-r) - 240px),
+    transparent var(--cov-art-r)
+  );
 }
 
-/* Chevron at 36, text axis at 96. Making the heading the positioning context
- * also lets the tabs share the panel's right edge. */
+/* Chevron at 36, text axis at 96. The heading is also the positioning context
+ * of the segmented control, which sits at the top of the glass. */
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="contracts"]
@@ -548,16 +658,17 @@ html[data-skin="slate"]
   margin: 0;
   padding: 0 0 0 48px;
 }
+/* glass top 24 + 16 inside it, measured from the heading's 26px top */
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="contracts"]
   .covenant-tabs {
   position: absolute;
-  top: 62px;
-  right: 0;
+  top: 14px;
+  right: calc(40px - var(--slate-page-x));
   left: auto;
   z-index: 3;
-  width: var(--covenant-col);
+  width: calc(var(--cov-panel) - 32px);
   height: auto;
 }
 html[data-skin="slate"]
@@ -565,103 +676,145 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="contracts"]
   .covenant-tabs
   button {
-  min-height: 0;
-  padding: 6px 28px 14px;
+  min-height: 36px;
+  padding: 0 16px;
+}
+/* The pane is the glass minus the segmented control: its top edge is where the
+ * copy is clipped when it scrolls, 14px under the control; its right and bottom
+ * edges are the glass edges (the shell pads 28px at the bottom, the glass sits
+ * at 24). Its rounded bottom clips scrolled copy to the glass corners. */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="contracts"]
+  > .covenant-box
+  > .folio-pane {
+  align-self: flex-end;
+  width: var(--cov-panel);
+  min-width: 0;
+  margin: 26px calc(24px - var(--slate-page-x)) -4px 0;
+  border-radius: 0 0 var(--lg-radius-sheet) var(--lg-radius-sheet);
+  overflow: hidden;
+}
+/* The inspector is full height, so — as on the map — the verdict and the 唤醒
+ * pill sit at its foot and the reading copy at its head. Every box from the
+ * scroller down to the copy column is a growing flex column (at least the
+ * viewport's height, taller when the copy needs to scroll); the status line
+ * takes the free space above itself. */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="contracts"]
+  .covenant-box
+  .modal-scroll {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  min-height: 100%;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="contracts"]
-  .covenant-tabs
-  button:first-child {
-  padding-left: 0;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="contracts"]
-  .covenant-tabs
-  button[aria-pressed="true"]::after {
-  left: 22px;
-  right: 22px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="contracts"]
-  .covenant-tabs
-  button:first-child[aria-pressed="true"]::after {
-  left: 0;
+  .covenant-side.reference-active-side {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="contracts"]
   .covenant-grid {
-  display: block;
-  width: var(--covenant-col);
-  margin: 0 0 0 auto;
-  /* clears the tab row, which is pinned above the panel */
-  padding: 78px 0 0;
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  width: auto;
+  margin: 0;
+  padding: 0 24px 24px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="contracts"]
+  .covenant-card.reference-active-contract {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="contracts"]
+  .covenant-copy {
+  flex: 1 0 auto;
+}
+/* an empty side (「未携带契约。」) is an empty state: centred in the glass */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="contracts"]
+  .covenant-grid
+  > .deck-plan {
+  margin: auto 0;
+  text-align: center;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="contracts"]
   .covenant-copy
   > small {
-  margin: 10px 0 0;
+  margin: 4px 0 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="contracts"]
   .covenant-copy
   > p {
-  margin: 18px 0 0;
-  padding: 18px 0 0;
+  margin: 14px 0 0;
+  padding: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="contracts"]
   .ritual-ledger {
-  margin: 14px 0 0;
+  margin: 12px 0 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="contracts"]
   .covenant-progress {
-  gap: 18px;
+  gap: 14px;
   margin: 20px 0 0;
-  padding: 20px 0 0;
+  padding: 16px 18px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="contracts"]
   :is(.ritual-gate, .covenant-mana-gate) {
-  grid-template-columns: 104px minmax(0, 1fr) auto;
-  column-gap: 20px;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  column-gap: 14px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="contracts"]
   .covenant-copy
   > p:is(.covenant-status, .enemy-covenant-status) {
-  margin: 20px 0 0;
-  padding: 20px 0 0;
+  margin: auto 0 0;
+  padding: 24px 0 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="contracts"]
   .covenant-copy
   .gold-btn {
-  align-self: flex-start;
-  min-width: 260px;
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
   min-height: 52px;
-  margin: 22px 0 0;
-  padding: 0 32px;
+  margin: 12px 0 0;
+  padding: 0 24px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="contracts"]
   .covenant-roster {
   position: absolute;
-  left: 48px;
-  bottom: 32px;
+  left: var(--slate-page-x);
+  bottom: 28px;
   z-index: 2;
   gap: 14px;
   width: min(430px, 32%);
@@ -677,15 +830,17 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="contracts"]
   .covenant-roster
-  strong {
+  button
+  > strong {
   padding: 0 10px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="contracts"]
   .covenant-roster
-  span {
-  padding: 3px 10px 12px;
+  button
+  > span {
+  padding: 2px 10px 11px;
 }
 
 /* ---------- narrower desktop windows ---------- */
@@ -693,14 +848,7 @@ html[data-skin="slate"]
   html[data-skin="slate"]
     body:not(.touch-layout)
     #modal.folio-host[data-type="contracts"]
-    .covenant-heading {
-    padding-left: 48px;
-  }
-  html[data-skin="slate"]
-    body:not(.touch-layout)
-    #modal.folio-host[data-type="contracts"]
     .covenant-roster {
-    left: 36px;
     width: min(360px, 34%);
   }
   html[data-skin="slate"]
@@ -716,6 +864,7 @@ html[data-skin="slate"]
     .covenant-copy
     h4 {
     font-size: 24px;
+    line-height: 32px;
   }
 }
 
@@ -723,8 +872,10 @@ html[data-skin="slate"]
  * 3. TOUCH GEOMETRY — body.touch-layout
  *
  * `--slate-cov-*` are page-local geometry values, not design tokens.
- * `--slate-cov-art` is the share of the screen the deity keeps; the title row
- * floats over it and the tab strip marks the top edge of the panel.
+ * `--slate-cov-art` is the share of the screen the deity keeps in portrait;
+ * the title row floats over it. The PANE keeps one even inset on left, right
+ * and bottom (`contracts.spec.cjs`); the glass takes the inspector's shape,
+ * which in landscape is only the right column.
  * ====================================================================== */
 html[data-skin="slate"]
   body.touch-layout
@@ -736,10 +887,143 @@ html[data-skin="slate"]
   /* 16px matches `--slate-cov-x`: `contracts.spec.cjs` asserts the compact pane
    * keeps one even inset on left, right and bottom. */
   --slate-cov-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  --slate-cov-art: 36dvh;
+  --slate-cov-art: 34dvh;
   --slate-cov-split: 42%;
+  /* the segmented control: 44px segments in a 3px track */
+  --slate-cov-tabs: 50px;
   padding: 0;
 }
+/* ---------- the compact composition, stated for every touch window ----------
+ * components.css builds the compact covenant (absolute pane, scrolling
+ * viewport, side as a column, roster above the copy) inside
+ * `@media (max-width: 1199px), (max-height: 699px)`. `mobile-view.js` also puts
+ * battle windows below 1360×700 on `body.touch-layout` ("compact desktop",
+ * e.g. 1280×720), which that media query misses — the page then fell apart
+ * into the desktop flow under touch geometry. The structural pieces are
+ * restated here on the layout class instead of the window size. */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="contracts"]
+  > .covenant-box {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="contracts"]
+  .covenant-box
+  > .scene-showcase {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-size: auto 100%;
+  background-position: center top;
+  background-repeat: no-repeat;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="contracts"]
+  > .covenant-box
+  > .folio-pane {
+  position: absolute;
+  z-index: 3;
+  flex: none;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+}
+/* The copy scrolls inside the glass, so its lower edge fades out (the scroll
+ * edge effect) instead of being sliced by the sheet's corner. The column ends
+ * in 14–16px of padding, which is what the fade covers at rest. Touch only:
+ * on the desktop the thumbnail strip is an absolutely positioned descendant
+ * of this viewport that sits outside its box, and a mask would erase it. */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="contracts"]
+  .covenant-box
+  .folio-viewport {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+  overflow: hidden auto;
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    #000 calc(100% - 18px),
+    transparent
+  );
+  mask-image: linear-gradient(180deg, #000 calc(100% - 18px), transparent);
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="contracts"]
+  .covenant-box
+  .modal-scroll {
+  display: block;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="contracts"]
+  .covenant-side.reference-active-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  border: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="contracts"]
+  .covenant-side
+  > :is(h3, .soul-ledger) {
+  display: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="contracts"]
+  .covenant-roster {
+  order: 1;
+  flex: 0 0 auto;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="contracts"]
+  .covenant-grid {
+  order: 2;
+  flex: none;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="contracts"]
+  .covenant-roster
+  button {
+  isolation: isolate;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="contracts"]
+  .covenant-roster
+  button
+  > img {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center var(--portrait-focus, 24%);
+}
+
 /* The compact components block caps the sheet at `min(60dvh, 560px)`; the slate
  * pane is placed by explicit top/bottom offsets instead, and the cap would
  * otherwise leave an uneven bottom inset (and strand the 唤醒 pill below the
@@ -762,9 +1046,9 @@ html[data-skin="slate"]
   right: auto;
   z-index: 4;
 }
-/* The heading spans the full width with no padding of its own, so the tab strip
- * (its only absolutely positioned child) can be placed against the same
- * percentage split the panel uses. */
+/* The heading spans the full width with no padding of its own, so the
+ * segmented control (its only absolutely positioned child) can be placed
+ * against the same percentage split the inspector uses. */
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="contracts"]
@@ -778,30 +1062,6 @@ html[data-skin="slate"]
   margin: 0;
   padding: 0;
 }
-/* The compact composition keeps the rule under the page title — it reads as the
- * slate 发丝线 section divider there rather than a line across the deity, and
- * `contracts.spec.cjs` asserts it stays an absolutely positioned `::after`
- * whose `right` offset clears the 48px title-row corner. It is cut back to the
- * title's own width so it never crosses the portrait. */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="contracts"]
-  .covenant-heading::after {
-  content: "";
-  position: absolute;
-  left: var(--slate-cov-x);
-  right: calc(100% - 240px);
-  top: auto;
-  bottom: 0;
-  width: auto;
-  height: 1px;
-  margin: 0;
-  border: 0;
-  border-radius: 0;
-  background: var(--slate-line-art);
-  box-shadow: none;
-  opacity: 1;
-}
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="contracts"]
@@ -811,7 +1071,6 @@ html[data-skin="slate"]
     calc(54px + var(--slate-cov-x));
   font-size: 22px;
   line-height: 44px;
-  letter-spacing: 2px;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -819,8 +1078,8 @@ html[data-skin="slate"]
   .covenant-tabs {
   position: absolute;
   z-index: 3;
-  /* the compact components block caps this at `60%` of the title row; the strip
-   * has to span the panel column instead, so `left`/`right` are the only
+  /* the compact components block caps this at `60%` of the title row; the
+   * control has to span the inspector instead, so `left`/`right` are the only
    * authority over its width */
   width: auto;
   max-width: none;
@@ -831,23 +1090,25 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="contracts"]
   .covenant-tabs
   button {
-  flex: 1 1 0;
   min-height: 44px;
-  padding: 8px 12px 10px;
+  padding: 0 12px;
   font-size: 16px;
-  letter-spacing: 1px;
-  text-align: center;
+}
+
+/* ---------- inspector column ---------- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="contracts"]
+  > .covenant-box
+  > .folio-pane {
+  border-radius: 0 0 var(--lg-radius-sheet) var(--lg-radius-sheet);
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="contracts"]
-  .covenant-tabs
-  button[aria-pressed="true"]::after {
-  left: 14px;
-  right: 14px;
+  .covenant-side.reference-active-side {
+  padding: 0 16px 16px;
 }
-
-/* ---------- panel column ---------- */
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="contracts"]
@@ -855,14 +1116,24 @@ html[data-skin="slate"]
   display: block;
   width: auto;
   margin: 0;
+  padding: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="contracts"]
+  .covenant-grid
+  > .deck-plan {
+  padding: 24px 0;
+  text-align: center;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="contracts"]
   .covenant-copy
   > small {
-  margin: 8px 0 0;
+  margin: 2px 0 0;
   font-size: 13px;
+  line-height: 18px;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -870,55 +1141,50 @@ html[data-skin="slate"]
   .covenant-copy
   h4 {
   font-size: 21px;
+  line-height: 28px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="contracts"]
   .covenant-copy
   > p {
-  margin: 12px 0 0;
-  padding: 12px 0 0;
+  margin: 10px 0 0;
+  padding: 0;
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.5;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="contracts"]
   .ritual-ledger {
-  margin: 12px 0 0;
+  margin: 10px 0 0;
   font-size: 13px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="contracts"]
   .covenant-progress {
-  gap: 12px;
+  gap: 10px;
   margin: 14px 0 0;
-  padding: 14px 0 0;
+  padding: 12px 16px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="contracts"]
   :is(.ritual-gate, .covenant-mana-gate) {
-  grid-template-columns: 76px minmax(0, 1fr) auto;
-  column-gap: 14px;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  column-gap: 12px;
   font-size: 14px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="contracts"]
-  :is(.ritual-count, .covenant-mana-gate > span)
-  > b {
-  font-size: 18px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="contracts"]
   .covenant-copy
   > p:is(.covenant-status, .enemy-covenant-status) {
-  margin: 14px 0 0;
-  padding: 14px 0 0;
-  font-size: 14px;
+  margin: 12px 0 0;
+  padding: 0;
+  font-size: 13px;
+  line-height: 18px;
 }
 /* the 唤醒 pill is the page's single primary action, so it spans the column */
 html[data-skin="slate"]
@@ -929,7 +1195,7 @@ html[data-skin="slate"]
   align-self: stretch;
   width: 100%;
   min-width: 0;
-  min-height: 52px;
+  min-height: 50px;
   margin: 14px 0 0;
   padding: 0 20px;
   font-size: 17px;
@@ -950,20 +1216,28 @@ html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="contracts"]
   .covenant-roster
-  strong {
-  padding: 0 8px;
+  button {
+  border-radius: 12px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="contracts"]
+  .covenant-roster
+  button
+  > strong {
+  padding: 0 8px 6px;
   font-size: 13px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="contracts"]
   .covenant-roster
-  span {
-  padding: 2px 8px 8px;
-  font-size: 11px;
+  button
+  > span {
+  display: none;
 }
 
-/* ---------- portrait: deity on top, panel below ---------- */
+/* ---------- portrait: deity on top, inspector sheet below ---------- */
 html[data-skin="slate"]
   body.touch-layout.mobile-portrait
   #modal.folio-host[data-type="contracts"]
@@ -973,22 +1247,31 @@ html[data-skin="slate"]
     linear-gradient(
       180deg,
       #0d142000 0%,
-      #0d142059 24%,
-      #0d1420cc 33%,
-      #0d1420f2 40%
+      #0d142000 22%,
+      #0d142073 34%,
+      #0d1420b3 46%
     ),
     linear-gradient(180deg, #0b101ab8 0%, #0b101a00 12%);
 }
-/* The panel starts at `--slate-cov-art`; the thumbnail row is its first band and
- * the tab strip sits directly under it, marking the sections below. */
+/* glass = the pane's rectangle; the segmented control heads it */
+html[data-skin="slate"]
+  body.touch-layout.mobile-portrait
+  #modal.folio-host[data-type="contracts"]
+  > .covenant-box::after {
+  top: var(--slate-cov-art);
+  right: var(--slate-cov-r);
+  bottom: var(--slate-cov-bottom);
+  left: var(--slate-cov-x);
+}
 html[data-skin="slate"]
   body.touch-layout.mobile-portrait
   #modal.folio-host[data-type="contracts"]
   .covenant-tabs {
-  left: var(--slate-cov-x);
-  right: var(--slate-cov-r);
-  top: calc(var(--slate-cov-art) + 80px);
+  left: calc(var(--slate-cov-x) + 12px);
+  right: calc(var(--slate-cov-r) + 12px);
+  top: calc(var(--slate-cov-art) + 12px);
 }
+/* the copy scrolls in the viewport, which starts under the control */
 html[data-skin="slate"]
   body.touch-layout.mobile-portrait
   #modal.folio-host[data-type="contracts"]
@@ -998,26 +1281,20 @@ html[data-skin="slate"]
   left: var(--slate-cov-x);
   right: var(--slate-cov-r);
   bottom: var(--slate-cov-bottom);
+  padding: calc(var(--slate-cov-tabs) + 24px) 0 0;
 }
 html[data-skin="slate"]
   body.touch-layout.mobile-portrait
   #modal.folio-host[data-type="contracts"]
   .covenant-roster {
-  height: 72px;
-  margin: 0 0 8px;
-}
-html[data-skin="slate"]
-  body.touch-layout.mobile-portrait
-  #modal.folio-host[data-type="contracts"]
-  .covenant-grid {
-  /* clears the pinned tab row */
-  padding: 52px 0 0;
+  height: 64px;
+  margin: 0 0 14px;
 }
 
-/* ---------- landscape: deity left, panel right with its own scroll ---------- */
+/* ---------- landscape: deity left, inspector right ---------- */
 /* The touch stage draws the painting at `auto 100%` from `center top`; in a wide
- * window that parks the deity exactly under the panel, so she is moved into the
- * left column the scrim keeps clear. */
+ * window that parks the deity exactly under the inspector, so she is moved into
+ * the left column the scrim keeps clear. */
 html[data-skin="slate"]
   body.touch-layout.mobile-landscape
   #modal.folio-host[data-type="contracts"]
@@ -1033,81 +1310,85 @@ html[data-skin="slate"]
   background:
     linear-gradient(
       90deg,
-      #0d142000 20%,
-      #0d1420ab 32%,
-      #0d1420ed calc(var(--slate-cov-split) - 2%)
+      #0d142000 22%,
+      #0d142066 34%,
+      #0d1420a6 calc(var(--slate-cov-split) + 6%)
     ),
     linear-gradient(0deg, #0b101ad9 0%, #0b101a00 24%);
 }
-/* The pane keeps the even 16px inset the compact composition (and
- * `contracts.spec.cjs`) expects; the two-column reading comes from the CONTENT
- * being right-aligned inside it, not from insetting the pane itself. The tab
- * strip is placed on the identical edge: 42% of the pane's content width,
- * measured from the same 16px origin. */
+/* The glass, the control and the copy column all start at 42% of the pane's
+ * content width, measured from the same 16px origin. */
+html[data-skin="slate"]
+  body.touch-layout.mobile-landscape
+  #modal.folio-host[data-type="contracts"]
+  > .covenant-box::after {
+  top: var(--slate-cov-top);
+  right: var(--slate-cov-r);
+  bottom: var(--slate-cov-bottom);
+  left: calc(
+    var(--slate-cov-x) + (100% - var(--slate-cov-x) - var(--slate-cov-r)) *
+      0.42
+  );
+}
 html[data-skin="slate"]
   body.touch-layout.mobile-landscape
   #modal.folio-host[data-type="contracts"]
   .covenant-tabs {
   left: calc(
-    var(--slate-cov-x) + (100% - var(--slate-cov-x) - var(--slate-cov-r)) * 0.42
+    var(--slate-cov-x) + (100% - var(--slate-cov-x) - var(--slate-cov-r)) *
+      0.42 + 12px
   );
-  right: var(--slate-cov-r);
-  top: 56px;
+  right: calc(var(--slate-cov-r) + 12px);
+  top: calc(var(--slate-cov-top) + 10px);
 }
+/* The pane keeps the even 16px inset the compact composition (and
+ * `contracts.spec.cjs`) expects; the two-column reading comes from the CONTENT
+ * being right-aligned inside it. */
 html[data-skin="slate"]
   body.touch-layout.mobile-landscape
   #modal.folio-host[data-type="contracts"]
   > .covenant-box
   > .folio-pane {
-  top: 108px;
+  top: calc(var(--slate-cov-top) + var(--slate-cov-tabs) + 20px);
   left: var(--slate-cov-x);
   right: var(--slate-cov-r);
   bottom: var(--slate-cov-bottom);
+  padding: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout.mobile-landscape
+  #modal.folio-host[data-type="contracts"]
+  .covenant-side.reference-active-side {
+  width: 58%;
+  margin: 0 0 0 auto;
+  padding: 0 14px 14px;
 }
 html[data-skin="slate"]
   body.touch-layout.mobile-landscape
   #modal.folio-host[data-type="contracts"]
   .covenant-roster {
-  width: 58%;
-  height: 58px;
-  margin: 0 0 10px auto;
-}
-html[data-skin="slate"]
-  body.touch-layout.mobile-landscape
-  #modal.folio-host[data-type="contracts"]
-  .covenant-grid {
-  width: 58%;
-  margin: 0 0 0 auto;
-  padding: 0;
+  width: auto;
+  height: 56px;
+  margin: 0 0 12px;
 }
 /* A phone in landscape has ~230px of column: the sections are compacted so the
- * 唤醒 pill comes within one short scroll instead of five. */
+ * 唤醒 pill comes within one short scroll. */
 html[data-skin="slate"]
   body.touch-layout.mobile-landscape
   #modal.folio-host[data-type="contracts"]
   .covenant-copy
   > p {
-  margin: 10px 0 0;
-  padding: 10px 0 0;
+  margin: 8px 0 0;
   font-size: 13px;
-  line-height: 1.6;
+  line-height: 1.5;
 }
 html[data-skin="slate"]
   body.touch-layout.mobile-landscape
   #modal.folio-host[data-type="contracts"]
   .covenant-progress {
-  gap: 10px;
+  gap: 8px;
   margin: 12px 0 0;
-  padding: 12px 0 0;
-}
-html[data-skin="slate"]
-  body.touch-layout.mobile-landscape
-  #modal.folio-host[data-type="contracts"]
-  .covenant-copy
-  > p:is(.covenant-status, .enemy-covenant-status) {
-  margin: 12px 0 0;
-  padding: 12px 0 0;
-  font-size: 13px;
+  padding: 10px 14px;
 }
 html[data-skin="slate"]
   body.touch-layout.mobile-landscape
@@ -1131,30 +1412,24 @@ html[data-skin="slate"]
   html[data-skin="slate"]
     body.touch-layout.mobile-landscape
     #modal.folio-host[data-type="contracts"]
-    .covenant-tabs {
-    top: 46px;
-  }
-  html[data-skin="slate"]
-    body.touch-layout.mobile-landscape
-    #modal.folio-host[data-type="contracts"]
     .covenant-tabs
     button {
     font-size: 14px;
-    padding: 6px 8px 8px;
+    padding: 0 8px;
   }
   html[data-skin="slate"]
     body.touch-layout.mobile-landscape
     #modal.folio-host[data-type="contracts"]
     > .covenant-box
     > .folio-pane {
-    top: 94px;
+    top: calc(var(--slate-cov-top) + var(--slate-cov-tabs) + 16px);
   }
   html[data-skin="slate"]
     body.touch-layout.mobile-landscape
     #modal.folio-host[data-type="contracts"]
     .covenant-roster {
-    height: 50px;
-    margin: 0 0 8px;
+    height: 48px;
+    margin: 0 0 10px;
   }
   html[data-skin="slate"]
     body.touch-layout.mobile-landscape
@@ -1162,5 +1437,6 @@ html[data-skin="slate"]
     .covenant-copy
     h4 {
     font-size: 18px;
+    line-height: 24px;
   }
 }
