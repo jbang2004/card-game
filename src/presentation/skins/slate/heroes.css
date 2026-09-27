@@ -1,23 +1,896 @@
-/* Test skin "slate" — 英雄选择 / hero-select page.
- * Tokens, the full-bleed page shell, pills and form controls live in base.css;
- * this file only adds heroes-specific selectors.
+/* Skin "slate" — 选择你的英雄 / hero selection (liquid glass, 2026-09-27).
+ * Tokens, the page shell, pills and form fields live in base.css; this file
+ * only lays out the hero page inside that shell.
+ *
+ * The page is a card stage (design system §5.0): one big relief card
+ * (`.scene-showcase`), a row of hero cards to pick from, one compact column of
+ * choices and the two actions. The choices column speaks the grouped-list
+ * language of the settings sheet: the hero's name (700/30), the skill in its
+ * own inset group, then one group of rows — 套牌 (a capsule select), 游戏模式
+ * (a segmented control on the desktop, the native select on touch), 对手 in
+ * practice, 契约栏 (a disclosure row) — and the deck idea as the group's
+ * footnote in ink-2. Hero cards are radius 16 with no border; the selected one
+ * wears the system ring and a small blue check beside its name.
+ *
+ * MATERIAL is declared once, unguarded (`html[data-skin="slate"] body …`), so
+ * every layout paints the same components the same way — the
+ * `responsive-component-style` contract compares background, border, radius,
+ * shadow, colour, font family/weight and text-shadow across viewports. The
+ * `body:not(.touch-layout)` and `body.touch-layout` blocks only place, size and
+ * show/hide.
+ *
+ * DOM (application/screens/heroes.js `showHeroes`), inside
+ * `section.hero-chooser.folio-dialog`:
+ *   .scene-showcase (sibling of the pane — it never scrolls) · .modal-heading
+ *   · .folio-pane > .folio-viewport > .modal-scroll.hero-single-sheet
+ *       > .hero-roster > (.hero-roster-heading) .hero-options
+ *           > button.hero-option × 4 > img, .hero-option-text > (small) h3 (em),
+ *             span.selected-check (selected only)
+ *       > .hero-configuration > header.hero-profile-heading > (small) h3
+ *           · section.hero-skill > h4, span.theme-orbit, div > strong + p
+ *           · (.hero-config-intro) · label.hero-config-deck > select
+ *           · label.hero-config-mode > select#game-mode · .hero-mode-cards
+ *           · (.hero-composition) · details.hero-config-contract
+ *           · .hero-config-plan > p#hero-plan, label#opponent-picker[hidden]
+ *   · .modal-footer > #hero-deck-btn (secondary) #hero-confirm (primary)
+ *   (parenthesised nodes stay in the DOM and are hidden here)
  */
 
+/* ==========================================================================
+   MATERIAL — every layout
+   ========================================================================== */
+
+/* ---------- retired structure: hide it again (§6 rule 7) ---------- */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  :is(
+    .hero-roster-heading,
+    .hero-config-intro,
+    .hero-composition,
+    .hero-profile-heading small,
+    .hero-option-text > small,
+    .hero-option-text > em,
+    .hero-config-contract summary > small
+  ) {
+  display: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  #opponent-picker[hidden] {
+  display: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  :is(
+    .hero-chooser > .modal-heading,
+    .hero-options,
+    .hero-option,
+    .hero-profile-heading,
+    .hero-profile-heading h3,
+    .hero-skill > .theme-orbit,
+    .hero-config-plan,
+    .hero-option .selected-check,
+    .hero-mode-cards [data-mode]
+  )::before,
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  :is(
+    .hero-chooser > .modal-heading,
+    .hero-option,
+    .hero-profile-heading,
+    .hero-skill > .theme-orbit,
+    .hero-config-plan,
+    .hero-option .selected-check,
+    .hero-mode-cards [data-mode]
+  )::after {
+  content: none;
+  display: none;
+}
+
+/* ---------- the relief card ---------- */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="heroes"]
   .hero-chooser
-  .modal-heading::after {
-  content: none;
+  > .scene-showcase {
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1.5px solid var(--slate-card-line);
+  background-color: var(--slate-card-base);
+  background-image: var(--scene-art);
+  background-size: cover;
+  background-position: 50% var(--hero-scene-y, 22%);
+  box-shadow:
+    0 18px 44px #0009,
+    inset 0 0 0 1px #0008;
+  filter: none;
+}
+/* the card's inner frame line and its bottom scrim */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-chooser
+  > .scene-showcase::before {
+  content: "";
+  display: block;
+  position: absolute;
+  inset: 6px;
+  border-radius: 8px;
+  border: 1px solid #ffffff2a;
+  pointer-events: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-chooser
+  > .scene-showcase::after {
+  content: "";
+  display: block;
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #0b101800 55%, #0b1018d9 100%);
+  pointer-events: none;
 }
 
-/* ---------- heroes ---------- */
+/* ---------- hero cards: art over a calm name band ---------- */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-roster {
+  position: static;
+  top: auto;
+  border: 0;
+  background: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-option {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  grid-template-areas: none;
+  align-items: center;
+  min-width: 0;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  background: var(--glass-fill-2);
+  box-shadow: inset 0 1px 0 #ffffff14;
+  clip-path: none;
+  overflow: hidden;
+  color: var(--slate-ink);
+  text-align: center;
+  cursor: pointer;
+  transition:
+    background var(--m-base) var(--e-std),
+    box-shadow var(--m-base) var(--e-std),
+    transform var(--m-base) var(--e-spring);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-option:hover {
+  background: #ffffff1a;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-option:active {
+  transform: scale(0.97);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-option.selected {
+  background: #0a84ff1f;
+  box-shadow:
+    0 0 0 2px var(--slate-blue),
+    0 0 0 6px #0a84ff29;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-option:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 3px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  > img {
+  grid-row: 1;
+  grid-column: 1 / -1;
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 5 / 6;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--slate-card-base);
+  box-shadow: none;
+  object-fit: cover;
+  object-position: 50% 18%;
+  clip-path: none;
+  filter: none;
+  transform: none;
+}
+/* the text wrapper dissolves so the name and the check share the band row */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-option-text {
+  display: contents;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  h3 {
+  grid-row: 2;
+  grid-column: 2;
+  min-width: 0;
+  margin: 0;
+  padding: 10px 0 11px;
+  border: 0;
+  font: 600 15px/20px var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink-2);
+  text-shadow: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-option.selected
+  h3 {
+  color: #fff;
+}
+/* the check rides beside the name, below the art, never on it */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  .selected-check {
+  grid-row: 2;
+  grid-column: 3;
+  position: static;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  min-width: 0;
+  min-height: 0;
+  margin: 0 0 0 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--slate-blue-deep);
+  box-shadow: 0 1px 3px #00000059;
+  color: #fff;
+  font-size: 0;
+  letter-spacing: 0;
+  transform: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  .selected-check
+  > svg {
+  display: block;
+  width: 11px;
+  height: 11px;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-option:not(.selected)
+  .selected-check {
+  display: none;
+}
+
+/* ---------- the choices column ---------- */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-configuration {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  color: var(--slate-ink);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading {
+  order: 0;
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading
+  h3 {
+  margin: 0;
+  padding: 0;
+  font: var(--lg-title-page);
+  letter-spacing: 0;
+  color: #fff;
+  text-shadow: none;
+}
+
+/* skill: its own inset group — caption, icon tile, name, rule text */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill {
+  order: 1;
+  position: relative;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  grid-template-areas:
+    "label label"
+    "icon copy";
+  align-items: center;
+  gap: 8px 14px;
+  min-height: 0;
+  margin: 16px 0 0;
+  padding: 12px 16px 16px;
+  border: 0;
+  border-radius: var(--lg-radius-group);
+  background: var(--glass-fill-2);
+  box-shadow: inset 0 1px 0 #ffffff0f;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill
+  > .hero-skill-label {
+  grid-area: label;
+  position: static;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font: 600 13px/18px var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill
+  > .theme-orbit {
+  grid-area: icon;
+  position: static;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: var(--lg-fill-control);
+  box-shadow: var(--lg-rim-soft);
+  color: #fff;
+  transform: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill
+  > .theme-orbit
+  > svg {
+  display: block;
+  position: static;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill
+  > div {
+  grid-area: copy;
+  position: static;
+  display: block;
+  min-width: 0;
+  margin: 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill
+  strong {
+  display: block;
+  font: var(--lg-headline);
+  letter-spacing: 0;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-skill
+  p {
+  margin: 2px 0 0;
+  padding: 0;
+  border: 0;
+  font: 400 14px/1.5 var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink-2);
+}
+
+/* the setup group: one inset group made of rows. Each row paints its own
+ * slice of the group fill — the first rounds the top, the last the bottom —
+ * because the rows are siblings with no wrapper; rows are parted by air, not
+ * rules. The plan paragraph is lifted out of `.hero-config-plan` (contents)
+ * so the practice opponent row can join the group and the plan becomes its
+ * footnote. */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-plan {
+  display: contents;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  :is(.archetype-picker, .hero-mode-cards, .hero-config-contract) {
+  /* class-only list: an id in this :is() would outrank the row radii below */
+  position: relative;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--glass-fill-2);
+  box-shadow: none;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-deck {
+  order: 2;
+  margin-top: 12px;
+  border-radius: var(--lg-radius-group) var(--lg-radius-group) 0 0;
+  box-shadow: inset 0 1px 0 #ffffff0f;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  :is(.hero-config-mode, .hero-mode-cards) {
+  order: 3;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  #opponent-picker {
+  order: 4;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract {
+  order: 5;
+  border-radius: 0 0 var(--lg-radius-group) var(--lg-radius-group);
+}
+/* a picker row: the label, then a capsule select filling the rest */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .archetype-picker {
+  font: var(--lg-headline);
+  letter-spacing: 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .archetype-picker
+  > select {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+}
+
+/* 游戏模式: a segmented control. The row is a grid — the label is `::before`,
+ * the capsule track is `::after` laid across both segment cells, and the two
+ * buttons sit on it as the segments. */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards::before {
+  content: "游戏模式";
+  display: block;
+  position: static;
+  font: var(--lg-headline);
+  letter-spacing: 0;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards::after {
+  content: "";
+  display: block;
+  position: static;
+  border-radius: 999px;
+  background: var(--lg-fill-control);
+  box-shadow: inset 0 1px 2px #00000026;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards
+  [data-mode] {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+  margin: 0;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  box-shadow: none;
+  clip-path: none;
+  font: 500 15px/1 var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink-2);
+  text-align: center;
+  text-shadow: none;
+  white-space: nowrap;
+  transition:
+    background var(--m-fast),
+    color var(--m-fast),
+    box-shadow var(--m-fast);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards
+  [data-mode]:hover {
+  color: #fff;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards
+  [data-mode][aria-pressed="true"] {
+  background: #ffffff24;
+  box-shadow:
+    var(--lg-rim-soft),
+    0 2px 8px #00000026;
+  color: #fff;
+  font-weight: 600;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards
+  [data-mode]:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 1px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards
+  [data-mode]
+  > svg {
+  display: block;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  color: currentColor;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards
+  [data-mode]
+  > span {
+  display: block;
+  font: inherit;
+  letter-spacing: 0;
+}
+/* the flavour line under each mode does not fit a segment */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-mode-cards
+  [data-mode]
+  > span
+  > small {
+  display: none;
+}
+
+/* 契约栏: a disclosure row — label, the three slots and a count, chevron */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract
+  > summary {
+  position: relative;
+  display: grid;
+  align-items: center;
+  margin: 0;
+  border: 0;
+  background: none;
+  list-style: none;
+  cursor: pointer;
+  font: var(--lg-headline);
+  letter-spacing: 0;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract
+  > summary::-webkit-details-marker {
+  display: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract
+  > summary::before {
+  content: none;
+  display: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract
+  > summary::after {
+  content: "";
+  display: block;
+  position: static;
+  width: 7px;
+  height: 7px;
+  margin: 0 3px 3px 0;
+  border: 0;
+  border-right: 2px solid var(--slate-ink-3);
+  border-bottom: 2px solid var(--slate-ink-3);
+  border-radius: 1px;
+  background: none;
+  transform: rotate(-45deg);
+  transition: transform var(--m-base) var(--e-std);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract[open]
+  > summary::after {
+  transform: rotate(45deg);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract
+  > summary:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: -2px;
+  border-radius: 12px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-chooser
+  .contract-slot-preview {
+  position: static;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-chooser
+  .contract-slot-preview
+  > i {
+  display: block;
+  flex: none;
+  width: 9px;
+  height: 9px;
+  margin: 0;
+  border: 1.5px solid var(--slate-ink-3);
+  border-radius: 2px;
+  background: none;
+  box-shadow: none;
+  transform: rotate(45deg);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-chooser
+  .contract-slot-preview
+  > i.filled {
+  border-color: var(--slate-blue);
+  background: var(--slate-blue);
+  box-shadow: 0 0 6px #64b4ff66;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-chooser
+  .contract-slot-preview
+  > b {
+  position: static;
+  margin: 0 0 0 2px;
+  font: 500 15px/1 var(--slate-font);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  color: var(--slate-ink-2);
+}
+/* the opened list: a note, then one checkbox row per contract */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract
+  > p {
+  margin: 0;
+  border: 0;
+  font: 400 13px/1.5 var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract
+  > label {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  grid-template-areas:
+    "box name"
+    "box rule";
+  align-items: center;
+  column-gap: 12px;
+  margin: 0;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  cursor: pointer;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract
+  > label
+  > input {
+  grid-area: box;
+  align-self: center;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--slate-blue-deep);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract
+  > label
+  > strong {
+  grid-area: name;
+  font: 600 15px/1.35 var(--slate-font);
+  letter-spacing: 0;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract
+  > label
+  > span {
+  grid-area: rule;
+  display: block;
+  font: 400 13px/1.45 var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink-2);
+}
+
+/* the deck idea: the group's footnote, two lines at most */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-plan
+  > .deck-plan {
+  order: 6;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  font: 400 13px/1.55 var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink-2);
+}
+
+/* ---------- footer: secondary + primary, one height, one width ---------- */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  > .hero-chooser
+  > .modal-footer {
+  display: flex;
+  grid-template-columns: none;
+  align-items: center;
+  border: 0;
+  background: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  > .hero-chooser
+  > .modal-footer
+  > button {
+  height: 50px;
+  min-height: 50px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   DESKTOP (body:not(.touch-layout)) — geometry
+   Card 300×430 (240×344 under 1500px wide) beside a 440px choices column,
+   the four hero cards centred in one row underneath. Under 820px tall the
+   hero cards move into a 2×2 block in a third column.
+   ========================================================================== */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  > .hero-chooser {
+  --stage-config: 440px;
+  --stage-gap: 56px;
+  --stage-roster: 0px;
+  --stage-w: calc(
+    var(--slate-card-w) + var(--stage-gap) + var(--stage-config)
+  );
+}
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
   .hero-chooser
   > .folio-pane {
   flex: 1 1 auto;
+  min-height: 0;
   margin: 18px 0 0;
 }
 html[data-skin="slate"]
@@ -33,375 +906,19 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="heroes"]
   .hero-single-sheet {
   display: grid;
-  grid-template-columns: var(--slate-rail) var(--slate-list) minmax(0, 1fr);
-  column-gap: var(--slate-col-gap);
-  padding: 0;
-  min-height: 100%;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-roster {
-  display: contents;
-}
-
-/* rail */
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-roster-heading {
-  border: 0;
-  background: none;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-roster-heading {
-  position: relative;
-  grid-column: 1;
-  align-self: stretch;
-  display: grid;
-  grid-template-columns: 56px minmax(0, 1fr);
-  grid-template-rows: 56px;
-  align-content: start;
-  align-items: center;
-  column-gap: 20px;
-  padding: 34px 0 0;
-  margin: 0;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-roster-heading::before {
-  content: "";
-  position: absolute;
-  left: 27px;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: var(--slate-line);
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-roster-heading::after {
-  content: "";
-  border-radius: 50%;
-  border: 1px solid #ffffff3a;
-  background: radial-gradient(
-    circle,
-    #cfe6ff 0 5px,
-    #4d93ff 6px 10px,
-    #1a3d78 11px 16px,
-    #0d1523 17px 22px,
-    #212c3d 23px
-  );
-  box-shadow:
-    0 0 24px #4d93ff55,
-    inset 0 0 8px #0009;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-roster-heading::after {
-  grid-area: 1 / 1;
-  width: 56px;
-  height: 56px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-roster-heading
-  > span {
-  font: 700 25px/1.2 var(--slate-font);
-  color: #fff;
-  letter-spacing: 1px;
-  text-shadow: 0 2px 8px #0006;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-roster-heading
-  > span {
-  grid-area: 1 / 2;
-  position: relative;
-}
-
-/* list */
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-options {
-  grid-column: 2;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  padding: 0;
-  margin: 0;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-options::before {
-  content: "全部英雄";
-  border-bottom: 0;
-  font: 700 20px/1.2 var(--slate-font);
-  color: #fff;
-  letter-spacing: 1px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-options::before {
-  display: block;
-  padding: 0 0 12px 8px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-option {
-  border: 0;
-  border-radius: 14px;
-  background: none;
-  box-shadow: none;
-  color: var(--slate-ink);
-  cursor: pointer;
-  transition: background 0.15s;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-option {
-  position: relative;
-  display: grid;
-  grid-template-columns: var(--slate-thumb-w) minmax(0, 1fr);
-  grid-template-rows: 30px auto auto;
+  grid-template-columns: var(--slate-card-w) var(--stage-config);
+  grid-template-rows: minmax(var(--slate-card-h), auto) auto;
   grid-template-areas:
-    "head head"
-    "img power"
-    "img action";
-  column-gap: 18px;
-  row-gap: 8px;
-  align-items: start;
-  width: 100%;
-  min-height: 0;
-  margin: 0;
-  padding: 12px 8px 16px;
-  text-align: left;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-option::before {
-  content: none;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-option:hover,
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-option.selected {
-  background: var(--glass-fill-2);
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-option:focus-visible {
-  outline: 2px solid var(--slate-blue);
-  outline-offset: -2px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-option-text {
-  display: contents;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  h3 {
-  font: 700 22px/1.3 var(--slate-font);
-  color: #fff;
-  letter-spacing: 1px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  h3 {
-  grid-area: head;
-  justify-self: start;
-  align-self: center;
-  margin: 0;
-  white-space: nowrap;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  small {
-  font: 400 13px/1.3 var(--slate-font);
-  color: var(--slate-ink-3);
-  letter-spacing: 1px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  small {
-  grid-area: head;
-  display: block;
-  justify-self: end;
-  align-self: center;
-  max-width: 55%;
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  img {
-  object-fit: cover;
-  clip-path: none;
-  border-radius: 8px;
-  border: 1.5px solid var(--slate-card-line);
-  background: var(--slate-card-base);
-  box-shadow: 0 8px 20px #0007;
-  filter: none;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  img {
-  grid-area: img;
-  width: var(--slate-thumb-w);
-  height: var(--slate-thumb-h);
-  margin: 2px 0 0;
-  padding: 0;
-  transform: none;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  em {
-  font: 400 14px/1.5 var(--slate-font);
-  font-style: normal;
-  color: var(--slate-ink-2);
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  em {
-  grid-area: power;
-  display: block;
-  margin: 2px 0 0;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  .selected-check,
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-option:not(.selected)::after {
-  border-radius: 999px;
-  border: 1px solid var(--slate-pill-line);
-  background: var(--slate-pill);
-  color: #fff;
-  font: 500 16px/1 var(--slate-font);
-  letter-spacing: 1px;
-  box-shadow: none;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  .selected-check,
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-option:not(.selected)::after {
-  grid-area: action;
-  justify-self: start;
-  align-self: end;
-  position: static;
-  display: inline-flex;
-  align-items: center;
+    "art config"
+    "roster roster";
+  column-gap: var(--stage-gap);
+  row-gap: 24px;
   justify-content: center;
-  gap: 8px;
-  box-sizing: border-box;
-  min-width: 170px;
-  height: 38px;
-  margin: 0;
-  padding: 0 22px;
-  transform: none;
+  align-content: start;
+  min-height: 0;
+  padding: 28px 0 8px;
 }
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-option:not(.selected)::after {
-  content: "选择英雄";
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-option:not(.selected):hover::after {
-  background: #1b2434d9;
-  border-color: var(--slate-line-strong);
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  .selected-check {
-  color: var(--slate-ink-3);
-  border-color: #ffffff1a;
-  background: #0d121b8c;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  .selected-check
-  svg {
-  width: 16px;
-  height: 16px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  .selected-check::after {
-  content: "已选择";
-}
-
-/* preview card (hero art) */
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-chooser
-  > .scene-showcase {
-  border-radius: 12px;
-  border: 1.5px solid var(--slate-card-line);
-  background-color: var(--slate-card-base);
-  background-image: var(--scene-art);
-  background-size: cover;
-  background-position: 50% var(--hero-scene-y, 22%);
-  box-shadow:
-    0 18px 44px #0009,
-    inset 0 0 0 1px #0008;
-  filter: none;
-}
+/* the card is outside the scroll; park it over the grid's "art" cell */
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
@@ -409,657 +926,256 @@ html[data-skin="slate"]
   > .scene-showcase {
   position: absolute;
   inset: auto;
-  left: calc(
-    var(--slate-page-x) + var(--slate-rail) + var(--slate-list) + 2 *
-      var(--slate-col-gap)
-  );
-  top: 150px;
+  left: calc(50% - var(--stage-w) / 2);
+  top: 116px;
+  z-index: 2;
   width: var(--slate-card-w);
   height: var(--slate-card-h);
-  z-index: 2;
-  overflow: hidden;
+  margin: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .hero-chooser
-  > .scene-showcase::before {
-  content: "";
-  position: absolute;
-  inset: 6px;
-  border-radius: 8px;
-  border: 1px solid #ffffff2a;
-  pointer-events: none;
+  .hero-roster {
+  display: block;
+  grid-area: roster;
+  min-width: 0;
+  padding: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .hero-chooser
-  > .scene-showcase::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, #0b101800 55%, #0b1018d9 100%);
+  .hero-options {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 20px;
+  margin: 0;
+  padding: 8px;
 }
-
-/* configuration column */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-option {
+  flex: 0 0 132px;
+  width: 132px;
+}
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
   .hero-configuration {
-  grid-column: 3;
-  display: block;
-  position: relative;
-  min-height: calc(var(--slate-card-h) + 60px);
-  margin: 0;
-  padding: 0 0 0 calc(var(--slate-card-w) + 40px);
+  grid-area: config;
+  align-self: start;
 }
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-profile-heading {
-  border-bottom: 0;
-  background: none;
-}
+
+/* rows */
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .hero-profile-heading {
-  display: flex;
-  align-items: baseline;
-  gap: 14px;
-  margin: 0 0 20px calc(-1 * (var(--slate-card-w) + 40px));
-  padding: 0 0 12px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-profile-heading::before {
-  content: "英雄预览";
-  font: 700 26px/1.2 var(--slate-font);
-  color: #fff;
-  letter-spacing: 1px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-profile-heading::before {
-  order: 0;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-profile-heading
-  h3 {
-  font: 500 22px/1.2 var(--slate-font);
-  color: var(--slate-blue);
-  letter-spacing: 1px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-profile-heading
-  h3 {
-  order: 1;
-  margin: 0;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-profile-heading
-  h3::before {
-  content: "|";
-  color: var(--slate-ink-3);
-  font-weight: 300;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-profile-heading
-  h3::before {
-  margin-right: 14px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-profile-heading
-  small {
-  font: 400 18px/1.2 var(--slate-font);
-  color: var(--slate-ink-2);
-  letter-spacing: 1px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-profile-heading
-  small {
-  order: 2;
-}
-html[data-skin="slate"] body #modal.folio-host[data-type="heroes"] .hero-skill {
-  border: 0;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-skill {
+  :is(.archetype-picker, .hero-mode-cards) {
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr);
-  gap: 10px 16px;
+  grid-template-columns: 76px minmax(0, 1fr);
   align-items: center;
-  margin: 0 0 18px;
-  padding: 0;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-skill
-  > .hero-skill-label {
-  font: 700 20px/1.2 var(--slate-font);
-  color: #fff;
-  letter-spacing: 1px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-skill
-  > .hero-skill-label {
-  grid-column: 1 / -1;
-  margin: 0;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-skill
-  > .theme-orbit {
-  border-radius: 12px;
-  border: 1.5px solid var(--slate-card-line);
-  background: var(--slate-card-base);
-  box-shadow: 0 6px 16px #0006;
-  color: #fff;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-skill
-  > .theme-orbit {
-  width: 64px;
-  height: 64px;
-  display: grid;
-  place-items: center;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-skill
-  > .theme-orbit::before,
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-skill
-  > .theme-orbit::after {
-  content: none;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-skill
-  svg {
-  color: #fff;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-skill
-  svg {
-  width: 34px;
-  height: 34px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-skill
-  strong {
-  font: 600 20px/1.3 var(--slate-font);
-  color: #fff;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-skill
-  strong {
-  display: block;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-skill
-  p {
-  font: 400 15px/1.5 var(--slate-font);
-  color: var(--slate-ink-2);
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-skill
-  p {
-  margin: 4px 0 0;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-config-intro {
-  border-top: 0;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-config-intro {
-  display: block;
-  margin: 0;
-  padding: 12px 0 4px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .config-kicker {
-  font: 700 20px/1.2 var(--slate-font);
-  color: #fff;
-  letter-spacing: 1px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .config-kicker {
-  display: block;
-  margin: 0 0 6px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-deck-note {
-  font: 400 15px/1.55 var(--slate-font);
-  color: var(--slate-ink-2);
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-deck-note {
-  margin: 0;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .archetype-picker {
-  font: 500 18px/1.2 var(--slate-font);
-  color: #fff;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .archetype-picker {
-  display: grid;
-  grid-template-columns: 64px minmax(0, 1fr);
-  align-items: center;
-  gap: 12px;
-  margin: 0;
-  padding: 10px 0;
+  column-gap: 12px;
+  min-height: 60px;
+  padding: 8px 12px 8px 16px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
   .hero-config-mode {
-  /* The mode cards below mirror this select; keep it for the script only. */
+  /* the segmented control below mirrors this select; kept for the script */
   display: none;
 }
 html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-mode-cards {
-  border-top: 0;
-}
-html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
   .hero-mode-cards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px 14px;
-  margin: 0;
-  padding: 12px 0 10px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-mode-cards::before {
-  content: "游戏模式";
-  font: 700 20px/1.2 var(--slate-font);
-  color: #fff;
-  letter-spacing: 1px;
+  grid-template-columns: 76px minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: 42px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
   .hero-mode-cards::before {
-  position: static;
-  grid-column: 1 / -1;
-  margin: 0;
+  grid-row: 1;
+  grid-column: 1;
 }
 html[data-skin="slate"]
-  body
+  body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .hero-mode-cards
-  button {
-  border-radius: 12px;
-  border: 1px solid transparent;
-  background: var(--glass-fill-2);
-  color: #fff;
-  box-shadow: inset 0 1px 0 #ffffff1f;
-  transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
+  .hero-mode-cards::after {
+  grid-row: 1;
+  grid-column: 2 / 4;
+  align-self: stretch;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
   .hero-mode-cards
-  button {
-  display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
-  align-items: center;
-  gap: 12px;
-  min-height: 62px;
-  margin: 0;
-  padding: 10px 16px;
-  text-align: left;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-mode-cards
-  button::before,
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-mode-cards
-  button::after {
-  content: none;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-mode-cards
-  button[aria-pressed="true"] {
-  border-color: var(--slate-blue);
-  box-shadow:
-    inset 0 0 0 1px var(--slate-blue),
-    0 0 18px #8cc4ff33;
-  background: #16243a;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-mode-cards
-  svg {
-  color: #fff;
+  [data-mode] {
+  grid-row: 1;
+  align-self: stretch;
+  height: auto;
+  min-height: 36px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
   .hero-mode-cards
-  svg {
-  width: 30px;
-  height: 30px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-mode-cards
-  span {
-  font: 700 18px/1.2 var(--slate-font);
+  [data-mode="campaign"] {
+  grid-column: 2;
+  margin: 3px 0 3px 3px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
   .hero-mode-cards
-  span {
-  display: block;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-mode-cards
-  small {
-  font: 400 13px/1.3 var(--slate-font);
-  color: var(--slate-ink-2);
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-mode-cards
-  small {
-  display: block;
-  margin: 4px 0 0;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-composition {
-  border: 0;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  :is(em, p) {
-  border: 0;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-composition {
-  margin: 0;
-  padding: 12px 0 8px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .comp-head {
-  position: static;
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin: 0 0 8px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .comp-head
-  h4 {
-  font: 700 20px/1.2 var(--slate-font);
-  color: #fff;
-  letter-spacing: 1px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .comp-head
-  h4 {
-  display: block;
-  margin: 0;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .comp-head
-  span {
-  font: 600 18px/1.2 var(--slate-font);
-  color: var(--slate-blue);
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .comp-counts {
-  display: flex;
-  gap: 10px;
-  margin: 0 0 10px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .comp-counts
-  span {
-  border-radius: 999px;
-  border: 1px solid var(--slate-pill-line);
-  background: var(--slate-pill);
-  font: 400 14px/1.4 var(--slate-font);
-  color: var(--slate-ink-2);
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .comp-counts
-  span {
-  padding: 4px 14px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .comp-counts
-  b {
-  color: #fff;
-  font-weight: 700;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .comp-curve-title {
-  font: 400 14px/1.4 var(--slate-font);
-  color: var(--slate-ink-3);
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .comp-curve-title {
-  display: block;
-  margin: 0 0 4px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-config-contract {
-  border-top: 0;
-  border-bottom: 0;
+  [data-mode="practice"] {
+  grid-column: 3;
+  margin: 3px 3px 3px 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
   .hero-config-contract {
-  margin: 0;
-  padding: 12px 0;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-config-contract
-  summary {
-  font: 700 20px/1.2 var(--slate-font);
-  color: #fff;
-  letter-spacing: 1px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-config-contract
-  summary
-  small {
-  font: 400 14px/1.4 var(--slate-font);
-  color: var(--slate-ink-3);
-  letter-spacing: 0;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-config-plan {
-  border-top: 0;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-config-plan {
-  margin: 0;
-  padding: 14px 0 8px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="heroes"]
-  .hero-config-plan::before {
-  content: "牌组思路";
-  font: 700 20px/1.2 var(--slate-font);
-  color: #fff;
-  letter-spacing: 1px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-config-plan::before {
   display: block;
-  margin: 0 0 6px;
+  padding: 0;
 }
 html[data-skin="slate"]
-  body
+  body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
-  .hero-config-plan
-  .deck-plan {
-  font: 400 15px/1.55 var(--slate-font);
-  color: var(--slate-ink-2);
+  .hero-config-contract
+  > summary {
+  grid-template-columns: 76px minmax(0, 1fr) 16px;
+  column-gap: 12px;
+  min-height: 60px;
+  padding: 0 16px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract
+  > p {
+  padding: 0 16px 6px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract
+  > label {
+  padding: 8px 16px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract
+  > label:last-of-type {
+  padding-bottom: 14px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
   .hero-config-plan
-  .deck-plan {
-  display: block;
-  margin: 0;
+  > .deck-plan {
+  padding: 10px 16px 0;
 }
 
-/* ---------- narrower desktop windows ---------- */
-@media (max-width: 1500px) {
+/* footer: two equal pills under the choices column's right edge */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  > .hero-chooser
+  > .modal-footer {
+  justify-content: flex-end;
+  gap: 12px;
+  width: auto;
+  margin: 0;
+  padding: 14px max(0px, calc(50% - var(--stage-w) / 2)) 0 0;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="heroes"]
+  > .hero-chooser
+  > .modal-footer
+  > button {
+  flex: 0 0 176px;
+  width: 176px;
+  min-width: 0;
+  max-width: none;
+  padding: 0 20px;
+}
+
+/* desktop windows under 820px tall: [card][choices][2×2 hero cards] */
+@media (max-height: 820px) {
   html[data-skin="slate"]
     body:not(.touch-layout)
     #modal.folio-host[data-type="heroes"]
-    .hero-roster-heading
-    > span {
-    font-size: 20px;
-    white-space: nowrap;
+    > .hero-chooser {
+    --stage-config: 400px;
+    --stage-gap: 40px;
+    --stage-roster: 272px;
+    --stage-w: calc(
+      var(--slate-card-w) + 2 * var(--stage-gap) + var(--stage-config) +
+        var(--stage-roster)
+    );
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="heroes"]
+    .hero-single-sheet {
+    grid-template-columns: var(--slate-card-w) var(--stage-config) var(
+        --stage-roster
+      );
+    grid-template-rows: minmax(var(--slate-card-h), auto);
+    grid-template-areas: "art config roster";
+    padding-top: 18px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="heroes"]
+    .hero-chooser
+    > .scene-showcase {
+    top: 106px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="heroes"]
+    .hero-options {
+    display: grid;
+    grid-template-columns: repeat(2, 120px);
+    justify-content: start;
+    gap: 16px;
+    padding: 0 8px 8px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="heroes"]
+    .hero-option {
+    flex: none;
+    width: auto;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="heroes"]
+    :is(.archetype-picker, .hero-mode-cards) {
+    min-height: 56px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="heroes"]
+    .hero-config-contract
+    > summary {
+    min-height: 56px;
   }
 }
 
 /* ==========================================================================
-   触控布局 / touch layouts (body.touch-layout) — GEOMETRY ONLY
-   ==========================================================================
-   The material above this line is scoped `html[data-skin="slate"] body` and so
-   already paints on touch: thumbnails keep their 8px radius and 1.5px card
-   rim, the roster rows keep their hairline, the 「选择英雄」 pill keeps its pill
-   chrome, the preview keeps its card chrome. Everything below only moves and
-   resizes those same components (REFERENCE_UI_STANDARD.md 「组件归属与响应式」).
-
-   Portrait 390×844 — single column: compact roster rows (56px thumb · name ·
-   power · small pill), then the hero preview card, then the configuration
-   sections. `.scene-showcase` is a SIBLING of `.folio-pane` in
-   `screens/heroes.js`, so it cannot be placed between the roster and the
-   configuration without a DOM change; it is taken out of its `inset: 0`
-   full-bleed placement and becomes a static 200px card directly under the
-   title row instead. That is the deviation from the brief's ordering; it is
-   what kills the baseline bug (configuration text sitting straight on the
-   artwork) without giving `.hero-configuration` a background the desktop
-   layout does not have.
-
-   Landscape ≤ 500px tall and tablet — two columns: the preview card gets its
-   own column and the roster + configuration share one scroll column.
+   TOUCH (body.touch-layout) — geometry
+   Portrait: the relief card over the scroll, four hero cards sharing one row,
+   then the choices; the footer pair spans the width. Short landscape: the
+   card owns a left column. Tablets: card left, hero row over the choices.
    ========================================================================== */
-
-/* --- the hero-chooser page shell becomes a grid so the preview card can own a
-       column in landscape; portrait keeps the single stacked column --- */
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="heroes"]
@@ -1087,14 +1203,7 @@ html[data-skin="slate"]
   > .folio-pane {
   grid-area: pane;
   min-height: 0;
-  margin: 10px 0 0;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  > .hero-chooser
-  > .modal-footer {
-  grid-area: foot;
+  margin: 8px 0 0;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1104,46 +1213,32 @@ html[data-skin="slate"]
   overflow-y: auto;
   height: 100%;
 }
-
-/* --- preview card: out of the full-bleed backdrop, into a 200px card --- */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  > .hero-chooser.folio-dialog
+  > .modal-footer {
+  grid-area: foot;
+  justify-self: stretch;
+  width: auto;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="heroes"]
   .hero-chooser
   > .scene-showcase {
   grid-area: art;
-  position: static;
+  position: relative;
   inset: auto;
   z-index: 0;
+  justify-self: center;
   width: 200px;
   height: 270px;
-  margin: 12px auto 0;
-  overflow: hidden;
+  margin: 10px 0 0;
 }
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-chooser
-  > .scene-showcase::before {
-  content: "";
-  position: absolute;
-  inset: 6px;
-  border-radius: 8px;
-  border: 1px solid #ffffff2a;
-  pointer-events: none;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-chooser
-  > .scene-showcase::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, #0b101800 55%, #0b1018d9 100%);
-}
-
-/* --- roster: one flat list, no navigation rail --- */
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="heroes"]
@@ -1157,292 +1252,139 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="heroes"]
   .hero-roster {
   display: block;
-}
-/* the rail node and its 2px spine are a desktop-only navigation device */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-roster-heading {
-  display: none;
+  grid-column: auto;
+  height: auto;
+  max-height: none;
+  min-height: 0;
+  padding: 0;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="heroes"]
   .hero-options {
   display: flex;
-  flex-direction: column;
-  gap: 0;
-  padding: 0;
+  flex-direction: row;
+  justify-content: center;
+  gap: 10px;
+  height: auto;
+  max-height: none;
+  min-height: 0;
   margin: 0;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-options::before {
-  display: block;
-  padding: 0 0 8px 2px;
+  padding: 8px 6px 14px;
+  overflow: visible;
+  scroll-snap-type: none;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="heroes"]
   .hero-option {
-  position: relative;
-  display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) 96px;
-  grid-template-rows: auto auto;
-  grid-template-areas:
-    "img head action"
-    "img power action";
-  column-gap: 14px;
-  row-gap: 2px;
-  align-items: center;
-  width: 100%;
-  min-height: 76px;
-  margin: 0;
-  padding: 10px 2px;
-  text-align: left;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  > img {
-  grid-area: img;
-  align-self: center;
-  width: 56px;
-  height: 56px;
-  margin: 0;
-  padding: 0;
+  flex: 1 1 0;
+  width: auto;
+  max-width: 124px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="heroes"]
   .hero-option
   h3 {
-  grid-area: head;
-  justify-self: start;
-  align-self: end;
-  margin: 0;
-  font-size: 18px;
-  line-height: 1.25;
-}
-/* the roster subtitle has no room next to a 56px thumb on a phone */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  small {
-  display: none;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  em {
-  grid-area: power;
-  align-self: start;
-  display: block;
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 13px;
-  line-height: 1.4;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  .selected-check,
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-option:not(.selected)::after {
-  grid-area: action;
-  position: static;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  box-sizing: border-box;
-  justify-self: end;
-  align-self: center;
-  min-width: 0;
-  height: 34px;
-  margin: 0;
-  padding: 0 14px;
+  padding: 8px 0 9px;
   font-size: 14px;
+  line-height: 18px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-option
+  .selected-check {
+  width: 16px;
+  height: 16px;
+  margin-left: 4px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="heroes"]
   .hero-option
   .selected-check
-  svg {
-  width: 14px;
-  height: 14px;
+  > svg {
+  width: 10px;
+  height: 10px;
 }
 
-/* --- configuration column: sections stack under the roster --- */
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="heroes"]
   .hero-configuration {
-  display: block;
   position: relative;
-  min-height: 0;
-  margin: 16px 0 0;
-  padding: 0;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-profile-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 8px;
-  margin: 0 0 14px;
-  padding: 0 0 10px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-profile-heading::before {
-  font-size: 20px;
+  margin: 4px 0 0;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="heroes"]
   .hero-profile-heading
   h3 {
-  font-size: 17px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-profile-heading
-  h3::before {
-  margin-right: 8px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-profile-heading
-  small {
-  font-size: 13px;
+  font-size: 26px;
+  line-height: 34px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="heroes"]
   .hero-skill {
-  display: grid;
-  grid-template-columns: 52px minmax(0, 1fr);
-  gap: 8px 14px;
-  align-items: center;
-  margin: 0 0 14px;
-  padding: 0;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-skill
-  > .hero-skill-label {
-  grid-column: 1 / -1;
-  margin: 0;
-  font-size: 18px;
+  grid-template-columns: 44px minmax(0, 1fr);
+  margin-top: 12px;
+  padding: 12px 16px 14px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="heroes"]
   .hero-skill
   > .theme-orbit {
-  display: grid;
-  place-items: center;
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="heroes"]
   .hero-skill
-  svg {
-  width: 28px;
-  height: 28px;
+  > .theme-orbit
+  > svg {
+  width: 26px;
+  height: 26px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="heroes"]
   .hero-skill
   strong {
-  display: block;
-  font-size: 17px;
+  font-size: 16px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="heroes"]
   .hero-skill
   p {
-  margin: 3px 0 0;
   font-size: 14px;
 }
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-config-intro {
-  display: block;
-  margin: 0;
-  padding: 10px 0 2px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .config-kicker {
-  display: block;
-  margin: 0 0 4px;
-  font-size: 18px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-deck-note {
-  margin: 0;
-  font-size: 14px;
-}
-/* the deck / mode selects become full-width 44px rows */
+
+/* rows: label + a 44px capsule select; the mode is the native select here
+ * (`dialog-layout.spec.cjs` scrolls to `#game-mode` on every touch size) */
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="heroes"]
   .archetype-picker {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: 64px minmax(0, 1fr);
   align-items: center;
-  gap: 6px;
-  margin: 0;
-  padding: 10px 0 2px;
+  column-gap: 10px;
+  min-height: 60px;
+  padding: 8px 10px 8px 16px;
   font-size: 16px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="heroes"]
   .archetype-picker
-  select {
-  width: 100%;
+  > select {
   min-height: 44px;
-}
-/* On touch the 玩法 picker stays the native `<select>` (a 44px slate form pill,
- * the same control the 套牌 row uses) and the two-up mode CARDS step aside.
- * The desktop does the opposite. This is a per-layout visibility choice, which
- * REFERENCE_UI_STANDARD.md allows; it also matches the non-slate touch layout
- * and keeps `#game-mode` reachable, which `dialog-layout.spec.cjs` asserts at
- * every viewport narrower than 1000px. §6.7: both hides are restated here
- * because the skin layer would otherwise revive whichever node is hidden by
- * `components.css`. */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-config-mode {
-  display: grid;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1453,101 +1395,65 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="heroes"]
-  .hero-composition {
-  margin: 0;
-  padding: 12px 0 6px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .comp-head {
-  position: static;
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 10px;
-  margin: 0 0 8px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .comp-head
-  h4 {
-  display: block;
-  margin: 0;
-  font-size: 18px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .comp-head
-  span {
-  font-size: 16px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .comp-counts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0 0 10px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .comp-counts
-  span {
-  padding: 4px 12px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .comp-curve-title {
-  display: block;
-  margin: 0 0 4px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
   .hero-config-contract {
-  margin: 0;
-  padding: 12px 0;
+  display: block;
+  padding: 0;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="heroes"]
   .hero-config-contract
-  summary {
+  > summary {
+  grid-template-columns: 64px minmax(0, 1fr) 16px;
+  column-gap: 10px;
+  min-height: 56px;
+  padding: 0 16px;
+  font-size: 16px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract
+  > p {
+  padding: 0 16px 6px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-contract
+  > label {
   min-height: 44px;
-  font-size: 18px;
+  padding: 8px 16px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="heroes"]
-  .hero-config-plan {
-  margin: 0;
-  padding: 12px 0 4px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-config-plan::before {
-  display: block;
-  margin: 0 0 4px;
-  font-size: 18px;
+  .hero-config-contract
+  > label:last-of-type {
+  padding-bottom: 14px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="heroes"]
   .hero-config-plan
-  .deck-plan {
-  display: block;
-  margin: 0;
-  font-size: 14px;
+  > .deck-plan {
+  padding: 10px 16px 4px;
 }
 
-/* --- landscape ≤ 500px tall: preview card takes its own column --- */
+/* footer on a phone: the pair shares the width (dialogs.css 12.2), 50 tall.
+ * Touch footer selectors carry `.folio-dialog` on the root: dialogs.css loads
+ * after this file and its page-shell footer rules tie them otherwise. */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  > .hero-chooser.folio-dialog
+  > .modal-footer
+  > button {
+  min-height: 50px;
+  font-size: 17px;
+}
+
+/* short landscape (844×390, 568×320): the card takes the left column */
 @media (max-height: 500px) {
   html[data-skin="slate"]
     body.touch-layout
@@ -1576,52 +1482,59 @@ html[data-skin="slate"]
     #modal.folio-host[data-type="heroes"]
     > .hero-chooser
     > .folio-pane {
-    margin: 8px 0 0;
+    margin: 4px 0 0;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-options {
+    justify-content: flex-start;
+    padding: 8px 6px 12px;
   }
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host[data-type="heroes"]
     .hero-option {
-    min-height: 60px;
-    padding: 6px 2px;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="heroes"]
-    .hero-option
-    > img {
-    width: 44px;
-    height: 44px;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="heroes"]
-    .hero-option {
-    grid-template-columns: 44px minmax(0, 1fr) 88px;
+    max-width: 96px;
   }
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host[data-type="heroes"]
     .hero-option
     h3 {
+    font-size: 13px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    .hero-profile-heading
+    h3 {
+    font-size: 22px;
+    line-height: 30px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    > .hero-chooser.folio-dialog
+    > .modal-footer {
+    justify-content: flex-end;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="heroes"]
+    > .hero-chooser.folio-dialog
+    > .modal-footer
+    > button {
+    flex: 0 0 160px;
+    width: 160px;
+    min-height: 44px;
+    height: 44px;
     font-size: 16px;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="heroes"]
-    .hero-option
-    em {
-    font-size: 12px;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="heroes"]
-    .hero-configuration {
-    margin-top: 12px;
   }
 }
 
-/* --- tablet 1024×768: landscape arrangement with desktop-sized air --- */
+/* tablets / wide touch (≥900×620): card left, hero row over the choices,
+ * the footer spanning the page with its pair at the trailing edge */
 @media (min-width: 900px) and (min-height: 620px) {
   html[data-skin="slate"]
     body.touch-layout
@@ -1632,8 +1545,8 @@ html[data-skin="slate"]
     grid-template-areas:
       "head head"
       "art pane"
-      "art foot";
-    column-gap: 32px;
+      "foot foot";
+    column-gap: 36px;
   }
   html[data-skin="slate"]
     body.touch-layout
@@ -1656,724 +1569,10 @@ html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host[data-type="heroes"]
     .hero-single-sheet {
-    display: grid;
-    grid-template-columns: minmax(0, 390px) minmax(0, 1fr);
-    column-gap: 32px;
-    align-items: start;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="heroes"]
-    .hero-configuration {
-    margin: 0;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="heroes"]
-    .hero-option {
-    min-height: 88px;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="heroes"]
-    .hero-option
-    > img {
-    width: 64px;
-    height: 64px;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="heroes"]
-    .hero-option {
-    grid-template-columns: 64px minmax(0, 1fr) 108px;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="heroes"]
-    .hero-option
-    h3 {
-    font-size: 20px;
-  }
-}
-
-/* the roster row is a grid; the text wrapper has to dissolve into it so name,
- * power and the pill land in their own areas (same trick as the desktop rule) */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-option-text {
-  display: contents;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  .selected-check,
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-option:not(.selected)::after {
-  white-space: nowrap;
-}
-/* the pill fills its fixed action column, so the selected and unselected rows
- * end up on the same right-hand alignment axis at every touch size */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  .selected-check,
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-option:not(.selected)::after {
-  width: 100%;
-  padding: 0 8px;
-  font-size: 13px;
-}
-
-/* `polish-mobile.css` pins `.hero-roster` with `position: sticky; top: 8px` for
- * the silverblue landscape split (150px roster beside the configuration). The
- * slate touch layout is one scroll column — roster first, configuration under
- * it — and a sticky roster taller than the 192px landscape viewport strands its
- * last rows outside every scroll position (`dialog-layout.spec.cjs`'s `turnTo`
- * could never reach 送魂人 at 844×390 / 568×320). Put it back in flow. */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-roster {
-  position: static;
-  top: auto;
-  grid-column: auto;
-  padding: 0;
-}
-
-/* ==========================================================================
-   卡牌舞台 / the hero page as a card stage (2026-09-22)
-   The page reads like the opening hand: one big relief card, a row of hero
-   cards to pick from, one compact column of choices, one primary action. The
-   navigation rail, the roster list chrome, the intro copy and the composition
-   chart are gone; the DOM is untouched (design system §5.1). Shared rules use
-   `body:is(.touch-layout, :not(.touch-layout))` so they tie the per-layout
-   rules above on specificity and win on source order.
-   ========================================================================== */
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  > .hero-chooser {
-  --stage-config: 470px;
-  --stage-gap: 56px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-single-sheet {
-  display: grid;
-  grid-template-columns: var(--slate-card-w) var(--stage-config);
-  grid-template-rows: minmax(var(--slate-card-h), auto) auto;
-  grid-template-areas:
-    "art config"
-    "roster roster";
-  column-gap: var(--stage-gap);
-  row-gap: 30px;
-  justify-content: center;
-  align-content: start;
-  padding: 30px 0 0;
-  min-height: 0;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-chooser
-  > .scene-showcase {
-  left: calc(
-    50% - (var(--slate-card-w) + var(--stage-gap) + var(--stage-config)) / 2
-  );
-  top: 118px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-roster {
-  display: block;
-  grid-area: roster;
-  min-width: 0;
-}
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-roster-heading,
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-config-intro,
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-composition,
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-profile-heading
-  small,
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  small,
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  em {
-  display: none;
-}
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-options::before,
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-option::before,
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-option:not(.selected)::after,
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-option:not(.selected):hover::after {
-  content: none;
-  display: none;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-options {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  gap: 22px;
-  padding: 6px 0 10px;
-}
-/* --- a hero option is a card: art, a name band, nothing else --- */
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-option {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  grid-template-columns: none;
-  grid-template-rows: none;
-  grid-template-areas: none;
-  min-height: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 14px;
-  background: var(--glass-fill-2);
-  box-shadow: inset 0 1px 0 #ffffff1f;
-  overflow: hidden;
-  text-align: center;
-  transition:
-    transform var(--m-base) var(--e-std),
-    box-shadow var(--m-base) var(--e-std),
-    background var(--m-base) var(--e-std);
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-option {
-  flex: 0 0 156px;
-  width: 156px;
-}
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  > img {
-  grid-area: auto;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 5 / 6;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  object-fit: cover;
-  object-position: 50% 18%;
-  box-shadow: none;
-  transform: none;
-}
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-option-text {
-  display: block;
-  padding: 10px 10px 12px;
-}
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  h3 {
-  grid-area: auto;
-  margin: 0;
-  font: 700 16px/1.3 var(--slate-font);
-  letter-spacing: 1px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  .selected-check {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: var(--slate-blue-deep);
-  box-shadow: 0 0 14px #2f72d6aa;
-  color: #fff;
-  font-size: 0;
-}
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  .selected-check
-  svg {
-  width: 14px;
-  height: 14px;
-}
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-option:not(.selected)
-  .selected-check {
-  display: none;
-}
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-option:hover {
-  background: #ffffff1a;
-  transform: translateY(-4px);
-}
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-option.selected {
-  background: #16243a;
-  box-shadow:
-    inset 0 0 0 2px var(--slate-blue),
-    0 0 28px #8cc4ff4d,
-    0 14px 30px #0008;
-  transform: translateY(-8px);
-}
-/* --- the choices column beside the card --- */
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-configuration {
-  grid-area: config;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  min-height: 0;
-  margin: 0;
-  padding: 2px 0 0;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-profile-heading {
-  margin: 0 0 4px;
-  padding: 0;
-}
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-profile-heading
-  h3 {
-  color: #fff;
-  font: 700 30px/1.2 var(--slate-font);
-  letter-spacing: 2px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-skill {
-  padding: 10px 0 14px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  :is(
-    .hero-config-deck,
-    .hero-config-mode,
-    .hero-mode-cards,
-    .hero-config-contract
-  ) {
-  padding-top: 10px;
-  padding-bottom: 10px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-mode-cards
-  button {
-  min-height: 54px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-config-plan {
-  padding: 4px 0 0;
-}
-
-/* --- touch: the same stage stacked; the hero cards become a swipe row --- */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-options {
-  display: flex;
-  flex-direction: row;
-  gap: 12px;
-  padding: 6px 4px 14px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  scroll-snap-type: x proximity;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-options::-webkit-scrollbar {
-  display: none;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-option {
-  flex: 0 0 104px;
-  width: 104px;
-  scroll-snap-align: center;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-option-text {
-  padding: 8px 6px 10px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  h3 {
-  font-size: 14px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-option.selected {
-  transform: translateY(-4px);
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-configuration {
-  margin-top: 4px;
-}
-@media (max-height: 500px) {
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="heroes"]
-    .hero-option {
-    flex-basis: 84px;
-    width: 84px;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="heroes"]
-    .hero-option
-    h3 {
-    font-size: 13px;
-  }
-}
-
-/* --- stage polish: the pieces the older rules still dressed up --- */
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-profile-heading
-  h3::before {
-  content: none;
-}
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-option.selected
-  .selected-check,
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  .selected-check {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  left: auto;
-  bottom: auto;
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  min-width: 0;
-  min-height: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: var(--slate-blue-deep);
-  box-shadow: 0 0 14px #2f72d6aa;
-  color: #fff;
-  font-size: 0;
-  letter-spacing: 0;
-}
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  .selected-check::before,
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-option
-  .selected-check::after {
-  content: none;
-}
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-config-plan
-  .deck-plan {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: none;
-  box-shadow: none;
-  font: 400 13px/1.6 var(--slate-font);
-  color: var(--slate-ink-2);
-}
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-config-contract
-  summary
-  small {
-  display: none;
-}
-/* desktop: the choices column must not outgrow the card */
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-skill {
-  margin: 0 0 6px;
-  padding: 8px 0 10px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  :is(
-    .hero-config-deck,
-    .hero-config-mode,
-    .hero-mode-cards,
-    .hero-config-contract
-  ) {
-  padding-top: 8px;
-  padding-bottom: 8px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-mode-cards
-  button {
-  min-height: 48px;
-  padding-top: 6px;
-  padding-bottom: 6px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-single-sheet {
-  row-gap: 22px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="heroes"]
-  .hero-option {
-  flex-basis: 132px;
-  width: 132px;
-}
-/* touch: nothing older may pin the swipe row's height */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  :is(.hero-roster, .hero-options, .hero-option) {
-  height: auto;
-  max-height: none;
-  min-height: 0;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-options {
-  scroll-padding-inline: 4px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-option {
-  scroll-snap-align: start;
-}
-
-/* the 「英雄预览」 kicker was drawn by a pseudo-element; the name stands alone */
-html[data-skin="slate"]
-  body:is(.touch-layout, :not(.touch-layout))
-  #modal.folio-host[data-type="heroes"]
-  .hero-profile-heading::before {
-  content: none;
-  display: none;
-}
-/* touch: four cards share the row instead of swiping — 82px on a 390 phone */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-options {
-  gap: 10px;
-  padding: 6px 0 12px;
-  overflow: visible;
-  scroll-snap-type: none;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="heroes"]
-  .hero-option {
-  flex: 1 1 0;
-  width: auto;
-  min-width: 0;
-  max-width: 124px;
-}
-@media (max-height: 500px) {
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="heroes"]
-    .hero-option {
-    flex: 1 1 0;
-    width: auto;
-    max-width: 96px;
-  }
-}
-/* desktop windows under 820px tall cannot stack the hero row under the card:
- * the four cards become a 2×2 block in a third column */
-@media (max-height: 820px) {
-  html[data-skin="slate"]
-    body:not(.touch-layout)
-    #modal.folio-host[data-type="heroes"]
-    > .hero-chooser {
-    --stage-config: 400px;
-    --stage-gap: 40px;
-  }
-  html[data-skin="slate"]
-    body:not(.touch-layout)
-    #modal.folio-host[data-type="heroes"]
-    .hero-single-sheet {
-    grid-template-columns: var(--slate-card-w) var(--stage-config) 262px;
-    grid-template-rows: minmax(var(--slate-card-h), auto);
-    grid-template-areas: "art config roster";
-    padding-top: 18px;
-  }
-  html[data-skin="slate"]
-    body:not(.touch-layout)
-    #modal.folio-host[data-type="heroes"]
-    .hero-chooser
-    > .scene-showcase {
-    left: calc(
-      50% -
-        (
-          var(--slate-card-w) + 2 * var(--stage-gap) + var(--stage-config) +
-            262px
-        ) /
-        2
-    );
-    top: 106px;
-  }
-  html[data-skin="slate"]
-    body:not(.touch-layout)
-    #modal.folio-host[data-type="heroes"]
-    .hero-options {
-    display: grid;
-    grid-template-columns: repeat(2, 120px);
-    justify-content: start;
-    gap: 14px;
-    padding: 2px 0 0;
-  }
-  html[data-skin="slate"]
-    body:not(.touch-layout)
-    #modal.folio-host[data-type="heroes"]
-    .hero-option {
-    flex-basis: auto;
-    width: auto;
-  }
-}
-
-/* --- tablet / wide touch (≥900×620): the hero row sits over the choices in
-   one column to the right of the relief card; the footer spans the page and
-   keeps its actions at the right --- */
-@media (min-width: 900px) and (min-height: 620px) {
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="heroes"]
-    > .hero-chooser {
-    grid-template-columns: 240px minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    grid-template-areas:
-      "head head"
-      "art pane"
-      "foot foot";
-    column-gap: 36px;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="heroes"]
-    > .hero-chooser
-    > .modal-footer {
-    justify-content: flex-end;
-    gap: 14px;
-    margin-top: 10px;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="heroes"]
-    .hero-single-sheet {
     display: flex;
     flex-direction: column;
     gap: 0;
-    max-width: 620px;
+    max-width: 560px;
   }
   html[data-skin="slate"]
     body.touch-layout
@@ -2381,7 +1580,7 @@ html[data-skin="slate"]
     .hero-options {
     justify-content: flex-start;
     gap: 14px;
-    padding: 4px 0 18px;
+    padding: 8px 8px 18px;
   }
   html[data-skin="slate"]
     body.touch-layout
@@ -2397,25 +1596,29 @@ html[data-skin="slate"]
     .hero-profile-heading
     h3 {
     font-size: 28px;
+    line-height: 36px;
   }
-}
-@media (min-width: 900px) and (min-height: 620px) {
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host[data-type="heroes"]
-    > .hero-chooser
+    > .hero-chooser.folio-dialog
     > .modal-footer {
+    justify-content: flex-end;
+    gap: 14px;
     width: 100%;
     max-width: none;
     justify-self: stretch;
+    margin-top: 10px;
   }
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host[data-type="heroes"]
-    > .hero-chooser
+    > .hero-chooser.folio-dialog
     > .modal-footer
     > button {
-    flex: 0 0 auto;
-    min-width: 200px;
+    flex: 0 0 176px;
+    width: 176px;
+    min-width: 0;
+    max-width: none;
   }
 }

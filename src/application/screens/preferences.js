@@ -124,12 +124,16 @@ const EmberPreferenceScreens = (() => {
       for (const chapter of chapters) {
         const button = document.createElement("button");
         button.className = "ghost-btn";
-        button.textContent = [
-          "01　战斗目标",
-          "02　出牌与攻击",
-          "03　构筑与冒险",
-          "04　关键词",
+        // The number and the title are separate boxes so the skin can seat the
+        // number in the sidebar's leading tile; the space between them keeps
+        // the accessible name "01 战斗目标" and collapses in the flex row.
+        const [index, title] = [
+          ["01", "战斗目标"],
+          ["02", "出牌与攻击"],
+          ["03", "构筑与冒险"],
+          ["04", "关键词"],
         ][chapters.indexOf(chapter)];
+        button.innerHTML = `<span class="help-toc-index">${index}</span> <span class="help-toc-label">${title}</span>`;
         contents.append(button);
       }
       $("modal").querySelector(".help-columns").before(contents);
