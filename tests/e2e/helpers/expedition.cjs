@@ -3,6 +3,7 @@
  * A player-facing test takes the same step a player does. The deck and the
  * covenants chosen on hero select belong to a practice duel, so tests that
  * need them pick the practice mode first. */
+const { turnTo } = require("./dialog-pages.cjs");
 async function chooseFoe(page, index = 0) {
   await page.locator("#modal .run-box [data-foe]").nth(index).click();
   await page.locator("#run-confirm").click();
@@ -13,8 +14,14 @@ async function beginExpedition(page) {
   await chooseFoe(page);
   await page.locator("#mulligan-confirm").waitFor();
 }
+/** the practice mode: the mode segments where the layout shows them, the mode select where it does not */
 async function choosePractice(page, opponent = null) {
-  await page.locator('.hero-mode-cards [data-mode="practice"]').click();
+  const segment = page.locator('.hero-mode-cards [data-mode="practice"]');
+  if (await segment.isVisible()) await segment.click();
+  else {
+    await turnTo(page, "#game-mode");
+    await page.locator("#game-mode").selectOption("practice");
+  }
   if (opponent) await page.locator("#practice-opponent").selectOption(opponent);
 }
 /** the lobby → an expedition battle for this hero, whose run has taken the hero's own covenants as treasures (a

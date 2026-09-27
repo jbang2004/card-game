@@ -1,5 +1,6 @@
 const { test, expect } = require("@playwright/test");
 const { inspectVisualDiscipline } = require("./helpers/visual-discipline.cjs");
+const { choosePractice } = require("./helpers/expedition.cjs");
 const path = require("node:path");
 for (const [width, height] of [
   [752, 884],
@@ -64,6 +65,8 @@ for (const [width, height] of [
       .locator('[data-hero="mage"],[data-hero="aelric"]')
       .first()
       .click();
+    // the covenant loadout is a practice duel's (the expedition takes its covenants as treasures)
+    await choosePractice(page);
     await page
       .locator(".hero-config-contract summary")
       .scrollIntoViewIfNeeded();
