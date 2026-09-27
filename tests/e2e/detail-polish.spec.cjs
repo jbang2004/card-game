@@ -12,35 +12,43 @@ for (const width of [1672, 1280, 390])
     await spell.click();
     await expect(spell).toHaveClass(/active/);
     // Slate replaced the old theme's travelling `.selection-light` band with
-    // the underline bar the text pager owns (`.filter-btn.active::after`,
-    // design system §3 「文字分页」); the band is no longer injected at all.
-    // The geometric intent is unchanged: the indicator is a thin bar pinned to
-    // the bottom of the active tab and centred on it.
+    // an indicator the control owns; the band is no longer injected at all.
+    // Since liquid glass v2 (design system 「分段控件」) the type filter is a
+    // segmented control: the indicator is the active segment's own capsule
+    // thumb inside the track, and no other segment paints one.
     await expect(group.locator(".selection-light")).toHaveCount(0);
     await expect
       .poll(() =>
         group.evaluate((e) => {
+          const painted = (b) => {
+            const s = getComputedStyle(b);
+            return (
+              s.backgroundColor !== "rgba(0, 0, 0, 0)" ||
+              s.backgroundImage !== "none"
+            );
+          };
           const active = e.querySelector(".active");
-          const a = active.getBoundingClientRect();
-          const bar = getComputedStyle(active, "::after");
-          if (bar.content === "none") return Infinity;
-          const left = parseFloat(bar.left),
-            right = parseFloat(bar.right),
-            bottom = parseFloat(bar.bottom),
-            height = parseFloat(bar.height);
+          const track = e.getBoundingClientRect(),
+            a = active.getBoundingClientRect();
+          const radius = parseFloat(getComputedStyle(active).borderRadius);
           return (
-            // symmetric inset keeps the bar centred on its tab
-            Math.abs(left - right) +
-            // a hairline bar, not a filled block
-            Math.max(0, height - 4) +
-            // pinned to the tab's bottom edge
-            Math.max(0, Math.abs(bottom) - 3) +
-            // and it has to actually span the tab
-            Math.max(0, 1 - (a.width - left - right))
+            // the active segment is a painted capsule…
+            (painted(active) ? 0 : 1) +
+            (radius >= a.height / 2 - 0.5 ? 0 : 1) +
+            // …seated inside the track…
+            (a.left >= track.left - 0.5 &&
+            a.right <= track.right + 0.5 &&
+            a.top >= track.top - 0.5 &&
+            a.bottom <= track.bottom + 0.5
+              ? 0
+              : 1) +
+            // …and it is the only thumb
+            [...e.querySelectorAll(".filter-btn:not(.active)")].filter(painted)
+              .length
           );
         }),
       )
-      .toBeLessThan(2);
+      .toBe(0);
     expect(await page.locator("#library-grid .card").count()).toBeGreaterThan(
       0,
     );
@@ -49,8 +57,9 @@ for (const width of [1672, 1280, 390])
     );
     // The old theme moved one shared band onto whatever the pointer was over,
     // which meant the indicator lied about which filter was applied. Slate
-    // marks hover on the label itself and leaves the underline on the tab that
-    // is actually active, so hovering must change neither selection nor grid.
+    // marks hover on the segment itself and leaves the thumb on the segment
+    // that is actually active, so hovering must change neither selection nor
+    // grid.
     const minion = group.locator('[data-type="minion"]');
     await minion.hover();
     await expect(minion).toHaveCSS("color", "rgb(255, 255, 255)");
