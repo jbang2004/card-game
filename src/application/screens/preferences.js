@@ -108,7 +108,7 @@ const EmberPreferenceScreens = (() => {
     }
     function showHelp() {
       showModal(
-        `<section class="modal-box help-box"><div class="modal-heading"><div class="eyebrow">玩法与规则</div><h2>旅人手册</h2><p>回合流程、构筑规则与关键词速查。</p></div><div class="help-columns"><div><section class="help-section"><h3>01 · 一场战斗如何获胜</h3><p>将敌方英雄生命降至 <b>0</b>。你有 <b>30 点基础生命、${D.deckRules.size} 张牌库</b>，双方最多拥有 <b>7 个随从、10 张手牌</b>。战役中你先手；练习对战随机先后手。先手起始三张、后手四张并在换牌后获得硬币。每个回合增加一枚法力水晶，上限 10，并补满法力、抽一张牌。</p></section><section class="help-section"><h3>02 · 出牌与攻击</h3><p><b>把手牌拖到战场</b>松手即可打出；需要目标时，拖向或点击目标确认，<b>右键或 Esc</b> 取消。也可以直接点击手牌：不需要目标的牌再点战场空位确认，需要目标的牌进入瞄准。<br><b>桌面悬停或右键</b>查看卡牌大图；触控设备长按或右键卡牌查看详情，点击空白处收起。<br><b>点击己方随从 → 点击敌人</b>即可攻击。新召唤的随从通常需要等待一回合。双方随从同时对彼此造成攻击力数值的伤害。装备武器后，点击自己的英雄攻击。<br>按按钮标示的法力费用使用英雄技能，每回合一次。空格结束回合，Esc 取消选择，M 静音。</p></section><section class="help-section"><h3>03 · 构筑与冒险</h3><p>图鉴中 ${D.cards.filter((c) => !c.token).length} 张卡全部开放，构筑使用所选职业与中立牌。${D.archetypes.length} 套预设分别提供打法说明。<b>${EmberDeckRules.summary(D)}</b>。${D.bosses.length} 位首领均在半血时进入第二阶段。每次胜利可更换一张牌并选择遗物，下一关生命完全恢复。练习对战可挑战 ${D.archetypes.length} 套牌，随机先后手、双方三十血，不覆盖战役进度。进度自动保存在当前浏览器。<br>牌库耗尽后，每次抽牌依次受到 <b>1、2、3…</b> 点疲劳伤害。第 51 个玩家回合开始时判为平局。</p></section></div><div><section class="help-section"><h3>04 · 关键词速查</h3><div class="key-table">${Object.entries(
+        `<section class="modal-box help-box"><div class="modal-heading"><div class="eyebrow">玩法与规则</div><h2>旅人手册</h2><p>回合流程、构筑规则与关键词速查。</p></div><div class="help-columns"><div><section class="help-section"><h3>01 · 一场战斗如何获胜</h3><p>将敌方英雄生命降至 <b>0</b>。你有 <b>30 点基础生命、${D.deckRules.size} 张牌库</b>，双方最多拥有 <b>7 个随从、10 张手牌</b>。战役中你先手；练习对战随机先后手。先手起始三张、后手四张并在换牌后获得硬币。每个回合增加一枚法力水晶，上限 10，并补满法力、抽一张牌。</p></section><section class="help-section"><h3>02 · 出牌与攻击</h3><p><b>把手牌拖到战场</b>松手即可打出；需要目标时，拖向或点击目标确认，<b>右键或 Esc</b> 取消。也可以直接点击手牌：不需要目标的牌再点战场空位确认，需要目标的牌进入瞄准。<br><b>桌面悬停或右键</b>查看卡牌大图；触控设备长按或右键卡牌查看详情，点击空白处收起。<br><b>点击己方随从 → 点击敌人</b>即可攻击。新召唤的随从通常需要等待一回合。双方随从同时对彼此造成攻击力数值的伤害。装备武器后，点击自己的英雄攻击。<br>按按钮标示的法力费用使用英雄技能，每回合一次。空格结束回合，Esc 取消选择，M 静音。</p></section><section class="help-section"><h3>03 · 构筑与冒险</h3><p>图鉴中 ${D.cards.filter((c) => !c.token).length} 张卡全部开放，构筑使用所选职业与中立牌。${D.archetypes.length} 套预设分别提供打法说明。<b>${EmberDeckRules.summary(D)}</b>。${D.bosses.length} 位首领均在半血时进入第二阶段。每次胜利可更换一张牌并选择遗物，下一关生命完全恢复。练习对战可挑战 ${D.archetypes.length} 套牌，随机先后手、双方三十血，不覆盖战役进度。进度自动保存在当前浏览器。<br>牌库耗尽后，每次抽牌依次受到 <b>1、2、3…</b> 点疲劳伤害。第 51 个玩家回合开始时判为平局。</p></section></div><div><section class="help-section"><h3>04 · 关键词速查</h3><div class="key-table lg-group">${Object.entries(
           keywords,
         )
           .map(([k, v]) => `<div><b>${D.kw[k]}</b>${v}</div>`)
@@ -119,11 +119,11 @@ const EmberPreferenceScreens = (() => {
       );
       const chapters = [...$("modal").querySelectorAll(".help-section")];
       const contents = document.createElement("nav");
-      contents.className = "help-toc";
+      contents.className = "help-toc lg-sidebar";
       contents.setAttribute("aria-label", "手册章节");
       for (const chapter of chapters) {
         const button = document.createElement("button");
-        button.className = "ghost-btn";
+        button.className = "lg-seg-item";
         // The number and the title are separate boxes so the skin can seat the
         // number in the sidebar's leading tile; the space between them keeps
         // the accessible name "01 战斗目标" and collapses in the flex row.
@@ -140,7 +140,7 @@ const EmberPreferenceScreens = (() => {
       EmberDialogs.tabs(contents, chapters);
       const overview = document.createElement("div");
       overview.className = "help-reference-overview";
-      overview.innerHTML = `<section class="help-turn-flow crafted-panel"><h3>回合流程</h3><p>回合开始时抽牌并恢复法力；出牌、攻击与技能可按策略穿插。</p><div>${[
+      overview.innerHTML = `<section class="help-turn-flow crafted-panel lg-group"><h3>回合流程</h3><p>回合开始时抽牌并恢复法力；出牌、攻击与技能可按策略穿插。</p><div>${[
         ["cards", "回合开始", "恢复法力 · 抽牌"],
         ["swords", "自由行动", "出牌、攻击与技能"],
         ["hourglass", "结束回合", "完成行动，轮到对手"],
@@ -151,9 +151,9 @@ const EmberPreferenceScreens = (() => {
         )
         .join(
           "",
-        )}</div></section><section class="help-card-anatomy crafted-panel"><h3>卡牌说明</h3><p>每张卡牌包含以下基本信息：</p><div class="help-card-diagram"><div class="help-card-labels"><p><b>费用</b>打出卡牌所需的法力。</p><p><b>攻击</b>随从造成的战斗伤害。</p></div>${EmberCards.cardHTML(D.cards.find((c) => c.type === "minion" && !c.token && c.cost === 3))}<div class="help-card-labels"><p><b>效果</b>卡牌的特殊能力或效果。</p><p><b>生命</b>生命降至 0 时被消灭。</p></div></div></section><aside class="help-key-preview crafted-panel"><h3>关键词速查</h3>${["taunt", "shield", "death", "charge"].map((key, i) => `<div><i>${A.icon(["taunt-mask", "ward", "keyword-skull", "lightning"][i])}</i><p><strong>${["嘲讽", "圣盾", "亡语", "冲锋"][i]}</strong><span>${["必须优先攻击具有嘲讽的角色。", "首次受到伤害时，抵消伤害并失去圣盾。", "随从死亡后触发一次效果。", "可以在召唤当回合立即攻击。"][i]}</span></p></div>`).join("")}</aside>`;
+        )}</div></section><section class="help-card-anatomy crafted-panel lg-group"><h3>卡牌说明</h3><p>每张卡牌包含以下基本信息：</p><div class="help-card-diagram"><div class="help-card-labels"><p><b>费用</b>打出卡牌所需的法力。</p><p><b>攻击</b>随从造成的战斗伤害。</p></div>${EmberCards.cardHTML(D.cards.find((c) => c.type === "minion" && !c.token && c.cost === 3))}<div class="help-card-labels"><p><b>效果</b>卡牌的特殊能力或效果。</p><p><b>生命</b>生命降至 0 时被消灭。</p></div></div></section><aside class="help-key-preview crafted-panel lg-group"><h3>关键词速查</h3>${["taunt", "shield", "death", "charge"].map((key, i) => `<div><i>${A.icon(["taunt-mask", "ward", "keyword-skull", "lightning"][i])}</i><p><strong>${["嘲讽", "圣盾", "亡语", "冲锋"][i]}</strong><span>${["必须优先攻击具有嘲讽的角色。", "首次受到伤害时，抵消伤害并失去圣盾。", "随从死亡后触发一次效果。", "可以在召唤当回合立即攻击。"][i]}</span></p></div>`).join("")}</aside>`;
       const basicRules = document.createElement("details");
-      basicRules.className = "help-basic-rules";
+      basicRules.className = "help-basic-rules lg-group";
       basicRules.innerHTML = "<summary>基础数值与先后手规则</summary>";
       basicRules.append(chapters[0].querySelector("p"));
       chapters[0].querySelector("h3").textContent = "01 · 战斗目标";

@@ -326,13 +326,7 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="map"]
   .adventure-atlas
   .atlas-dossier {
-  border: 0;
-  border-radius: var(--lg-radius-sheet);
-  background: var(--glass-fill);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-rim), var(--glass-shadow);
-  color: var(--slate-ink);
+  /* material: base.css `.lg-sheet` */
   font-family: var(--slate-font);
 }
 /* boss card: art cover, concentric with the sheet (28 − 10px inset = 18) */
@@ -452,9 +446,7 @@ html[data-skin="slate"]
   box-sizing: border-box;
   /* legacy-components caps the old inline relic strip at 220px */
   max-width: none;
-  border: 0;
-  border-radius: var(--lg-radius-group);
-  background: var(--glass-fill-2);
+  /* material: base.css `.lg-group` */
 }
 html[data-skin="slate"]
   body

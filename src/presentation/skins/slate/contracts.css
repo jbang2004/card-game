@@ -123,10 +123,7 @@ html[data-skin="slate"]
   gap: 0;
   margin: 0;
   padding: 3px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--lg-fill-control);
-  box-shadow: inset 0 1px 2px #00000026;
+  /* material: base.css `.lg-seg` */
 }
 html[data-skin="slate"]
   body
@@ -137,19 +134,12 @@ html[data-skin="slate"]
   flex: 1 1 0;
   min-width: 0;
   margin: 0;
+  /* material: base.css `.lg-seg-item`; the transparent 1px edge keeps
+   * Playwright's stability wait settling (see the page notes) */
   border: 1px solid transparent;
-  border-radius: 999px;
-  background: transparent;
-  box-shadow: none;
-  font: 500 15px/20px var(--slate-font);
-  letter-spacing: 0;
-  color: var(--slate-ink-2);
+  font-size: 15px;
+  line-height: 20px;
   text-align: center;
-  text-shadow: none;
-  transition:
-    background-color var(--m-fast),
-    box-shadow var(--m-fast),
-    color var(--m-fast);
 }
 html[data-skin="slate"]
   body
@@ -162,25 +152,6 @@ html[data-skin="slate"]
   .covenant-tabs
   button::after {
   content: none;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="contracts"]
-  .covenant-tabs
-  button:hover {
-  color: #fff;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="contracts"]
-  .covenant-tabs
-  button[aria-pressed="true"] {
-  background: #ffffff24;
-  box-shadow:
-    var(--lg-rim-soft),
-    0 2px 8px #00000026;
-  color: #fff;
-  font-weight: 600;
 }
 html[data-skin="slate"]
   body
@@ -320,9 +291,8 @@ html[data-skin="slate"]
   .covenant-progress {
   display: flex;
   flex-direction: column;
+  /* material: base.css `.lg-group` (plus a transparent top edge) */
   border-top: 1px solid transparent;
-  border-radius: var(--lg-radius-group);
-  background: var(--glass-fill-2);
 }
 html[data-skin="slate"]
   body

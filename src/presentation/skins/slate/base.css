@@ -357,7 +357,7 @@ html[data-skin="slate"]
   body
   #modal.folio-host
   .folio-dialog
-  :is(.crafted-panel, .touch-hero-info, .atelier-vignette):where(:not(.lg-sheet)) {
+  :is(.crafted-panel, .touch-hero-info, .atelier-vignette):where(:not(.lg-sheet, .lg-group)) {
   background: none;
   border: 0;
   border-radius: 0;

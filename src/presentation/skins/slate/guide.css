@@ -36,7 +36,10 @@
    ========================================================================== */
 
 /* ---------- chapter navigation: sidebar rows / segments ---------- */
-html[data-skin="slate"] body #modal.folio-host[data-type="help"] .help-toc {
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="help"]
+  .help-toc {
   border: 0;
   background: none;
 }
@@ -58,49 +61,15 @@ html[data-skin="slate"]
   content: none;
   display: none;
 }
+/* material: base.css `.lg-sidebar` / `.lg-seg-item`; only the type size here */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="help"]
   .help-toc
   button {
-  border: 0;
-  border-radius: 999px;
-  background: none;
-  box-shadow: none;
   clip-path: none;
-  font: 500 17px/1.2 var(--slate-font);
-  letter-spacing: 0;
-  color: var(--slate-ink);
-  text-shadow: none;
-  transition:
-    background var(--m-fast),
-    color var(--m-fast);
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="help"]
-  .help-toc
-  button:hover {
-  background: #ffffff0f;
-  color: #fff;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="help"]
-  .help-toc
-  button.active {
-  background: #ffffff24;
-  box-shadow: var(--lg-rim-soft);
-  color: #fff;
-  font-weight: 600;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="help"]
-  .help-toc
-  button:focus-visible {
-  outline: 2px solid var(--slate-blue);
-  outline-offset: 2px;
+  font-size: 17px;
+  line-height: 1.2;
 }
 html[data-skin="slate"]
   body
@@ -217,12 +186,10 @@ html[data-skin="slate"]
     .key-table,
     .help-basic-rules
   ) {
-  /* an invisible 1px edge: the fill runs under it, so it reads as no border,
-   * and `detail-polish.spec.cjs` still finds a framed card */
+  /* material: base.css `.lg-group`. An invisible 1px edge on top: the fill
+   * runs under it, so it reads as no border, and `detail-polish.spec.cjs`
+   * still finds a framed card */
   border: 1px solid transparent;
-  border-radius: var(--lg-radius-group);
-  background: var(--glass-fill-2);
-  box-shadow: inset 0 1px 0 #ffffff0f;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
@@ -982,9 +949,6 @@ html[data-skin="slate"]
   height: auto;
   margin: 0 0 18px;
   padding: 3px;
-  border-radius: 999px;
-  background: var(--lg-fill-control);
-  box-shadow: inset 0 1px 2px #00000026;
   overflow: visible;
 }
 html[data-skin="slate"]
