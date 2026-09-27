@@ -235,7 +235,7 @@ EmberVoxelKit.define("rider", (() => {
   }
 
   return {
-    cards: ["rider"], kind: "quadruped", build, scale: 1.2, pose,
+    cards: ["rider"], kind: "quadruped", build, scale: 1.25, pose,
     moves: { attack: { clip: "charge", style: "slash", hit: 0.42, length: 1.2, reach: 0.34, trail: { prop: "blade", from: [0, 0.1, 0], to: [0, 0.38, 0] } } },
   };
 })());

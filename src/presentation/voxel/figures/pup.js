@@ -114,7 +114,7 @@ EmberVoxelKit.define("pup", (() => {
   }
 
   return {
-    cards: ["pup"], kind: "quadruped", build: pup, scale: 1.1, pose,
+    cards: ["pup"], kind: "quadruped", build: pup, scale: 1.15, pose,
     face: { kind: "wolf", look: { eye: 0xe0922e, rim: "#2a211b" }, params: (ch) => { const b = ch.faces[0], q = 1.5; return { cx: b.c[0], cy: b.c[1] + 0.004 * q, dx: 0.021 * q }; } },
     moves: { attack: { clip: "pounce", style: "bite", hit: 0.42, length: 1.1, reach: 0.24 } },
   };

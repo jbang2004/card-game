@@ -35,12 +35,29 @@ const EmberModelFigures = (() => {
   const texel = (M, u, v) => Math.min(M.size[1] - 1, Math.floor(v * M.size[1])) * M.size[0] + Math.min(M.size[0] - 1, Math.floor(u * M.size[0]));
 
   /* A model's data is inline: M.bin (base64 of the mesh; with M.z, of the mesh deflated — the Artifact build, which
-   * must fit its size limit, tools/build_artifact.py), M.tex a data URI */
+   * must fit its size limit, tools/build_artifact.py; M.z 2: packed before it was deflated, see unpack), M.tex a data URI */
   function load(id, M) {
     const bytes = Uint8Array.from(atob(M.bin), (c) => c.charCodeAt(0));
     if (!M.z) { build0(id, M, bytes.buffer, M.tex); return; }
     new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer()
-      .then((raw) => build0(id, M, raw, M.tex)).catch((e) => console.warn("model figure unavailable", id, e));
+      .then((raw) => build0(id, M, M.z === 2 ? unpack(raw, M) : raw, M.tex)).catch((e) => console.warn("model figure unavailable", id, e));
+  }
+  /** M.z 2 (the Artifact build): each 16-bit array stored as its low bytes then its high bytes, the triangle indices
+   *  (16-bit) as zig-zagged deltas — the same layout, far better deflated */
+  function unpack(raw, M) {
+    const src = new Uint8Array(raw), out = new Uint8Array(raw.byteLength), n = M.count, t3 = M.tris * 3;
+    const segs = [[n * 6, 1], [n * 4, 1], [n * 4, 0], [n * 4, 0], [t3 * (M.wide ? 4 : 2), M.wide ? 0 : 2]];
+    let o = 0;
+    for (const [len, kind] of segs) {
+      if (!kind) out.set(src.subarray(o, o + len), o);
+      else {
+        const h = len / 2;
+        if (kind === 1) for (let i = 0; i < h; i++) { out[o + 2 * i] = src[o + i]; out[o + 2 * i + 1] = src[o + h + i]; }
+        else for (let i = 0, prev = 0; i < h; i++) { const z = src[o + i] | (src[o + h + i] << 8), v = (prev + ((z >>> 1) ^ -(z & 1))) & 0xffff; out[o + 2 * i] = v & 255; out[o + 2 * i + 1] = v >> 8; prev = v; }
+      }
+      o += Math.ceil(len / 4) * 4;
+    }
+    return out.buffer;
   }
   function build0(id, M, raw, texSrc) {
     const n = M.count;
@@ -129,6 +146,8 @@ const EmberModelFigures = (() => {
   // a signature figure's lit blade (EmberSkillFx sets its strength): the blade's bind-space segment, its strength, the
   // time its shimmer runs on, and the golden rim that swells with it
   const NO_LUX = { a: { value: V3(9, 9, 9) }, b: { value: V3(9, 9, 9.1) }, k: { value: 0 }, t: { value: 0 }, rim: { value: 0 } };
+  // a beast's own light (BEASTS[id].look): what glows on it, and a spirit's inner light
+  const NO_LOOK = () => ({ emitC: { value: V3() }, emitK: { value: 0 }, ghost: { value: 0 }, ghostC: { value: V3() }, t: { value: 0 }, key: { value: 1 } });
   // an arrival or a death (EmberVoxelArena): the figure shows from its feet up / burns away from its head down along a
   // noisy front (uDisK 0 whole → 1 gone; uDisY its bind-space height range), the front lit in uDisC
   const disOf = (M) => {
@@ -136,19 +155,20 @@ const EmberModelFigures = (() => {
     const b = M.geo.boundingBox;
     return { k: { value: 0 }, y: { value: new THREE.Vector2(b.min.y, b.max.y) }, c: { value: V3(1, 0.85, 0.5) } };
   };
-  function material(M, hit, blink, glow, hide = false, lux = NO_LUX, dis = disOf(M)) {
+  function material(M, hit, blink, glow, hide = false, lux = NO_LUX, dis = disOf(M), look = NO_LOOK()) {
     const m = new THREE.MeshBasicMaterial({ map: M.tex, side: THREE.DoubleSide });
     m.toneMapped = false;
     const E = M.eyes || { a: new THREE.Vector4(9, 9, 9, 9), b: new THREE.Vector4(9, 9, 9, 9), z: 9, skin: V3() };
     m.onBeforeCompile = (s) => {
       Object.assign(s.uniforms, { uShade: SHADE, uHitC: hit, uBlink: blink, uGlow: glow.k, uGlowC: glow.c, uOrb: glow.at, uEyeA: { value: E.a }, uEyeB: { value: E.b }, uEyeZ: { value: E.z }, uSkin: { value: E.skin }, uAura: { value: M.beast ? 0.4 : 1 }, uHide: { value: hide ? 1 : 0 },
-        uBladeA: lux.a, uBladeB: lux.b, uBladeK: lux.k, uBladeT: lux.t, uRimK: lux.rim, uDisK: dis.k, uDisY: dis.y, uDisC: dis.c });
+        uBladeA: lux.a, uBladeB: lux.b, uBladeK: lux.k, uBladeT: lux.t, uRimK: lux.rim, uDisK: dis.k, uDisY: dis.y, uDisC: dis.c,
+        uEmitC: look.emitC, uEmitK: look.emitK, uGhost: look.ghost, uGhostC: look.ghostC, uFxT: look.t, uKey: look.key });
       s.vertexShader = "varying vec3 vBind;\n" + s.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n vBind = position;");
       if (M.lit) s.vertexShader = "attribute float aMetal; varying float vMetal; varying vec3 vN;\n" + s.vertexShader.replace("#include <fog_vertex>", "#include <fog_vertex>\n vMetal = aMetal; vN = normalize(transformedNormal);");
       s.fragmentShader = `#ifdef LIT
         varying float vMetal; varying vec3 vN;
         #endif
-        uniform vec3 uHitC, uSkin, uGlowC, uBladeA, uBladeB, uDisC; uniform float uShade, uBlink, uEyeZ, uGlow, uAura, uHide, uBladeK, uBladeT, uRimK, uDisK; uniform vec4 uEyeA, uEyeB, uOrb; uniform vec2 uDisY; varying vec3 vBind;
+        uniform vec3 uHitC, uSkin, uGlowC, uBladeA, uBladeB, uDisC, uEmitC, uGhostC; uniform float uShade, uBlink, uEyeZ, uGlow, uAura, uHide, uBladeK, uBladeT, uRimK, uDisK, uEmitK, uGhost, uFxT, uKey; uniform vec4 uEyeA, uEyeB, uOrb; uniform vec2 uDisY; varying vec3 vBind;
         float dh(vec3 p) { return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
         float dn(vec3 p) { vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
           return mix(mix(mix(dh(i), dh(i + vec3(1, 0, 0)), f.x), mix(dh(i + vec3(0, 1, 0)), dh(i + vec3(1, 1, 0)), f.x), f.y),
@@ -233,6 +253,20 @@ const EmberModelFigures = (() => {
               lit += vec3(1.0, 0.72, 0.32) * uBladeK * on * (0.4 + 0.6 * band + 0.35 * clamp(bs, 0.0, 1.0));
             }
             lit += vec3(1.0, 0.76, 0.34) * (rim + 0.25 * pow(rim, 0.5)) * uRimK;
+            lit *= uKey;                                      // a dark beast kept dark (the radiant key would pale it)
+            // what glows on a beast: texels of about its glow's colour (lava in a dragon's cracks, a rune crystal, a
+            // phoenix's heart), saturated and bright, lit up by uEmitK (its clips pulse it)
+            if (uEmitK > 0.0) {
+              vec3 kn = uEmitC / max(max(uEmitC.r, max(uEmitC.g, uEmitC.b)), 1e-3), bn = base / max(mx, 1e-3);
+              float em = smoothstep(0.62, 0.9, 1.0 - 0.8 * length(bn - kn)) * smoothstep(0.35, 0.6, sat) * smoothstep(0.28, 0.6, mx);
+              lit += uEmitC * em * uEmitK * (1.0 + 0.6 * mx);
+            }
+            // a spirit: its body dimmed and lit from within, glow flowing up it and gathering at its edges
+            if (uGhost > 0.0) {
+              float flow = dn(vBind * 26.0 + vec3(0.0, -uFxT * 0.9, uFxT * 0.3)) * 0.6 + dn(vBind * 61.0 - vec3(0.0, uFxT * 1.7, 0.0)) * 0.4;
+              vec3 spirit = lit * 0.5 + uGhostC * (0.16 + 0.95 * rim + 0.5 * pow(rim, 0.5) * flow + 0.3 * smoothstep(0.55, 0.8, flow));
+              lit = mix(lit, spirit, uGhost);
+            }
             diffuseColor.rgb = lit;
           }
           #endif
@@ -251,16 +285,69 @@ const EmberModelFigures = (() => {
     return m;
   }
 
+  /* The beasts' signatures (the humanoids' are their SUITES): a beast moves on its voxel figure's coded clips, so its
+   * signature is the timing round the clip and its effects (EmberSkillFx) — the charge, the lunge or leap, the blow's
+   * mark (a bite, a raking claw, a burst of fire), what it leaves on the ground, how it triumphs, what hangs round it at
+   * rest. The rarer it is, the heavier its presence: a legend dims the stage as it strikes, shakes the ground, its
+   * element drifting round it; now and then it rears and roars (flourish: its victory clip, every so many seconds).
+   *   sig: windup (ms added to its charge) · leap (the share of the lead when it leaves its station) · dash leap|lunge ·
+   *        reach (× its size, where it strikes from) · hitstop (frames, by tier) · post / rise / back (seconds it
+   *        stays at the foe, and hops home) · stay (it strikes from where it stands) · fx (the recipe)
+   *   look: emit [r, g, b] (what glows on it: texels of about that colour, emitK strong, pulsing with its clips) ·
+   *         ghost (0–1: a spirit — its body lit from within, a flowing glow toward its edges, in ghostC)
+   *   blade: [[x, y, z] hilt, [x, y, z] point] in bind space, on bladeBone (a rider's sword: its swoosh) */
+  const bsig = (o) => ({ windup: 160, leap: 0.55, dash: "leap", hitstop: [0, 3, 4, 6], post: [[0, 0], [0.18, 0]], rise: 0.12, back: 0.3, ...o, fx: { flash: 0.4, ...o.fx } });
+  const BEASTS = {
+    // 月影幼狼: a bite that leaves two moonlit crescents closing on the foe
+    wolf: { sig: bsig({ fx: { pal: "moon", sigil: false, slash: "bite", beam: false, bits: "wisp", nbits: 4, hurt: "body", scale: 0.9, victory: { ray: false }, aura: { bits: "sparkle", every: 1400, halo: false } } }) },
+    // 幽灵狼: a wolf cub with a ghost's pale violet glow at its edges
+    pup: { look: { ghost: 0.28, ghostC: [0.62, 0.45, 1.0] }, sig: bsig({ windup: 120, fx: { pal: "void", sigil: false, slash: "bite", beam: false, bits: "wisp", nbits: 3, hurt: "body", scale: 0.75, victory: { ray: false }, aura: { bits: "wisp", every: 1600, halo: false } } }) },
+    // 灵狼: a spirit of the green wood, lit from within
+    spiritwolf: { look: { ghost: 0.75, ghostC: [0.35, 1.25, 0.7] }, sig: bsig({ windup: 140, fx: { pal: "fey", sigil: false, slash: "bite", beam: false, bits: "wisp", nbits: 6, hurt: "body", scale: 0.9, victory: { ray: false }, aura: { bits: "wisp", every: 520, halo: false } } }) },
+    // 银灯灵狐: a fox of lantern light
+    moonfox: { sig: bsig({ windup: 140, fx: { pal: "fey", sigil: false, slash: "bite", beam: false, bits: "wisp", nbits: 5, hurt: "body", scale: 0.9, victory: { ray: false, orb: "moon" }, aura: { bits: "sparkle", every: 900, halo: false } } }) },
+    // 暮角契鹿: antlers lowered, a charge that splits the ground with roots
+    duskstag: { sig: bsig({ windup: 220, leap: 0.45, dash: "lunge", fx: { pal: "dawn", sigil: false, slash: "pierce", ground: "roots", bits: "leaf", beam: false, hurt: "body", victory: { ray: false, rain: "leaf" }, aura: { bits: "leaf", every: 1100, halo: false } } }) },
+    // 幽谷蛛后: fangs, venom, the ground gone dark under her prey
+    spider: { sig: bsig({ windup: 200, leap: 0.5, fx: { pal: "necro", sigil: false, slash: "bite", ground: "void", bits: "wisp", beam: false, hurt: "body", victory: { ray: false }, aura: { bits: "wisp", every: 900, halo: false } } }) },
+    // 烬喉幼龙: a young dragon's gout of fire
+    dragon: { look: { emit: [1.0, 0.45, 0.12], emitK: 0.35 }, emitter: { bone: "jaw", offset: [0, 0.012, 0.07] }, sig: bsig({ windup: 220, fx: { pal: "ember", sigil: false, ground: "crack", flame: true, slash: false, beam: false, hurt: "body", victory: { ray: false, flame: true }, aura: { bits: "sparkle", every: 700, halo: false } } }) },
+    // 终焰·阿什拉 (legendary): lava in the cracks of its hide; it rears, the stage darkens, and it pours a river of fire
+    // on its foe — the ground breaks molten under it, rocks fly; now and then it spreads its wings and roars
+    ashdragon: { look: { emit: [1.0, 0.42, 0.1], emitK: 0.6, key: 0.85 }, flourish: { every: 11, len: 1.6 }, emitter: { bone: "jaw", offset: [0, 0.012, 0.075] },
+      sig: bsig({ windup: 380, fx: { pal: "fire", sigil: false, rise: true, riseShape: "spark", ground: "crack", flame: true, rocks: 6, spikes: "rock", slash: false, beam: false, dim: 0.55, dust: 1.6, shake: 1.8, scale: 1.35, hurt: "body", victory: { ray: false, flame: true, shock: true }, aura: { bits: "sparkle", every: 220, halo: false } } }) },
+    // 蚀月狼王 (legendary): the eclipse over it; a raking blow of the dark moon — three claw-cuts and the void under
+    // them; it howls at the dark moon now and then
+    eclipsewolf: { look: { key: 0.72 }, flourish: { every: 12, len: 1.6 },
+      sig: bsig({ windup: 320, leap: 0.5, dash: "lunge", fx: { pal: "void", sigil: "moon", slash: "claw", ground: "void", bits: "wisp", nbits: 8, limb: ["wriL", "fpawL"], trailFrom: 0.55, trailInner: 0.25, beam: false, dim: 0.5, shake: 1.4, scale: 1.0, hurt: "body", victory: { ray: false, orb: "moon" }, aura: { bits: "wisp", every: 380, halo: false } } }) },
+    // 不灭凤凰 (epic): a gold flame at its heart; it dives wings first, a crescent of blue fire; feathers of light fall
+    phoenix: { look: { emit: [1.0, 0.72, 0.25], emitK: 0.8 }, flourish: { every: 10, len: 1.6 },
+      sig: bsig({ windup: 280, leap: 0.4, fx: { pal: "phoenix", sigil: "star", slash: "crescent", flame: true, bits: "feather", nbits: 6, limb: ["wing2R", "wing3R"], trailFrom: 0.55, trailInner: 0.3, beam: false, dim: 0.35, shake: 1.2, scale: 1.15, hurt: "body", victory: { ray: false, rain: "feather", flame: true }, aura: { bits: "sparkle", every: 320, halo: false } } }) },
+    // 霜牙狼骑: the knight's ice blade cuts as the wolf charges; frost and ice where it lands
+    rider: { blade: { bone: "rHandR", at: [[-0.13, 0.475, 0], [-0.52, 0.7, 0]] },
+      sig: bsig({ windup: 220, leap: 0.45, dash: "lunge", fx: { pal: "frost", sigil: false, slash: "line", ground: "frost", spikes: "ice", bits: "shard", bits2: "snow", trailFrom: 0.6, beam: false, hurt: "body", victory: { ray: true, rain: "snow" }, aura: { bits: "snow", every: 800, halo: false } } }) },
+    // 绵羊: a soft bonk and a few stars
+    sheep: { sig: bsig({ windup: 100, leap: 0.5, dash: "lunge", fx: { pal: "dawn", sigil: false, slash: false, beam: false, bits: "star", nbits: 4, dust: 1.2, shake: 0.5, scale: 0.8, hurt: "body", victory: { ray: false, rain: "star" }, aura: { bits: "sparkle", every: 2400, halo: false } } }) },
+    // 石卫: the rune crystal lit; it slams, the ground cracks and stone spikes out of it
+    stone: { look: { emit: [0.3, 0.7, 1.0], emitK: 0.9 }, sig: bsig({ windup: 200, leap: 0.4, dash: "lunge", fx: { pal: "rune", sigil: false, slash: false, beam: false, ground: "crack", rocks: 5, spikes: "rock", dust: 1.5, shake: 1.4, hurt: "body", victory: { ray: false, shock: true, rain: "rock" }, aura: { bits: "sparkle", every: 1100, halo: false } } }) },
+    // 荆棘树灵: it lashes from where it grows; roots split the ground under its foe and thorns burst up
+    thorn: { sig: bsig({ windup: 180, stay: true, fx: { pal: "verdant", sigil: false, slash: false, beam: false, ground: "roots", spikes: "thorn", bits: "leaf", hurt: "body", victory: { ray: false, rain: "leaf" }, aura: { bits: "leaf", every: 1300, halo: false } } }) },
+  };
+
   /** a beast (tools/beast_prep.cjs): the model skinned to its voxel figure's own skeleton (same bone names, rest
    *  rotations identity), so the figure's clips and custom pose (EmberVoxelClips) move it unchanged */
   function buildBeast(id) {
-    const M = models.get(id), spec = EmberVoxelKit.get(id), root = new THREE.Group();
+    const M = models.get(id), spec = EmberVoxelKit.get(id), root = new THREE.Group(), Bs = BEASTS[id] || {};
     const bones = M.joints.map((j) => { const b = new THREE.Bone(); b.name = j.name; b.position.fromArray(j.t); return b; });
     M.joints.forEach((j, i) => (j.parent >= 0 ? bones[j.parent] : root).add(bones[i]));
     const inv = M.joints.map((_, i) => new THREE.Matrix4().fromArray(M.ibm, i * 16));
     const tint = new THREE.Color(spec.moves?.attack?.tint ?? 0xffd070);
     const hit = { value: V3() }, blink = { value: 0 }, glow = { k: { value: 0 }, c: { value: V3(tint.r, tint.g, tint.b) }, at: { value: new THREE.Vector4(0, -9, 0, 0.09) } };
-    const dis = disOf(M), mat = material(M, hit, blink, glow, false, NO_LUX, dis), mesh = new THREE.SkinnedMesh(M.geo, mat);
+    const look = NO_LOOK(), L = Bs.look || {};
+    if (L.emit) { look.emitC.value.set(...L.emit); look.emitK.value = L.emitK ?? 0.6; }
+    if (L.ghost) { look.ghost.value = L.ghost; look.ghostC.value.set(...L.ghostC); }
+    if (L.key) look.key.value = L.key;
+    const dis = disOf(M), mat = material(M, hit, blink, glow, false, NO_LUX, dis, look), mesh = new THREE.SkinnedMesh(M.geo, mat);
     mesh.frustumCulled = false; mesh.layers.set(LAYER);
     root.add(mesh); root.updateMatrixWorld(true);
     mesh.bind(new THREE.Skeleton(bones, inv), new THREE.Matrix4());
@@ -272,9 +359,14 @@ const EmberModelFigures = (() => {
     root.add(outline); outline.bind(mesh.skeleton, new THREE.Matrix4());
     const cols = [], uv = M.geo.attributes.uv;
     for (let i = 0; i < uv.count; i += 37) cols.push(...lin(M.data, texel(M, uv.getX(i), uv.getY(i))));
+    const J = Object.fromEntries(bones.map((b) => [b.name, b]));
+    // a rider's sword: two points on the sword hand (its swoosh, EmberSkillFx)
+    const bb = Bs.blade, hi = bb ? M.joints.findIndex((j) => j.name === bb.bone) : -1;
+    const blade = hi >= 0 ? bb.at.map((p) => { const o = new THREE.Object3D(); o.position.copy(V3(...p)).applyMatrix4(inv[hi]); bones[hi].add(o); return o; }) : null;
     const rest = new Map(); root.traverse((o) => rest.set(o, { p: o.position.clone(), q: o.quaternion.clone(), s: o.scale.clone() }));
-    return { model: true, beast: true, id, spec, kind: spec.kind, char: { kind: spec.kind }, root, mesh, outline, bones, J: Object.fromEntries(bones.map((b) => [b.name, b])), skel: mesh.skeleton, rest,
+    return { model: true, beast: true, id, spec, kind: spec.kind, char: { kind: spec.kind }, root, mesh, outline, bones, J, skel: mesh.skeleton, rest,
       props: [], mats: [mat, om], geos: [], hit, blink, glow, dis, M, style: "beast", faces: null, face: null, phase: Math.random() * 6.28,
+      sig: Bs.sig || null, stay: !!Bs.sig?.stay, look, emitBase: look.emitK.value, flourish: Bs.flourish || null, blade, emitter: Bs.emitter || null,
       vox: { bone: new Array(cols.length / 3).fill(0), color: new Float32Array(cols) } };
   }
   function build(id) {
@@ -1206,7 +1298,8 @@ const EmberModelFigures = (() => {
   R.build = (id, o) => (has(id) ? build(id) : base.build(id, o));
   R.dispose = (fig) => { if (!fig.model) return base.dispose(fig); for (const m of fig.mats) m.dispose(); fig.mesh.skeleton.dispose(); fig.fire?.dispose(); };
   R.setHit = (fig, r, g, b) => (fig.model ? fig.hit.value.set(r, g, b) : base.setHit(fig, r, g, b));
-  R.setEmit = (fig, k) => (fig.model ? undefined : base.setEmit(fig, k));
+  // a beast's glow follows its clips' emission (a dragon drawing breath, a crystal charging)
+  R.setEmit = (fig, k) => (fig.model ? (fig.look && (fig.look.emitK.value = fig.emitBase * k)) : base.setEmit(fig, k));
   R.setFace = (fig, e) => (fig.model ? undefined : base.setFace(fig, e));
   R.setPixelRatio = (fig, pr) => (fig.model ? undefined : base.setPixelRatio(fig, pr));
   R.voxelsWorld = (fig) => (fig.model ? pointsWorld(fig) : base.voxelsWorld(fig));
@@ -1216,7 +1309,10 @@ const EmberModelFigures = (() => {
     if (!fig.model) return base.pose(fig, clip, t, T);
     if (!fig.beast) return pose(fig, clip, t, T);
     fig.outline.visible = SHADE.value === 3;
-    const r = base.pose(fig, clip, t, T);             // the voxel figure's own clips, on the same bones
+    fig.look.t.value = T;
+    // the voxel figure's own clips, on the same bones; at rest a legend now and then rears and roars (its victory clip)
+    const fl = fig.flourish, tf = fl && clip === "idle" ? (T + fig.phase * 2) % fl.every : Infinity;
+    const r = tf < fl?.len ? (base.pose(fig, "victory", tf, T), true) : base.pose(fig, clip, t, T);
     fig.root.updateMatrixWorld(true);
     return r;
   };

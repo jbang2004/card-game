@@ -582,6 +582,7 @@ const EmberSkillFx = (() => {
     soul: { core: [1.8, 2.4, 2.8], glow: [0.4, 1.3, 2.0], deep: [0.1, 0.35, 0.7], trail: [0.3, 0.8, 1.3], mote: [0.9, 1.9, 2.6], dust: [0.2, 0.26, 0.32] },
     blood: { core: [2.6, 1.2, 1.3], glow: [2.0, 0.12, 0.25], deep: [0.6, 0.0, 0.05], trail: [1.2, 0.08, 0.15], mote: [2.2, 0.3, 0.4], dust: [0.2, 0.08, 0.08], blood: [2.2, 0.2, 0.3] },
     fey: { core: [2.0, 2.6, 2.2], glow: [0.5, 1.8, 1.0], deep: [0.1, 0.6, 0.5], trail: [0.4, 1.2, 0.8], mote: [1.4, 2.4, 1.4], dust: [0.4, 0.5, 0.45], leaf: [1.2, 2.0, 1.4] },
+    phoenix: { core: [2.6, 2.3, 1.5], glow: [0.75, 1.45, 2.6], deep: [0.15, 0.25, 1.0], trail: [0.8, 1.2, 2.2], mote: [2.4, 1.7, 0.8], dust: [0.5, 0.56, 0.72] },
     rune: { core: [1.8, 2.2, 2.7], glow: [0.45, 1.1, 2.2], deep: [0.1, 0.25, 0.8], trail: [0.4, 0.7, 1.4], mote: [0.8, 1.6, 2.6], dust: [0.5, 0.48, 0.44], rock: [0.42, 0.4, 0.38], emit: [0.25, 0.6, 1.3] },
   };
   const rnd = (a, b) => a + (b - a) * Math.random();
@@ -677,7 +678,9 @@ const EmberSkillFx = (() => {
     const kill = (m) => { o.remove(m); m.material.dispose(); };
     const stOf = (u) => { let s = state.get(u); if (!s) { s = { aura: 0, atk: null, vic: 0, flash: 0, halo: null }; state.set(u, s); } return s; };
     const blade = (f) => { const [a, b] = f.blade; a.updateWorldMatrix(true, false); b.updateWorldMatrix(true, false); return [a.getWorldPosition(V3()), b.getWorldPosition(V3())]; };
-    const bone = (f, n) => { const b = f.bones?.[n]; if (!b) return null; b.updateWorldMatrix(true, false); return b; };
+    // (a beast's skeleton is its voxel figure's: its chest, head and hips stand for the humanoid's)
+    const ALIAS = { Spine2: "chest", Head: "head", Hips: "root" };
+    const bone = (f, n) => { const b = f.bones?.[n] || f.J?.[n] || f.J?.[ALIAS[n]]; if (!b) return null; b.updateWorldMatrix(true, false); return b; };
     const chestOf = (u) => bone(u.fig, "Spine2") || u.fig.root;
     const recipe = (u) => u.fig.sig?.fx || {};
     const palOf = (fx) => PAL[fx.pal] || PAL.holy;
@@ -885,10 +888,11 @@ const EmberSkillFx = (() => {
       if (fx.modern) { modernHit(u, c, g, dir, P, k, heavy, fx); return; }
       const main = () => {
         const t = NOW();
-        // the flash: a glow, a starburst, a lens streak
-        put(glow, { p: c, t0: t, life: 70, s0: 0.45 * k, s1: 0.6 * k, col: P.core.map((x) => x * 0.65), k: 0.9, shape: SHAPE.glow });
-        put(glow, { p: c, t0: t, life: heavy ? 150 : 110, s0: (heavy ? 1.0 : 0.75) * k, s1: (heavy ? 1.25 : 0.9) * k, rot: rnd(0, 1), spin: 0.8, col: P.glow, k: 0.9, shape: SHAPE.star });
-        put(glow, { p: c, t0: t, life: 100, s0: 1.6 * k, s1: 2.0 * k, col: P.glow.map((x) => x * 0.6), k: 0.6, shape: SHAPE.flare });
+        // the flash: a glow, a starburst, a lens streak (fx.flash < 1: a smaller, dimmer one — a beast's blow is its mark)
+        const fl = fx.flash ?? 1, fs = 0.45 + 0.55 * fl;
+        put(glow, { p: c, t0: t, life: 70, s0: 0.45 * k * fs, s1: 0.6 * k * fs, col: P.core.map((x) => x * 0.65 * fl), k: 0.9, shape: SHAPE.glow });
+        put(glow, { p: c, t0: t, life: heavy ? 150 : 110, s0: (heavy ? 1.0 : 0.75) * k * fs, s1: (heavy ? 1.25 : 0.9) * k * fs, rot: rnd(0, 1), spin: 0.8, col: P.glow.map((x) => x * fl), k: 0.9, shape: SHAPE.star });
+        put(glow, { p: c, t0: t, life: 100, s0: 1.6 * k * fs, s1: 2.0 * k * fs, col: P.glow.map((x) => x * 0.6 * fl), k: 0.6, shape: SHAPE.flare });
         // the mark the weapon leaves across the victim: a line along the blow, a cross, a crescent, a piercing streak
         const mark = (rot, s0, s1, life = 220) => put(glow, { p: c.clone().add(V3(0, 0.06 * k, 0)), t0: t, life, s0: s0 * k, s1: s1 * k, rot, col: P.core.map((x) => x * 0.75), k: 1.2, shape: SHAPE.flare, env: "pop" });
         if (fx.slash === "cross") { mark(0.75, 0.4, 1.15); mark(-0.75, 0.4, 1.15, 260); }
@@ -896,6 +900,24 @@ const EmberSkillFx = (() => {
         else if (fx.slash === "pierce") {
           for (let i = 0; i < 2; i++) put(glow, { p: c.clone().addScaledVector(dir, 0.15 * k), v: dir.clone().multiplyScalar((3.2 + i) * k), drag: 5, t0: t + i * 30, life: 240, s0: 0.1 * k, s1: 0.05 * k, col: P.core.map((x) => x * 0.8), k: 1.3, shape: SHAPE.wisp, env: "pop", stretch: 0.12 });
           put(glow, { p: c.clone().addScaledVector(dir, 0.12 * k), t0: t, life: 260, s0: 0.2 * k, s1: 0.8 * k, col: P.glow, k: 1.0, shape: SHAPE.ring, env: "pop" });
+        } else if (fx.slash === "claw" || fx.slash === "bite") {
+          // a beast's mark, drawn across the victim as the camera sees it: three raking claw-cuts, or two rows of fangs
+          // (crescents) snapping shut on it
+          const q = cam ? cam.quaternion : new THREE.Quaternion(), R = V3(1, 0, 0).applyQuaternion(q), U = V3(0, 1, 0).applyQuaternion(q);
+          const at = c.clone().add(V3(0, 0.06 * k, 0));
+          if (fx.slash === "claw") {
+            const r0 = 0.95 + rnd(-0.15, 0.15), px = Math.cos(r0 + Math.PI / 2), py = Math.sin(r0 + Math.PI / 2);
+            for (let i = -1; i <= 1; i++) {
+              const p = at.clone().addScaledVector(R, px * i * 0.13 * k).addScaledVector(U, py * i * 0.13 * k);
+              put(glow, { p, t0: t + (i + 1) * 28, life: 260, s0: 0.35 * k, s1: 1.0 * k, rot: r0, col: P.core.map((x) => x * 0.75), k: 1.2, shape: SHAPE.flare, env: "pop" });
+              put(dark, { p, t0: t + (i + 1) * 28, life: 240, s0: 0.4 * k, s1: 1.05 * k, rot: r0, col: [0, 0, 0], k: 0.45, shape: SHAPE.flare, env: "pop" });
+            }
+          } else {
+            for (const sg of [1, -1]) {
+              put(glow, { p: at.clone().addScaledVector(U, sg * 0.16 * k), v: U.clone().multiplyScalar(-sg * 1.3 * k), drag: 7, t0: t, life: 240, s0: 0.42 * k, s1: 0.55 * k, rot: sg > 0 ? 0 : Math.PI, col: P.glow, k: 1.2, shape: SHAPE.crescent, env: "pop" });
+              for (let i = -1; i <= 1; i += 2) put(glow, { p: at.clone().addScaledVector(U, sg * 0.05 * k).addScaledVector(R, i * 0.07 * k), t0: t + 40, life: 160, s0: 0.12 * k, s1: 0.05 * k, rot: rnd(0, 1), col: P.core, k: 1.3, shape: SHAPE.sparkle, env: "pop" });
+            }
+          }
         } else if (fx.slash !== false) mark(Math.PI / 2 - 0.42, 0.45, 1.1);
         // on the ground: a shock front, a slower, wider one, what the blow leaves there
         decal(SHOCK_FS, g, (heavy ? 1.35 : 1.0) * k, heavy ? 420 : 360, { uTint: C(P.glow) }).env = "u";
@@ -1018,7 +1040,7 @@ const EmberSkillFx = (() => {
         put(glow, { p, track: head || u.fig.root, off: V3(0, 0.12 * k, 0).addScaledVector(V3(0, 0, -1).applyQuaternion(u.fig.root.quaternion), 0.12 * k), t0: now + 200, life: 1900, s0: 0.35 * k, s1: 0.6 * k, rot: V.orb === "moon" ? 3.4 : 0, spin: V.orb === "moon" ? 0 : 0.4, col: P.glow.map((x) => x * 0.6), k: 0.6, shape: sh, env: "hold" });
         put(glow, { p, track: head || u.fig.root, off: V3(0, 0.12 * k, 0), t0: now + 200, life: 1900, s0: 0.45 * k, s1: 0.65 * k, col: P.glow.map((x) => x * 0.3), k: 0.5, shape: SHAPE.glow, env: "hold" });
       }
-      const d = decal(SIGIL_FS, p, 0.8 * k, 2100, { uTint: C(P.glow.map((x) => x * 0.8)), uStyle: { value: SIGILS[fx.sigil] ?? 0 } }); d.env = "hold"; d.spin = 0.7;
+      if (fx.sigil !== false) { const d = decal(SIGIL_FS, p, 0.8 * k, 2100, { uTint: C(P.glow.map((x) => x * 0.8)), uStyle: { value: SIGILS[fx.sigil] ?? 0 } }); d.env = "hold"; d.spin = 0.7; }
       const rain = V.rain || fx.bits || "feather";
       for (let i = 0; i < 12; i++) {
         const a = rnd(0, 6.28), R = rnd(0.15, 0.6) * k, at = p.clone().add(V3(Math.cos(a) * R, rnd(1.5, 2.3) * k, Math.sin(a) * R));
@@ -1105,7 +1127,8 @@ const EmberSkillFx = (() => {
         // the sun over the foe: the blow comes down from it as a column of light
         if (A.sky && !A.skyFell && q >= 1) { A.skyFell = true; if (T) beam(T.ground, 2.2 * k, 0.5 * k, 420, P.glow, 1.2, "flash"); }
         // no contact came (the blow was taken on a shield, or nothing stood there): the weapon still meets the ground
-        if (!A.hit && !f.spell && q > 1 + 90 / A.align) {
+        // (a shooter's contact comes after its release: its fire still in the air)
+        if (!A.hit && !f.spell && now - A.t0 > A.contact + 90) {
           const fwd = V3(0, 0, 1).applyQuaternion(f.root.getWorldQuaternion(new THREE.Quaternion())).setY(0).normalize();
           const g = f.sig?.stay && T ? T.ground.clone() : pts ? V3(pts[1].x, 0, pts[1].z) : f.root.position.clone().addScaledVector(fwd, 0.35 * k).setY(0);
           impact(u, { at: g.clone().setY(0.35 * k), ground: g, dir: fwd }, A.tier);

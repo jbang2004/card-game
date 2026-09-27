@@ -63,6 +63,9 @@ const FIGURES = {
   // beasts on their voxel figures' skeletons (tools/beast_prep.cjs): the figures' own clips move them
   wolf: { beast: true, mt: 0, tex: 1536 }, moonfox: { beast: true, mt: 0, tex: 1536 }, duskstag: { beast: true, mt: 0, tex: 1536 },
   dragon: { beast: true, mt: 0, tex: 1536 }, spider: { beast: true, mt: 128, tex: 1536 },
+  ashdragon: { beast: true, mt: 0, tex: 1536 }, eclipsewolf: { beast: true, mt: 0, tex: 1536 }, phoenix: { beast: true, mt: 0, tex: 1536 },
+  rider: { beast: true, mt: 128, tex: 1536 }, sheep: { beast: true, mt: 0, tex: 1536 }, pup: { beast: true, mt: 0, tex: 1536 },
+  spiritwolf: { beast: true, mt: 0, tex: 1536 }, stone: { beast: true, mt: 128, tex: 1536 }, thorn: { beast: true, mt: 0, tex: 1536 },
 };
 
 function readGlb(file) {

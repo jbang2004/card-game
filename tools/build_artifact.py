@@ -15,6 +15,8 @@ live/<id>.json, and fails if any file or the file count breaks those limits.
 Run `python3 build.py` first so the embedded art in art/ is current.
 """
 import base64
+import hashlib
+import struct
 import io
 import json
 import re
@@ -39,14 +41,39 @@ def data_uri(rel):
 
 
 def embed(text):
-    return re.sub(r"asset:([\w/.-]+)", lambda m: data_uri(m[1]), text)
+    return re.sub(r"asset:([\w/.-]+)", lambda m: shrink_image(data_uri(m[1])), text)
+
+
+# A big picture made lossless (a cut-out with its alpha, a theme backdrop) is re-encoded lossy for the Artifact:
+# near the same to the eye, a fraction of the bytes (cached by content, like the live layers below)
+BIG_IMAGE = 250_000
+IMAGE_QUALITY = 82
+
+
+def shrink_image(uri):
+    raw = base64.b64decode(uri.split(",", 1)[1]) if uri.startswith("data:image/") else b""
+    if len(raw) < BIG_IMAGE:
+        return uri
+    try:
+        from PIL import Image
+    except ImportError:
+        return uri
+    key = hashlib.sha1(raw + f"img{IMAGE_QUALITY}".encode()).hexdigest()[:20]
+    hit = CACHE / f"{key}.webp"
+    if not hit.exists():
+        img = Image.open(io.BytesIO(raw))
+        out = io.BytesIO()
+        img.save(out, "WEBP", quality=IMAGE_QUALITY, alpha_quality=90, method=6)
+        CACHE.mkdir(parents=True, exist_ok=True)
+        hit.write_bytes(out.getvalue() if len(out.getvalue()) < len(raw) * 0.9 else raw)
+    return "data:image/webp;base64," + base64.b64encode(hit.read_bytes()).decode()
 
 
 # The realistic figures (EmberModelArt, tools/model_art.cjs) are too large to ship as made: each model's mesh is
 # deflated (`z`: EmberModelFigures inflates it with DecompressionStream) and its texture re-encoded as WebP of at most
 # TEX_MAX px (with Pillow when it is installed; without it the texture stays as made and the build may exceed the limit).
 TEX_MAX = 1024
-TEX_QUALITY = 75
+TEX_QUALITY = 68
 MODEL_LINE = re.compile(r"^(  )(\w+): (\{.*\})(,?)$", re.M)
 
 
@@ -64,14 +91,64 @@ def shrink_texture(uri):
     return "data:image/webp;base64," + base64.b64encode(out.getvalue()).decode()
 
 
+def pack_mesh(raw, entry):
+    """the mesh laid out as EmberModelFigures reads it (positions, uvs: 16-bit; joints, weights: bytes; triangles), each
+    16-bit array as its low bytes then its high bytes and the 16-bit triangle indices as zig-zagged deltas: the same
+    size, but it deflates far better (`z` 2 — models.js unpacks it)"""
+    n, t3, wide = entry["count"], entry["tris"] * 3, entry.get("wide")
+    out, o = bytearray(raw), 0
+    for size, kind in ((n * 6, 1), (n * 4, 1), (n * 4, 0), (n * 4, 0), (t3 * (4 if wide else 2), 0 if wide else 2)):
+        if kind:
+            vals = list(struct.unpack_from(f"<{size // 2}H", raw, o))
+            if kind == 2:
+                prev, zz = 0, []
+                for v in vals:
+                    d = ((v - prev + 32768) & 0xFFFF) - 32768
+                    zz.append(((d << 1) ^ (d >> 31)) & 0xFFFF)
+                    prev = v
+                vals = zz
+            h = size // 2
+            out[o:o + h] = bytes(v & 255 for v in vals)
+            out[o + h:o + size] = bytes(v >> 8 for v in vals)
+        o += -(-size // 4) * 4
+    return bytes(out)
+
+
+# The live artwork's big layers (the painting, the figure cut out of it, what stands in front) are re-encoded a little
+# lighter (LIVE_QUALITY) for the same reason; its depth and control maps stay as made. Results are cached by content.
+LIVE_QUALITY = 72
+LIVE_LAYERS = ("bg", "body", "front")
+CACHE = ROOT / "tools" / "models" / "cache" / "artifact"
+
+
+def shrink_live(kind, uri):
+    if kind not in LIVE_LAYERS:
+        return uri
+    try:
+        from PIL import Image
+    except ImportError:
+        return uri
+    raw = base64.b64decode(uri.split(",", 1)[1])
+    key = hashlib.sha1(raw + f"{LIVE_QUALITY}".encode()).hexdigest()[:20]
+    hit = CACHE / f"{key}.webp"
+    if not hit.exists():
+        img = Image.open(io.BytesIO(raw))
+        out = io.BytesIO()
+        img.save(out, "WEBP", quality=LIVE_QUALITY, method=6)
+        CACHE.mkdir(parents=True, exist_ok=True)
+        hit.write_bytes(out.getvalue() if len(out.getvalue()) < len(raw) else raw)
+    return "data:image/webp;base64," + base64.b64encode(hit.read_bytes()).decode()
+
+
 def shrink_models(text):
     def one(m):
         entry = json.loads(m[3])
         if "bin" not in entry or entry.get("z"):
             return m[0]
         deflate = zlib.compressobj(9, zlib.DEFLATED, -15)
-        entry["bin"] = base64.b64encode(deflate.compress(base64.b64decode(entry["bin"])) + deflate.flush()).decode()
-        entry["z"] = 1
+        raw = pack_mesh(base64.b64decode(entry["bin"]), entry)
+        entry["bin"] = base64.b64encode(deflate.compress(raw) + deflate.flush()).decode()
+        entry["z"] = 2
         if entry.get("tex", "").startswith("data:image/"):
             entry["tex"] = shrink_texture(entry["tex"])
         return f"{m[1]}{m[2]}: {json.dumps(entry, separators=(',', ':'))}{m[4]}"
@@ -98,7 +175,7 @@ def main(out):
     maps = json.loads(re.search(r"Object\.freeze\((\{.*?\})\);", maps_src, re.S)[1])
     packed = {}
     for key, kinds in maps.items():
-        write(f"live/{key}.json", json.dumps({k: data_uri(v[len("asset:"):]) for k, v in kinds.items()}))
+        write(f"live/{key}.json", json.dumps({k: shrink_live(k, data_uri(v[len("asset:"):])) for k, v in kinds.items()}))
         packed[key] = {k: f"pack:live/{key}.json#{k}" for k in kinds}
     sources = {}
     for token, rel in registry.items():

@@ -264,6 +264,15 @@ const EmberVoxelClips = (() => {
       rot(fig, "chest", -0.15 * k, 0, 0.12 * k); rot(fig, "neck", 0.3 * k, 0, 0); rot(fig, "head", 0.3 * k, 0.3 * k, 0.2 * k);
       off(fig, "root", 0, 0.01 * k, -0.06 * k);
       face = t < 0.4 ? "hurt" : "open";
+    } else if (clip === "victory") {
+      // it rears a little on its haunches, the head thrown back in a howl (a stag: a toss of the antlers), tail high
+      const up = bump(0, 0.3, 1.1, 1.5, t), cry = bump(0.3, 0.45, 1.0, 1.3, t);
+      rot(fig, "root", -0.22 * up, 0, 0); off(fig, "root", 0, 0.015 * up, 0);
+      rot(fig, "chest", -0.08 * up, 0, 0); rot(fig, "neck", -0.55 * up, 0, 0); rot(fig, "head", (stag ? -0.2 : -0.4) * up + 0.03 * Math.sin(t * 24) * cry, 0, 0);
+      rot(fig, "jaw", (stag ? 0.2 : 0.5) * cry, 0, 0);
+      for (const s of ["L", "R"]) { rot(fig, "scap" + s, -0.45 * up, 0, 0); rot(fig, "elb" + s, 0.55 * up, 0, 0); rot(fig, "hip" + s, 0.25 * up, 0, 0); rot(fig, "ear" + s, -0.3 * up, 0, 0); }
+      rot(fig, "tail1", 0.35 * up, 0.15 * Math.sin(T * 5) * up, 0);
+      face = "fierce";
     }
     emitBoost(fig, glow);
     setFace(fig, face);

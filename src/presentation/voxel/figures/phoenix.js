@@ -217,7 +217,7 @@ EmberVoxelKit.define("phoenix", (() => {
 
   const trailTip = sub(wingOf(-1).x(PRIM[TRAIL]), wingOf(-1).W);
   return {
-    cards: ["phoenix"], kind: "bird", build, scale: 1.15, pose,
+    cards: ["phoenix"], kind: "bird", build, scale: 1.2, pose,
     moves: { attack: { clip: "dive", hit: 0.42, length: 1.1, style: "slash", tint: 0x8fd8ff, trail: { bone: "wing3R", from: [0, 0, 0], to: trailTip.map((v) => +v.toFixed(3)) } } },
   };
 })());
