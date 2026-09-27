@@ -814,33 +814,6 @@ body.touch-layout .mulligan-card.replace:after {
   letter-spacing: 3px;
   border-radius: 10px;
 }
-body.touch-layout .relic-options {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-body.touch-layout .relic-choice {
-  min-height: 118px;
-  width: 100%;
-
-  position: relative;
-  text-align: left;
-}
-body.touch-layout .relic-choice img {
-  position: absolute;
-  left: 13px;
-  top: 19px;
-  width: 60px;
-  height: 74px;
-  margin: 0;
-}
-body.touch-layout .relic-choice h3 {
-  font-size: 18px;
-}
-body.touch-layout .relic-choice p {
-  font-size: 13px;
-  line-height: 1.6;
-}
 body.touch-layout .result-title {
   font-size: 32px;
   letter-spacing: 5px;
@@ -1467,20 +1440,6 @@ body.mobile-landscape .discover-options {
   max-width: 560px;
   margin: 18px auto;
   gap: 28px;
-}
-body.mobile-landscape .relic-options {
-  flex-direction: row;
-  gap: 12px;
-}
-body.mobile-landscape .relic-choice {
-  min-height: 210px;
-  text-align: center;
-}
-body.mobile-landscape .relic-choice img {
-  position: static;
-  margin: 0 auto 10px;
-  width: 52px;
-  height: 62px;
 }
 body.mobile-landscape .library-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));

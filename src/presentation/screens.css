@@ -491,9 +491,6 @@ body #modal.folio-host .card-detail-art {
   padding: 12px 20px 22px;
   box-sizing: border-box;
 }
-body #modal.folio-host > .rewards-box {
-  --dialog-width: 1240px;
-}
 
 body #modal.folio-host .discover-options {
   justify-content: center;
@@ -501,46 +498,6 @@ body #modal.folio-host .discover-options {
   gap: 40px;
   margin: 20px 0;
   padding: 10px 18px 30px;
-}
-
-body #modal.folio-host .relic-options {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 26px;
-  margin: 15px 0 25px;
-}
-body #modal.folio-host .relic-choice {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 0;
-}
-body #modal.folio-host .relic-art {
-  width: 100%;
-  height: 190px;
-  display: grid;
-  place-items: center;
-}
-body #modal.folio-host .relic-art img {
-  width: 160px;
-  height: 160px;
-}
-body #modal.folio-host .relic-choice h3 {
-  font: 400 25px var(--ui-display);
-  letter-spacing: 2px;
-  margin: 18px 0;
-}
-body #modal.folio-host .relic-choice p {
-  line-height: 1.8;
-  font-size: 16px;
-  flex: 1;
-  margin: 0 0 18px;
-}
-body #modal.folio-host .relic-pick-label {
-  display: block;
-  width: 100%;
-  padding: 13px 0;
-  font-size: 15px;
 }
 body #modal.folio-host > .result-box {
   --dialog-width: 980px;
@@ -1102,20 +1059,6 @@ body:not(.touch-layout) .board-empty {
     grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
-  body #modal.folio-host .relic-options {
-    gap: 12px;
-  }
-
-  body #modal.folio-host .relic-art {
-    height: 120px;
-  }
-  body #modal.folio-host .relic-art img {
-    width: 100px;
-    height: 100px;
-  }
-  body #modal.folio-host .relic-choice h3 {
-    font-size: 20px;
-  }
   body #modal.folio-host .adventure-atlas .modal-scroll {
     flex-direction: column;
   }
@@ -1237,32 +1180,6 @@ body:not(.touch-layout) .board-empty {
     gap: 20px 14px;
     padding: 14px 8px;
     margin: 0;
-  }
-
-  body #modal.folio-host .relic-options {
-    grid-template-columns: 1fr;
-  }
-  body #modal.folio-host .relic-choice {
-    display: grid;
-    grid-template-columns: 95px 1fr;
-    text-align: left;
-  }
-  body #modal.folio-host .relic-art {
-    width: 95px;
-    height: 95px;
-    grid-row: 1/4;
-  }
-  body #modal.folio-host .relic-choice h3 {
-    margin: 0;
-    font-size: 21px;
-  }
-  body #modal.folio-host .relic-choice p {
-    margin: 0;
-    font-size: 16px;
-  }
-  body #modal.folio-host .relic-pick-label {
-    padding: 8px 0;
-    font-size: 13px;
   }
   body #modal.folio-host .result-title {
     font-size: 46px;

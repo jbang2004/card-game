@@ -3,8 +3,7 @@
  * The run screens (application/screens/run.js) are their own dialog type,
  * `run`, on the PAGE shell (base.css): full bleed over the blurred edition
  * art, like the hero and collection pages — the expedition is the game's main
- * loop, not a note floating over the lobby. Nothing here inherits the retired
- * relic-reward sheet (`.rewards-box` / `.relic-choice`); the markup is:
+ * loop, not a note floating over the lobby. The markup is:
  *
  *   section.run-box[data-shell=page][data-run-step]
  *     > .modal-heading.run-heading          (fixed; a 2×2 grid)

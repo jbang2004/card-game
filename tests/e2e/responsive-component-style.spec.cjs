@@ -4,8 +4,7 @@ const { chooseFoe } = require("./helpers/expedition.cjs");
 const path = require("node:path");
 
 // Dialog sizes that slate renders as a full-bleed page shell; every other
-// size is a floating shell (design system §1). `choice` — the relic reward —
-// is a page shell too (§5.5).
+// size is a floating shell (design system §1).
 const PAGE_SHELL_SIZES = [
   "heroes",
   "library",

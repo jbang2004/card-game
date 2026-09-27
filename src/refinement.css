@@ -1649,23 +1649,6 @@ body.touch-layout .drag-ghost {
   letter-spacing: 1px;
   color: #bdbba9;
 }
-
-.relic-choice img {
-  width: 81px;
-  height: 91px;
-  border-radius: 4px;
-  object-fit: cover;
-  border-color: #baa67c40;
-}
-.relic-choice h3 {
-  color: #e4d5b6;
-  font-size: 18px;
-}
-.relic-choice p {
-  font-size: 11px;
-  line-height: 1.8;
-  color: #a0b1a6;
-}
 /* Collection: a generous four-column gallery, a separate deck column. */
 .library-box {
   width: 1376px;

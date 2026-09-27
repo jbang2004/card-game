@@ -68,9 +68,6 @@ body #modal.folio-host > [data-dialog-size="discover"] {
 body #modal.folio-host > [data-dialog-size="mulligan"] {
   --dialog-width: 1060px;
 }
-body #modal.folio-host > [data-dialog-size="choice"] {
-  --dialog-width: 900px;
-}
 body #modal.folio-host > [data-dialog-size="covenant"] {
   --dialog-width: 500px;
 }
@@ -765,32 +762,11 @@ body #modal.folio-host .touch-library-tabs {
 }
 
 /* Short decisions and long reading pages share the same scroll lifecycle. */
-body #modal.folio-host :is(.relic-options, .refit-fields) {
+body #modal.folio-host .refit-fields {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
   gap: 16px;
   margin: 0;
-}
-body #modal.folio-host .relic-choice {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: auto;
-  min-height: 0;
-}
-body #modal.folio-host .relic-art {
-  display: grid;
-  place-items: center;
-  width: 112px;
-  height: 112px;
-}
-body #modal.folio-host .relic-art img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-body #modal.folio-host .relic-pick-label {
-  margin-top: auto;
 }
 body #modal.folio-host .campaign-refit {
   margin-top: 18px;

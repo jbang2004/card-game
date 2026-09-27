@@ -652,16 +652,6 @@ body:not(.touch-layout) .lobby-collection {
 .map-foot {
   color: #8b9d7a;
 }
-.relic-choice {
-  color: #53714b;
-}
-
-.relic-choice h3 {
-  color: #506e47;
-}
-.relic-choice p {
-  color: #7b906c;
-}
 .result-title {
   color: #56754b;
   text-shadow: 0 2px #fff7d3;
@@ -978,7 +968,6 @@ body.touch-layout .gold-btn {
 .hero-option-text p,
 .map-stop p,
 .map-foot,
-.relic-choice p,
 .atelier-foot p,
 .atelier-vignette p {
   color: #68765d;

@@ -1682,40 +1682,6 @@ button {
   color: #7d928c;
   letter-spacing: 2px;
 }
-.relic-options {
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-  margin-top: 25px;
-}
-.relic-choice {
-  flex: 1;
-  text-align: center;
-  min-height: 187px;
-  transition: 0.2s;
-}
-.relic-choice:hover {
-  transform: translateY(-5px);
-}
-.relic-choice img {
-  width: 55px;
-  height: 55px;
-  object-fit: cover;
-  border: 1px solid #ba9f6459;
-  border-radius: 50%;
-  margin-bottom: 13px;
-}
-.relic-choice h3 {
-  font: 17px var(--serif);
-  color: #d0bb91;
-  letter-spacing: 1px;
-}
-.relic-choice p {
-  font-size: 10px;
-  line-height: 1.8;
-  color: #7d9790;
-  margin-top: 10px;
-}
 .discover-options {
   display: flex;
   gap: 30px;
@@ -1862,8 +1828,7 @@ body.mobile-ui .hero-option .hero-option-text {
   bottom: 16px;
 }
 
-body.mobile-ui .discover-options,
-body.mobile-ui .relic-options {
+body.mobile-ui .discover-options {
   flex-wrap: wrap;
 }
 body.mobile-ui .help-columns {

@@ -84,7 +84,6 @@ const EmberDialogs = (() => {
     map: "route",
     discover: "discover",
     mulligan: "mulligan",
-    rewards: "choice",
     run: "run",
     help: "help",
     atelier: "atelier",
@@ -94,7 +93,7 @@ const EmberDialogs = (() => {
    * SHEET, or a STAGE — no pane, cards straight on the blurred scene. The
    * hero info sheet shares the card sheet's `detail` size but is a stats
    * panel, so it is a sheet. Layout-independent: where a shell changes with
-   * the layout (the relic reward is a page on touch), the page file says so. */
+   * the layout, the page file says so. */
   const dialogShell = Object.freeze({
     heroes: "page",
     library: "page",
