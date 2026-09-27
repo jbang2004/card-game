@@ -71,7 +71,7 @@ async function assertDialogFit(page) {
       )
         errors.push(`vertical overflow ${e.scrollHeight - e.clientHeight}`);
     for (const e of box.querySelectorAll(
-      ":scope > .modal-footer button,:scope > .reward-footer button,.modal-close",
+      ":scope > .modal-footer button,.modal-close",
     )) {
       if (!e.checkVisibility()) continue;
       const b = e.getBoundingClientRect();

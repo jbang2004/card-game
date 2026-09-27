@@ -21,7 +21,7 @@ async function inspectVisualDiscipline(page) {
         a.top - b.bottom,
       );
     for (const button of document.querySelectorAll(
-      "#modal .modal-footer button,#modal .reward-footer button,#modal .deck-actions button",
+      "#modal .modal-footer button,#modal .deck-actions button",
     )) {
       if (!button.checkVisibility()) continue;
       const b = rect(button),

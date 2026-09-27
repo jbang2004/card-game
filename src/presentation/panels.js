@@ -14,7 +14,7 @@ const EmberPanels = (() => {
     box.querySelector(":scope > .modal-heading")?.classList.add("panel-heading");
     box
       .querySelector(
-        ":scope > .modal-footer,:scope > .reward-footer,:scope > .atelier-foot",
+        ":scope > .modal-footer,:scope > .atelier-foot",
       )
       ?.classList.add("panel-actions");
   }

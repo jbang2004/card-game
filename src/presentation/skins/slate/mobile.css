@@ -838,7 +838,7 @@ html[data-skin="slate"]
     [data-dialog-size="hand"],
     [data-dialog-size="detail"]
   )
-  > :is(.modal-footer, .reward-footer, .atelier-foot) {
+  > :is(.modal-footer, .atelier-foot) {
   position: static;
   gap: 10px;
   margin: 0;
@@ -859,7 +859,7 @@ html[data-skin="slate"]
     [data-dialog-size="hand"],
     [data-dialog-size="detail"]
   )
-  > :is(.modal-footer, .reward-footer, .atelier-foot)::before,
+  > :is(.modal-footer, .atelier-foot)::before,
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host:not([data-type="library-card"])
@@ -872,7 +872,7 @@ html[data-skin="slate"]
     [data-dialog-size="hand"],
     [data-dialog-size="detail"]
   )
-  > :is(.modal-footer, .reward-footer, .atelier-foot)::after {
+  > :is(.modal-footer, .atelier-foot)::after {
   content: none;
 }
 html[data-skin="slate"]

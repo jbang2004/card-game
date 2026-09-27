@@ -47,7 +47,6 @@
     "hero-confirm": "arrow",
     "settings-done": "check",
     "help-done": "arrow",
-    "reward-confirm": "arrow",
     "result-next": "arrow",
     "result-home": "return",
     "library-detail-back": "return",

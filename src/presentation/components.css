@@ -324,7 +324,7 @@ body #modal.folio-host .modal-heading .eyebrow {
   letter-spacing: 4px;
   font-size: 11px;
 }
-body #modal.folio-host :is(.modal-footer, .reward-footer, .atelier-foot) {
+body #modal.folio-host :is(.modal-footer, .atelier-foot) {
   border-top: 1px solid var(--line);
   padding-top: 16px;
 }
@@ -350,7 +350,6 @@ body
   :is(
     .deck-tools,
     .contract-setup,
-    .campaign-refit,
     .hero-composition,
     .hero-config-intro,
     .key-table,
@@ -362,7 +361,7 @@ body
   box-shadow: none;
   border-radius: 3px;
 }
-body :is(.deck-tools, .contract-setup, .campaign-refit) summary {
+body :is(.deck-tools, .contract-setup) summary {
   color: var(--ink);
   border-color: var(--line);
   background: transparent;
@@ -3012,22 +3011,6 @@ body #modal.folio-host[data-type="heroes"] .hero-config-contract {
   body:not(.touch-layout) #modal.folio-host[data-type] .result-stats span {
     font: 25px var(--ui-display);
   }
-  body:not(.touch-layout) #modal.folio-host[data-type] .campaign-refit {
-    max-width: 850px;
-    margin: auto;
-    background: #0e1a2be6;
-    border: 1px solid #a7bcd077;
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] .reward-footer {
-    border: 0;
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] #reward-confirm {
-    min-height: 65px;
-    min-width: 330px;
-    font-family: var(--ui-display);
-    font-size: 23px;
-    font-weight: 600;
-  }
   body:not(.touch-layout) #modal.folio-host[data-type] .library-box {
     padding: 18px 24px;
   }
@@ -5042,7 +5025,6 @@ body
     #help-done,
     #library-detail-add,
     #mulligan-confirm,
-    #reward-confirm,
     #hero-confirm,
     #result-next,
     #ok-confirm

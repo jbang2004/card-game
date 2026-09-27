@@ -1716,14 +1716,13 @@ body
   font: 13px/1.6 var(--panel-body-font);
   letter-spacing: 0.04em;
 }
-body #modal :is(.modal-footer, .reward-footer, .deck-actions, .setting-row) {
+body #modal :is(.modal-footer, .deck-actions, .setting-row) {
   border-color: var(--panel-line);
 }
 body
   #modal
   :is(
     .modal-footer,
-    .reward-footer,
     .atelier-foot,
     .folio-actions,
     .deck-actions

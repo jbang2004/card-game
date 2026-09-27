@@ -238,12 +238,12 @@ const EmberDialogs = (() => {
         content = document.createElement("div");
         content.className = "modal-scroll";
         const foot = box.querySelector(
-          ":scope > .modal-footer,:scope > .reward-footer,:scope > .atelier-foot",
+          ":scope > .modal-footer,:scope > .atelier-foot",
         );
         for (const el of [...box.children])
           if (
             !el.matches(
-              ".scene-showcase,.modal-close,.modal-heading,.covenant-heading,.modal-footer,.reward-footer,.atelier-foot,.atlas-corners",
+              ".scene-showcase,.modal-close,.modal-heading,.covenant-heading,.modal-footer,.atelier-foot,.atlas-corners",
             )
           )
             content.append(el);

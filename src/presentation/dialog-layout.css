@@ -129,7 +129,7 @@ body
 body
   #modal.folio-host
   .folio-dialog
-  > :is(.modal-footer, .reward-footer, .atelier-foot) {
+  > :is(.modal-footer, .atelier-foot) {
   position: static;
   display: flex;
   flex: 0 0 auto;
@@ -142,7 +142,7 @@ body
   margin: 0;
   padding: 0;
 }
-body #modal.folio-host :is(.modal-footer, .reward-footer, .atelier-foot) > div {
+body #modal.folio-host :is(.modal-footer, .atelier-foot) > div {
   margin-right: auto;
 }
 body
@@ -762,20 +762,6 @@ body #modal.folio-host .touch-library-tabs {
 }
 
 /* Short decisions and long reading pages share the same scroll lifecycle. */
-body #modal.folio-host .refit-fields {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
-  gap: 16px;
-  margin: 0;
-}
-body #modal.folio-host .campaign-refit {
-  margin-top: 18px;
-}
-body #modal.folio-host .refit-fields label {
-  display: grid;
-  gap: 6px;
-  min-width: 0;
-}
 body #modal.folio-host .result-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
