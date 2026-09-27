@@ -357,7 +357,7 @@ html[data-skin="slate"]
   body
   #modal.folio-host
   .folio-dialog
-  :is(.crafted-panel, .touch-hero-info, .atelier-vignette) {
+  :is(.crafted-panel, .touch-hero-info, .atelier-vignette):where(:not(.lg-sheet)) {
   background: none;
   border: 0;
   border-radius: 0;
@@ -780,6 +780,119 @@ html[data-skin="slate"]
   ):focus-visible {
   outline: 2px solid var(--slate-blue);
   outline-offset: 2px;
+}
+
+/* ==========================================================================
+ * SHARED COMPONENTS (liquid glass v2). One definition each; page files add
+ * geometry only (position, size, spacing, font size) and never restate the
+ * material. The markup opts in with a class:
+ *
+ *   .lg-glass    clear glass for a control floating on content by itself —
+ *                toolbars, tab bars, HUD chips, standalone pills. Its tint is
+ *                contextual: `--lg-glass-tint` is clear glass everywhere and
+ *                the smoke-tinted HUD glass inside the battle view.
+ *   .lg-sheet    regular glass for a pane that carries text but is not a
+ *                dialog: inspectors, the battle's side panels.
+ *   .lg-seg      a segmented control's track; its buttons are .lg-seg-item.
+ *   .lg-sidebar  a navigation list that is a sidebar on the desktop and a
+ *                segmented control on touch; its buttons are .lg-seg-item.
+ *   .lg-group    a grouped section inside a pane (one step lighter fill).
+ *
+ * The component rules carry `:is(#app, #modal, #card-stage)` so they hold
+ * against the legacy layers' id-level rules without reaching outside the
+ * game's three roots.
+ * ========================================================================== */
+html[data-skin="slate"] body {
+  --lg-glass-tint: var(--lg-clear);
+  --lg-glass-tint-hover: var(--lg-clear-hover);
+}
+html[data-skin="slate"] body #app.battle-view {
+  --lg-glass-tint: var(--lg-hud);
+  --lg-glass-tint-hover: var(--lg-hud-hover);
+}
+html[data-skin="slate"] body :is(#app, #modal, #card-stage) .lg-glass {
+  border: 0;
+  background: var(--lg-glass-tint);
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
+  box-shadow: var(--glass-rim), var(--lg-lift);
+}
+html[data-skin="slate"] body :is(#app, #modal, #card-stage) .lg-sheet {
+  border: 0;
+  border-radius: var(--lg-radius-sheet);
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-rim), var(--glass-shadow);
+  color: var(--slate-ink);
+}
+html[data-skin="slate"] body :is(#app, #modal, #card-stage) .lg-group {
+  border: 0;
+  border-radius: var(--lg-radius-group);
+  background: var(--glass-fill-2);
+  box-shadow: inset 0 1px 0 #ffffff0f;
+}
+/* segmented control: a control-fill capsule track with a faint inner shadow;
+ * the selected segment is a lighter capsule thumb, white 600 */
+html[data-skin="slate"] body :is(#app, #modal, #card-stage) .lg-seg,
+html[data-skin="slate"] body.touch-layout :is(#app, #modal) .lg-sidebar {
+  border: 0;
+  border-radius: 999px;
+  background: var(--lg-fill-control);
+  box-shadow: inset 0 1px 2px #00000026;
+}
+html[data-skin="slate"] body :is(#app, #modal, #card-stage) .lg-seg-item {
+  position: relative;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  box-shadow: none;
+  color: var(--slate-ink-2);
+  font-family: var(--slate-font);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-shadow: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--m-fast),
+    box-shadow var(--m-fast),
+    color var(--m-fast);
+}
+html[data-skin="slate"] body :is(#app, #modal, #card-stage) .lg-seg-item:hover {
+  background: #ffffff0f;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body
+  :is(#app, #modal, #card-stage)
+  .lg-seg-item:is(.active, [aria-selected="true"], [aria-pressed="true"]) {
+  background: #ffffff24;
+  box-shadow:
+    var(--lg-rim-soft),
+    0 2px 8px #00000026;
+  color: #fff;
+  font-weight: 600;
+}
+html[data-skin="slate"]
+  body
+  :is(#app, #modal, #card-stage)
+  .lg-seg-item:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 1px;
+}
+/* a sidebar row reads as primary text and its highlight casts no shadow
+ * (same material on touch, where the list is a segmented track) */
+html[data-skin="slate"] body :is(#app, #modal) .lg-sidebar > .lg-seg-item {
+  color: var(--slate-ink);
+}
+html[data-skin="slate"]
+  body
+  :is(#app, #modal)
+  .lg-sidebar
+  > .lg-seg-item:is(.active, [aria-selected="true"], [aria-pressed="true"]) {
+  box-shadow: var(--lg-rim-soft);
+  color: #fff;
 }
 
 /* range slider (all dialogs): a 6px capsule track filled with the accent up

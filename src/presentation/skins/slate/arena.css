@@ -56,25 +56,17 @@ html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .brand small {
   letter-spacing: 3px;
   color: var(--slate-ink-3);
 }
-/* the desktop toolbar: every icon in one glass capsule */
+/* the toolbar: every icon in one glass capsule (`.lg-glass`, HUD tint) */
 html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .top-actions {
   gap: 2px;
   padding: 4px;
   border-radius: 999px;
-  background: var(--lg-hud);
-  -webkit-backdrop-filter: var(--lg-clear-blur);
-  backdrop-filter: var(--lg-clear-blur);
-  box-shadow: var(--glass-rim), var(--lg-lift);
 }
 html[data-skin="slate"] body.touch-layout #app.battle-view .top-actions {
-  /* no padding: the 44px icon targets fill the capsule edge to edge */
+  /* no padding: the icon targets fill the capsule edge to edge */
   gap: 0;
   padding: 0;
   border-radius: 999px;
-  background: var(--lg-hud);
-  -webkit-backdrop-filter: var(--lg-clear-blur);
-  backdrop-filter: var(--lg-clear-blur);
-  box-shadow: var(--glass-rim), var(--lg-lift);
 }
 html[data-skin="slate"] body #app.battle-view .top-actions .icon-btn {
   border: 0;
@@ -87,11 +79,7 @@ html[data-skin="slate"] body #app.battle-view .top-actions .icon-btn {
     color var(--m-fast);
 }
 html[data-skin="slate"] body:not(.touch-layout) #battle .utility-tab {
-  border: 0;
-  background: var(--lg-hud);
-  -webkit-backdrop-filter: var(--lg-clear-blur);
-  backdrop-filter: var(--lg-clear-blur);
-  box-shadow: var(--glass-rim), var(--lg-lift);
+  /* material: `.lg-glass` */
   color: var(--slate-ink);
 }
 html[data-skin="slate"] body #app.battle-view .top-actions .icon-btn:hover {
@@ -802,15 +790,11 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #app.battle-view
   :is(.enemy-deck, .player-deck) {
+  /* material: `.lg-glass` */
   left: 36px;
   height: 30px;
   padding: 0 12px 0 10px;
   gap: 7px;
-  border: 0;
-  background: var(--lg-hud);
-  -webkit-backdrop-filter: var(--lg-clear-blur);
-  backdrop-filter: var(--lg-clear-blur);
-  box-shadow: var(--glass-rim), var(--lg-lift);
   color: var(--slate-ink-2);
 }
 /* the counter sits under its owner's seat: what you have left, where you sit */
@@ -1524,14 +1508,8 @@ html[data-skin="slate"] body #app.battle-view #battle-status {
     border-color 200ms,
     box-shadow 200ms;
 }
-/* a message gets the HUD glass capsule */
-html[data-skin="slate"] body #app.battle-view #battle-status.has-message {
-  border-color: transparent;
-  background: var(--lg-hud);
-  -webkit-backdrop-filter: var(--lg-clear-blur);
-  backdrop-filter: var(--lg-clear-blur);
-  box-shadow: var(--glass-rim), var(--lg-lift);
-}
+/* a message gets the HUD glass capsule: `.lg-glass` on the rail, which the
+ * rule above clears while it only shows the round */
 html[data-skin="slate"] body #app.battle-view #battle-status #touch-cancel {
   border-color: transparent;
   background: #ffffff24;

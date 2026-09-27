@@ -39,12 +39,12 @@ const EmberPreferenceScreens = (() => {
             ? Math.max(0, Math.min(1, settings[key]))
             : defaults[key]) * 100,
         );
-      const toggles = (keys) =>
+      const toggles = (keys, rowClass = "setting-row") =>
         options
           .filter(([key]) => keys.includes(key))
           .map(
             ([key, name, description]) =>
-              `<div class="setting-row"><div class="setting-copy"><h3>${name}</h3><p>${description}</p></div><button class="toggle ${settings[key] ? "on" : ""}" data-setting="${key}" role="switch" aria-checked="${settings[key]}" aria-label="${name}"><span class="toggle-state">${settings[key] ? "开启" : "关闭"}</span></button></div>`,
+              `<div class="${rowClass}"><div class="setting-copy"><h3>${name}</h3><p>${description}</p></div><button class="toggle ${settings[key] ? "on" : ""}" data-setting="${key}" role="switch" aria-checked="${settings[key]}" aria-label="${name}"><span class="toggle-state">${settings[key] ? "开启" : "关闭"}</span></button></div>`,
           )
           .join("");
       const sliders = levels
@@ -54,7 +54,7 @@ const EmberPreferenceScreens = (() => {
         )
         .join("");
       showModal(
-        `<section class="modal-box settings-box"><div class="modal-heading"><h2>旅途设置</h2><p>设置即时生效，自动保存在当前浏览器。</p></div><nav class="settings-nav" aria-label="设置分类"><button data-section="audio">${A.icon("waveform")}声音</button><button data-section="options">${A.icon("monitor")}画面</button><button data-section="operation">${A.icon("settings")}操作</button></nav><div class="settings-content"><section class="settings-section settings-audio-section"><div class="settings-section-heading"><span>声音设置</span></div>${toggles(["sound"])}<div class="audio-sliders">${sliders}</div></section><section class="settings-section settings-options-section"><div class="settings-section-heading"><span>画面设置</span></div><div class="settings-options">${toggles(["reduced", "low"])}</div></section><section class="settings-section settings-operation-section"><div class="settings-section-heading"><span>战斗操作</span></div><div class="settings-options">${toggles(["fast"])}</div><p class="settings-operation-note">拖动手牌出牌；需要目标时拖向目标。点按手牌后，再点战场空位或合法目标确认；Esc 或右键取消。</p></section></div><div class="modal-footer">${context.inBattle ? '<button class="ghost-btn small-btn" id="settings-home">返回营地</button><button class="ghost-btn small-btn" id="restart-battle">重试本关</button>' : '<button class="ghost-btn small-btn" id="settings-how">游戏玩法</button>'}<button class="gold-btn small-btn" id="settings-done">完成</button></div></section>`,
+        `<section class="modal-box settings-box"><div class="modal-heading"><h2>旅途设置</h2><p>设置即时生效，自动保存在当前浏览器。</p></div><nav class="settings-nav lg-sidebar" aria-label="设置分类"><button class="lg-seg-item" data-section="audio">${A.icon("waveform")}声音</button><button class="lg-seg-item" data-section="options">${A.icon("monitor")}画面</button><button class="lg-seg-item" data-section="operation">${A.icon("settings")}操作</button></nav><div class="settings-content"><section class="settings-section settings-audio-section"><div class="settings-section-heading"><span>声音设置</span></div>${toggles(["sound"], "setting-row lg-group")}<div class="audio-sliders lg-group">${sliders}</div></section><section class="settings-section settings-options-section"><div class="settings-section-heading"><span>画面设置</span></div><div class="settings-options lg-group">${toggles(["reduced", "low"])}</div></section><section class="settings-section settings-operation-section"><div class="settings-section-heading"><span>战斗操作</span></div><div class="settings-options lg-group">${toggles(["fast"])}</div><p class="settings-operation-note">拖动手牌出牌；需要目标时拖向目标。点按手牌后，再点战场空位或合法目标确认；Esc 或右键取消。</p></section></div><div class="modal-footer">${context.inBattle ? '<button class="ghost-btn small-btn" id="settings-home">返回营地</button><button class="ghost-btn small-btn" id="restart-battle">重试本关</button>' : '<button class="ghost-btn small-btn" id="settings-how">游戏玩法</button>'}<button class="gold-btn small-btn" id="settings-done">完成</button></div></section>`,
         "settings",
       );
       const settingsBox = $("modal").querySelector(".settings-box");

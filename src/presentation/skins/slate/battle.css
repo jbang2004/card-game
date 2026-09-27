@@ -143,10 +143,8 @@ html[data-skin="slate"] body:not(.touch-layout) #battle .utility-tab {
   justify-content: center;
   gap: 9px;
   padding: 0 16px;
-  border: 1px solid var(--slate-pill-line);
+  /* material: base.css `.lg-glass` */
   border-radius: 999px;
-  background: var(--slate-pill);
-  box-shadow: none;
   color: var(--slate-ink-2);
   font: 500 14px/1 var(--slate-font);
   letter-spacing: 1px;
@@ -188,17 +186,11 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #app.battle-view
   :is(.log-panel, .boss-panel) {
-  /* legacy `refinement.css` pins .log-panel to 246px; the shell hugs content */
+  /* legacy `refinement.css` pins .log-panel to 246px; the shell hugs content.
+   * Material: base.css `.lg-sheet`. */
   height: auto;
   padding: 18px 20px 20px;
-  border: 0;
-  border-radius: 24px;
-  background: var(--glass-fill);
-  box-shadow: var(--glass-rim), var(--glass-shadow);
-  color: var(--slate-ink);
   font-family: var(--slate-font);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
   clip-path: none;
 }
 html[data-skin="slate"]
@@ -644,10 +636,8 @@ html[data-skin="slate"]
   width: max-content;
   height: 38px;
   padding: 0 16px 0 10px;
-  border: 1px solid var(--slate-pill-line);
+  /* material: base.css `.lg-glass` */
   border-radius: 999px;
-  background: var(--slate-pill);
-  box-shadow: none;
   transform: none;
   /* same plane as the other HUD chips, so the top rail counter is not buried
      under the topbar veil */

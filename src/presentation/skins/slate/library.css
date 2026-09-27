@@ -100,15 +100,7 @@ html[data-skin="slate"]
   border: 0;
   background: none;
 }
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  :is(.filter-type-group, .filter-mana-group, .touch-library-tabs) {
-  border: 0;
-  border-radius: 999px;
-  background: var(--lg-fill-control);
-  box-shadow: inset 0 1px 2px #00000026;
-}
+/* material: base.css `.lg-seg` / `.lg-seg-item`; the page sets type only */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="library"]
@@ -119,65 +111,9 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="library"]
   .touch-library-tabs
   button {
-  position: relative;
-  border: 0;
-  border-radius: 999px;
-  background: none;
-  box-shadow: none;
-  color: var(--slate-ink-2);
-  font: 500 15px/1.2 var(--slate-font);
+  font-size: 15px;
+  line-height: 1.2;
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0;
-  text-shadow: none;
-  white-space: nowrap;
-  cursor: pointer;
-  transition:
-    background var(--m-fast),
-    box-shadow var(--m-fast),
-    color var(--m-fast);
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  :is(.filter-type-group, .filter-mana-group)
-  .filter-btn:hover,
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .touch-library-tabs
-  button:hover {
-  background: #ffffff0f;
-  color: #fff;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  :is(.filter-type-group, .filter-mana-group)
-  .filter-btn.active,
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .touch-library-tabs
-  button[aria-selected="true"] {
-  background: #ffffff24;
-  box-shadow:
-    var(--lg-rim-soft),
-    0 2px 8px #00000026;
-  color: #fff;
-  font-weight: 600;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  :is(.filter-type-group, .filter-mana-group)
-  .filter-btn:focus-visible,
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .touch-library-tabs
-  button:focus-visible {
-  outline: 2px solid var(--slate-blue);
-  outline-offset: 1px;
 }
 /* the retired text pager drew a divider (`::before`) and an underline bar
  * (`::after`); the thumb is the segment's own background now */
@@ -323,19 +259,8 @@ html[data-skin="slate"]
   color: var(--slate-ink-3);
 }
 
-/* ---------- deck inspector: the one floating regular-glass pane ---------- */
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .deck-editor {
-  border: 0;
-  border-radius: var(--lg-radius-sheet);
-  background: var(--glass-fill);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-rim), var(--glass-shadow);
-  color: var(--slate-ink);
-}
+/* ---------- deck inspector: the one floating regular-glass pane ----------
+ * material: base.css `.lg-sheet` (the markup carries the class) */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="library"]

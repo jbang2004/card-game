@@ -194,11 +194,11 @@ const EmberDialogs = (() => {
       // Tabs follow available dialog width, not the device's touch classification.
       if (!box.querySelector(".touch-library-tabs")) {
         const tabs = document.createElement("div");
-        tabs.className = "touch-library-tabs";
+        tabs.className = "touch-library-tabs lg-seg";
         tabs.setAttribute("role", "tablist");
         tabs.setAttribute("aria-label", "卡牌收藏与牌组");
         tabs.innerHTML =
-          '<button id="touch-card-tab" role="tab" aria-selected="true">全部卡牌</button><button id="touch-deck-tab" role="tab" aria-selected="false">我的牌组</button>';
+          '<button id="touch-card-tab" class="lg-seg-item" role="tab" aria-selected="true">全部卡牌</button><button id="touch-deck-tab" class="lg-seg-item" role="tab" aria-selected="false">我的牌组</button>';
         box.querySelector(".library-heading").after(tabs);
         tabs.querySelectorAll("button").forEach(
           (b, i) =>
