@@ -1,5 +1,6 @@
 const { openCovenantPage } = require("./helpers/covenant.cjs");
 const { test, expect } = require("@playwright/test");
+const { chooseFoe } = require("./helpers/expedition.cjs");
 const path = require("node:path");
 const out = path.resolve(
   process.env.REFERENCE_OUTPUT || "output/remaining-reference-20260913",
@@ -101,6 +102,17 @@ test("reference pages: live settings, guide chapters, hero modes and public cont
   await page.locator('[data-mode="campaign"]').click();
   await page.locator('[data-hero="morla"]').click();
   await page.locator("#hero-confirm").click();
+  await page.locator("#modal .run-box [data-foe]").first().waitFor();
+  await shot(page, "route");
+  // covenants are treasures of a run: give this one Morla's and come back to it, as a resumed run does
+  await page.evaluate(() => {
+    const run = JSON.parse(localStorage.getItem("emberfall.run.v1"));
+    run.contracts = [...EmberData.heroes.find((h) => h.id === "morla").defaultContracts];
+    localStorage.setItem("emberfall.run.v1", JSON.stringify(run));
+  });
+  await page.locator("#run-home").click();
+  await page.locator("#start-btn").click();
+  await chooseFoe(page);
   await page.locator("[data-mulligan]").first().click();
   await expect(page.locator(".mulligan-choice-state").first()).toContainText(
     "替换",
@@ -123,10 +135,10 @@ test("reference pages: live settings, guide chapters, hero modes and public cont
     /reference-active-side/,
   );
   await page.keyboard.press("Escape");
+  // an expedition battle cannot be restarted; the lobby's new-journey prompt is the confirm page
   await page.locator("#settings-btn").click();
-  await page.locator("#restart-battle").click();
-  await shot(page, "confirm");
-  await page.locator("#cancel-confirm").click();
+  await expect(page.locator("#restart-battle")).toHaveCount(0);
+  await page.locator("#settings-done").click();
   await page.evaluate(() => {
     const g = EmberDebug.game;
     g.s.choice = { side: "p", cards: ["spark", "frostbolt", "fireball"] };
@@ -140,17 +152,20 @@ test("reference pages: live settings, guide chapters, hero modes and public cont
     EmberFX.configure(true, false);
     const g = EmberDebug.game;
     g.s.e.hp = 0;
-    g.s.rewardOffers = ["heart", "lens", "crown"];
     g.cleanup();
     g.emit();
   });
   await page.locator("#result-next").waitFor();
   await shot(page, "result");
   await page.locator("#result-next").click();
-  await page.locator('[data-relic="lens"]').click();
+  await page.locator("[data-pick]").first().click();
   await shot(page, "rewards");
-  await expect(page.locator("#reward-confirm")).toBeEnabled();
-  await page.locator("#reward-confirm").click();
+  await expect(page.locator("#run-confirm")).toBeEnabled();
+  await page.locator("#run-confirm").click();
+  await page.locator('#modal .run-box[data-run-step="bundle"] [data-pick]').first().click();
+  await shot(page, "bundle");
+  await page.locator("#run-confirm").click();
+  await chooseFoe(page);
   await page.locator("#mulligan-confirm").click();
   await page.waitForFunction(() => !EmberFX.busy);
   await page.evaluate(() => {
@@ -161,6 +176,18 @@ test("reference pages: live settings, guide chapters, hero modes and public cont
   });
   await page.locator("#result-next").waitFor();
   await shot(page, "defeat");
+  await page.locator("#result-next").click();
+  await page.locator('#modal .run-box[data-run-step="lost"]').waitFor();
+  await shot(page, "run-end");
+  // a new run, left at its first choice: starting another asks first
+  await page.locator("#run-home").click();
+  await page.locator("#start-btn").click();
+  await page.locator("#hero-confirm").click();
+  await page.locator("#run-home").click();
+  await page.locator("#quick-btn").click();
+  await page.locator("#ok-confirm").waitFor();
+  await shot(page, "confirm");
+  await page.locator("#cancel-confirm").click();
   expect(errors).toEqual([]);
 });
 for (const [w, h, touch] of [

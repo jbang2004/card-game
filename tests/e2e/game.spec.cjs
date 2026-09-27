@@ -1,5 +1,6 @@
 const { openDeckTools, finishDeckTools } = require("./helpers/deck-tools.cjs");
 const { test, expect } = require("@playwright/test");
+const { beginExpedition } = require("./helpers/expedition.cjs");
 const fs = require("node:fs");
 const path = require("node:path");
 const out = path.resolve("artifacts/qa");
@@ -128,14 +129,14 @@ test("web build: all assets decode, no external dependencies, actual spells, mel
   expect(external).toEqual([]);
 });
 
-test("real origin: campaign, settings and day/night survive reload; demo leaves save intact", async ({
+test("real origin: an expedition battle, settings and day/night survive reload; demo leaves save intact", async ({
   page,
 }) => {
   await page.goto("./?debug=1");
   await ready(page);
   await page.locator("#start-btn").click();
   await page.locator('[data-hero="paladin"]').click();
-  await page.locator("#hero-confirm").click();
+  await beginExpedition(page);
   await page.locator("#mulligan-confirm").click();
   await idle(page);
   await page.locator("#settings-btn").click();
@@ -149,7 +150,7 @@ test("real origin: campaign, settings and day/night survive reload; demo leaves 
   expect(JSON.parse(before).heroId).toBe("paladin");
   await page.reload();
   await ready(page);
-  await expect(page.locator("#start-btn")).toContainText("继续冒险");
+  await expect(page.locator("#start-btn")).toContainText("继续远征");
   await page.locator("#start-btn").click();
   await idle(page);
   expect(await page.evaluate(() => JSON.stringify(EmberDebug.game.s))).toBe(
@@ -651,18 +652,27 @@ test("portable build leaves out live artwork: the hero preview keeps its relief 
   expect(errors).toEqual([]);
 });
 
-test("current fixture resumes through actual browser storage", async ({
+test("a current expedition match resumes through actual browser storage", async ({
   page,
 }) => {
-  const old = JSON.parse(
-    fs.readFileSync(path.resolve("tests/fixtures/save-current.json"), "utf8"),
-  );
   await page.goto("./");
   await ready(page);
-  await page.evaluate(
-    (save) => localStorage.setItem("emberfall.v1", JSON.stringify(save)),
-    old,
-  );
+  // a run fighting its first battle, and that battle's match, both written straight to storage
+  const old = await page.evaluate(() => {
+    const D = EmberData,
+      R = EmberRun;
+    let run = R.create(D, "mage", 4242);
+    run = R.choose(D, run, run.offer.foes[0]);
+    const g = new EmberEngine.Game();
+    g.start(run.heroId, 0, run.relics, run.deck, 4242, {
+      run: { level: run.level, foe: run.foe },
+      contracts: run.contracts,
+    });
+    g.mulligan();
+    localStorage.setItem("emberfall.run.v1", JSON.stringify(run));
+    localStorage.setItem("emberfall.v1", JSON.stringify(g.s));
+    return JSON.parse(JSON.stringify(g.s));
+  });
   await page.reload();
   await ready(page);
   await page.locator("#start-btn").click();
@@ -675,13 +685,13 @@ test("current fixture resumes through actual browser storage", async ({
   expect(await page.evaluate(() => Emberfall.game.s)).toEqual(old);
 });
 
-test("campaign rewards and deck editor use the new state boundary", async ({
+test("expedition spoils and deck editor use the new state boundary", async ({
   page,
 }) => {
   await page.goto("./?debug=1");
   await ready(page);
   await page.locator("#start-btn").click();
-  await page.locator("#hero-confirm").click();
+  await beginExpedition(page);
   await page.locator("#mulligan-confirm").click();
   await idle(page);
   await page.evaluate(() => {
@@ -692,14 +702,20 @@ test("campaign rewards and deck editor use the new state boundary", async ({
     EmberDebug.game.emit();
   });
   await page.locator("#result-next").click();
-  await expect(page.locator(".relic-choice")).toHaveCount(3);
-  await page.locator(".relic-choice").first().click();
-  await page.locator("#reward-confirm").click();
-  expect(await page.evaluate(() => Emberfall.game.s.bossIndex)).toBe(1);
-  expect(await page.evaluate(() => Emberfall.game.s.relics.length)).toBe(1);
-  await page.locator("#mulligan-confirm").click();
-  await idle(page);
-  await page.locator("#home-btn").click();
+  // level 1's spoils: a treasure, then a bundle of three cards, then level 2's opponents
+  const run = () =>
+    page.evaluate(() => JSON.parse(localStorage.getItem("emberfall.run.v1")));
+  await expect(page.locator("#modal .run-box [data-pick]")).toHaveCount(3);
+  await page.locator("[data-pick]").first().click();
+  await page.locator("#run-confirm").click();
+  await expect(page.locator('#modal .run-box[data-run-step="bundle"]')).toBeVisible();
+  const before = (await run()).deck.length;
+  await page.locator("[data-pick]").first().click();
+  await page.locator("#run-confirm").click();
+  await expect(page.locator('#modal .run-box[data-run-step="route"]')).toBeVisible();
+  expect((await run()).level).toBe(2);
+  expect((await run()).deck.length).toBe(before + 3);
+  await page.locator("#run-home").click();
   await page.locator("#collection-nav").click();
   await openDeckTools(page);
   await page.locator("#deck-reset").click();

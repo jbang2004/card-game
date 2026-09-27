@@ -19,6 +19,14 @@ const EmberStorage = (() => {
           return fallback;
         }
       },
+      remove(key) {
+        try {
+          getStorage().removeItem(key);
+          return true;
+        } catch {
+          return false;
+        }
+      },
       write(key, value) {
         try {
           getStorage().setItem(key, JSON.stringify(value));

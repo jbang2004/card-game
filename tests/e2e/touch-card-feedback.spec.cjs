@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const { beginExpedition } = require("./helpers/expedition.cjs");
 const path = require('node:path');
 const out = path.resolve('artifacts/touch-card-feedback');
 
@@ -70,7 +71,7 @@ test('rubbing an opening choice does not toggle it; a tap still does', async ({ 
   const page = await context.newPage(), cdp = await context.newCDPSession(page);
   await boot(page);
   await page.locator('#start-btn').click();
-  await page.locator('#hero-confirm').click();
+  await beginExpedition(page);
   const choice = page.locator('.mulligan-card').first();
   await expect(choice).toBeVisible();
   // the opening hand is still (2026-09-22): rubbing neither turns nor toggles it

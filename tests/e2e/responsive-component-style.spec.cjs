@@ -1,5 +1,6 @@
 const { openCovenantPage } = require("./helpers/covenant.cjs");
 const { test, expect } = require("@playwright/test");
+const { chooseFoe } = require("./helpers/expedition.cjs");
 const path = require("node:path");
 
 // Dialog sizes that slate renders as a full-bleed page shell; every other
@@ -182,7 +183,7 @@ const pages = {
     ".rewards-box",
     ".relic-choice",
     '.relic-choice[aria-pressed="true"]',
-    "#reward-confirm",
+    "#run-confirm",
   ],
 };
 
@@ -361,6 +362,16 @@ async function captureViewport(browser, viewport) {
   await page.locator('[data-hero="morla"]').click();
   result.heroes = await fingerprint(page, pages.heroes);
   await page.locator("#hero-confirm").click();
+  await page.locator("#modal .run-box [data-foe]").first().waitFor();
+  // Morla's covenants as the run's treasures, and the run resumed from the lobby
+  await page.evaluate(() => {
+    const run = JSON.parse(localStorage.getItem("emberfall.run.v1"));
+    run.contracts = [...EmberData.heroes.find((h) => h.id === "morla").defaultContracts];
+    localStorage.setItem("emberfall.run.v1", JSON.stringify(run));
+  });
+  await page.locator("#run-home").click();
+  await page.locator("#start-btn").click();
+  await chooseFoe(page);
   await page.locator("[data-mulligan]").first().click();
   result.mulligan = await fingerprint(page, pages.mulligan);
   const openingHand = await page
@@ -397,10 +408,6 @@ async function captureViewport(browser, viewport) {
   result.contracts = await fingerprint(page, pages.contracts);
   await page.keyboard.press("Escape");
 
-  await page.locator("#settings-btn").evaluate((button) => button.click());
-  await page.locator("#restart-battle").click();
-  result.confirm = await fingerprint(page, pages.confirm);
-  await page.locator("#cancel-confirm").click();
   await page.evaluate(() => {
     const game = EmberDebug.game;
     game.s.choice = { side: "p", cards: ["spark", "frostbolt", "fireball"] };
@@ -413,15 +420,20 @@ async function captureViewport(browser, viewport) {
   await page.evaluate(() => {
     const game = EmberDebug.game;
     game.s.e.hp = 0;
-    game.s.rewardOffers = ["heart", "lens", "crown"];
     game.cleanup();
     game.emit();
   });
   await page.locator("#result-next").waitFor();
   result.result = await fingerprint(page, pages.result);
   await page.locator("#result-next").click();
-  await page.locator('[data-relic="lens"]').click();
+  await page.locator("[data-pick]").nth(1).click();
   result.rewards = await fingerprint(page, pages.rewards);
+  // an expedition battle is not restarted: the confirm page is the lobby's new-journey prompt
+  await page.locator("#run-home").click();
+  await page.locator("#quick-btn").click();
+  await page.locator("#ok-confirm").waitFor();
+  result.confirm = await fingerprint(page, pages.confirm);
+  await page.locator("#cancel-confirm").click();
   await context.close();
   return result;
 }

@@ -1,6 +1,7 @@
 const { openCovenantPage } = require("./helpers/covenant.cjs");
 const { openDeckTools, finishDeckTools } = require("./helpers/deck-tools.cjs");
 const { test, expect } = require("@playwright/test");
+const { beginWithCovenants } = require("./helpers/expedition.cjs");
 const gods = [
   ["mage", "jingchen", "stars"],
   ["paladin", "aurion", "dawn"],
@@ -34,9 +35,7 @@ for (const [width, height, touch] of [
       await page.waitForFunction(
         () => window.Emberfall && !AtelierWorld.loading,
       );
-      await page.locator("#start-btn").click();
-      await page.locator(`[data-hero="${hero}"]`).click();
-      await page.locator("#hero-confirm").click();
+      await beginWithCovenants(page, hero);
       await page.locator("#mulligan-confirm").click();
       await page.waitForFunction(() => !EmberFX.busy);
       await openCovenantPage(page);

@@ -1,5 +1,6 @@
 const { openDeckTools, finishDeckTools } = require("./helpers/deck-tools.cjs");
 const { test, expect } = require("@playwright/test");
+const { chooseFoe, beginExpedition, choosePractice } = require("./helpers/expedition.cjs");
 const D = require("../../src/data.js");
 async function ready(page) {
   await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
@@ -135,13 +136,24 @@ test("a second mage and sixth boss work through production screens with only con
     `,
     });
   });
+  // the new boss waits on the expedition's first level: a stage's pool names it, nothing else changes
+  await page.route("**/scripts/content/dungeon.js", async (route) => {
+    const response = await route.fetch();
+    const body = await response.text();
+    await route.fulfill({
+      response,
+      body: body + `\nEmberDungeon.stages[0].pool.push('sixth');\n`,
+    });
+  });
   await open(page);
   await page.locator("#start-btn").click();
   await expect(page.locator(".hero-option")).toHaveCount(D.heroes.length + 1);
   await expect(page.locator("#game-mode option").first()).toContainText(
-    `${D.bosses.length + 1} 关`,
+    `${D.dungeon.levels} 层`,
   );
   await page.locator('[data-hero="arcanist"]').click();
+  // decks are a practice duel's (the expedition sets out with its own starter cards)
+  await choosePractice(page);
   await page.locator("#hero-deck-btn").click();
   await expect(page.locator("#deck-class")).toHaveValue("arcanist");
   await expect(page.locator("#deck-preset option")).toHaveCount(
@@ -150,36 +162,31 @@ test("a second mage and sixth boss work through production screens with only con
   await page.locator("#deck-name").fill("第二法师牌组");
   await page.screenshot({ path: "artifacts/qa/model-desktop.png" });
   await finishDeckTools(page);
+  // a named deck goes into a practice duel
   await page.locator("#deck-play").click();
+  await expect(page.locator("#game-mode")).toHaveValue("practice");
   await page.locator("#hero-confirm").click();
   expect(await page.evaluate(() => Emberfall.game.s.heroId)).toBe("arcanist");
+  await page.locator("#mulligan-confirm").waitFor();
+  await page.evaluate(() => Emberfall.home());
+  // the expedition: the new hero sets out with its deck's cheapest cards and can meet the new boss
+  await page.locator("#start-btn").click();
+  await page.locator('[data-hero="arcanist"]').click();
+  await expect(page.locator("#game-mode")).toHaveValue("campaign");
+  await page.locator("#hero-confirm").click();
+  await expect(page.locator('[data-foe="sixth"]')).toBeVisible();
+  await chooseFoe(page, await page.locator("[data-foe]").evaluateAll((xs) => xs.findIndex((x) => x.dataset.foe === "sixth")));
   await page.locator("#mulligan-confirm").click();
   await page.waitForFunction(() => !EmberFX.busy);
-  await page.evaluate(() => {
-    Emberfall.settings.reduced = true;
-    EmberFX.configure(true, false);
-    const g = EmberDebug.game;
-    g.s.bossIndex = EmberData.bosses.length - 2;
-    g.s.relics = EmberData.relics.map((r) => r.id);
-    g.s.e.hp = 0;
-    g.cleanup();
-    g.emit();
-  });
-  await expect(page.locator("#result-next")).toContainText("选择遗物");
-  await page.locator("#result-next").click();
-  await expect(page.locator("#reward-confirm")).toBeEnabled();
-  await page.locator("#reward-confirm").click();
   expect(await page.evaluate(() => Emberfall.game.s.bossIndex)).toBe(
     D.bosses.length,
   );
+  expect(await page.evaluate(() => Emberfall.game.s.p.deck.length + Emberfall.game.s.p.hand.length)).toBe(10);
   await page.reload();
   await ready(page);
+  await expect(page.locator("#start-btn")).toContainText("继续远征");
   await page.locator("#start-btn").click();
-  expect(await page.evaluate(() => Emberfall.game.s.bossIndex)).toBe(
-    D.bosses.length,
-  );
-  await page.locator("#mulligan-confirm").click();
-  await page.waitForFunction(() => !EmberFX.busy);
+  await page.waitForFunction(() => !EmberFX.busy && Emberfall.inBattle);
   await page.evaluate(() => {
     Emberfall.settings.reduced = true;
     EmberFX.configure(true, false);
@@ -188,10 +195,13 @@ test("a second mage and sixth boss work through production screens with only con
     g.cleanup();
     g.emit();
   });
-  await expect(page.locator("#result-next")).toContainText("新的旅程");
-  await page.locator("#result-home").click();
+  await expect(page.locator("#result-next")).toContainText("领取战利品");
+  await page.locator("#result-next").click();
+  await expect(page.locator('#modal .run-box[data-run-step="treasure"]')).toBeVisible();
+  await page.locator("#run-home").click();
   await page.locator("#adventure-nav").click();
-  await expect(page.locator(".atlas-location.done")).toHaveCount(D.bosses.length + 1);
+  await expect(page.locator(".atlas-location")).toHaveCount(D.bosses.length + 1);
+  await expect(page.locator('.atlas-location.done[data-region="sixth"]')).toHaveCount(1);
   expect(errors).toEqual([]);
 });
 
@@ -210,7 +220,7 @@ test("obsolete campaign is not resumed and a new match uses the current schema",
   await expect(page.locator(".local-status")).toContainText("已失效");
   await page.locator("#start-btn").click();
   await expect(page.locator("#hero-confirm")).toBeVisible();
-  await page.locator("#hero-confirm").click();
+  await beginExpedition(page);
   const s = await page.evaluate(() => Emberfall.game.s);
   expect(s.version).toBe(3);
   expect(s).not.toHaveProperty("ruleset");
