@@ -4,6 +4,40 @@
 
 用户决策（2026-09-13）：完成后设为默认皮肤；主页 / 地图 / 战场保留场景原画，只重做 UI 层；手机布局纳入第二阶段。2026-09-14 旧的星海银蓝主题连同 `?skin=` 开关一并删除：`src/presentation/theme.js` 无条件写入 `html[data-skin="slate"]`，该属性是皮肤选择器的命名空间，不再是切换点。
 
+## 液态玻璃 v2（2026-09-27，Apple Liquid Glass）
+
+用户 2026-09-27 要求把全站 UI 元素（面板、按钮及其他控件）改成 Apple Liquid Glass（iOS / macOS 26）的风格，排版简洁清爽。本节优先于下文 §1–§5 中与之冲突的旧规格（导航轨发光节点、下划线文字分页、104×40 开关、蓝色外发光主按钮、3px 标题字距等均已退役）。令牌全部在 `base.css`。
+
+**材质：两种玻璃 + 一条高光边。**
+- 常规玻璃（regular）= `--glass-fill` + `--glass-blur`：承载文字的面板——浮层、检查器（右侧详情栏）、战场侧栏。中性烟灰着色，重模糊 + 高饱和，让背后场景的颜色透出来。
+- 透明玻璃（clear）= `--lg-clear` + `--lg-clear-blur`：**独立浮在内容上的控件**——工具条、标签栏、HUD 芯片、单独摆放的按钮、返回钮。几乎不着色、轻模糊、微提亮；悬停 `--lg-clear-hover`。
+- 高光边 `--glass-rim`：左上亮唇 + 右下弱唇 + 7% 轮廓 + 顶部内光 + 底部内影，全部是 inset 阴影，跟随任意圆角，不需要伪元素。浮起的玻璃再叠 `--lg-lift`（控件）或 `--glass-shadow`（面板）。
+- **玻璃上不叠玻璃**：面板里的控件不再做玻璃，用填充 `--lg-fill-control`（悬停 `--lg-fill-control-hover`）+ 小高光 `--lg-rim-soft`；分组块用 `--glass-fill-2`。
+- **着色玻璃（prominent）** `--lg-prominent` + `--lg-prominent-rim` = 主操作（`.gold-btn`、开启冒险）。战场上"此刻可行动"仍是余烬色，做成余烬着色玻璃（同一条高光边配方）。
+- 性能：`backdrop-filter` 只给单独浮起的元素；列表项、网格里重复的元素、面板内部控件一律不用。
+
+**形状。** 按钮、芯片、分段控件、标签栏 = 胶囊（999）；图标按钮 = 圆；面板 `--lg-radius-sheet` 28；面板内分组 `--lg-radius-group` 18；分组里的行 / 小卡 12–14。浮在场景上的检查器离视口边 16–24px，不贴边。
+
+**字体。** 字体栈以 `-apple-system` 开头（中文落到苹方）。中文标题**不加字距**（0；仅品牌字标、大号 CTA 可 ≤1px）。页面标题 700 30/44（`--lg-title-page`），面板标题 700 24/32（`--lg-title-sheet`），行标题 600 17/24（`--lg-headline`），正文 400 15–16，说明 13–14 用 `--slate-ink-2`，最弱 `--slate-ink-3`。数字用 `font-variant-numeric: tabular-nums`。文字色是中性白 + 透明度（`--slate-ink` #f5f5f7、`--slate-ink-2` 72%、`--slate-ink-3` 50%），强调色是系统蓝（`--slate-blue` #64b4ff 文字 / 描边，`--slate-blue-deep` #0a84ff 填充）。
+
+**组件。**
+| 组件 | 规格 | 实现 |
+| --- | --- | --- |
+| 主按钮 | 着色玻璃胶囊，600 17px，高 48–52 | base.css `.gold-btn` |
+| 次按钮 | 控件填充胶囊 + 小高光 | base.css `.ghost-btn` |
+| 关闭 | 40 圆，控件填充，`×` 用 ink-2 | base.css 浮层壳 `.modal-close` |
+| 返回 | 44 圆，透明玻璃，2.5px 细 chevron | base.css 页面壳 `.modal-close` |
+| 分段控件 | 轨道 `--lg-fill-control` 胶囊、内边距 3、`inset 0 1px 2px #00000026`；段高 36（桌面）/ 44（触屏）；选中段 `#ffffff24` + `--lg-rim-soft` + `0 2px 8px #00000026`，白字 600；未选 ink-2 500 | settings.css 触屏导航、home.css 标签栏 |
+| 侧边栏 | 44 高胶囊行，左侧 28px 彩色图标块（圆角 8、`inset 0 1px 0 #ffffff4d`），选中行 `#ffffff24` + `--lg-rim-soft` | settings.css 桌面导航 |
+| 开关 | iOS 26：64×28 轨道 + 38×24 胶囊白钮，开启 #30d158；按钮本体保持 64×44 透明命中区 | settings.css `.toggle` |
+| 滑杆 | 6px 胶囊轨道，系统蓝进度，34×22 白色胶囊钮 | base.css `input[type=range]` |
+| 输入 / 下拉 | 44 高胶囊，控件填充 + 小高光 | base.css |
+| 选中态（卡、选项块） | 不用粗边框：`0 0 0 2px var(--slate-blue)` + `0 0 0 6px #0a84ff29` 光晕，底色可加 `#0a84ff1f` | 各页 |
+| 工具条 / 标签栏 | 透明玻璃胶囊，内边距 4，图标钮 40（触屏 44）圆、透明底、悬停 `#ffffff1f`；选中标签是 `::after` 胶囊滑块 | home.css |
+| 分组列表 | `--glass-fill-2` 圆角 18，行高 ≥56，行间靠留白不画线 | settings.css |
+
+**动效。** 按下 `scale(.97)`，回弹用 `--e-spring`；时长用 `--m-*`；遵守减少动态效果。
+
 ## 0. 参考元素到本项目的映射
 
 | 参考元素 | 本项目实现 |
