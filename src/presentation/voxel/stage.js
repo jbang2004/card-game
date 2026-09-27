@@ -11,7 +11,7 @@ const EmberMiniatures = (() => {
   const THREE = EmberVesperThree, KIT = EmberVoxelKit;
   const SIZE = 1.25;            // board size of a figure (× its spec.scale): a miniature a head taller than its token
   let renderer = null, pass = null, scene = null, camera = null, canvas = null, arena = null, failed = false, raf = 0, last = 0, box = null, dimmer = null;
-  const stats = { status: "idle", error: null, frameMs: 0 };
+  const stats = { status: "idle", error: null, frameMs: 0, frames: 0 };
   const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), hit = new THREE.Vector3();
   const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches || document.body.classList.contains("reduced-motion");
   const desk = matchMedia("(hover: hover) and (pointer: fine)");
@@ -326,15 +326,19 @@ const EmberMiniatures = (() => {
   const stands = (cid) => enabled() && !!specOf(cid);
 
   // ------------------------------------------------------------------ frames
-  /* Pacing: while only idle breathing is on, the touch layouts draw the stage every other frame (30 fps); a blow, a
-   * death, an arrival, the aim — anything fast (arena.hot, or a cue in the last 2.5 s) — draws every frame. */
-  let hotUntil = 0, drawnAt = 0;
+  /* Pacing: the stage draws every frame. Only a device that cannot keep up (the stage's own work, averaged, over
+   * SLOW ms a frame — a weak phone) draws idle breathing every other frame (30 fps); a blow, a death, an arrival, the
+   * aim — anything fast (arena.hot, or a cue in the last 2.5 s) — always draws every frame. */
+  const SLOW = 7;
+  let hotUntil = 0, drawnAt = 0, cost = 0;
   const heat = (ms = 2500) => { hotUntil = Math.max(hotUntil, performance.now() + ms); };
+  let warmed = false;
   function render(now) {
     raf = 0;
     if (!renderer || document.hidden || !battle()?.offsetParent) return;
-    if (touchLayout() && now < drawnAt + 30 && now > hotUntil && !arena.hot()) { raf = requestAnimationFrame(render); return; }
+    if (cost > SLOW && now < drawnAt + 30 && now > hotUntil && !arena.hot()) { raf = requestAnimationFrame(render); return; }
     drawnAt = now;
+    if (!warmed) { warmed = true; arena.warm(); }      // the battle's first frame compiles every effect's shader (EmberVoxelArena.warm)
     const start = performance.now();
     const dt = Math.min(0.05, (now - (last || now)) / 1000); last = now;
     box = fitCamera();
@@ -342,7 +346,8 @@ const EmberMiniatures = (() => {
     if (dimmer) { const d = arena.dim(now); dimmer.style.opacity = d > 0.005 ? d.toFixed(3) : "0"; }
     if (EmberPixelPass.settings.on) pass.render(scene, camera, OVER, UNDER);
     else { camera.layers.enableAll(); renderer.render(scene, camera); camera.layers.set(0); }
-    stats.frameMs = performance.now() - start;
+    stats.frameMs = performance.now() - start; stats.frames++;
+    cost += (stats.frameMs - cost) * 0.05;
     if (busy) wake();
     else if (canvas) canvas.hidden = true;
   }

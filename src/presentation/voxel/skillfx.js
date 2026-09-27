@@ -598,7 +598,7 @@ const EmberSkillFx = (() => {
     /** a mesh effect: step(u, now) each frame (u its age 0 → 1); it is dropped at the end of its life */
     function meshFx(objs, t0, life, stepFn) {
       for (const m of objs) { m.frustumCulled = false; m.material.userData.toScreen = true; o.add(m); }
-      const M = { objs, t0, life, stepFn, kill: () => objs.forEach((m) => { o.remove(m); m.material.dispose(); }) };
+      const M = { objs, t0, life, stepFn, kill: () => objs.forEach(kill) };
       meshes.push(M);
       return M;
     }
@@ -675,7 +675,7 @@ const EmberSkillFx = (() => {
       beams.push(b);
       return b;
     }
-    const kill = (m) => { o.remove(m); m.material.dispose(); };
+    const kill = (m) => { o.remove(m); if (!m.material.userData.keep) m.material.dispose(); };
     const stOf = (u) => { let s = state.get(u); if (!s) { s = { aura: 0, atk: null, vic: 0, flash: 0, halo: null }; state.set(u, s); } return s; };
     const blade = (f) => { const [a, b] = f.blade; a.updateWorldMatrix(true, false); b.updateWorldMatrix(true, false); return [a.getWorldPosition(V3()), b.getWorldPosition(V3())]; };
     // (a beast's skeleton is its voxel figure's: its chest, head and hips stand for the humanoid's)
@@ -1205,7 +1205,7 @@ const EmberSkillFx = (() => {
         const R = ribs[i];
         buildRibbon(R, now);
         R.mesh.material.uniforms.uTime.value = now / 1000;
-        if (!R.open && !R.S.length) { o.remove(R.mesh); R.mesh.geometry.dispose(); R.mesh.material.dispose(); ribs.splice(i, 1); }
+        if (!R.open && !R.S.length) { o.remove(R.mesh); R.mesh.geometry.dispose(); if (!R.mesh.material.userData.keep) R.mesh.material.dispose(); ribs.splice(i, 1); }
       }
       for (let i = shakes.length - 1; i >= 0; i--) if (now - shakes[i].t0 > shakes[i].life) shakes.splice(i, 1);
       return !!(glow.P.length || smoke.P.length || dark.P.length || meshes.length || rocks.P.length || spikes.P.length || beams.length || ribs.length || later.length || missiles.length);
@@ -1291,7 +1291,28 @@ const EmberSkillFx = (() => {
     }
     /** the glow colour of a signature figure's element (its palette) — null for one without a signature */
     const tintOf = (u) => (u.fig?.sig?.fx ? palOf(recipe(u)).glow : null);
-    return { attack, impact, hurt, victory, frame, swing, step, shake, punch, dim, drop, dispose, hot, arrive, land, motes, gloom, tintOf };
+    /** every effect's shader drawn once, far under the board, tiny and for a moment — and those materials kept, never
+     *  disposed. three.js forgets a shader once the last material using it is disposed, and the effects make and
+     *  dispose theirs blow by blow: without a keeper each blow would compile its shaders again, a stall on the hit */
+    function warm() {
+      const at = V3(0, -60, 0), to = at.clone().add(V3(1e-4, 0, 0)), P = PAL.fire, t = NOW(), r = 1e-4, life = 400;
+      const n0 = [decals.length, beams.length, meshes.length, ribs.length];
+      for (const fs of [SIGIL_FS, SHOCK_FS, CRACK_FS, FROST_FS, SCORCH_FS, VOID_FS, ZONE_FS]) decal(fs, at, r, life);
+      beam(at, r, r, life, P.glow);
+      streak(at, to, r, life, 0, 40, 0, P);
+      vortex(at, r, t, 40, life, P); hole(at, r, t, life, P, () => {});
+      for (const pl of [glow, smoke, dark]) put(pl, { p: at, t0: t, life, s0: r, s1: r, col: [0, 0, 0], k: 0, shape: 0 });
+      rocks.P.push({ p: at.clone(), v: V3(), grav: 0, axis: V3(0, 1, 0), rot: 0, spin: 0, size: r, col: [0, 0, 0], emit: [0, 0, 0], t0: t, life });
+      spikes.P.push({ p: at.clone(), dir: V3(0, 1, 0), twist: 0, h: r, w: r, col: [0, 0, 0], emit: [0, 0, 0], t0: t, grow: 10, life });
+      const R = ribbon(P.trail, P.core, 0.5);
+      R.S.push({ b: at.clone(), tp: at.clone().add(V3(0, r, 0)), t, g: 0 }, { b: to.clone(), tp: to.clone().add(V3(0, r, 0)), t: t + 1, g: 0 });
+      R.open = false; o.add(R.mesh); ribs.push(R);
+      const keep = (m) => { m.material.userData.keep = true; };
+      decals.slice(n0[0]).forEach((d) => keep(d.m)); beams.slice(n0[1]).forEach((b) => keep(b.m));
+      meshes.slice(n0[2]).forEach((M) => M.objs.forEach(keep)); ribs.slice(n0[3]).forEach((R2) => keep(R2.mesh));
+      o.fire?.warm();
+    }
+    return { attack, impact, hurt, victory, frame, swing, step, shake, punch, dim, drop, dispose, hot, arrive, land, motes, gloom, tintOf, warm };
   }
   return Object.freeze({ create, PAL: Object.keys(PAL) });
 })();
