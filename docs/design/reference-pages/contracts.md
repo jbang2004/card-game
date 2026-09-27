@@ -96,3 +96,18 @@
 与本次改动前在 `?skin=slate` 下的结果逐项相同。`responsive-component-style.spec.cjs` 的跨视口材质比对中
 `contracts` 一页的差异由 60 条降到 **0** 条。桌面 1672×941 与改动前逐像素完全一致（0 像素差）。
 截图见 [output/slate-mobile-scene-20260914/](../../../output/slate-mobile-scene-20260914/README.md)。
+
+## 2026-09-27 液态玻璃（Apple Liquid Glass）
+
+按设计系统「液态玻璃 v2」重做，唯一样式文件仍是 `src/presentation/skins/slate/contracts.css`，`src/application/contracts.js` 未改。
+
+- **右栏改为浮动常规玻璃检查器**：桌面距顶 / 右 / 底 24px，宽 `min(--covenant-col, 520px)`，圆角 28。玻璃画在 `.covenant-box::after`（`z-index: -1`，盒子是 `isolation: isolate`），而不是装文字的 `.folio-pane`：`backdrop-filter` 会让元素成为绝对定位后代的包含块，桌面缩略图条正是窗格子树里的绝对定位元素，会被拖进面板并裁掉；玻璃也不应随文字滚动；触控窗格还要保持 `contracts.spec.cjs` 断言的左 / 右 / 下等距，而横屏检查器只是右栏。
+- **我方 / 敌方契约**由下划线文字分页改为分段控件：轨道 `--lg-fill-control` 胶囊、内边距 3、`inset 0 1px 2px #00000026`；段高 36（桌面）/ 44（触屏）；选中段 `#ffffff24` + `--lg-rim-soft` + `0 2px 8px #00000026`、白字 600，未选 ink-2 500。控件在玻璃顶部，窗格从控件下方开始，文字滚动时不会滑到控件底下。
+- **正文**：名称 26/700 无字距 → 元信息 14 ink-3 等宽数字 → 效果 15 ink → 进度分组块（`--glass-fill-2` 圆角 18；每行「标签 / 6px 胶囊轨道 `#7878805c` + `--slate-blue-deep` 填充 / 600 等宽数值 + ink-3 分母」）→ 需求说明 14 ink-2 → 「唤醒 …」主胶囊通栏。桌面检查器是满高的，需求说明与唤醒胶囊钉在玻璃底部（与地图一致），正文在顶部。禁用态为 20% 灰填充 + ink-3、去掉着色与高光（并清掉 components.css 旧禁用态的 `filter` / `opacity`）。敌方分页无契约时「未携带契约。」作为空状态居中。
+- **缩略图**：圆角 14（触屏 12）、无描边，选中为系统选中环；名称居中。
+- **神像**：桌面按 `auto 100%` 画的神像原本在右侧留下一条硬边，现在用遮罩把两侧淡出到夜色里（卡图统一 3:4，神像宽 75vh）。
+- **触控**：竖屏玻璃 = 窗格矩形（原画份额 34dvh），分段控件在玻璃顶部，其下滚动缩略图与正文；横屏玻璃只占右侧 58%，窗格仍左右下等距，内容右对齐；滚动区底部 18px 淡出。标题下的发丝线删除（`contracts.spec.cjs` 紧凑断言随之改为「无线」）。
+- **紧凑桌面**：战斗中宽 < 1360 或高 < 700 的鼠标窗口会进 `body.touch-layout`，但 components.css 的紧凑块只在 `max-width: 1199px / max-height: 699px` 生效，1280×720 的契约页此前散架（旧标题与灵魂账本露出、缩略图跑到按钮下面）。触控几何段现在按布局类重申了这些结构规则。
+- 战斗内神祇舞台（`#god-stage` 的进度线与「还需 N 印记」胶囊）样式在 `console.css`，本轮未改。
+
+验证：`node --test tests/*.test.cjs` 全通过；`contracts.spec.cjs` 9/9、`pantheon.spec.cjs` 13/13、`god-stage-motion.spec.cjs` 全过（机器负载高时需 `--timeout=120000`，默认 45s 下会超时）；`responsive-component-style.spec.cjs` 中 `contracts` 一页跨视口材质零差异。截图（改动前 / 后）不入库，见最终报告。

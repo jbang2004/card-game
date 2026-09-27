@@ -1,51 +1,56 @@
-/* Test skin "slate" — 冒险地图 / adventure map page (brief 5.2, template T5 + T1 preview column).
+/* Skin "slate" — 冒险地图 / adventure map page (brief 5.2, template T5 + T1 preview column).
  *
  * Tokens, the full-bleed page shell (this page is `[data-dialog-size="route"]`),
  * the back chevron, the title type scale and the pill buttons all live in
  * base.css; this file only adds map-specific selectors.
  *
- * Composition kept from the existing desktop layout: the map artwork stays a
- * full-bleed scene (`.atlas-stage`), the level anchors stay percentage-placed
- * over it, the route `<svg>` keeps its live geometry, and the dossier stays the
- * right-hand column with the relic row + primary pill pinned to its bottom.
- * What changes is the material: matte column, hairline sections, rail-node
- * level markers, chip statistics, and no four-corner / paper ornament.
+ * Liquid glass (2026-09-27, design system 「液态玻璃 v2」): the map artwork is
+ * the content and runs edge to edge; the dossier is a floating regular-glass
+ * INSPECTOR inset from the screen edges, with the relic group and the primary
+ * pill at its foot; level markers are glass circles over the painting.
+ *
+ * WHY THE STAGE KEEPS ITS WIDTH. The level anchors are percentage-placed on
+ * `.atlas-stage` and the painting is drawn at `100% 100%` of it, so anchors and
+ * landmarks stay registered only while the stage keeps the column's width —
+ * widening it would push 04 / 05 under the inspector. Instead the stage's
+ * `::before` continues the painting past its right edge as a mirror image
+ * (seamless at the seam, since a mirror is continuous there), and the
+ * inspector overlaps the stage by 24px and floats over that continuation.
+ * Only the 24px margins around the glass show the mirrored strip; everything
+ * under the glass is blurred by it.
  *
  * ---------------------------------------------------------------------------
- * FILE SHAPE (phase 2, 2026-09-14), three sections in this order:
+ * FILE SHAPE, three sections in this order:
  *
- *   1. MATERIAL — `html[data-skin="slate"] body`, no layout guard. One matte,
- *      one rim, one node language, one type colour for desktop, portrait and
- *      landscape. `tests/e2e/responsive-component-style.spec.cjs` compares
+ *   1. MATERIAL — `html[data-skin="slate"] body`, no layout guard. One glass,
+ *      one node language, one type colour for desktop, portrait and landscape.
+ *      `tests/e2e/responsive-component-style.spec.cjs` compares
  *      `.adventure-atlas`, `.modal-close`, `.atlas-stage`, `.atlas-node`,
  *      `.atlas-heading h2`, `.atlas-dossier` and `.atlas-footer` across
  *      viewports, so nothing here may be restated per layout. Font size and
  *      line-height ride in the `font:` shorthand at the desktop value; the
- *      layout sections below only retune `font-size`.
- *   2. DESKTOP GEOMETRY — `body:not(.touch-layout)`: the 380px dossier column
- *      with the footer pinned under it. Unchanged from phase 1.
+ *      layout sections below only retune `font-size` / `line-height`.
+ *   2. DESKTOP GEOMETRY — `body:not(.touch-layout)`: the inspector floats 24px
+ *      from the top, right and bottom; the footer (relics + pill) is pinned
+ *      inside its foot.
  *   3. TOUCH GEOMETRY — `body.touch-layout`: portrait stacks title row → map
- *      stage → dossier sheet → footer pill; landscape keeps the desktop
- *      two-column reading (map left, 300px dossier right) at phone paddings.
+ *      stage → inspector sheet → footer; landscape keeps the desktop reading
+ *      (map left, inspector right) at phone insets.
  *
- * The `border-left` hairline on the dossier and the footer is the COLUMN
- * DIVIDER: it exists only in the layouts that actually have a second column
- * (desktop and touch landscape). That is a visibility change of a separator,
- * which the responsive contract allows; the panel's own background, radius and
- * shadow never change.
+ * The page root is transparent: where the stage does not reach (the touch
+ * title row, around the portrait sheet, under the footer) the page shell's
+ * blurred backdrop (base.css `#modal.folio-host::before`) shows through.
  */
 
 /* =========================================================================
  * 1. MATERIAL — one contract for desktop, portrait and landscape
  * ====================================================================== */
 
-/* The page shell paints `--slate-material`; the map covers its own pane with
- * artwork, so the shell ground is flattened to one dark value everywhere. */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="map"]
   > .adventure-atlas {
-  background: #0d121b;
+  background: none;
 }
 
 /* ---------- ornament removal ----------
@@ -68,7 +73,7 @@ html[data-skin="slate"]
   display: none;
 }
 
-/* ---------- title row ---------- */
+/* ---------- title row: plain type over the painting ---------- */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="map"]
@@ -84,12 +89,12 @@ html[data-skin="slate"]
   .atlas-heading
   h2 {
   margin: 0;
-  font: 700 32px/44px var(--slate-font);
-  letter-spacing: 3px;
+  font: var(--lg-title-page);
+  letter-spacing: 0;
   color: #fff;
   text-shadow:
-    0 2px 12px #000c,
-    0 0 4px #0009;
+    0 1px 2px #00000099,
+    0 2px 18px #000000a6;
 }
 html[data-skin="slate"]
   body
@@ -98,22 +103,25 @@ html[data-skin="slate"]
   .atlas-kicker {
   display: block;
   margin: 0;
-  font: 400 16px/1.2 var(--slate-font);
-  letter-spacing: 1px;
+  font: 500 14px/20px var(--slate-font);
+  letter-spacing: 0;
   color: var(--slate-ink-3);
-  text-shadow: 0 2px 10px #000c;
+  font-variant-numeric: tabular-nums;
+  text-shadow:
+    0 1px 2px #000000b3,
+    0 0 12px #000000a6;
 }
 
 /* ---------- route lines ---------- */
 html[data-skin="slate"] body #modal.folio-host[data-type="map"] .atlas-paths {
-  filter: drop-shadow(0 0 6px #4d93ff55);
+  filter: drop-shadow(0 1px 2px #00000080);
 }
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="map"]
   .atlas-paths
   path {
-  stroke: #a8d3ffd9;
+  stroke: #ffffffc2;
   stroke-width: 2;
 }
 html[data-skin="slate"]
@@ -121,7 +129,7 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="map"]
   .atlas-paths
   .atlas-route-shadow {
-  stroke: #00000073;
+  stroke: #0000006b;
   stroke-width: 5;
 }
 html[data-skin="slate"]
@@ -136,16 +144,21 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="map"]
   .atlas-paths
   circle {
-  fill: #8cc4ffcc;
+  fill: #ffffffd9;
   stroke: none;
 }
 html[data-skin="slate"] body #modal.folio-host[data-type="map"] .atlas-loading {
-  background: #0f151fee;
+  background: #16181ef0;
   color: var(--slate-ink);
   font-family: var(--slate-font);
 }
 
-/* ---------- level nodes: the navigation-rail node language ---------- */
+/* ---------- level nodes: glass circles over the painting ----------
+ * Clear glass (`--lg-clear` + the specular rim) over a light dimming layer —
+ * Apple's clear glass carries one over busy media so a glyph stays legible.
+ * No backdrop blur: six repeated markers are exactly the "repeated item" the
+ * performance rule excludes. `--node-shadow` is each state's own shadow, so
+ * the selection ring can be layered on top of whichever state is selected. */
 html[data-skin="slate"] body #modal.folio-host[data-type="map"] .atlas-node {
   padding: 0;
   border: 0;
@@ -165,81 +178,69 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="map"]
   .atlas-node
   .atlas-landmark {
+  --node-shadow: var(--glass-rim), var(--lg-lift);
   position: relative;
   flex: none;
   box-sizing: border-box;
+  padding: 0;
+  border: 0;
   border-radius: 50%;
-  border: 1px solid #ffffff3a;
-  background: #212c3d;
-  box-shadow: inset 0 0 8px #0009;
+  background-color: #0e101680;
+  background-image: linear-gradient(var(--lg-clear), var(--lg-clear));
+  box-shadow: var(--node-shadow);
   clip-path: none;
   transition:
-    width 0.2s,
-    height 0.2s,
-    box-shadow 0.2s;
+    box-shadow var(--m-base) var(--e-std),
+    filter var(--m-fast);
 }
-/* cleared — filled node with a check */
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="map"]
-  .done
-  .atlas-landmark {
-  border-color: #8cc4ff8c;
-  background: linear-gradient(180deg, #3f7fd6, #23509c);
-  box-shadow:
-    0 0 14px #2f72d666,
-    inset 0 0 8px #0006;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="map"]
-  .done
-  .atlas-number
-  svg {
-  color: #fff;
-}
-/* current playable — blue glow around the live boss portrait */
+/* current — the boss portrait behind a brighter glass bezel */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="map"]
   .current
   .atlas-landmark {
-  border: 1px solid #bcdcff;
-  background: #0d1523;
-  box-shadow:
-    0 0 0 4px #4d93ff33,
-    0 0 24px #4d93ffaa,
-    inset 0 0 8px #0009;
+  padding: 3px;
+  background-color: #ffffff3d;
+  background-image: none;
 }
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="map"]
   .current
   .atlas-number
-  img {
+  > img {
   display: block;
   width: 100%;
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
 }
-/* locked — hollow dot with a lock */
+/* cleared — accent-tinted glass with a check */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="map"]
-  .locked
+  .done
   .atlas-landmark {
-  border: 2px solid #aab4c3;
-  background: #1c2330d9;
-  box-shadow: none;
+  --node-shadow: var(--lg-prominent-rim);
+  background-color: transparent;
+  background-image: var(--lg-prominent);
 }
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .done
+  .atlas-number
+  > svg {
+  color: #fff;
+}
+/* locked — clear glass with the lock glyph */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="map"]
   .locked
   .atlas-number
-  svg {
-  color: var(--slate-ink-2);
+  > svg {
+  color: #ffffffc7;
 }
 html[data-skin="slate"] body #modal.folio-host[data-type="map"] .atlas-number {
   position: static;
@@ -250,25 +251,23 @@ html[data-skin="slate"] body #modal.folio-host[data-type="map"] .atlas-number {
   box-shadow: none;
   color: #fff;
 }
-/* selection is a separate axis from progress, so it gets its own ring */
+/* selection is a separate axis from progress: the system selection ring */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="map"]
   .atlas-node[aria-pressed="true"]
   .atlas-landmark {
-  border-color: #cfe6ff;
-  background: #16304f;
   box-shadow:
-    0 0 0 5px #8cc4ff3d,
-    0 0 26px #8cc4ffb3,
-    inset 0 0 8px #0009;
+    0 0 0 2px var(--slate-blue),
+    0 0 0 6px #0a84ff29,
+    var(--node-shadow);
 }
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="map"]
   .atlas-node:hover
   .atlas-landmark {
-  border-color: #ffffff8c;
+  filter: brightness(1.14);
 }
 html[data-skin="slate"]
   body
@@ -276,28 +275,31 @@ html[data-skin="slate"]
   .atlas-node:focus-visible {
   outline: 2px solid var(--slate-blue);
   outline-offset: 6px;
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
 /* node labels */
 html[data-skin="slate"] body #modal.folio-host[data-type="map"] .atlas-name {
-  font: 700 20px/1.3 var(--slate-font);
-  letter-spacing: 1px;
+  font: 600 17px/1.25 var(--slate-font);
+  letter-spacing: 0;
   color: #fff;
+  /* a halo rather than a drop shadow, as map labels do over imagery */
   text-shadow:
-    0 2px 6px #000d,
-    0 0 12px #0009;
+    0 0 2px #000000e6,
+    0 1px 3px #000000cc,
+    0 0 16px #000000b3;
 }
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="map"]
   .atlas-name
-  small {
+  > small {
   display: block;
-  margin: 0 0 2px;
-  font: 700 25px/1.1 var(--slate-font);
-  letter-spacing: 2px;
+  margin: 0 0 1px;
+  font: 600 14px/1.2 var(--slate-font);
+  letter-spacing: 0;
   color: var(--slate-ink-2);
+  font-variant-numeric: tabular-nums;
 }
 html[data-skin="slate"]
   body
@@ -311,28 +313,29 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="map"]
   .locked
   .atlas-name
-  small {
+  > small {
   color: var(--slate-ink-3);
 }
 
-/* ---------- dossier ---------- */
+/* ---------- inspector ---------- */
+/* `.atlas-dossier` is also a `.crafted-panel`, which base.css neutralises on
+ * `.folio-dialog :is(.crafted-panel, …)`; the `.adventure-atlas` step here
+ * out-ranks that by one class. */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="map"]
   .adventure-atlas
   .atlas-dossier {
   border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  /* matte column: the page material, flattened a little for legibility */
-  background-color: #0e141d;
-  background-image:
-    linear-gradient(180deg, #0e141de8, #0e141df7), var(--slate-material);
-  background-attachment: scroll;
+  border-radius: var(--lg-radius-sheet);
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-rim), var(--glass-shadow);
   color: var(--slate-ink);
   font-family: var(--slate-font);
 }
-/* boss card */
+/* boss card: art cover, concentric with the sheet (28 − 10px inset = 18) */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="map"]
@@ -341,10 +344,10 @@ html[data-skin="slate"]
   opacity: 1;
   mask-image: none;
   -webkit-mask-image: none;
-  border: 1.5px solid var(--slate-card-line);
-  border-radius: 12px;
+  border: 0;
+  border-radius: var(--lg-radius-group);
   background: var(--slate-card-base);
-  box-shadow: 0 8px 20px #0007;
+  box-shadow: 0 6px 16px #00000052;
   object-fit: cover;
   object-position: 50% 26%;
 }
@@ -354,8 +357,8 @@ html[data-skin="slate"]
   .atlas-dossier
   h3 {
   margin: 0;
-  font: 700 28px/1.25 var(--slate-font);
-  letter-spacing: 1px;
+  font: 700 28px/34px var(--slate-font);
+  letter-spacing: 0;
   color: #fff;
 }
 html[data-skin="slate"]
@@ -364,8 +367,8 @@ html[data-skin="slate"]
   .atlas-dossier
   > .atlas-dossier-status {
   display: block;
-  font: 400 14px/1.5 var(--slate-font);
-  letter-spacing: 1px;
+  font: 400 14px/20px var(--slate-font);
+  letter-spacing: 0;
   color: var(--slate-ink-3);
 }
 html[data-skin="slate"]
@@ -373,17 +376,20 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="map"]
   .atlas-dossier-quote {
   border-top: 0;
-  font: 400 15px/1.8 var(--slate-font);
+  font: 400 15px/1.6 var(--slate-font);
+  letter-spacing: 0;
   color: var(--slate-ink-2);
 }
-/* statistics chips */
+/* statistics: control-fill capsules. The skill line is a sentence, so it is a
+ * block whose radius is half its one-line height — a capsule while it fits on
+ * one line, a rounded rectangle when it wraps. */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="map"]
   .atlas-dossier-rule {
   border-top: 0;
   border-bottom: 0;
-  font: 400 14px/1.6 var(--slate-font);
+  font: 400 14px/20px var(--slate-font);
   color: var(--slate-ink);
 }
 html[data-skin="slate"]
@@ -398,37 +404,35 @@ html[data-skin="slate"]
   .atlas-dossier-stat {
   display: inline-flex;
   align-items: center;
-  min-height: 28px;
-  padding: 4px 14px;
-  border: 1px solid var(--slate-pill-line);
-  border-radius: 999px;
-  background: var(--slate-pill);
-  font: 500 14px/1.5 var(--slate-font);
+  box-sizing: border-box;
+  min-height: 32px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--lg-fill-control);
+  box-shadow: var(--lg-rim-soft);
+  font: 600 14px/20px var(--slate-font);
+  letter-spacing: 0;
   color: var(--slate-ink);
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-/* the skill line is a full sentence, so it wraps inside a softer chip */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="map"]
   .atlas-dossier-stat.atlas-dossier-skill {
   display: block;
   width: 100%;
-  border-radius: 14px;
-  padding: 10px 16px;
-  font-weight: 400;
-  line-height: 1.7;
+  font-weight: 500;
   color: var(--slate-ink-2);
   white-space: normal;
 }
 
-/* ---------- relic section + primary pill ---------- */
+/* ---------- footer: the relic group and the primary pill ---------- */
 /* `.atlas-footer` is also a `.modal-footer`, and `dialogs.css` flattens every
- * dialog footer with `.folio-dialog > :is(.modal-footer, …) { border: 0;
- * border-top: 1px …; background: none }`. Phase 1 out-ranked that by one class
- * through its `body:not(.touch-layout)` guard; dropping the guard here would
- * hand the matte column back to dialogs.css on source order, so the dialog
- * root's own `.folio-dialog` class restores the same class count. */
+ * dialog footer with `.folio-dialog > :is(.modal-footer, …)`; the dialog
+ * root's own `.folio-dialog` class keeps this rule ahead of it. The footer
+ * itself is transparent: on the desktop it lies on the inspector's glass. */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="map"]
@@ -436,26 +440,30 @@ html[data-skin="slate"]
   > .atlas-footer {
   border: 0;
   border-top: 0;
-  background-color: #0e141d;
-  background-image:
-    linear-gradient(180deg, #0e141df2, #0e141dfa), var(--slate-material);
-  background-attachment: scroll;
+  background: none;
+  box-shadow: none;
 }
+/* grouped section: label left, the relics (or the empty note) beside it */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="map"]
   .atlas-footer
   .atlas-relics {
+  box-sizing: border-box;
+  /* legacy-components caps the old inline relic strip at 220px */
+  max-width: none;
   border: 0;
-  background: none;
+  border-radius: var(--lg-radius-group);
+  background: var(--glass-fill-2);
 }
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="map"]
   .atlas-relic-label {
+  width: auto;
   border-bottom: 0;
-  font: 700 20px/1.2 var(--slate-font);
-  letter-spacing: 1px;
+  font: 600 15px/20px var(--slate-font);
+  letter-spacing: 0;
   color: #fff;
 }
 html[data-skin="slate"] body #modal.folio-host[data-type="map"] .atlas-relic {
@@ -464,30 +472,34 @@ html[data-skin="slate"] body #modal.folio-host[data-type="map"] .atlas-relic {
   padding: 0;
   border: 1px solid transparent;
   border-radius: 12px;
-  background: var(--glass-fill-2);
-  box-shadow: inset 0 1px 0 #ffffff1f;
+  background: #ffffff14;
+  box-shadow: var(--lg-rim-soft);
 }
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="map"]
   .atlas-relic-empty {
-  font: 400 15px/1.6 var(--slate-font);
+  font: 400 14px/20px var(--slate-font);
   color: var(--slate-ink-3);
 }
 html[data-skin="slate"] body #modal.folio-host[data-type="map"] #map-continue {
-  font: 600 18px/1 var(--slate-font);
-  letter-spacing: 1px;
+  font: 600 17px/1 var(--slate-font);
+  letter-spacing: 0;
 }
 
 /* =========================================================================
  * 2. DESKTOP GEOMETRY — body:not(.touch-layout)
+ *
+ * `--atlas-col` is the page-local inspector width. The inspector is a flex item
+ * `--atlas-col` wide with a −24px left and +24px right margin, so its outer
+ * size — and therefore the stage width the anchors are placed on — is the
+ * same as the flush column it replaced.
  * ====================================================================== */
-
-/* the map is full bleed, so drop the shell padding */
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
   > .adventure-atlas {
+  --atlas-col: 380px;
   padding: 0;
   gap: 0;
 }
@@ -509,7 +521,7 @@ html[data-skin="slate"]
   z-index: 4;
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 14px;
   margin: 0;
   padding: 0 0 0 60px;
 }
@@ -521,7 +533,7 @@ html[data-skin="slate"]
   > div:not(.atlas-chapter) {
   display: flex;
   align-items: baseline;
-  gap: 18px;
+  gap: 14px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -558,7 +570,7 @@ html[data-skin="slate"]
   z-index: 3;
   flex-direction: column;
   align-items: flex-start;
-  gap: 3px;
+  gap: 2px;
   color: #fff;
 }
 html[data-skin="slate"]
@@ -568,8 +580,10 @@ html[data-skin="slate"]
   > .atlas-wordmark
   > span {
   font: 700 20px/1.2 var(--slate-font);
-  letter-spacing: 4px;
-  text-shadow: 0 2px 10px #000c;
+  letter-spacing: 1px;
+  text-shadow:
+    0 1px 2px #00000099,
+    0 2px 14px #0000008c;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -577,25 +591,21 @@ html[data-skin="slate"]
   > .adventure-atlas
   > .atlas-wordmark
   > small {
-  font: 400 10px/1.2 var(--slate-font);
-  letter-spacing: 3px;
+  font: 600 10px/1.2 var(--slate-font);
+  letter-spacing: 2px;
   color: var(--slate-ink-2);
-  text-shadow: 0 2px 10px #000c;
+  text-shadow: 0 1px 6px #000000b3;
 }
 
 /* ---------- scene ---------- */
 /* The desktop components layer sizes the scene off the WINDOW
  * (`.atlas-stage { height: 100dvh; min-height: 100dvh }`, components.css inside
- * `@media (min-width: 1100px) and (min-height: 650px)`). That only ever fits
- * because the same block zeroes the dialog's padding, so window height ==
- * `.folio-viewport` height. The slate page shell (base.css) pads the dialog
- * `26px … 28px`, so the moment anything lets that padding through, the scene is
- * 54px taller than its pane and the map's `.folio-viewport` — which is
- * `overflow: hidden` here, not `auto` — reports a 54px vertical overflow, the
- * exact failure `tests/e2e/dialog-layout.spec.cjs` asserts against at 1600×940
- * and 1280×800. Size the scene off the pane instead of the window so it tracks
- * whatever height the shell leaves, and drop the flow's trailing 12px so the
- * full-bleed scene still reaches the bottom edge. */
+ * `@media (min-width: 1100px) and (min-height: 650px)`). Size it off the pane
+ * instead so it tracks whatever height the shell leaves (a 54px overflow here
+ * is what `tests/e2e/dialog-layout.spec.cjs` asserts against), and drop the
+ * flow's trailing 12px so the scene still reaches the bottom edge.
+ * `overflow: visible` lets the mirrored continuation below reach under the
+ * inspector; `.folio-viewport` still clips it at the screen edge. */
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
@@ -604,6 +614,20 @@ html[data-skin="slate"]
   width: auto;
   height: auto;
   min-height: 0;
+  overflow: visible;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-stage::before {
+  content: "";
+  display: block;
+  position: absolute;
+  inset: 0 auto 0 100%;
+  width: 100%;
+  pointer-events: none;
+  background: var(--scene-art) center / 100% 100% no-repeat;
+  transform: scaleX(-1);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -618,12 +642,28 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
   .atlas-node {
-  gap: 16px;
+  gap: 14px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
   .atlas-node
+  .atlas-landmark {
+  width: 44px;
+  height: 44px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .done
+  .atlas-landmark {
+  width: 48px;
+  height: 48px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .current
   .atlas-landmark {
   width: 56px;
   height: 56px;
@@ -633,24 +673,16 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="map"]
   .done
   .atlas-number
-  svg {
-  width: 26px;
-  height: 26px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="map"]
-  .locked
-  .atlas-landmark {
-  width: 44px;
-  height: 44px;
+  > svg {
+  width: 24px;
+  height: 24px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
   .locked
   .atlas-number
-  svg {
+  > svg {
   width: 18px;
   height: 18px;
 }
@@ -661,20 +693,21 @@ html[data-skin="slate"]
   gap: 2px;
 }
 
-/* ---------- dossier column ---------- */
+/* ---------- inspector ---------- */
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
   .adventure-atlas
   .atlas-dossier {
   position: relative;
-  flex: 0 0 380px;
-  width: 380px;
+  flex: 0 0 var(--atlas-col);
+  width: var(--atlas-col);
   display: flex;
   flex-direction: column;
   gap: 0;
-  margin: 0;
-  padding: 28px 28px 210px;
+  margin: 24px 24px 24px -24px;
+  /* the foot is reserved for the footer that is pinned over it */
+  padding: 10px 24px 176px;
   border-left: 0;
   overflow: hidden auto;
 }
@@ -684,11 +717,12 @@ html[data-skin="slate"]
   .atlas-dossier
   > img {
   order: 1;
+  flex: none;
   position: static;
   z-index: auto;
-  width: 100%;
-  height: 208px;
-  margin: 0 0 22px;
+  width: calc(100% + 28px);
+  height: 220px;
+  margin: 0 -14px 20px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -704,15 +738,15 @@ html[data-skin="slate"]
   .atlas-dossier
   > .atlas-dossier-status {
   order: 3;
-  margin: 10px 0 0;
+  margin: 4px 0 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
   .atlas-dossier-quote {
   order: 4;
-  margin: 18px 0 0;
-  padding: 18px 0 0;
+  margin: 16px 0 0;
+  padding: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -722,30 +756,30 @@ html[data-skin="slate"]
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: 10px;
+  gap: 8px;
   margin: 18px 0 0;
-  padding: 18px 0 0;
+  padding: 0;
 }
 
-/* ---------- relic section + primary pill, pinned to the column bottom ---------- */
+/* ---------- footer, pinned inside the inspector's foot ---------- */
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
   .adventure-atlas
   > .atlas-footer {
   position: absolute;
-  inset: auto 0 0 auto;
-  width: 380px;
+  inset: auto 24px 24px auto;
+  width: var(--atlas-col);
   min-height: 0;
   z-index: 4;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0;
-  margin: 0;
-  padding: 22px 28px 28px;
-  border-left: 0;
   justify-content: flex-end;
+  gap: 12px;
+  margin: 0;
+  padding: 0 24px 24px;
+  border-left: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -755,33 +789,42 @@ html[data-skin="slate"]
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 8px 12px;
   width: 100%;
-  margin: 0 0 20px;
-  padding: 0;
+  min-height: 52px;
+  margin: 0;
+  padding: 12px 16px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
   .atlas-relic-label {
-  flex: 0 0 100%;
-  margin: 0 0 4px;
-  padding: 0 0 12px;
+  flex: 1 1 auto;
+  margin: 0;
+  padding: 0;
+}
+/* with relics to show, the label heads its own row */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-relics:has(.atlas-relic)
+  .atlas-relic-label {
+  flex-basis: 100%;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
   .atlas-relic {
-  width: 56px;
-  height: 56px;
+  width: 44px;
+  height: 44px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="map"]
   .atlas-relic
-  img {
-  width: 40px;
-  height: 40px;
+  > img {
+  width: 32px;
+  height: 32px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -798,38 +841,41 @@ html[data-skin="slate"]
   html[data-skin="slate"]
     body:not(.touch-layout)
     #modal.folio-host[data-type="map"]
-    .adventure-atlas
-    .atlas-dossier,
-  html[data-skin="slate"]
-    body:not(.touch-layout)
-    #modal.folio-host[data-type="map"]
-    .adventure-atlas
-    > .atlas-footer {
-    flex-basis: 336px;
-    width: 336px;
-    padding-left: 22px;
-    padding-right: 22px;
+    > .adventure-atlas {
+    --atlas-col: 336px;
   }
   html[data-skin="slate"]
     body:not(.touch-layout)
     #modal.folio-host[data-type="map"]
     .adventure-atlas
     .atlas-dossier {
-    padding-bottom: 200px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="map"]
+    .adventure-atlas
+    > .atlas-footer {
+    padding-left: 20px;
+    padding-right: 20px;
   }
   html[data-skin="slate"]
     body:not(.touch-layout)
     #modal.folio-host[data-type="map"]
     .atlas-dossier
     > img {
-    height: 178px;
+    width: calc(100% + 20px);
+    height: 184px;
+    margin: 0 -10px 18px;
   }
   html[data-skin="slate"]
     body:not(.touch-layout)
     #modal.folio-host[data-type="map"]
     .atlas-dossier
     h3 {
-    font-size: 25px;
+    font-size: 26px;
+    line-height: 32px;
   }
   html[data-skin="slate"]
     body:not(.touch-layout)
@@ -839,18 +885,28 @@ html[data-skin="slate"]
     left: 36px;
   }
 }
+/* short desktop windows: the boss card gives the copy its room back */
+@media (max-height: 780px) {
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="map"]
+    .atlas-dossier
+    > img {
+    height: 144px;
+  }
+}
 
 /* =========================================================================
  * 3. TOUCH GEOMETRY — body.touch-layout
  *
- * `--slate-map-x` is a page-local inset, not a design token.
+ * `--slate-map-x` / `--slate-map-r` are page-local insets, not design tokens.
  * ====================================================================== */
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="map"]
   > .adventure-atlas {
-  --slate-map-x: max(16px, env(safe-area-inset-left, 0px));
-  --slate-map-r: max(16px, env(safe-area-inset-right, 0px));
+  --slate-map-x: max(12px, env(safe-area-inset-left, 0px));
+  --slate-map-r: max(12px, env(safe-area-inset-right, 0px));
   padding: 0;
   gap: 0;
 }
@@ -874,10 +930,10 @@ html[data-skin="slate"]
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  gap: 2px;
+  gap: 0;
   min-height: 54px;
   margin: 0;
-  padding: max(10px, env(safe-area-inset-top, 0px)) var(--slate-map-r) 10px 60px;
+  padding: max(10px, env(safe-area-inset-top, 0px)) var(--slate-map-r) 8px 64px;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -886,8 +942,7 @@ html[data-skin="slate"]
   .atlas-heading
   h2 {
   font-size: 22px;
-  line-height: 1.2;
-  letter-spacing: 2px;
+  line-height: 28px;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -895,6 +950,7 @@ html[data-skin="slate"]
   .adventure-atlas
   .atlas-kicker {
   font-size: 12px;
+  line-height: 16px;
 }
 
 /* ---------- stage + nodes ---------- */
@@ -916,23 +972,23 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="map"]
   .atlas-node
   .atlas-landmark {
-  width: 48px;
-  height: 48px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="map"]
-  .locked
-  .atlas-landmark {
   width: 44px;
   height: 44px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="map"]
+  .current
+  .atlas-landmark {
+  width: 48px;
+  height: 48px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="map"]
   .done
   .atlas-number
-  svg {
+  > svg {
   width: 22px;
   height: 22px;
 }
@@ -941,7 +997,7 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="map"]
   .locked
   .atlas-number
-  svg {
+  > svg {
   width: 16px;
   height: 16px;
 }
@@ -962,18 +1018,16 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="map"]
   .atlas-name {
   font-size: 13px;
-  letter-spacing: 0;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="map"]
   .atlas-name
-  small {
-  font-size: 15px;
-  letter-spacing: 1px;
+  > small {
+  font-size: 12px;
 }
 
-/* ---------- dossier + footer shared touch chrome ---------- */
+/* ---------- inspector + footer shared touch geometry ---------- */
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="map"]
@@ -983,11 +1037,10 @@ html[data-skin="slate"]
   flex-direction: column;
   align-items: stretch;
   gap: 0;
-  margin: 0;
 }
-/* The touch dossier is a fixed-height flex column, so its children would flex-
- * shrink to nothing (the boss name collapsed to 0px at 568×320 before this).
- * The column scrolls instead. */
+/* The touch inspector is a fixed-height flex column, so its children would
+ * flex-shrink to nothing (the boss name collapsed to 0px at 568×320 before
+ * this). The column scrolls instead. */
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="map"]
@@ -1009,8 +1062,8 @@ html[data-skin="slate"]
   order: 1;
   position: static;
   z-index: auto;
-  width: 100%;
-  margin: 0 0 14px;
+  width: calc(100% + 12px);
+  margin: 0 -6px 12px;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1020,6 +1073,7 @@ html[data-skin="slate"]
   order: 2;
   min-height: 0;
   font-size: 22px;
+  line-height: 28px;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1027,18 +1081,19 @@ html[data-skin="slate"]
   .atlas-dossier
   > .atlas-dossier-status {
   order: 3;
-  margin: 8px 0 0;
+  margin: 2px 0 0;
   font-size: 13px;
+  line-height: 18px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="map"]
   .atlas-dossier-quote {
   order: 4;
-  margin: 14px 0 0;
-  padding: 14px 0 0;
+  margin: 10px 0 0;
+  padding: 0;
   font-size: 14px;
-  line-height: 1.65;
+  line-height: 1.5;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1049,22 +1104,13 @@ html[data-skin="slate"]
   flex-wrap: wrap;
   align-items: flex-start;
   gap: 8px;
-  margin: 14px 0 0;
-  padding: 14px 0 0;
+  margin: 12px 0 0;
+  padding: 0;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="map"]
   .atlas-dossier-stat {
-  min-height: 28px;
-  padding: 4px 12px;
-  font-size: 13px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="map"]
-  .atlas-dossier-stat.atlas-dossier-skill {
-  padding: 8px 14px;
   font-size: 13px;
 }
 html[data-skin="slate"]
@@ -1083,34 +1129,34 @@ html[data-skin="slate"]
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 6px 10px;
   width: 100%;
-  margin: 0 0 12px;
-  padding: 0;
+  min-height: 48px;
+  margin: 0;
+  padding: 8px 16px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="map"]
   .atlas-relic-label {
-  flex: 0 0 100%;
-  margin: 0 0 2px;
-  padding: 0 0 8px;
-  font-size: 15px;
+  flex: 1 1 auto;
+  margin: 0;
+  padding: 0;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="map"]
   .atlas-relic {
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="map"]
   .atlas-relic
-  img {
-  width: 34px;
-  height: 34px;
+  > img {
+  width: 28px;
+  height: 28px;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1124,12 +1170,11 @@ html[data-skin="slate"]
   #map-continue {
   width: 100%;
   min-width: 0;
-  min-height: 52px;
+  min-height: 50px;
   margin: 0;
-  font-size: 17px;
 }
 
-/* ---------- portrait: title row → stage → dossier sheet → footer ---------- */
+/* ---------- portrait: title row → stage → inspector sheet → footer ---------- */
 html[data-skin="slate"]
   body.touch-layout.mobile-portrait
   #modal.folio-host[data-type="map"]
@@ -1143,9 +1188,17 @@ html[data-skin="slate"]
   body.touch-layout.mobile-portrait
   #modal.folio-host[data-type="map"]
   .adventure-atlas
+  .modal-scroll {
+  gap: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout.mobile-portrait
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
   .atlas-dossier {
   width: auto;
-  padding: 18px var(--slate-map-r) 20px var(--slate-map-x);
+  margin: 12px var(--slate-map-r) 0 var(--slate-map-x);
+  padding: 10px 16px 16px;
   overflow: visible;
 }
 html[data-skin="slate"]
@@ -1153,7 +1206,7 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="map"]
   .atlas-dossier
   > img {
-  height: 112px;
+  height: 104px;
 }
 html[data-skin="slate"]
   body.touch-layout.mobile-portrait
@@ -1163,12 +1216,12 @@ html[data-skin="slate"]
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0;
-  padding: 14px var(--slate-map-r) calc(14px + env(safe-area-inset-bottom, 0px))
-    var(--slate-map-x);
+  gap: 10px;
+  padding: 12px var(--slate-map-r)
+    calc(12px + env(safe-area-inset-bottom, 0px)) var(--slate-map-x);
 }
 
-/* ---------- landscape: map left, 300px dossier right ---------- */
+/* ---------- landscape: map left, inspector right over the continued map ---------- */
 html[data-skin="slate"]
   body.touch-layout.mobile-landscape
   #modal.folio-host[data-type="map"]
@@ -1177,6 +1230,20 @@ html[data-skin="slate"]
   width: auto;
   height: auto;
   min-height: 0;
+  overflow: visible;
+}
+html[data-skin="slate"]
+  body.touch-layout.mobile-landscape
+  #modal.folio-host[data-type="map"]
+  .atlas-stage::before {
+  content: "";
+  display: block;
+  position: absolute;
+  inset: 0 auto 0 100%;
+  width: 100%;
+  pointer-events: none;
+  background: var(--scene-art) center / 100% 100% no-repeat;
+  transform: scaleX(-1);
 }
 html[data-skin="slate"]
   body.touch-layout.mobile-landscape
@@ -1192,7 +1259,8 @@ html[data-skin="slate"]
   .atlas-dossier {
   flex: 0 0 min(300px, 45%);
   width: min(300px, 45%);
-  padding: 16px var(--slate-map-r) 16px 16px;
+  margin: 0 var(--slate-map-r) 0 -12px;
+  padding: 8px 14px 14px;
   border-left: 0;
   overflow: hidden auto;
 }
@@ -1201,7 +1269,7 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="map"]
   .atlas-dossier
   > img {
-  height: 104px;
+  height: 96px;
 }
 html[data-skin="slate"]
   body.touch-layout.mobile-landscape
@@ -1213,8 +1281,8 @@ html[data-skin="slate"]
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
-  padding: 12px var(--slate-map-r) calc(12px + env(safe-area-inset-bottom, 0px))
-    var(--slate-map-x);
+  padding: 10px var(--slate-map-r)
+    calc(10px + env(safe-area-inset-bottom, 0px)) var(--slate-map-x);
 }
 html[data-skin="slate"]
   body.touch-layout.mobile-landscape
@@ -1223,21 +1291,18 @@ html[data-skin="slate"]
   .atlas-relics {
   flex: 1 1 auto;
   width: auto;
-  margin: 0;
+  flex-wrap: nowrap;
 }
 html[data-skin="slate"]
   body.touch-layout.mobile-landscape
   #modal.folio-host[data-type="map"]
   .atlas-relic-label {
-  flex: 0 0 auto;
-  margin: 0 8px 0 0;
-  padding: 0;
-  border-bottom: 0;
+  flex: 0 1 auto;
 }
 html[data-skin="slate"]
   body.touch-layout.mobile-landscape
   #modal.folio-host[data-type="map"]
   #map-continue {
-  width: 300px;
-  flex: 0 0 300px;
+  width: min(300px, 45%);
+  flex: 0 0 min(300px, 45%);
 }
