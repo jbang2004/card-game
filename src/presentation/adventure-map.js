@@ -75,10 +75,10 @@
           </article>`;
         }).join('')}
       </div>
-      <aside class="atlas-dossier crafted-panel" aria-live="polite"><img class="atlas-dossier-art" alt=""><small class="atlas-dossier-status"></small><h3></h3><p class="atlas-dossier-quote"></p><div class="atlas-dossier-rule"></div></aside>
+      <aside class="atlas-dossier crafted-panel lg-sheet" aria-live="polite"><img class="atlas-dossier-art" alt=""><small class="atlas-dossier-status"></small><h3></h3><p class="atlas-dossier-quote"></p><div class="atlas-dossier-rule"></div></aside>
       <div class="modal-footer atlas-footer">
         <div class="atlas-focus" aria-live="polite"><strong></strong><span></span></div>
-        <div class="atlas-relics" aria-label="旅途遗物"><span class="atlas-relic-label">旅途遗物</span>${relics.length ? relics.map(r => `<span class="atlas-relic" title="${escape(r.name + '：' + r.text)}"><img src="${A.relic(r.id)}" alt="${escape(r.name)}" width="30" height="30"></span>`).join('') : '<span class="atlas-relic-empty">击败首领后获得</span>'}</div>
+        <div class="atlas-relics lg-group" aria-label="旅途遗物"><span class="atlas-relic-label">旅途遗物</span>${relics.length ? relics.map(r => `<span class="atlas-relic" title="${escape(r.name + '：' + r.text)}"><img src="${A.relic(r.id)}" alt="${escape(r.name)}" width="30" height="30"></span>`).join('') : '<span class="atlas-relic-empty">击败首领后获得</span>'}</div>
         <button class="gold-btn" id="map-continue">${E.inBattle ? '回到战场' : run && !complete ? '继续远征' : '准备出发'} ${A.icon('arrow')}</button>
       </div>
     </section>`, 'map');

@@ -88,6 +88,22 @@ const EmberDialogs = (() => {
     help: "help",
     atelier: "atelier",
   });
+  /* Which of the skin's three shells a size wears (design system 「液态玻璃
+   * v2」): a full-bleed PAGE over the blurred edition art, a floating glass
+   * SHEET, or a STAGE — no pane, cards straight on the blurred scene. The
+   * hero info sheet shares the card sheet's `detail` size but is a stats
+   * panel, so it is a sheet. Layout-independent: where a shell changes with
+   * the layout (the relic reward is a page on touch), the page file says so. */
+  const dialogShell = Object.freeze({
+    heroes: "page",
+    library: "page",
+    route: "page",
+    covenant: "page",
+    detail: "stage",
+    discover: "stage",
+    mulligan: "stage",
+    hand: "stage",
+  });
   function mount(box, type) {
     cleanup();
     const modal = document.getElementById("modal");
@@ -95,6 +111,10 @@ const EmberDialogs = (() => {
     modal.classList.add("folio-host");
     box.classList.add("folio-dialog");
     box.dataset.dialogSize = dialogSize[type] || "workspace";
+    box.dataset.shell =
+      type === "touch-hero"
+        ? "sheet"
+        : dialogShell[box.dataset.dialogSize] || "sheet";
     const title = box.querySelector("h2");
     if (title) {
       title.id ||= "dialog-title";
@@ -174,11 +194,11 @@ const EmberDialogs = (() => {
       // Tabs follow available dialog width, not the device's touch classification.
       if (!box.querySelector(".touch-library-tabs")) {
         const tabs = document.createElement("div");
-        tabs.className = "touch-library-tabs";
+        tabs.className = "touch-library-tabs lg-seg";
         tabs.setAttribute("role", "tablist");
         tabs.setAttribute("aria-label", "卡牌收藏与牌组");
         tabs.innerHTML =
-          '<button id="touch-card-tab" role="tab" aria-selected="true">全部卡牌</button><button id="touch-deck-tab" role="tab" aria-selected="false">我的牌组</button>';
+          '<button id="touch-card-tab" class="lg-seg-item" role="tab" aria-selected="true">全部卡牌</button><button id="touch-deck-tab" class="lg-seg-item" role="tab" aria-selected="false">我的牌组</button>';
         box.querySelector(".library-heading").after(tabs);
         tabs.querySelectorAll("button").forEach(
           (b, i) =>

@@ -1,19 +1,173 @@
-/* Test skin "slate" — a library card held up on the stage (EmberCardStage).
+/* Skin "slate" — a library card held up on the stage (EmberCardStage).
  * Structure, flight, flip and scrim are the god stage's (console.css); this file
- * only adds what an ordinary card's label needs. */
+ * only adds what an ordinary card's label needs. Liquid glass v2 (2026-09-27):
+ * calm type (no tracking on CJK), and the two actions as a pill pair —
+ * 「返回收藏」 a secondary control-fill pill, 「加入牌组」 the prominent tinted
+ * pill. The stage lives outside `#modal`, so base.css's pill rules do not
+ * reach it and the pills are restated here. One material for every layout
+ * (`responsive-component-style.spec` compares `#library-detail-add`,
+ * `#library-detail-back`, `.card-stage-name`, `.card-detail-rule`); only
+ * sizes change per layout. */
 html[data-skin="slate"] body .god-stage.card-stage {
   position: fixed;
   z-index: 1100;
+}
+
+/* --- label: eyebrow · name · rule · count, then the pill pair --- */
+html[data-skin="slate"] body .card-stage .god-ritual {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px 12px;
+  text-shadow: 0 1px 10px #00000080;
+}
+html[data-skin="slate"] body .card-stage .god-ritual > * {
+  grid-column: 1 / -1;
+}
+html[data-skin="slate"] body .card-stage .god-eyebrow {
+  color: var(--slate-ink-2);
+  font: 500 14px/1.3 var(--slate-font);
+  letter-spacing: 0;
 }
 html[data-skin="slate"] body .card-stage .card-stage-name {
   margin: 0;
   color: var(--slate-ink);
   font: 700 28px/1.2 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
 }
 html[data-skin="slate"] body .card-stage .card-detail-rule {
   color: var(--slate-ink);
+  font: 400 16px/1.5 var(--slate-font);
+  letter-spacing: 0;
+}
+html[data-skin="slate"] body .card-stage .card-stage-count {
+  color: var(--slate-ink-2);
+  font: 400 14px/1.4 var(--slate-font);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+html[data-skin="slate"] body .card-stage .card-stage-count b {
+  color: var(--slate-ink);
+  font-weight: 600;
+}
+
+/* --- the pill pair: secondary on the left, prominent on the right --- */
+html[data-skin="slate"]
+  body
+  .card-stage
+  .god-ritual
+  > :is(#library-detail-add, #library-detail-back) {
+  grid-row: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  width: 100%;
+  height: 50px;
+  min-height: 0;
+  margin: 6px 0 0;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  color: #fff;
+  font: 600 17px/1 var(--slate-font);
+  letter-spacing: 0;
+  text-decoration: none;
+  text-shadow: none;
+  white-space: nowrap;
+  cursor: pointer;
+  clip-path: none;
+  transition:
+    background var(--m-fast),
+    transform var(--m-base) var(--e-spring);
+}
+html[data-skin="slate"] body .card-stage .god-ritual > #library-detail-back {
+  grid-column: 1;
+  background: var(--lg-fill-control);
+  box-shadow: var(--lg-rim-soft);
+}
+html[data-skin="slate"]
+  body
+  .card-stage
+  .god-ritual
+  > #library-detail-back:hover {
+  background: var(--lg-fill-control-hover);
+  transform: none;
+}
+html[data-skin="slate"] body .card-stage .god-ritual > #library-detail-add {
+  grid-column: 2;
+  background: var(--lg-prominent);
+  box-shadow: var(--lg-prominent-rim);
+}
+html[data-skin="slate"]
+  body
+  .card-stage
+  .god-ritual
+  > #library-detail-add:hover {
+  /* components.css lifts every `.gold-btn` 1px on hover; glass does not */
+  background: var(--lg-prominent-hover);
+  box-shadow: var(--lg-prominent-rim);
+  transform: none;
+}
+html[data-skin="slate"]
+  body
+  .card-stage
+  .god-ritual
+  > :is(#library-detail-add, #library-detail-back):active {
+  transform: scale(0.97);
+}
+html[data-skin="slate"]
+  body
+  .card-stage
+  .god-ritual
+  > :is(#library-detail-add, #library-detail-back):focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 3px;
+}
+/* components.css paints the old bitmap-pill ornaments on `.gold-btn` */
+html[data-skin="slate"]
+  body
+  .card-stage
+  .god-ritual
+  > #library-detail-add::before,
+html[data-skin="slate"]
+  body
+  .card-stage
+  .god-ritual
+  > #library-detail-add::after {
+  content: none;
+  display: none;
+}
+
+/* --- per-layout sizes --- */
+html[data-skin="slate"] body:not(.touch-layout) .card-stage .god-ritual {
+  gap: 10px 12px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  .card-stage
+  .god-ritual
+  > :is(#library-detail-add, #library-detail-back) {
+  height: 48px;
+  font-size: 16px;
 }
 html[data-skin="slate"] body.touch-layout .card-stage .card-stage-name {
+  font-size: 24px;
+}
+html[data-skin="slate"] body.touch-layout .card-stage .card-detail-rule {
+  font-size: 15px;
+}
+html[data-skin="slate"] body.mobile-landscape .card-stage .god-ritual {
+  gap: 7px 10px;
+}
+html[data-skin="slate"] body.mobile-landscape .card-stage .card-stage-name {
   font-size: 22px;
+}
+html[data-skin="slate"]
+  body.mobile-landscape
+  .card-stage
+  .god-ritual
+  > :is(#library-detail-add, #library-detail-back) {
+  height: 44px;
+  margin-top: 2px;
+  font-size: 16px;
 }

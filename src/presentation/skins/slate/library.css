@@ -1,9 +1,35 @@
-/* Test skin "slate" — 万象秘典 / card library page.
- * Tokens, the full-bleed page shell, pills and form controls live in base.css;
- * this file only adds library-specific selectors.
+/* Skin "slate" — 万象秘典 / card library page (collection + deck editor).
+ * Liquid glass v2 (2026-09-27, design system 「液态玻璃 v2」).
+ *
+ * Tokens, the full-bleed page shell, the back chevron, pills and form fields
+ * live in base.css; this file only adds library-specific selectors. Three
+ * sections, in this order:
+ *
+ *   1. MATERIAL — `html[data-skin="slate"] body …`, no layout guard, so the
+ *      desktop and `body.touch-layout` share one set of fills, rims, radii,
+ *      colours and font family/weight. `responsive-component-style.spec`
+ *      compares exactly these on `.library-box`, `.filter-btn`,
+ *      `.filter-btn.active`, `.deck-editor`, `.deck-row`,
+ *      `.deck-actions button` and `.library-item .card`.
+ *   2. DESKTOP GEOMETRY — `body:not(.touch-layout)`.
+ *   3. TOUCH GEOMETRY — `body.touch-layout`, with its landscape bands.
+ *
+ * The page: title row (back · title · count · search field), two segmented
+ * controls (type, cost) over the card grid, and the deck as ONE floating
+ * regular-glass inspector — the only element on this page with a
+ * backdrop-filter. Everything inside the inspector is a fill, never glass.
+ *
+ * §6 rule 7: the skin layer outranks every `display: none` in the component
+ * layer, so the rules that must keep a node hidden are restated below
+ * (filter label, deck/collection panes, the search field on the deck tab,
+ * the short-landscape deck-tools stack).
  */
 
-/* ---------- library ---------- */
+/* =========================================================================
+ * 1. MATERIAL — one contract for desktop, portrait and landscape
+ * ====================================================================== */
+
+/* ---------- title row ---------- */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="library"]
@@ -11,6 +37,604 @@ html[data-skin="slate"]
   > .library-heading {
   border: 0;
   background: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .library-heading::after {
+  content: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .library-heading
+  p {
+  font: 400 15px/1.3 var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+/* an Apple search field: the control-fill capsule from base.css with a
+ * leading magnifier (a CSS vector, no markup, no bitmap) */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .library-heading
+  #library-search {
+  padding: 0 18px 0 42px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23ebebf599' stroke-width='1.8' stroke-linecap='round'%3E%3Ccircle cx='6.8' cy='6.8' r='5'/%3E%3Cpath d='M10.6 10.6l3.9 3.9'/%3E%3C/svg%3E")
+      no-repeat 17px 50% / 16px 16px,
+    var(--lg-fill-control);
+  color: var(--slate-ink);
+  letter-spacing: 0;
+  transition: background-color var(--m-fast);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .library-heading
+  #library-search::placeholder {
+  color: var(--slate-ink-3);
+  opacity: 1;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .library-heading
+  #library-search:hover {
+  background-color: var(--lg-fill-control-hover);
+}
+
+/* ---------- segmented controls ----------
+ * Type (全部 / 随从 / 法术 / 武器), cost (全部 / 0…7+) and, on touch, the
+ * 「全部卡牌 / 我的牌组」 tab strip are one component (design system v2
+ * 「分段控件」): a control-fill capsule track with 3px of padding and a faint
+ * inner shadow; the selected segment is a lighter capsule thumb with a small
+ * rim and a soft drop, white 600; the rest are ink-2 500. */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .library-filters
+  > .filter-bar {
+  border: 0;
+  background: none;
+}
+/* material: base.css `.lg-seg` / `.lg-seg-item`; the page sets type only */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  :is(.filter-type-group, .filter-mana-group)
+  .filter-btn,
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .touch-library-tabs
+  button {
+  font-size: 15px;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+/* the retired text pager drew a divider (`::before`) and an underline bar
+ * (`::after`); the thumb is the segment's own background now */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .filter-btn::before,
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .filter-btn::after,
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .touch-library-tabs
+  button::before,
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .touch-library-tabs
+  button::after {
+  content: none;
+  display: none;
+}
+/* 「费用」 is hidden on the desktop by the component layer; the segmented
+ * track names itself (`aria-label="法力费用"`), so it stays hidden on touch
+ * too — restated because the skin outranks that rule (§6 rule 7). */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .filter-mana-group
+  > .filter-label {
+  display: none;
+}
+
+/* ---------- filter disclosure (touch only; hidden on the desktop) ---------- */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .library-filters {
+  border: 0;
+  background: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .library-filters
+  > summary {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  font: 600 17px/1.2 var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .library-filters
+  > summary
+  small {
+  font: 400 14px/1.2 var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .library-filters
+  > summary::after {
+  border-right-color: var(--slate-ink-3);
+  border-bottom-color: var(--slate-ink-3);
+}
+
+/* ---------- card grid entries ----------
+ * Under each card: the owned count as a quiet capsule on the left and a
+ * small 「加入」 control-fill capsule on the right. The 「点击翻看」 hint is
+ * dropped — the card itself is the button (`aria-label="翻看…"`), and the
+ * hint was what crowded the count off narrow columns. */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .library-item
+  > .add-label {
+  display: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .library-item
+  > .owned-count {
+  grid-column: 1;
+  justify-self: start;
+  align-self: center;
+  min-height: 0;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: var(--glass-fill-2);
+  color: var(--slate-ink-2);
+  font: 600 13px/1 var(--slate-font);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  text-shadow: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .library-entry
+  > .library-inspect {
+  min-width: 0;
+  padding: 0;
+  border: 0 solid transparent;
+  border-radius: 999px;
+  background: var(--lg-fill-control);
+  /* on touch the button keeps a 44px hit area around a 32px capsule: the
+   * transparent border is the difference, and the rim (inset) follows the
+   * padding edge */
+  background-clip: padding-box;
+  box-shadow: var(--lg-rim-soft);
+  color: #fff;
+  font: 600 13px/1 var(--slate-font);
+  letter-spacing: 0;
+  text-shadow: none;
+  white-space: nowrap;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .library-entry
+  > .library-inspect:hover {
+  background-color: var(--lg-fill-control-hover);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .library-foot {
+  border-top: 0;
+  font: 400 13px/1.4 var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink-3);
+}
+
+/* ---------- deck inspector: the one floating regular-glass pane ----------
+ * material: base.css `.lg-sheet` (the markup carries the class) */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-editor::before {
+  content: "牌组预览";
+  display: block;
+  border: 0;
+  font: var(--lg-headline);
+  letter-spacing: 0;
+  color: var(--slate-ink);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-identity {
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-identity
+  img {
+  object-fit: cover;
+  border: 0;
+  border-radius: 12px;
+  background: var(--slate-card-base);
+  box-shadow: 0 4px 12px #00000059;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-identity
+  small {
+  font: 400 13px/1.3 var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink-3);
+}
+/* the deck name is an editable title: plain type at rest, a fill on hover and
+ * the control capsule while typing */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-identity
+  .deck-title-input {
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  box-shadow: none;
+  font: 700 20px/1.3 var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink);
+  transition: background var(--m-fast);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-identity
+  .deck-title-input:hover {
+  background: #ffffff0f;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-identity
+  .deck-title-input:focus {
+  background: var(--lg-fill-control);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-total {
+  font: 700 20px/1 var(--slate-font);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  color: var(--slate-blue);
+}
+
+/* 「调整套牌」 is a grouped row; its body holds the base.css fields */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-tools {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-tools
+  > summary {
+  border: 0;
+  border-radius: 12px;
+  background: var(--glass-fill-2);
+  box-shadow: none;
+  font: 600 16px/1.2 var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink);
+  list-style: none;
+  cursor: pointer;
+  transition: background var(--m-fast);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-tools
+  > summary:hover {
+  background: #ffffff17;
+}
+/* the hint 「英雄 · 预设 · 契约」 is the unclassed element after the title
+ * (§6 rule 8: no bare `span` selectors) */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-tools
+  > summary
+  > .deck-tools-title
+  + * {
+  margin-left: auto;
+  font: 400 13px/1.2 var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink-3);
+}
+/* open, the summary reads 「完成调整，返回牌组」 and the fields below say what
+ * the hint said */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-tools[open]
+  > summary
+  > .deck-tools-title
+  + * {
+  display: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-tools
+  > summary::after {
+  color: var(--slate-ink-3);
+  font: 600 15px/1 var(--slate-font);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-tools-body
+  label {
+  font: 500 13px/1.3 var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-tools-body
+  .contract-setup {
+  border: 0;
+  border-radius: 12px;
+  background: var(--glass-fill-2);
+  box-shadow: none;
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-tools-body
+  .contract-setup
+  > summary {
+  border: 0;
+  background: none;
+  font: 500 15px/1.3 var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-tools-body
+  .contract-setup
+  > summary::marker {
+  color: var(--slate-ink-3);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-plan {
+  border: 0;
+  background: none;
+  font: 400 13px/1.5 var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink-2);
+}
+/* validation: a warm-tinted grouped row instead of a framed box */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  #deck-warning
+  .deck-issues {
+  border: 0;
+  border-radius: 12px;
+  background: #ff9f0a1f;
+  box-shadow: none;
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  #deck-warning
+  .deck-issues
+  > summary {
+  border: 0;
+  background: none;
+  color: #ffb340;
+  min-height: 44px;
+  padding: 10px 0;
+  font: 600 14px/24px var(--slate-font);
+  letter-spacing: 0;
+  cursor: pointer;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  #deck-warning
+  .deck-issues
+  > p {
+  margin: 0 0 12px;
+  color: var(--slate-ink-2);
+  font: 400 13px/1.6 var(--slate-font);
+  letter-spacing: 0;
+}
+
+/* ---------- deck rows: grouped rows, no rules ---------- */
+html[data-skin="slate"] body #modal.folio-host[data-type="library"] .deck-row {
+  border: 0;
+  border-radius: 12px;
+  background: var(--glass-fill-2);
+  box-shadow: none;
+  color: var(--slate-ink);
+  font: 500 15px/1.2 var(--slate-font);
+  letter-spacing: 0;
+  text-shadow: none;
+  transition: background var(--m-fast);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-row:hover {
+  background: #ffffff1a;
+}
+/* legacy-components paints a tavern-brown gradient on `.deck-row::after` */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-row::before,
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-row::after {
+  content: none;
+  display: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-row
+  .cost {
+  border: 0;
+  border-radius: 50%;
+  background: #ffffff1f;
+  box-shadow: none;
+  color: #fff;
+  font: 600 14px/1 var(--slate-font);
+  font-variant-numeric: tabular-nums;
+  text-shadow: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-row
+  .deck-row-art {
+  object-fit: cover;
+  opacity: 0.5;
+  mask: linear-gradient(90deg, #0000, #000 60%);
+  -webkit-mask: linear-gradient(90deg, #0000, #000 60%);
+}
+/* only the words that can land on the artwork carry a shadow */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-row
+  :is(.deck-row-name, .count) {
+  text-shadow: 0 1px 3px #00000099;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-row
+  .count {
+  font: 600 14px/1 var(--slate-font);
+  font-variant-numeric: tabular-nums;
+  color: var(--slate-ink-2);
+}
+
+/* ---------- mana curve: accent capsules ---------- */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-curve {
+  border-top: 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .curve-bar {
+  min-height: 4px;
+  border: 0;
+  border-radius: 4px 4px 2px 2px;
+  background: linear-gradient(
+    180deg,
+    var(--slate-blue) 0%,
+    var(--slate-blue-deep) 100%
+  );
+  box-shadow: none;
+}
+/* an empty cost is a quiet stub, not an accent hairline */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .curve-bar[style^="height:0px"] {
+  background: #ffffff1f;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .curve-bar
+  small {
+  font: 500 11px/1.2 var(--slate-font);
+  font-variant-numeric: tabular-nums;
+  color: var(--slate-ink-3);
+}
+
+/* ---------- actions: the pills are base.css's; disabled reads as a fill ---- */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-actions {
+  border-top: 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="library"]
+  .deck-actions
+  > button:disabled {
+  border-color: transparent;
+  background: var(--lg-fill-control);
+  box-shadow: none;
+  color: var(--slate-ink-3);
+}
+
+/* =========================================================================
+ * 2. DESKTOP GEOMETRY — body:not(.touch-layout)
+ *    [title · count ········ search] | inspector
+ *    [type ▭▭▭▭ ···· cost ▭▭▭▭▭▭▭▭▭] |   (full height, 24px off the
+ *    [card grid                     ] |    top, right and bottom edges)
+ * ====================================================================== */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="library"]
+  .library-box {
+  --lib-col: 356px;
+  --lib-gap: 40px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -22,15 +646,11 @@ html[data-skin="slate"]
   gap: 18px;
   min-height: 44px;
   margin: 0;
-  /* same constant title position as base.css's page-shell heading: the back
-   * chevron ends at a fixed 80px, the heading box starts at the page inset */
-  padding: 0 0 0 max(48px, calc(96px - var(--slate-page-x)));
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .library-heading::after {
-  content: none;
+  /* same constant title position as base.css's page-shell heading (the back
+   * chevron ends at a fixed 80px); on the right the row stops where the
+   * inspector column begins */
+  padding: 0 calc(var(--lib-col) + var(--lib-gap)) 0
+    max(48px, calc(96px - var(--slate-page-x)));
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -39,16 +659,8 @@ html[data-skin="slate"]
   > div {
   display: flex;
   align-items: baseline;
-  gap: 16px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .library-heading
-  p {
-  font: 400 16px/1.2 var(--slate-font);
-  color: var(--slate-ink-3);
-  letter-spacing: 1px;
+  gap: 14px;
+  min-width: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -56,14 +668,17 @@ html[data-skin="slate"]
   .library-heading
   p {
   margin: 0;
+  white-space: nowrap;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="library"]
   .library-heading
   #library-search {
-  width: 420px;
-  max-width: 40%;
+  flex: 0 1 380px;
+  width: 380px;
+  min-width: 200px;
+  max-width: 45%;
   margin: 0 0 0 auto;
 }
 html[data-skin="slate"]
@@ -77,12 +692,15 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="library"]
   .library-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 380px;
-  column-gap: 40px;
+  grid-template-columns: minmax(0, 1fr) var(--lib-col);
+  column-gap: var(--lib-gap);
   flex: 1 1 auto;
   min-height: 0;
-  margin: 18px 0 0;
+  margin: 16px 0 0;
   padding: 0;
+  /* the inspector reaches past this box (see `.deck-editor` below); both
+   * columns scroll inside their own panes, so nothing else overflows it */
+  overflow: visible;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -91,13 +709,6 @@ html[data-skin="slate"]
   display: flex;
   flex-direction: column;
   min-height: 0;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .library-filters {
-  border: 0;
-  background: none;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -114,262 +725,96 @@ html[data-skin="slate"]
   display: none;
 }
 html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .library-filters
-  > .filter-bar {
-  border: 0;
-  border-bottom: 0;
-  background: none;
-}
-html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="library"]
   .library-filters
   > .filter-bar {
   display: flex;
-  align-items: flex-end;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  margin: 0 0 22px;
+  gap: 12px 24px;
+  height: auto;
+  /* components.css reserves 62px for the retired text pager */
+  min-height: 0;
+  margin: 0 0 18px;
   padding: 0;
 }
 html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .filter-group {
-  border: 0;
-  background: none;
-}
-html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="library"]
   .filter-group {
-  display: flex;
+  display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 0;
   margin: 0;
-  padding: 0;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .filter-type-group
-  .filter-btn {
-  border: 0;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-  font: 500 20px/1.2 var(--slate-font);
-  letter-spacing: 2px;
-  color: var(--slate-ink-3);
-  transition: color 0.15s;
+  padding: 3px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="library"]
   .filter-type-group
   .filter-btn {
-  position: relative;
-  min-height: 0;
-  margin: 0;
-  padding: 6px 28px 14px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="library"]
-  .filter-type-group
-  .filter-btn
-  + .filter-btn::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 8px;
-  width: 1px;
-  height: 22px;
-  background: none;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .filter-type-group
-  .filter-btn:hover {
-  color: #fff;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .filter-type-group
-  .filter-btn.active {
-  color: #fff;
-  font-weight: 700;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="library"]
-  .filter-type-group
-  .filter-btn.active::after {
-  content: "";
-  position: absolute;
-  left: 22px;
-  right: 22px;
-  bottom: -1px;
-  height: 3px;
-  border-radius: 2px;
-  background: #fff;
-  box-shadow: 0 0 10px #fff8;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="library"]
-  .filter-mana-group {
-  gap: 8px;
-  padding: 0 0 12px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .filter-label {
-  font: 400 16px/1.2 var(--slate-font);
-  color: var(--slate-ink-3);
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="library"]
-  .filter-label {
-  margin: 0 8px 0 0;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .filter-btn.mana {
-  border-radius: 50%;
-  border: 1px solid var(--slate-pill-line);
-  background: var(--slate-pill);
-  color: var(--slate-ink-2);
-  font: 600 15px/1 var(--slate-font);
-  box-shadow: none;
-  transition:
-    background 0.15s,
-    border-color 0.15s;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="library"]
-  .filter-btn.mana {
-  width: 36px;
+  min-width: 0;
   height: 36px;
   min-height: 36px;
   margin: 0;
-  padding: 0;
+  padding: 0 22px;
 }
 html[data-skin="slate"]
-  body
+  body:not(.touch-layout)
   #modal.folio-host[data-type="library"]
-  .filter-btn.mana[data-mana="all"] {
-  border-radius: 999px;
+  .filter-btn.mana {
+  width: auto;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
+  margin: 0;
+  padding: 0 8px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="library"]
   .filter-btn.mana[data-mana="all"] {
-  width: auto;
-  padding: 0 16px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .filter-btn.mana:hover {
-  border-color: var(--slate-line-strong);
-  color: #fff;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .filter-btn.mana.active {
-  background: var(--slate-blue-deep);
-  border-color: #8cc4ff99;
-  color: #fff;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .filter-btn::before:not(.filter-type-group .filter-btn + .filter-btn::before),
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .filter-btn.mana::before,
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .filter-btn.mana::after {
-  content: none;
+  padding: 0 14px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="library"]
   #library-grid {
   grid-template-columns: repeat(auto-fill, minmax(186px, 1fr));
-  gap: 26px 18px;
+  gap: 24px 18px;
   padding: 4px 4px 12px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .library-item
-  .add-label {
-  color: var(--slate-ink-2);
-  font: 400 14px/1.2 var(--slate-font);
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .library-item
-  .owned-count {
-  color: #fff;
-  font: 600 14px/1.2 var(--slate-font);
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .library-inspect {
-  font-size: 13px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="library"]
-  .library-inspect {
-  min-width: 56px;
-  min-height: 30px;
-  padding: 0 14px;
-  white-space: nowrap;
+  .library-entry {
+  --entry-action-height: 28px;
+  grid-template-columns: minmax(0, 1fr) auto 52px;
+  gap: 8px 6px;
 }
 html[data-skin="slate"]
-  body
+  body:not(.touch-layout)
   #modal.folio-host[data-type="library"]
-  .library-foot {
-  border-top: 0;
-  font: 400 14px/1.4 var(--slate-font);
-  color: var(--slate-ink-3);
+  .library-entry
+  > .library-inspect {
+  width: 100%;
+  min-height: 28px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="library"]
   .library-foot {
   margin: 10px 0 0;
-  padding: 12px 0 0;
+  padding: 10px 0 0;
 }
 
-/* deck editor column */
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .deck-editor {
-  border-left: 0;
-  border-radius: 20px;
-  background: var(--glass-fill-2);
-  box-shadow: inset 0 1px 0 #ffffff14;
-}
+/* inspector: pulled out of the page inset so it floats 24px off the window's
+ * top, right and bottom edges, beside the title row rather than under it.
+ * The top offset is the page shell's 26px padding + the 44px title row + the
+ * layout's 16px margin, less 24px. */
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="library"]
@@ -377,25 +822,14 @@ html[data-skin="slate"]
   display: flex;
   flex-direction: column;
   min-height: 0;
-  margin: 0;
-  padding: 20px 24px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .deck-editor::before {
-  content: "牌组预览";
-  border-bottom: 0;
-  font: 700 22px/1.2 var(--slate-font);
-  color: #fff;
-  letter-spacing: 1px;
+  margin: -62px calc(24px - var(--slate-page-x)) -4px 0;
+  padding: 20px 20px 20px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="library"]
   .deck-editor::before {
-  display: block;
-  padding: 0 0 12px;
+  padding: 2px 4px 8px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -406,50 +840,23 @@ html[data-skin="slate"]
   min-height: 0;
 }
 html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .deck-identity {
-  border: 0;
-  border-bottom: 0;
-  background: none;
-}
-html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="library"]
   .deck-identity {
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) auto;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   margin: 0;
-  padding: 16px 0 14px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .deck-identity
-  img {
-  object-fit: cover;
-  border-radius: 8px;
-  border: 1.5px solid var(--slate-card-line);
-  background: var(--slate-card-base);
-  box-shadow: 0 6px 16px #0006;
+  padding: 6px 4px 14px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="library"]
   .deck-identity
   img {
-  width: 56px;
-  height: 56px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .deck-identity
-  small {
-  font: 400 14px/1.3 var(--slate-font);
-  color: var(--slate-ink-3);
+  width: 52px;
+  height: 52px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -457,40 +864,17 @@ html[data-skin="slate"]
   .deck-identity
   small {
   display: block;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .deck-identity
-  .deck-title-input {
-  border: 0;
-  border-radius: 0;
-  background: none;
-  font: 700 22px/1.3 var(--slate-font);
-  color: #fff;
+  padding: 0 0 2px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="library"]
   .deck-identity
   .deck-title-input {
-  width: 100%;
+  width: calc(100% + 6px);
   min-height: 0;
-  padding: 0;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .deck-total {
-  font: 700 22px/1 var(--slate-font);
-  color: var(--slate-blue);
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .deck-tools {
-  border: 0;
-  background: none;
+  margin: 0 0 0 -6px;
+  padding: 2px 6px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -498,19 +882,6 @@ html[data-skin="slate"]
   .deck-tools {
   margin: 0;
   padding: 0;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .deck-tools
-  > summary {
-  border: 0;
-  border-bottom: 0;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-  font: 500 17px/1.2 var(--slate-font);
-  color: #fff;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -518,34 +889,34 @@ html[data-skin="slate"]
   .deck-tools
   > summary {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: nowrap;
   align-items: center;
-  min-height: 0;
+  gap: 10px;
+  min-height: 48px;
   margin: 0;
-  padding: 14px 0;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .deck-tools
-  > summary
-  span {
-  font: 400 14px/1.2 var(--slate-font);
-  color: var(--slate-ink-3);
+  padding: 0 16px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="library"]
   .deck-tools-body {
-  padding: 10px 0;
+  padding: 12px 0 2px;
 }
 html[data-skin="slate"]
-  body
+  body:not(.touch-layout)
   #modal.folio-host[data-type="library"]
   .deck-tools-body
-  label {
-  font: 500 15px/1.3 var(--slate-font);
-  color: var(--slate-ink-2);
+  .contract-setup
+  > summary {
+  min-height: 44px;
+  padding: 11px 14px;
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="library"]
+  #deck-warning
+  .deck-issues {
+  padding: 0 14px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -557,46 +928,19 @@ html[data-skin="slate"]
   margin: 12px 0 0;
   padding: 0;
 }
-html[data-skin="slate"] body #modal.folio-host[data-type="library"] .deck-row {
-  border-radius: 8px;
-  border: 1px solid var(--slate-pill-line);
-  background:
-    linear-gradient(90deg, #121824e6 45%, #12182480 100%),
-    var(--slate-card-base);
-  color: #fff;
-  font: 500 15px/1.2 var(--slate-font);
-  box-shadow: none;
-}
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="library"]
   .deck-row {
+  position: relative;
   display: grid;
-  grid-template-columns: 32px minmax(0, 1fr) auto;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
-  min-height: 40px;
+  min-height: 44px;
   margin: 0;
-  padding: 0 12px 0 6px;
+  padding: 0 14px 0 8px;
   overflow: hidden;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .deck-row:hover {
-  border-color: var(--slate-line-strong);
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .deck-row
-  .cost {
-  border-radius: 50%;
-  border: 1px solid #8cc4ff88;
-  background: #16243a;
-  color: #fff;
-  font: 700 14px/1 var(--slate-font);
-  box-shadow: none;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -609,16 +953,6 @@ html[data-skin="slate"]
   height: 28px;
 }
 html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .deck-row
-  .deck-row-art {
-  object-fit: cover;
-  opacity: 0.55;
-  mask: linear-gradient(90deg, #0000, #000 45%);
-  -webkit-mask: linear-gradient(90deg, #0000, #000 45%);
-}
-html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="library"]
   .deck-row
@@ -626,74 +960,30 @@ html[data-skin="slate"]
   position: absolute;
   right: 0;
   top: 0;
-  width: 45%;
+  width: 50%;
   height: 100%;
   pointer-events: none;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="library"]
-  .deck-row {
-  position: relative;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
   .deck-row
-  .deck-row-name,
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .deck-row
-  .count {
-  text-shadow: 0 1px 4px #000c;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="library"]
-  .deck-row
-  .deck-row-name,
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host[data-type="library"]
-  .deck-row
-  .count {
+  :is(.deck-row-name, .count) {
   position: relative;
   z-index: 1;
 }
 html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .deck-row
-  .count {
-  font: 600 14px/1 var(--slate-font);
-  color: var(--slate-ink-2);
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .deck-curve {
-  border-top: 0;
-}
-html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="library"]
   .deck-curve {
-  /* `components.css` reserves the bottom 22px of the fixed 72px box for the
-   * mana labels, which `.curve-bar small` parks at `calc(100% + 5px)`. The
-   * hairline gap has to be added to the box, not taken out of that gutter,
-   * or the labels fall out from under the chart. */
+  /* `components.css` reserves the bottom 22px of the box for the mana labels,
+   * which `.curve-bar small` parks at `calc(100% + 5px)`; air above the chart
+   * has to be added to the box, not taken out of that gutter. */
   flex: 0 0 86px;
   height: 86px;
   min-height: 86px;
-  margin: 14px 0 0;
-  padding: 14px 0 22px;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .deck-actions {
-  border-top: 0;
+  margin: 12px 0 0;
+  padding: 14px 4px 22px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -701,16 +991,9 @@ html[data-skin="slate"]
   .deck-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 10px;
   margin: 14px 0 0;
-  padding: 16px 0 0;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .deck-actions
-  > button {
-  font-size: 17px;
+  padding: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -731,140 +1014,32 @@ html[data-skin="slate"]
   grid-column: 1 / -1;
 }
 
-/* ---------- narrower desktop windows ---------- */
+/* narrower desktop windows: base.css drops the page inset to 36px */
 @media (max-width: 1500px) {
   html[data-skin="slate"]
     body:not(.touch-layout)
     #modal.folio-host[data-type="library"]
-    .library-layout {
-    grid-template-columns: minmax(0, 1fr) 320px;
-    column-gap: 28px;
+    .library-box {
+    --lib-col: 300px;
+    --lib-gap: 28px;
   }
   html[data-skin="slate"]
     body:not(.touch-layout)
     #modal.folio-host[data-type="library"]
     .deck-editor {
-    padding-left: 24px;
+    padding: 18px 16px 16px;
   }
 }
 
 /* ==========================================================================
-   触控布局 / touch layouts (body.touch-layout)
-   ==========================================================================
-   Material is layout-agnostic above; this section only repositions and resizes
-   (REFERENCE_UI_STANDARD.md 「组件归属与响应式」).
+ * 3. TOUCH GEOMETRY — body.touch-layout (REFERENCE_UI_STANDARD.md
+ *    「组件归属与响应式」): a dedicated composition, not a scaled desktop.
+ *    Title row, search field, the 「全部卡牌 / 我的牌组」 segmented control,
+ *    then ONE pane at a time — `mobile.css` mounts exactly one of the two on
+ *    `body.touch-layout` at every size. Filters fold behind their summary.
+ * ======================================================================== */
 
-   Search pill under the title, 「全部卡牌 / 我的牌组」 as the page's text tabs,
-   2-column card grid; the deck editor is the second tab. `mobile.css` mounts
-   exactly one of the two panes on `body.touch-layout` at every size, so the
-   slate geometry is a single column at every touch size too — only the header
-   arrangement and the grid density change with the window.
-   ========================================================================== */
-
-/* --- the tab strip is a slate text-pagination control (design system §3
-       「文字分页」), same language as `.filter-type-group`. Its material is
-       declared at `body` scope because the strip is one component; only the
-       row geometry below is per-layout. --- */
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .touch-library-tabs {
-  border: 0;
-  border-bottom: 0;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .touch-library-tabs
-  button {
-  border: 0;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-  font: 500 17px/1.2 var(--slate-font);
-  letter-spacing: 1.5px;
-  color: var(--slate-ink-3);
-  text-shadow: none;
-  transition: color 0.15s;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .touch-library-tabs
-  button[aria-selected="true"] {
-  color: #fff;
-  font-weight: 700;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .touch-library-tabs
-  button::before {
-  content: none;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .touch-library-tabs
-  button[aria-selected="true"]::after {
-  content: "";
-  border-radius: 2px;
-  background: #fff;
-  box-shadow: 0 0 10px #fff8;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="library"]
-  .touch-library-tabs {
-  display: flex;
-  flex: 0 0 auto;
-  gap: 0;
-  margin: 12px 0 0;
-  padding: 0;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="library"]
-  .touch-library-tabs
-  button {
-  position: relative;
-  flex: 1 1 0;
-  min-width: 0;
-  min-height: 44px;
-  margin: 0;
-  padding: 0 8px 10px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="library"]
-  .touch-library-tabs
-  button
-  + button::before {
-  content: "";
-  display: block;
-  position: absolute;
-  left: 0;
-  top: 12px;
-  width: 1px;
-  height: 20px;
-  background: none;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="library"]
-  .touch-library-tabs
-  button[aria-selected="true"]::after {
-  position: absolute;
-  left: 18%;
-  right: 18%;
-  bottom: -1px;
-  height: 3px;
-}
-
-/* --- title row: title above, search pill on its own full-width line --- */
+/* --- title row: title above, search field on its own full-width line --- */
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="library"]
@@ -874,6 +1049,8 @@ html[data-skin="slate"]
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
   gap: 10px;
+  height: auto;
+  min-height: 44px;
   margin: 0;
   /* matches base.css's touch page-shell heading: clear the 10px/44px chevron */
   padding: 0 0 0 54px;
@@ -886,7 +1063,7 @@ html[data-skin="slate"]
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 10px;
+  gap: 4px 10px;
   min-height: 44px;
 }
 html[data-skin="slate"]
@@ -895,7 +1072,26 @@ html[data-skin="slate"]
   .library-heading
   p {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
+}
+/* `polish-mobile.css` folds the search field into the filter disclosure on
+ * phones; the slate title row keeps it on the page — but `dialog-layout.css`'s
+ * rule that the deck tab has nothing to search stands (§6 rule 7). */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="library"]
+  .library-box
+  #library-search {
+  display: block;
+  position: static;
+  inset: auto;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="library"]
+  .library-box.touch-show-deck
+  #library-search {
+  display: none;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -905,11 +1101,42 @@ html[data-skin="slate"]
   width: 100%;
   max-width: none;
   min-height: 44px;
-  /* cancel the heading's chevron gutter so the pill spans the full width */
+  /* cancel the heading's chevron gutter so the field spans the full width */
   margin: 0 0 0 -54px;
 }
 
-/* --- layout: one column under the tabs --- */
+/* --- 「全部卡牌 / 我的牌组」: a segmented control under the title ---
+ * `polish-mobile.css` parks this strip absolutely over the silverblue title
+ * row; the slate page shell has a real title row, so it goes back into the
+ * flow. */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="library"]
+  .library-box
+  .touch-library-tabs {
+  position: static;
+  inset: auto;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0;
+  width: auto;
+  margin: 12px 0 0;
+  padding: 3px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="library"]
+  .touch-library-tabs
+  button {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 10px;
+}
+
+/* --- one column under the control --- */
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="library"]
@@ -930,8 +1157,23 @@ html[data-skin="slate"]
   flex-direction: column;
   min-height: 0;
 }
+/* §6 rule 7: only one of the two panes is visible at a time (`mobile.css` on
+ * touch, `dialog-layout.css` below 800px of dialog), but the `display` this
+ * file gives `.library-main` / `.deck-editor` outranks that. Restate it. */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="library"]
+  .library-box:not(.touch-show-deck)
+  .deck-editor,
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="library"]
+  .library-box.touch-show-deck
+  .library-main {
+  display: none;
+}
 
-/* --- filters collapse behind their own summary on narrow dialogs --- */
+/* --- filters: a disclosure row, then the two segmented controls --- */
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="library"]
@@ -939,33 +1181,8 @@ html[data-skin="slate"]
   margin: 0;
   padding: 0;
 }
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .library-filters
-  > summary {
-  border: 0;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-  font: 700 17px/1.2 var(--slate-font);
-  letter-spacing: 1px;
-  color: #fff;
-}
-html[data-skin="slate"]
-  body
-  #modal.folio-host[data-type="library"]
-  .library-filters
-  > summary
-  small {
-  font: 400 14px/1.2 var(--slate-font);
-  letter-spacing: 0;
-  color: var(--slate-ink-3);
-}
-/* `polish-mobile.css` parks the filter disclosure at `position: absolute;
- * top: 12px; right: 70px` — over the silverblue landscape title row. The slate
- * page shell owns that row, so the summary goes back into the flow as a normal
- * disclosure line at every touch size. */
+/* `polish-mobile.css` parks the disclosure at `position: absolute; top: 12px;
+ * right: 70px` over the silverblue landscape title row; back into the flow. */
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="library"]
@@ -975,13 +1192,20 @@ html[data-skin="slate"]
   top: auto;
   right: auto;
   display: flex;
-  justify-content: space-between;
   align-items: center;
   gap: 10px;
   width: auto;
   min-height: 44px;
-  padding: 6px 0;
+  padding: 4px 4px 4px 2px;
   text-align: left;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="library"]
+  .library-filters
+  > summary
+  small {
+  margin-left: auto;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -998,92 +1222,60 @@ html[data-skin="slate"]
   flex-direction: column;
   align-items: stretch;
   gap: 10px;
-  margin: 0 0 12px;
-  padding: 10px 0 12px;
+  height: auto;
+  margin: 0 0 14px;
+  padding: 6px 0 4px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="library"]
   .filter-group {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 0;
   margin: 0;
-  padding: 0;
+  padding: 3px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="library"]
   .filter-type-group
   .filter-btn {
-  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 44px;
   min-height: 44px;
   margin: 0;
-  padding: 4px 14px 10px;
-  font-size: 16px;
-  letter-spacing: 1px;
+  padding: 0 10px;
 }
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="library"]
-  .filter-type-group
-  .filter-btn
-  + .filter-btn::before {
-  content: "";
-  display: block;
-  position: absolute;
-  left: 0;
-  top: 12px;
-  width: 1px;
-  height: 20px;
-  background: none;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="library"]
-  .filter-type-group
-  .filter-btn.active::after {
-  content: "";
-  display: block;
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 2px;
-  height: 3px;
-  border-radius: 2px;
-  background: #fff;
-  box-shadow: 0 0 10px #fff8;
-}
+/* nine cost segments at a 44px hit area are wider than a phone: the track
+ * keeps its capsule and scrolls sideways inside it */
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="library"]
   .filter-mana-group {
-  gap: 8px;
-  padding: 0;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="library"]
-  .filter-label {
-  margin: 0 6px 0 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="library"]
   .filter-btn.mana {
-  width: 44px;
+  flex: 1 0 auto;
+  width: auto;
+  min-width: 44px;
   height: 44px;
   min-height: 44px;
   margin: 0;
-  padding: 0;
+  padding: 0 8px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="library"]
   .filter-btn.mana[data-mana="all"] {
-  width: auto;
-  padding: 0 18px;
+  padding: 0 14px;
 }
 
 /* --- card grid: two columns in portrait --- */
@@ -1094,18 +1286,39 @@ html[data-skin="slate"]
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px 14px;
-  /* the card faces hang their 攻血 badges past the card edge, so the grid keeps
+  /* the card faces hang their 攻血 gems past the card edge, so the grid keeps
    * a matching side gutter instead of clipping them */
   padding: 4px 16px 14px;
+}
+/* `dialog-layout.css` only widens the entry action row to 44px under
+ * `@media (any-pointer: coarse)`; `body.touch-layout` also covers narrow
+ * windows and mouse-driven tablets. The 「加入」 capsule is 32px tall inside
+ * that 44px hit area (see its transparent border in §1). */
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="library"]
+  .library-entry {
+  --entry-action-height: 44px;
+  grid-template-columns: minmax(0, 1fr) auto 48px;
+  gap: 6px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="library"]
-  .library-inspect {
+  .library-entry
+  > .library-inspect {
+  width: 100%;
   min-width: 0;
-  min-height: 34px;
-  padding: 0 14px;
-  white-space: nowrap;
+  min-height: 44px;
+  border-width: 6px 0;
+  padding: 0;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="library"]
+  .library-item
+  > .owned-count {
+  height: 26px;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1115,7 +1328,7 @@ html[data-skin="slate"]
   padding: 10px 0 0;
 }
 
-/* --- deck editor: the second tab owns the full width --- */
+/* --- deck tab: the inspector owns the full width --- */
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="library"]
@@ -1124,21 +1337,13 @@ html[data-skin="slate"]
   flex-direction: column;
   min-height: 0;
   margin: 0;
-  padding: 0;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="library"]
-  .deck-editor {
-  border-left: 0;
-  border-top: 0;
+  padding: 16px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="library"]
   .deck-editor::before {
-  display: block;
-  padding: 12px 0 10px;
+  padding: 0 4px 6px;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1157,7 +1362,7 @@ html[data-skin="slate"]
   align-items: center;
   gap: 12px;
   margin: 0;
-  padding: 12px 0;
+  padding: 8px 4px 12px;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1173,15 +1378,18 @@ html[data-skin="slate"]
   .deck-identity
   small {
   display: block;
+  padding: 0 0 2px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="library"]
   .deck-identity
   .deck-title-input {
-  width: 100%;
+  width: calc(100% + 6px);
+  height: auto;
   min-height: 0;
-  padding: 0;
+  margin: 0 0 0 -6px;
+  padding: 2px 6px;
   font-size: 19px;
 }
 html[data-skin="slate"]
@@ -1197,18 +1405,18 @@ html[data-skin="slate"]
   .deck-tools
   > summary {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 10px;
-  min-height: 44px;
+  min-height: 48px;
   margin: 0;
-  padding: 10px 0;
+  padding: 0 16px;
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="library"]
   .deck-tools-body {
-  padding: 10px 0;
+  padding: 12px 0 2px;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1216,6 +1424,22 @@ html[data-skin="slate"]
   .deck-tools-body
   :is(label, select) {
   min-height: 44px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="library"]
+  .deck-tools-body
+  .contract-setup
+  > summary {
+  min-height: 44px;
+  padding: 11px 14px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="library"]
+  #deck-warning
+  .deck-issues {
+  padding: 0 14px;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1233,12 +1457,12 @@ html[data-skin="slate"]
   .deck-row {
   position: relative;
   display: grid;
-  grid-template-columns: 32px minmax(0, 1fr) auto;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
-  min-height: 44px;
+  min-height: 48px;
   margin: 0;
-  padding: 0 12px 0 6px;
+  padding: 0 14px 0 10px;
   overflow: hidden;
 }
 html[data-skin="slate"]
@@ -1259,7 +1483,7 @@ html[data-skin="slate"]
   position: absolute;
   right: 0;
   top: 0;
-  width: 45%;
+  width: 50%;
   height: 100%;
   pointer-events: none;
 }
@@ -1267,12 +1491,7 @@ html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host[data-type="library"]
   .deck-row
-  .deck-row-name,
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="library"]
-  .deck-row
-  .count {
+  :is(.deck-row-name, .count) {
   position: relative;
   z-index: 1;
 }
@@ -1285,7 +1504,7 @@ html[data-skin="slate"]
   height: 84px;
   min-height: 84px;
   margin: 12px 0 0;
-  padding: 12px 0 22px;
+  padding: 12px 4px 22px;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1295,7 +1514,7 @@ html[data-skin="slate"]
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   margin: 12px 0 0;
-  padding: 12px 0 0;
+  padding: 0;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1316,20 +1535,16 @@ html[data-skin="slate"]
   grid-column: 1 / -1;
 }
 
-/* --- wide dialogs (844×390 landscape, 1024×768 tablet): the deck editor keeps
-       its own column, exactly as `dialog-layout.css` keeps both panes --- */
-/* --- wide touch windows (844×390 landscape, 1024×768 tablet): the header gets
-       its two-row treatment back on one row and the grid fits more cards. The
-       two PANES still take turns — `mobile.css` drives the collection/deck
-       switch from `body.touch-layout` at every size, and the brief reaches the
-       deck editor through the 「全部卡牌 / 我的牌组」 tabs. --- */
+/* --- wide touch windows (844×390 landscape, 1024×768 tablet): title and
+       search share a row, the control is a centred fixed-width capsule, the
+       filters sit side by side and the grid fits more cards --- */
 @media (min-width: 700px) {
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host[data-type="library"]
     .library-box
     > .library-heading {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
     align-items: center;
     gap: 18px;
   }
@@ -1343,12 +1558,29 @@ html[data-skin="slate"]
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host[data-type="library"]
+    .library-box
+    .touch-library-tabs {
+    width: min(100%, 440px);
+    margin-inline: auto;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="library"]
     .library-filters
     > .filter-bar {
     flex-direction: row;
-    align-items: flex-end;
+    flex-wrap: wrap;
+    align-items: center;
     justify-content: space-between;
-    gap: 20px;
+    gap: 10px 16px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="library"]
+    .filter-type-group
+    .filter-btn {
+    flex: 0 0 auto;
+    padding: 0 18px;
   }
   html[data-skin="slate"]
     body.touch-layout
@@ -1368,62 +1600,11 @@ html[data-skin="slate"]
   }
 }
 
-/* `polish-mobile.css` folds the search field away into the filter disclosure on
- * phones. The slate brief keeps it on the page as a search pill under the
- * title, so re-open it here — but keep `dialog-layout.css`'s rule that the deck
- * tab has nothing to search (§6.7: a hidden node has to be re-hidden). */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="library"]
-  .library-box
-  #library-search {
-  display: block;
-  position: static;
-  inset: auto;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="library"]
-  .library-box.touch-show-deck
-  #library-search {
-  display: none;
-}
-/* the entry footer row is only as wide as the card, so the 详情 pill trims its
- * padding instead of pushing the grid sideways */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="library"]
-  .library-inspect {
-  min-width: 0;
-  min-height: 44px;
-  padding: 0 8px;
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-/* §6.7: the skin layer sits after `components`, so `dialog-layout.css`'s
- * rule that only one of the two panes is visible at a time (`mobile.css` for
- * touch layouts, `dialog-layout.css` below 800px of dialog) is overridden by
- * the `display` this file gives `.library-main` / `.deck-editor`. Restate it. */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="library"]
-  .library-box:not(.touch-show-deck)
-  .deck-editor,
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="library"]
-  .library-box.touch-show-deck
-  .library-main {
-  display: none;
-}
-
 /* --- short landscape (844×390, 568×320) ---------------------------------
-   `polish-mobile.css` parks the filter disclosure and the search field in
-   absolute positions over the title row (the silverblue landscape treatment).
-   The slate page shell has a real title row, so both go back into the flow and
-   the whole header collapses to two compact rows: [title | search] and
-   [tabs · filters]. Cards drop to a browsable size for a 320-390px window. */
+   The header collapses to [title | search], the control and the filter
+   summary; cards drop to a browsable size for a 320–390px window. A 5:7.4
+   card plus its 50px footer row has to clear the header, or the first row
+   of the collection is cut off by the bottom of the screen. */
 @media (max-height: 500px) {
   html[data-skin="slate"]
     body.touch-layout
@@ -1433,6 +1614,7 @@ html[data-skin="slate"]
     grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
     align-items: center;
     gap: 12px;
+    min-height: 40px;
   }
   html[data-skin="slate"]
     body.touch-layout
@@ -1453,6 +1635,14 @@ html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host[data-type="library"]
     .library-heading
+    h2 {
+    font-size: 21px;
+    line-height: 28px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="library"]
+    .library-heading
     #library-search {
     min-height: 40px;
     margin: 0;
@@ -1460,18 +1650,9 @@ html[data-skin="slate"]
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host[data-type="library"]
+    .library-box
     .touch-library-tabs {
-    margin: 6px 0 0;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="library"]
-    .touch-library-tabs
-    button {
-    min-height: 40px;
-    padding: 0 6px 8px;
-    font-size: 15px;
-    white-space: nowrap;
+    margin-top: 6px;
   }
   html[data-skin="slate"]
     body.touch-layout
@@ -1485,7 +1666,7 @@ html[data-skin="slate"]
     .library-filters
     > summary {
     min-height: 40px;
-    padding: 4px 0;
+    padding: 2px 4px 2px 2px;
     font-size: 15px;
   }
   html[data-skin="slate"]
@@ -1493,28 +1674,14 @@ html[data-skin="slate"]
     #modal.folio-host[data-type="library"]
     .library-filters
     > .filter-bar {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 6px 16px;
     margin: 0 0 8px;
-    padding: 4px 0 8px;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="library"]
-    .filter-type-group
-    .filter-btn {
-    min-height: 44px;
-    padding: 2px 12px 8px;
-    font-size: 15px;
+    padding: 2px 0 4px;
   }
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host[data-type="library"]
     #library-grid {
-    grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(142px, 1fr));
     justify-content: start;
     gap: 14px 12px;
     padding: 2px 14px 12px;
@@ -1530,9 +1697,17 @@ html[data-skin="slate"]
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host[data-type="library"]
+    .deck-editor {
+    padding: 12px 16px 14px;
+  }
+  /* the 「我的牌组」 segment already names this pane; the 270px of height a
+   * short landscape leaves it goes to the deck list instead */
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host[data-type="library"]
     .deck-editor::before {
-    padding: 6px 0 8px;
-    font-size: 18px;
+    content: none;
+    display: none;
   }
   html[data-skin="slate"]
     body.touch-layout
@@ -1540,7 +1715,7 @@ html[data-skin="slate"]
     .deck-identity {
     grid-template-columns: 40px minmax(0, 1fr) auto;
     gap: 10px;
-    padding: 8px 0;
+    padding: 4px 4px 8px;
   }
   html[data-skin="slate"]
     body.touch-layout
@@ -1549,6 +1724,7 @@ html[data-skin="slate"]
     img {
     width: 40px;
     height: 40px;
+    border-radius: 10px;
   }
   html[data-skin="slate"]
     body.touch-layout
@@ -1562,8 +1738,7 @@ html[data-skin="slate"]
     #modal.folio-host[data-type="library"]
     .deck-tools
     > summary {
-    min-height: 40px;
-    padding: 6px 0;
+    min-height: 44px;
   }
   html[data-skin="slate"]
     body.touch-layout
@@ -1574,7 +1749,7 @@ html[data-skin="slate"]
     height: 80px;
     min-height: 80px;
     margin: 8px 0 0;
-    padding: 8px 0 22px;
+    padding: 8px 4px 22px;
   }
   html[data-skin="slate"]
     body.touch-layout
@@ -1583,7 +1758,6 @@ html[data-skin="slate"]
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
     margin: 8px 0 0;
-    padding: 8px 0 0;
   }
   html[data-skin="slate"]
     body.touch-layout
@@ -1604,25 +1778,9 @@ html[data-skin="slate"]
     grid-column: auto;
   }
 }
-
-/* The tab strip stays on at every touch size: `mobile.css` keeps exactly one
- * pane mounted on `body.touch-layout`, so the switch is always meaningful. */
-
-/* the entry footer (加入牌组 · 0/2 · 详情) needs ~140px before the label and the
- * count collide */
-@media (max-height: 500px) {
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="library"]
-    #library-grid {
-    grid-template-columns: repeat(auto-fill, minmax(142px, 1fr));
-  }
-}
-/* A 5:7.4 card plus its 50px footer row has to fit under the 147px header, or
- * the first row of the collection is cut off by the bottom of the screen. At
- * 390px of height a 142px column makes a 268px entry against 241px of room,
- * so the column minimum comes down for this band — 568×320 is shorter than
- * any readable card plus footer and keeps its own size. */
+/* 844×390: at 390px of height a 142px column makes a 268px entry against
+ * ~240px of room, so the column minimum comes down for this band — 568×320
+ * is shorter than any readable card plus footer and keeps its own size. */
 @media (orientation: landscape) and (min-height: 381px) and (max-height: 500px) {
   html[data-skin="slate"]
     body.touch-layout
@@ -1632,72 +1790,13 @@ html[data-skin="slate"]
   }
 }
 
-/* `polish-mobile.css` builds the silverblue landscape header by absolutely
- * parking the tab strip at `top: 12px; left: 122px` and reserving a 52px right
- * margin on the title for a top-right close button. The slate page shell has a
- * real title row and a top-LEFT back chevron, so the strip goes back into the
- * flow and the title reclaims the full width. */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="library"]
-  .library-box
-  .touch-library-tabs {
-  position: static;
-  inset: auto;
-  width: auto;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="library"]
-  .library-box
-  > .library-heading {
-  height: auto;
-  min-height: 44px;
-  margin: 0;
-}
-@media (max-height: 500px) {
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="library"]
-    .library-box
-    > .library-heading {
-    min-height: 40px;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="library"]
-    .library-heading
-    h2 {
-    font-size: 21px;
-    line-height: 28px;
-  }
-}
-
-/* `dialog-layout.css` only widens the entry action row to 44px under
- * `@media (any-pointer: coarse)`. `body.touch-layout` also covers plain narrow
- * windows and tablets driven by a mouse, where the row stays 24px while the
- * 详情 pill above keeps its 44px touch target and hangs 20px out of the grid.
- * Grow the row wherever the touch layout is on. */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="library"]
-  .library-entry {
-  --entry-action-height: 44px;
-}
-
 /* --- very short AND narrow landscape (568×320): `.library-box` scrolls as a
-   single block (base layer's `display:block; overflow-y:auto` from
-   `polish-mobile.css` — the slate page shell never overrides it), so the test
-   only sees the first, unscrolled screenful. At 390px tall the wide-window
-   header above (`@media (min-width:700px)`) already reads fine, and at
-   844×390 the same header clears the first card row; only the 568×320
-   corner — narrow AND under ~400px tall — still buries the first card under
-   a ~147px title/tabs/filter stack. Collapse that stack to one compact title
-   row (chevron + 20px title + 36px search pill, already a single grid row)
-   plus a 32px tab row, drop the filter summary to match, and narrow the grid
-   to 2 columns so the first card + its 44px 「加入牌组 / 详情」 pill still
-   fits above the fold; anything past the first row scrolls with the rest of
-   the box exactly as it already does at every other touch size. */
+   single block (`polish-mobile.css`'s `display:block; overflow-y:auto`), and
+   the first card + its 44px footer still has to fit above the fold. The
+   header drops to one compact title row (chevron + 18px title + 32px
+   search), a compact control and the filter summary; the grid narrows to two
+   104px columns. The control is the one place on this page below a 44px
+   hit area — the same compromise the text tabs made here before. --- */
 @media (max-width: 699px) and (max-height: 400px) {
   html[data-skin="slate"]
     body.touch-layout
@@ -1706,12 +1805,9 @@ html[data-skin="slate"]
     > .library-heading {
     grid-template-columns: minmax(0, 1fr) minmax(0, 168px);
     gap: 8px;
-    /* beats base.css's `:is([data-dialog-size="library"],…) :is(.modal-heading,
-     * .library-heading)` (5.7's shared 44/36px chevron-row rule) — that
-     * selector's two `:is()` groups add two more specificity classes than
-     * `.library-box > .library-heading` alone, so it otherwise wins the tie
-     * despite this file loading after base.css. The `.library-box` qualifier
-     * on every declaration below restores that lost class of specificity. */
+    /* base.css's shared chevron-row rule carries two `:is()` groups; the
+     * `.library-box` qualifier restores the class of specificity that
+     * `.library-box > .library-heading` alone would lose to it */
     min-height: 32px;
   }
   html[data-skin="slate"]
@@ -1744,32 +1840,35 @@ html[data-skin="slate"]
     .library-heading
     #library-search {
     min-height: 32px;
-    padding: 0 12px;
+    padding: 0 12px 0 32px;
+    background-position:
+      12px 50%,
+      0 0;
+    background-size:
+      13px 13px,
+      auto;
     font-size: 13px;
   }
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host[data-type="library"]
+    .library-box
     .touch-library-tabs {
-    margin: 2px 0 0;
+    margin-top: 2px;
+    padding: 2px;
   }
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host[data-type="library"]
     .touch-library-tabs
     button {
-    /* `screens.css` (components layer) pins this button to a literal
-     * `height: 34px` — a lower layer, but the skin layer only ever restated
-     * `min-height` here, so with a smaller min-height that fixed `height`
-     * became the winning value for the property skin never contested.
-     * Setting `height` here (skin still wins on layer alone) is what
-     * actually shrinks the row; line-height matches it to center the label
-     * without vertical padding. */
-    height: 30px;
-    min-height: 30px;
+    /* `screens.css` pins this button to `height: 34px`; restate `height`
+     * itself, or that lower-layer value wins the property skin never set */
+    height: 28px;
+    min-height: 28px;
     padding: 0 6px;
     font-size: 13px;
-    line-height: 30px;
+    line-height: 28px;
   }
   html[data-skin="slate"]
     body.touch-layout
@@ -1783,7 +1882,7 @@ html[data-skin="slate"]
     .library-filters
     > summary {
     min-height: 26px;
-    padding: 1px 0;
+    padding: 1px 4px 1px 2px;
     font-size: 13px;
   }
   html[data-skin="slate"]
@@ -1806,48 +1905,22 @@ html[data-skin="slate"]
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host[data-type="library"]
-    .library-inspect {
-    padding: 0 6px;
-    font-size: 11px;
-  }
-  /* a 104px column only leaves ~48px for the label+count pair before the
-   * 44px 详情 pill — `.add-label` has no `overflow:hidden` of its own (the
-   * shared dialog-layout.css rule is only `white-space:nowrap`), so past
-   * `.owned-count` it would visibly run text over the pill instead of
-   * clipping. Drop the count (still visible everywhere else) and let the
-   * label use the freed column with an ellipsis instead of an overlap. */
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="library"]
-    .library-item
-    > .owned-count {
-    display: none;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="library"]
-    .library-item
-    > .add-label {
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 11px;
+    .library-entry {
+    grid-template-columns: minmax(0, 1fr) auto 44px;
   }
 }
 
 /* ==========================================================================
    短横屏（landscape, 高 <= 500）— 「调整套牌」面板必须留在视口里
    --------------------------------------------------------------------------
-   `components` 层的 screens.css 早就写了这条：面板展开时，牌组列只留
-   `#deck-tools` 与 `#deck-warning`，其余兄弟节点隐藏。但皮肤层排在它后面，
-   本文件与 base.css 里那些给 `.deck-identity` / `.deck-list` / `.deck-row`
-   重新声明 `display` 的规则会把它们一起复活（设计系统 §6 规则 7：
-   「隐藏要重说一遍」）。于是 568x320 上整列高 1389px，面板落在滚动区之外，
-   玩家要盲滚才能改套牌。这里把隐藏重说一遍，并给面板自己的高度上限与滚动条。
+   `components` 层的 screens.css 写了：面板展开时，牌组列只留 `#deck-tools`
+   与 `#deck-warning`，其余兄弟节点隐藏。但皮肤层排在它后面，本文件给
+   `.deck-identity` / `.deck-list` / `.deck-row` 重新声明的 `display` 会把它们
+   一起复活（设计系统 §6 规则 7：「隐藏要重说一遍」），面板就落到滚动区之外。
+   这里把隐藏重说一遍，并给面板自己的高度上限与滚动条。
 
    面板不能靠 flex 撑满滚动区：`<details>` 的内容在 Chrome 里包在自己的
-   slot 盒里，`.deck-tools-body` 并不是 `<details>` 的 flex 子项（计算值里
-   的 flex-grow 是"声明值"，不代表参与了 flex 布局），所以这里用显式的
+   slot 盒里，`.deck-tools-body` 并不是 `<details>` 的 flex 子项，所以用显式的
    `max-height`，下限 88px 保证面板不会被压成一条缝。
    ========================================================================== */
 @media (orientation: landscape) and (max-height: 500px) {
@@ -1867,50 +1940,4 @@ html[data-skin="slate"]
     overflow-y: auto;
     overscroll-behavior: contain;
   }
-}
-
-/* phone landscape (844×390): the grid column is ~110px, so the 「点击翻看」
- * label wrapped onto two lines against the owned count. Same cure as the
- * narrow portrait block above: drop the count, ellipsise the label. */
-@media (orientation: landscape) and (max-height: 500px) {
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="library"]
-    .library-item
-    > .owned-count {
-    display: none;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host[data-type="library"]
-    .library-item
-    > .add-label {
-    max-width: 100%;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    font-size: 11px;
-  }
-}
-
-/* touch: the deck column is a sub-glass block, so it needs its own inset */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="library"]
-  .deck-editor {
-  padding: 12px 16px 16px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="library"]
-  .deck-editor::before {
-  padding: 2px 0 10px;
-  font-size: 20px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host[data-type="library"]
-  .library-heading
-  p {
-  margin-left: 12px;
 }

@@ -83,7 +83,8 @@ html[data-skin="slate"]
 
 /* ---------- topbar ---------- */
 html[data-skin="slate"] body #app.lobby-view .topbar {
-  background: linear-gradient(180deg, #0e131bc4 0%, #0e131b5c 62%, #0e131b00);
+  /* content runs under the bar; a short scrim keeps the glass legible */
+  background: linear-gradient(180deg, #05070a8c 0%, #05070a33 62%, #05070a00);
   border: 0;
   border-bottom: 0;
   color: var(--slate-ink);
@@ -108,67 +109,77 @@ html[data-skin="slate"] body #app.lobby-view .brand:hover strong {
   color: #fff;
 }
 
-/* --- nav: text tabs with a glowing underline bar --- */
+/* --- nav: a floating clear-glass tab bar (liquid glass, 2026-09-27) ---
+ * The three links sit in one capsule; the open page carries a lighter
+ * capsule thumb, painted as `.nav-link.active::after` (inset 0, behind the
+ * label) so `home-reference.spec` still finds a painted, centred indicator. */
 html[data-skin="slate"] body #app.lobby-view .top-nav {
-  border-left: 0;
+  /* material: base.css `.lg-glass` */
+  border-radius: 999px;
 }
 html[data-skin="slate"] body #app.lobby-view .nav-link {
   position: relative;
+  isolation: isolate;
   border: 0;
-  border-radius: 0;
+  border-radius: 999px;
   background: none;
   box-shadow: none;
-  font: 500 20px/1.2 var(--slate-font);
-  letter-spacing: 2px;
-  color: var(--slate-ink-3);
-  text-shadow: var(--home-caption-shadow);
-  transition: color 0.15s;
+  font: 600 16px/1.2 var(--slate-font);
+  letter-spacing: 0;
+  color: var(--slate-ink-2);
+  text-shadow: none;
+  transition: color var(--m-fast);
 }
 html[data-skin="slate"] body #app.lobby-view .nav-link:hover {
   color: #fff;
 }
 html[data-skin="slate"] body #app.lobby-view .nav-link.active {
   color: #fff;
-  font-weight: 700;
+  font-weight: 600;
 }
-/* components.css disabled this underline in favour of the old theme's moving
- * light band; the band is gone and the slate skin brings the underline back. */
 html[data-skin="slate"] body #app.lobby-view .top-nav .nav-link.active::after {
   content: "";
   display: block;
   position: absolute;
-  bottom: 0;
-  height: 3px;
-  border-radius: 2px;
-  background: #fff;
-  box-shadow: 0 0 10px #fff9;
+  inset: 0;
+  z-index: -1;
+  width: auto;
+  height: auto;
+  border-radius: 999px;
+  background: #ffffff29;
+  box-shadow:
+    var(--lg-rim-soft),
+    0 2px 8px #00000026;
+  opacity: 1;
 }
 html[data-skin="slate"] body #app.lobby-view .nav-link:focus-visible {
   outline: 2px solid var(--slate-blue);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: 999px;
 }
 
-/* --- icon buttons: round pills --- */
+/* --- icon buttons: one clear-glass toolbar capsule (`.lg-glass`) --- */
+html[data-skin="slate"] body #app.lobby-view .top-actions {
+  border-radius: 999px;
+}
 html[data-skin="slate"] body #app.lobby-view .top-actions .icon-btn {
   /* NOTE: no `display` here on purpose. components.css hides `#fullscreen-btn`,
    * `#wind-time` and (on desktop) the `.touch-only` buttons on the lobby with
    * `display:none`, and the skin layer would out-rank that and resurrect them. */
   place-items: center;
   padding: 0;
-  border: 1px solid var(--slate-pill-line);
+  border: 0;
   border-radius: 50%;
-  background: var(--slate-pill);
+  background: none;
   box-shadow: none;
-  color: var(--slate-ink-2);
+  color: var(--slate-ink);
   transition:
-    background 0.15s,
-    border-color 0.15s,
-    color 0.15s;
+    background var(--m-fast),
+    color var(--m-fast),
+    transform var(--m-base) var(--e-spring);
 }
 html[data-skin="slate"] body #app.lobby-view .top-actions .icon-btn:hover {
-  background: #1b2434d9;
-  border-color: var(--slate-line-strong);
+  background: #ffffff1f;
   color: #fff;
   transform: none;
 }
@@ -186,25 +197,25 @@ html[data-skin="slate"]
 /* `#settings-btn` loses its rim on touch in components.css; the pill is one
  * component, so the rim is restated for every layout here. */
 html[data-skin="slate"] body #app.lobby-view #settings-btn {
-  border: 1px solid var(--slate-pill-line);
+  border: 0;
 }
 
 /* ---------- title block ---------- */
 html[data-skin="slate"] body #lobby .lobby-chinese {
   font: 700 28px/1.35 var(--slate-font);
-  letter-spacing: 4px;
+  letter-spacing: 0;
   color: var(--slate-ink);
   text-shadow: var(--home-caption-shadow);
 }
 html[data-skin="slate"] body #lobby .lobby-tagline {
   font: 400 18px/1.5 var(--slate-font);
-  letter-spacing: 2px;
+  letter-spacing: 0.5px;
   color: var(--slate-ink-2);
   text-shadow: var(--home-caption-shadow);
 }
 html[data-skin="slate"] body #lobby .lobby-desc {
   font: 400 15px/1.55 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   color: var(--slate-ink-3);
   text-shadow: var(--home-caption-shadow);
 }
@@ -214,26 +225,26 @@ html[data-skin="slate"] body #lobby .home-action {
   border-radius: 999px;
   text-shadow: none;
   clip-path: none;
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
   transition:
-    background 0.15s,
-    border-color 0.15s,
-    transform 0.15s;
+    background var(--m-fast),
+    transform var(--m-base) var(--e-spring);
 }
+/* primary: accent-tinted glass; secondary: clear glass */
 html[data-skin="slate"] body #lobby #start-btn {
-  border: 1px solid #8cc4ff99;
-  background: linear-gradient(180deg, #4a8be6, #2c66c4);
+  border: 0;
+  background: var(--lg-prominent);
   color: #fff;
-  font: 700 22px/1 var(--slate-font);
-  letter-spacing: 3px;
-  box-shadow: 0 10px 26px #060c16a6;
+  font: 700 21px/1 var(--slate-font);
+  letter-spacing: 0;
+  box-shadow: var(--lg-prominent-rim);
 }
 html[data-skin="slate"] body #lobby #quick-btn {
-  border: 1px solid var(--slate-pill-line);
-  background: var(--slate-pill);
+  /* material: base.css `.lg-glass` */
   color: var(--slate-ink);
   font: 600 19px/1 var(--slate-font);
-  letter-spacing: 3px;
-  box-shadow: 0 8px 20px #060c1680;
+  letter-spacing: 0;
 }
 html[data-skin="slate"] body #lobby .home-action-symbol,
 html[data-skin="slate"] body #lobby #quick-btn .home-action-symbol {
@@ -252,13 +263,12 @@ html[data-skin="slate"] body #lobby .home-action:active {
 }
 @media (hover: hover) {
   html[data-skin="slate"] body #lobby #start-btn:not(:disabled):hover {
-    background: linear-gradient(180deg, #5b98ee, #3572cf);
+    background: var(--lg-prominent-hover);
     filter: none;
     transform: none;
   }
   html[data-skin="slate"] body #lobby #quick-btn:not(:disabled):hover {
-    background: #1b2434e6;
-    border-color: var(--slate-line-strong);
+    background: var(--lg-glass-tint-hover);
     filter: none;
     transform: none;
   }
@@ -280,15 +290,23 @@ html[data-skin="slate"] body #lobby .home-collection-heading {
    * painted scene art, not on the matte panel the token was tuned for. */
   border-bottom: 0;
   font: 700 20px/1.2 var(--slate-font);
-  letter-spacing: 2px;
+  letter-spacing: 0;
   color: #fff;
   text-shadow: var(--home-caption-shadow);
 }
+/* the collection shelf floats as one clear-glass card over the scene */
+html[data-skin="slate"] body #lobby #lobby-library-btn::before {
+  border-radius: var(--lg-radius-sheet);
+  background: var(--lg-clear);
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
+  box-shadow: var(--glass-rim), var(--lg-lift);
+}
 html[data-skin="slate"] body #lobby .home-collection-card {
-  border-radius: 10px;
-  border: 1.5px solid var(--slate-card-line);
+  border-radius: 14px;
+  border: 1px solid #ffffff38;
   background: var(--slate-card-base);
-  box-shadow: 0 8px 20px #0007;
+  box-shadow: 0 10px 24px #00000073;
   overflow: hidden;
 }
 html[data-skin="slate"] body #lobby .home-collection-card img {
@@ -296,21 +314,21 @@ html[data-skin="slate"] body #lobby .home-collection-card img {
   filter: none;
 }
 html[data-skin="slate"] body #lobby .home-collection-card > span {
-  font: 500 15px/1.3 var(--slate-font);
-  letter-spacing: 1px;
+  font: 600 15px/1.3 var(--slate-font);
+  letter-spacing: 0;
   color: var(--slate-ink);
-  background: linear-gradient(#0b0f1600, #0b0f16e8 68%);
+  background: linear-gradient(#05070a00, #05070ad9 68%);
   text-shadow: 0 1px 4px #000a;
 }
 html[data-skin="slate"] body #lobby .home-collection-arrow {
-  border: 1px solid var(--slate-pill-line);
+  border: 0;
   border-radius: 50%;
-  background: var(--slate-pill);
-  color: var(--slate-ink-2);
+  background: var(--lg-fill-control);
+  box-shadow: var(--lg-rim-soft);
+  color: var(--slate-ink);
   transition:
-    background 0.15s,
-    border-color 0.15s,
-    color 0.15s;
+    background var(--m-fast),
+    color var(--m-fast);
 }
 @media (hover: hover) {
   html[data-skin="slate"]
@@ -318,8 +336,7 @@ html[data-skin="slate"] body #lobby .home-collection-arrow {
     #lobby
     #lobby-library-btn:hover
     .home-collection-arrow {
-    background: #1b2434e6;
-    border-color: var(--slate-line-strong);
+    background: var(--lg-fill-control-hover);
     color: #fff;
   }
 }
@@ -335,7 +352,7 @@ html[data-skin="slate"]
 html[data-skin="slate"] body #lobby .home-collection-note {
   font: 400 16px/1.5 var(--slate-font);
   font-style: normal;
-  letter-spacing: 2px;
+  letter-spacing: 0.5px;
   color: var(--slate-ink-2);
   text-shadow: var(--home-caption-shadow);
 }
@@ -343,7 +360,7 @@ html[data-skin="slate"] body #lobby .home-collection-note {
 /* ---------- verse + footer ---------- */
 html[data-skin="slate"] body #lobby .home-verse {
   font: 400 15px/1.8 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   color: var(--slate-ink-2);
   text-shadow: var(--home-caption-shadow);
 }
@@ -362,7 +379,7 @@ html[data-skin="slate"] body #lobby .lobby-bottom {
 }
 html[data-skin="slate"] body #lobby .lobby-bottom :is(b, span) {
   font: inherit;
-  letter-spacing: 2px;
+  letter-spacing: 0.5px;
   color: inherit;
 }
 html[data-skin="slate"] body #lobby .home-footer-emblem {
@@ -371,12 +388,12 @@ html[data-skin="slate"] body #lobby .home-footer-emblem {
 }
 html[data-skin="slate"] body #lobby .lobby-bottom small {
   font: 400 12px/1.4 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   color: var(--slate-ink-3);
 }
 html[data-skin="slate"] body #lobby #atelier-open {
   font: 400 12px/1.4 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   color: var(--slate-ink-3);
 }
 
@@ -427,34 +444,35 @@ html[data-skin="slate"] body:not(.touch-layout) #app.lobby-view .brand small {
   padding: 0;
 }
 html[data-skin="slate"] body:not(.touch-layout) #app.lobby-view .top-nav {
-  margin-left: 0;
-  gap: 8px;
-  height: 44px;
+  margin-left: 20px;
+  gap: 2px;
+  height: 48px;
   align-items: stretch;
-  padding-left: 30px;
+  padding: 4px;
 }
 html[data-skin="slate"] body:not(.touch-layout) #app.lobby-view .nav-link {
   min-width: 0;
-  padding: 4px 22px 12px;
+  padding: 0 22px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #app.lobby-view
   .top-nav
   .nav-link.active::after {
-  left: 16px;
-  right: 16px;
+  left: 0;
+  right: 0;
 }
 html[data-skin="slate"] body:not(.touch-layout) #app.lobby-view .top-actions {
-  gap: 12px;
+  gap: 2px;
+  padding: 4px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #app.lobby-view
   .top-actions
   .icon-btn {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -683,8 +701,9 @@ html[data-skin="slate"] body.touch-layout #app.lobby-view .brand small {
   font-size: 9px;
 }
 html[data-skin="slate"] body.touch-layout #app.lobby-view .top-actions {
-  gap: 8px;
+  gap: 0;
   margin-left: auto;
+  padding: 2px;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -739,7 +758,7 @@ html[data-skin="slate"] body.touch-layout #app.lobby-view .nav-link {
   min-width: 0;
   min-height: 44px;
   font-size: 15px;
-  letter-spacing: 1px;
+  letter-spacing: 0;
   white-space: nowrap;
 }
 html[data-skin="slate"]
@@ -747,8 +766,8 @@ html[data-skin="slate"]
   #app.lobby-view
   .top-nav
   .nav-link.active::after {
-  left: 12px;
-  right: 12px;
+  left: 0;
+  right: 0;
 }
 
 /* --- portrait: the strip becomes a second topbar row --- */
@@ -759,7 +778,7 @@ html[data-skin="slate"]
   height: auto;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  grid-template-rows: var(--header-h, 52px) 44px;
+  grid-template-rows: var(--header-h, 52px) 52px;
   align-items: center;
   column-gap: 8px;
   row-gap: 0;
@@ -784,16 +803,16 @@ html[data-skin="slate"]
   .top-nav {
   grid-area: 2 / 1 / 3 / 3;
   gap: 0;
-  height: 44px;
-  margin: 0;
-  padding: 0;
+  height: 48px;
+  margin: 0 0 4px;
+  padding: 2px;
 }
 html[data-skin="slate"]
   body.touch-layout.mobile-portrait
   #app.lobby-view
   .nav-link {
   flex: 1 1 0;
-  padding: 0 6px 8px;
+  padding: 0 6px;
 }
 
 /* --- landscape: tabs stay inline in the single topbar row --- */
@@ -812,24 +831,24 @@ html[data-skin="slate"]
   body.touch-layout.mobile-landscape
   #app.lobby-view
   .top-nav {
-  gap: 4px;
-  height: 44px;
+  gap: 0;
+  height: 48px;
   margin: 0 0 0 6px;
-  padding-left: 12px;
+  padding: 2px;
   border-left: 0;
 }
 html[data-skin="slate"]
   body.touch-layout.mobile-landscape
   #app.lobby-view
   .nav-link {
-  padding: 0 12px 6px;
+  padding: 0 14px;
 }
 
 /* ---------- portrait body ---------- */
 html[data-skin="slate"] body.touch-layout.mobile-portrait #lobby .lobby-copy {
   left: var(--slate-touch-x);
   right: var(--slate-touch-r);
-  top: calc(var(--header-h, 52px) + 44px + 18px);
+  top: calc(var(--header-h, 52px) + 52px + 16px);
   width: auto;
   max-width: none;
 }
@@ -844,7 +863,7 @@ html[data-skin="slate"]
   .lobby-chinese {
   margin: 0;
   font-size: 26px;
-  letter-spacing: 3px;
+  letter-spacing: 0;
 }
 html[data-skin="slate"]
   body.touch-layout.mobile-portrait
@@ -924,14 +943,15 @@ html[data-skin="slate"] body.touch-layout #lobby #lobby-library-btn {
   font-size: 14px;
 }
 html[data-skin="slate"] body.touch-layout #lobby #lobby-library-btn::before {
-  inset: -14px -12px -14px -14px;
+  inset: -12px -8px -12px -8px;
+  border-radius: 24px;
 }
 html[data-skin="slate"] body.touch-layout #lobby .home-collection-heading {
   height: auto;
   margin: 0 0 10px;
   padding: 0 0 8px;
   font-size: 16px;
-  letter-spacing: 1px;
+  letter-spacing: 0;
 }
 /* A plain row on touch: the desktop stagger needs hover parallax and depth the
  * phone does not have, and it costs the caption its hit-free space. */
@@ -1011,7 +1031,7 @@ html[data-skin="slate"]
   .lobby-chinese {
   margin: 0;
   font-size: 22px;
-  letter-spacing: 3px;
+  letter-spacing: 0;
 }
 html[data-skin="slate"]
   body.touch-layout.mobile-landscape
@@ -1236,7 +1256,7 @@ html[data-skin="slate"]
     #lobby
     .lobby-chinese {
     font-size: 20px;
-    letter-spacing: 2px;
+    letter-spacing: 0;
   }
   html[data-skin="slate"]
     body.touch-layout.mobile-portrait

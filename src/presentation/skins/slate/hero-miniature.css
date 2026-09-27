@@ -99,9 +99,11 @@ html[data-skin="slate"] #minions .minion:is(.miniature-ready, .miniature-pending
   bottom: var(--plate-bottom);
   height: var(--plate-h);
   border-radius: 999px;
-  background: linear-gradient(180deg, #1d1a15f2, #0b0907f2);
+  /* a small dark glass capsule; no backdrop blur (there can be fourteen) */
+  background: linear-gradient(180deg, #2a2c34f0, #16181ef2);
   box-shadow:
-    0 0 0 1.5px var(--tok-line, #8a7446),
+    var(--lg-rim-soft),
+    0 0 0 1px #00000073,
     0 3px 8px #000000b3;
   pointer-events: none;
 }
@@ -305,12 +307,17 @@ html[data-skin="slate"]
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  border: 1.5px solid var(--seat-line, #8a7446);
+  /* liquid glass (2026-09-27): a clear-glass plaque, no metal line */
+  border: 1.5px solid transparent;
   border-radius: 999px;
-  background: linear-gradient(180deg, #16120ee8, #0a0806f0);
-  box-shadow: 0 6px 14px #000c;
-  font-size: 13px;
-  letter-spacing: 3px;
+  background: var(--lg-hud);
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
+  box-shadow: var(--glass-rim), var(--lg-lift);
+  color: var(--slate-ink);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0;
 }
 html[data-skin="slate"] body:not(.touch-layout) #battle .hero.hero-station .hero-chips {
   position: absolute;
@@ -327,10 +334,10 @@ html[data-skin="slate"] body:not(.touch-layout) #battle .hero.hero-station .hero
   height: 30px;
   padding: 0 12px;
   border-radius: 999px;
-  background: linear-gradient(180deg, #1d1a15f0, #0b0907f0);
-  box-shadow:
-    0 0 0 1.5px var(--seat-line, #8a7446),
-    0 4px 10px #000b;
+  background: var(--lg-hud);
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
+  box-shadow: var(--glass-rim), var(--lg-lift);
   font-size: 18px;
 }
 html[data-skin="slate"] body:not(.touch-layout) #battle .hero.hero-station .hero-attack.is-zero {
@@ -346,6 +353,7 @@ html[data-skin="slate"] body:not(.touch-layout) #battle .hero.hero-station .hero
 /* targeted: the plaque takes the aim's gold (the ring round the feet does too) */
 html[data-skin="slate"] body:not(.touch-layout) #battle .hero.hero-station.valid-target .hero-stat {
   box-shadow:
+    var(--glass-rim),
     0 0 0 2px #e0b455,
     0 0 16px #f0cf8299;
 }
@@ -401,21 +409,35 @@ html[data-skin="slate"] body.touch-layout #battle .hero.hero-station .portrait-f
  * used to): ember "can act", brass "chosen", amber "a target" */
 html[data-skin="slate"] body.touch-layout #battle .hero.hero-station .hero-card-inner .hero-name {
   box-sizing: border-box;
-  border: 1.5px solid var(--seat-line, #8a7446);
+  border: 1.5px solid transparent;
   border-radius: 999px;
-  box-shadow: 0 3px 8px #000c;
+  background: var(--lg-hud);
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
+  box-shadow: var(--glass-rim), 0 3px 8px #0009;
+  color: var(--slate-ink);
+  letter-spacing: 0.5px;
 }
+/* state rings on the plaque (the dais halo shows them too): ember "can act",
+ * warm white "chosen", amber "a target" (mobile-hand-layout.spec reads the
+ * plaque's border colour) */
 html[data-skin="slate"] body #battle .hero.hero-station.ready .hero-card-inner .hero-name {
   border-color: #ffb35a;
-  box-shadow: 0 0 10px #ff9b3d99;
+  box-shadow:
+    var(--glass-rim),
+    0 0 12px #ff9b3d99;
 }
 html[data-skin="slate"] body #battle .hero.hero-station.selected .hero-card-inner .hero-name {
   border-color: var(--arena-brass-hi);
-  box-shadow: 0 0 10px #c9a45c88;
+  box-shadow:
+    var(--glass-rim),
+    0 0 12px #f3dfa659;
 }
 html[data-skin="slate"] body #battle .hero.hero-station.valid-target .hero-card-inner .hero-name {
   border-color: #e0b455;
-  box-shadow: 0 0 10px #f0cf8299;
+  box-shadow:
+    var(--glass-rim),
+    0 0 12px #f0cf8299;
 }
 /* portrait: the enemy's chips keep to the left of its figure */
 html[data-skin="slate"] body.touch-layout.mobile-portrait #battle .hero.enemy.hero-station .hero-chips {

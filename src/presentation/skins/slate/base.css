@@ -51,23 +51,27 @@
  * geometry tokens for narrower desktop windows.
  *
  * ---------------------------------------------------------------------------
- * TWO SHELLS, keyed off `[data-dialog-size]` (set by presentation/dialog-layout.js):
+ * THREE SHELLS, keyed off `[data-shell]` (presentation/dialog-layout.js maps
+ * each `[data-dialog-size]` to one; page files may still key off the size):
  *
- *   PAGE shell  — heroes, library, settings, route, covenant, help.
- *     Full-bleed: host padding 0, dialog 100%×100%, matte material background,
- *     no border/radius/shadow, `padding: 26px var(--slate-page-x) 28px`, and the
- *     close button becomes a back chevron at the TOP-LEFT plus a title row.
- *     On `body.touch-layout` the same shell retunes to 16px + safe-area
- *     gutters, a 44px chevron and a 28px title, with a short-landscape
+ *   PAGE  — heroes, library, route, covenant.
+ *     Full-bleed over the blurred edition art, `padding: 26px
+ *     var(--slate-page-x) 28px`, a glass back circle at the TOP-LEFT and a
+ *     title row. On `body.touch-layout` it retunes to 16px + safe-area
+ *     gutters, a 44px back circle and a 26px title, with a short-landscape
  *     (`max-height: 500px`) and a tablet (`min-width: 900px`) pass.
  *
- *   FLOATING shell — confirm, detail, hand, menu, journal, discover, mulligan,
- *     choice, result, atelier, workspace.
+ *   SHEET — settings, help, confirm, menu, journal, choice, result, atelier,
+ *     workspace, and the hero info sheet (`detail` size, touch-hero type).
  *     Host keeps dialog-layout's centering and gets a dim; the dialog is a
- *     rounded matte panel (16px radius, hairline border, drop shadow). Widths
- *     stay exactly as dialog-layout.css defines them — never override
- *     `--dialog-width` here. The close button stays a top-RIGHT round "×":
- *     40px on desktop, 44px on touch.
+ *     regular-glass pane (radius `--lg-radius-sheet`, `--glass-rim`, soft
+ *     shadow). Widths stay as dialog-layout.css defines them, except settings
+ *     and the guide, sized below. Close = a top-RIGHT round "×": 40px on
+ *     desktop, 44px on touch.
+ *
+ *   STAGE — detail, discover, mulligan, hand. No pane: the host dims and
+ *     blurs the scene and the cards sit on it. It shares the sheet's close
+ *     button rules (`:is([data-shell="sheet"], [data-shell="stage"])`).
  *
  * ---------------------------------------------------------------------------
  * SHARED CONTROLS (apply to EVERY dialog type, not just the pages above):
@@ -81,13 +85,19 @@
 
 html[data-skin="slate"] {
   --slate-font:
-    "PingFang SC", "Hiragino Sans GB", "Source Han Sans SC", "Noto Sans SC",
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
+    "Hiragino Sans GB", "Source Han Sans SC", "Noto Sans SC", "Segoe UI",
     "Microsoft YaHei", system-ui, sans-serif;
-  --slate-ink: #f3f6fa;
-  --slate-ink-2: #c3ccd8;
-  --slate-ink-3: #8e99a9;
-  --slate-blue: #8cc4ff;
-  --slate-blue-deep: #2f72d6;
+  /* ink (2026-09-27 liquid glass): neutral whites with vibrancy-style alpha
+   * instead of blue-greys, so secondary text takes on whatever the glass
+   * behind it is tinted with — Apple's label / secondaryLabel / tertiary. */
+  --slate-ink: #f5f5f7;
+  --slate-ink-2: #ebebf5b8;
+  --slate-ink-3: #ebebf280;
+  /* one accent: Apple system blue on dark. `--slate-blue` is the readable
+   * text / outline tint, `--slate-blue-deep` the fill. */
+  --slate-blue: #64b4ff;
+  --slate-blue-deep: #0a84ff;
   --slate-line: #ffffff26;
   --slate-line-strong: #ffffff40;
   /* hairline for scene-backed (T5) pages where `--slate-line` disappears over
@@ -120,22 +130,67 @@ html[data-skin="slate"] {
   --e-std: cubic-bezier(0.2, 0.8, 0.2, 1);
   --e-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
   --e-exit: cubic-bezier(0.4, 0, 1, 1);
-  /* liquid glass (2026-09-22 A/B). A panel is a tinted pane over whatever is
-   * behind it: `--glass-fill` is the tint, `--glass-blur` the backdrop
-   * filter, `--glass-rim` the refracted edge (top-lit lip, shaded foot, a
-   * 5% contour) drawn with inset shadows instead of a border. `--glass-fill-2`
-   * is one step lighter, for grouping content inside a pane without a
-   * hairline. The old matte material is aliased to the fill so the page files
-   * that still paint `--slate-material` pick up the tint until they are
-   * rewritten. */
-  --glass-fill:
-    radial-gradient(90% 70% at 8% 0%, #ffffff17 0%, #ffffff00 58%),
-    linear-gradient(160deg, #1a2231ad 0%, #0f151fa3 100%);
+  /* liquid glass (2026-09-22 A/B, rebuilt 2026-09-27 after Apple's Liquid
+   * Glass). Two materials and one edge:
+   *   REGULAR glass (`--glass-fill` + `--glass-blur`) — panes that carry text:
+   *     sheets, inspectors, the battle side panels. A neutral smoke tint that
+   *     lets the scene's colour bleed through a heavy, saturated blur.
+   *   CLEAR glass (`--lg-clear` + `--lg-clear-blur`) — controls that float on
+   *     content by themselves: toolbars, tab bars, HUD chips, standalone
+   *     buttons. Almost no tint, a light blur, slightly brightened.
+   *   The EDGE (`--glass-rim`) is the specular lip that makes a pane read as
+   *     a lens: a bright highlight along the top-left, a softer one along the
+   *     bottom-right, a 7% contour and a faint inner sheen at the top — all
+   *     inset shadows, so it follows any radius and needs no pseudo-element.
+   * Controls INSIDE a pane never get glass of their own (no glass on glass):
+   * they are fills (`--lg-fill-control`) with a small rim (`--lg-rim-soft`).
+   * `--glass-fill-2` is the grouped-section fill inside a pane. */
+  --glass-fill: linear-gradient(180deg, #2a2c34a3 0%, #1a1c22b0 100%);
   --glass-fill-2: #ffffff0f;
-  --glass-blur: blur(28px) saturate(160%);
+  --glass-blur: blur(36px) saturate(190%) brightness(0.92);
   --glass-rim:
-    inset 0 1px 0 #ffffff30, inset 0 -1px 0 #00000030, inset 0 0 0 1px #ffffff0c;
-  --glass-shadow: 0 30px 80px #00000080;
+    inset 1.25px 1.25px 0.5px -0.5px #ffffff8c,
+    inset -1px -1px 0.5px -0.5px #ffffff47, inset 0 0 0 1px #ffffff12,
+    inset 0 12px 20px -14px #ffffff38, inset 0 -10px 18px -14px #00000059;
+  --glass-shadow: 0 24px 64px #00000073, 0 2px 6px #00000040;
+  --lg-clear: #ffffff17;
+  --lg-clear-hover: #ffffff26;
+  --lg-clear-blur: blur(14px) saturate(180%) brightness(1.06);
+  --lg-lift: 0 8px 24px #00000047, 0 1px 2px #00000033;
+  --lg-fill-control: #7878803d;
+  --lg-fill-control-hover: #78788057;
+  --lg-rim-soft:
+    inset 1px 1px 0 -0.25px #ffffff4d, inset -1px -1px 0 -0.25px #ffffff1f;
+  /* tinted ("prominent") glass: the same lens, filled with the accent */
+  --lg-prominent: linear-gradient(180deg, #2c96ffeb 0%, #0a7af5e6 100%);
+  --lg-prominent-hover: linear-gradient(180deg, #45a3ffeb 0%, #1a86fae6 100%);
+  --lg-prominent-rim:
+    inset 1.25px 1.25px 0.5px -0.5px #ffffffb3,
+    inset -1px -1px 0.5px -0.5px #ffffff59, inset 0 12px 18px -12px #ffffff59,
+    inset 0 -10px 16px -12px #00287873, 0 8px 22px #003ca04d,
+    0 1px 2px #00000033;
+  /* HUD glass (battlefield): clear glass with a smoke tint so a chip stays
+   * legible over the lit court and the lava; a plain colour, because several
+   * HUD controls must compute `background-image: none` (arena.css contract).
+   * `--lg-ember` is the court's prominent glass: ember = "act now". */
+  --lg-hud: #1d1f26a8;
+  --lg-hud-hover: #2c2e36c4;
+  --lg-ember: linear-gradient(180deg, #ffb660f5 0%, #ff8a2eeb 100%);
+  --lg-ember-hover: linear-gradient(180deg, #ffc37af5 0%, #ff9640eb 100%);
+  --lg-ember-rim:
+    inset 1.25px 1.25px 0.5px -0.5px #ffffffcc,
+    inset -1px -1px 0.5px -0.5px #ffffff66, inset 0 12px 18px -12px #ffffff66,
+    inset 0 -10px 16px -12px #8a300073, 0 8px 22px #b4471a59,
+    0 1px 2px #00000040;
+  /* type: Apple's dark-mode scale, no tracking on CJK titles */
+  --lg-title-page: 700 30px/38px var(--slate-font);
+  --lg-title-sheet: 700 24px/32px var(--slate-font);
+  --lg-headline: 600 17px/24px var(--slate-font);
+  --lg-radius-sheet: 28px;
+  /* the one selection mark for a chosen tile, card or node: a 2px accent
+   * ring and a soft accent halo, drawn outside the element */
+  --lg-select-ring: 0 0 0 2px var(--slate-blue), 0 0 0 6px #0a84ff29;
+  --lg-radius-group: 18px;
   --slate-material: var(--glass-fill);
   /* battlefield material (2026-09-22, skins/slate/arena.css). One key for the
    * whole court: smoked obsidian glass, aged brass for the player, cold iron
@@ -179,14 +234,22 @@ html[data-skin="slate"] {
   (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
 ) {
   html[data-skin="slate"] {
-    --glass-fill: linear-gradient(160deg, #1a2231f2 0%, #0f151ff5 100%);
+    --glass-fill: linear-gradient(180deg, #2a2c34f5 0%, #1a1c22f7 100%);
     --glass-blur: none;
+    --lg-clear: #2a2c34e6;
+    --lg-clear-hover: #34363ef0;
+    --lg-clear-blur: none;
+    --lg-hud: #1d1f26f0;
   }
 }
 @media (prefers-reduced-transparency: reduce) {
   html[data-skin="slate"] {
-    --glass-fill: linear-gradient(160deg, #1a2231f2 0%, #0f151ff5 100%);
+    --glass-fill: linear-gradient(180deg, #2a2c34f5 0%, #1a1c22f7 100%);
     --glass-blur: none;
+    --lg-clear: #2a2c34e6;
+    --lg-clear-hover: #34363ef0;
+    --lg-clear-blur: none;
+    --lg-hud: #1d1f26f0;
   }
 }
 
@@ -207,18 +270,9 @@ html[data-skin="slate"] body #app {
 /* ---------- full-bleed page shell ---------- */
 html[data-skin="slate"]
   body
-  #modal.folio-host:has(
-    > .folio-dialog:is(
-        [data-dialog-size="heroes"],
-        [data-dialog-size="library"],
-        [data-dialog-size="settings"],
-        [data-dialog-size="route"],
-        [data-dialog-size="covenant"],
-        [data-dialog-size="help"]
-      )
-  ) {
+  #modal.folio-host:has(> .folio-dialog[data-shell="page"]) {
   padding: 0;
-  background: #0b0f16;
+  background: #05070a;
 }
 /* The page shell is a transparent sheet over the edition's backdrop artwork
  * (`--scene-backdrop`, written on the root by presentation/theme.js), blurred
@@ -228,37 +282,21 @@ html[data-skin="slate"]
  * transparent fringe outside the host, which clips it. */
 html[data-skin="slate"]
   body
-  #modal.folio-host:has(
-    > .folio-dialog:is(
-        [data-dialog-size="heroes"],
-        [data-dialog-size="library"],
-        [data-dialog-size="settings"],
-        [data-dialog-size="route"],
-        [data-dialog-size="covenant"],
-        [data-dialog-size="help"]
-      )
-  )::before {
+  #modal.folio-host:has(> .folio-dialog[data-shell="page"])::before {
   content: "";
   position: absolute;
   inset: -48px;
   z-index: 0;
   pointer-events: none;
   background:
-    linear-gradient(100deg, #0b0f16a6 0%, #0b0f1666 45%, #0b0f1680 100%),
+    linear-gradient(100deg, #05070aa6 0%, #05070a5c 45%, #05070a80 100%),
     var(--scene-backdrop) center / cover no-repeat;
   filter: blur(30px) saturate(140%) brightness(1.08);
 }
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  ) {
+  > .folio-dialog[data-shell="page"] {
   --dialog-width: 100%;
   width: 100%;
   max-width: 100%;
@@ -322,7 +360,7 @@ html[data-skin="slate"]
   body
   #modal.folio-host
   .folio-dialog
-  :is(.crafted-panel, .touch-hero-info, .atelier-vignette) {
+  :is(.crafted-panel, .touch-hero-info, .atelier-vignette):where(:not(.lg-sheet, .lg-group)) {
   background: none;
   border: 0;
   border-radius: 0;
@@ -354,14 +392,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-close {
   top: 26px;
   left: 36px;
@@ -369,22 +400,21 @@ html[data-skin="slate"]
   width: 44px;
   height: 44px;
   border: 0;
-  border-radius: 8px;
-  background: none;
-  box-shadow: none;
+  /* a clear-glass circle, like the back button of an iOS 26 navigation bar */
+  border-radius: 50%;
+  background: var(--lg-clear);
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
+  box-shadow: var(--glass-rim), var(--lg-lift);
   color: #fff;
+  transition:
+    background var(--m-fast),
+    transform var(--m-base) var(--e-spring);
 }
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-close
   svg {
   display: none;
@@ -392,28 +422,21 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-close::before {
   content: "";
   display: block;
   position: absolute;
   inset: auto;
-  left: 17px;
-  top: 13px;
-  width: 15px;
-  height: 15px;
+  left: 19px;
+  top: 16px;
+  width: 10px;
+  height: 10px;
   margin: 0;
   border: 0;
-  border-left: 3px solid #fff;
-  border-bottom: 3px solid #fff;
-  border-radius: 2px;
+  border-left: 2.5px solid #fff;
+  border-bottom: 2.5px solid #fff;
+  border-radius: 1.5px;
   background: none;
   box-shadow: none;
   opacity: 1;
@@ -422,14 +445,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-close::after {
   content: none;
   display: none;
@@ -437,30 +453,23 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
-  > .modal-close:hover::before {
-  border-color: var(--slate-blue);
+  > .folio-dialog[data-shell="page"]
+  > .modal-close:hover {
+  background: var(--lg-clear-hover);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .folio-dialog[data-shell="page"]
+  > .modal-close:active {
+  transform: scale(0.94);
 }
 
 /* page title row (page shell only) */
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-heading {
   display: flex;
   align-items: center;
@@ -480,40 +489,19 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-heading::before,
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-heading::after {
   content: none;
 }
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-heading
   p {
   display: none;
@@ -527,10 +515,10 @@ html[data-skin="slate"]
   :is(.modal-heading, .library-heading)
   h2 {
   margin: 0;
-  font: 700 32px/44px var(--slate-font);
-  letter-spacing: 3px;
+  font: 700 30px/44px var(--slate-font);
+  letter-spacing: 0;
   color: #fff;
-  text-shadow: 0 2px 10px #0006;
+  text-shadow: 0 1px 14px #00000059;
 }
 
 /* `components.css` rules every `.crafted-panel` heading and footer with a
@@ -542,10 +530,10 @@ html[data-skin="slate"] body #modal.folio-host .crafted-panel > .panel-actions {
   border-top: 0;
 }
 
-/* ---------- pill buttons (all dialogs) ---------- */
+/* ---------- pill buttons (all dialogs and the card stage) ---------- */
 html[data-skin="slate"]
   body
-  #modal.folio-host
+  :is(#modal.folio-host, #card-stage)
   :is(.gold-btn, .ghost-btn, .text-btn, .library-inspect) {
   display: inline-flex;
   align-items: center;
@@ -555,18 +543,28 @@ html[data-skin="slate"]
   padding: 0 28px;
   border-radius: 999px;
   border: 1px solid transparent;
-  background: #ffffff14;
+  /* inside a pane: a control fill, not a second sheet of glass */
+  background: var(--lg-fill-control);
   color: #fff;
-  font: 500 18px/1 var(--slate-font);
-  letter-spacing: 1px;
-  box-shadow: inset 0 1px 0 #ffffff2e;
+  font: 600 17px/1 var(--slate-font);
+  letter-spacing: 0;
+  box-shadow: var(--lg-rim-soft);
   text-shadow: none;
   clip-path: none;
   mask: none;
   -webkit-mask: none;
   transition:
-    background 0.15s,
-    border-color 0.15s;
+    background var(--m-fast),
+    box-shadow var(--m-fast),
+    transform var(--m-base) var(--e-spring);
+}
+html[data-skin="slate"]
+  body
+  :is(#modal.folio-host, #card-stage)
+  :is(.gold-btn, .ghost-btn, .text-btn, .library-inspect):active:not(
+    :disabled
+  ) {
+  transform: scale(0.97);
 }
 /* `components.css` lays `button.crafted-action` out on a `1em 1fr 1em` grid so
  * that a leading icon is mirrored by an empty track and the label stays
@@ -582,15 +580,15 @@ html[data-skin="slate"]
 }
 html[data-skin="slate"]
   body
-  #modal.folio-host
+  :is(#modal.folio-host, #card-stage)
   :is(.gold-btn, .ghost-btn, .text-btn, .library-inspect)::before,
 html[data-skin="slate"]
   body
-  #modal.folio-host
+  :is(#modal.folio-host, #card-stage)
   :is(.gold-btn, .ghost-btn, .text-btn, .library-inspect)::after,
 html[data-skin="slate"]
   body
-  #modal.folio-host
+  :is(#modal.folio-host, #card-stage)
   :is(.gold-btn, .ghost-btn)
   > img {
   content: none;
@@ -598,22 +596,34 @@ html[data-skin="slate"]
 }
 html[data-skin="slate"]
   body
-  #modal.folio-host
+  :is(#modal.folio-host, #card-stage)
   :is(.ghost-btn, .text-btn, .library-inspect):hover {
-  background: #ffffff24;
+  background: var(--lg-fill-control-hover);
 }
-html[data-skin="slate"] body #modal.folio-host .gold-btn {
-  background: linear-gradient(180deg, #4a8be6, #2c66c4);
+html[data-skin="slate"] body :is(#modal.folio-host, #card-stage) .gold-btn {
+  background: var(--lg-prominent);
   border-color: transparent;
-  box-shadow:
-    inset 0 1px 0 #ffffff59,
-    0 10px 28px #2f72d659;
+  box-shadow: var(--lg-prominent-rim);
   font-weight: 600;
 }
-html[data-skin="slate"] body #modal.folio-host .gold-btn:hover {
-  background: linear-gradient(180deg, #5b98ee, #3572cf);
+html[data-skin="slate"] body :is(#modal.folio-host, #card-stage) .gold-btn:hover {
+  background: var(--lg-prominent-hover);
 }
-html[data-skin="slate"] body #modal.folio-host .gold-btn svg {
+/* disabled: a quiet grey fill, no rim, tertiary text; components.css also
+ * dims its old disabled button with filter and opacity, both reset */
+html[data-skin="slate"]
+  body
+  :is(#modal.folio-host, #card-stage)
+  :is(.gold-btn, .ghost-btn, .text-btn, .library-inspect):disabled {
+  background: #78788029;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--slate-ink-3);
+  filter: none;
+  opacity: 1;
+  cursor: default;
+}
+html[data-skin="slate"] body :is(#modal.folio-host, #card-stage) .gold-btn svg {
   width: 18px;
   height: 18px;
 }
@@ -622,14 +632,7 @@ html[data-skin="slate"] body #modal.folio-host .gold-btn svg {
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-footer {
   justify-content: flex-end;
   gap: 16px;
@@ -640,14 +643,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-footer
   > button {
   min-width: 220px;
@@ -664,14 +660,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  ) {
+  > .folio-dialog[data-shell="page"] {
   padding: calc(12px + env(safe-area-inset-top))
     calc(16px + env(safe-area-inset-right))
     calc(12px + env(safe-area-inset-bottom))
@@ -681,14 +670,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-close {
   top: calc(10px + env(safe-area-inset-top));
   left: calc(10px + env(safe-area-inset-left));
@@ -698,14 +680,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > :is(.modal-heading, .library-heading) {
   min-height: 44px;
   /* The touch chevron sits at `left: 10px` and is 44px wide, so it ends at
@@ -716,61 +691,33 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   :is(.modal-heading, .library-heading)
   h2 {
-  font-size: 28px;
+  font-size: 26px;
   line-height: 36px;
-  letter-spacing: 2px;
+  letter-spacing: 0;
 }
 /* short landscape windows buy the title row back for content */
 @media (max-height: 500px) {
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="route"],
-      [data-dialog-size="covenant"],
-      [data-dialog-size="help"]
-    ) {
+    > .folio-dialog[data-shell="page"] {
     padding-top: calc(8px + env(safe-area-inset-top));
     padding-bottom: calc(10px + env(safe-area-inset-bottom));
   }
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="route"],
-      [data-dialog-size="covenant"],
-      [data-dialog-size="help"]
-    )
+    > .folio-dialog[data-shell="page"]
     > :is(.modal-heading, .library-heading) {
     min-height: 36px;
   }
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="route"],
-      [data-dialog-size="covenant"],
-      [data-dialog-size="help"]
-    )
+    > .folio-dialog[data-shell="page"]
     > .modal-close {
     top: calc(8px + env(safe-area-inset-top));
     left: calc(8px + env(safe-area-inset-left));
@@ -779,14 +726,7 @@ html[data-skin="slate"]
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="route"],
-      [data-dialog-size="covenant"],
-      [data-dialog-size="help"]
-    )
+    > .folio-dialog[data-shell="page"]
     :is(.modal-heading, .library-heading)
     h2 {
     font-size: 21px;
@@ -798,14 +738,7 @@ html[data-skin="slate"]
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="route"],
-      [data-dialog-size="covenant"],
-      [data-dialog-size="help"]
-    ) {
+    > .folio-dialog[data-shell="page"] {
     padding: calc(22px + env(safe-area-inset-top))
       calc(32px + env(safe-area-inset-right))
       calc(20px + env(safe-area-inset-bottom))
@@ -814,14 +747,7 @@ html[data-skin="slate"]
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="route"],
-      [data-dialog-size="covenant"],
-      [data-dialog-size="help"]
-    )
+    > .folio-dialog[data-shell="page"]
     > .modal-close {
     top: calc(20px + env(safe-area-inset-top));
     left: calc(24px + env(safe-area-inset-left));
@@ -829,14 +755,7 @@ html[data-skin="slate"]
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="route"],
-      [data-dialog-size="covenant"],
-      [data-dialog-size="help"]
-    )
+    > .folio-dialog[data-shell="page"]
     > :is(.modal-heading, .library-heading) {
     /* the tablet chevron moves to `left: 24px`, ending at 68px against a
      * 32px gutter, so 48px of padding left only 12px of air */
@@ -845,19 +764,12 @@ html[data-skin="slate"]
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="route"],
-      [data-dialog-size="covenant"],
-      [data-dialog-size="help"]
-    )
+    > .folio-dialog[data-shell="page"]
     :is(.modal-heading, .library-heading)
     h2 {
-    font-size: 32px;
+    font-size: 30px;
     line-height: 44px;
-    letter-spacing: 3px;
+    letter-spacing: 0;
   }
 }
 
@@ -870,10 +782,10 @@ html[data-skin="slate"]
   padding: 0 18px;
   border-radius: 999px;
   border: 1px solid transparent;
-  background: #ffffff14;
+  background: var(--lg-fill-control);
   color: #fff;
   font: 400 16px var(--slate-font);
-  box-shadow: inset 0 1px 0 #ffffff2e;
+  box-shadow: var(--lg-rim-soft);
 }
 html[data-skin="slate"]
   body
@@ -887,47 +799,221 @@ html[data-skin="slate"]
   outline-offset: 2px;
 }
 
+/* ==========================================================================
+ * SHARED COMPONENTS (liquid glass v2). One definition each; page files add
+ * geometry only (position, size, spacing, font size) and never restate the
+ * material. The markup opts in with a class:
+ *
+ *   .lg-glass    clear glass for a control floating on content by itself —
+ *                toolbars, tab bars, HUD chips, standalone pills. Its tint is
+ *                contextual: `--lg-glass-tint` is clear glass everywhere and
+ *                the smoke-tinted HUD glass inside the battle view.
+ *   .lg-sheet    regular glass for a pane that carries text but is not a
+ *                dialog: inspectors, the battle's side panels.
+ *   .lg-seg      a segmented control's track; its buttons are .lg-seg-item.
+ *   .lg-sidebar  a navigation list that is a sidebar on the desktop and a
+ *                segmented control on touch; its buttons are .lg-seg-item.
+ *   .lg-group    a grouped section inside a pane (one step lighter fill).
+ *
+ * The component rules carry `:is(#app, #modal, #card-stage)` so they hold
+ * against the legacy layers' id-level rules without reaching outside the
+ * game's three roots.
+ * ========================================================================== */
+html[data-skin="slate"] body {
+  --lg-glass-tint: var(--lg-clear);
+  --lg-glass-tint-hover: var(--lg-clear-hover);
+}
+html[data-skin="slate"] body #app.battle-view {
+  --lg-glass-tint: var(--lg-hud);
+  --lg-glass-tint-hover: var(--lg-hud-hover);
+}
+html[data-skin="slate"] body :is(#app, #modal, #card-stage) .lg-glass {
+  border: 0;
+  background: var(--lg-glass-tint);
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
+  box-shadow: var(--glass-rim), var(--lg-lift);
+}
+html[data-skin="slate"] body :is(#app, #modal, #card-stage) .lg-sheet {
+  border: 0;
+  border-radius: var(--lg-radius-sheet);
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-rim), var(--glass-shadow);
+  color: var(--slate-ink);
+}
+html[data-skin="slate"] body :is(#app, #modal, #card-stage) .lg-group {
+  border: 0;
+  border-radius: var(--lg-radius-group);
+  background: var(--glass-fill-2);
+  box-shadow: inset 0 1px 0 #ffffff0f;
+}
+/* segmented control: a control-fill capsule track with a faint inner shadow;
+ * the selected segment is a lighter capsule thumb, white 600 */
+html[data-skin="slate"] body :is(#app, #modal, #card-stage) .lg-seg,
+html[data-skin="slate"] body.touch-layout :is(#app, #modal) .lg-sidebar {
+  border: 0;
+  border-radius: 999px;
+  background: var(--lg-fill-control);
+  box-shadow: inset 0 1px 2px #00000026;
+}
+html[data-skin="slate"] body :is(#app, #modal, #card-stage) .lg-seg-item {
+  position: relative;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  box-shadow: none;
+  color: var(--slate-ink-2);
+  font-family: var(--slate-font);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-shadow: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--m-fast),
+    box-shadow var(--m-fast),
+    color var(--m-fast);
+}
+html[data-skin="slate"] body :is(#app, #modal, #card-stage) .lg-seg-item:hover {
+  background: #ffffff0f;
+  color: #fff;
+}
+html[data-skin="slate"]
+  body
+  :is(#app, #modal, #card-stage)
+  .lg-seg-item:is(.active, [aria-selected="true"], [aria-pressed="true"]) {
+  background: #ffffff24;
+  box-shadow:
+    var(--lg-rim-soft),
+    0 2px 8px #00000026;
+  color: #fff;
+  font-weight: 600;
+}
+html[data-skin="slate"]
+  body
+  :is(#app, #modal, #card-stage)
+  .lg-seg-item:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 1px;
+}
+/* a sidebar row reads as primary text and its highlight casts no shadow
+ * (same material on touch, where the list is a segmented track) */
+html[data-skin="slate"] body :is(#app, #modal) .lg-sidebar > .lg-seg-item {
+  color: var(--slate-ink);
+}
+html[data-skin="slate"]
+  body
+  :is(#app, #modal)
+  .lg-sidebar
+  > .lg-seg-item:is(.active, [aria-selected="true"], [aria-pressed="true"]) {
+  box-shadow: var(--lg-rim-soft);
+  color: #fff;
+}
+
+/* range slider (all dialogs): a 6px capsule track filled with the accent up
+ * to `--range-progress` (written by preferences.js), and the iOS 26 capsule
+ * knob — white, wider than tall, lifted by a soft shadow. */
+html[data-skin="slate"] body #modal.folio-host input[type="range"] {
+  appearance: none;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--slate-blue-deep) 0 var(--range-progress, 0%),
+    #7878805c var(--range-progress, 0%) 100%
+  );
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 34px;
+  height: 22px;
+  margin-top: -8px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow:
+    0 2px 7px #00000059,
+    0 0 0 0.5px #0000000f;
+  transition: transform var(--m-base) var(--e-spring);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  input[type="range"]:active::-webkit-slider-thumb {
+  transform: scale(1.12);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  input[type="range"]::-moz-range-track {
+  height: 6px;
+  border: 0;
+  border-radius: 999px;
+  background: #7878805c;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  input[type="range"]::-moz-range-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--slate-blue-deep);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  input[type="range"]::-moz-range-thumb {
+  width: 34px;
+  height: 22px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 2px 7px #00000059;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  input[type="range"]:focus-visible {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 4px;
+}
+
 /* ---------- floating dialog shell ---------- */
 /* Every size that is NOT a full-bleed page. Widths stay as dialog-layout.css
  * sets them; this only restates the material, rim and padding. */
 html[data-skin="slate"]
   body
   #modal.folio-host:has(
-    > .folio-dialog:is(
-        [data-dialog-size="confirm"],
-        [data-dialog-size="detail"],
-        [data-dialog-size="hand"],
-        [data-dialog-size="menu"],
-        [data-dialog-size="journal"],
-        [data-dialog-size="discover"],
-        [data-dialog-size="mulligan"],
-        [data-dialog-size="choice"],
-        [data-dialog-size="result"],
-        [data-dialog-size="atelier"],
-        [data-dialog-size="workspace"]
-      )
+    > .folio-dialog:is([data-shell="sheet"], [data-shell="stage"])
   ) {
-  background: #0b0f168c;
+  background: #05070a80;
 }
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="confirm"],
-    [data-dialog-size="detail"],
-    [data-dialog-size="hand"],
-    [data-dialog-size="menu"],
-    [data-dialog-size="journal"],
-    [data-dialog-size="discover"],
-    [data-dialog-size="mulligan"],
-    [data-dialog-size="choice"],
-    [data-dialog-size="result"],
-    [data-dialog-size="atelier"],
-    [data-dialog-size="workspace"]
-  ) {
+  > .folio-dialog:is([data-shell="sheet"], [data-shell="stage"]) {
   padding: 28px 32px;
   border: 0;
-  border-radius: 24px;
+  border-radius: var(--lg-radius-sheet);
   box-shadow: var(--glass-rim), var(--glass-shadow);
   background: var(--glass-fill);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -939,19 +1025,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="confirm"],
-    [data-dialog-size="detail"],
-    [data-dialog-size="hand"],
-    [data-dialog-size="menu"],
-    [data-dialog-size="journal"],
-    [data-dialog-size="discover"],
-    [data-dialog-size="mulligan"],
-    [data-dialog-size="choice"],
-    [data-dialog-size="result"],
-    [data-dialog-size="atelier"],
-    [data-dialog-size="workspace"]
-  )
+  > .folio-dialog:is([data-shell="sheet"], [data-shell="stage"])
   > .modal-close {
   width: 40px;
   height: 40px;
@@ -959,89 +1033,41 @@ html[data-skin="slate"]
   min-height: 40px;
   border: 0;
   border-radius: 50%;
-  background: #ffffff14;
-  box-shadow: inset 0 1px 0 #ffffff2e;
-  color: #fff;
-  transition: background 0.15s;
+  background: var(--lg-fill-control);
+  box-shadow: var(--lg-rim-soft);
+  color: var(--slate-ink-2);
+  transition: background var(--m-fast);
 }
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="confirm"],
-    [data-dialog-size="detail"],
-    [data-dialog-size="hand"],
-    [data-dialog-size="menu"],
-    [data-dialog-size="journal"],
-    [data-dialog-size="discover"],
-    [data-dialog-size="mulligan"],
-    [data-dialog-size="choice"],
-    [data-dialog-size="result"],
-    [data-dialog-size="atelier"],
-    [data-dialog-size="workspace"]
-  )
+  > .folio-dialog:is([data-shell="sheet"], [data-shell="stage"])
   > .modal-close::before,
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="confirm"],
-    [data-dialog-size="detail"],
-    [data-dialog-size="hand"],
-    [data-dialog-size="menu"],
-    [data-dialog-size="journal"],
-    [data-dialog-size="discover"],
-    [data-dialog-size="mulligan"],
-    [data-dialog-size="choice"],
-    [data-dialog-size="result"],
-    [data-dialog-size="atelier"],
-    [data-dialog-size="workspace"]
-  )
+  > .folio-dialog:is([data-shell="sheet"], [data-shell="stage"])
   > .modal-close::after {
   content: none;
 }
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="confirm"],
-    [data-dialog-size="detail"],
-    [data-dialog-size="hand"],
-    [data-dialog-size="menu"],
-    [data-dialog-size="journal"],
-    [data-dialog-size="discover"],
-    [data-dialog-size="mulligan"],
-    [data-dialog-size="choice"],
-    [data-dialog-size="result"],
-    [data-dialog-size="atelier"],
-    [data-dialog-size="workspace"]
-  )
+  > .folio-dialog:is([data-shell="sheet"], [data-shell="stage"])
   > .modal-close
   svg {
   position: relative;
   z-index: 1;
-  width: 18px;
-  height: 18px;
-  color: #fff;
+  width: 16px;
+  height: 16px;
+  color: var(--slate-ink-2);
 }
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="confirm"],
-    [data-dialog-size="detail"],
-    [data-dialog-size="hand"],
-    [data-dialog-size="menu"],
-    [data-dialog-size="journal"],
-    [data-dialog-size="discover"],
-    [data-dialog-size="mulligan"],
-    [data-dialog-size="choice"],
-    [data-dialog-size="result"],
-    [data-dialog-size="atelier"],
-    [data-dialog-size="workspace"]
-  )
+  > .folio-dialog:is([data-shell="sheet"], [data-shell="stage"])
   > .modal-close:hover {
-  background: #ffffff24;
+  background: var(--lg-fill-control-hover);
 }
 /* on touch the 40px round close button is below the 44px target AGENTS.md asks
  * for. GEOMETRY only — the chrome above is unchanged.
@@ -1058,6 +1084,70 @@ html[data-skin="slate"]
   height: 44px;
 }
 
+/* ---------- settings and the guide: sheets with a page's title row ----------
+ * They are sheets on every layout, but keep the page shell's heading row and
+ * footer (flex title row, hidden lead paragraph, right-aligned wide pills),
+ * which the per-layout rules below then size. */
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .folio-dialog:is([data-dialog-size="settings"], [data-dialog-size="help"]) {
+  margin: 0;
+  gap: 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .folio-dialog:is([data-dialog-size="settings"], [data-dialog-size="help"])
+  > .modal-heading {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  border: 0;
+  background: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .folio-dialog:is([data-dialog-size="settings"], [data-dialog-size="help"])
+  > .modal-heading::before,
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .folio-dialog:is([data-dialog-size="settings"], [data-dialog-size="help"])
+  > .modal-heading::after {
+  content: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .folio-dialog:is([data-dialog-size="settings"], [data-dialog-size="help"])
+  > .modal-heading
+  p {
+  display: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .folio-dialog:is([data-dialog-size="settings"], [data-dialog-size="help"])
+  > .modal-footer {
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 18px 0 0;
+  border: 0;
+  background: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .folio-dialog:is([data-dialog-size="settings"], [data-dialog-size="help"])
+  > .modal-footer
+  > button {
+  min-width: 220px;
+  min-height: 52px;
+  margin: 0;
+}
+
 /* ---------- desktop: settings and the guide float ---------- */
 /* Neither page has enough content to earn the whole screen on a desktop
  * window, so there they take the floating glass pane instead: a sharp, dimmed
@@ -1070,7 +1160,7 @@ html[data-skin="slate"]
     > .folio-dialog:is([data-dialog-size="settings"], [data-dialog-size="help"])
   ) {
   padding: 24px;
-  background: #0b0f168c;
+  background: #05070a80;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -1089,7 +1179,7 @@ html[data-skin="slate"]
   height: auto;
   max-height: 100%;
   padding: 24px 36px 30px;
-  border-radius: 24px;
+  border-radius: var(--lg-radius-sheet);
   box-shadow: var(--glass-rim), var(--glass-shadow);
   background: var(--glass-fill);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -1113,8 +1203,8 @@ html[data-skin="slate"]
   height: 40px;
   border: 0;
   border-radius: 50%;
-  background: #ffffff14;
-  box-shadow: inset 0 1px 0 #ffffff2e;
+  background: var(--lg-fill-control);
+  box-shadow: var(--lg-rim-soft);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -1132,16 +1222,16 @@ html[data-skin="slate"]
   display: block;
   position: relative;
   z-index: 1;
-  width: 18px;
-  height: 18px;
-  color: #fff;
+  width: 16px;
+  height: 16px;
+  color: var(--slate-ink-2);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host
   > .folio-dialog:is([data-dialog-size="settings"], [data-dialog-size="help"])
   > .modal-close:hover {
-  background: #ffffff24;
+  background: var(--lg-fill-control-hover);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -1157,8 +1247,8 @@ html[data-skin="slate"]
   > .folio-dialog:is([data-dialog-size="settings"], [data-dialog-size="help"])
   > .modal-heading
   h2 {
-  font-size: 26px;
-  letter-spacing: 2px;
+  font: var(--lg-title-sheet);
+  letter-spacing: 0;
 }
 
 /* ---------- stage shell: the card is the page ---------- */
@@ -1170,26 +1260,16 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host:not([data-type="touch-hero"]):has(
-    > .folio-dialog:is(
-        [data-dialog-size="detail"],
-        [data-dialog-size="discover"],
-        [data-dialog-size="mulligan"],
-        [data-dialog-size="hand"]
-      )
+    > .folio-dialog[data-shell="stage"]
   ) {
-  background: #0b0f16a6;
+  background: #05070a99;
   -webkit-backdrop-filter: blur(18px) saturate(120%);
   backdrop-filter: blur(18px) saturate(120%);
 }
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host:not([data-type="touch-hero"]):has(
-    > .folio-dialog:is(
-        [data-dialog-size="detail"],
-        [data-dialog-size="discover"],
-        [data-dialog-size="mulligan"],
-        [data-dialog-size="hand"]
-      )
+    > .folio-dialog[data-shell="stage"]
   ) {
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
@@ -1197,12 +1277,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host:not([data-type="touch-hero"])
-  > .folio-dialog:is(
-    [data-dialog-size="detail"],
-    [data-dialog-size="discover"],
-    [data-dialog-size="mulligan"],
-    [data-dialog-size="hand"]
-  ) {
+  > .folio-dialog[data-shell="stage"] {
   padding: 8px 24px 12px;
   border: 0;
   border-radius: 0;
@@ -1214,12 +1289,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host:not([data-type="touch-hero"])
-  > .folio-dialog:is(
-    [data-dialog-size="detail"],
-    [data-dialog-size="discover"],
-    [data-dialog-size="mulligan"],
-    [data-dialog-size="hand"]
-  )
+  > .folio-dialog[data-shell="stage"]
   > .modal-heading
   :is(h2, p) {
   text-shadow: 0 2px 14px #000000cc;
@@ -1237,7 +1307,7 @@ html[data-skin="slate"]
   padding: max(12px, env(safe-area-inset-top))
     max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom))
     max(12px, env(safe-area-inset-left));
-  background: #0b0f168c;
+  background: #05070a80;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1256,7 +1326,7 @@ html[data-skin="slate"]
   height: auto;
   max-height: 100%;
   padding: 20px 24px 22px;
-  border-radius: 24px;
+  border-radius: var(--lg-radius-sheet);
   box-shadow: var(--glass-rim), var(--glass-shadow);
   background: var(--glass-fill);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -1273,15 +1343,15 @@ html[data-skin="slate"]
   #modal.folio-host
   > .folio-dialog:is([data-dialog-size="settings"], [data-dialog-size="help"])
   > .modal-close {
-  top: 10px;
+  top: 14px;
   left: auto;
-  right: 10px;
+  right: 14px;
   width: 44px;
   height: 44px;
   border: 0;
   border-radius: 50%;
-  background: #ffffff14;
-  box-shadow: inset 0 1px 0 #ffffff2e;
+  background: var(--lg-fill-control);
+  box-shadow: var(--lg-rim-soft);
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1299,9 +1369,9 @@ html[data-skin="slate"]
   display: block;
   position: relative;
   z-index: 1;
-  width: 18px;
-  height: 18px;
-  color: #fff;
+  width: 16px;
+  height: 16px;
+  color: var(--slate-ink-2);
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1320,7 +1390,7 @@ html[data-skin="slate"]
   h2 {
   font-size: 22px;
   line-height: 44px;
-  letter-spacing: 2px;
+  letter-spacing: 0;
 }
 
 /* ---------- narrower desktop windows ---------- */
