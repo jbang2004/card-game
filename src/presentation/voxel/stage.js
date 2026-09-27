@@ -136,7 +136,11 @@ const EmberMiniatures = (() => {
     const bb = g.boundingBox, base = (u.spec.scale || 1) * SIZE, px = ppu(u.pos), k = (w / TOKEN_W) * (150 / px.across);
     const grow = u.fig.J.head ? 1 + (u.fig.J.head.scale.x - 1) * 0.2 : 1;     // the sprite's enlarged head
     const tall = bb.max.y * grow * base * k * px.up, wide = (bb.max.x - bb.min.x) * base * k * px.across;
-    return k * Math.min(1, ((FOOT + RISE) * h) / tall, (MAX_W * w) / wide);
+    // (a touch layout's far line stands right under the top bar: no head or weapon reaches up under it)
+    let room = Infinity;
+    const hdr = touchLayout() && EmberViewport.layout?.header;
+    if (hdr) { const r = el.getBoundingClientRect(), a = document.getElementById("app")?.getBoundingClientRect(); if (a) room = r.top + r.height * FOOT - (a.top + hdr + 4); }
+    return k * Math.min(1, ((FOOT + RISE) * h) / tall, (MAX_W * w) / wide, Math.max(0.35, room / tall));
   }
   // ------------------------------------------------------------------ heroes
   /* On the desktop layout each hero stands as a figure too: the figure of its portrait's card (the art the plate
@@ -284,7 +288,8 @@ const EmberMiniatures = (() => {
     else if (focus && locked) { const el = refEl(focus); to = el && box ? footOf(el, box) : null; }
     if (!to && pt) to = ground(pt.x, pt.y, box);
     if (!to) { arena.aim(null); return false; }
-    arena.aim({ from: u.pos, to, r, locked: !!locked && !!focus });
+    // (the desktop court is seen from further off: its arrow is drawn wider, as wide on screen as the page's old cue)
+    arena.aim({ from: u.pos, to, r, locked: !!locked && !!focus, wide: touchLayout() ? 1 : 1.7 });
     wake();
     return true;
   }
