@@ -753,6 +753,13 @@
   function centerOf(el) {
     return EmberViewport.pos(el);
   }
+  /* Where the aim rests on a unit: a hero is its card slot, where its figure
+   * stands on its dais (a touch console's hero element spans the whole strip:
+   * its centre is empty space) — the same box the effects land on. */
+  function aimPointOf(el) {
+    const slot = el?.classList?.contains("hero") && el.querySelector(".hero-card-inner");
+    return (slot && centerOf(slot)) || centerOf(el);
+  }
   function findUnit(side, uid) {
     return uid === "hero"
       ? $(side === "p" ? "player-hero" : "enemy-hero")
@@ -1449,13 +1456,19 @@
   const HIT_IGNORE =
     "#card-preview,#touch-target-bar,.hero-chips,.hero-covenant";
   function unitAt(x, y) {
-    return (
+    const hit =
       document
         .elementsFromPoint(x, y)
         .filter((n) => !n.closest?.(HIT_IGNORE))
         .map((n) => n.closest?.("[data-uid]"))
-        .find((n) => n && n.closest("#battle")) || null
-    );
+        .find((n) => n && n.closest("#battle")) || null;
+    if (hit || typeof EmberMiniatures === "undefined") return hit;
+    // a hero standing as a figure on its dais is hit where its figure is, even past its plate (a head above it)
+    for (const side of ["e", "p"]) {
+      const b = EmberMiniatures.heroBox?.(side);
+      if (b && x >= b.left && x <= b.right && y >= b.top && y <= b.bottom) return findUnit(side, "hero");
+    }
+    return null;
   }
   /* `pointer` lives in the app's 1600x940 design space, but elementsFromPoint
    * wants client pixels. #app is centred and scaled, so hit testing the design
@@ -1490,7 +1503,7 @@
       uid = hit?.dataset?.uid || null,
       side = hit?.dataset?.side || null,
       unit = hit ? findUnit(side, uid) : null;
-    if (unit) pointer = centerOf(unit) || pointer;
+    if (unit) pointer = aimPointOf(unit) || pointer;
     const valid = !!unit?.classList.contains("valid-target"),
       key = uid ? side + ":" + uid : null;
     if (key !== lastHit) {
@@ -1615,7 +1628,7 @@
       targets.find((t) => t.side === "e" && t.uid !== "hero") ||
       targets.find((t) => t.side === "e") ||
       targets[0];
-    return centerOf(findUnit(preferred.side, preferred.uid));
+    return aimPointOf(findUnit(preferred.side, preferred.uid));
   }
   function targetLabel(target) {
     if (target === "friendlyMinion") return "一个友方随从";

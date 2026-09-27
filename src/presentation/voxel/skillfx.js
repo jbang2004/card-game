@@ -1219,6 +1219,42 @@ const EmberSkillFx = (() => {
       for (const s of shakes) { const u = (now - s.t0) / s.life; if (u >= 0 && u < 1) a += s.a * (1 - u) * (1 - u); }
       return a;
     }
+    /* A figure's arrival and death (the arena drives its dissolve front; these are the light round it). col: its
+     * rarity's (or a hero's) colour; big: a legend or a hero — taller light, a sigil, a camera punch */
+    function arrive(u, col, big) {
+      const k = K(u), g = (u.pos || u.fig.root.position).clone().setY(0), t = NOW();
+      beam(g, (big ? 2.6 : 2.0) * k, (big ? 0.42 : 0.28) * k, big ? 950 : 720, col.map((x) => x * 0.8), big ? 0.85 : 0.6, "pop");
+      const r = decal(SIGIL_FS, g, (big ? 0.85 : 0.62) * k, big ? 1100 : 820, { uTint: C(col.map((x) => x * 0.75)), uStyle: { value: big ? 0 : 2 } });
+      r.env = "pop"; r.spin = big ? 1.2 : 1.8;
+      for (let i = 0; i < (big ? 18 : 10); i++) {
+        const a = rnd(0, 6.28), R = rnd(0.05, 0.3) * k;
+        put(glow, { p: g.clone().add(V3(Math.cos(a) * R, rnd(0.2, 1.4) * k, Math.sin(a) * R)), v: V3(0, -rnd(0.4, 0.9) * k, 0), t0: t + rnd(0, 180), life: rnd(320, 520),
+          s0: 0.03 * k, s1: 0.01 * k, col, k: 1.3, shape: SHAPE.sparkle, env: "fade" });
+      }
+    }
+    function land(u, col, big) {
+      const k = K(u), g = (u.pos || u.fig.root.position).clone().setY(0), t = NOW();
+      decal(SHOCK_FS, g, (big ? 1.25 : 0.85) * k, big ? 460 : 380, { uTint: C(col) }).env = "u";
+      for (let i = 0, n = big ? 14 : 8; i < n; i++) {
+        const a = (i / n) * 6.283 + rnd(-0.2, 0.2), d = V3(Math.cos(a), 0, Math.sin(a));
+        put(glow, { p: g.clone().addScaledVector(d, 0.12 * k).setY(0.03 * k), v: d.multiplyScalar(rnd(1.0, 1.6) * k).setY(rnd(0.3, 0.7) * k), grav: 3 * k, drag: 2.5, t0: t, life: rnd(240, 380),
+          s0: 0.016 * k, s1: 0.008 * k, col: col.map((x) => Math.min(1.6, x * 1.2)), k: 1.4, shape: SHAPE.spark, env: "fade", stretch: 0.04, floor: 0.01 });
+      }
+      shakes.push({ t0: t, a: (big ? 0.028 : 0.01) * k, life: big ? 300 : 200 });
+      if (big) punches.push({ t0: t, a: 0.045, life: 380 });
+    }
+    /** light shed where a figure's dissolve front passes: n of its surface points near the front's height rise as motes */
+    function motes(pts, y, band, col, k, n, up = 1, dy = 0) {
+      for (let tries = 0, made = 0; tries < n * 6 && made < n; tries++) {
+        const i = ((Math.random() * pts.length) / 3) | 0;
+        if (Math.abs(pts[i * 3 + 1] - y) > band) continue;
+        made++;
+        put(glow, { p: V3(pts[i * 3], pts[i * 3 + 1] + dy, pts[i * 3 + 2]), v: V3(rnd(-0.12, 0.12), rnd(0.35, 0.8) * up, rnd(-0.12, 0.12)).multiplyScalar(k), drag: 0.8, sway: 0.03 * k,
+          t0: NOW(), life: rnd(450, 850), s0: rnd(0.02, 0.034) * k, s1: 0.006 * k, col: Math.random() < 0.3 ? [1.4, 1.35, 1.25] : col, k: 1.3, shape: Math.random() < 0.5 ? SHAPE.sparkle : SHAPE.glow, env: "fade" });
+      }
+    }
+    /** a hero's fall: the stage dimmed round it a moment */
+    const gloom = (a = 0.5, life = 1400) => { const t0 = NOW(); dims.push({ t0, peak: t0 + 260, hold: t0 + life - 380, a }); };
     /** something fast is on (a blow's meshes, beams, swooshes, debris, ground marks, shake) — not the idle motes */
     const hot = () => !!(meshes.length || beams.length || ribs.length || later.length || missiles.length || rocks.P.length || spikes.P.length ||
       shakes.length || punches.length || dims.length || decals.some((d) => d.env !== "halo"));
@@ -1230,7 +1266,9 @@ const EmberSkillFx = (() => {
       for (const M of meshes) M.kill();
       decals.length = beams.length = ribs.length = later.length = missiles.length = meshes.length = 0; state.clear();
     }
-    return { attack, impact, hurt, victory, frame, swing, step, shake, punch, dim, drop, dispose, hot };
+    /** the glow colour of a signature figure's element (its palette) — null for one without a signature */
+    const tintOf = (u) => (u.fig?.sig?.fx ? palOf(recipe(u)).glow : null);
+    return { attack, impact, hurt, victory, frame, swing, step, shake, punch, dim, drop, dispose, hot, arrive, land, motes, gloom, tintOf };
   }
   return Object.freeze({ create, PAL: Object.keys(PAL) });
 })();

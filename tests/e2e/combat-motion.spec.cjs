@@ -1,7 +1,7 @@
 const { test, expect } = require("@playwright/test");
 const path = require("node:path");
-async function demo(page) {
-  await page.goto("./?debug=1");
+async function demo(page, query = "") {
+  await page.goto("./?debug=1" + query);
   await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
   await page.locator("#quick-btn").click();
   await page.waitForFunction(() => !EmberFX.busy);
@@ -55,7 +55,8 @@ async function cast(page, id, side, index = 0) {
 test("actual deathrattle shows hit, death and token in order; cancellation commits the final view", async ({
   page,
 }) => {
-  await demo(page);
+  // the card-token death (its .death-ghost): a unit standing as a figure dies as its figure (R13), so without figures
+  await demo(page, "&figures=0");
   await prepare(page, { enemies: ["wolf"], hand: ["fireball"] });
   const state = await cast(page, "fireball", "e");
   await page.waitForFunction(() => {

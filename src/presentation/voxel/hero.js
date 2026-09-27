@@ -134,9 +134,12 @@ const EmberHeroFigure = (() => {
     if (desk()) {                                      // the stage has the heroes: only victories pass through
       if (host) host.hidden = true;
       plate()?.classList.remove("hero-miniature-ready");
-      // (the winner cheers once the blow that won has landed)
-      if (s.winner && won !== s.winner) { won = s.winner; const side = s.winner, cheer = () => (typeof EmberFX !== "undefined" && EmberFX.busy ? setTimeout(cheer, 120) : won === side && cue("victory", 0, side)); cheer(); }
-      else if (!s.winner) won = null;
+      // (the winner cheers once the blow that won has landed, and the loser's hero falls)
+      if (s.winner && won !== s.winner) {
+        won = s.winner; const side = s.winner;
+        const cheer = () => (typeof EmberFX !== "undefined" && EmberFX.busy ? setTimeout(cheer, 120) : won === side && (cue("victory", 0, side), (side === "p" || side === "e") && EmberMiniatures.fall?.(side === "p" ? "e" : "p")));
+        cheer();
+      } else if (!s.winner) { won = null; EmberMiniatures.fall?.(null); }
       return;
     }
     const spec = specFor(s);
