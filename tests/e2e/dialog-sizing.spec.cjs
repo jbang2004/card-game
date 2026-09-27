@@ -105,9 +105,10 @@ test("desktop toolbar SVGs remain aligned inside visible controls", async ({
     );
   expect(metrics).toHaveLength(2);
   for (const icon of metrics) {
-    // Slate's toolbar icon buttons are 36px round pills (design system §3).
-    expect(icon.button[0]).toBeGreaterThanOrEqual(36);
-    expect(icon.button[1]).toBe(36);
+    // The lobby toolbar is one glass capsule of 40px round icon buttons
+    // (liquid glass v2, design system 「液态玻璃 v2」).
+    expect(icon.button[0]).toBeGreaterThanOrEqual(40);
+    expect(icon.button[1]).toBe(40);
     expect(icon.svg).toEqual([18, 18]);
     if (icon.id === "sound-btn")
       expect(Math.abs(icon.offset[0])).toBeLessThanOrEqual(0.1);
