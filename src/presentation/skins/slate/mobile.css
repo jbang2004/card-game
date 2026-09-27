@@ -644,15 +644,9 @@ html[data-skin="slate"]
   body.touch-layout
   #app.battle-view
   :is(.log-panel, .boss-panel) {
+  /* material: base.css `.lg-sheet` (the same pane on every layout) */
   padding: 14px 16px 16px;
-  border: 0;
-  border-radius: 20px;
-  background: var(--glass-fill);
-  box-shadow: var(--glass-rim), var(--glass-shadow);
-  color: var(--slate-ink);
   font-family: var(--slate-font);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
   clip-path: none;
 }
 html[data-skin="slate"]
