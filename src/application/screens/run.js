@@ -64,7 +64,7 @@ const EmberRunScreens = (() => {
       const cards = run.offer.foes.map((id) => {
         const f = R.foe(D, run.level, id), boss = f.kind === "boss" ? D.bosses[f.bossIndex] : null, hero = boss ? null : D.heroes.find((h) => h.id === f.hero);
         const face = boss || hero, power = boss ? boss.power : hero.power, powerText = boss ? boss.powerText : hero.powerText;
-        return `<button class="relic-choice crafted-panel run-foe run-foe-${f.kind}" data-foe="${id}" aria-pressed="false"><span class="relic-art run-portrait"><img src="${A.character(face)}" alt="${escape(face.name)}" draggable="false"></span><span class="run-kind">${boss ? "首领" : "劲敌"}</span><h3>${escape(f.name)}</h3><small class="run-foe-title">${escape(f.title)}</small><p class="run-foe-stats">生命 ${f.hp} · 牌库 ${f.deck.length} 张</p><p><strong>${escape(power)}</strong>${powerText ? " · " + escape(powerText) : ""}</p>${boss ? `<p class="run-phase">半血觉醒：${escape(boss.phaseText)}</p>` : ""}<span class="relic-pick-label">选择此对手</span></button>`;
+        return `<button class="relic-choice crafted-panel lg-group run-foe run-foe-${f.kind}" data-foe="${id}" aria-pressed="false"><span class="relic-art run-portrait"><img src="${A.character(face)}" alt="${escape(face.name)}" draggable="false"></span><span class="run-kind">${boss ? "首领" : "劲敌"}</span><h3>${escape(f.name)}</h3><small class="run-foe-title">${escape(f.title)}</small><p class="run-foe-stats">生命 ${f.hp} · 牌库 ${f.deck.length} 张</p><p><strong>${escape(power)}</strong>${powerText ? " · " + escape(powerText) : ""}</p>${boss ? `<p class="run-phase">半血觉醒：${escape(boss.phaseText)}</p>` : ""}<span class="relic-pick-label">选择此对手</span></button>`;
       }).join("");
       page(run, "地下城远征 · 第 " + run.level + " 层", run.offer.foes.length > 1 ? "选择你的对手" : "最终之战", run.offer.foes.length > 1 ? "两条路，选一个对手迎战。战斗开始时生命全满；失败一次，远征即告终结。" : "穿过最后的门，终焉在此等候。",
         `<div class="relic-options run-foes" role="group" aria-label="可选对手">${cards}</div>`,
@@ -80,10 +80,10 @@ const EmberRunScreens = (() => {
       const options = run.offer.treasures.map((t, i) => {
         if (t.kind === "relic") {
           const r = D.relics.find((x) => x.id === t.id);
-          return `<button class="relic-choice crafted-panel run-treasure" data-pick="${i}" aria-pressed="false"><span class="relic-art"><img src="${A.relic(r.id)}" alt="${escape(r.name)}"></span><span class="run-kind">遗物</span><h3>${escape(r.name)}</h3><p>${escape(r.text)}</p><span class="relic-pick-label">选择此宝物</span></button>`;
+          return `<button class="relic-choice crafted-panel lg-group run-treasure" data-pick="${i}" aria-pressed="false"><span class="relic-art"><img src="${A.relic(r.id)}" alt="${escape(r.name)}"></span><span class="run-kind">遗物</span><h3>${escape(r.name)}</h3><p>${escape(r.text)}</p><span class="relic-pick-label">选择此宝物</span></button>`;
         }
         const c = D.byId[t.id];
-        return `<button class="relic-choice crafted-panel run-treasure" data-pick="${i}" aria-pressed="false">${cardBox(c.id)}<span class="run-kind">${t.kind === "contract" ? "神契" : "宝物牌"}</span><h3>${escape(c.name)}</h3><p>${t.kind === "contract" ? "加入契约栏：献祭进度在整场远征中累积。" + escape(EmberContracts.describe(c)) : "加入牌组。"}</p><span class="relic-pick-label">选择此宝物</span></button>`;
+        return `<button class="relic-choice crafted-panel lg-group run-treasure" data-pick="${i}" aria-pressed="false">${cardBox(c.id)}<span class="run-kind">${t.kind === "contract" ? "神契" : "宝物牌"}</span><h3>${escape(c.name)}</h3><p>${t.kind === "contract" ? "加入契约栏：献祭进度在整场远征中累积。" + escape(EmberContracts.describe(c)) : "加入牌组。"}</p><span class="relic-pick-label">选择此宝物</span></button>`;
       }).join("");
       page(run, "宝物 · 第 " + run.level + " 层之后", "选择一件宝物", "强大的遗物、神明的契约，或一张传奇之牌。",
         `<div class="relic-options run-treasures" role="group" aria-label="可选宝物">${options}</div>`,
@@ -91,7 +91,7 @@ const EmberRunScreens = (() => {
       choice("[data-pick]", "pick", (i) => { const t = run.offer.treasures[i]; return t.kind === "relic" ? D.relics.find((x) => x.id === t.id).name : D.byId[t.id].name; }, (i) => { const next = apply(R.takeTreasure(D, run, +i)); if (next) show(next); });
     }
     function bundle(run) {
-      const options = run.offer.bundles.map((b, i) => `<button class="relic-choice crafted-panel run-bundle" data-pick="${i}" aria-pressed="false"><span class="run-kind">${escape(b.name)}</span><p>${escape(b.text)}</p><span class="run-bundle-cards">${b.cards.map((id) => cardBox(id)).join("")}</span><span class="run-bundle-names">${b.cards.map((id) => `<span><span class="run-deck-cost">${D.byId[id].cost}</span>${escape(D.byId[id].name)}</span>`).join("")}</span><span class="relic-pick-label">选择这组卡牌</span></button>`).join("");
+      const options = run.offer.bundles.map((b, i) => `<button class="relic-choice crafted-panel lg-group run-bundle" data-pick="${i}" aria-pressed="false"><span class="run-kind">${escape(b.name)}</span><p>${escape(b.text)}</p><span class="run-bundle-cards">${b.cards.map((id) => cardBox(id)).join("")}</span><span class="run-bundle-names">${b.cards.map((id) => `<span><span class="run-deck-cost">${D.byId[id].cost}</span>${escape(D.byId[id].name)}</span>`).join("")}</span><span class="relic-pick-label">选择这组卡牌</span></button>`).join("");
       page(run, "战利品 · 第 " + run.level + " 层之后", "选择一组卡牌", "三张同主题的牌一起加入牌组。",
         `<div class="relic-options run-bundles" role="group" aria-label="可选卡包">${options}</div>`,
         `<div><button class="ghost-btn" id="run-home">返回营地</button><p id="run-selection" aria-live="polite">先选择一组卡牌</p></div><button class="gold-btn" id="run-confirm" disabled>加入牌组 ${A.icon("arrow")}</button>`);
@@ -103,7 +103,7 @@ const EmberRunScreens = (() => {
       for (const id of run.deck) counts[id] = (counts[id] || 0) + 1;
       const options = Object.keys(counts).sort((a, b) => D.byId[a].cost - D.byId[b].cost).map((id) => `<option value="${id}">${D.byId[id].cost}费 · ${escape(D.byId[id].name)}${counts[id] > 1 ? " ×" + counts[id] : ""}</option>`).join("");
       page(run, "鎏金酒馆 · 第 " + run.level + " 层之后", "在酒馆整备", "用赢来的金币买牌，或从牌组里删去一张。",
-        `<div class="run-tavern"><div class="run-wares" aria-label="出售的卡牌">${wares}</div><div class="run-remove crafted-panel"><h3>删去一张牌</h3><p>牌组越精简，关键牌来得越快。每删一次，价格上涨。</p><label><select id="run-remove-card" class="library-search" aria-label="要删去的牌">${options}</select></label><button class="ghost-btn" id="run-remove" ${run.gold < run.offer.removePrice || run.deck.length <= 5 ? "disabled" : ""}>删去 · ${run.offer.removePrice} 金</button></div></div>`,
+        `<div class="run-tavern"><div class="run-wares" aria-label="出售的卡牌">${wares}</div><div class="run-remove crafted-panel lg-group"><h3>删去一张牌</h3><p>牌组越精简，关键牌来得越快。每删一次，价格上涨。</p><label><select id="run-remove-card" class="library-search" aria-label="要删去的牌">${options}</select></label><button class="ghost-btn" id="run-remove" ${run.gold < run.offer.removePrice || run.deck.length <= 5 ? "disabled" : ""}>删去 · ${run.offer.removePrice} 金</button></div></div>`,
         `<div><button class="ghost-btn" id="run-home">返回营地</button><p id="run-selection" aria-live="polite">金币 ${run.gold}</p></div><button class="gold-btn" id="run-confirm">离开酒馆 ${A.icon("arrow")}</button>`);
       document.querySelectorAll("[data-buy]").forEach((b) => (b.onclick = () => { const next = apply(R.buy(D, run, +b.dataset.buy)); if (next) tavern(next); }));
       $("run-remove").onclick = () => { const next = apply(R.remove(D, run, $("run-remove-card").value)); if (next) tavern(next); };
@@ -113,7 +113,7 @@ const EmberRunScreens = (() => {
       const won = run.step === "won";
       clearRun();
       page(run, won ? "远征完成" : "远征终结", won ? "余火不灭" : "火种未熄", won ? "八层之门尽数洞开，终焉在你面前熄灭。" : `你在第 ${run.level} 层倒下。每一次陨落，都是下一次重燃的序章。`,
-        `<div class="result-stats run-summary"><div><strong>${run.wins}</strong><span>胜场</span></div><div><strong>${run.deck.length}</strong><span>牌组</span></div><div><strong>${run.relics.length + run.contracts.length}</strong><span>宝物</span></div></div>`,
+        `<div class="result-stats run-summary lg-group"><div><strong>${run.wins}</strong><span>胜场</span></div><div><strong>${run.deck.length}</strong><span>牌组</span></div><div><strong>${run.relics.length + run.contracts.length}</strong><span>宝物</span></div></div>`,
         `<div><button class="ghost-btn" id="run-home">返回营地</button><p id="run-selection"></p></div><button class="gold-btn" id="run-confirm">新的远征 ${A.icon("arrow")}</button>`);
       $("run-confirm").onclick = () => { closeModal(false); showHeroes("campaign"); };
     }
