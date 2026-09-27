@@ -679,7 +679,7 @@ const EmberVoxelArena = (() => {
     }
     // a shot the arena flies itself (gallery): arrow / bolt / breath from the shooter's emitter to the target
     function emitterOf(u) {
-      const a = u.spec.moves?.attack || {}, e = a.emitter;
+      const a = u.spec.moves?.attack || {}, e = u.fig.emitter || a.emitter;     // (a model's own mouth, where it has one)
       if (e && u.fig.J[e.bone]) { u.fig.J[e.bone].updateWorldMatrix(true, false); return u.fig.J[e.bone].localToWorld(V3(...(e.offset || [0, 0, 0]))); }
       return center(u).add(V3(0, 0.15 * u.fig.root.scale.x, 0));
     }
@@ -721,6 +721,18 @@ const EmberVoxelArena = (() => {
         const to = where(s.to);
         if (!to) { shots.splice(i, 1); continue; }
         const v = units.get(key(s.to.side, s.to.uid)), end = v?.fig ? center(v) : to.clone().add(V3(0, 0.45 * SIZE, 0));
+        // a realistic dragon breathes a river of fire: bolts poured from its open jaws, one on another, from the release
+        // until just past the blow
+        if (s.style === "breath" && fire && s.u.fig.model) {
+          const k = s.u.fig.root.scale.x, stop = s.hit + 300;
+          for (s.next ??= s.at; s.next <= Math.min(now, stop); s.next += 45) {
+            const q = (s.next - s.at) / Math.max(1, stop - s.at), aim = end.clone().add(V3((Math.random() - 0.5) * 0.22 * k, (Math.random() - 0.5) * 0.14 * k, (Math.random() - 0.5) * 0.22 * k));
+            // the first tongues reach the foe on the blow; the fire keeps pouring a moment after it
+            fire.shoot(emitterOf(s.u), aim, Math.max(110, Math.min(200, s.hit - s.next)) + 40 * Math.random(), (0.045 + 0.025 * Math.sin(q * Math.PI)) * k, undefined, { lite: true });
+          }
+          if (now >= stop) shots.splice(i, 1);
+          continue;
+        }
         if (!s.fired) {
           s.fired = true; s.from = emitterOf(s.u);
           if (s.fire && fire) fire.shoot(s.from, end, Math.max(60, s.hit - now), 0.1 * s.u.fig.root.scale.x);

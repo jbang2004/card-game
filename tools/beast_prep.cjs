@@ -40,6 +40,32 @@ const BEASTS = {
     "leg3*a": [0.09, 0.22, 0.02], "leg3*b": [0.24, 0.21, 0], "leg3*c": [0.25, 0.12, -0.005], "leg3*d": [0.255, 0.045, -0.01],
     "leg4*a": [0.08, 0.22, -0.04], "leg4*b": [0.17, 0.2, -0.1], "leg4*c": [0.175, 0.13, -0.11], "leg4*d": [0.18, 0.07, -0.12],
   } },
+  // height: the model's own height (it is then as big on the board as its figure's scale makes it: a legend towers)
+  eclipsewolf: { front: -0.28, mt: 0, height: 0.62, noSkin: ["eclipse"] },
+  pup: { front: 0.05, mt: 0, height: 0.36 },
+  spiritwolf: { front: 0.07, mt: 0, height: 0.46 },
+  sheep: { front: 0.81, mt: 0, height: 0.38 },
+  // the frost wolf and its knight, one model: the knight's upper body (above the saddle) and the ice blade out to its
+  // right are the rider's bones (read off its views), the rest the wolf's
+  rider: { front: 1.42, mt: 128, height: 0.72, at: {
+    rHip: [0, 0.4, -0.06], rTorso: [0, 0.45, -0.06], rChest: [0, 0.53, -0.05], rHead: [0, 0.6, -0.03],
+    rArmR: [-0.07, 0.55, -0.05], rForeR: [-0.1, 0.5, -0.02], rHandR: [-0.12, 0.47, 0], rArmL: [0.07, 0.55, -0.05], rForeL: [0.09, 0.48, 0], rHandL: [0.07, 0.43, 0.06],
+    rCape: [0, 0.52, -0.12],
+  }, tips: { rHead: [0, 0.7, -0.02], rCape: [0, 0.36, -0.32], rHandL: [0.06, 0.41, 0.1] },
+    rider: (p) => (p[0] < -0.13 && p[1] > 0.43) || (p[1] > 0.41 && p[2] > -0.36 && p[2] < 0.1), blade: (p) => p[0] < -0.13 && p[1] > 0.43 },
+  ashdragon: { front: "-x", mt: 0, height: 0.68, bodyU: [0.05, 0.45, 0.85], legs: "upright" },
+  // no legs: one rigid bone (the stone ward) · a stalk bent by height (the thorn spirit)
+  // the phoenix: its wings raised in a V as its voxel figure's are; joints read off its views (a wing is its side's
+  // wing bones only, the body and the plumes never take them)
+  phoenix: { front: "+z", mt: 0, height: 1.0, rig: {
+    root: [0, 0.43, 0], chest: [0, 0.52, 0.025], neck: [0, 0.62, 0.04], neck2: [0, 0.69, 0.05], head: [0, 0.745, 0.05],
+    tail1: [0, 0.375, -0.025], tail2: [0, 0.225, -0.04], tail3: [0, 0.075, -0.05],
+    "wing1*": [0.0875, 0.625, -0.025], "wing2*": [0.25, 0.725, -0.06], "wing3*": [0.39, 0.85, -0.1],
+    "thigh*": [0.044, 0.4, 0.04], "shin*": [0.05, 0.34, 0.06], "foot*": [0.05, 0.29, 0.075],
+  }, snout: [0, 0.75, 0.13], tips: { wing3L: [0.525, 0.99, -0.125], wing3R: [-0.525, 0.99, -0.125], tail3: [0, 0, -0.06], footL: [0.05, 0.27, 0.1], footR: [-0.05, 0.27, 0.1] },
+    allow: (p, nm) => (Math.abs(p[0]) > 0.12 ? /^wing\d/.test(nm) && (nm.endsWith("L") ? p[0] > 0 : p[0] < 0) : !/^wing[23]/.test(nm)) },
+  stone: { mt: 128, height: 0.6, rig: {}, skin: "rigid" },
+  thorn: { mt: 0, height: 0.55, rig: {}, skin: "chain", chain: ["root", "s1", "s2", "s3", "s4"] },
 };
 
 // ---- the voxel skeletons (the figure files, as the build loads them)
@@ -125,15 +151,17 @@ function prep(id, cfg) {
   const texI = G.j.textures[G.j.materials[prim.material].pbrMetallicRoughness.baseColorTexture.index].source;
   const img = G.image(texI), mime = G.j.images[texI].mimeType || "image/jpeg";
 
-  // ---- turn to face +z, feet on y = 0, centred over the paws
+  // ---- turn to face +z, feet on y = 0, centred over the paws (front: an axis, or the yaw its head points at, atan2(x, z))
+  const yaw = typeof cfg.front === "number" ? -cfg.front : 0, cy = Math.cos(yaw), sy = Math.sin(yaw);
   for (let i = 0; i < n; i++) {
     const x = pos[i * 3], z = pos[i * 3 + 2];
     if (cfg.front === "+x") { pos[i * 3] = -z; pos[i * 3 + 2] = x; }
     else if (cfg.front === "-x") { pos[i * 3] = z; pos[i * 3 + 2] = -x; }
     else if (cfg.front === "-z") { pos[i * 3] = -x; pos[i * 3 + 2] = -z; }
+    else if (yaw) { pos[i * 3] = x * cy + z * sy; pos[i * 3 + 2] = -x * sy + z * cy; }
   }
   const T = voxelSkeleton(id), TI = Object.fromEntries(T.map((b, i) => [b.name, i])), th = (nm) => T[TI[nm]].head;
-  const quad = "fpawL" in TI;
+  const quad = "fpawL" in TI && !cfg.rig;
   let minY = Infinity, maxY = -Infinity; for (let i = 0; i < n; i++) { minY = Math.min(minY, pos[i * 3 + 1]); maxY = Math.max(maxY, pos[i * 3 + 1]); }
   for (let i = 0; i < n; i++) pos[i * 3 + 1] -= minY;
   const H = maxY - minY;
@@ -152,13 +180,16 @@ function prep(id, cfg) {
     s = cfg.height ? cfg.height / H : tz / mz;
     dx = -lowC[0]; dz = th("bpawL")[2] - ((paws.bpawL[2] + paws.bpawR[2]) / 2) * s;
   } else {
-    // a spider: as tall as the voxel one's knees are high, centred on its root
-    const knee = Math.max(...T.filter((b) => /^leg\dLb$/.test(b.name)).map((b) => b.head[1]));
+    // a spider: as tall as the voxel one's knees are high, centred on its root; anything else rigged by hand (cfg.rig):
+    // cfg.height tall, centred over its footprint (the root's z)
+    const knee = cfg.height ? 0 : Math.max(...T.filter((b) => /^leg\dLb$/.test(b.name)).map((b) => b.head[1]));
     let zlo = 9, zhi = -9, xlo = 9, xhi = -9; for (let i = 0; i < n; i++) { zlo = Math.min(zlo, pos[i * 3 + 2]); zhi = Math.max(zhi, pos[i * 3 + 2]); xlo = Math.min(xlo, pos[i * 3]); xhi = Math.max(xhi, pos[i * 3]); }
-    s = (knee * 1.25) / H; dx = -(xlo + xhi) / 2; dz = th("root")[2] - ((zlo + zhi) / 2) * s;
+    s = cfg.height ? cfg.height / H : (knee * 1.25) / H; dx = -(xlo + xhi) / 2; dz = (cfg.height ? 0 : th("root")[2]) - ((zlo + zhi) / 2) * s;
   }
   for (let i = 0; i < n; i++) { pos[i * 3] = (pos[i * 3] + dx) * s; pos[i * 3 + 1] *= s; pos[i * 3 + 2] = pos[i * 3 + 2] * s + dz; }
   for (const k in paws) paws[k] = [(paws[k][0] + dx) * s, 0, paws[k][2] * s + dz];
+  // BEAST_DUMP=<dir>: the turned and scaled mesh (<id>.pos/.uv/.tex) to read joint positions off (tools/.scratch/beast/views.py)
+  if (process.env.BEAST_DUMP) { const D = process.env.BEAST_DUMP; fs.writeFileSync(path.join(D, id + ".pos"), Buffer.from(pos.buffer)); fs.writeFileSync(path.join(D, id + ".uv"), Buffer.from(uv.buffer)); fs.writeFileSync(path.join(D, id + ".tex"), img); }
   const A = adjacency(pos, idx);
 
   // ---- fit the skeleton (twice when the head has to be turned straight first)
@@ -270,7 +301,7 @@ function prep(id, cfg) {
   const kids = J.map(() => []); J.forEach((b, i) => b.parent >= 0 && kids[b.parent].push(i));
   const tipOf = (i) => {
     const b = J[i], nm = b.name;
-    if (nm === "head") return cfg._snout || (get("jaw") ? lerp(b.head, get("jaw"), 1.3) : null);
+    if (nm === "head") return cfg._snout || ("jaw" in TI ? lerp(b.head, get("jaw"), 1.3) : null);
     if (/^ear/.test(nm)) return cfg["_earTip" + nm.slice(-1)] || addv(b.head, [0, 0.04, 0]);
     if (/^antler/.test(nm)) return addv(b.head, [Math.sign(b.head[0]) * 0.02, 0.12, 0]);
     if (/paw/.test(nm)) return addv(b.head, [0, 0, 0.02]);
@@ -282,20 +313,37 @@ function prep(id, cfg) {
     if (kids[i].length) { const k = kids[i].find((c) => !/^(ear|antler|jaw|wf|tail|scap|hip|wing)/.test(J[c].name)) ?? kids[i][0]; return J[k].head; }
     return b.head;
   };
-  const skip = new Set(J.map((b, i) => (/^wf\d/.test(b.name) ? i : -1)).filter((i) => i >= 0));
-  const segs = J.map((b, i) => [b.head, tipOf(i) || b.head]);
+  const skip = new Set(J.map((b, i) => (/^wf\d/.test(b.name) || (cfg.noSkin || []).includes(b.name) ? i : -1)).filter((i) => i >= 0));
+  const segs = J.map((b, i) => [b.head, (cfg.tips && cfg.tips[b.name]) || tipOf(i) || b.head]);
   const sideOf = (nm) => (/[a-z0-9]L[a-z]?$/.test(nm) ? 1 : /[a-z0-9]R[a-z]?$/.test(nm) ? -1 : 0);
   const Wt = new Float32Array(n * J.length);
   const jawI = TI.jaw, headI = TI.head;
+  // a rider on its mount: a vertex is the rider's (bones named r<Upper>…) or the mount's, never both
+  const riderBone = (nm) => /^r[A-Z]/.test(nm);
   for (let i = 0; i < n; i++) {
     const p = P(i), d = [];
+    // a rigid thing (a floating stone) is all its root; a plant bends along its stalk by height (cfg.chain, root first)
+    if (cfg.skin === "rigid") { Wt[i * J.length] = 1; continue; }
+    if (cfg.skin === "chain") {
+      const ch = cfg.chain.map((nm) => TI[nm]), ys = ch.map((k) => J[k].head[1]);
+      if (p[1] <= ys[0]) { Wt[i * J.length + ch[0]] = 1; continue; }
+      let a = ch.length - 1; for (let k = 0; k < ch.length - 1; k++) if (p[1] < ys[k + 1]) { a = k; break; }
+      if (a === ch.length - 1) { Wt[i * J.length + ch[a]] = 1; continue; }
+      const u = (p[1] - ys[a]) / (ys[a + 1] - ys[a]), w = u * u * (3 - 2 * u);
+      Wt[i * J.length + ch[a]] = 1 - w; Wt[i * J.length + ch[a + 1]] = w; continue;
+    }
+    const onRider = cfg.rider ? cfg.rider(p) : null;
     for (let k = 0; k < J.length; k++) {
       if (skip.has(k)) continue;
+      if (onRider != null && onRider !== riderBone(J[k].name)) continue;
+      if (cfg.allow && !cfg.allow(p, J[k].name)) continue;
       const sd = sideOf(J[k].name); if (sd && sd * p[0] < -0.004) continue;
       if (/^(ear|antler)/.test(J[k].name) && p[1] < J[k].head[1] - 0.006) continue;      // ears and antlers above their base only
       d.push([segDist(p, segs[k][0], segs[k][1]), k]);
     }
     d.sort((a, b) => a[0] - b[0]);
+    // the rider's blade is rigid in the sword hand (cfg.blade: the vertex is the blade's)
+    if (cfg.blade && cfg.blade(p)) { Wt[i * J.length + TI[cfg.bladeBone || "rHandR"]] = 1; continue; }
     // antlers are rigid on their side of the skull: everything above their base
     if ("antlerL" in TI && p[1] > get("antlerL")[1] + 0.005) { Wt[i * J.length + TI[p[0] >= 0 ? "antlerL" : "antlerR"]] = 1; continue; }
     // a spider's abdomen is one plate: everything behind the cut that is not a leg
@@ -338,6 +386,7 @@ function prep(id, cfg) {
   const out = path.join(OUT, id + ".glb");
   writeGlb(out, { pos, uv, idx, J: JI, W: WI, bones: J, img, mime });
   fs.writeFileSync(path.join(OUT, id + ".joints.json"), JSON.stringify(J.map((b) => ({ name: b.name, head: b.head.map((x) => +x.toFixed(4)) }))));
+  if (cfg._snout && "jaw" in TI) console.log(`${id}: snout ${cfg._snout.map((x) => x.toFixed(4))} − jaw ${get("jaw").map((x) => x.toFixed(4))} (a breath's emitter, in the jaw's frame)`);
   const b = bbox(all);
   console.log(`${id}: ${n} verts, scale ${s.toFixed(3)}, size ${sub(b.hi, b.lo).map((x) => x.toFixed(3)).join(" × ")}, ${J.length} bones → ${path.relative(ROOT, out)}`);
 }

@@ -178,7 +178,7 @@ EmberVoxelKit.define("eclipsewolf", (() => {
   }
 
   return {
-    cards: ["eclipsewolf"], kind: "quadruped", build: wolfKing, scale: 1.3, pose,
+    cards: ["eclipsewolf"], kind: "quadruped", build: wolfKing, scale: 1.45, pose,
     moves: { attack: { clip: "rake", style: "slash", hit: 0.42, length: 1.2, reach: 0.3, trail: { bone: "wriL", from: [0, -0.02, 0.01], to: [0, -0.075, 0.07] } } },
   };
 })());

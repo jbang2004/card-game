@@ -505,11 +505,12 @@ test("every on-board minion shows its own decoded illustration across roster pag
   }
 });
 
-// (a card without a voxel figure: a figure's token dims its art to a backdrop by design, MINIATURES.md)
+// (a battlefield without figures — every minion has one now, and a figure's token dims its art to a backdrop by
+// design, MINIATURES.md)
 test("a summoned minion lands with its illustration visible and unobscured", async ({
   page,
 }) => {
-  await demo(page);
+  await demo(page, "&figures=0");
   await prepare(page, { hand: ["ashdragon"] });
   await cast(page, "ashdragon");
   const art = page.locator('#minions [data-cardid="ashdragon"] .minion-art');

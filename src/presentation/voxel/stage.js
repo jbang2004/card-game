@@ -128,7 +128,9 @@ const EmberMiniatures = (() => {
   // a unit stands at FOOT of its token's height; the token's lower band keeps the stats readable
   const footOf = (el, bx) => { const r = el.getBoundingClientRect(); return r.width ? ground(r.left + r.width / 2, r.top + r.height * (el.dataset.uid === "hero" ? 0.8 : FOOT), bx) : null; };
   // × the figure's board size so it fits its station: as wide against its token as a desktop token's figure at the
-  // board centre (150 px per unit), capped in height and width
+  // board centre (150 px per unit), capped in height and width — a legend (an epic, a rare a little) allowed to tower
+  // over its token and its neighbours: its presence is its size
+  const GRAND = { legendary: 1.4, epic: 1.2, rare: 1.06 };
   function fit(u) {
     const el = u.info.el, w = el?.offsetWidth, h = el?.offsetHeight;
     if (!w || !u.fig || !u.pos) return 1;
@@ -140,19 +142,19 @@ const EmberMiniatures = (() => {
     let room = Infinity;
     const hdr = touchLayout() && EmberViewport.layout?.header;
     if (hdr) { const r = el.getBoundingClientRect(), a = document.getElementById("app")?.getBoundingClientRect(); if (a) room = r.top + r.height * FOOT - (a.top + hdr + 4); }
-    return k * Math.min(1, ((FOOT + RISE) * h) / tall, (MAX_W * w) / wide, Math.max(0.35, room / tall));
+    const gr = GRAND[["legendary", "epic", "rare"].find((r) => el.classList.contains(r))] || 1;
+    return k * Math.min(1, ((FOOT + RISE * gr * gr) * h) / tall, (MAX_W * gr * w) / wide, Math.max(0.35, room / tall));
   }
   // ------------------------------------------------------------------ heroes
   /* On the desktop layout each hero stands as a figure too: the figure of its portrait's card (the art the plate
    * showed), on its seat — the dais the battlefield scene raises outside the court (EmberArena3D.seat). Its plate stays
    * as the click and focus target and shows only its name and stats (`.hero-dais`). A portrait without a realistic
    * figure keeps its card. Touch layouts keep the plates (their consoles have no room for a dais). */
-  const HERO_FIG = { ashdragon: "dragon" };        // the final dragon is its young kin, grown (its spec scale)
   const heroesOn = () => !failed && !off && !reduced() && typeof EmberArena3D !== "undefined" && typeof EmberModelFigures !== "undefined";
   const touchLayout = () => document.body.classList.contains("touch-layout");
   function heroSpec(el) {
     const k = el?.querySelector(".portrait-frame img")?.dataset.artKey;
-    const sp = k && specOf(HERO_FIG[k] || k);
+    const sp = k && specOf(k);
     return sp && EmberModelFigures.has(sp.id) ? sp : null;
   }
   const heroEl = (side) => document.getElementById(side === "p" ? "player-hero" : "enemy-hero");

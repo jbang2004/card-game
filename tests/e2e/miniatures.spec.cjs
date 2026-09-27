@@ -1,7 +1,7 @@
 const { test, expect } = require("@playwright/test");
 // figures are baked in a worker as pixel sprites (0.1–2 s each): these tests wait for real bakes
 test.describe.configure({ timeout: 90000 });
-// Minion miniatures: one stage canvas; figures stand on tokens that have a spec,
+// Minion miniatures: one stage canvas; figures stand on their tokens (every minion card has one),
 // answer attack / hurt / death cues and never change the rules state.
 test("minion miniatures follow tokens and combat cues", async ({ page }) => {
   const errors = [];
@@ -14,17 +14,17 @@ test("minion miniatures follow tokens and combat cues", async ({ page }) => {
   const ids = await page.evaluate(() => {
     const g = EmberDebug.game;
     const h = g.summon("p", "huntress"), d = g.summon("p", "duskstag"), w = g.summon("e", "wolf");
-    g.summon("p", "sheep"); // no spec: stays a flat token
+    g.summon("p", "sheep"); // a polymorph's sheep stands as its own figure too
     Emberfall.renderNow();
     return { h: h.uid, d: d.uid, w: w.uid };
   });
-  await page.waitForFunction(() => EmberMiniatures.diagnostics().figures === 5);   // three minions, two heroes
+  await page.waitForFunction(() => EmberMiniatures.diagnostics().figures === 6);   // four minions, two heroes
   // pixel-sprite bakes take up to ~2 s each in the worker (longer on a loaded machine): wait for them to stand
-  await page.waitForFunction(() => EmberMiniatures.diagnostics().live === 5, null, { timeout: 60000 });
+  await page.waitForFunction(() => EmberMiniatures.diagnostics().live === 6, null, { timeout: 60000 });
   expect(await page.locator("#miniature-stage").count()).toBe(1);
   expect(await page.evaluate(() => getComputedStyle(document.getElementById("miniature-stage")).pointerEvents)).toBe("none");
   await expect(page.locator(`#minions .minion[data-uid="${ids.h}"]`)).toHaveClass(/miniature-ready/);
-  await expect(page.locator('#minions .minion[data-cardid="sheep"]')).not.toHaveClass(/miniature-ready/);
+  await expect(page.locator('#minions .minion[data-cardid="sheep"]')).toHaveClass(/miniature-ready/);
   const before = await page.evaluate(() => JSON.stringify(EmberDebug.game.s.e.board.map((m) => [m.uid, m.hp])));
   await page.waitForTimeout(300);
   expect(await page.evaluate(() => JSON.stringify(EmberDebug.game.s.e.board.map((m) => [m.uid, m.hp])))).toBe(before);

@@ -152,7 +152,7 @@ EmberVoxelKit.define("spiritwolf", (() => {
   }
 
   return {
-    cards: ["spiritwolf"], kind: "quadruped", build: spiritwolf, scale: 1.15, pose,
+    cards: ["spiritwolf"], kind: "quadruped", build: spiritwolf, scale: 1.2, pose,
     // painted eyes: the pixel sprite only (its build declares the face decal; the voxel build keeps glowing eye shapes)
     face: { kind: "wolf", look: { eye: 0x7dffc0 }, params: (ch) => { const b = ch.faces[0]; return { cx: b.c[0], cy: b.c[1], dx: 0.023 * ch.Hs }; } },
     moves: { attack: { clip: "pounce", style: "bite", hit: 0.4, length: 1.05, reach: 0.26 } },

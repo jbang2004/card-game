@@ -9,7 +9,8 @@
  *                                          the spell grows there, a rune circle turns under the caster's feet
  *                                          (o.orb false: the hand holds its own), a column of motes rises (o.rise)
  *     orbit(centre, ms, R, look)           motes whirling round a figure (a sprite's spin)
- *     shoot(from, to, ms, r, look)         the bolt in flight with its trail; bursts where it lands
+ *     shoot(from, to, ms, r, look, o)      the bolt in flight with its trail; bursts where it lands (o.lite: one
+ *                                          tongue of a stream of fire — a thinner flame, a splash, no flash)
  *     burst(p, r, look), step(now)
  *   look = { mode: "fire" | "energy", tint: [r, g, b] (linear, may exceed 1) }
  * Pure presentation: no game state. */
@@ -136,11 +137,11 @@ const EmberFire = (() => {
       },
       orbit(centre, ms, R, look) { orbits.push({ centre, t0: performance.now(), ms, R, look, emit: 0 }); },
       /** a bolt of radius r from `from` to `to` (Vector3s, world) arriving in ms */
-      shoot(from, to, ms, r, look = FIRE) {
-        const outer = flame(0, r * 3.2, look), inner = flame(0, r * 1.9, look);
-        inner.material.uniforms.uK.value = 1.25;
-        for (const m of [outer, inner]) { m.position.copy(from); add(m); }
-        shots.push({ ms: [outer, inner], from: from.clone(), to: to.clone(), t0: performance.now(), dur: ms, r, look, emit: 0 });
+      shoot(from, to, ms, r, look = FIRE, o = {}) {
+        const ms_ = o.lite ? [flame(0, r * 2.2, look)] : [flame(0, r * 3.2, look), flame(0, r * 1.9, look)];
+        if (!o.lite) ms_[1].material.uniforms.uK.value = 1.25;
+        for (const m of ms_) { m.position.copy(from); add(m); }
+        shots.push({ ms: ms_, from: from.clone(), to: to.clone(), t0: performance.now(), dur: ms, r, look, emit: 0, lite: !!o.lite });
       },
       burst(p, r, look = FIRE) {
         for (let i = 0; i < 14; i++) {
@@ -194,11 +195,15 @@ const EmberFire = (() => {
           s.ms.forEach((m, k) => { m.position.copy(p); m.scale.setScalar(f); m.material.uniforms.uTime.value = T * (k ? 1.3 : 1); });
           // the trail: puffs shed behind it drifting up and back, and sparks
           const back = s.from.clone().sub(s.to).normalize().multiplyScalar(s.r * 3).add(V3(0, s.r * 4, 0));
-          for (s.emit += dt * 70; s.emit >= 1; s.emit--) {
+          for (s.emit += dt * (s.lite ? 36 : 70); s.emit >= 1; s.emit--) {
             puff(p.clone().add(rnd().multiplyScalar(s.r * 0.5)), back, s.r * (1.3 + Math.random()), 260 + Math.random() * 160, 0.95, s.look);
             if (Math.random() < 0.5) puff(p.clone(), rnd().multiplyScalar(s.r * 8), s.r * 0.6, 350, 1.1, s.look, 2);
           }
-          if (q >= 1) { s.ms.forEach(drop); shots.splice(i, 1); this.burst(s.to, s.r, s.look); }
+          if (q >= 1) {
+            s.ms.forEach(drop); shots.splice(i, 1);
+            if (!s.lite) this.burst(s.to, s.r, s.look);
+            else for (let j = 0; j < 4; j++) { const a = Math.random() * Math.PI * 2; puff(s.to, V3(Math.cos(a), 0.6 + Math.random(), Math.sin(a)).multiplyScalar(s.r * 5), s.r * 1.6, 320 + Math.random() * 200, 1.0, s.look); }
+          }
         }
         for (let i = puffs.length - 1; i >= 0; i--) {
           const f = puffs[i], age = (now - f.t0) / f.life;
