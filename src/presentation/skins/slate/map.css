@@ -278,28 +278,50 @@ html[data-skin="slate"]
   border-radius: 12px;
 }
 
-/* node labels */
+/* node labels: a dark capsule under each name. A text halo alone was lost
+ * over snowfields and cloud banks (the painting is bright in half its
+ * regions); six small capsules, no backdrop blur (repeated items). */
 html[data-skin="slate"] body #modal.folio-host[data-type="map"] .atlas-name {
-  font: 600 17px/1.25 var(--slate-font);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  width: max-content;
+  padding: 5px 12px 6px 10px;
+  border-radius: 999px;
+  background: #0b0d12b8;
+  box-shadow: var(--lg-rim-soft), 0 4px 12px #00000059;
+  font: 600 16px/1.25 var(--slate-font);
   letter-spacing: 0;
   color: #fff;
-  /* a halo rather than a drop shadow, as map labels do over imagery */
-  text-shadow:
-    0 0 2px #000000e6,
-    0 1px 3px #000000cc,
-    0 0 16px #000000b3;
+  text-shadow: none;
 }
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="map"]
   .atlas-name
   > small {
-  display: block;
-  margin: 0 0 1px;
-  font: 600 14px/1.2 var(--slate-font);
+  display: inline;
+  margin: 0;
+  font: 600 12px/1 var(--slate-font);
   letter-spacing: 0;
-  color: var(--slate-ink-2);
+  color: var(--slate-ink-3);
   font-variant-numeric: tabular-nums;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-node[aria-pressed="true"]
+  .atlas-name {
+  background: #0a84ffd9;
+  box-shadow: var(--lg-prominent-rim), 0 4px 12px #00000059;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-node[aria-pressed="true"]
+  .atlas-name
+  > small {
+  color: #ffffffb3;
 }
 html[data-skin="slate"]
   body
@@ -713,7 +735,9 @@ html[data-skin="slate"]
   position: static;
   z-index: auto;
   width: calc(100% + 28px);
-  height: 220px;
+  /* the boss card grows with the window so the inspector's middle is the
+   * portrait, not an empty band above the pinned footer */
+  height: clamp(220px, calc(100vh - 560px), 400px);
   margin: 0 -14px 20px;
 }
 html[data-skin="slate"]
@@ -858,7 +882,7 @@ html[data-skin="slate"]
     .atlas-dossier
     > img {
     width: calc(100% + 20px);
-    height: 184px;
+    height: clamp(184px, calc(100vh - 560px), 360px);
     margin: 0 -10px 18px;
   }
   html[data-skin="slate"]
@@ -884,7 +908,7 @@ html[data-skin="slate"]
     #modal.folio-host[data-type="map"]
     .atlas-dossier
     > img {
-    height: 144px;
+    height: clamp(144px, calc(100vh - 500px), 220px);
   }
 }
 

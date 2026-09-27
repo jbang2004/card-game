@@ -1,25 +1,92 @@
-/* Test skin "slate" (磨砂青岩) — 地下城远征 / the expedition's screens.
+/* Skin "slate" — 地下城远征 / the expedition's screens (2026-09-28 layout pass).
  *
- * The run screens (application/screens/run.js) are `rewards` dialogs, so they
- * sit in the same shell as the relic reward (a sheet on the desktop, the page
- * shell on touch) and inherit its relic-choice tiles, pills and footer from
- * dialogs.css. Materials follow liquid glass v2 (SLATE_DESIGN_SYSTEM.md): the
- * tiles and the tavern's strike panel are `.lg-group` in the markup, the chips
- * inside the sheet take the control fill (no glass on glass), the deck list is
- * the one floating popover and gets regular glass. This file adds the run's
- * own geometry: the status strip, the eight-level track, the foes, treasures,
- * bundles, the tavern and the end summary. Every card inside is the live card
- * face (card-face.css), never a bitmap.
+ * The run screens (application/screens/run.js) are their own dialog type,
+ * `run`, on the PAGE shell (base.css): full bleed over the blurred edition
+ * art, like the hero and collection pages — the expedition is the game's main
+ * loop, not a note floating over the lobby. Nothing here inherits the retired
+ * relic-reward sheet (`.rewards-box` / `.relic-choice`); the markup is:
+ *
+ *   section.run-box[data-shell=page][data-run-step]
+ *     > .modal-heading.run-heading          (fixed; a 2×2 grid)
+ *         > .run-title > .run-eyebrow h2 p.run-sub
+ *         > .run-status  (chips: hero, gold, relics, covenants, the deck list)
+ *         > ol.run-track (level · stop · level … the final level)
+ *     > .folio-pane > .folio-viewport > .modal-scroll
+ *         > .run-options > button.run-option × n
+ *               > .run-art  .run-copy  .run-pick
+ *         | .run-tavern > .run-shelf  .run-remove
+ *         | .run-summary
+ *     > .modal-footer.run-footer > #run-home  p#run-selection  #run-confirm
+ *
+ * One reading axis: the heading, the options and the footer share one
+ * centred column (`--run-col`), every text block is left-aligned, and the
+ * choice is confirmed where the eye ends — the footer's right edge.
+ * Materials are the liquid-glass tokens (base.css); tiles are `.lg-group` in
+ * the markup, chips over the backdrop are clear glass.
  */
 
-/* ---- the run at a glance ------------------------------------------------ */
+html[data-skin="slate"] body #modal.folio-host > .run-box {
+  --run-col: 1240px;
+  --run-gap: 24px;
+}
+
+/* ==========================================================================
+   heading — title and chips on one row, the path beneath
+   ========================================================================== */
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .run-box[data-shell="page"]
+  > .modal-heading.run-heading {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "title status"
+    "track track";
+  align-items: end;
+  column-gap: 32px;
+  row-gap: 22px;
+  width: 100%;
+  max-width: var(--run-col);
+  min-height: 0;
+  margin: 0 auto;
+  padding: 0;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-title {
+  grid-area: title;
+  min-width: 0;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-eyebrow {
+  margin: 0 0 4px;
+  color: var(--slate-blue);
+  font: 600 14px/20px var(--slate-font);
+  font-variant-numeric: tabular-nums;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .run-box[data-shell="page"]
+  > .modal-heading
+  p.run-sub {
+  display: block;
+  max-width: 44em;
+  margin: 6px 0 0;
+  color: var(--slate-ink-2);
+  font: 400 15px/1.6 var(--slate-font);
+  letter-spacing: 0;
+}
+
+/* ---- the chips ---------------------------------------------------------- */
 html[data-skin="slate"] body #modal.folio-host .run-box .run-status {
+  grid-area: status;
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   align-items: center;
-  justify-content: center;
   gap: 8px;
-  margin: 14px auto 0;
+  margin: 0;
   color: var(--slate-ink-2);
   font: 500 14px/1 var(--slate-font);
 }
@@ -30,38 +97,73 @@ html[data-skin="slate"]
   .run-status
   > :is(span, details) {
   display: inline-flex;
+  flex: none;
   align-items: center;
   gap: 6px;
-  min-height: 32px;
+  height: 36px;
   padding: 0 14px;
   border: 0;
   border-radius: 999px;
-  background: var(--lg-fill-control);
-  box-shadow: var(--lg-rim-soft);
+  background: var(--lg-clear);
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
+  box-shadow: var(--glass-rim);
+  white-space: nowrap;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-status small {
+  color: var(--slate-ink-3);
+  font: 500 13px/1 var(--slate-font);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-status .ui-icon {
+  width: 16px;
+  height: 16px;
 }
 html[data-skin="slate"] body #modal.folio-host .run-box .run-hero {
+  padding-left: 4px;
   color: var(--slate-ink);
   font-weight: 600;
 }
+html[data-skin="slate"] body #modal.folio-host .run-box .run-hero img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 50% 18%;
+  box-shadow: inset 0 0 0 1px #ffffff26;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  .run-box
+  :is(.run-gold, .run-buy, #run-remove)
+  .ui-icon {
+  color: #f3d28a;
+}
 html[data-skin="slate"] body #modal.folio-host .run-box .run-gold strong {
   color: var(--slate-ink);
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
-}
-html[data-skin="slate"] body #modal.folio-host .run-box .run-status .ui-icon {
-  width: 18px;
-  height: 18px;
 }
 html[data-skin="slate"] body #modal.folio-host .run-box .run-relic {
   display: inline-grid;
   place-items: center;
-  color: var(--slate-blue);
+  color: #f3d28a;
 }
-html[data-skin="slate"] body #modal.folio-host .run-box .run-contracts {
-  gap: 10px;
+html[data-skin="slate"] body #modal.folio-host .run-box .run-contract {
   color: var(--slate-ink);
 }
-/* the deck list opens as a small floating popover under its chip (a <details>
- * does not lay its own box out as flex, so the chip's row is the summary's) */
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  .run-box
+  .run-contract
+  + .run-contract::before {
+  content: "·";
+  margin-right: 6px;
+  color: var(--slate-ink-3);
+}
+/* the deck chip opens a small popover list under itself (a <details> does
+ * not lay its own box out as flex, so the chip's row is the summary's) */
 html[data-skin="slate"] body #modal.folio-host .run-box .run-status > .run-deck {
   position: relative;
   display: inline-block;
@@ -71,10 +173,15 @@ html[data-skin="slate"] body #modal.folio-host .run-box .run-deck summary {
   display: flex;
   align-items: center;
   gap: 6px;
-  min-height: 32px;
-  padding: 0 14px;
+  height: 36px;
+  padding: 0 12px 0 14px;
+  border-radius: 999px;
   cursor: pointer;
   list-style: none;
+  transition: background var(--m-fast);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-deck summary:hover {
+  background: #ffffff14;
 }
 html[data-skin="slate"]
   body
@@ -84,8 +191,25 @@ html[data-skin="slate"]
   summary::-webkit-details-marker {
   display: none;
 }
+html[data-skin="slate"] body #modal.folio-host .run-box .run-deck summary .ui-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--slate-ink-3);
+  transform: rotate(90deg);
+  transition: transform var(--m-base) var(--e-std);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  .run-box
+  .run-deck[open]
+  summary
+  .ui-icon {
+  transform: rotate(-90deg);
+}
 html[data-skin="slate"] body #modal.folio-host .run-box .run-deck strong {
   color: var(--slate-ink);
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 html[data-skin="slate"] body #modal.folio-host .run-box .run-deck ul {
@@ -94,245 +218,529 @@ html[data-skin="slate"] body #modal.folio-host .run-box .run-deck ul {
   top: calc(100% + 8px);
   right: 0;
   display: grid;
-  gap: 4px;
+  gap: 2px;
   width: max-content;
-  max-width: 280px;
-  max-height: 360px;
+  min-width: 220px;
+  max-width: 300px;
+  max-height: min(420px, 60vh);
   overflow: auto;
   margin: 0;
-  padding: 14px 18px;
+  padding: 12px 14px;
   border: 0;
   border-radius: var(--lg-radius-group);
   background: var(--glass-fill);
+  -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   box-shadow: var(--glass-rim), var(--glass-shadow);
   list-style: none;
-  font: 400 14px/1.6 var(--slate-font);
   color: var(--slate-ink);
+  font: 400 14px/1.9 var(--slate-font);
 }
 html[data-skin="slate"] body #modal.folio-host .run-box .run-deck em {
+  margin-left: 4px;
   color: var(--slate-ink-3);
   font-style: normal;
+  font-variant-numeric: tabular-nums;
 }
+/* the small blue cost disc (deck list, bundle list) */
 html[data-skin="slate"] body #modal.folio-host .run-box .run-deck-cost {
   display: inline-grid;
+  flex: none;
   place-items: center;
-  width: 20px;
-  height: 20px;
-  margin-right: 8px;
+  width: 22px;
+  height: 22px;
+  margin-right: 10px;
   border-radius: 50%;
   background: var(--slate-blue-deep);
   color: #fff;
   font: 600 12px/1 var(--slate-font);
   font-variant-numeric: tabular-nums;
+  vertical-align: 1px;
 }
 
-/* ---- the eight levels ----------------------------------------------------- */
+/* ---- the path: level · stop · level … ---------------------------------- */
+/* A level is a numbered disc; the stop after it (every stop has a bundle of
+ * cards, and a treasure or a tavern) is a labelled pill on the path. The
+ * path is a diagram line, the one kind of line slate keeps. Walked segments
+ * turn blue; where the player stands is the filled blue disc or pill. */
 html[data-skin="slate"] body #modal.folio-host .run-box .run-track {
+  grid-area: track;
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 0;
-  margin: 18px auto 0;
-  padding: 0;
+  align-items: center;
+  width: 100%;
+  margin: 0;
+  padding: 0 0 18px;
   list-style: none;
 }
 html[data-skin="slate"] body #modal.folio-host .run-box .run-step {
   position: relative;
+  flex: none;
   display: grid;
-  justify-items: center;
-  gap: 4px;
-  width: 64px;
+  place-items: center;
+  width: 34px;
+  height: 34px;
   color: var(--slate-ink-3);
-  font: 600 13px/1 var(--slate-font);
-}
-/* the path between two levels (a diagram line, the kind slate keeps) */
-html[data-skin="slate"]
-  body
-  #modal.folio-host
-  .run-box
-  .run-step
-  + .run-step::before {
-  content: "";
-  position: absolute;
-  top: 14px;
-  right: calc(50% + 16px);
-  width: calc(100% - 32px);
-  height: 1px;
-  background: var(--slate-line-strong);
+  font: 600 14px/1 var(--slate-font);
+  font-variant-numeric: tabular-nums;
 }
 html[data-skin="slate"] body #modal.folio-host .run-box .run-step > span {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
-  border: 0;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  background: var(--lg-fill-control);
+  background: #ffffff14;
   box-shadow: var(--lg-rim-soft);
-  font-variant-numeric: tabular-nums;
-}
-html[data-skin="slate"] body #modal.folio-host .run-box .run-step small {
-  font: 500 11px/1 var(--slate-font);
+  transition:
+    background var(--m-base),
+    box-shadow var(--m-base);
 }
 html[data-skin="slate"] body #modal.folio-host .run-box .run-step.done > span {
-  color: var(--slate-blue);
+  background: #0a84ff38;
+  color: #cfe6ff;
 }
-html[data-skin="slate"]
-  body
-  #modal.folio-host
-  .run-box
-  .run-step.current
-  > span {
+html[data-skin="slate"] body #modal.folio-host .run-box .run-step.current > span {
   background: var(--slate-blue-deep);
   box-shadow: var(--lg-select-ring);
   color: #fff;
 }
-html[data-skin="slate"] body #modal.folio-host .run-box .run-step.current {
-  color: var(--slate-ink);
+/* where a lost run fell */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-step.fell > span {
+  background: #ff6b5a38;
+  box-shadow: inset 0 0 0 1.5px #ff8f80;
+  color: #ffd2c7;
 }
-/* the last level: the ember of "the final fight" as a ring, not a fill */
-html[data-skin="slate"] body #modal.folio-host .run-box .run-step.final > span {
-  width: 32px;
-  height: 32px;
-  margin-top: -2px;
-  box-shadow:
-    var(--lg-rim-soft),
-    inset 0 0 0 1.5px #ff9b7a99;
-}
-
-/* ---- shared tile parts ---------------------------------------------------- */
-/* the legacy sheets lift a hovered relic tile 5px: with the pointer resting on
- * a tile's lower edge that lift moves it out from under the pointer and back
- * every frame. Slate marks hover with fill only (dialogs.css). */
-html[data-skin="slate"] body #modal.folio-host .run-box .relic-choice:hover {
-  transform: none;
-}
-html[data-skin="slate"] body #modal.folio-host .run-box .run-kind {
-  padding: 4px 12px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--lg-fill-control);
-  color: var(--slate-ink-2);
-  font: 600 12px/1.2 var(--slate-font);
-}
-html[data-skin="slate"] body #modal.folio-host .run-box .run-card {
-  width: 100%;
-  max-width: 150px;
-  pointer-events: none;
-}
-html[data-skin="slate"] body #modal.folio-host .run-box .run-card > .card {
-  --w: 150px;
-}
-
-/* ---- choose a foe: two portraits ---------------------------------------- */
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host
-  .rewards-box.run-box
-  .relic-options.run-foes {
-  grid-template-columns: repeat(auto-fit, minmax(0, 440px));
-  justify-content: center;
-  margin-top: 22px;
+/* the final level: an ember ring, a caption under it */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-step.final {
+  width: 40px;
+  height: 40px;
 }
 html[data-skin="slate"]
   body
   #modal.folio-host
   .run-box
-  .run-foe
-  .run-portrait
-  img {
-  border-radius: 50%;
-  object-fit: cover;
-}
-/* a smaller portrait than a relic's: the foe's tile also carries its power and awakening */
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host
-  .rewards-box.run-box
-  .run-foe
-  .relic-art {
-  height: 144px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host
-  .rewards-box.run-box
-  .run-foe
-  .relic-art
-  img {
-  width: 136px;
-  height: 136px;
-}
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host
-  .rewards-box.run-box
-  .relic-choice.run-foe {
-  gap: 10px;
-  padding: 22px 24px 18px;
-}
-html[data-skin="slate"] body #modal.folio-host .run-box .run-foe-boss .run-kind {
-  background: #ff9b7a2e;
+  .run-step.final:not(.current)
+  > span {
+  box-shadow:
+    var(--lg-rim-soft),
+    inset 0 0 0 1.5px #ff9b7ab3;
   color: #ffc2ad;
 }
-html[data-skin="slate"] body #modal.folio-host .run-box .run-foe-title {
-  margin-top: -8px;
-  color: var(--slate-ink-3);
-  font: 500 14px/1.3 var(--slate-font);
+html[data-skin="slate"] body #modal.folio-host .run-box .run-step small {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ffc2ad;
+  font: 600 12px/1 var(--slate-font);
+  white-space: nowrap;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-stop {
+  position: relative;
+  flex: 1 1 0;
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 34px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-stop::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  border-radius: 1px;
+  background: #ffffff21;
 }
 html[data-skin="slate"]
   body
   #modal.folio-host
-  .rewards-box.run-box
-  .relic-choice
-  p.run-foe-stats {
+  .run-box
+  .run-stop:is(.done, .current)::before {
+  background: #0a84ffa6;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-stop small {
+  position: relative;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: #23262e;
+  box-shadow: var(--lg-rim-soft);
+  color: var(--slate-ink-3);
+  font: 600 12px/1 var(--slate-font);
+  white-space: nowrap;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  .run-box
+  .run-stop.treasure.ahead
+  small {
+  color: #e9cf8f;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  .run-box
+  .run-stop.tavern.ahead
+  small {
+  color: #f2b98f;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-stop.done small {
+  background: #1d2c40;
+  color: #9fc7f0;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-stop.current small {
+  background: var(--slate-blue-deep);
+  box-shadow: var(--lg-select-ring);
+  color: #fff;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-stop i {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffffff40;
+}
+
+/* ==========================================================================
+   the scroll surface — options centred in the space the heading leaves
+   ========================================================================== */
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .run-box[data-shell="page"]
+  > .folio-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 12px 0 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .run-box[data-shell="page"]
+  > .folio-pane
+  > .folio-viewport {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .modal-scroll {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  /* room for a focused tile's 6px halo, which the viewport would clip */
+  padding: 10px 8px 16px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  .run-box
+  .modal-scroll
+  > :is(.run-options, .run-tavern, .run-summary) {
+  margin-block: auto;
+}
+
+/* ==========================================================================
+   option tiles
+   ========================================================================== */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-options {
+  display: grid;
+  /* as many columns as options (`--n` in the markup), each at most --tile-w:
+   * a narrower window shrinks the tiles instead of wrapping one of them */
+  grid-template-columns: repeat(var(--n, 3), minmax(0, var(--tile-w, 392px)));
+  justify-content: center;
+  gap: var(--run-gap);
+  width: 100%;
+  max-width: var(--run-col);
+  margin-inline: auto;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-foes {
+  --tile-w: 560px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-bundles {
+  --tile-w: 420px;
+}
+/* the tile: an `.lg-group` surface; the whole tile is the button */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 18px;
+  min-width: 0;
+  margin: 0;
+  padding: 14px 14px 22px;
+  border: 0;
+  /* one radius on every layout: the material contract compares it */
+  border-radius: 24px;
   color: var(--slate-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--m-fast),
+    box-shadow var(--m-base) var(--e-std),
+    transform var(--m-base) var(--e-spring);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-option:hover {
+  background: #ffffff17;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-option:active {
+  transform: scale(0.985);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-option:focus {
+  outline: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  .run-box
+  .run-option:focus-visible {
+  box-shadow: var(--glass-rim), var(--lg-select-ring);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  .run-box
+  .run-option[aria-pressed="true"] {
+  background: #0a84ff24;
+  box-shadow: var(--glass-rim), var(--lg-select-ring);
+}
+
+/* the picture well */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 232px;
+  overflow: hidden;
+  border-radius: 18px;
+  background:
+    radial-gradient(ellipse 60% 70% at 50% 45%, #ffffff17, #ffffff00 70%),
+    #00000038;
+  box-shadow: inset 0 0 0 1px #ffffff0d;
+}
+/* a relic's picture is painted on its own dark ground: a soft vignette lets
+ * any ground melt into the well instead of showing a square */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-relic-tile .run-art img {
+  width: 184px;
+  height: 184px;
+  object-fit: contain;
+  -webkit-mask-image: radial-gradient(closest-side, #000 72%, #0000 100%);
+  mask-image: radial-gradient(closest-side, #000 72%, #0000 100%);
+}
+/* a card face sizes itself from --w; its wrapper takes the same width (a grid
+ * or flex item with no width of its own would collapse the face to 0) */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-card {
+  flex: none;
+  width: var(--card-w, 142px);
+  pointer-events: none;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-card > .card {
+  --w: var(--card-w, 142px);
+}
+
+/* the words */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-copy {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  padding: 0 10px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-copy h3 {
+  margin: 0;
+  color: #fff;
+  font: 700 21px/28px var(--slate-font);
+  letter-spacing: 0;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-copy p {
+  margin: 4px 0 0;
+  color: var(--slate-ink-2);
+  font: 400 16px/1.6 var(--slate-font);
+  letter-spacing: 0;
+  text-align: left;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-copy p strong {
+  color: var(--slate-ink);
+  font-weight: 600;
+}
+/* the kind: a coloured dot and a word, not a chip */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--kind, var(--slate-blue));
+  font: 600 13px/18px var(--slate-font);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-kind::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-foe-boss .run-kind {
+  --kind: #ffab8f;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-relic-tile .run-kind {
+  --kind: #f0cf82;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-kind-god {
+  --kind: #c7a8ff;
+}
+
+/* the pick mark: an empty ring, then a filled check */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-pick {
+  position: absolute;
+  top: -5px;
+  right: 10px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #0000004d;
+  box-shadow: inset 0 0 0 2px #ffffff59;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition:
+    background var(--m-fast),
+    box-shadow var(--m-fast);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-pick .ui-icon {
+  width: 16px;
+  height: 16px;
+  color: #fff;
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity var(--m-fast),
+    transform var(--m-base) var(--e-spring);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  .run-box
+  .run-option[aria-pressed="true"]
+  .run-pick {
+  background: var(--slate-blue-deep);
+  box-shadow: 0 2px 8px #0a84ff66;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  .run-box
+  .run-option[aria-pressed="true"]
+  .run-pick
+  .ui-icon {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---- foes: a portrait beside the words ---------------------------------- */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-foe {
+  display: grid;
+  grid-template-columns: 196px minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+  padding: 14px 24px 14px 14px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-foe .run-art {
+  height: 262px;
+  border-radius: 18px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-foe .run-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 16%;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-foe .run-copy {
+  padding: 18px 0 8px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-foe-title {
+  margin-top: -4px;
+  color: var(--slate-ink-3);
+  font: 500 14px/20px var(--slate-font);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-foe-stats {
+  display: flex;
+  gap: 6px;
+  margin: 6px 0 2px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-foe-stats > span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--lg-fill-control);
+  color: var(--slate-ink-2);
+  font: 500 13px/1 var(--slate-font);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-foe-stats b {
+  color: #fff;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
+html[data-skin="slate"] body #modal.folio-host .run-box .run-copy p.run-phase {
+  margin-top: 0;
+  color: #ffc9b5;
+}
+
+/* ---- bundles: three cards fanned in the well, their names beneath ------- */
+/* the well is the size container: three fanned cards take a third of its
+ * width each (less the overlap), capped at their full size */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-bundle .run-art {
+  height: 212px;
+  container-type: inline-size;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-bundle-cards {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-bundle-cards .run-card {
+  margin: 0 -6px;
+  transform: rotate(var(--fan, 0deg)) translateY(var(--lift, 6px));
+  transform-origin: 50% 100%;
+}
 html[data-skin="slate"]
   body
   #modal.folio-host
-  .rewards-box.run-box
-  .relic-choice
-  p.run-phase {
-  color: #ffc2ad;
-}
-
-/* ---- treasures: a relic or a card on each tile --------------------------- */
-html[data-skin="slate"]
-  body:not(.touch-layout)
-  #modal.folio-host
-  .rewards-box.run-box
-  .run-treasure
-  .relic-art {
-  height: 170px;
+  .run-box
+  .run-bundle-cards
+  .run-card:first-child {
+  --fan: -6deg;
 }
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
-  .rewards-box.run-box
-  .run-treasure
-  .relic-art
-  img {
-  width: 150px;
-  height: 150px;
+  .run-box
+  .run-bundle-cards
+  .run-card:nth-child(2) {
+  --lift: 0px;
+  z-index: 1;
 }
-
-/* ---- bundles: three small cards per tile --------------------------------- */
 html[data-skin="slate"]
-  body:not(.touch-layout)
+  body
   #modal.folio-host
-  .rewards-box.run-box
-  .relic-choice.run-bundle {
-  padding: 22px 18px 18px;
-}
-html[data-skin="slate"] body #modal.folio-host .run-box .run-bundle-cards {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  width: 100%;
+  .run-box
+  .run-bundle-cards
+  .run-card:last-child {
+  --fan: 6deg;
 }
 html[data-skin="slate"]
   body
@@ -340,76 +748,113 @@ html[data-skin="slate"]
   .run-box
   .run-bundle-cards
   .run-card {
-  max-width: none;
+  --card-w: min(116px, calc(100cqw / 3 + 4px));
 }
-html[data-skin="slate"]
-  body
-  #modal.folio-host
-  .run-box
-  .run-bundle-cards
-  .run-card
-  > .card {
-  --w: 110px;
-}
-
-/* the small faces hide their rules text, so the three names are spelled out */
 html[data-skin="slate"] body #modal.folio-host .run-box .run-bundle-names {
   display: grid;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-bundle-names li {
+  display: flex;
+  align-items: center;
+  min-width: 0;
   color: var(--slate-ink);
-  font: 500 15px/1.4 var(--slate-font);
-  text-align: left;
+  font: 500 15px/22px var(--slate-font);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-bundle-names b {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-bundle-names small {
+  flex: none;
+  margin-left: auto;
+  padding-left: 12px;
+  color: var(--slate-ink-3);
+  font: 500 13px/1 var(--slate-font);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   the tavern — the shelf, and the strike panel beside it
+   ========================================================================== */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-tavern {
+  display: grid;
+  grid-template-columns: auto 340px;
+  justify-content: center;
+  align-items: start;
+  gap: 40px;
+  width: 100%;
+  max-width: var(--run-col);
+  margin-inline: auto;
 }
 html[data-skin="slate"]
   body
   #modal.folio-host
   .run-box
-  .run-bundle-names
-  > span {
-  display: flex;
-  align-items: center;
+  :is(.run-shelf, .run-remove)
+  h3 {
+  margin: 0;
+  color: var(--slate-ink);
+  font: var(--lg-headline);
+  letter-spacing: 0;
 }
-
-/* ---- the tavern ---------------------------------------------------------- */
-html[data-skin="slate"] body #modal.folio-host .run-box .run-tavern {
+html[data-skin="slate"] body #modal.folio-host .run-box .run-shelf {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
-  gap: 28px;
-  align-items: start;
-  width: 100%;
-  max-width: 1180px;
-  margin: 24px auto 0;
+  gap: 16px;
 }
 html[data-skin="slate"] body #modal.folio-host .run-box .run-wares {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 html[data-skin="slate"] body #modal.folio-host .run-box .run-ware {
   display: grid;
   justify-items: center;
-  gap: 10px;
+  gap: 14px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-ware .run-card {
+  --card-w: 176px;
 }
 html[data-skin="slate"] body #modal.folio-host .run-box .run-ware.sold .run-card {
   opacity: 0.35;
   filter: grayscale(0.8);
 }
-html[data-skin="slate"] body #modal.folio-host .run-box .run-buy {
-  min-height: 34px;
-  padding: 0 16px;
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  .run-box
+  :is(.run-buy, #run-remove) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 20px;
   font-variant-numeric: tabular-nums;
 }
-/* the strike panel is an `.lg-group` in the markup: geometry only here */
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  .run-box
+  :is(.run-buy, #run-remove)
+  .ui-icon {
+  width: 16px;
+  height: 16px;
+}
 html[data-skin="slate"] body #modal.folio-host .run-box .run-remove {
   display: grid;
-  gap: 12px;
-  padding: 22px 20px;
+  gap: 14px;
+  margin-top: 40px;
+  padding: 24px 22px;
+  border-radius: 24px;
   color: var(--slate-ink);
-}
-html[data-skin="slate"] body #modal.folio-host .run-box .run-remove h3 {
-  margin: 0;
-  font: var(--lg-headline);
 }
 html[data-skin="slate"] body #modal.folio-host .run-box .run-remove p {
   margin: 0;
@@ -420,9 +865,9 @@ html[data-skin="slate"] body #modal.folio-host .run-box .run-remove select {
   width: 100%;
 }
 
-/* ---- the end of a run ---------------------------------------------------- */
-/* the same three figures as the battle result, in one grouped section
- * (`.lg-group` in the markup; dialogs.css .result-stats) */
+/* ==========================================================================
+   the end of a run
+   ========================================================================== */
 html[data-skin="slate"] body #modal.folio-host .run-box .run-summary {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -430,8 +875,9 @@ html[data-skin="slate"] body #modal.folio-host .run-box .run-summary {
   width: 100%;
   max-width: 640px;
   justify-items: stretch;
-  margin: 36px auto 12px;
-  padding: 18px 0;
+  margin-inline: auto;
+  padding: 22px 0;
+  border-radius: 24px;
 }
 html[data-skin="slate"] body #modal.folio-host .run-box .run-summary > div {
   display: flex;
@@ -443,220 +889,687 @@ html[data-skin="slate"] body #modal.folio-host .run-box .run-summary > div {
   border: 0;
 }
 html[data-skin="slate"] body #modal.folio-host .run-box .run-summary strong {
-  font: 700 40px/1.1 var(--slate-font);
   color: #fff;
+  font: 700 40px/1.1 var(--slate-font);
   font-variant-numeric: tabular-nums;
 }
 html[data-skin="slate"] body #modal.folio-host .run-box .run-summary span {
-  font: 500 15px/1.4 var(--slate-font);
   color: var(--slate-ink-2);
+  font: 500 15px/1.4 var(--slate-font);
 }
 
-/* ---- phones: one column, smaller faces (geometry only; colours stay above) */
-html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-track {
-  flex-wrap: wrap;
-  row-gap: 8px;
-}
-html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-step {
-  width: 44px;
-}
-html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-tavern {
-  grid-template-columns: minmax(0, 1fr) 240px;
+/* ==========================================================================
+   footer — back on the left; the choice and its action on the right
+   ========================================================================== */
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .run-box[data-shell="page"]
+  > .modal-footer.run-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   gap: 16px;
-  margin-top: 16px;
-}
-html[data-skin="slate"] body.mobile-portrait #modal.folio-host .run-box .run-tavern {
-  grid-template-columns: minmax(0, 1fr);
-}
-html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-wares {
-  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
-  gap: 12px;
-}
-html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-card {
-  max-width: 120px;
-}
-html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-buy {
   width: 100%;
-  min-height: 36px;
-  padding: 0 8px;
-  font-size: 14px;
+  max-width: var(--run-col);
+  margin: 0 auto;
+  padding: 16px 0 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .run-box[data-shell="page"]
+  > .modal-footer
+  > #run-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 22px 0 18px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box #run-home .ui-icon {
+  width: 18px;
+  height: 18px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box #run-selection {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--slate-ink-2);
+  font: 500 15px/1.4 var(--slate-font);
+  text-align: right;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 html[data-skin="slate"]
-  body.touch-layout
+  body
   #modal.folio-host
-  .run-box
-  .run-bundle-cards
-  .run-card {
-  max-width: none;
-}
-/* landscape: the page between the title and the footer is barely 250px tall,
- * so a tile must fit it whole — a smaller picture, tighter rows, and the pick
- * label left out (the whole tile is the button and shows its pressed state) */
-html[data-skin="slate"]
-  body.mobile-landscape
-  #modal.folio-host
-  .rewards-box.run-box
-  .relic-choice {
-  gap: 4px;
-  padding: 10px 12px;
-}
-/* (under .relic-options: the phone picture rules further down share this
- * specificity and would otherwise win by order) */
-html[data-skin="slate"]
-  body.mobile-landscape
-  #modal.folio-host
-  .rewards-box.run-box
-  .relic-options
-  .relic-choice
-  .relic-art {
-  width: 56px;
-  height: 56px;
-}
-html[data-skin="slate"]
-  body.mobile-landscape
-  #modal.folio-host
-  .rewards-box.run-box
-  .relic-options
-  .relic-choice
-  .relic-art
-  img {
-  width: 56px;
-  height: 56px;
-}
-html[data-skin="slate"]
-  body.mobile-landscape
-  #modal.folio-host
-  .rewards-box.run-box
-  .relic-pick-label {
-  display: none;
-}
-html[data-skin="slate"]
-  body.mobile-landscape
-  #modal.folio-host
-  .run-box
-  .run-foe-title {
-  margin-top: -4px;
-}
-html[data-skin="slate"]
-  body.mobile-landscape
-  #modal.folio-host
-  .run-box
-  .relic-choice
-  > .run-card {
-  max-width: 84px;
-}
-/* landscape: two foes share the row the three relics would */
-html[data-skin="slate"]
-  body.mobile-landscape
-  #modal.folio-host
-  .rewards-box.run-box
-  .relic-options.run-foes {
-  grid-template-columns: none;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 360px);
-  justify-content: center;
-}
-/* portrait: the relic tile's two-column grid (mobile.css) has one art cell and
- * three text rows; a run tile carries more (a card row, stats, an awakening),
- * so it stacks instead */
-html[data-skin="slate"]
-  body.mobile-portrait
-  #modal.folio-host
-  .rewards-box.run-box
-  .relic-choice {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 16px 16px 14px;
-}
-html[data-skin="slate"]
-  body.mobile-portrait
-  #modal.folio-host
-  .rewards-box.run-box
-  .relic-choice
-  p {
-  text-align: center;
-}
-html[data-skin="slate"]
-  body.mobile-portrait
-  #modal.folio-host
-  .rewards-box.run-box
-  .relic-pick-label {
-  margin: 4px auto 0;
-}
-html[data-skin="slate"]
-  body.mobile-portrait
-  #modal.folio-host
-  .rewards-box.run-box
-  .relic-art {
-  grid-row: auto;
-}
-html[data-skin="slate"]
-  body.mobile-portrait
-  #modal.folio-host
-  .run-box
-  .run-bundle-names {
-  width: auto;
-}
-/* the legacy phone sheets pin every `.relic-choice img` absolutely at the
- * tile's top-left (where the relic grid's art cell happens to be) at 76px:
- * a stacked tile keeps its pictures in flow, and a card's art fills its face */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box.run-box
-  .relic-choice
-  .relic-art {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 88px;
-  height: 88px;
-  margin: 0 auto;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box.run-box
-  .relic-choice
-  .relic-art
-  img {
-  position: static;
-  inset: auto;
-  width: 88px;
-  height: 88px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box.run-box
-  .run-foe
-  .relic-art
-  img {
-  object-fit: cover;
-  border-radius: 50%;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box.run-box
-  .relic-choice
-  .card
-  .card-art
-  img {
-  position: static;
-  inset: auto;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: var(--art-pos, 50% 22%);
-  border-radius: 0;
-  filter: saturate(0.88) contrast(1.02);
+  > .run-box[data-shell="page"]
+  > .modal-footer
+  > #run-confirm {
+  min-width: 240px;
 }
 
-/* ---- hero select: the expedition brings no deck or covenants of its own -- */
+/* ==========================================================================
+   short desktop windows (1280×720 and the like): a smaller well
+   ========================================================================== */
+@media (max-height: 820px) {
+  html[data-skin="slate"] body:not(.touch-layout) #modal.folio-host .run-box .run-art {
+    height: 168px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host
+    .run-box
+    .run-foe
+    .run-art {
+    height: 200px;
+  }
+  html[data-skin="slate"] body:not(.touch-layout) #modal.folio-host .run-box .run-foe {
+    grid-template-columns: 150px minmax(0, 1fr);
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host
+    .run-box
+    .run-foe
+    .run-copy {
+    padding-top: 8px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host
+    .run-box
+    .run-relic-tile
+    .run-art
+    img {
+    width: 136px;
+    height: 136px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host
+    .run-box
+    .run-card {
+    --card-w: 108px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host
+    .run-box
+    .run-bundle-cards
+    .run-card {
+    --card-w: 96px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host
+    .run-box
+    .run-ware
+    .run-card {
+    --card-w: 140px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host
+    > .run-box[data-shell="page"]
+    > .modal-heading.run-heading {
+    row-gap: 16px;
+  }
+  html[data-skin="slate"] body:not(.touch-layout) #modal.folio-host .run-box .run-option {
+    gap: 14px;
+  }
+}
+
+/* ==========================================================================
+   touch — tablets keep the desktop grid; phones stack
+   ========================================================================== */
+html[data-skin="slate"] body.touch-layout #modal.folio-host > .run-box {
+  --run-gap: 16px;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host
+  > .run-box[data-shell="page"]
+  > .modal-heading.run-heading {
+  padding-left: 0;
+}
+/* the heading's chips and the path never wrap on touch: the chips scroll
+ * sideways under the title, the path shrinks */
+@media (max-width: 760px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .run-box[data-shell="page"]
+    > .modal-heading.run-heading {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "title"
+      "status"
+      "track";
+    row-gap: 12px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-eyebrow {
+    font-size: 13px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .run-box[data-shell="page"]
+    > .modal-heading
+    h2 {
+    font-size: 24px;
+    line-height: 32px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .run-box[data-shell="page"]
+    > .modal-heading
+    p.run-sub {
+    margin-top: 4px;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-status {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    margin: 0 -16px;
+    padding: 2px 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .run-box
+    .run-status::-webkit-scrollbar {
+    display: none;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .run-box
+    .run-status
+    > :is(span, details) {
+    height: 34px;
+  }
+  /* the deck popover would be clipped by the scrolling chip row: on a phone
+   * it opens as a sheet pinned under the row */
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-status > .run-deck {
+    position: static;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-deck ul {
+    position: fixed;
+    top: auto;
+    left: 16px;
+    right: 16px;
+    width: auto;
+    max-width: none;
+    margin-top: 8px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-track {
+    padding-bottom: 16px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-step {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-step.final {
+    width: 32px;
+    height: 32px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-stop {
+    min-width: 10px;
+    height: 28px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-stop::before {
+    left: 3px;
+    right: 3px;
+  }
+  /* the stop's word becomes its coloured dot */
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-stop small {
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 50%;
+    background: #e9cf8f;
+    box-shadow: none;
+    color: transparent;
+    font-size: 0;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .run-box
+    .run-stop.tavern
+    small {
+    background: #f2b98f;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .run-box
+    .run-stop.done
+    small {
+    background: #5aa9ff;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .run-box
+    .run-stop.current
+    small {
+    width: 12px;
+    height: 12px;
+    background: var(--slate-blue-deep);
+    box-shadow: var(--lg-select-ring);
+  }
+
+  /* tiles: one column; a picture beside the words */
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-options {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-option {
+    display: grid;
+    grid-template-columns: 104px minmax(0, 1fr);
+    align-items: start;
+    gap: 14px;
+    padding: 10px 14px 12px 10px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-art {
+    height: 136px;
+    border-radius: 14px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .run-box
+    .run-relic-tile
+    .run-art
+    img {
+    width: 100px;
+    height: 100px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-card {
+    --card-w: 88px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-copy {
+    gap: 4px;
+    padding: 4px 0 0;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-copy h3 {
+    font-size: 18px;
+    line-height: 24px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-copy p {
+    margin-top: 2px;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-pick {
+    top: -2px;
+    right: 0;
+    width: 26px;
+    height: 26px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-foe .run-art {
+    height: 136px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-foe .run-copy {
+    padding: 4px 0 0;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-foe-stats {
+    flex-wrap: wrap;
+    margin: 4px 0 0;
+  }
+  /* a bundle keeps its fanned cards on top, full width */
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-bundle {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 10px 10px 14px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .run-box
+    .run-bundle
+    .run-art {
+    height: 150px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .run-box
+    .run-bundle
+    .run-copy {
+    padding: 0 6px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .run-box
+    .run-bundle-cards
+    .run-card {
+    --card-w: 90px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-bundle-names {
+    margin-top: 6px;
+    gap: 6px;
+  }
+
+  /* tavern: the shelf above, three to a row; the strike panel beneath */
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-tavern {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-wares {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .run-box
+    .run-ware
+    .run-card {
+    --card-w: min(104px, calc((100vw - 52px) / 3));
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-buy {
+    width: 100%;
+    padding: 0 8px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-remove {
+    margin-top: 0;
+    padding: 18px 16px;
+  }
+
+  /* footer: two pills, the words above them */
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .run-box[data-shell="page"]
+    > .modal-footer.run-footer {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-top: 12px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box #run-selection {
+    order: -1;
+    flex: 1 1 100%;
+    font-size: 13px;
+    text-align: center;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box #run-selection:empty {
+    display: none;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .run-box[data-shell="page"]
+    > .modal-footer
+    > button {
+    min-height: 50px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .run-box[data-shell="page"]
+    > .modal-footer
+    > #run-home {
+    flex: none;
+    padding: 0 18px 0 14px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .run-box[data-shell="page"]
+    > .modal-footer
+    > #run-confirm {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
+/* short landscape (phones on their side): one compact heading row, the tiles
+ * side by side, words beside small pictures */
+@media (max-height: 500px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .run-box[data-shell="page"]
+    > .modal-heading.run-heading {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "title status"
+      "track track";
+    row-gap: 8px;
+    column-gap: 16px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .run-box[data-shell="page"]
+    > .modal-heading
+    :is(p.run-sub, .run-eyebrow) {
+    display: none;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .run-box[data-shell="page"]
+    > .modal-heading
+    h2 {
+    font-size: 20px;
+    line-height: 28px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-status {
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .run-box
+    .run-status
+    > :is(span, details) {
+    height: 32px;
+    padding: 0 12px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .run-box
+    .run-status
+    > :is(.run-relics, .run-contracts) {
+    display: none;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-deck summary {
+    height: 32px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-track {
+    padding-bottom: 0;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-step,
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-stop {
+    height: 24px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-step {
+    width: 24px;
+    font-size: 12px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-step.final {
+    width: 26px;
+    height: 26px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-step small {
+    display: none;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-stop small {
+    padding: 3px 8px;
+    font-size: 11px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .run-box[data-shell="page"]
+    > .folio-pane {
+    margin-top: 6px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .modal-scroll {
+    padding: 8px 6px 8px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-options {
+    grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr));
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-foes {
+    grid-template-columns: repeat(var(--n, 2), minmax(0, 380px));
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-option {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+    padding: 8px 10px 10px 8px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-art {
+    height: 100px;
+    border-radius: 12px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-foe .run-art {
+    height: 100px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .run-box
+    .run-relic-tile
+    .run-art
+    img {
+    width: 72px;
+    height: 72px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-card {
+    --card-w: 66px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-copy {
+    gap: 2px;
+    padding: 2px 0 0;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-copy h3 {
+    font-size: 16px;
+    line-height: 22px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-copy p {
+    margin-top: 0;
+    font-size: 16px;
+    line-height: 1.45;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-foe-title {
+    display: none;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-foe-stats {
+    margin: 2px 0;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-pick {
+    top: -1px;
+    right: 0;
+    width: 22px;
+    height: 22px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-bundle {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .run-box
+    .run-bundle
+    .run-art {
+    height: 92px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .run-box
+    .run-bundle
+    :is(.run-copy > p) {
+    display: none;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .run-box
+    .run-bundle-cards
+    .run-card {
+    --card-w: 56px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-bundle-names {
+    margin-top: 2px;
+    gap: 2px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-bundle-names li {
+    font-size: 13px;
+    line-height: 20px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-deck-cost {
+    width: 18px;
+    height: 18px;
+    margin-right: 6px;
+    font-size: 11px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-tavern {
+    grid-template-columns: auto 260px;
+    gap: 20px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-shelf h3 {
+    display: none;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-wares {
+    gap: 12px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    .run-box
+    .run-ware
+    .run-card {
+    --card-w: 100px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-ware {
+    gap: 8px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-remove {
+    margin-top: 0;
+    gap: 10px;
+    padding: 14px 14px;
+  }
+  html[data-skin="slate"] body.touch-layout #modal.folio-host .run-box .run-remove p {
+    display: none;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .run-box[data-shell="page"]
+    > .modal-footer.run-footer {
+    padding-top: 8px;
+  }
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .run-box[data-shell="page"]
+    > .modal-footer
+    > button {
+    min-height: 44px;
+  }
+}
+
+/* ==========================================================================
+   hero select: the expedition brings no deck or covenants of its own
+   ========================================================================== */
 html[data-skin="slate"]
   body
   #modal

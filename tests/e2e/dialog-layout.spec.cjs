@@ -50,17 +50,26 @@ for (const [width, height] of [
     }
     if (width === 1600) {
       await turnTo(page, ".hero-option");
-      // the card stage (design system §5.1, 2026-09-22): the four hero cards
-      // share one row under the relief card, and the choices column sits to
-      // the right of that card
+      // the card stage (design system §5.1, 2026-09-28): three columns read
+      // left to right — the four hero cards as a 2×2 block, the relief card,
+      // the choices column — and the relief card is vertically centred on the
+      // hero block
       const cards = await page
         .locator(".hero-option")
         // offsetTop, not the client rect: the selected card lifts 8px
-        .evaluateAll((es) => es.map((e) => e.offsetTop));
-      expect(Math.max(...cards) - Math.min(...cards)).toBeLessThanOrEqual(1);
+        .evaluateAll((es) => es.map((e) => [e.offsetLeft, e.offsetTop]));
+      expect(new Set(cards.map(([x]) => x)).size).toBe(2);
+      expect(new Set(cards.map(([, y]) => y)).size).toBe(2);
+      const roster = await page.locator(".hero-options").boundingBox();
       const showcase = await page.locator(".scene-showcase").boundingBox();
       const config = await page.locator(".hero-configuration").boundingBox();
+      expect(roster.x + roster.width).toBeLessThan(showcase.x);
       expect(config.x).toBeGreaterThan(showcase.x + showcase.width);
+      expect(
+        Math.abs(
+          roster.y + roster.height / 2 - (showcase.y + showcase.height / 2),
+        ),
+      ).toBeLessThanOrEqual(2);
       await expect(page.locator(".hero-dossier")).toHaveCount(0);
     }
 

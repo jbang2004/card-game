@@ -557,14 +557,23 @@ html[data-skin="slate"]
   :is(.deck-row-name, .count) {
   text-shadow: 0 1px 3px #00000099;
 }
+/* the count sits on the row's artwork: a small dark capsule keeps it legible
+ * over bright art (ice, gold) where a text shadow alone did not */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="library"]
   .deck-row
   .count {
-  font: 600 14px/1 var(--slate-font);
+  min-width: 30px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #0b0d12b3;
+  box-shadow: var(--lg-rim-soft);
+  font: 600 13px/1 var(--slate-font);
   font-variant-numeric: tabular-nums;
-  color: var(--slate-ink-2);
+  color: #fff;
+  text-align: center;
+  text-shadow: none;
 }
 
 /* ---------- mana curve: accent capsules ---------- */

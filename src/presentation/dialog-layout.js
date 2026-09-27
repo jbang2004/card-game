@@ -85,6 +85,7 @@ const EmberDialogs = (() => {
     discover: "discover",
     mulligan: "mulligan",
     rewards: "choice",
+    run: "run",
     help: "help",
     atelier: "atelier",
   });
@@ -99,6 +100,7 @@ const EmberDialogs = (() => {
     library: "page",
     route: "page",
     covenant: "page",
+    run: "page",
     detail: "stage",
     discover: "stage",
     mulligan: "stage",
