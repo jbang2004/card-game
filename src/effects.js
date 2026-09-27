@@ -410,7 +410,7 @@ const EmberFX = (() => {
     return EmberFXProfiles.fromPalette(card.palette);
   }
   function powerSchool(side, s) {
-    return side === "e" && s?.mode !== "practice"
+    return side === "e" && !s?.opponentHero
       ? EmberFXProfiles.fromPalette(EmberData.bosses[s?.bossIndex]?.palette)
       : { mage: "fire", paladin: "holy", ranger: "steel" }[
           side === "e" ? s?.opponentHero : s?.heroId
@@ -2141,7 +2141,7 @@ const EmberFX = (() => {
       if (ref?.uid === "hero") {
         const heroId =
           ref.side === "e"
-            ? s?.mode !== "practice" && EmberData.bosses[s?.bossIndex]
+            ? !s?.opponentHero && EmberData.bosses[s?.bossIndex]
               ? EmberData.bosses[s.bossIndex].portraitId
               : s?.opponentHero
             : s?.heroId;

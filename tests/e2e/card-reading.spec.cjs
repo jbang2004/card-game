@@ -1,4 +1,5 @@
 const { test, expect } = require("@playwright/test");
+const { beginExpedition } = require("./helpers/expedition.cjs");
 
 async function ready(page) {
   await page.goto("./?debug=1");
@@ -15,8 +16,7 @@ async function startMulligan(page) {
   await ready(page);
   await page.locator("#start-btn").click();
   await page.waitForSelector("#hero-confirm");
-  await page.locator("#hero-confirm").click();
-  await page.waitForSelector("#mulligan-confirm");
+  await beginExpedition(page);
 }
 
 function detailMetrics(page) {

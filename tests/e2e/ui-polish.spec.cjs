@@ -1,5 +1,6 @@
 const { openCovenantPage } = require("./helpers/covenant.cjs");
 const { test, expect } = require("@playwright/test");
+const { beginWithCovenants } = require("./helpers/expedition.cjs");
 const { openDeckTools } = require("./helpers/deck-tools.cjs");
 for (const [width, height] of [
   [1600, 940],
@@ -35,7 +36,9 @@ for (const [width, height] of [
     await page.locator("#settings-done").click();
     await page.locator("#start-btn").click();
     await visibleInViewport("#hero-confirm");
-    await page.locator("#hero-confirm").click();
+    // a battle whose run carries covenants, so the ritual progress below has something to show
+    await page.keyboard.press("Escape");
+    await beginWithCovenants(page, "mage");
     await page.locator("#mulligan-confirm").click();
     await page.waitForFunction(() => !EmberFX.busy);
     const commandStyles = await page

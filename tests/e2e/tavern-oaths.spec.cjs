@@ -129,7 +129,7 @@ for (const [width, height] of [
       hasTouch: true,
     });
     const page = await c.newPage();
-    await page.goto("http://127.0.0.1:8000/dist/?debug=1");
+    await page.goto("./?debug=1");
     await ready(page);
     await page.locator("#start-btn").tap();
     if (await page.locator('[data-mode="practice"]').isVisible())
@@ -165,10 +165,11 @@ test("full practice game through visible card/target controls with no stuck trig
   });
   await page.locator("#start-btn").click();
   await page.locator('[data-hero="ranger"]').click();
-  await page.locator("#hero-archetype").selectOption("ranger_death");
+  // the deck is a practice duel's setting: pick the mode first
   if (await page.locator('[data-mode="practice"]').isVisible())
     await page.locator('[data-mode="practice"]').click();
   else await page.locator("#game-mode").selectOption("practice");
+  await page.locator("#hero-archetype").selectOption("ranger_death");
   await page.locator("#practice-opponent").selectOption("mage_burn");
   await page.locator("#hero-confirm").click();
   await page.locator("#mulligan-confirm").click();
@@ -239,51 +240,49 @@ test("full practice game through visible card/target controls with no stuck trig
   await page.screenshot({ path: "artifacts/qa/oaths-practice-result.png" });
 });
 
-test("campaign refit rejects a third copy and carries a legal replacement forward", async ({
+test("the expedition tavern sells each card once, strikes a card for rising gold and moves on", async ({
   page,
 }) => {
   await page.goto("./?debug=1");
   await ready(page);
-  await page.locator("#start-btn").click();
-  await page.locator("#hero-confirm").click();
-  await page.locator("#mulligan-confirm").click();
-  await idle(page);
-  const choices = await page.evaluate(() => {
-    const g = EmberDebug.game,
-      deck = g.s.customDeck;
-    const counts = Object.fromEntries(
-      [...new Set(deck)].map((id) => [id, deck.filter((x) => x === id).length]),
-    );
-    const twice = Object.keys(counts).find((id) => counts[id] === 2);
-    const remove = deck.find((id) => id !== twice);
-    const add = EmberData.cards.find(
-      (c) => !c.token && c.class === "mage" && !counts[c.id],
-    ).id;
-    Emberfall.settings.reduced = true;
-    EmberFX.configure(true, false);
-    g.s.e.hp = 0;
-    g.cleanup();
-    g.emit();
-    return { twice, remove, add, deck: [...deck] };
+  // a run that has won its first two levels, stored at the tavern after level 2
+  await page.evaluate(() => {
+    const D = EmberData,
+      R = EmberRun;
+    let run = R.create(D, "mage", 99);
+    while (run.step !== "tavern") {
+      if (run.step === "route") run = R.choose(D, run, run.offer.foes[0]);
+      else if (run.step === "battle") run = R.resolve(D, run, "p");
+      else if (run.step === "treasure") run = R.takeTreasure(D, run, 0);
+      else run = R.takeBundle(D, run, 0);
+    }
+    localStorage.setItem("emberfall.run.v1", JSON.stringify({ ...run, gold: 200 }));
   });
-  await page.locator("#result-next").click();
-  await page.locator(".campaign-refit summary").click();
-  await page.locator("#refit-remove").selectOption(choices.remove);
-  await page.locator("#refit-add").selectOption(choices.twice);
-  await page.locator(".relic-choice").first().click();
-  await page.locator("#reward-confirm").click();
-  await expect(page.locator("#refit-status")).toContainText("最多 2 张");
-  expect(await page.evaluate(() => Emberfall.game.s.bossIndex)).toBe(0);
-  expect(await page.evaluate(() => Emberfall.game.s.customDeck)).toEqual(
-    choices.deck,
+  await page.locator("#start-btn").click();
+  await expect(page.locator('#modal .run-box[data-run-step="tavern"]')).toBeVisible();
+  const run = () =>
+    page.evaluate(() => JSON.parse(localStorage.getItem("emberfall.run.v1")));
+  const before = await run();
+  await page.locator('[data-buy="0"]').click();
+  let after = await run();
+  expect(after.deck.length).toBe(before.deck.length + 1);
+  expect(after.gold).toBe(200 - before.offer.cards[0].price);
+  await expect(page.locator('[data-buy="0"]')).toBeDisabled();
+  await expect(page.locator('[data-buy="0"]')).toHaveText("已售出");
+  const struck = after.deck[0];
+  await page.locator("#run-remove-card").selectOption(struck);
+  await page.locator("#run-remove").click();
+  const removed = await run();
+  expect(removed.deck.length).toBe(after.deck.length - 1);
+  expect(removed.gold).toBe(after.gold - before.offer.removePrice);
+  expect(removed.offer.removePrice).toBe(
+    before.offer.removePrice +
+      (await page.evaluate(() => EmberData.dungeon.prices.removeStep)),
   );
-  await page.locator("#refit-add").selectOption(choices.add);
-  await page.locator(".relic-choice").first().click();
-  await page.locator("#reward-confirm").click();
-  const expected = [...choices.deck];
-  expected[expected.indexOf(choices.remove)] = choices.add;
-  expect(await page.evaluate(() => Emberfall.game.s.customDeck)).toEqual(
-    expected,
-  );
-  await expect(page.locator("#mulligan-confirm")).toBeVisible();
+  await expect(page.locator("#run-remove")).toContainText(String(removed.offer.removePrice));
+  await page.locator("#run-confirm").click();
+  await expect(page.locator('#modal .run-box[data-run-step="route"]')).toBeVisible();
+  after = await run();
+  expect(after.level).toBe(3);
+  expect(after.deck).toEqual(removed.deck);
 });

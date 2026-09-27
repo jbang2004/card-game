@@ -6,7 +6,8 @@
     $ = (id) => document.getElementById(id),
     app = $("app");
   const STORE = "emberfall.v1",
-    SETTINGS = "emberfall.settings.v1";
+    SETTINGS = "emberfall.settings.v1",
+    RUN_STORE = "emberfall.run.v1";                    // the expedition in progress (EmberRun)
   const {
     escape,
     formatText,
@@ -19,6 +20,7 @@
   const {
     read: readStore,
     write: writeStore,
+    remove: removeStore,
     readResult,
   } = EmberStorage.create(
     () => localStorage,
@@ -85,16 +87,20 @@
     toast,
     preview,
     hidePreview,
+    // a named deck goes into a practice duel (the expedition brings its own deck)
     onStart(hero) {
       chosenHero = hero;
       if (inBattle && !isDemo)
         showConfirm(
-          "开启新的战役",
-          "当前战役进度将被新战役覆盖。已应用的卡组会保留。",
-          showHeroes,
+          "离开当前战斗",
+          "用这套牌组开始练习对战。远征的进度已保存，可从营地继续。",
+          () => {
+            save();
+            showHeroes("practice");
+          },
           "选择英雄",
         );
-      else showHeroes();
+      else showHeroes("practice");
     },
   });
   const screenContext = {
@@ -117,6 +123,10 @@
     keywords,
     showHeroes,
     showHelp,
+    startRun,
+    startRunBattle,
+    saveRun,
+    clearRun,
     get chosenHero() {
       return chosenHero;
     },
@@ -133,8 +143,56 @@
   const screens = Object.freeze({
     heroes: EmberHeroScreens.create(screenContext),
     campaign: EmberCampaignScreens.create(screenContext),
+    run: EmberRunScreens.create(screenContext),
     preferences: EmberPreferenceScreens.create(screenContext),
   });
+  // ------------------------------------------------------------------ the expedition (EmberRun)
+  /** the stored run, when it is whole and still going */
+  function activeRun() {
+    const run = readStore(RUN_STORE);
+    return EmberRun.valid(run, D) && run.step !== "won" && run.step !== "lost" ? run : null;
+  }
+  function saveRun(run) {
+    writeStore(RUN_STORE, run);
+  }
+  function clearRun() {
+    removeStore(RUN_STORE);
+    if (readStore(STORE)?.mode === "run") removeStore(STORE);
+  }
+  /** a new expedition with this hero (it replaces any stored run and the match it was fighting) */
+  function startRun(heroId) {
+    const run = EmberRun.create(D, heroId, Date.now());
+    if (run.error) { toast(run.error); return; }
+    saveRun(run);
+    removeStore(STORE);
+    chosenHero = heroId;
+    closeModal(false);
+    screens.run.show(run);
+  }
+  /** the battle the run chose */
+  function startRunBattle(run) {
+    startGame(run.heroId, 0, run.relics, run.deck, {
+      run: { level: run.level, foe: run.foe, devotion: run.devotion },
+      contracts: run.contracts,
+    });
+  }
+  /** back into the stored run: its battle (the saved match, or a fresh start of it) or its next choice */
+  function resumeRun(run) {
+    if (run.step !== "battle") { screens.run.show(run); return; }
+    const s = validSave();
+    if (s?.mode === "run" && s.run.level === run.level && s.run.foe === run.foe) continueGame();
+    else startRunBattle(run);
+  }
+  /** a run battle is over and the player moves on: the run takes the result */
+  function runAfterBattle() {
+    const run = readStore(RUN_STORE);
+    closeModal(false);
+    if (!EmberRun.valid(run, D)) { home(); return; }
+    inBattle = false;
+    setView(false);
+    screens.run.afterBattle(run, game.s);
+  }
+  screenContext.runAfterBattle = runAfterBattle;
   function showLibrary() {
     library.show();
   }
@@ -540,37 +598,46 @@
     EmberAudio.toggle(settings.sound);
     EmberFX.configure(settings.reduced, settings.low);
   }
+  // the only match kept is the expedition's, and only while the run is fighting it (once the run has taken its
+  // result it is done); the demo, practice duels and single boss battles are never stored
   function save() {
-    if (game.s && !isDemo && game.s.mode !== "practice")
+    if (!game.s || isDemo || game.s.mode !== "run") return;
+    const run = activeRun();
+    if (run?.step === "battle" && run.level === game.s.run.level && run.foe === game.s.run.foe)
       writeStore(STORE, game.s);
+    else removeStore(STORE);
   }
   function validSave() {
     const s = readStore(STORE);
-    return EmberState.valid(s, D) ? s : null;
+    return EmberState.valid(s, D) && s.mode === "run" ? s : null;
   }
   function updateStart() {
-    const s = validSave();
-    const discarded = readStore(STORE) && !s;
+    const run = activeRun();
+    // a stored match or run this version cannot read (an old campaign, a broken save) is dropped, and said so
+    const discarded =
+      (readStore(STORE) && !validSave()) ||
+      (readStore(RUN_STORE) && !EmberRun.valid(readStore(RUN_STORE), D));
     document.querySelector(".local-status").textContent = discarded
       ? "测试存档已失效，请重新开始"
-      : "单人战役";
-    $("start-btn").querySelector(".home-action-label").textContent = s
-      ? "继续冒险"
-      : "开启冒险";
-    $("quick-btn").querySelector(".home-action-label").textContent = s
+      : "地下城远征";
+    $("start-btn").querySelector(".home-action-label").textContent = run
+      ? "继续远征"
+      : "开启远征";
+    $("quick-btn").querySelector(".home-action-label").textContent = run
       ? "新的旅程"
       : "战斗试玩";
     $("lobby-save-status").textContent = discarded
       ? "测试存档已失效，请重新开始"
-      : s
-        ? "旅程已保存，等待你归来。"
+      : run
+        ? `远征第 ${run.level} 层 · 牌组 ${run.deck.length} 张，等待你归来。`
         : "";
-    $("quick-btn").title = s
-      ? "开始新战役（确认后覆盖当前进度）"
-      : "从第 6 回合开始的示范战斗，不影响战役存档";
-    // A saved run's next encounter is already decided while the player is
+    $("quick-btn").title = run
+      ? "开始新的远征（确认后覆盖当前进度）"
+      : "从第 6 回合开始的示范战斗，不影响远征存档";
+    // A run fighting a battle already knows its opponent while the player is
     // still looking at the lobby: start that request now, not on the click.
-    if (s) preloadEncounter(s.bossIndex, s.mode);
+    const foe = run?.step === "battle" && EmberRun.foe(D, run.level, run.foe);
+    if (foe) preloadEncounter(foe.bossIndex ?? 0, foe.kind === "rival" ? "practice" : null);
   }
   /* The battle arena is rendered live (presentation/arena-3d.js); its material
    * maps are separate HTTP assets in the web build. The boss is known well
@@ -584,7 +651,8 @@
     EmberArena3D.preload();
   }
   function startGame(hero, boss = 0, relics = [], deck = null, options = {}) {
-    preloadEncounter(boss, options.opponent ? "practice" : null);
+    const runFoe = options.run && EmberRun.foe(D, options.run.level, options.run.foe);
+    preloadEncounter(runFoe?.kind === "boss" ? runFoe.bossIndex : boss, options.opponent || runFoe?.kind === "rival" ? "practice" : null);
     EmberFX.cancel();
     runToken++;
     clearTimeout(aiTimer);
@@ -609,7 +677,7 @@
       showHeroes();
       return;
     }
-    preloadEncounter(s.bossIndex, s.mode);
+    preloadEncounter(s.bossIndex, s.opponentHero ? "practice" : null);
     runToken++;
     isDemo = false;
     inBattle = true;
@@ -667,14 +735,14 @@
     setView(false);
   }
   function newJourney() {
-    if (validSave())
+    if (activeRun())
       showConfirm(
         "重燃一段新的旅程",
-        "开启新战役后，当前战役的本地进度将被覆盖。卡组和设置不会受到影响。",
-        () => showHeroes(),
+        "开启新的远征后，当前远征的本地进度将被覆盖。卡组和设置不会受到影响。",
+        () => showHeroes("campaign"),
         "选择英雄",
       );
-    else showHeroes();
+    else showHeroes("campaign");
   }
   function demo() {
     // `Game.demo` always stages the first boss.
@@ -989,19 +1057,20 @@
     if (manaRefreshed) manaTurn = s.turn;
     contractUI.render(s);
     EmberFX.setTheme(s.bossIndex, s.phase2);
+    // the opponent: a hero (a practice duel, an expedition's rival — its preset's name leads) or a boss
     const hero = D.heroes.find((h) => h.id === s.heroId),
-      boss =
-        s.mode === "practice"
-          ? {
-              ...D.heroes.find((h) => h.id === s.opponentHero),
-              en: "PRACTICE DUEL",
-              phaseText: "双方 30 血，无遗物与首领觉醒。",
-            }
-          : D.bosses[s.bossIndex];
+      rival = s.mode === "run" && s.opponentHero ? EmberRun.foe(D, s.run.level, s.run.foe) : null,
+      boss = s.opponentHero
+        ? {
+            ...D.heroes.find((h) => h.id === s.opponentHero),
+            en: rival ? "RIVAL" : "PRACTICE DUEL",
+            phaseText: rival ? `劲敌「${rival.name}」，没有觉醒阶段。` : "双方 30 血，无遗物与首领觉醒。",
+          }
+        : D.bosses[s.bossIndex];
     if (typeof EmberArena3D !== "undefined")
-      EmberArena3D.setEncounter(s.mode === "practice" ? "practice" : boss.id);
+      EmberArena3D.setEncounter(s.opponentHero ? "practice" : boss.id);
     $("chapter-name").textContent =
-      s.mode === "practice" ? "酒馆练习" : boss.title;
+      s.mode === "practice" ? "酒馆练习" : s.mode === "run" ? `远征第 ${s.run.level} 层 · ${rival ? rival.name : boss.title}` : boss.title;
     $("relic-slots").innerHTML = s.relics
       .map((id) => {
         const r = D.relics.find((x) => x.id === id);
@@ -1010,13 +1079,13 @@
       .join("");
     $("relic-slots").hidden = !s.relics.length;
     $("boss-order").textContent =
-      s.mode === "practice" ? "对手情报" : "首领情报";
+      s.mode === "practice" ? "对手情报" : rival ? "劲敌情报" : "首领情报";
     $("boss-name").textContent = boss.name;
     $("boss-power-info").innerHTML =
       `<strong>${boss.power}</strong><p>${boss.powerText || "双方使用英雄技能，无首领觉醒。"}</p>`;
     $("phase-info").classList.toggle("awaken", s.phase2);
     $("phase-info").innerHTML =
-      `<small>${s.mode === "practice" ? "公平练习" : s.phase2 ? "PHASE II · 已觉醒" : "PHASE II · 半血觉醒"}</small><p>${boss.phaseText}</p>`;
+      `<small>${s.mode === "practice" ? "公平练习" : rival ? "无觉醒" : s.phase2 ? "PHASE II · 已觉醒" : "PHASE II · 半血觉醒"}</small><p>${boss.phaseText}</p>`;
     for (const side of ["p", "e"]) {
       const p = s[side],
         data = side === "p" ? hero : boss,
@@ -1047,7 +1116,7 @@
           side === "p"
             ? `<div class="weapon-slot" id="weapon-slot"${weapon ? "" : " hidden"} title="${weapon ? weaponCard.name + "：攻击 " + weapon.atk + "，耐久 " + weapon.durability + "。点击英雄攻击。" : "未装备武器"}">${weapon ? `<img src="${A.card(weaponCard)}" alt="${weaponCard.name}"><b aria-label="攻击 ${weapon.atk}">${weapon.atk}</b><b aria-label="耐久 ${weapon.durability}">${weapon.durability}</b>` : ""}</div>`
             : "";
-      el.innerHTML = `<div class="hero-card-inner"><div class="portrait-frame"><img src="${A.character(data)}" data-art-key="${data.portraitId}" alt="${data.name}" draggable="false" style="${artStyleForHero(data, "hero")}"></div><span class="hero-card-plaque" aria-hidden="true"></span><div class="hero-name">${data.name}</div></div><div class="hero-chips">${stats}${covenant}${handChip}</div>${weaponMarkup}${p.secrets.length ? '<div class="secret-indicator" title="奥秘已布置">?</div>' : ""}${side === "e" && s.mode !== "practice" ? `<div class="hero-phase">${s.phase2 ? "阶段 II" : "阶段 I"}</div>` : ""}`;
+      el.innerHTML = `<div class="hero-card-inner"><div class="portrait-frame"><img src="${A.character(data)}" data-art-key="${data.portraitId}" alt="${data.name}" draggable="false" style="${artStyleForHero(data, "hero")}"></div><span class="hero-card-plaque" aria-hidden="true"></span><div class="hero-name">${data.name}</div></div><div class="hero-chips">${stats}${covenant}${handChip}</div>${weaponMarkup}${p.secrets.length ? '<div class="secret-indicator" title="奥秘已布置">?</div>' : ""}${side === "e" && !s.opponentHero ? `<div class="hero-phase">${s.phase2 ? "阶段 II" : "阶段 I"}</div>` : ""}`;
       el.dataset.heroClass = data.classId || "boss";
       el.classList.toggle("frozen", p.frozen);
       el.classList.toggle("ready", game.canAttack(side, "hero"));
@@ -2479,9 +2548,6 @@
   function showResult(...args) {
     return screens.campaign.showResult(...args);
   }
-  function showRewards(...args) {
-    return screens.campaign.showRewards(...args);
-  }
   function showSettings(...args) {
     return screens.preferences.showSettings(...args);
   }
@@ -2490,18 +2556,22 @@
   }
   $("start-btn").onclick = () => {
     EmberAudio.unlock();
-    validSave() ? continueGame() : showHeroes();
+    const run = activeRun();
+    if (run) resumeRun(run);
+    else showHeroes("campaign");
   };
   $("quick-btn").onclick = () => {
     EmberAudio.unlock();
-    validSave() ? newJourney() : demo();
+    activeRun() ? newJourney() : demo();
   };
   $("home-btn").onclick = () => {
     if (inBattle) home();
   };
   $("adventure-nav").onclick = () => {
     if (modalType) closeModal();
-    if (!inBattle && validSave()) continueGame();
+    if (inBattle) return;
+    const run = activeRun();
+    if (run) resumeRun(run);
   };
   $("collection-nav").onclick = showLibrary;
   $("guide-nav").onclick = showHelp;

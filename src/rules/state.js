@@ -39,7 +39,8 @@ const EmberState = (() => {
       )
         return false;
       if ("ruleset" in s || "legacyDeck" in s) return false;
-      if (s.mode !== undefined && s.mode !== "practice") return false;
+      if (s.mode !== undefined && s.mode !== "practice" && s.mode !== "run")
+        return false;
       if (
         s.mode === "practice" &&
         (!data.archetypes.some(
@@ -48,6 +49,20 @@ const EmberState = (() => {
           !["p", "e"].includes(s.first))
       )
         return false;
+      // an expedition battle: its level and opponent are the run's, a rival's preset and hero match it
+      if (s.mode === "run") {
+        const Run =
+          typeof EmberRun !== "undefined" ? EmberRun : require("./run.js");
+        const foe = s.run && Run.foe(data, s.run.level, s.run.foe);
+        if (
+          !foe ||
+          s.first !== "p" ||
+          (foe.kind === "rival"
+            ? s.opponent !== foe.archetype || s.opponentHero !== foe.hero
+            : s.opponent !== undefined || s.bossIndex !== foe.bossIndex)
+        )
+          return false;
+      }
       const validUses = (u) =>
         u === undefined ||
         (u &&
@@ -105,7 +120,7 @@ const EmberState = (() => {
         const cls =
           side === "p"
             ? data.heroes.find((h) => h.id === s.heroId).classId
-            : s.mode === "practice"
+            : s.opponentHero
               ? data.heroes.find((h) => h.id === s.opponentHero).classId
               : data.bosses[s.bossIndex].discoverClass;
         const contracts =
@@ -195,12 +210,6 @@ const EmberState = (() => {
           )
             return false;
         }
-      if (
-        s.rewardOffers !== undefined &&
-        (!Array.isArray(s.rewardOffers) ||
-          s.rewardOffers.some((id) => !data.relics.some((r) => r.id === id)))
-      )
-        return false;
       return true;
     } catch {
       return false;

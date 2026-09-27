@@ -25,7 +25,11 @@ const EmberData = (() => {
     typeof EmberContracts !== "undefined"
       ? EmberContracts
       : require("./rules/contracts.js");
-  function create(input = definitions, world = campaign) {
+  const expedition =
+    typeof EmberDungeon !== "undefined"
+      ? EmberDungeon
+      : require("./content/dungeon.js");
+  function create(input = definitions, world = campaign, dungeonDef = expedition) {
     Schema.validate(world);
     const cards = input.map((c) => ({
       tags: [],
@@ -291,6 +295,30 @@ const EmberData = (() => {
       const result = Decks.check(catalog, h.deck, h.id);
       if (!result.ok) throw Error(h.id + ": " + result.errors.join("; "));
     }
+    // the expedition (content/dungeon.js): its starter decks are the class's own cards, its stages name real
+    // opponents, its prices are whole
+    const dungeon = structuredClone(dungeonDef);
+    if (!Array.isArray(dungeon.stages) || dungeon.stages.length !== dungeon.levels)
+      throw Error("dungeon: one stage per level");
+    for (const h of heroes) {
+      // a hero without a starter of its own sets out with its deck's ten cheapest cards
+      dungeon.starters[h.id] ??= [...h.deck].sort((a, b) => byId[a].cost - byId[b].cost || a.localeCompare(b)).slice(0, 10);
+      const deck = dungeon.starters[h.id], cls = h.classId;
+      if (
+        !Array.isArray(deck) ||
+        deck.length < 5 ||
+        deck.some((id) => !byId[id] || byId[id].token || (byId[id].class !== cls && byId[id].class !== "neutral"))
+      )
+        throw Error(h.id + ": Invalid dungeon starter deck");
+    }
+    dungeon.stages.forEach((st, i) => {
+      if (!Array.isArray(st.pool) || !st.pool.length || st.pool.some((id) => id !== "rival" && !bosses.some((b) => b.id === id)))
+        throw Error("dungeon stage " + (i + 1) + ": Invalid opponent pool");
+      if (st.pool.includes("rival") && !(Number.isInteger(st.rival?.hp) && Number.isInteger(st.rival?.cards)))
+        throw Error("dungeon stage " + (i + 1) + ": Rival needs hp and cards");
+    });
+    for (const k of ["common", "rare", "epic", "legendary", "remove", "removeStep"])
+      if (!Number.isInteger(dungeon.prices[k]) || dungeon.prices[k] < 0) throw Error("dungeon: Invalid price " + k);
     return R.freeze({
       cards,
       classes,
@@ -304,6 +332,7 @@ const EmberData = (() => {
       archetypes,
       classNames,
       tribeNames,
+      dungeon,
     });
   }
   return Object.freeze({ ...create(), create });

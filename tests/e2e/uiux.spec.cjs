@@ -1,25 +1,37 @@
 const { turnTo, assertDialogFit } = require("./helpers/dialog-pages.cjs");
 const { test, expect } = require("@playwright/test");
+const { beginExpedition } = require("./helpers/expedition.cjs");
 async function ready(page) {
   await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
 }
+const storedRun = (page) =>
+  page.evaluate(() => JSON.parse(localStorage.getItem("emberfall.run.v1")));
+// the expedition's first treasure, offered as three relics: the first battle is won, the stored run's offer is
+// set, and the run is shown again as a resumed run is
 async function rewardPage(page) {
   await page.goto("./?debug=1");
   await ready(page);
   await page.locator("#start-btn").click();
-  await page.locator("#hero-confirm").click();
+  await beginExpedition(page);
   await page.locator("#mulligan-confirm").click();
   await page.waitForFunction(() => !EmberFX.busy);
   await page.evaluate(() => {
     Emberfall.settings.reduced = true;
     EmberFX.configure(true, false);
     const g = EmberDebug.game;
-    g.s.rewardOffers = ["heart", "lens", "banner"];
     g.s.e.hp = 0;
     g.cleanup();
     g.emit();
   });
   await page.locator("#result-next").click();
+  await page.locator('#modal .run-box[data-run-step="treasure"]').waitFor();
+  await page.evaluate(() => {
+    const run = JSON.parse(localStorage.getItem("emberfall.run.v1"));
+    run.offer.treasures = ["heart", "lens", "banner"].map((id) => ({ kind: "relic", id }));
+    localStorage.setItem("emberfall.run.v1", JSON.stringify(run));
+  });
+  await page.locator("#run-home").click();
+  await page.locator("#start-btn").click();
   await page
     .locator(".relic-choice img")
     .evaluateAll((xs) => Promise.all(xs.map((x) => x.decode())));
@@ -98,21 +110,21 @@ for (const [width, height, touch] of [
       expect(b.font).toBeGreaterThanOrEqual(16);
       expect(b.within && b.text && !b.overlap).toBe(true);
     }
-    await expect(page.locator("#reward-confirm")).toBeDisabled();
-    await page.locator('[data-relic="heart"]').click();
-    await expect(page.locator('[data-relic="heart"]')).toHaveAttribute(
+    await expect(page.locator("#run-confirm")).toBeDisabled();
+    await page.locator('[data-pick="0"]').click();
+    await expect(page.locator('[data-pick="0"]')).toHaveAttribute(
       "aria-pressed",
       "true",
     );
-    expect(await page.evaluate(() => Emberfall.game.s.bossIndex)).toBe(0);
-    await page.locator('[data-relic="lens"]').click();
-    await expect(page.locator('[data-relic="heart"]')).toHaveAttribute(
+    expect((await storedRun(page)).step).toBe("treasure");
+    await page.locator('[data-pick="1"]').click();
+    await expect(page.locator('[data-pick="0"]')).toHaveAttribute(
       "aria-pressed",
       "false",
     );
-    await page.locator("#reward-confirm").scrollIntoViewIfNeeded();
+    await page.locator("#run-confirm").scrollIntoViewIfNeeded();
     expect(
-      await page.locator("#reward-confirm").evaluate((x) => {
+      await page.locator("#run-confirm").evaluate((x) => {
         const r = x.getBoundingClientRect();
         const hit = document.elementFromPoint(
           r.x + r.width / 2,
@@ -124,11 +136,9 @@ for (const [width, height, touch] of [
     await page.screenshot({
       path: `artifacts/uiux/verified-rewards-${width}.png`,
     });
-    await page.locator("#reward-confirm").click();
-    await expect(page.locator("#mulligan-confirm")).toBeVisible();
-    expect(await page.evaluate(() => Emberfall.game.s.relics)).toEqual([
-      "lens",
-    ]);
+    await page.locator("#run-confirm").click();
+    await expect(page.locator('#modal .run-box[data-run-step="bundle"]')).toBeVisible();
+    expect((await storedRun(page)).relics).toEqual(["lens"]);
     expect(errors).toEqual([]);
     await ctx.close();
   });
@@ -165,13 +175,13 @@ test("enlarged reward rules remain contained and keyboard selection does not aut
   await page.addStyleTag({
     content: ".relic-choice p {font-size:32px !important;}",
   });
-  await page.locator('[data-relic="banner"]').focus();
+  await page.locator('[data-pick="2"]').focus();
   await page.keyboard.press("Space");
-  await expect(page.locator('[data-relic="banner"]')).toHaveAttribute(
+  await expect(page.locator('[data-pick="2"]')).toHaveAttribute(
     "aria-pressed",
     "true",
   );
-  expect(await page.evaluate(() => Emberfall.game.s.bossIndex)).toBe(0);
+  expect((await storedRun(page)).step).toBe("treasure");
   const fit = await page
     .locator(".relic-choice p")
     .evaluateAll((xs) =>
@@ -182,9 +192,9 @@ test("enlarged reward rules remain contained and keyboard selection does not aut
       ),
     );
   expect(fit).toBe(true);
-  await page.locator("#reward-confirm").scrollIntoViewIfNeeded();
-  await page.locator("#reward-confirm").click();
-  await expect(page.locator("#mulligan-confirm")).toBeVisible();
+  await page.locator("#run-confirm").scrollIntoViewIfNeeded();
+  await page.locator("#run-confirm").click();
+  await expect(page.locator('#modal .run-box[data-run-step="bundle"]')).toBeVisible();
 });
 
 test("long collection rules stay above stats on desktop and phone", async ({

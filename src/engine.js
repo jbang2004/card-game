@@ -23,6 +23,8 @@ const EmberEngine = (() => {
     typeof EmberContracts !== "undefined"
       ? EmberContracts
       : require("./rules/contracts.js");
+  const Run =
+    typeof EmberRun !== "undefined" ? EmberRun : require("./rules/run.js");
   class Game {
     constructor(opts = {}) {
       this.data = opts.data || D;
@@ -233,6 +235,13 @@ const EmberEngine = (() => {
       seed = Date.now(),
       options = {},
     ) {
+      // an expedition battle (EmberRun): the opponent the run chose at its level — a rival (a preset deck, cut down)
+      // or a boss (its health scaled); the run's own deck, relics and covenants
+      const runFoe = options.run
+        ? Run.foe(this.data, options.run.level, options.run.foe)
+        : null;
+      if (options.run && !runFoe) return this.reject("未知远征对手");
+      if (runFoe?.kind === "boss") bossIndex = runFoe.bossIndex;
       const hero = this.data.heroes.find((h) => h.id === heroId),
         boss = this.data.bosses[bossIndex];
       if (!hero || !Number.isInteger(bossIndex) || !boss)
@@ -245,18 +254,25 @@ const EmberEngine = (() => {
         return this.reject("未知或重复遗物");
       if (options.first !== undefined && !["p", "e"].includes(options.first))
         return this.reject("无效先后手");
-      if (deck !== null && !this.validateDeck(deck, hero.id))
+      if (runFoe) {
+        if (!Run.legalDeck(this.data, deck, hero.id))
+          return this.reject("远征牌组无效");
+      } else if (deck !== null && !this.validateDeck(deck, hero.id))
         return this.reject(
           Decks.check(this.data, deck, hero.id).errors.join("；"),
         );
-      const opponent = options.opponent
-        ? this.data.archetypes.find((a) => a.id === options.opponent)
-        : null;
+      const opponent =
+        runFoe?.kind === "rival"
+          ? this.data.archetypes.find((a) => a.id === runFoe.archetype)
+          : options.opponent
+            ? this.data.archetypes.find((a) => a.id === options.opponent)
+            : null;
       if (options.opponent && !opponent) return this.reject("未知练习对手");
-      const contracts = options.contracts ?? hero.defaultContracts ?? [];
+      const contracts =
+        options.contracts ?? (runFoe ? [] : (hero.defaultContracts ?? []));
       if (!Contracts.check(this.data, contracts, hero.classId))
         return this.reject("无效契约：最多三张、同职业且至多一位神祇");
-      if (opponent) relics = [];
+      if (opponent && !runFoe) relics = [];
       this.s = {
         version: State.VERSION,
         seq: 0,
@@ -282,9 +298,16 @@ const EmberEngine = (() => {
       );
       if (archetype) this.s.archetype = archetype.id;
       if (opponent) {
-        this.s.mode = "practice";
         this.s.opponent = opponent.id;
         this.s.opponentHero = opponent.hero;
+      }
+      if (runFoe) {
+        // (the player always moves first on an expedition)
+        this.s.mode = "run";
+        this.s.run = { level: options.run.level, foe: runFoe.id };
+        this.s.first = "p";
+      } else if (opponent) {
+        this.s.mode = "practice";
         this.s.first = options.first || (this.rand() < 0.5 ? "p" : "e");
       }
       const unit = (hp) => ({
@@ -315,22 +338,36 @@ const EmberEngine = (() => {
         usedContracts: [],
       });
       this.s.p = unit(30 + this.relicValue("maxHealth"));
-      this.s.e = unit(opponent ? 30 : boss.hp);
+      this.s.e = unit(runFoe ? runFoe.hp : opponent ? 30 : boss.hp);
       this.s.p.contracts = [...contracts];
-      this.s.e.contracts = opponent
-        ? [
-            ...(this.data.heroes.find((h) => h.id === opponent.hero)
-              .defaultContracts || []),
-          ]
-        : [];
-      const valid = this.validateDeck(deck);
+      this.s.e.contracts =
+        opponent && !runFoe
+          ? [
+              ...(this.data.heroes.find((h) => h.id === opponent.hero)
+                .defaultContracts || []),
+            ]
+          : [];
+      // the covenant rituals' progress an expedition carries from battle to battle (the hunt's per-turn count does not)
+      const kept = options.run?.devotion;
+      if (runFoe && kept)
+        this.s.p.devotion = {
+          spells: [...(kept.spells || [])].filter((id) => this.data.byId[id]),
+          shields: kept.shields | 0,
+          hunts: kept.hunts | 0,
+          huntTurn: 0,
+          huntCount: 0,
+        };
+      const valid = runFoe || this.validateDeck(deck);
       this.s.p.deck = this.shuffle(
         (valid ? deck : hero.deck).map((x) => this.card(x)),
       );
       this.s.e.deck = this.shuffle(
-        (opponent ? opponent.deck : [...boss.deck, ...boss.deck]).map((x) =>
-          this.card(x),
-        ),
+        (runFoe
+          ? runFoe.deck
+          : opponent
+            ? opponent.deck
+            : [...boss.deck, ...boss.deck]
+        ).map((x) => this.card(x)),
       );
       const second = this.s.first === "e";
       this.draw("p", second ? 4 : 3);
@@ -348,9 +385,11 @@ const EmberEngine = (() => {
       this.s.p.maxMana = this.relicValue("startingMana");
       this.relicEffects("onStart");
       this.log(
-        opponent
-          ? "练习对战 · " + opponent.name
-          : "你抵达了" + boss.title + "。",
+        runFoe
+          ? "远征第 " + options.run.level + " 层 · 迎战" + runFoe.name + "。"
+          : opponent
+            ? "练习对战 · " + opponent.name
+            : "你抵达了" + boss.title + "。",
       );
       this.log("选择需要替换的起始卡牌。");
       return this.emit();
@@ -362,9 +401,10 @@ const EmberEngine = (() => {
       return Decks.check(this.data, deck, heroId).ok;
     }
     classFor(side) {
+      // (an opponent that is a hero — a practice duel, an expedition's rival — or else the boss)
       return side === "p"
         ? Decks.classFor(this.data, this.s.heroId)
-        : this.s.mode === "practice"
+        : this.s.opponentHero
           ? Decks.classFor(this.data, this.s.opponentHero)
           : this.data.bosses[this.s.bossIndex].discoverClass;
     }
@@ -736,7 +776,7 @@ const EmberEngine = (() => {
     powerDefinition(side) {
       return side === "p"
         ? this.data.heroes.find((h) => h.id === this.s.heroId)
-        : this.s.mode === "practice"
+        : this.s.opponentHero
           ? this.data.heroes.find((h) => h.id === this.s.opponentHero)
           : this.data.bosses[this.s.bossIndex];
     }
@@ -839,7 +879,7 @@ const EmberEngine = (() => {
         return;
       }
       if (
-        this.s.mode !== "practice" &&
+        !this.s.opponentHero &&
         !this.s.phase2 &&
         this.s.e.hp <= this.s.e.maxHp / 2 &&
         this.s.phase === "battle"
@@ -1024,15 +1064,6 @@ const EmberEngine = (() => {
         "你的随从已准备好攻击。",
       ];
       this.emit();
-    }
-    rewardOffers() {
-      if (!this.s.rewardOffers) {
-        const ids = this.data.relics
-          .filter((r) => !this.s.relics.includes(r.id))
-          .map((r) => r.id);
-        this.s.rewardOffers = this.shuffle(ids).slice(0, 3);
-      }
-      return [...this.s.rewardOffers];
     }
     aiAction() {
       return AI.choose(this);

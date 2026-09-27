@@ -22,28 +22,41 @@
   const compass = '<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="33"/><circle cx="50" cy="50" r="40"/><path d="M50 3 60 40 97 50 60 60 50 97 40 60 3 50 40 40Z"/><path d="M50 3V97M3 50H97M20 20 80 80M20 80 80 20"/></svg>';
   const lock = A.icon('lock');
 
-  function campaignState() {
-    if (E.inBattle && E.game.s) return E.game.s;
+  // the expedition in progress (EmberRun, rules/run.js): the bosses it has beaten and the ones its level offers
+  function runState() {
     try {
-      const state = JSON.parse(localStorage.getItem('emberfall.v1'));
-      if (EmberState.valid(state, D)) return state;
-    } catch { /* An absent/invalid save displays the start of the campaign. */ }
+      const run = JSON.parse(localStorage.getItem('emberfall.run.v1'));
+      if (EmberRun.valid(run, D)) return run;
+    } catch { /* No run: the map shows where each boss may be met. */ }
     return null;
+  }
+  // the levels a boss can be met at, as "3–4"
+  function levels(boss) {
+    const at = D.dungeon.stages.map((st, i) => st.pool.includes(boss.id) ? i + 1 : 0).filter(Boolean);
+    return at.length > 1 ? `${at[0]}–${at[at.length - 1]}` : String(at[0] ?? '?');
   }
 
   function showMap() {
     if (EmberFX.busy || (document.getElementById('modal').dataset.locked === '1' && E.modal)) return;
-    const state = campaignState(), chapter = state?.bossIndex ?? 0;
-    const complete = state?.phase === 'over' && state?.winner === 'p' && chapter === D.bosses.length - 1;
-    const condition = i => complete || i < chapter ? 'done' : i === chapter ? 'current' : 'locked';
-    const status = i => ({done: '已战胜', current: state ? '当前挑战' : '冒险起点', locked: '尚未抵达'})[condition(i)];
-    const relics = (state?.relics || []).map(id => D.relics.find(r => r.id === id)).filter(Boolean);
+    const run = runState(), complete = run?.step === 'won';
+    // the last opponent of a lost run was not beaten
+    const beaten = new Set(run ? (run.step === 'lost' ? run.seen.slice(0, -1) : run.seen) : []);
+    const offered = run?.step === 'route' ? run.offer.foes : run?.step === 'battle' ? [run.foe] : [];
+    const condition = i => beaten.has(D.bosses[i].id) ? 'done' : offered.includes(D.bosses[i].id) ? 'current' : 'locked';
+    const status = i => ({done: '已战胜', current: run?.step === 'battle' ? '正在交战' : '本层可遇',
+      locked: `第 ${levels(D.bosses[i])} 层`})[condition(i)];
+    // a boss offered at this level has its health scaled by the level
+    const hpOf = i => (condition(i) === 'current' && EmberRun.foe(D, run.level, D.bosses[i].id)?.hp) || D.bosses[i].hp;
+    const firstOf = kind => D.bosses.findIndex((b, i) => condition(i) === kind);
+    const chapter = Math.max(0, [firstOf('current'), firstOf('locked'), D.bosses.length - 1].find(i => i >= 0));
+    const level = Math.min(run?.level ?? 1, D.dungeon.levels);
+    const relics = (run?.relics || []).map(id => D.relics.find(r => r.id === id)).filter(Boolean);
     E.showModal(`<section class="modal-box adventure-atlas" aria-labelledby="atlas-title">
       <span class="atlas-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
       <div class="modal-heading atlas-heading">
         <span class="atlas-emblem">${compass}</span>
         <div><span class="atlas-kicker">远征图志 · ${String(D.bosses.length).padStart(2, '0')} 境</span><h2 id="atlas-title">冒险地图</h2></div>
-        <div class="atlas-chapter"><span>${complete ? '远征完成' : '当前旅程'}</span><strong>${String(chapter + 1).padStart(2, '0')}<small> / ${String(D.bosses.length).padStart(2, '0')}</small></strong></div>
+        <div class="atlas-chapter"><span>${complete ? '远征完成' : run ? '远征层数' : '地下城远征'}</span><strong>${String(level).padStart(2, '0')}<small> / ${String(D.dungeon.levels).padStart(2, '0')}</small></strong></div>
       </div>
       <div data-theme-art="map" class="atlas-stage ${D.bosses.length > 6 ? "atlas-extended" : ""}" aria-label="战役路线" aria-busy="true">
         <div class="atlas-loading" role="status"><span>${compass}</span><p>正在展开远征图…</p><button type="button" hidden>重新加载</button></div>
@@ -54,10 +67,10 @@
             <button class="atlas-node" data-map-node="${i}" aria-pressed="${i === chapter}" aria-label="查看${escape(boss.title)}，${status(i)}">
               <span class="atlas-landmark">
 
-                <span class="atlas-pennant" aria-hidden="true">${i > chapter && !complete ? lock : compass}</span>
+                <span class="atlas-pennant" aria-hidden="true">${condition(i) === 'locked' ? lock : compass}</span>
                 <span class="atlas-number">${condition(i) === "done" ? A.icon("check") : condition(i) === "locked" ? lock : `<img src="${A.character(boss)}" alt="">`}</span>
               </span>
-              <span class="atlas-location-copy"><strong class="atlas-name"><small>${String(i + 1).padStart(2, "0")}</small>${escape(boss.name)}</strong><span class="atlas-boss">${escape(boss.name)} <span>· ${boss.hp} 生命</span></span><span class="atlas-status">${condition(i) === 'done' ? '✓ ' : condition(i) === 'current' ? '◆ ' : ''}${status(i)}</span></span>
+              <span class="atlas-location-copy"><strong class="atlas-name"><small>${String(i + 1).padStart(2, "0")}</small>${escape(boss.name)}</strong><span class="atlas-boss">${escape(boss.name)} <span>· ${hpOf(i)} 生命</span></span><span class="atlas-status">${condition(i) === 'done' ? '✓ ' : condition(i) === 'current' ? '◆ ' : ''}${status(i)}</span></span>
             </button>
           </article>`;
         }).join('')}
@@ -66,7 +79,7 @@
       <div class="modal-footer atlas-footer">
         <div class="atlas-focus" aria-live="polite"><strong></strong><span></span></div>
         <div class="atlas-relics lg-group" aria-label="旅途遗物"><span class="atlas-relic-label">旅途遗物</span>${relics.length ? relics.map(r => `<span class="atlas-relic" title="${escape(r.name + '：' + r.text)}"><img src="${A.relic(r.id)}" alt="${escape(r.name)}" width="30" height="30"></span>`).join('') : '<span class="atlas-relic-empty">击败首领后获得</span>'}</div>
-        <button class="gold-btn" id="map-continue">${E.inBattle ? '回到战场' : '准备出发'} ${A.icon('arrow')}</button>
+        <button class="gold-btn" id="map-continue">${E.inBattle ? '回到战场' : run && !complete ? '继续远征' : '准备出发'} ${A.icon('arrow')}</button>
       </div>
     </section>`, 'map');
     const box = document.querySelector('.adventure-atlas');
@@ -100,14 +113,14 @@
       };
       rule.textContent = '';
       rule.append(
-        stat(`${boss.hp} 生命`, 'atlas-dossier-stat'),
+        stat(`${hpOf(i)} 生命`, 'atlas-dossier-stat'),
         stat(' · ', 'atlas-dossier-sep'),
         stat(`${boss.powerText || boss.rule || ''}`, 'atlas-dossier-stat atlas-dossier-skill')
       );
 
       box.querySelector('.atlas-focus strong').textContent = `${D.bosses[i].title} · ${status(i)}`;
-      box.querySelector('.atlas-focus > span').textContent = i > chapter && !complete
-        ? `击败${D.bosses[i - 1].name}后抵达` : D.bosses[i].quote;
+      box.querySelector('.atlas-focus > span').textContent = condition(i) === 'locked'
+        ? `远征第 ${levels(D.bosses[i])} 层可能遭遇` : D.bosses[i].quote;
     };
     buttons.forEach((button, i) => {
       button.onclick = () => select(i);
@@ -175,7 +188,7 @@
           c2 = [side, end[1] - (end[1] - start[1]) * .35];
         }
         const d = `M${start} C${c1} ${c2} ${end}`;
-        return `<path class="atlas-route-shadow" d="${d}"/><path class="${complete || i < chapter ? 'traversed' : ''}" d="${d}"/><circle cx="${start[0]}" cy="${start[1]}" r="4"/><circle cx="${end[0]}" cy="${end[1]}" r="4"/>`;
+        return `<path class="atlas-route-shadow" d="${d}"/><path class="${condition(i) === 'done' && condition(i + 1) !== 'locked' ? 'traversed' : ''}" d="${d}"/><circle cx="${start[0]}" cy="${start[1]}" r="4"/><circle cx="${end[0]}" cy="${end[1]}" r="4"/>`;
       });
       svg.querySelector('g').innerHTML = paths.join('');
     };

@@ -1,15 +1,13 @@
 const { openCovenantPage } = require("./helpers/covenant.cjs");
 const { openDeckTools, finishDeckTools } = require("./helpers/deck-tools.cjs");
 const { test, expect } = require("@playwright/test");
+const { beginWithCovenants } = require("./helpers/expedition.cjs");
 async function open(page) {
   await page.goto("./?debug=1");
   await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
 }
 async function begin(page) {
-  await page.locator("#start-btn").click();
-  await page.locator('[data-hero="morla"]').click();
-  await expect(page.locator("#hero-archetype")).toHaveValue("moon_covenant");
-  await page.locator("#hero-confirm").click();
+  await beginWithCovenants(page, "morla");
   await page.locator("#mulligan-confirm").click();
   await page.waitForFunction(() => !EmberFX.busy);
 }

@@ -1,6 +1,7 @@
 const { openCovenantPage } = require("./helpers/covenant.cjs");
 const { turnTo, assertDialogFit } = require("./helpers/dialog-pages.cjs");
 const { test, expect } = require("@playwright/test");
+const { beginWithCovenants } = require("./helpers/expedition.cjs");
 for (const [width, height] of [
   [568, 320],
   [844, 390],
@@ -70,8 +71,7 @@ for (const [width, height] of [
     expect(reopened.height).toBeGreaterThanOrEqual(80);
     expect(errors).toEqual([]);
     await page.locator(".modal-close").click();
-    await page.locator("#start-btn").click();
-    await page.locator("#hero-confirm").click();
+    await beginWithCovenants(page, "mage");
     await page.locator("#mulligan-confirm").click();
     await page.waitForFunction(() => !EmberFX.busy);
     await page.evaluate(() => {

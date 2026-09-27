@@ -38,7 +38,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 ## v0.11 内容与验证
 
-- 卡牌只编辑 `src/content/cards.js` 的具名定义；战役编辑 `src/content/campaign.js`。不要恢复 `battle/effect/value/death` 字段或重复手写规则文案。
+- 卡牌只编辑 `src/content/cards.js` 的具名定义；英雄、首领、遗物编辑 `src/content/campaign.js`；地下城远征（主玩法，取代原线性战役）的层数、对手池、起始牌、卡包主题与价格编辑 `src/content/dungeon.js`，其规则是纯函数模块 `src/rules/run.js`。不要恢复 `battle/effect/value/death` 字段或重复手写规则文案。
 - 新效果注册字段校验、执行和文案，补充 AI / 必要预览；纯规则不依赖表现。
 - 生产界面使用只读状态和动作接口；仅本地 `?debug=1` 暴露 `EmberDebug.game` 给测试。
 - 当前完整入口为 `npm run test:release`；旧 Python 浏览器脚本已退役，旧 QA 仅作历史记录。
