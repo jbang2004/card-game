@@ -318,11 +318,22 @@ body #modal.folio-host .mulligan-card > .card {
   body #modal.folio-host .mulligan-cards:has(> :nth-child(4)) {
     --opening-columns: 2;
   }
+  /* three cards in two columns: the third is centred under the pair, not
+   * left hanging in the first column */
+  body #modal.folio-host .mulligan-card:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: calc((100% - var(--panel-gap)) / 2);
+  }
 }
 @media (orientation: landscape) and (max-height: 500px) {
   body #modal.folio-host .mulligan-cards {
     --opening-columns: 3;
     --opening-width: clamp(70px, calc((100dvh - 250px) / 1.48), 160px);
+  }
+  body #modal.folio-host .mulligan-card:last-child:nth-child(odd) {
+    grid-column: auto;
+    width: 100%;
   }
   body #modal.folio-host .mulligan-cards:has(> :nth-child(4)) {
     --opening-columns: 4;

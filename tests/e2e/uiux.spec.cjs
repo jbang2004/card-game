@@ -33,7 +33,7 @@ async function rewardPage(page) {
   await page.locator("#run-home").click();
   await page.locator("#start-btn").click();
   await page
-    .locator(".relic-choice img")
+    .locator(".run-option img")
     .evaluateAll((xs) => Promise.all(xs.map((x) => x.decode())));
 }
 async function assertInk(page, selector, bgSelector) {
@@ -86,8 +86,8 @@ for (const [width, height, touch] of [
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
     await rewardPage(page);
-    await assertInk(page, ".relic-choice p", ".relic-choice");
-    const bounds = await page.locator(".relic-choice").evaluateAll((xs) =>
+    await assertInk(page, ".run-option p", ".run-option");
+    const bounds = await page.locator(".run-option").evaluateAll((xs) =>
       xs.map((x) => {
         const r = x.getBoundingClientRect(),
           i = x.querySelector("img").getBoundingClientRect(),
@@ -173,7 +173,7 @@ test("enlarged reward rules remain contained and keyboard selection does not aut
 }) => {
   await rewardPage(page);
   await page.addStyleTag({
-    content: ".relic-choice p {font-size:32px !important;}",
+    content: ".run-option p {font-size:32px !important;}",
   });
   await page.locator('[data-pick="2"]').focus();
   await page.keyboard.press("Space");
@@ -183,7 +183,7 @@ test("enlarged reward rules remain contained and keyboard selection does not aut
   );
   expect((await storedRun(page)).step).toBe("treasure");
   const fit = await page
-    .locator(".relic-choice p")
+    .locator(".run-option p")
     .evaluateAll((xs) =>
       xs.every(
         (p) =>

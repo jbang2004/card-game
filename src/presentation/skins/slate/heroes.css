@@ -46,9 +46,7 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="heroes"]
   :is(
     .hero-roster-heading,
-    .hero-config-intro,
     .hero-composition,
-    .hero-profile-heading small,
     .hero-option-text > small,
     .hero-option-text > em,
     .hero-config-contract summary > small
@@ -337,10 +335,41 @@ html[data-skin="slate"]
   h3 {
   margin: 0;
   padding: 0;
-  font: var(--lg-title-page);
+  font: 700 36px/44px var(--slate-font);
   letter-spacing: 0;
   color: #fff;
   text-shadow: none;
+}
+/* the hero's motto over the name (Latin caps: the one place a tracked-out
+ * eyebrow is right), and who they are with one line of how they play under it */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-heading
+  small {
+  display: block;
+  margin: 0 0 4px;
+  color: var(--slate-blue);
+  font: 600 12px/18px var(--slate-font);
+  letter-spacing: 2px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-line {
+  margin: 6px 0 0;
+  color: var(--slate-ink-2);
+  font: 400 15px/1.6 var(--slate-font);
+  letter-spacing: 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-profile-line
+  b {
+  margin-right: 8px;
+  color: var(--slate-ink);
+  font-weight: 600;
 }
 
 /* skill: its own inset group — caption, icon tile, name, rule text */
@@ -468,10 +497,12 @@ html[data-skin="slate"]
   box-shadow: none;
   color: #fff;
 }
+/* the mode leads the group (it decides what the rest of the group is): the
+ * expedition has nothing under it, so there the mode row is a group alone */
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="heroes"]
-  .hero-config-deck {
+  :is(.hero-config-mode, .hero-mode-cards) {
   order: 2;
   margin-top: 12px;
   border-radius: var(--lg-radius-group) var(--lg-radius-group) 0 0;
@@ -480,7 +511,14 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host[data-type="heroes"]
+  .hero-chooser[data-play="expedition"]
   :is(.hero-config-mode, .hero-mode-cards) {
+  border-radius: var(--lg-radius-group);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-deck {
   order: 3;
 }
 html[data-skin="slate"]
@@ -811,6 +849,109 @@ html[data-skin="slate"]
   color: var(--slate-ink-2);
 }
 
+/* the expedition's starting hand: a group of its own under the mode — the
+ * ten starter cards as cost-disc rows in columns, the run's rules as the
+ * group's footnote. Practice duels show their deck and plan instead. */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-chooser[data-play="practice"]
+  .hero-config-intro {
+  display: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-intro {
+  order: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 12px 0 0;
+  padding: 16px 18px 16px;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-intro
+  .config-kicker {
+  order: 1;
+  display: block;
+  margin: 0;
+  color: #fff;
+  font: var(--lg-headline);
+  letter-spacing: 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-starter {
+  order: 2;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-starter
+  li {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--slate-ink);
+  font: 500 14px/22px var(--slate-font);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  .hero-starter {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-starter-cost {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--slate-blue-deep);
+  color: #fff;
+  font: 600 11px/1 var(--slate-font);
+  font-variant-numeric: tabular-nums;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-starter
+  em {
+  margin-left: 4px;
+  color: var(--slate-ink-3);
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  .hero-config-intro
+  .hero-deck-note {
+  order: 3;
+  margin: 2px 0 0;
+  color: var(--slate-ink-2);
+  font: 400 13px/1.6 var(--slate-font);
+  letter-spacing: 0;
+}
+
 /* ---------- footer: secondary + primary, one height, one width ---------- */
 html[data-skin="slate"]
   body
@@ -836,21 +977,54 @@ html[data-skin="slate"]
 }
 
 /* ==========================================================================
-   DESKTOP (body:not(.touch-layout)) — geometry
-   Card 300×430 (240×344 under 1500px wide) beside a 440px choices column,
-   the four hero cards centred in one row underneath. Under 820px tall the
-   hero cards move into a 2×2 block in a third column.
+   DESKTOP (body:not(.touch-layout)) — geometry (2026-09-28)
+   Three columns read left to right: the four hero cards (2×2) to pick from,
+   the relief card of the one picked, and its choices column; the actions sit
+   under the choices column's right edge. The composition centres on the
+   window's height, so a tall window no longer leaves the lower half empty.
+   The relief card lives outside the scroll (it never scrolls), so its `top`
+   and the grid's first row are both derived from one `--stage-top`: the pane
+   starts 88px down the dialog (26 padding + 44 title + 18 gap).
    ========================================================================== */
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
   > .hero-chooser {
-  --stage-config: 440px;
+  --hero-card-w: 340px;
+  --hero-card-h: 488px;
+  --hero-tile: 132px;
+  --stage-config: 460px;
   --stage-gap: 56px;
-  --stage-roster: 0px;
+  --stage-roster: calc(2 * var(--hero-tile) + 16px);
   --stage-w: calc(
-    var(--slate-card-w) + var(--stage-gap) + var(--stage-config)
+    var(--stage-roster) + var(--hero-card-w) + var(--stage-config) + 2 *
+      var(--stage-gap)
   );
+  --stage-top: max(116px, calc(50vh - var(--hero-card-h) / 2 - 28px));
+}
+@media (max-width: 1499px), (max-height: 899px) {
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="heroes"]
+    > .hero-chooser {
+    --hero-card-w: 280px;
+    --hero-card-h: 402px;
+    --hero-tile: 116px;
+    --stage-config: 420px;
+    --stage-gap: 40px;
+  }
+}
+@media (max-height: 760px) {
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="heroes"]
+    > .hero-chooser {
+    --hero-card-w: 240px;
+    --hero-card-h: 344px;
+    --hero-tile: 104px;
+    --stage-config: 400px;
+    --stage-top: 106px;
+  }
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -874,17 +1048,17 @@ html[data-skin="slate"]
   #modal.folio-host[data-type="heroes"]
   .hero-single-sheet {
   display: grid;
-  grid-template-columns: var(--slate-card-w) var(--stage-config);
-  grid-template-rows: minmax(var(--slate-card-h), auto) auto;
-  grid-template-areas:
-    "art config"
-    "roster roster";
+  grid-template-columns: var(--stage-roster) var(--hero-card-w) var(
+      --stage-config
+    );
+  grid-template-rows: minmax(var(--hero-card-h), auto);
+  grid-template-areas: "roster art config";
   column-gap: var(--stage-gap);
-  row-gap: 24px;
+  row-gap: 0;
   justify-content: center;
   align-content: start;
   min-height: 0;
-  padding: 28px 0 8px;
+  padding: calc(var(--stage-top) - 88px) 0 8px;
 }
 /* the card is outside the scroll; park it over the grid's "art" cell */
 html[data-skin="slate"]
@@ -894,19 +1068,25 @@ html[data-skin="slate"]
   > .scene-showcase {
   position: absolute;
   inset: auto;
-  left: calc(50% - var(--stage-w) / 2);
-  top: 116px;
+  left: calc(
+    50% - var(--stage-w) / 2 + var(--stage-roster) + var(--stage-gap)
+  );
+  top: var(--stage-top);
   z-index: 2;
-  width: var(--slate-card-w);
-  height: var(--slate-card-h);
+  width: var(--hero-card-w);
+  height: var(--hero-card-h);
   margin: 0;
 }
+/* the four hero cards: a 2×2 block, centred on the relief card's height */
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
   .hero-roster {
-  display: block;
+  display: flex;
   grid-area: roster;
+  align-self: start;
+  align-items: center;
+  height: var(--hero-card-h);
   min-width: 0;
   padding: 0;
 }
@@ -914,19 +1094,19 @@ html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
   .hero-options {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, var(--hero-tile));
+  justify-content: start;
+  gap: 16px;
   margin: 0;
-  padding: 8px;
+  padding: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #modal.folio-host[data-type="heroes"]
   .hero-option {
-  flex: 0 0 132px;
-  width: 132px;
+  flex: none;
+  width: auto;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -1067,74 +1247,63 @@ html[data-skin="slate"]
   > .hero-chooser
   > .modal-footer
   > button {
-  flex: 0 0 176px;
-  width: 176px;
+  flex: 0 0 200px;
+  width: 200px;
   min-width: 0;
   max-width: none;
   padding: 0 20px;
 }
 
-/* desktop windows under 820px tall: [card][choices][2×2 hero cards] */
+/* the footer echoes what the primary action will start, like the
+ * expedition pages' footer does (run.css) */
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="heroes"]
+  > .hero-chooser
+  > .modal-footer
+  > .hero-summary {
+  margin: 0 8px 0 0;
+  color: var(--slate-ink-2);
+  font: 500 15px/1.4 var(--slate-font);
+  white-space: nowrap;
+}
+html[data-skin="slate"]
+  body.touch-layout
+  #modal.folio-host[data-type="heroes"]
+  > .hero-chooser
+  > .modal-footer
+  > .hero-summary {
+  display: none;
+}
+
+/* short desktop windows: tighter rows, a smaller type scale */
 @media (max-height: 820px) {
   html[data-skin="slate"]
     body:not(.touch-layout)
     #modal.folio-host[data-type="heroes"]
-    > .hero-chooser {
-    --stage-config: 400px;
-    --stage-gap: 40px;
-    --stage-roster: 272px;
-    --stage-w: calc(
-      var(--slate-card-w) + 2 * var(--stage-gap) + var(--stage-config) +
-        var(--stage-roster)
-    );
-  }
-  html[data-skin="slate"]
-    body:not(.touch-layout)
-    #modal.folio-host[data-type="heroes"]
-    .hero-single-sheet {
-    grid-template-columns: var(--slate-card-w) var(--stage-config) var(
-        --stage-roster
-      );
-    grid-template-rows: minmax(var(--slate-card-h), auto);
-    grid-template-areas: "art config roster";
-    padding-top: 18px;
-  }
-  html[data-skin="slate"]
-    body:not(.touch-layout)
-    #modal.folio-host[data-type="heroes"]
-    .hero-chooser
-    > .scene-showcase {
-    top: 106px;
-  }
-  html[data-skin="slate"]
-    body:not(.touch-layout)
-    #modal.folio-host[data-type="heroes"]
-    .hero-options {
-    display: grid;
-    grid-template-columns: repeat(2, 120px);
-    justify-content: start;
-    gap: 16px;
-    padding: 0 8px 8px;
-  }
-  html[data-skin="slate"]
-    body:not(.touch-layout)
-    #modal.folio-host[data-type="heroes"]
-    .hero-option {
-    flex: none;
-    width: auto;
-  }
-  html[data-skin="slate"]
-    body:not(.touch-layout)
-    #modal.folio-host[data-type="heroes"]
     :is(.archetype-picker, .hero-mode-cards) {
-    min-height: 56px;
+    min-height: 54px;
   }
   html[data-skin="slate"]
     body:not(.touch-layout)
     #modal.folio-host[data-type="heroes"]
     .hero-config-contract
     > summary {
-    min-height: 56px;
+    min-height: 54px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="heroes"]
+    .hero-profile-heading
+    h3 {
+    font-size: 30px;
+    line-height: 38px;
+  }
+  html[data-skin="slate"]
+    body:not(.touch-layout)
+    #modal.folio-host[data-type="heroes"]
+    .hero-skill {
+    margin-top: 12px;
   }
 }
 

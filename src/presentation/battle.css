@@ -301,10 +301,12 @@ body:not(.touch-layout) .arena {
   width: 1060px;
   height: 540px;
 }
+/* the opponent's hand sits on the opponent's side of the top bar, between the
+ * turn line and the log tab — not against the player's toolbar on the left */
 body:not(.touch-layout) .enemy-hand {
-  left: 380px;
-  top: 15px;
-  width: 240px;
+  left: 1032px;
+  top: 12px;
+  width: 216px;
   height: 65px;
 }
 body:not(.touch-layout) .hand-zone {

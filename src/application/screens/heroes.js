@@ -47,9 +47,18 @@ const EmberHeroScreens = (() => {
         8,
         (CharacterCatalog[hero.portraitId]?.focus ?? 24) - 3,
       );
+      // the expedition's ten starter cards, one row per name (cheapest first)
+      const starterHTML = () => {
+        const counts = {};
+        for (const id of D.dungeon.starters[context.chosenHero] || []) counts[id] = (counts[id] || 0) + 1;
+        return Object.keys(counts)
+          .sort((a, b) => D.byId[a].cost - D.byId[b].cost || D.byId[a].name.localeCompare(D.byId[b].name))
+          .map((id) => `<li><span class="hero-starter-cost">${D.byId[id].cost}</span>${escape(D.byId[id].name)}${counts[id] > 1 ? `<em>×${counts[id]}</em>` : ""}</li>`)
+          .join("");
+      };
       const heroSceneStyle = `${artStyleForHero(hero, "detail")};--hero-scene-y:${heroSceneFocus}%;--scene-art:url('${A.character(hero)}')`;
       showModal(
-        `<section class="modal-box hero-chooser"><div class="scene-showcase" data-art-key="${hero.portraitId}" style="${heroSceneStyle}" aria-hidden="true"></div><div class="modal-heading"><div class="eyebrow">准备出发</div><h2>选择你的英雄</h2><p>循余火而行 · 以信念抵达明天</p></div><div class="hero-roster"><div class="hero-roster-heading"><span>英雄名册</span></div><div class="hero-options">${D.heroes.map((h) => `<button class="hero-option hero-${h.id} ${h.id === context.chosenHero ? "selected" : ""}" data-hero="${h.id}" aria-pressed="${h.id === context.chosenHero}"><img src="${A.character(h)}" alt="${h.name}" draggable="false" style="${artStyleForHero(h, "option")}"><div class="hero-option-text"><small>${h.sub}</small><h3>${h.name}</h3><em>${heroOptionPower(h)}</em></div>${h.id === context.chosenHero ? '<span class="selected-check" aria-hidden="true">' + A.icon("check") + "</span>" : ""}</button>`).join("")}</div></div><div class="hero-configuration crafted-panel"><header class="hero-profile-heading"><small>${escape(hero.sub)}</small><h3>${escape(hero.name)}</h3></header><section class="hero-skill lg-group"><h4 class="hero-skill-label">英雄技能</h4><span class="theme-orbit" data-power="${hero.powerIcon}" aria-hidden="true">${A.icon(hero.powerIcon)}</span><div><strong>${escape(hero.power)}</strong><p>${escape(heroOptionPower(hero))}</p></div></section><div class="hero-config-intro"><span class="config-kicker">出发准备</span><p class="hero-deck-note">${escape(deckStatus)}</p></div><label class="archetype-picker hero-config-deck">套牌 <select class="library-search" id="hero-archetype">${customs.map((d) => `<option value="saved:${d.id}" ${d.id === collection.activeId ? "selected" : ""}>${escape(d.name)}</option>`).join("")}${presets
+        `<section class="modal-box hero-chooser"><div class="scene-showcase" data-art-key="${hero.portraitId}" style="${heroSceneStyle}" aria-hidden="true"></div><div class="modal-heading"><div class="eyebrow">准备出发</div><h2>选择你的英雄</h2><p>循余火而行 · 以信念抵达明天</p></div><div class="hero-roster"><div class="hero-roster-heading"><span>英雄名册</span></div><div class="hero-options">${D.heroes.map((h) => `<button class="hero-option hero-${h.id} ${h.id === context.chosenHero ? "selected" : ""}" data-hero="${h.id}" aria-pressed="${h.id === context.chosenHero}"><img src="${A.character(h)}" alt="${h.name}" draggable="false" style="${artStyleForHero(h, "option")}"><div class="hero-option-text"><small>${h.sub}</small><h3>${h.name}</h3><em>${heroOptionPower(h)}</em></div>${h.id === context.chosenHero ? '<span class="selected-check" aria-hidden="true">' + A.icon("check") + "</span>" : ""}</button>`).join("")}</div></div><div class="hero-configuration crafted-panel"><header class="hero-profile-heading"><small>${escape(hero.sub)}</small><h3>${escape(hero.name)}</h3><p class="hero-profile-line"><b>${escape(hero.title)}</b>${escape(hero.desc)}</p></header><section class="hero-skill lg-group"><h4 class="hero-skill-label">英雄技能</h4><span class="theme-orbit" data-power="${hero.powerIcon}" aria-hidden="true">${A.icon(hero.powerIcon)}</span><div><strong>${escape(hero.power)}</strong><p>${escape(heroOptionPower(hero))}</p></div></section><div class="hero-config-intro lg-group"><span class="config-kicker">出发准备</span><p class="hero-deck-note">${escape(deckStatus)}</p><ul class="hero-starter" aria-label="起始牌组">${starterHTML()}</ul></div><label class="archetype-picker hero-config-deck">套牌 <select class="library-search" id="hero-archetype">${customs.map((d) => `<option value="saved:${d.id}" ${d.id === collection.activeId ? "selected" : ""}>${escape(d.name)}</option>`).join("")}${presets
           .map(
             (a) =>
               `<option value="${a.id}" ${!customs.length && a.id === D.heroes.find((h) => h.id === context.chosenHero).defaultDeckId ? "selected" : ""}>${a.name}</option>`,
@@ -68,7 +77,7 @@ const EmberHeroScreens = (() => {
                 `<label><input type="checkbox" data-contract="${c.id}" checked><strong>${c.name}</strong><span>${EmberContracts.describe(c)}</span></label>`,
             )
             .join("") || "该职业尚无契约。"
-        }</details><div class="hero-config-plan"><p id="hero-plan" class="deck-plan"></p><label class="archetype-picker" id="opponent-picker" hidden>对手 <select id="practice-opponent" class="library-search">${D.archetypes.map((a) => `<option value="${a.id}">${D.classNames[a.classId]} · ${a.name}</option>`).join("")}</select></label></div></div><div class="modal-footer"><button class="ghost-btn" id="hero-deck-btn">调整牌组</button><button class="gold-btn" id="hero-confirm">开始冒险 ${A.icon("arrow")}</button></div></section>`,
+        }</details><div class="hero-config-plan"><p id="hero-plan" class="deck-plan"></p><label class="archetype-picker" id="opponent-picker" hidden>对手 <select id="practice-opponent" class="library-search">${D.archetypes.map((a) => `<option value="${a.id}">${D.classNames[a.classId]} · ${a.name}</option>`).join("")}</select></label></div></div><div class="modal-footer"><p class="hero-summary" id="hero-summary" aria-live="polite"></p><button class="ghost-btn" id="hero-deck-btn">调整牌组</button><button class="gold-btn" id="hero-confirm">开始冒险 ${A.icon("arrow")}</button></div></section>`,
         "heroes",
       );
       // The preview card: the hero's living portrait when one is baked, turning with
@@ -170,9 +179,13 @@ const EmberHeroScreens = (() => {
         $("opponent-picker").hidden = !practice;
         $("hero-confirm").innerHTML =
           (practice ? "开始练习" : "开始远征") + " " + A.icon("arrow");
+        $("hero-summary").textContent = `${hero.name} · ${practice ? "练习对战" : `地下城远征 · ${D.dungeon.levels} 层`}`;
+        document.querySelector("#modal .config-kicker").textContent = practice
+          ? "出发准备"
+          : `起始牌组 · ${D.dungeon.starters[context.chosenHero].length} 张`;
         document.querySelector("#modal .hero-deck-note").textContent = practice
           ? `${deckStatus} 选择牌组与契约，和任意套牌对手练习；练习不影响远征存档。`
-          : `远征从 ${D.dungeon.starters[context.chosenHero].length} 张起始牌出发，共 ${D.dungeon.levels} 层：每层二选一迎战，胜后挑选卡牌与宝物，每两层有一间酒馆。每场战斗生命全满，失败一次即告终结。`;
+          : `闯过 ${D.dungeon.levels} 层：每层二选一迎战，胜后挑选卡牌与宝物，每两层一间酒馆。每战生命全满，一败即终。`;
       };
       $("game-mode").value = mode;
       $("game-mode").onchange = syncMode;

@@ -13,21 +13,21 @@ const PAGE_SHELL_SIZES = [
   "route",
   "covenant",
   "help",
-  "choice",
+  "run",
 ];
-// Settings and the guide float on every layout (design system §1); the relic
-// reward floats on the desktop and keeps the page shell on touch, where three
-// relic cards fill a phone.
+// Settings and the guide float on every layout (design system §1). The
+// expedition's screens (`run`) are a page on every layout since 2026-09-28;
+// the relic-reward sheet that floated on the desktop is retired.
 const FLOATING_SIZES = ["settings", "help"];
-const DESKTOP_FLOATING_SIZES = ["choice"];
+const DESKTOP_FLOATING_SIZES = [];
 // Card-focus dialogs have no pane at all: the host blurs, the cards sit on it.
 const STAGE_SIZES = ["detail", "discover", "mulligan", "hand"];
 // Their roots therefore differ by layout on purpose and are not compared
 // across viewports.
-const LAYOUT_SHELL_ROOTS = [".settings-box", ".help-box", ".rewards-box"];
+const LAYOUT_SHELL_ROOTS = [".settings-box", ".help-box"];
 // …and so does their close control: a round "×" on the floating pane, the
 // page shell's back chevron on touch.
-const LAYOUT_SHELL_PAGES = ["settings", "help", "rewards"];
+const LAYOUT_SHELL_PAGES = ["settings", "help"];
 
 const MATERIAL_PROPERTIES = [
   "backgroundColor",
@@ -179,10 +179,13 @@ const pages = {
     "#result-home",
     "#result-next",
   ],
-  rewards: [
-    ".rewards-box",
-    ".relic-choice",
-    '.relic-choice[aria-pressed="true"]',
+  run: [
+    ".run-box",
+    ".run-status > span",
+    ".run-option",
+    '.run-option[aria-pressed="true"]',
+    ".run-pick",
+    "#run-home",
     "#run-confirm",
   ],
 };
@@ -427,7 +430,7 @@ async function captureViewport(browser, viewport) {
   result.result = await fingerprint(page, pages.result);
   await page.locator("#result-next").click();
   await page.locator("[data-pick]").nth(1).click();
-  result.rewards = await fingerprint(page, pages.rewards);
+  result.run = await fingerprint(page, pages.run);
   // an expedition battle is not restarted: the confirm page is the lobby's new-journey prompt
   await page.locator("#run-home").click();
   await page.locator("#quick-btn").click();
