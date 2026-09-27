@@ -1,8 +1,8 @@
 const { test, expect } = require("@playwright/test");
 const path = require("node:path");
 const output = path.resolve("artifacts/god-stage-fix-20260920");
-async function open(page) {
-  await page.goto("./?debug=1");
+async function open(page, query = "") {
+  await page.goto("./?debug=1" + query);
   await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
   await page.locator("#quick-btn").click();
   await page.waitForFunction(() => !EmberFX.busy);
@@ -140,7 +140,8 @@ for (const [width, height] of [
 test("death dissolution cannot reveal its original image after animation cleanup", async ({
   page,
 }) => {
-  await open(page);
+  // the card-token dissolution (a unit standing as a figure dies as its figure, R13): without figures
+  await open(page, "&figures=0");
   await page.evaluate(() => {
     const g = EmberDebug.game;
     g.s.active = "p";

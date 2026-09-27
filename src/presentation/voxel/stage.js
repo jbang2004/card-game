@@ -88,7 +88,7 @@ const EmberMiniatures = (() => {
           const own = arena?.unit(ref.side, ref.uid)?.info.el, el = own?.isConnected ? own : refEl(ref);   // (no query per frame)
           return el && el.isConnected && box ? footOf(el, box) : null;
         },
-        live: (u, on) => { const el = u.info.el; if (!el) return; if (u.info.hero) { el.classList.toggle("hero-dais", on); return; } el.classList.toggle("miniature-ready", on); if (!on) el.classList.remove("miniature-pending"); },
+        live: (u, on) => { const el = u.info.el; if (!el) return; if (u.info.hero) { if (on || !fallen.has(u.side)) el.classList.toggle("hero-dais", on); return; } el.classList.toggle("miniature-ready", on); if (!on) el.classList.remove("miniature-pending"); },
       });
       // the hit-feel's particle, star, beam and trail programs compile now, not on the first contact of the battle
       renderer.compileAsync(scene, camera).catch(() => {});
@@ -194,7 +194,11 @@ const EmberMiniatures = (() => {
     if (!tokens.length && !heroes.length && !arena) return;
     if (!init()) { clearTokens(); return; }
     const seen = new Set();
-    for (const h of heroes) { seen.add(EmberVoxelArena.key(h.side, "hero")); h.el.classList.add("hero-station"); arena.set(h.side, "hero", h.sp.id, { el: h.el, hero: true }); }
+    for (const h of heroes) {
+      h.el.classList.add("hero-station");
+      if (fallen.has(h.side)) continue;                  // (a fallen hero's dais stays empty until the next battle)
+      seen.add(EmberVoxelArena.key(h.side, "hero")); arena.set(h.side, "hero", h.sp.id, { el: h.el, hero: true });
+    }
     for (const side of ["p", "e"]) if (!heroes.some((h) => h.side === side)) heroEl(side)?.classList.remove("hero-station", "hero-dais");
     for (const el of tokens) {
       const { side, uid, cardid } = el.dataset;
@@ -284,6 +288,33 @@ const EmberMiniatures = (() => {
     wake();
     return true;
   }
+  /** fall(side): the battle is lost — that hero's figure falls (reels, then burns away; EmberVoxelArena) and its dais
+   *  stays empty; fall(null): a new battle, the heroes stand again (they arrive at the next sync) */
+  const fallen = new Set();
+  function fall(side) {
+    if (!side) { if (fallen.size) { fallen.clear(); later(); } return; }
+    if (fallen.has(side)) return;
+    fallen.add(side);
+    if (arena?.has(side, "hero")) { heat(4000); arena.cue(side, "hero", "death"); wake(); }
+  }
+  /** the client box a hero's figure covers on its dais (its mesh's bounds through the camera) — the page aims and
+   *  releases on it as on the hero's plate; null when the hero does not stand as a figure */
+  const _q = new THREE.Vector3(), _bb = new THREE.Box3();
+  function heroBox(side) {
+    const u = arena?.unit(side, "hero");
+    if (!u || u.state !== "live" || !u.fig?.mesh || !camera) return null;
+    box ||= fitCamera();
+    const g = u.fig.mesh.geometry; if (!g.boundingBox) g.computeBoundingBox();
+    u.fig.root.updateMatrixWorld(true);
+    _bb.copy(g.boundingBox).applyMatrix4(u.fig.mesh.matrixWorld);
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (let i = 0; i < 8; i++) {
+      _q.set(i & 1 ? _bb.max.x : _bb.min.x, i & 2 ? _bb.max.y : _bb.min.y, i & 4 ? _bb.max.z : _bb.min.z).project(camera);
+      const x = box.rect.left + ((_q.x + 1) / 2) * box.rect.width, y = box.rect.top + ((1 - _q.y) / 2) * box.rect.height;
+      x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+    }
+    return Number.isFinite(x0) ? { left: x0, top: y0, right: x1, bottom: y1 } : null;
+  }
   /** a unit of this card stands as a voxel figure here (the effect layer then leaves out its card-shaped decorations) */
   const stands = (cid) => enabled() && !!specOf(cid);
 
@@ -329,7 +360,7 @@ const EmberMiniatures = (() => {
   if (typeof EmberModelFigures !== "undefined") EmberModelFigures.onReady?.(later);
 
   return Object.freeze({
-    sync, prewarm, cue, contact, has, owns, plan, stands, hero, aim,
+    sync, prewarm, cue, contact, has, owns, plan, stands, hero, aim, heroBox, fall,
     /** the heroes stand on their daises here (the desktop layout): the plate's own figure (EmberHeroFigure) stands down */
     heroDesk: () => heroesOn(),
     diagnostics: () => ({ ...(arena ? arena.diagnostics() : { figures: 0, cues: [], bakeMs: {}, dying: 0, baking: 0, live: 0 }), ...stats }),

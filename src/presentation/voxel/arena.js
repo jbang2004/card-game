@@ -89,7 +89,11 @@ const EmberVoxelArena = (() => {
     hero: { ready: [[0.42, 1.0, 0.52], [0.95, 1.0, 0.78]], target: [[1.0, 0.34, 0.2], [1.0, 0.82, 0.62]], frozen: [[0.5, 0.84, 1.0], [0.92, 1.0, 1.0]] },
     unit: { p: [1.0, 0.72, 0.36], e: [0.58, 0.68, 0.9], ready: [0.36, 1.0, 0.45], target: [1.0, 0.3, 0.16], frozen: [0.45, 0.82, 1.0], shield: [1.0, 0.82, 0.36] },
   };
-  const DISC = { 0: 1, 1: 1.45 };                          // the disc's radius × the station's (a minion's glow and ward reach past it)
+  const DISC = { 0: 1, 1: 1.45 };
+  // a realistic figure's arrival and death light (its dissolve front, the column over it): its rarity's colour
+  const RARITY = { common: [0.92, 0.95, 1.0], rare: [0.4, 0.72, 1.0], epic: [0.78, 0.45, 1.0], legendary: [1.0, 0.78, 0.32] };
+  const rarityOf = (u) => (u.info.hero ? "legendary" : ["legendary", "epic", "rare"].find((r) => u.info.el?.classList.contains(r)) || "common");
+  const ease = (x) => x * x * (3 - 2 * x);                          // the disc's radius × the station's (a minion's glow and ward reach past it)
   function halo(layer, style) {
     const mat = new THREE.ShaderMaterial({ vertexShader: HALO_VS, fragmentShader: HALO_FS, transparent: true, depthWrite: false,
       blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
@@ -576,6 +580,17 @@ const EmberVoxelArena = (() => {
       if (!u.fig || u.state === "baking") { dropBase(scene, u); return; }
       u.state = "dying"; u.dieF = frame; dying.push(u);
       u.fig.root.visible = true;
+      if (u.fig.model && u.fig.dis) {
+        // a realistic figure: it reels from the blow and holds there, then burns away from its head down along a lit
+        // front, its light rising (a hero slower, the stage dimmed round it) — no tumble, no voxels
+        const big = !!u.info.hero, col = sfx?.tintOf(u) || RARITY[rarityOf(u)];
+        u.fall = { col, big, hold: 9, dur: big ? 72 : 40, pts: null, y0: 0, y1: 1, q0: u.fig.root.quaternion.clone() };
+        u.fig.dis.c.value.set(...col.map((c) => Math.min(1.4, c * 1.15)));
+        u.clip = "hurt"; u.t = 0; u.atk = null; u.glow = { f: 0, tier: 3, kill: true };
+        dropBase(scene, u);
+        if (big) sfx?.gloom(0.5, 1700);
+        return;
+      }
       const p = u.fig.root.position, a = from && units.get(key(from.side, from.uid));
       const d = a && a.fig ? V3(p.x - a.fig.root.position.x, 0, p.z - a.fig.root.position.z) : V3(0, 0, u.side === "p" ? 1 : -1);
       if (d.lengthSq() < 1e-6) d.set(0, 0, 1); d.normalize();
@@ -726,6 +741,22 @@ const EmberVoxelArena = (() => {
       for (let i = dying.length - 1; i >= 0; i--) {
         const u = dying[i], age = frame - u.dieF;
         if (u.glow) u.glow.f++;
+        if (u.fall) {
+          const F = u.fall, q = Math.max(0, Math.min(1, (age - F.hold) / F.dur));
+          if (age === F.hold) {
+            F.pts = R.voxelsWorld(u.fig).pts; let a = Infinity, b = -Infinity;
+            for (let j = 1; j < F.pts.length; j += 3) { a = Math.min(a, F.pts[j]); b = Math.max(b, F.pts[j]); }
+            F.y0 = a; F.y1 = b;
+          }
+          const k = q > 0 ? 0.02 + 0.98 * q * q * (1.6 - 0.6 * q) : 0;
+          u.fig.dis.k.value = k;
+          if (F.pts && q > 0 && q < 1 && age % 2 === 0) {
+            const front = F.y0 + Math.max(0, 1 - k / 0.84) * (F.y1 - F.y0);
+            sfx?.motes(F.pts, front, 0.06 * (F.y1 - F.y0), F.col, u.fig.root.scale.x * 2.2, F.big ? 7 : 4);
+          }
+          if (age > F.hold + F.dur + 2) { scene.remove(u.fig.root); R.dispose(u.fig); dying.splice(i, 1); }
+          continue;
+        }
         if (!u.shattered) {
           const dt = 1 / FPS, v = u.fly.v;
           v.y -= 13 * (Math.abs(v.y) < 1 ? 0.5 : 1) * dt;
@@ -763,11 +794,26 @@ const EmberVoxelArena = (() => {
           facing(u, u.fig.root.position);
           C.pose(u.fig, "idle", 0, T);
           const { pts, cols, size } = R.voxelsWorld(u.fig);
-          fx.assemble(pts, cols, frame, ASSEMBLE, { n: 900, size });
+          if (u.fig.model && u.fig.dis) {
+            // a realistic figure descends in a column of light, shown from its feet up along a lit front (its rarity's
+            // colour; a legend or a hero taller, with a sigil) and lands — the voxel figures keep assembling from cubes
+            const big = !!u.info.hero || rarityOf(u) === "legendary", col = RARITY[rarityOf(u)];
+            let y0 = Infinity, y1 = -Infinity; for (let j = 1; j < pts.length; j += 3) { y0 = Math.min(y0, pts[j]); y1 = Math.max(y1, pts[j]); }
+            u.rise = { col, big, pts, y0, y1 };
+            u.fig.dis.c.value.set(...col.map((c) => Math.min(1.4, c * 1.15))); u.fig.dis.k.value = 1;
+            u.fig.root.visible = true;
+            sfx?.arrive(u, col, big);
+          } else fx.assemble(pts, cols, frame, ASSEMBLE, { n: 900, size });
           u.state = "assembling"; u.spawnAt = frame;
         } else if (u.state === "assembling" && frame - u.spawnAt >= ASSEMBLE + 2) {
           goLive(u);
-          fx.dustPuff(u.fig.root.position.x, u.fig.root.position.z, 2, 1.2 * S, 0.34 * S, 0.05 * S, 0.3);
+          if (u.rise) { u.fig.dis.k.value = 0; sfx?.land(u, u.rise.col, u.rise.big); u.rise = null; }
+          else fx.dustPuff(u.fig.root.position.x, u.fig.root.position.z, 2, 1.2 * S, 0.34 * S, 0.05 * S, 0.3);
+        } else if (u.state === "assembling" && u.rise) {
+          const q = ease(Math.min(1, (frame - u.spawnAt) / ASSEMBLE)), k = Math.max(0.001, 1 - q), H = u.rise.y1 - u.rise.y0;
+          u.fig.dis.k.value = k;
+          u.fig.root.position.y += (1 - q) * 0.35 * H;               // (it settles down onto its station as it shows)
+          if ((frame - u.spawnAt) % 2 === 0) sfx?.motes(u.rise.pts, u.rise.y0 + Math.max(0, 1 - k / 0.84) * H, 0.05 * H, u.rise.col, u.fig.root.scale.x * 2.2, u.rise.big ? 5 : 3, 0.6, (1 - q) * 0.35 * H);
         }
         if (u.state !== "live") continue;
         facing(u, u.fig.root.position);
@@ -783,6 +829,14 @@ const EmberVoxelArena = (() => {
         glowOf(u);
       }
       for (const u of dying) {
+        if (u.fall) {                                   // it reels back and holds, sinking a little as it burns away
+          const age = frame - u.dieF, q = ease(Math.min(1, age / (u.fall.hold + u.fall.dur)));
+          if (u.pos) u.fig.root.position.copy(u.pos).add(V3(0, -0.05 * q * u.fig.root.scale.x, 0));
+          C.pose(u.fig, "hurt", Math.min(age / FPS, 0.26), T);
+          u.fig.root.quaternion.copy(u.fall.q0); u.fig.root.rotateX(-0.12 * q);
+          glowOf(u);
+          continue;
+        }
         if (u.shattered) continue;
         const q = new THREE.Quaternion().setFromAxisAngle(u.fly.axis, -u.fly.rot);
         u.fig.root.position.copy(u.fly.p0); u.fig.root.quaternion.copy(q.multiply(u.fly.q0));

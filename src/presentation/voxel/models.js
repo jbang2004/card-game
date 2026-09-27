@@ -129,19 +129,30 @@ const EmberModelFigures = (() => {
   // a signature figure's lit blade (EmberSkillFx sets its strength): the blade's bind-space segment, its strength, the
   // time its shimmer runs on, and the golden rim that swells with it
   const NO_LUX = { a: { value: V3(9, 9, 9) }, b: { value: V3(9, 9, 9.1) }, k: { value: 0 }, t: { value: 0 }, rim: { value: 0 } };
-  function material(M, hit, blink, glow, hide = false, lux = NO_LUX) {
+  // an arrival or a death (EmberVoxelArena): the figure shows from its feet up / burns away from its head down along a
+  // noisy front (uDisK 0 whole → 1 gone; uDisY its bind-space height range), the front lit in uDisC
+  const disOf = (M) => {
+    if (!M.geo.boundingBox) M.geo.computeBoundingBox();
+    const b = M.geo.boundingBox;
+    return { k: { value: 0 }, y: { value: new THREE.Vector2(b.min.y, b.max.y) }, c: { value: V3(1, 0.85, 0.5) } };
+  };
+  function material(M, hit, blink, glow, hide = false, lux = NO_LUX, dis = disOf(M)) {
     const m = new THREE.MeshBasicMaterial({ map: M.tex, side: THREE.DoubleSide });
     m.toneMapped = false;
     const E = M.eyes || { a: new THREE.Vector4(9, 9, 9, 9), b: new THREE.Vector4(9, 9, 9, 9), z: 9, skin: V3() };
     m.onBeforeCompile = (s) => {
       Object.assign(s.uniforms, { uShade: SHADE, uHitC: hit, uBlink: blink, uGlow: glow.k, uGlowC: glow.c, uOrb: glow.at, uEyeA: { value: E.a }, uEyeB: { value: E.b }, uEyeZ: { value: E.z }, uSkin: { value: E.skin }, uAura: { value: M.beast ? 0.4 : 1 }, uHide: { value: hide ? 1 : 0 },
-        uBladeA: lux.a, uBladeB: lux.b, uBladeK: lux.k, uBladeT: lux.t, uRimK: lux.rim });
+        uBladeA: lux.a, uBladeB: lux.b, uBladeK: lux.k, uBladeT: lux.t, uRimK: lux.rim, uDisK: dis.k, uDisY: dis.y, uDisC: dis.c });
       s.vertexShader = "varying vec3 vBind;\n" + s.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n vBind = position;");
       if (M.lit) s.vertexShader = "attribute float aMetal; varying float vMetal; varying vec3 vN;\n" + s.vertexShader.replace("#include <fog_vertex>", "#include <fog_vertex>\n vMetal = aMetal; vN = normalize(transformedNormal);");
       s.fragmentShader = `#ifdef LIT
         varying float vMetal; varying vec3 vN;
         #endif
-        uniform vec3 uHitC, uSkin, uGlowC, uBladeA, uBladeB; uniform float uShade, uBlink, uEyeZ, uGlow, uAura, uHide, uBladeK, uBladeT, uRimK; uniform vec4 uEyeA, uEyeB, uOrb; varying vec3 vBind;
+        uniform vec3 uHitC, uSkin, uGlowC, uBladeA, uBladeB, uDisC; uniform float uShade, uBlink, uEyeZ, uGlow, uAura, uHide, uBladeK, uBladeT, uRimK, uDisK; uniform vec4 uEyeA, uEyeB, uOrb; uniform vec2 uDisY; varying vec3 vBind;
+        float dh(vec3 p) { return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
+        float dn(vec3 p) { vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+          return mix(mix(mix(dh(i), dh(i + vec3(1, 0, 0)), f.x), mix(dh(i + vec3(0, 1, 0)), dh(i + vec3(1, 1, 0)), f.x), f.y),
+                     mix(mix(dh(i + vec3(0, 0, 1)), dh(i + vec3(1, 0, 1)), f.x), mix(dh(i + vec3(0, 1, 1)), dh(i + vec3(1, 1, 1)), f.x), f.y), f.z); }
         float lid(vec4 r) {                                   // 1 where this eye is closed over by the lid
           if (vBind.z < uEyeZ || vBind.x < r.x || vBind.x > r.z || vBind.y < r.y || vBind.y > r.w) return 0.0;
           float mid = 0.5 * (r.y + r.w), h = 0.5 * (r.w - r.y) - 0.012;
@@ -226,7 +237,14 @@ const EmberModelFigures = (() => {
           }
           #endif
           diffuseColor.rgb += uHitC * (0.45 + 0.55 * diffuseColor.rgb);
-          if (uGlow > 0.0) diffuseColor.rgb += uGlowC * uGlow * (1.0 - smoothstep(0.4, 1.0, distance(vBind, uOrb.xyz) / uOrb.w));`);
+          if (uGlow > 0.0) diffuseColor.rgb += uGlowC * uGlow * (1.0 - smoothstep(0.4, 1.0, distance(vBind, uOrb.xyz) / uOrb.w));
+          if (uDisK > 0.0) {                                  // the front: gone above it (a death) / not yet below it (an arrival)
+            float hh = clamp((vBind.y - uDisY.x) / max(uDisY.y - uDisY.x, 1e-3), 0.0, 1.0);
+            float sw = (1.0 - hh) * 0.84 + (dn(vBind * 18.0) * 0.65 + dn(vBind * 47.0) * 0.35) * 0.16;
+            if (sw < uDisK * 1.02) discard;
+            float edge = 1.0 - smoothstep(0.0, 0.045, sw - uDisK * 1.02);
+            diffuseColor.rgb = mix(diffuseColor.rgb, uDisC * 1.5, edge * 0.8) + uDisC * edge * edge * 0.8;
+          }`);
     };
     if (M.lit) m.defines = { LIT: "" };
     m.customProgramCacheKey = () => (M.lit ? "ember-model-lit" : "ember-model");
@@ -242,7 +260,7 @@ const EmberModelFigures = (() => {
     const inv = M.joints.map((_, i) => new THREE.Matrix4().fromArray(M.ibm, i * 16));
     const tint = new THREE.Color(spec.moves?.attack?.tint ?? 0xffd070);
     const hit = { value: V3() }, blink = { value: 0 }, glow = { k: { value: 0 }, c: { value: V3(tint.r, tint.g, tint.b) }, at: { value: new THREE.Vector4(0, -9, 0, 0.09) } };
-    const mat = material(M, hit, blink, glow), mesh = new THREE.SkinnedMesh(M.geo, mat);
+    const dis = disOf(M), mat = material(M, hit, blink, glow, false, NO_LUX, dis), mesh = new THREE.SkinnedMesh(M.geo, mat);
     mesh.frustumCulled = false; mesh.layers.set(LAYER);
     root.add(mesh); root.updateMatrixWorld(true);
     mesh.bind(new THREE.Skeleton(bones, inv), new THREE.Matrix4());
@@ -256,7 +274,7 @@ const EmberModelFigures = (() => {
     for (let i = 0; i < uv.count; i += 37) cols.push(...lin(M.data, texel(M, uv.getX(i), uv.getY(i))));
     const rest = new Map(); root.traverse((o) => rest.set(o, { p: o.position.clone(), q: o.quaternion.clone(), s: o.scale.clone() }));
     return { model: true, beast: true, id, spec, kind: spec.kind, char: { kind: spec.kind }, root, mesh, outline, bones, J: Object.fromEntries(bones.map((b) => [b.name, b])), skel: mesh.skeleton, rest,
-      props: [], mats: [mat, om], geos: [], hit, blink, glow, M, style: "beast", faces: null, face: null, phase: Math.random() * 6.28,
+      props: [], mats: [mat, om], geos: [], hit, blink, glow, dis, M, style: "beast", faces: null, face: null, phase: Math.random() * 6.28,
       vox: { bone: new Array(cols.length / 3).fill(0), color: new Float32Array(cols) } };
   }
   function build(id) {
@@ -280,7 +298,7 @@ const EmberModelFigures = (() => {
     // wrong end of a spear)
     const span = wh ? [wh.userData.fist.clone().addScaledVector(wh.userData.ax, wh.userData.far * from), wh.userData.fist.clone().addScaledVector(wh.userData.ax, wh.userData.far)] : M.blade ? M.blade.map((p) => V3(...p)) : null;
     const lux = sg && span ? { a: { value: span[0] }, b: { value: span[1] }, k: { value: 0 }, t: { value: 0 }, rim: { value: 0 } } : NO_LUX;
-    const hit = { value: V3() }, blink = { value: 0 }, mat = material(M, hit, blink, glow, !!fireCfg, lux);
+    const hit = { value: V3() }, blink = { value: 0 }, dis = disOf(M), mat = material(M, hit, blink, glow, !!fireCfg, lux, dis);
     const mesh = new THREE.SkinnedMesh(M.geo, mat);
     mesh.frustumCulled = false; mesh.layers.set(LAYER);
     root.add(mesh);
@@ -320,7 +338,7 @@ const EmberModelFigures = (() => {
     const headRest = B.Head ? modelQ(B.Head, root, new THREE.Quaternion()) : null;
     const cols = [], uv = M.geo.attributes.uv;
     for (let i = 0; i < uv.count; i += 37) cols.push(...lin(M.data, texel(M, uv.getX(i), uv.getY(i))));
-    const fig = { model: true, id, spec, kind: spec.kind, root, mesh, outline, bones: B, J, props, mats: outline ? [mat, outline.material] : [mat], geos: [], hit, blink, glow, gripAxis, M, style: M.style || STYLE[id] || "melee", side,
+    const fig = { model: true, id, spec, kind: spec.kind, root, mesh, outline, bones: B, J, props, mats: outline ? [mat, outline.material] : [mat], geos: [], hit, blink, glow, dis, gripAxis, M, style: M.style || STYLE[id] || "melee", side,
       rest: bones.map((b) => [b, b.quaternion.clone(), b.position.clone()]),
       vox: { bone: new Array(cols.length / 3).fill(0), color: new Float32Array(cols) }, phase: Math.random() * 6.28,
       spring: { x: 0, vx: 0, z: 0, vz: 0, prev: null, vel: null, T: null }, nextBlink: 1 + Math.random() * 3,
