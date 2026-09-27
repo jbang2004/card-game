@@ -889,6 +889,13 @@ const EmberVoxelArena = (() => {
       return !!(units.size || dying.length || queue.length || shots.length || smites.length || lit || aiming);
     }
     function setPixelRatio(dpr) { for (const u of units.values()) if (u.fig) R.setPixelRatio(u.fig, dpr); }
+    /** every effect's shader drawn once (EmberSkillFx.warm, a far arrow): nothing compiles on the battle's first blow */
+    function warm() {
+      sfx?.warm();
+      const parts = arrowMesh(1e-3);
+      for (const m of parts) m.position.set(0, -60, 0);
+      setTimeout(() => { for (const m of parts) { scene.remove(m); m.geometry.dispose(); } }, 600);     // (its materials kept: keepers)
+    }
     function dispose() {
       disposed = true;
       for (const u of [...units.values(), ...dying]) { if (u.fig) { scene.remove(u.fig.root); R.dispose(u.fig); } dropBase(scene, u); }
@@ -898,7 +905,7 @@ const EmberVoxelArena = (() => {
       sfx?.dispose();
     }
     return Object.freeze({
-      set, drop, cue, contact, owns, plan, step, setPixelRatio, dispose, fx, aim,
+      set, drop, cue, contact, owns, plan, step, setPixelRatio, dispose, fx, aim, warm,
       /** the camera shake the blows ask for now (world units; the page applies it) */
       shake: (now = performance.now()) => sfx?.shake(now) ?? 0,
       /** the camera's punch in toward a god's blow (× its distance) and how far the stage is dimmed round it (0 – 1) */

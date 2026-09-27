@@ -1016,18 +1016,22 @@ const EmberModelFigures = (() => {
     let u = frame != null ? Math.min(last, Math.max(0, frame)) : clip === "idle" ? ((T + fig.phase * 3) * A.fps) % last : Math.min(last, t * A.fps * k);
     const f0 = Math.floor(u), f1 = Math.min(last, f0 + 1), fr = u - f0;
     // per bone: the clip's world turn for this frame
-    if (!fig.clipIdx || fig.clipIdx.name !== name) fig.clipIdx = { name, of: A.bones.map((nm) => fig.M.joints.findIndex((j) => j.name === nm)) };
+    const idxs = fig.clipIdxs || (fig.clipIdxs = new Map());         // (per clip: a blend plays two a frame)
+    if (!idxs.has(name)) idxs.set(name, { name, of: A.bones.map((nm) => fig.M.joints.findIndex((j) => j.name === nm)) });
+    fig.clipIdx = idxs.get(name);
     const W = fig.worldQ || (fig.worldQ = fig.M.joints.map(() => new THREE.Quaternion()));
-    const D = new Array(fig.M.joints.length).fill(null);
+    // (the clip's turns go into arrays kept on the figure: posing allocates nothing, frame after frame)
+    const D = fig.clipQ || (fig.clipQ = fig.M.joints.map(() => new THREE.Quaternion())), has = fig.clipHas || (fig.clipHas = new Uint8Array(fig.M.joints.length));
+    has.fill(0);
     fig.clipIdx.of.forEach((ji, k2) => {
       if (ji < 0 || !fig.M.tq[ji]) return;
       const o0 = (f0 * A.bones.length + k2) * 4, o1 = (f1 * A.bones.length + k2) * 4;
       _a.set(A.q[o0], A.q[o0 + 1], A.q[o0 + 2], A.q[o0 + 3]); _b.set(A.q[o1], A.q[o1 + 1], A.q[o1 + 2], A.q[o1 + 3]);
-      D[ji] = _a.clone().slerp(_b, fr);
+      D[ji].copy(_a).slerp(_b, fr); has[ji] = 1;
     });
     fig.bonesArr.forEach((b, i) => {
       const p = fig.M.joints[i].parent, pw = p >= 0 ? W[p] : _w.identity();
-      if (D[i]) W[i].copy(D[i]).multiply(_a.fromArray(fig.M.tq[i]));
+      if (has[i]) W[i].copy(D[i]).multiply(_a.fromArray(fig.M.tq[i]));
       else W[i].copy(pw).multiply(fig.restQ[i]);
       b.quaternion.copy(p >= 0 ? W[p] : _b.identity()).invert().multiply(W[i]);
     });

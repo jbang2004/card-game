@@ -122,13 +122,19 @@ const EmberFire = (() => {
   function system(add, remove) {
     const puffs = [], shots = [], gathers = [], orbits = [];
     let last = null;
-    const drop = (m) => { remove(m); m.material.dispose(); };
+    const drop = (m) => { remove(m); if (!m.material.userData.keep) m.material.dispose(); };
+    const keepers = [];
     function puff(p, v, size, life, heat = 1, look = FIRE, shape = 1, pull = null) {
       const m = flame(shape, size, look); m.position.copy(p); add(m);
       puffs.push({ m, v: v.clone(), t0: performance.now(), life, heat, size, shape, pull });
     }
     const rnd = () => V3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1);
     return {
+      /** a flame and a rune circle drawn once far under the board and kept (never disposed): three.js keeps their
+       *  shaders compiled, so the first spell of the battle, and every one after, compiles nothing */
+      warm() {
+        for (const m of [flame(0, 1e-4), sigil(FIRE)]) { m.material.userData.keep = true; m.position.set(0, -60, 0); add(m); keepers.push({ m, t0: performance.now() }); }
+      },
       gather(hand, feet, ms, r, look, o = {}) {
         const g = { hand, feet, t0: performance.now(), ms, r, look, o, emit: 0, rise: 0, orb: null, ring: null, done: false };
         if (o.orb !== false) { g.orb = [flame(0, r * 3.2, look), flame(0, r * 1.9, look)]; g.orb[1].material.uniforms.uK.value = 1.25; g.orb.forEach(add); }
@@ -205,6 +211,7 @@ const EmberFire = (() => {
             else for (let j = 0; j < 4; j++) { const a = Math.random() * Math.PI * 2; puff(s.to, V3(Math.cos(a), 0.6 + Math.random(), Math.sin(a)).multiplyScalar(s.r * 5), s.r * 1.6, 320 + Math.random() * 200, 1.0, s.look); }
           }
         }
+        for (let i = keepers.length - 1; i >= 0; i--) if (now - keepers[i].t0 > 500) { remove(keepers[i].m); keepers.splice(i, 1); }
         for (let i = puffs.length - 1; i >= 0; i--) {
           const f = puffs[i], age = (now - f.t0) / f.life;
           if (age >= 1) { drop(f.m); puffs.splice(i, 1); continue; }
