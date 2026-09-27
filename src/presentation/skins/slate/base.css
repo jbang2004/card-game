@@ -51,23 +51,27 @@
  * geometry tokens for narrower desktop windows.
  *
  * ---------------------------------------------------------------------------
- * TWO SHELLS, keyed off `[data-dialog-size]` (set by presentation/dialog-layout.js):
+ * THREE SHELLS, keyed off `[data-shell]` (presentation/dialog-layout.js maps
+ * each `[data-dialog-size]` to one; page files may still key off the size):
  *
- *   PAGE shell  — heroes, library, settings, route, covenant, help.
- *     Full-bleed: host padding 0, dialog 100%×100%, matte material background,
- *     no border/radius/shadow, `padding: 26px var(--slate-page-x) 28px`, and the
- *     close button becomes a back chevron at the TOP-LEFT plus a title row.
- *     On `body.touch-layout` the same shell retunes to 16px + safe-area
- *     gutters, a 44px chevron and a 28px title, with a short-landscape
+ *   PAGE  — heroes, library, route, covenant.
+ *     Full-bleed over the blurred edition art, `padding: 26px
+ *     var(--slate-page-x) 28px`, a glass back circle at the TOP-LEFT and a
+ *     title row. On `body.touch-layout` it retunes to 16px + safe-area
+ *     gutters, a 44px back circle and a 26px title, with a short-landscape
  *     (`max-height: 500px`) and a tablet (`min-width: 900px`) pass.
  *
- *   FLOATING shell — confirm, detail, hand, menu, journal, discover, mulligan,
- *     choice, result, atelier, workspace.
+ *   SHEET — settings, help, confirm, menu, journal, choice, result, atelier,
+ *     workspace, and the hero info sheet (`detail` size, touch-hero type).
  *     Host keeps dialog-layout's centering and gets a dim; the dialog is a
- *     rounded matte panel (16px radius, hairline border, drop shadow). Widths
- *     stay exactly as dialog-layout.css defines them — never override
- *     `--dialog-width` here. The close button stays a top-RIGHT round "×":
- *     40px on desktop, 44px on touch.
+ *     regular-glass pane (radius `--lg-radius-sheet`, `--glass-rim`, soft
+ *     shadow). Widths stay as dialog-layout.css defines them, except settings
+ *     and the guide, sized below. Close = a top-RIGHT round "×": 40px on
+ *     desktop, 44px on touch.
+ *
+ *   STAGE — detail, discover, mulligan, hand. No pane: the host dims and
+ *     blurs the scene and the cards sit on it. It shares the sheet's close
+ *     button rules (`:is([data-shell="sheet"], [data-shell="stage"])`).
  *
  * ---------------------------------------------------------------------------
  * SHARED CONTROLS (apply to EVERY dialog type, not just the pages above):
@@ -141,11 +145,7 @@ html[data-skin="slate"] {
    * Controls INSIDE a pane never get glass of their own (no glass on glass):
    * they are fills (`--lg-fill-control`) with a small rim (`--lg-rim-soft`).
    * `--glass-fill-2` is the grouped-section fill inside a pane. */
-  --glass-fill: linear-gradient(
-    180deg,
-    #2a2c34a3 0%,
-    #1a1c22b0 100%
-  );
+  --glass-fill: linear-gradient(180deg, #2a2c34a3 0%, #1a1c22b0 100%);
   --glass-fill-2: #ffffff0f;
   --glass-blur: blur(36px) saturate(190%) brightness(0.92);
   --glass-rim:
@@ -267,16 +267,7 @@ html[data-skin="slate"] body #app {
 /* ---------- full-bleed page shell ---------- */
 html[data-skin="slate"]
   body
-  #modal.folio-host:has(
-    > .folio-dialog:is(
-        [data-dialog-size="heroes"],
-        [data-dialog-size="library"],
-        [data-dialog-size="settings"],
-        [data-dialog-size="route"],
-        [data-dialog-size="covenant"],
-        [data-dialog-size="help"]
-      )
-  ) {
+  #modal.folio-host:has(> .folio-dialog[data-shell="page"]) {
   padding: 0;
   background: #05070a;
 }
@@ -288,16 +279,7 @@ html[data-skin="slate"]
  * transparent fringe outside the host, which clips it. */
 html[data-skin="slate"]
   body
-  #modal.folio-host:has(
-    > .folio-dialog:is(
-        [data-dialog-size="heroes"],
-        [data-dialog-size="library"],
-        [data-dialog-size="settings"],
-        [data-dialog-size="route"],
-        [data-dialog-size="covenant"],
-        [data-dialog-size="help"]
-      )
-  )::before {
+  #modal.folio-host:has(> .folio-dialog[data-shell="page"])::before {
   content: "";
   position: absolute;
   inset: -48px;
@@ -311,14 +293,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  ) {
+  > .folio-dialog[data-shell="page"] {
   --dialog-width: 100%;
   width: 100%;
   max-width: 100%;
@@ -414,14 +389,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-close {
   top: 26px;
   left: 36px;
@@ -443,14 +411,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-close
   svg {
   display: none;
@@ -458,14 +419,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-close::before {
   content: "";
   display: block;
@@ -488,14 +442,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-close::after {
   content: none;
   display: none;
@@ -503,28 +450,14 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-close:hover {
   background: var(--lg-clear-hover);
 }
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-close:active {
   transform: scale(0.94);
 }
@@ -533,14 +466,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-heading {
   display: flex;
   align-items: center;
@@ -560,40 +486,19 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-heading::before,
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-heading::after {
   content: none;
 }
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-heading
   p {
   display: none;
@@ -710,14 +615,7 @@ html[data-skin="slate"] body #modal.folio-host .gold-btn svg {
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-footer {
   justify-content: flex-end;
   gap: 16px;
@@ -728,14 +626,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-footer
   > button {
   min-width: 220px;
@@ -752,14 +643,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  ) {
+  > .folio-dialog[data-shell="page"] {
   padding: calc(12px + env(safe-area-inset-top))
     calc(16px + env(safe-area-inset-right))
     calc(12px + env(safe-area-inset-bottom))
@@ -769,14 +653,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > .modal-close {
   top: calc(10px + env(safe-area-inset-top));
   left: calc(10px + env(safe-area-inset-left));
@@ -786,14 +663,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   > :is(.modal-heading, .library-heading) {
   min-height: 44px;
   /* The touch chevron sits at `left: 10px` and is 44px wide, so it ends at
@@ -804,14 +674,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="heroes"],
-    [data-dialog-size="library"],
-    [data-dialog-size="settings"],
-    [data-dialog-size="route"],
-    [data-dialog-size="covenant"],
-    [data-dialog-size="help"]
-  )
+  > .folio-dialog[data-shell="page"]
   :is(.modal-heading, .library-heading)
   h2 {
   font-size: 26px;
@@ -823,42 +686,21 @@ html[data-skin="slate"]
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="route"],
-      [data-dialog-size="covenant"],
-      [data-dialog-size="help"]
-    ) {
+    > .folio-dialog[data-shell="page"] {
     padding-top: calc(8px + env(safe-area-inset-top));
     padding-bottom: calc(10px + env(safe-area-inset-bottom));
   }
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="route"],
-      [data-dialog-size="covenant"],
-      [data-dialog-size="help"]
-    )
+    > .folio-dialog[data-shell="page"]
     > :is(.modal-heading, .library-heading) {
     min-height: 36px;
   }
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="route"],
-      [data-dialog-size="covenant"],
-      [data-dialog-size="help"]
-    )
+    > .folio-dialog[data-shell="page"]
     > .modal-close {
     top: calc(8px + env(safe-area-inset-top));
     left: calc(8px + env(safe-area-inset-left));
@@ -867,14 +709,7 @@ html[data-skin="slate"]
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="route"],
-      [data-dialog-size="covenant"],
-      [data-dialog-size="help"]
-    )
+    > .folio-dialog[data-shell="page"]
     :is(.modal-heading, .library-heading)
     h2 {
     font-size: 21px;
@@ -886,14 +721,7 @@ html[data-skin="slate"]
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="route"],
-      [data-dialog-size="covenant"],
-      [data-dialog-size="help"]
-    ) {
+    > .folio-dialog[data-shell="page"] {
     padding: calc(22px + env(safe-area-inset-top))
       calc(32px + env(safe-area-inset-right))
       calc(20px + env(safe-area-inset-bottom))
@@ -902,14 +730,7 @@ html[data-skin="slate"]
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="route"],
-      [data-dialog-size="covenant"],
-      [data-dialog-size="help"]
-    )
+    > .folio-dialog[data-shell="page"]
     > .modal-close {
     top: calc(20px + env(safe-area-inset-top));
     left: calc(24px + env(safe-area-inset-left));
@@ -917,14 +738,7 @@ html[data-skin="slate"]
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="route"],
-      [data-dialog-size="covenant"],
-      [data-dialog-size="help"]
-    )
+    > .folio-dialog[data-shell="page"]
     > :is(.modal-heading, .library-heading) {
     /* the tablet chevron moves to `left: 24px`, ending at 68px against a
      * 32px gutter, so 48px of padding left only 12px of air */
@@ -933,14 +747,7 @@ html[data-skin="slate"]
   html[data-skin="slate"]
     body.touch-layout
     #modal.folio-host
-    > .folio-dialog:is(
-      [data-dialog-size="heroes"],
-      [data-dialog-size="library"],
-      [data-dialog-size="settings"],
-      [data-dialog-size="route"],
-      [data-dialog-size="covenant"],
-      [data-dialog-size="help"]
-    )
+    > .folio-dialog[data-shell="page"]
     :is(.modal-heading, .library-heading)
     h2 {
     font-size: 30px;
@@ -1066,38 +873,14 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host:has(
-    > .folio-dialog:is(
-        [data-dialog-size="confirm"],
-        [data-dialog-size="detail"],
-        [data-dialog-size="hand"],
-        [data-dialog-size="menu"],
-        [data-dialog-size="journal"],
-        [data-dialog-size="discover"],
-        [data-dialog-size="mulligan"],
-        [data-dialog-size="choice"],
-        [data-dialog-size="result"],
-        [data-dialog-size="atelier"],
-        [data-dialog-size="workspace"]
-      )
+    > .folio-dialog:is([data-shell="sheet"], [data-shell="stage"])
   ) {
   background: #05070a80;
 }
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="confirm"],
-    [data-dialog-size="detail"],
-    [data-dialog-size="hand"],
-    [data-dialog-size="menu"],
-    [data-dialog-size="journal"],
-    [data-dialog-size="discover"],
-    [data-dialog-size="mulligan"],
-    [data-dialog-size="choice"],
-    [data-dialog-size="result"],
-    [data-dialog-size="atelier"],
-    [data-dialog-size="workspace"]
-  ) {
+  > .folio-dialog:is([data-shell="sheet"], [data-shell="stage"]) {
   padding: 28px 32px;
   border: 0;
   border-radius: var(--lg-radius-sheet);
@@ -1112,19 +895,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="confirm"],
-    [data-dialog-size="detail"],
-    [data-dialog-size="hand"],
-    [data-dialog-size="menu"],
-    [data-dialog-size="journal"],
-    [data-dialog-size="discover"],
-    [data-dialog-size="mulligan"],
-    [data-dialog-size="choice"],
-    [data-dialog-size="result"],
-    [data-dialog-size="atelier"],
-    [data-dialog-size="workspace"]
-  )
+  > .folio-dialog:is([data-shell="sheet"], [data-shell="stage"])
   > .modal-close {
   width: 40px;
   height: 40px;
@@ -1140,55 +911,19 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="confirm"],
-    [data-dialog-size="detail"],
-    [data-dialog-size="hand"],
-    [data-dialog-size="menu"],
-    [data-dialog-size="journal"],
-    [data-dialog-size="discover"],
-    [data-dialog-size="mulligan"],
-    [data-dialog-size="choice"],
-    [data-dialog-size="result"],
-    [data-dialog-size="atelier"],
-    [data-dialog-size="workspace"]
-  )
+  > .folio-dialog:is([data-shell="sheet"], [data-shell="stage"])
   > .modal-close::before,
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="confirm"],
-    [data-dialog-size="detail"],
-    [data-dialog-size="hand"],
-    [data-dialog-size="menu"],
-    [data-dialog-size="journal"],
-    [data-dialog-size="discover"],
-    [data-dialog-size="mulligan"],
-    [data-dialog-size="choice"],
-    [data-dialog-size="result"],
-    [data-dialog-size="atelier"],
-    [data-dialog-size="workspace"]
-  )
+  > .folio-dialog:is([data-shell="sheet"], [data-shell="stage"])
   > .modal-close::after {
   content: none;
 }
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="confirm"],
-    [data-dialog-size="detail"],
-    [data-dialog-size="hand"],
-    [data-dialog-size="menu"],
-    [data-dialog-size="journal"],
-    [data-dialog-size="discover"],
-    [data-dialog-size="mulligan"],
-    [data-dialog-size="choice"],
-    [data-dialog-size="result"],
-    [data-dialog-size="atelier"],
-    [data-dialog-size="workspace"]
-  )
+  > .folio-dialog:is([data-shell="sheet"], [data-shell="stage"])
   > .modal-close
   svg {
   position: relative;
@@ -1200,19 +935,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host
-  > .folio-dialog:is(
-    [data-dialog-size="confirm"],
-    [data-dialog-size="detail"],
-    [data-dialog-size="hand"],
-    [data-dialog-size="menu"],
-    [data-dialog-size="journal"],
-    [data-dialog-size="discover"],
-    [data-dialog-size="mulligan"],
-    [data-dialog-size="choice"],
-    [data-dialog-size="result"],
-    [data-dialog-size="atelier"],
-    [data-dialog-size="workspace"]
-  )
+  > .folio-dialog:is([data-shell="sheet"], [data-shell="stage"])
   > .modal-close:hover {
   background: var(--lg-fill-control-hover);
 }
@@ -1229,6 +952,70 @@ html[data-skin="slate"]
   > .modal-close {
   width: 44px;
   height: 44px;
+}
+
+/* ---------- settings and the guide: sheets with a page's title row ----------
+ * They are sheets on every layout, but keep the page shell's heading row and
+ * footer (flex title row, hidden lead paragraph, right-aligned wide pills),
+ * which the per-layout rules below then size. */
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .folio-dialog:is([data-dialog-size="settings"], [data-dialog-size="help"]) {
+  margin: 0;
+  gap: 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .folio-dialog:is([data-dialog-size="settings"], [data-dialog-size="help"])
+  > .modal-heading {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  border: 0;
+  background: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .folio-dialog:is([data-dialog-size="settings"], [data-dialog-size="help"])
+  > .modal-heading::before,
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .folio-dialog:is([data-dialog-size="settings"], [data-dialog-size="help"])
+  > .modal-heading::after {
+  content: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .folio-dialog:is([data-dialog-size="settings"], [data-dialog-size="help"])
+  > .modal-heading
+  p {
+  display: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .folio-dialog:is([data-dialog-size="settings"], [data-dialog-size="help"])
+  > .modal-footer {
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 18px 0 0;
+  border: 0;
+  background: none;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .folio-dialog:is([data-dialog-size="settings"], [data-dialog-size="help"])
+  > .modal-footer
+  > button {
+  min-width: 220px;
+  min-height: 52px;
+  margin: 0;
 }
 
 /* ---------- desktop: settings and the guide float ---------- */
@@ -1343,12 +1130,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host:not([data-type="touch-hero"]):has(
-    > .folio-dialog:is(
-        [data-dialog-size="detail"],
-        [data-dialog-size="discover"],
-        [data-dialog-size="mulligan"],
-        [data-dialog-size="hand"]
-      )
+    > .folio-dialog[data-shell="stage"]
   ) {
   background: #05070a99;
   -webkit-backdrop-filter: blur(18px) saturate(120%);
@@ -1357,12 +1139,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host:not([data-type="touch-hero"]):has(
-    > .folio-dialog:is(
-        [data-dialog-size="detail"],
-        [data-dialog-size="discover"],
-        [data-dialog-size="mulligan"],
-        [data-dialog-size="hand"]
-      )
+    > .folio-dialog[data-shell="stage"]
   ) {
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
@@ -1370,12 +1147,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host:not([data-type="touch-hero"])
-  > .folio-dialog:is(
-    [data-dialog-size="detail"],
-    [data-dialog-size="discover"],
-    [data-dialog-size="mulligan"],
-    [data-dialog-size="hand"]
-  ) {
+  > .folio-dialog[data-shell="stage"] {
   padding: 8px 24px 12px;
   border: 0;
   border-radius: 0;
@@ -1387,12 +1159,7 @@ html[data-skin="slate"]
 html[data-skin="slate"]
   body
   #modal.folio-host:not([data-type="touch-hero"])
-  > .folio-dialog:is(
-    [data-dialog-size="detail"],
-    [data-dialog-size="discover"],
-    [data-dialog-size="mulligan"],
-    [data-dialog-size="hand"]
-  )
+  > .folio-dialog[data-shell="stage"]
   > .modal-heading
   :is(h2, p) {
   text-shadow: 0 2px 14px #000000cc;
