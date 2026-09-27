@@ -20,18 +20,21 @@ for (const [width, height] of [
     await page.goto("./?debug=1");
     await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
     await page.locator("#start-btn").click();
-    const heroColumns = await page.locator(".hero-options").evaluate((grid) => {
-      const firstTop = grid
-        .querySelector(".hero-option")
-        .getBoundingClientRect().top;
-      return [...grid.querySelectorAll(".hero-option")].filter(
-        (card) => Math.abs(card.getBoundingClientRect().top - firstTop) <= 1,
-      ).length;
+    const heroRow = await page.locator(".hero-options").evaluate((grid) => {
+      const cards = [...grid.querySelectorAll(".hero-option")];
+      const firstTop = cards[0].getBoundingClientRect().top;
+      return {
+        total: cards.length,
+        inRow: cards.filter(
+          (card) => Math.abs(card.getBoundingClientRect().top - firstTop) <= 1,
+        ).length,
+      };
     });
-    // The slate roster is a vertical list at every touch size: one full-width
-    // row per hero (portrait thumbnail + name + power), not the silverblue
-    // four-up chip grid that narrow portrait windows used to get.
-    expect(heroColumns).toBe(1);
+    // The slate hero page is a card stage (design system §5.0, 2026-09-22):
+    // the hero cards share one row at every touch size, above the choices.
+    // (The retired vertical roster used to be asserted here; it only kept
+    // passing because the selected card was lifted off the row.)
+    expect(heroRow.inRow).toBe(heroRow.total);
     await page.locator('[data-hero="morla"]').click();
     // Skill copy belongs to the selected hero dossier, not each roster chip.
     await page
