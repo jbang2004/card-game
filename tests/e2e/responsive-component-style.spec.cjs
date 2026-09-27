@@ -276,9 +276,9 @@ async function fingerprint(page, selectors) {
                 `${name}[${size}]: page shell radius ${s.borderRadius}`,
               );
           } else {
-            // floating shell: a 24px liquid-glass pane — a tinted gradient over
+            // floating shell: a 28px liquid-glass pane — a tinted gradient over
             // a backdrop blur, edged by an inset highlight rather than a border
-            if (radius !== 24)
+            if (radius !== 28)
               issues.push(
                 `${name}[${size}]: floating shell radius ${s.borderRadius}`,
               );

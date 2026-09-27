@@ -36,9 +36,17 @@ async function assertInk(page, selector, bgSelector) {
         .map((v) => v / 255)
         .map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
         .reduce((a, v, i) => a + v * [0.2126, 0.7152, 0.0722][i], 0);
+    // Liquid-glass tiles are translucent fills (e.g. 6% white) laid over the
+    // dark sheet, so the tile's own background colour is composited over the
+    // near-black the sheet dims to instead of being read as opaque.
+    const backdrop = (el) => {
+      const v = getComputedStyle(el).backgroundColor.match(/[\d.]+/g).map(Number);
+      const a = v.length > 3 ? v[3] : 1;
+      return [5, 7, 10].map((c, i) => v[i] * a + c * (1 - a));
+    };
     return xs.map((x) => {
       const a = lum(rgb(getComputedStyle(x).color)),
-        b = lum(rgb(getComputedStyle(x.closest(bg)).backgroundColor));
+        b = lum(backdrop(x.closest(bg)));
       return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
     });
   }, bgSelector);

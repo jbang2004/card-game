@@ -237,6 +237,8 @@ for (const [width, height] of [
     const close = await page
       .locator(".covenant-box > .modal-close")
       .boundingBox();
+    // Liquid glass (design system 「液态玻璃 v2」) groups by air: the title row
+    // carries no rule, neither a border nor the old slate `::after` hairline.
     const headingLine = await page
       .locator(".covenant-heading")
       .evaluate((heading) => {
@@ -244,16 +246,12 @@ for (const [width, height] of [
         return {
           border: getComputedStyle(heading).borderBottomStyle,
           content: style.content,
-          position: style.position,
-          right: parseFloat(style.right),
         };
       });
     expect(close.width).toBe(44);
     expect(close.height).toBe(44);
     expect(headingLine.border).toBe("none");
-    expect(headingLine.content).not.toBe("none");
-    expect(headingLine.position).toBe("absolute");
-    expect(headingLine.right).toBeGreaterThanOrEqual(48);
+    expect(headingLine.content).toBe("none");
     await ctx.close();
   });
 }

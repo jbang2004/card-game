@@ -4,6 +4,57 @@
 
 用户决策（2026-09-13）：完成后设为默认皮肤；主页 / 地图 / 战场保留场景原画，只重做 UI 层；手机布局纳入第二阶段。2026-09-14 旧的星海银蓝主题连同 `?skin=` 开关一并删除：`src/presentation/theme.js` 无条件写入 `html[data-skin="slate"]`，该属性是皮肤选择器的命名空间，不再是切换点。
 
+## 液态玻璃 v2（2026-09-27，Apple Liquid Glass）
+
+用户 2026-09-27 要求把全站 UI 元素（面板、按钮及其他控件）改成 Apple Liquid Glass（iOS / macOS 26）的风格，排版简洁清爽。本节优先于下文 §1–§5 中与之冲突的旧规格（导航轨发光节点、下划线文字分页、104×40 开关、蓝色外发光主按钮、3px 标题字距等均已退役）。令牌全部在 `base.css`。
+
+**材质：两种玻璃 + 一条高光边。**
+- 常规玻璃（regular）= `--glass-fill` + `--glass-blur`：承载文字的面板——浮层、检查器（右侧详情栏）、战场侧栏。中性烟灰着色，重模糊 + 高饱和，让背后场景的颜色透出来。
+- 透明玻璃（clear）= `--lg-clear` + `--lg-clear-blur`：**独立浮在内容上的控件**——工具条、标签栏、HUD 芯片、单独摆放的按钮、返回钮。几乎不着色、轻模糊、微提亮；悬停 `--lg-clear-hover`。
+- 高光边 `--glass-rim`：左上亮唇 + 右下弱唇 + 7% 轮廓 + 顶部内光 + 底部内影，全部是 inset 阴影，跟随任意圆角，不需要伪元素。浮起的玻璃再叠 `--lg-lift`（控件）或 `--glass-shadow`（面板）。
+- **玻璃上不叠玻璃**：面板里的控件不再做玻璃，用填充 `--lg-fill-control`（悬停 `--lg-fill-control-hover`）+ 小高光 `--lg-rim-soft`；分组块用 `--glass-fill-2`。
+- **着色玻璃（prominent）** `--lg-prominent` + `--lg-prominent-rim` = 主操作（`.gold-btn`、开启冒险）。战场上"此刻可行动"仍是余烬色，做成余烬着色玻璃（同一条高光边配方）。
+- 性能：`backdrop-filter` 只给单独浮起的元素；列表项、网格里重复的元素、面板内部控件一律不用。
+
+**形状。** 按钮、芯片、分段控件、标签栏 = 胶囊（999）；图标按钮 = 圆；面板 `--lg-radius-sheet` 28；面板内分组 `--lg-radius-group` 18；分组里的行 / 小卡 12–14。浮在场景上的检查器离视口边 16–24px，不贴边。
+
+**字体。** 字体栈以 `-apple-system` 开头（中文落到苹方）。中文标题**不加字距**（0；仅品牌字标、大号 CTA 可 ≤1px）。页面标题 700 30/44（`--lg-title-page`），面板标题 700 24/32（`--lg-title-sheet`），行标题 600 17/24（`--lg-headline`），正文 400 15–16，说明 13–14 用 `--slate-ink-2`，最弱 `--slate-ink-3`。数字用 `font-variant-numeric: tabular-nums`。文字色是中性白 + 透明度（`--slate-ink` #f5f5f7、`--slate-ink-2` 72%、`--slate-ink-3` 50%），强调色是系统蓝（`--slate-blue` #64b4ff 文字 / 描边，`--slate-blue-deep` #0a84ff 填充）。
+
+**组件。**
+| 组件 | 规格 | 实现 |
+| --- | --- | --- |
+| 主按钮 | 着色玻璃胶囊，600 17px，高 48–52 | base.css `.gold-btn` |
+| 次按钮 | 控件填充胶囊 + 小高光 | base.css `.ghost-btn` |
+| 关闭 | 40 圆，控件填充，`×` 用 ink-2 | base.css 浮层壳 `.modal-close` |
+| 返回 | 44 圆，透明玻璃，2.5px 细 chevron | base.css 页面壳 `.modal-close` |
+| 分段控件 | 轨道 `--lg-fill-control` 胶囊、内边距 3、`inset 0 1px 2px #00000026`；段高 36（桌面）/ 44（触屏）；选中段 `#ffffff24` + `--lg-rim-soft` + `0 2px 8px #00000026`，白字 600；未选 ink-2 500 | settings.css 触屏导航、home.css 标签栏 |
+| 侧边栏 | 44 高胶囊行，左侧 28px 彩色图标块（圆角 8、`inset 0 1px 0 #ffffff4d`），选中行 `#ffffff24` + `--lg-rim-soft` | settings.css 桌面导航 |
+| 开关 | iOS 26：64×28 轨道 + 38×24 胶囊白钮，开启 #30d158；按钮本体保持 64×44 透明命中区 | settings.css `.toggle` |
+| 滑杆 | 6px 胶囊轨道，系统蓝进度，34×22 白色胶囊钮 | base.css `input[type=range]` |
+| 输入 / 下拉 | 44 高胶囊，控件填充 + 小高光 | base.css |
+| 选中态（卡、选项块） | 不用粗边框：`0 0 0 2px var(--slate-blue)` + `0 0 0 6px #0a84ff29` 光晕，底色可加 `#0a84ff1f` | 各页 |
+| 工具条 / 标签栏 | 透明玻璃胶囊，内边距 4，图标钮 40（触屏 44）圆、透明底、悬停 `#ffffff1f`；选中标签是 `::after` 胶囊滑块 | home.css |
+| 分组列表 | `--glass-fill-2` 圆角 18，行高 ≥56，行间靠留白不画线 | settings.css |
+
+**动效。** 按下 `scale(.97)`，回弹用 `--e-spring`；时长用 `--m-*`；遵守减少动态效果。
+
+**共享组件（base.css，唯一定义）。** 材质配方只写一次，页面文件只写几何（位置、尺寸、间距、字号），不重复材质。标记里挂类名接入：
+| 类 | 含义 | 使用处 |
+| --- | --- | --- |
+| `.lg-glass` | 透明玻璃（独立浮起的控件）；着色取 `--lg-glass-tint`：平时 `--lg-clear`，`#app.battle-view` 内为 `--lg-hud` | 主页标签栏与工具条、战斗试玩按钮、战场工具条、战斗记录/情报圆钮、牌库芯片、状态胶囊 |
+| `.lg-sheet` | 常规玻璃面板（非对话框的检查器） | 图鉴牌组栏、地图详情栏、战场记录与首领情报面板 |
+| `.lg-seg` + `.lg-seg-item` | 分段控件轨道与分段 | 图鉴类型/费用/触屏标签、契约我方/敌方、英雄游戏模式 |
+| `.lg-sidebar` + `.lg-seg-item` | 桌面侧边栏，触屏自动变为分段控件轨道 | 设置导航、手册目录 |
+| `.lg-group` | 面板内分组块 | 设置分组、手册各节、英雄技能块、地图遗物、契约进度、结算统计、遗物选项卡 |
+| `--lg-select-ring` | 选中环：2px 强调色 + 6px 光晕 | 遗物选项、地图节点、契约缩略图 |
+| 禁用按钮 | `#78788029` 灰填充、无高光、ink-3 字 | base.css 药丸 `:disabled` |
+
+组件规则带 `:is(#app, #modal, #card-stage)` 以压过遗留层的 id 级规则；页面文件里若有旧规则仍在覆盖材质，删掉那条旧规则的材质声明，而不是再加一层更高权重的覆盖。`crafted-panel` 中和规则用 `:where(:not(.lg-sheet, .lg-group))` 排除组件，不增加权重。
+
+**三种外壳由 `data-shell` 声明。** `dialog-layout.js` 按尺寸写 `data-shell`：`page`（英雄、图鉴、地图、契约）、`sheet`（设置、手册、确认、菜单、记录、遗物奖励、结算、画廊、英雄信息表）、`stage`（卡牌详情、发现、换牌、手牌总览）。base.css 只按 `data-shell` 写外壳；需要随布局改变外壳的页面（触屏遗物奖励是整页）由页面文件自己声明。设置与手册在所有布局都是浮层，但保留页面式标题行与右对齐页脚。
+
+**战场 HUD。** 独立 HUD 元素用 `.lg-glass`（战场内自动为烟色 `--lg-hud`）。必须保持 `background-image: none` 的控件（`#power-btn` `#end-turn` 等）把玻璃画在 `::before` 上。结束回合：平时透明玻璃胶囊，回合用尽（`.ready-end`）变余烬着色玻璃 `--lg-ember` + `--lg-ember-rim`。英雄底座名牌用 `1.5px solid transparent` 边，状态时改边色（ready #ffb35a / 选中 #f3dfa6 / 目标 #e0b455，`mobile-hand-layout.spec` 读它）。随从铭牌数量多，用深色胶囊 + `--lg-rim-soft`，不加背景模糊。回合横幅、召唤印记、战斗事件标签都是玻璃胶囊。
+
 ## 0. 参考元素到本项目的映射
 
 | 参考元素 | 本项目实现 |
@@ -42,18 +93,27 @@
 
 | 令牌 | 值 | 用途 |
 | --- | --- | --- |
-| `--slate-font` | PingFang SC / Hiragino Sans GB / Source Han Sans / Noto Sans SC / Microsoft YaHei / system-ui | 全部文字，标题 700，正文 400/500 |
-| `--slate-ink` `--slate-ink-2` `--slate-ink-3` | #f3f6fa / #c3ccd8 / #8e99a9 | 主文字 / 次文字 / 弱文字 |
-| `--slate-blue` `--slate-blue-deep` | #8cc4ff / #2f72d6 | 强调文字、选中描边 / 主按钮、选中填充 |
+| `--slate-font` | -apple-system / BlinkMacSystemFont / SF Pro Text / PingFang SC / Hiragino Sans GB / Source Han Sans / Noto Sans SC / Segoe UI / Microsoft YaHei / system-ui | 全部文字，标题 700，正文 400/500；中文不加字距 |
+| `--slate-ink` `--slate-ink-2` `--slate-ink-3` | #f5f5f7 / #ebebf5b8 / #ebebf280 | 主文字 / 次文字（72%）/ 弱文字（50%），中性白 + 透明度 |
+| `--slate-blue` `--slate-blue-deep` | #64b4ff / #0a84ff | 强调文字、选中描边 / 主按钮、进度、选中填充（系统蓝） |
 | `--slate-line` `--slate-line-strong` | #ffffff26 / #ffffff40 | 仅剩导航轨竖线、图示连线与少数可点选实体轮廓（契约缩略图）使用；**不再作分节线或浮层边** |
 | `--slate-line-art` | #ffffff59 | 场景原画（T5）上的发丝线，`--slate-line` 压在画面上会看不见 |
 | `--slate-pill` `--slate-pill-line` | #121824b3 / #ffffff12 | 深色药丸底 / 7% 的极淡边（战场 HUD 芯片仍引用；对话框内的药丸已改为 #ffffff14 底 + 顶部内高光，无边） |
 | `--slate-card-line` `--slate-card-base` | #d6dfe9aa / #0f141d | 卡片描边 / 卡片底 |
-| `--glass-fill` | 左上 9% 白色高光 + 160° `#1a2231ad → #0f151fa3` 透色 | 玻璃着色（浮层壳、战场侧栏、英雄信息表等） |
+| `--glass-fill` | 180° `#2a2c34a3 → #1a1c22b0` 中性烟灰 | 常规玻璃着色（浮层、检查器、战场侧栏） |
 | `--glass-fill-2` | #ffffff0f | 子玻璃块：面板内分组、模式卡、手册内容卡、图鉴牌组编辑列、设置分组 |
-| `--glass-blur` | `blur(28px) saturate(160%)` | 玻璃的 backdrop-filter；回退时为 `none` |
-| `--glass-rim` | `inset 0 1px 0 #ffffff30, inset 0 -1px 0 #00000030, inset 0 0 0 1px #ffffff0c` | 折射边缘：顶部亮唇、底部阴影、5% 轮廓，代替 border |
-| `--glass-shadow` | `0 30px 80px #00000080` | 浮层柔投影，与 `--glass-rim` 一起写进 box-shadow |
+| `--glass-blur` | `blur(36px) saturate(190%) brightness(0.92)` | 常规玻璃的 backdrop-filter；回退时为 `none` |
+| `--glass-rim` | 左上亮唇、右下弱唇、7% 轮廓、顶部内光、底部内影（全部 inset） | 高光边，代替 border |
+| `--glass-shadow` | `0 24px 64px #00000073, 0 2px 6px #00000040` | 浮层柔投影 |
+| `--lg-clear` `--lg-clear-hover` `--lg-clear-blur` | #ffffff17 / #ffffff26 / `blur(14px) saturate(180%) brightness(1.06)` | 透明玻璃（独立浮起的控件） |
+| `--lg-hud` `--lg-hud-hover` | #1d1f26a8 / #2c2e36c4 | 战场 HUD 的烟色透明玻璃（纯色，满足 `background-image: none` 合同） |
+| `--lg-fill-control` `--lg-fill-control-hover` `--lg-rim-soft` | #7878803d / #78788057 / 双向 1px 内高光 | 面板内控件的填充与小高光（玻璃不叠玻璃） |
+| `--lg-prominent` `--lg-prominent-rim` | 系统蓝着色玻璃 | 主按钮 |
+| `--lg-ember` `--lg-ember-rim` | 余烬着色玻璃 | 战场"此刻可行动"（结束回合） |
+| `--lg-lift` | `0 8px 24px #00000047, 0 1px 2px #00000033` | 浮起控件的投影 |
+| `--lg-radius-sheet` `--lg-radius-group` | 28px / 18px | 面板 / 分组圆角 |
+| `--lg-title-page` `--lg-title-sheet` `--lg-headline` | 700 30/38 · 700 24/32 · 600 17/24 | 页面标题 / 面板标题 / 行标题 |
+| `--lg-select-ring` | `0 0 0 2px var(--slate-blue), 0 0 0 6px #0a84ff29` | 选中环 |
 | `--slate-material` | `var(--glass-fill)` | **别名**，只为兼容尚未改写的旧引用（dialogs / map / mobile 的少数面板）；新代码直接用 `--glass-fill` |
 | `--slate-page-x` `--slate-rail` `--slate-list` `--slate-col-gap` `--slate-card-w/h` `--slate-thumb-w/h` | 48 / 200 / 400 / 40 / 300×430 / 72×96 px；`max-width:1500px` 时 36 / 150 / 330 / 28 / 240×344 | 页面壳几何 |
 | `--covenant-col` | `clamp(400px, 42vw, 600px)` | 契约页右栏列宽。分页轨与面板在不同子树里，必须共用同一条列边，所以不能挂在其中任何一个上（2026-09-14 由 contracts.css 上收） |

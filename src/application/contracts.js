@@ -49,7 +49,7 @@ const EmberContractUI = (() => {
                           : p.board.length >= 7
                             ? "仪式已达成 · 等待空位"
                             : "条件已满足 · 敌方回合可唤醒";
-                  return `<article data-deity="${id}" data-ritual="${ritualFor(c)}" class="covenant-card crafted-panel ${!reason ? "invokable" : ""} ${c.contract.divine ? "divine" : ""} ${used ? "spent" : ""}"><img src="${A.card(c)}" alt="${c.name}"><div class="covenant-copy"><div class="ritual-mark" aria-hidden="true">${A.icon(symbolFor(ritualFor(c)))}</div><small>${c.contract.divine ? "神祇契约" : "契兽契约"} · ${c.cost} 法力 · ${c.atk} 攻击 / ${c.hp} 生命</small><h4>${c.name}</h4><p>${c.text}</p>${c.contract.ritual?.kind === "spells" && p.devotion.spells.length ? `<details class="ritual-ledger"><summary>已施放 ${p.devotion.spells.length} 种法术</summary><p>${p.devotion.spells.map((id) => D.byId[id].name).join(" · ")}</p></details>` : ""}<div class="covenant-progress">${EmberContracts.progress(
+                  return `<article data-deity="${id}" data-ritual="${ritualFor(c)}" class="covenant-card crafted-panel ${!reason ? "invokable" : ""} ${c.contract.divine ? "divine" : ""} ${used ? "spent" : ""}"><img src="${A.card(c)}" alt="${c.name}"><div class="covenant-copy"><div class="ritual-mark" aria-hidden="true">${A.icon(symbolFor(ritualFor(c)))}</div><small>${c.contract.divine ? "神祇契约" : "契兽契约"} · ${c.cost} 法力 · ${c.atk} 攻击 / ${c.hp} 生命</small><h4>${c.name}</h4><p>${c.text}</p>${c.contract.ritual?.kind === "spells" && p.devotion.spells.length ? `<details class="ritual-ledger"><summary>已施放 ${p.devotion.spells.length} 种法术</summary><p>${p.devotion.spells.map((id) => D.byId[id].name).join(" · ")}</p></details>` : ""}<div class="covenant-progress lg-group">${EmberContracts.progress(
                     p,
                     c,
                   )
@@ -70,10 +70,10 @@ const EmberContractUI = (() => {
       const box = document.querySelector(".covenant-box");
       const sides = [...box.querySelectorAll(".covenant-side")];
       const tabs = document.createElement("nav");
-      tabs.className = "covenant-tabs";
+      tabs.className = "covenant-tabs lg-seg";
       tabs.setAttribute("aria-label", "契约归属");
       tabs.innerHTML =
-        '<button data-side="0" aria-pressed="true">我方契约</button><button data-side="1" aria-pressed="false">敌方契约</button>';
+        '<button class="lg-seg-item" data-side="0" aria-pressed="true">我方契约</button><button class="lg-seg-item" data-side="1" aria-pressed="false">敌方契约</button>';
       box.querySelector(".covenant-heading").append(tabs);
       const selectSide = (index) => {
         sides.forEach((side, i) =>
