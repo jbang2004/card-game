@@ -439,7 +439,7 @@
   }
   function updatePlacementCue(pointerTarget = null) {
     if (!selection || selection.type !== "card-play") return;
-    const from = centerOf(sourceCard(selection.uid)),
+    const from = cueFrom(sourceCard(selection.uid)),
       to = placementAnchor(pointerTarget);
     drawActionCue(from, to, "placement");
     showLandingSlot(to);
@@ -752,6 +752,12 @@
   }
   function centerOf(el) {
     return EmberViewport.pos(el);
+  }
+  /* A card's cue leaves from its top edge: from its centre the arrow ran over
+   * the card's own art and name while the player aimed it. */
+  function cueFrom(el) {
+    const c = centerOf(el);
+    return c && Number.isFinite(c.top) ? { ...c, y: c.top + Math.min(14, (c.h || 0) * 0.08) } : c;
   }
   /* Where the aim rests on a unit: a hero is its card slot, where its figure
    * stands on its dais (a touch console's hero element spans the whole strip:
@@ -2023,7 +2029,7 @@
         : selection.type === "power"
           ? $("power-btn")
           : sourceCard(selection.uid);
-    const from = centerOf(source);
+    const from = selection.type === "attack" || selection.type === "power" ? centerOf(source) : cueFrom(source);
     if (!from) {
       clearActionCue();
       return;

@@ -1510,3 +1510,9 @@ html[data-skin="slate"] body #app.battle-view #battle-status {
     border-color 200ms,
     box-shadow 200ms;
 }
+
+/* Event labels over the board stay one line: near an edge the shrink-to-fit
+ * box broke 英雄倒下 in two. */
+html[data-skin="slate"] body .combat-cue {
+  white-space: nowrap;
+}

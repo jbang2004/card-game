@@ -133,15 +133,21 @@ const EmberVoxelArena = (() => {
    * a faint warm ring turning slowly; on a target it may take, it snaps to that unit, tightens, turns red and spins
    * faster. Drawn with the halos (under the figures), in display space. */
   const AIM_BEAM_FS = /* glsl */ `
-    uniform float uK, uT, uLen, uEnd; uniform vec3 uCol; varying vec2 vUv;
+    uniform float uK, uT, uLen, uEnd, uLock; uniform vec3 uCol; varying vec2 vUv;
     void main() {
-      float x = vUv.x, y = abs(vUv.y - 0.5) * 2.0, aa = max(fwidth(y), 1e-4);
-      float core = 1.0 - smoothstep(0.1 - aa, 0.1 + aa, y);
-      float glow = exp(-y * 3.5) * 0.3;
-      float u = fract(x * uLen / 0.2 - uT * 2.4 + y * 0.55);            // chevrons, one every 0.2 world units
-      float chev = (1.0 - smoothstep(0.07, 0.07 + 2.0 * aa + 0.02, abs(u - 0.5))) * (1.0 - smoothstep(0.62, 0.8, y));
-      float ends = smoothstep(0.0, 0.12, x) * (1.0 - smoothstep(uEnd - 0.05, uEnd, x));
-      gl_FragColor = vec4(uCol * (core * 0.75 + glow + chev * 0.85) * ends * uK, 0.0);
+      // an arrow on the ground (the page's red cue, laid flat): a tapered shaft of tiles flowing toward its head, a dark
+      // rim round every piece so it reads on the pale court and on dark stone alike (premultiplied: it covers the ground)
+      float x = vUv.x, y = abs(vUv.y - 0.5) * 2.0, L = max(uLen, 1e-3), aa = max(fwidth(y), 1e-4) * 1.2;
+      float head = min(0.32 / L, 0.45), hb = uEnd - head;
+      float w = mix(0.2, 0.42, clamp(x / max(hb, 1e-3), 0.0, 1.0));             // the shaft's half-width (of the quad's)
+      float u = fract((x * L - uT * 0.9) / 0.17), ux = max(fwidth(x * L / 0.17), 1e-4);
+      float tile = smoothstep(0.0, ux, u) * (1.0 - smoothstep(0.68 - ux, 0.68, u));
+      float inShaft = step(x, hb) * smoothstep(0.03, 0.08, x) * tile, hx = (uEnd - x) / head, inHead = step(hb, x) * step(x, uEnd);
+      float shaftA = smoothstep(-aa, aa, w - y) * inShaft, headA = smoothstep(-aa, aa, hx - y) * inHead;
+      float inside = max(shaftA, headA), d = headA > shaftA ? hx - y : w - y;      // (d: how far in from its rim)
+      vec3 rim = uCol * 0.32, face = mix(rim, uCol, smoothstep(0.02, 0.1, d)) + vec3(1.0, 0.8, 0.6) * smoothstep(0.1, 0.22, d) * 0.12;
+      float a = inside * uK * mix(0.78, 0.95, uLock);
+      gl_FragColor = vec4(face * a, a);
     }`;
   const AIM_RET_FS = /* glsl */ `
     uniform float uK, uT, uLock; uniform vec3 uCol; varying vec2 vUv;
@@ -150,17 +156,17 @@ const EmberVoxelArena = (() => {
       vec2 p = vUv * 2.0 - 1.0; float r = length(p), a = atan(p.y, p.x);
       float aa = max(fwidth(r), 1e-4), px = length(fwidth(p)) / max(r, 1e-3) / 1.5708;
       float R = mix(0.74, 0.62, uLock);
-      float ring = band(r - R, 0.011, aa);
       float q = fract((a + uT * mix(0.5, 1.9, uLock)) / 1.5708);         // four quadrants, turning
-      float bracket = band(r - 0.9, 0.018, aa) * (1.0 - smoothstep(0.3 - px, 0.3 + px, abs(q - 0.5)));
-      float tick = (1.0 - smoothstep(0.02 - px, 0.02 + px, min(q, 1.0 - q))) * step(R + 0.05, r) * (1.0 - smoothstep(0.84, 0.86, r));
-      float glow = exp(-abs(r - R) * 11.0) * 0.28 + exp(-abs(r - 0.9) * 16.0) * 0.12;
-      float fill = (1.0 - smoothstep(0.0, R, r)) * 0.1 * uLock;
-      float dot = (1.0 - smoothstep(0.045 - aa, 0.045 + aa, r)) * uLock;
-      float c = ring + bracket * 0.9 + tick * 0.7 + glow + fill + dot;
-      gl_FragColor = vec4(uCol * c * uK * (1.0 - smoothstep(0.96, 1.0, r)), 0.0);
+      float ring = band(r - R, 0.028, aa), core = band(r - R, 0.012, aa);
+      float bracket = band(r - 0.9, 0.035, aa) * (1.0 - smoothstep(0.3 - px, 0.3 + px, abs(q - 0.5)));
+      float bcore = band(r - 0.9, 0.018, aa) * (1.0 - smoothstep(0.27 - px, 0.27 + px, abs(q - 0.5)));
+      float dot = (1.0 - smoothstep(0.06 - aa, 0.06 + aa, r)) * uLock;
+      float shape = max(max(ring, bracket), dot), lit = max(max(core, bcore), dot);
+      vec3 c = mix(uCol * 0.32, uCol, lit);
+      float al = shape * uK * mix(0.8, 0.95, uLock) * (1.0 - smoothstep(0.96, 1.0, r));
+      gl_FragColor = vec4(c * al, al);
     }`;
-  const AIM_COL = { free: [1.0, 0.88, 0.7], lock: [1.0, 0.34, 0.18] };
+  const AIM_COL = { free: [0.98, 0.5, 0.26], lock: [1.0, 0.2, 0.1] };            // (display colours: the page's red cue)
   function aimMesh(fs, layer) {
     const mat = new THREE.ShaderMaterial({ vertexShader: HALO_VS, fragmentShader: fs, transparent: true, depthWrite: false,
       blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
@@ -207,10 +213,11 @@ const EmberVoxelArena = (() => {
     const aimAt = { beam: aimMesh(AIM_BEAM_FS, o.baseLayer ?? o.fxLayer), ret: aimMesh(AIM_RET_FS, o.baseLayer ?? o.fxLayer),
       from: V3(), to: V3(), r: 0.3, lock: 0, want: 0, k: 0 };
     scene.add(aimAt.beam, aimAt.ret);
-    /** aim({ from, to, r, locked }) — ground points (Vector3), the reticle's radius (world units) — or aim(null) */
+    /** aim({ from, to, r, locked, wide }) — ground points (Vector3), the reticle's radius (world units), × the arrow's
+     *  width — or aim(null) */
     function aim(a) {
       if (!a) { aimAt.want = 0; return; }
-      aimAt.from.copy(a.from); aimAt.to.copy(a.to); aimAt.r = a.r; aimAt.locked = !!a.locked; aimAt.want = 1;
+      aimAt.from.copy(a.from); aimAt.to.copy(a.to); aimAt.r = a.r; aimAt.locked = !!a.locked; aimAt.wide = a.wide || 1; aimAt.want = 1;
     }
     function stepAim(dt) {
       const A = aimAt, e = 1 - Math.exp(-dt * 14);
@@ -220,11 +227,11 @@ const EmberVoxelArena = (() => {
       const dx = A.to.x - A.from.x, dz = A.to.z - A.from.z, len = Math.hypot(dx, dz), r = A.r * (1 - 0.12 * A.lock);
       const col = _c.setRGB(...AIM_COL.free).lerp(_c2.setRGB(...AIM_COL.lock), A.lock);
       for (const m of [A.beam, A.ret]) { const U = m.material.uniforms; U.uT.value = T; U.uLock.value = A.lock; U.uCol.value.copy(col); }
-      A.beam.material.uniforms.uK.value = A.k * (0.75 + 0.25 * A.lock) * (len > r * 1.2 ? 1 : 0);
+      A.beam.material.uniforms.uK.value = A.k * (len > r * 1.2 ? 1 : 0);
       A.beam.material.uniforms.uLen.value = len; A.beam.material.uniforms.uEnd.value = Math.max(0.05, 1 - (r * 0.62) / Math.max(len, 1e-3));
       A.beam.position.set((A.from.x + A.to.x) / 2, 0.006, (A.from.z + A.to.z) / 2);
-      A.beam.rotation.set(0, -Math.atan2(dz, dx), 0); A.beam.scale.set(Math.max(len, 1e-3), 1, 0.09 * SIZE);
-      A.ret.material.uniforms.uK.value = A.k * (0.7 + 0.45 * A.lock);
+      A.beam.rotation.set(0, -Math.atan2(dz, dx), 0); A.beam.scale.set(Math.max(len, 1e-3), 1, 0.2 * SIZE * (A.wide || 1));
+      A.ret.material.uniforms.uK.value = A.k;
       A.ret.position.set(A.to.x, 0.007, A.to.z); A.ret.scale.set(r * 2, 1, r * 2);
       return true;
     }
