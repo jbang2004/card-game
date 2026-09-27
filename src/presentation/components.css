@@ -324,7 +324,7 @@ body #modal.folio-host .modal-heading .eyebrow {
   letter-spacing: 4px;
   font-size: 11px;
 }
-body #modal.folio-host :is(.modal-footer, .reward-footer, .atelier-foot) {
+body #modal.folio-host :is(.modal-footer, .atelier-foot) {
   border-top: 1px solid var(--line);
   padding-top: 16px;
 }
@@ -350,7 +350,6 @@ body
   :is(
     .deck-tools,
     .contract-setup,
-    .campaign-refit,
     .hero-composition,
     .hero-config-intro,
     .key-table,
@@ -362,7 +361,7 @@ body
   box-shadow: none;
   border-radius: 3px;
 }
-body :is(.deck-tools, .contract-setup, .campaign-refit) summary {
+body :is(.deck-tools, .contract-setup) summary {
   color: var(--ink);
   border-color: var(--line);
   background: transparent;
@@ -845,28 +844,7 @@ body #modal.folio-host .atelier-vignette p {
   text-shadow: none;
 }
 
-/* Rewards, contracts and utility screens reuse the same surfaces. */
-body .relic-choice {
-  color: var(--ink);
-}
-
-body .relic-art {
-  background: radial-gradient(ellipse, #b9dff31a, transparent 65%);
-  border: 0;
-  box-shadow: none;
-}
-body .relic-art img {
-  filter: drop-shadow(0 8px 22px #070f1dbb);
-  object-fit: contain;
-}
-body .relic-pick-label {
-  background: transparent;
-  color: var(--ink-secondary);
-  border-top: 1px solid var(--line);
-}
-body .relic-choice[aria-pressed="true"] .relic-pick-label {
-  color: var(--accent);
-}
+/* Results, contracts and utility screens reuse the same surfaces. */
 body .result-sigil {
   color: var(--accent);
   background: radial-gradient(ellipse, #96c7f029, transparent 65%);
@@ -1260,10 +1238,6 @@ body
 }
 body #modal.folio-host .hero-chooser .modal-heading::after {
   display: none;
-}
-body #modal.folio-host .relic-choice p {
-  font-size: 16px;
-  line-height: 1.65;
 }
 body .card .card-art img {
   position: absolute;
@@ -3036,56 +3010,6 @@ body #modal.folio-host[data-type="heroes"] .hero-config-contract {
   }
   body:not(.touch-layout) #modal.folio-host[data-type] .result-stats span {
     font: 25px var(--ui-display);
-  }
-
-  body:not(.touch-layout) #modal.folio-host[data-type][data-type="rewards"] {
-    backdrop-filter: none;
-    padding: 0;
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] > .rewards-box {
-    --dialog-width: 1500px;
-    width: 90vw;
-    height: 95dvh;
-    max-height: 95dvh;
-  }
-
-  body:not(.touch-layout) #modal.folio-host[data-type] .rewards-box .eyebrow {
-    display: none;
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] .relic-options {
-    gap: 80px;
-    margin: 0 0 25px;
-  }
-
-  body:not(.touch-layout) #modal.folio-host[data-type] .relic-art {
-    height: 310px;
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] .relic-art img {
-    width: 280px;
-    height: 280px;
-    border: 0;
-    border-radius: 0;
-    object-fit: contain;
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] .relic-choice h3 {
-    font: 28px var(--ui-display);
-    margin: 12px 0;
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] .campaign-refit {
-    max-width: 850px;
-    margin: auto;
-    background: #0e1a2be6;
-    border: 1px solid #a7bcd077;
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] .reward-footer {
-    border: 0;
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] #reward-confirm {
-    min-height: 65px;
-    min-width: 330px;
-    font-family: var(--ui-display);
-    font-size: 23px;
-    font-weight: 600;
   }
   body:not(.touch-layout) #modal.folio-host[data-type] .library-box {
     padding: 18px 24px;
@@ -4904,10 +4828,6 @@ body #modal.folio-host .crafted-panel > .panel-actions > button {
 body #modal.folio-host .crafted-panel > .folio-pane > .folio-viewport {
   scrollbar-gutter: auto;
 }
-body #modal.folio-host .relic-choice.crafted-panel[aria-pressed="true"] {
-  border-color: var(--accent);
-  box-shadow: inset 0 0 0 1px #bbdff94d;
-}
 body #modal.folio-host[data-type] button.crafted-action {
   position: relative;
   isolation: isolate;
@@ -5105,7 +5025,6 @@ body
     #help-done,
     #library-detail-add,
     #mulligan-confirm,
-    #reward-confirm,
     #hero-confirm,
     #result-next,
     #ok-confirm

@@ -20,9 +20,6 @@ body #modal.folio-host .covenant-grid > p {
   background: var(--surface-soft);
   border: 1px solid var(--line);
 }
-body #modal.folio-host .relic-art img {
-  border-color: var(--line);
-}
 body #modal.folio-host .atlas-stage {
   border: 1px solid var(--line);
 }
@@ -36,11 +33,6 @@ body #modal.folio-host .card-detail-rule {
   border: 1px solid #abbad455;
   font-family: var(--ui-display);
   font-weight: 400;
-}
-body #modal.folio-host .campaign-refit > summary {
-  padding: 14px 16px;
-  font-weight: 500;
-  color: var(--ink-secondary);
 }
 body #modal.folio-host .help-toc button {
   background: transparent;
@@ -183,16 +175,6 @@ body
   body:not(.touch-layout) #modal.folio-host .covenant-copy .gold-btn {
     margin-top: 8px;
     min-height: 48px;
-  }
-
-  body:not(.touch-layout) #modal.folio-host .relic-choice h3 {
-    margin: 16px 0;
-    line-height: 1.4;
-  }
-  body:not(.touch-layout) #modal.folio-host .relic-choice p {
-    font-size: 16px;
-    line-height: 1.85;
-    text-wrap: pretty;
   }
 }
 /* Keyword entries inherited the former parchment foreground. */

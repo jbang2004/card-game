@@ -828,8 +828,7 @@ body.mobile-ui .hero-option .hero-option-text {
   padding-top: 38px;
 }
 body.mobile-ui .mulligan-cards,
-body.mobile-ui .discover-options,
-body.mobile-ui .relic-options {
+body.mobile-ui .discover-options {
   flex-wrap: wrap;
   gap: 18px;
 }

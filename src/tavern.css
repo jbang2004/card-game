@@ -1349,24 +1349,6 @@ button:not(:disabled) {
   color: #856242;
   font-size: 14px;
 }
-
-.relic-choice:hover {
-  transform: translateY(-5px);
-}
-.relic-choice img {
-  border: 3px solid #c09c5b;
-  border-radius: 50%;
-  width: 88px;
-  height: 88px;
-}
-.relic-choice h3 {
-  color: #654626;
-  font: 700 19px var(--serif);
-}
-.relic-choice p {
-  font: 12px/1.7 var(--sans);
-  color: #87633d;
-}
 .confirm-box p {
   color: #896c48;
 }

@@ -18,8 +18,8 @@
  * background / border / radius / shadow / colour / font-family / font-weight /
  * text-shadow of `#power-btn`, `#end-turn`, `#contract-open`, `.mana-panel`,
  * `.hero`, `.menu-action`, `.touch-log`, `.touch-live-stat`,
- * `.mulligan-choice-state`, `.relic-choice`, `.result-*` and `.discover-card`
- * between 1600×940 and the touch sizes and fails on any difference. Only
+ * `.mulligan-choice-state`, `.result-*` and `.discover-card` between
+ * 1600×940 and the touch sizes and fails on any difference. Only
  * position, size, spacing, order and visibility change here.
  *
  * Three structural facts shape this file:
@@ -696,7 +696,6 @@ html[data-skin="slate"]
   #modal.folio-host:not([data-type="library-card"])
   > .folio-dialog:is(
     [data-dialog-size="mulligan"],
-    [data-dialog-size="choice"],
     [data-dialog-size="result"],
     [data-dialog-size="discover"],
     [data-dialog-size="menu"],
@@ -706,57 +705,11 @@ html[data-skin="slate"]
   ) {
   padding: 18px 16px 16px;
 }
-/* 遗物奖励 is the one battle-time dialog the touch layout puts on the PAGE
- * shell (§5.5; on the desktop `dialogs.css` keeps it a wide floating pane
- * since 2026-09-22). The touch layout promotes it — the shell rim, radius and shadow are shared materials
- * (`responsive-component-style.spec.cjs` compares `.rewards-box` against the
- * desktop one), and a full-bleed reward page is also the only way three relic
- * cards and the 「酒馆整备」 section fit a phone. The block mirrors base.css's
- * page-shell rules, keyed to `choice`. */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host:has(> .folio-dialog[data-dialog-size="choice"]) {
-  padding: 0;
-  background: #05070a;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  > .folio-dialog[data-dialog-size="choice"] {
-  --dialog-width: 100%;
-  width: 100%;
-  max-width: 100%;
-  height: 100%;
-  max-height: 100%;
-  margin: 0;
-  padding: max(16px, env(safe-area-inset-top))
-    max(16px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom))
-    max(16px, env(safe-area-inset-left));
-  gap: 0;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  background: var(--slate-material);
-  background-attachment: scroll;
-  color: var(--slate-ink);
-  font-family: var(--slate-font);
-}
-/* the page shell is full height, so the scroll surface takes the space between
- * the title row and the footer instead of hugging the title */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  > .folio-dialog[data-dialog-size="choice"]
-  > .folio-pane {
-  flex: 1 1 auto;
-  margin: 0;
-}
 html[data-skin="slate"]
   body.mobile-landscape
   #modal.folio-host:not([data-type="library-card"])
   > .folio-dialog:is(
     [data-dialog-size="mulligan"],
-    [data-dialog-size="choice"],
     [data-dialog-size="result"],
     [data-dialog-size="discover"],
     [data-dialog-size="menu"],
@@ -765,14 +718,6 @@ html[data-skin="slate"]
     [data-dialog-size="detail"]
   ) {
   padding: 12px 16px;
-}
-html[data-skin="slate"]
-  body.mobile-landscape
-  #modal.folio-host
-  > .folio-dialog[data-dialog-size="choice"] {
-  padding: max(12px, env(safe-area-inset-top))
-    max(16px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom))
-    max(16px, env(safe-area-inset-left));
 }
 /* the close button keeps its 44px hit area inside the trimmed padding */
 html[data-skin="slate"]
@@ -793,7 +738,6 @@ html[data-skin="slate"]
   #modal.folio-host:not([data-type="library-card"])
   > .folio-dialog:is(
     [data-dialog-size="mulligan"],
-    [data-dialog-size="choice"],
     [data-dialog-size="result"],
     [data-dialog-size="discover"],
     [data-dialog-size="menu"],
@@ -812,7 +756,6 @@ html[data-skin="slate"]
   #modal.folio-host:not([data-type="library-card"])
   > .folio-dialog:is(
     [data-dialog-size="mulligan"],
-    [data-dialog-size="choice"],
     [data-dialog-size="result"],
     [data-dialog-size="discover"],
     [data-dialog-size="menu"],
@@ -829,7 +772,6 @@ html[data-skin="slate"]
   #modal.folio-host:not([data-type="library-card"])
   > .folio-dialog:is(
     [data-dialog-size="mulligan"],
-    [data-dialog-size="choice"],
     [data-dialog-size="result"],
     [data-dialog-size="discover"],
     [data-dialog-size="menu"],
@@ -846,7 +788,6 @@ html[data-skin="slate"]
   #modal.folio-host:not([data-type="library-card"])
   > .folio-dialog:is(
     [data-dialog-size="mulligan"],
-    [data-dialog-size="choice"],
     [data-dialog-size="result"],
     [data-dialog-size="discover"],
     [data-dialog-size="menu"],
@@ -869,7 +810,6 @@ html[data-skin="slate"]
   #modal.folio-host:not([data-type="library-card"])
   > .folio-dialog:is(
     [data-dialog-size="mulligan"],
-    [data-dialog-size="choice"],
     [data-dialog-size="result"],
     [data-dialog-size="discover"],
     [data-dialog-size="menu"],
@@ -891,7 +831,6 @@ html[data-skin="slate"]
   #modal.folio-host:not([data-type="library-card"])
   > .folio-dialog:is(
     [data-dialog-size="mulligan"],
-    [data-dialog-size="choice"],
     [data-dialog-size="result"],
     [data-dialog-size="discover"],
     [data-dialog-size="menu"],
@@ -899,7 +838,7 @@ html[data-skin="slate"]
     [data-dialog-size="hand"],
     [data-dialog-size="detail"]
   )
-  > :is(.modal-footer, .reward-footer, .atelier-foot) {
+  > :is(.modal-footer, .atelier-foot) {
   position: static;
   gap: 10px;
   margin: 0;
@@ -913,7 +852,6 @@ html[data-skin="slate"]
   #modal.folio-host:not([data-type="library-card"])
   > .folio-dialog:is(
     [data-dialog-size="mulligan"],
-    [data-dialog-size="choice"],
     [data-dialog-size="result"],
     [data-dialog-size="discover"],
     [data-dialog-size="menu"],
@@ -921,13 +859,12 @@ html[data-skin="slate"]
     [data-dialog-size="hand"],
     [data-dialog-size="detail"]
   )
-  > :is(.modal-footer, .reward-footer, .atelier-foot)::before,
+  > :is(.modal-footer, .atelier-foot)::before,
 html[data-skin="slate"]
   body.touch-layout
   #modal.folio-host:not([data-type="library-card"])
   > .folio-dialog:is(
     [data-dialog-size="mulligan"],
-    [data-dialog-size="choice"],
     [data-dialog-size="result"],
     [data-dialog-size="discover"],
     [data-dialog-size="menu"],
@@ -935,7 +872,7 @@ html[data-skin="slate"]
     [data-dialog-size="hand"],
     [data-dialog-size="detail"]
   )
-  > :is(.modal-footer, .reward-footer, .atelier-foot)::after {
+  > :is(.modal-footer, .atelier-foot)::after {
   content: none;
 }
 html[data-skin="slate"]
@@ -991,7 +928,6 @@ html[data-skin="slate"]
     #modal.folio-host:not([data-type="library-card"])
     > .folio-dialog:is(
       [data-dialog-size="mulligan"],
-      [data-dialog-size="choice"],
       [data-dialog-size="result"],
       [data-dialog-size="discover"],
       [data-dialog-size="menu"],
@@ -1235,502 +1171,6 @@ html[data-skin="slate"]
     #modal.folio-host
     .mulligan-choice-state {
     min-height: 36px;
-  }
-}
-
-/* ===========================================================================
- * 11. 遗物奖励 / rewards — the floating shell (the desktop page shell needs a
- * width the phone does not have); relic cards stack vertically in portrait
- * and share the row in landscape.
- * ======================================================================== */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box
-  .relic-options {
-  /* 6px of air so the selected tile's ring and halo are not clipped by the
-   * scroll surface */
-  box-sizing: border-box;
-  gap: 12px;
-  width: 100%;
-  margin: 8px 0 0;
-  padding: 6px;
-}
-html[data-skin="slate"]
-  body.mobile-portrait
-  #modal.folio-host
-  .rewards-box
-  .relic-options {
-  grid-template-columns: minmax(0, 1fr);
-}
-html[data-skin="slate"]
-  body.mobile-landscape
-  #modal.folio-host
-  .rewards-box
-  .relic-options {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box
-  .relic-choice {
-  /* material: dialogs.css option tile (`.lg-group`), every layout */
-  height: auto;
-}
-html[data-skin="slate"]
-  body.mobile-portrait
-  #modal.folio-host
-  .rewards-box
-  .relic-choice {
-  display: grid;
-  grid-template-columns: 76px minmax(0, 1fr);
-  align-items: center;
-  gap: 4px 14px;
-  padding: 14px 16px;
-}
-html[data-skin="slate"]
-  body.mobile-landscape
-  #modal.folio-host
-  .rewards-box
-  .relic-choice {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 12px 10px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box
-  .relic-choice::before,
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box
-  .relic-choice::after {
-  content: none;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box
-/* the art sits in a `.relic-art` wrapper (campaign.js), so the wrapper is the
- * grid child that spans the three text rows; the img only sizes itself */
-html[data-skin="slate"]
-  body.mobile-portrait
-  #modal.folio-host
-  .rewards-box
-  .relic-art {
-  grid-row: span 3;
-  width: 76px;
-  height: 76px;
-  display: grid;
-  place-items: center;
-}
-html[data-skin="slate"]
-  body.mobile-portrait
-  #modal.folio-host
-  .rewards-box
-  .relic-choice
-  img {
-  grid-row: auto;
-  width: 76px;
-  height: 76px;
-  border: 0;
-  border-radius: 0;
-  object-fit: contain;
-  filter: drop-shadow(0 8px 22px #0009);
-}
-html[data-skin="slate"]
-  body.mobile-landscape
-  #modal.folio-host
-  .rewards-box
-  .relic-choice
-  img {
-  width: 64px;
-  height: 64px;
-  border: 0;
-  border-radius: 0;
-  object-fit: contain;
-  filter: drop-shadow(0 8px 22px #0009);
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box
-  .relic-choice
-  h3 {
-  margin: 0;
-  font: 700 17px/1.35 var(--slate-font);
-  letter-spacing: 0;
-  color: #fff;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box
-  .relic-choice
-  p {
-  flex: 0 0 auto;
-  margin: 0;
-  font: 400 16px/1.6 var(--slate-font);
-  color: var(--slate-ink-2);
-}
-html[data-skin="slate"]
-  body.mobile-portrait
-  #modal.folio-host
-  .rewards-box
-  .relic-choice
-  p {
-  text-align: left;
-}
-html[data-skin="slate"]
-  body.mobile-landscape
-  #modal.folio-host
-  .rewards-box
-  .relic-choice
-  p {
-  text-align: center;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box
-  .relic-pick-label {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: auto;
-  min-height: 34px;
-  padding: 0 18px;
-  /* material: dialogs.css (every layout) */
-  font-size: 13px;
-}
-html[data-skin="slate"]
-  body.mobile-portrait
-  #modal.folio-host
-  .rewards-box
-  .relic-pick-label {
-  margin: 4px auto 0 0;
-}
-html[data-skin="slate"]
-  body.mobile-landscape
-  #modal.folio-host
-  .rewards-box
-  .relic-pick-label {
-  margin: auto auto 0;
-}
-/* 「酒馆整备」 becomes a hairline section, as on the desktop rewards page */
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box
-  .campaign-refit {
-  width: 100%;
-  margin: 16px 0 0;
-  padding: 14px 0 0;
-  border: 0;
-  border-top: 0;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box
-  .campaign-refit
-  > summary {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-  list-style: none;
-  color: #fff;
-  font: 700 16px/1.4 var(--slate-font);
-  letter-spacing: 0;
-  cursor: pointer;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box
-  .campaign-refit
-  > summary::-webkit-details-marker {
-  display: none;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box
-  .campaign-refit
-  > summary
-  span {
-  font: 400 13px/1.4 var(--slate-font);
-  letter-spacing: 0.5px;
-  color: var(--slate-ink-3);
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box
-  .refit-fields {
-  grid-template-columns: minmax(0, 1fr);
-  gap: 14px;
-  margin: 12px 0 0;
-}
-html[data-skin="slate"]
-  body.mobile-landscape
-  #modal.folio-host
-  .rewards-box
-  .refit-fields {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px 20px;
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box
-  .refit-fields
-  label {
-  gap: 8px;
-  font: 500 13px/1.4 var(--slate-font);
-  color: var(--slate-ink-2);
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box
-  #refit-status {
-  margin: 12px 0 0;
-  font: 400 13px/1.6 var(--slate-font);
-  color: var(--slate-ink-3);
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box
-  .reward-next {
-  display: block;
-  font: 600 14px/1.4 var(--slate-font);
-  letter-spacing: 0;
-  color: var(--slate-ink);
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box
-  #reward-selection {
-  margin: 4px 0 0;
-  font: 400 12px/1.5 var(--slate-font);
-  color: var(--slate-ink-3);
-}
-html[data-skin="slate"]
-  body.touch-layout
-  #modal.folio-host
-  .rewards-box
-  > .reward-footer
-  > button {
-  flex: 1 1 160px;
-  min-width: 160px;
-  max-width: 100%;
-  min-height: 50px;
-  font-size: 16px;
-}
-
-/* Tablets and the compact-desktop battle view get the desktop reward page's
- * proportions back: the decision block centres between the title row and the
- * footer, and the art stops being a phone thumbnail. */
-@media (min-width: 900px) {
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host
-    > .folio-dialog[data-dialog-size="choice"]
-    .modal-scroll {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-height: 100%;
-    padding: 0;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host
-    .rewards-box
-    .relic-options {
-    gap: 22px;
-    max-width: 1180px;
-    margin: 22px auto 0;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host
-    .rewards-box
-    .relic-choice {
-    gap: 12px;
-    padding: 22px 20px 18px;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host
-    .rewards-box
-    .relic-choice
-    img {
-    width: 136px;
-    height: 136px;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host
-    .rewards-box
-    .relic-choice
-    h3 {
-    font-size: 20px;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host
-    .rewards-box
-    .relic-choice
-    p {
-    line-height: 1.7;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host
-    .rewards-box
-    .relic-pick-label {
-    min-height: 34px;
-    padding: 0 22px;
-    font-size: 14px;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host
-    .rewards-box
-    .campaign-refit {
-    max-width: 1180px;
-    margin: 24px auto 0;
-  }
-  html[data-skin="slate"]
-    body.touch-layout
-    #modal.folio-host
-    .rewards-box
-    > .reward-footer
-    > button {
-    flex: 0 1 auto;
-    min-width: 240px;
-    max-width: 360px;
-  }
-}
-
-/* Short landscape has ~250px between the title row and the footer: shrink the
- * relic art and the copy so the 「选择此遗物」 pill is never cut off. */
-@media (orientation: landscape) and (max-height: 430px) {
-  html[data-skin="slate"]
-    body.mobile-landscape
-    #modal.folio-host
-    .rewards-box
-    .relic-choice {
-    gap: 6px;
-    padding: 10px 10px 8px;
-  }
-  html[data-skin="slate"]
-    body.mobile-landscape
-    #modal.folio-host
-    .rewards-box
-    .relic-choice
-    img {
-    width: 48px;
-    height: 48px;
-  }
-  html[data-skin="slate"]
-    body.mobile-landscape
-    #modal.folio-host
-    .rewards-box
-    .relic-choice
-    p {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
-    font-size: 12px;
-  }
-  html[data-skin="slate"]
-    body.mobile-landscape
-    #modal.folio-host
-    .rewards-box
-    .relic-choice
-    h3 {
-    font-size: 15px;
-  }
-  html[data-skin="slate"]
-    body.mobile-landscape
-    #modal.folio-host
-    .rewards-box
-    .relic-choice
-    p {
-    line-height: 1.55;
-  }
-  html[data-skin="slate"]
-    body.mobile-landscape
-    #modal.folio-host
-    .rewards-box
-    .relic-pick-label {
-    min-height: 30px;
-    padding: 0 14px;
-    font-size: 12px;
-  }
-  html[data-skin="slate"]
-    body.mobile-landscape
-    #modal.folio-host
-    .rewards-box
-    .relic-options {
-    margin-top: 10px;
-  }
-}
-/* 568×320 has ~185px for the three cards: the relic art gives up the rest of
- * its size before the rule text or the pick pill do. */
-@media (orientation: landscape) and (max-height: 350px) {
-  html[data-skin="slate"]
-    body.mobile-landscape
-    #modal.folio-host
-    .rewards-box
-    .relic-choice
-    img {
-    width: 40px;
-    height: 40px;
-  }
-  html[data-skin="slate"]
-    body.mobile-landscape
-    #modal.folio-host
-    .rewards-box
-    .relic-choice
-    h3 {
-    font-size: 14px;
-  }
-  html[data-skin="slate"]
-    body.mobile-landscape
-    #modal.folio-host
-    .rewards-box
-    .relic-choice
-    p {
-    line-height: 1.45;
-  }
-  html[data-skin="slate"]
-    body.mobile-landscape
-    #modal.folio-host
-    .rewards-box
-    .relic-pick-label {
-    min-height: 28px;
-    font-size: 11px;
   }
 }
 
@@ -2228,8 +1668,6 @@ html[data-skin="slate"]
     #modal.folio-host
     :is(
       .mulligan-choice-state,
-      .relic-choice,
-      .relic-pick-label,
       .discover-card,
       .touch-hand-grid > button,
       .touch-menu-grid .menu-action
@@ -2255,8 +1693,6 @@ html[data-skin="slate"]
   #modal.folio-host
   :is(
     .mulligan-choice-state,
-    .relic-choice,
-    .relic-pick-label,
     .discover-card,
     .touch-hand-grid > button,
     .touch-menu-grid .menu-action

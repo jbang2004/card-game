@@ -67,7 +67,7 @@
 - **压在原画上的文字要有底。** 光靠文字阴影在雪地、云海上读不出来：地图地名、图鉴牌组行的张数都改成深色小胶囊（`#0b0d12b3~b8` + `--lg-rim-soft`，重复元素不加背景模糊）。
 - **列数跟着选项数走。** 并排选项用 `repeat(var(--n), minmax(0, 上限))`，窗口变窄时缩小而不是把最后一张挤到下一行。
 
-**地下城远征页（`run.js` / `run.css`）。** 从「浮在主页上的遗物奖励浮层」改为独立对话框类型 `run`、页面壳（`dialog-layout.js` `run → page`，`panels.js` 不再挂 `crafted-panel`），不再继承旧 `.rewards-box` / `.relic-choice` 规则。结构：标题行（蓝色 eyebrow「宝物 · 第 1 层之后」+ 标题 + 说明）与右侧状态胶囊（英雄头像 + 名、金币、遗物、神契、牌组下拉）同一行；下面是贯穿整列的**路径轨**——8 个层级圆点之间是「宝物 / 酒馆」站点药丸（每站都有卡包，所以只标宝物或酒馆），走过的路段变蓝，所在位置是实心蓝点或蓝色药丸，终战是珊瑚色环；再下面是选项卡片（上图下文，对手卡左图右文），页脚「返回营地 ··· 已选择 · X [确认 →]」。手机竖屏：状态胶囊一行横滑、站点缩成彩色小点、卡片左图右文单列、页脚两枚药丸；矮横屏：标题与胶囊同一行、隐藏说明、卡片三列。`responsive-component-style.spec` 以 `run` 页登记这些组件的跨视口材质。
+**地下城远征页（`run.js` / `run.css`）。** 从「浮在主页上的遗物奖励浮层」改为独立对话框类型 `run`、页面壳（`dialog-layout.js` `run → page`，`panels.js` 不再挂 `crafted-panel`），旧 `.rewards-box` / `.relic-*` 规则与 `choice` 尺寸已删除。结构：标题行（蓝色 eyebrow「宝物 · 第 1 层之后」+ 标题 + 说明）与右侧状态胶囊（英雄头像 + 名、金币、遗物、神契、牌组下拉）同一行；下面是贯穿整列的**路径轨**——8 个层级圆点之间是「宝物 / 酒馆」站点药丸（每站都有卡包，所以只标宝物或酒馆），走过的路段变蓝，所在位置是实心蓝点或蓝色药丸，终战是珊瑚色环；再下面是选项卡片（上图下文，对手卡左图右文），页脚「返回营地 ··· 已选择 · X [确认 →]」。手机竖屏：状态胶囊一行横滑、站点缩成彩色小点、卡片左图右文单列、页脚两枚药丸；矮横屏：标题与胶囊同一行、隐藏说明、卡片三列。`responsive-component-style.spec` 以 `run` 页登记这些组件的跨视口材质。
 
 **英雄选择（heroes.css 桌面几何段）。** 三列 `[英雄卡 2×2][浮雕大卡][选项列]`，从左到右读：挑英雄 → 看立绘 → 看配置；大卡 1600×940 下 340×488（<1500 宽或 <900 高 280×402，<760 高 240×344）。选项列：英文座右铭 eyebrow（唯一允许字距 2px 的地方，拉丁大写）+ 36px 名字 + 「称号 一句打法」，技能分组，模式分段控件（在分组首行；远征模式下它自成一组、四角全圆），远征模式多一组「起始牌组 · 10 张」（费用圆点 + 牌名三列，规则一句作脚注）。
 
@@ -238,9 +238,9 @@
 - 每个 Boss 一个战场（2026-09-23）：`arena-3d.js` 的 `SCENES` 是配方表（台面石色/嵌饰/强调色、光照与雾、`ground` 地面类型、`under` 下方云海或水面、粒子 `fall`/`dust`、`bloom`/`expo`/`leak` 后期），`SCENE_OF` 决定谁用哪张：灰烬监守与练习赛 = `lava` 断裂王庭；荆棘女王 = `pavilion` 低语密林（林间木台、荆棘玫瑰栏杆、树根、萤火与落瓣）；霜狱君王 = `frost` 永冻王座（冰砖广场、冰雕栏、冰封气泡、霜晶）；断契监誓者 = `clouds` 月蚀祭坛（云海上的星图祭坛、锁链浮岛、日冕、刃碑、云鲸）；深渊先知 = `abyss` 无光圣所（黑玻璃台面、向心脉动环纹、黑镜水面、柱环、水母、光柱）；终焉巨龙 = `dragon` 世界之烬（龙背铜台、龙脊骨刺、燃烧云海）。台面、相机、接触阴影与 HUD 避让共用；断裂王庭以外的台面由 `courtArtPainted()` 画遮罩。`EmberArena3D.sceneId` 返回当前配方名，`?arena-scene=<名>` 仅供调试强制换场。全部只用 `assets/scenes/lava-forge/` 的 6 张贴图，其余材质是程序化着色。
 - 验收：`battle-hud-layout`、`ui-alignment`、`action-feedback`、`ui-polish`、`mobile-craft`、`remaining-reference`、`hand-drag`、`hand-reading`、`card-motion`、`mobile-hand-layout`、`motion-semantics`、`combat-motion`、`boss-scenes` 全过；`card-motion` 里压缩抽牌的代理卡断言改为逐帧观察（代理卡只活约 90ms，100ms 轮询碰运气）。
 
-### 5.5 过场与对话 dialogs（T4 / T6）— `src/application/screens/campaign.js`（`.rewards-box` `.relic-choice` `.campaign-refit`、`.result-box` `.result-stats`、发现 `.discover-options` `.discover-card`），`src/application/screens/heroes.js`（`.mulligan-box`），`src/ui.js`（`.confirm-box`），`src/enhancements.js`（卡牌详情 `.card-detail-layout` `.card-detail-copy`），`src/mobile-ui.js`（`.tactical-sheet` `.touch-menu-grid` `.touch-hand-grid` `.touch-hero-info`，桌面下也可打开的菜单/记录/手牌总览），`src/atelier-ui.js`（`.atelier-box` 画廊）
+### 5.5 过场与对话 dialogs（T4 / T6）— `src/application/screens/campaign.js`（`.result-box` `.result-stats`、发现 `.discover-options` `.discover-card`），`src/application/screens/heroes.js`（`.mulligan-box`），`src/ui.js`（`.confirm-box`），`src/enhancements.js`（卡牌详情 `.card-detail-layout` `.card-detail-copy`），`src/mobile-ui.js`（`.tactical-sheet` `.touch-menu-grid` `.touch-hand-grid` `.touch-hero-info`，桌面下也可打开的菜单/记录/手牌总览），`src/atelier-ui.js`（`.atelier-box` 画廊）
 - 起手换牌 `mulligan`：浮层壳 1060；标题「命运的第一手」26px/700 + 副标；三张牌保留；「保留 / 替换」改药丸（替换 = 蓝底）；发丝线；主药丸；提示 15px ink-2。
-- 遗物奖励 `choice`：改用页面壳（在 dialogs.css 内覆盖 `[data-dialog-size="choice"]`）；标题行 → 三张遗物卡（圆角 14 描边卡，遗物图 + 名称 22px/700 + 说明 15px + 「选择此遗物」小药丸；选中蓝边发光）→「酒馆整备」折叠区改发丝线分节 → 左下状态文字，右下主药丸「继续冒险」。
+- 遗物奖励 `choice`：已退役（2026-09-28），由远征页 `run` 取代，见「版式重塑」节；`choice` 尺寸与 `.rewards-box` / `.relic-*` 规则已删除。
 - 胜利结算 `result` 与失败：浮层壳；徽记保留；标题 44px/700；三项统计并排，中间竖线分隔，数字 40px/700；发丝线；底部次 + 主药丸。
 - 卡牌详情 `detail`：浮层壳 740；标题行；左卡右信息（名称 26px/700，效果 15px，发丝线行：职业稀有度 / 已加入 / 牌组）；底部次 + 主药丸。
 - 发现 `discover`：浮层壳 820；标题 + 副标；三张牌，选中蓝色发光。
