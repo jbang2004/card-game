@@ -2802,7 +2802,7 @@ html[data-skin="slate"] body #hand-scroll-hints span {
   align-items: center;
   text-shadow: 0 1px 4px #000;
   pointer-events: none;
-  background: linear-gradient(90deg, #0e172bd9, #0e172b00);
+  background: linear-gradient(90deg, #05070acc, #05070a00);
 }
 html[data-skin="slate"] body #hand-scroll-hints span[data-hand-scroll="-1"] {
   left: 0;
@@ -2813,7 +2813,7 @@ html[data-skin="slate"] body #hand-scroll-hints span[data-hand-scroll="1"] {
   right: 0;
   justify-content: flex-end;
   padding-right: 6px;
-  background: linear-gradient(270deg, #0e172bd9, #0e172b00);
+  background: linear-gradient(270deg, #05070acc, #05070a00);
 }
 html[data-skin="slate"] body #hand-scroll-hints span[hidden] {
   display: none;

@@ -169,6 +169,19 @@ html[data-skin="slate"] {
     inset -1px -1px 0.5px -0.5px #ffffff59, inset 0 12px 18px -12px #ffffff59,
     inset 0 -10px 16px -12px #00287873, 0 8px 22px #003ca04d,
     0 1px 2px #00000033;
+  /* HUD glass (battlefield): clear glass with a smoke tint so a chip stays
+   * legible over the lit court and the lava; a plain colour, because several
+   * HUD controls must compute `background-image: none` (arena.css contract).
+   * `--lg-ember` is the court's prominent glass: ember = "act now". */
+  --lg-hud: #1d1f26a8;
+  --lg-hud-hover: #2c2e36c4;
+  --lg-ember: linear-gradient(180deg, #ffb660f5 0%, #ff8a2eeb 100%);
+  --lg-ember-hover: linear-gradient(180deg, #ffc37af5 0%, #ff9640eb 100%);
+  --lg-ember-rim:
+    inset 1.25px 1.25px 0.5px -0.5px #ffffffcc,
+    inset -1px -1px 0.5px -0.5px #ffffff66, inset 0 12px 18px -12px #ffffff66,
+    inset 0 -10px 16px -12px #8a300073, 0 8px 22px #b4471a59,
+    0 1px 2px #00000040;
   /* type: Apple's dark-mode scale, no tracking on CJK titles */
   --lg-title-page: 700 30px/38px var(--slate-font);
   --lg-title-sheet: 700 24px/32px var(--slate-font);
@@ -223,6 +236,7 @@ html[data-skin="slate"] {
     --lg-clear: #2a2c34e6;
     --lg-clear-hover: #34363ef0;
     --lg-clear-blur: none;
+    --lg-hud: #1d1f26f0;
   }
 }
 @media (prefers-reduced-transparency: reduce) {
@@ -232,6 +246,7 @@ html[data-skin="slate"] {
     --lg-clear: #2a2c34e6;
     --lg-clear-hover: #34363ef0;
     --lg-clear-blur: none;
+    --lg-hud: #1d1f26f0;
   }
 }
 
@@ -1431,9 +1446,9 @@ html[data-skin="slate"]
   #modal.folio-host
   > .folio-dialog:is([data-dialog-size="settings"], [data-dialog-size="help"])
   > .modal-close {
-  top: 10px;
+  top: 14px;
   left: auto;
-  right: 10px;
+  right: 14px;
   width: 44px;
   height: 44px;
   border: 0;

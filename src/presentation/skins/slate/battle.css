@@ -192,7 +192,7 @@ html[data-skin="slate"]
   height: auto;
   padding: 18px 20px 20px;
   border: 0;
-  border-radius: 20px;
+  border-radius: 24px;
   background: var(--glass-fill);
   box-shadow: var(--glass-rim), var(--glass-shadow);
   color: var(--slate-ink);
@@ -222,7 +222,7 @@ html[data-skin="slate"]
   border-bottom: 0;
   color: #fff;
   font: 700 16px/1.3 var(--slate-font);
-  letter-spacing: 2px;
+  letter-spacing: 0;
 }
 /* `ui.js` renders the last eight entries as `.log-line` divs inside a legacy
  * bottom-anchored flex column with a fade mask. The slate panel reads as a
@@ -277,7 +277,7 @@ html[data-skin="slate"]
   .boss-order {
   color: var(--slate-ink-3);
   font: 500 11px/1.5 var(--slate-font);
-  letter-spacing: 2px;
+  letter-spacing: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -287,7 +287,7 @@ html[data-skin="slate"]
   margin: 10px 0 4px;
   color: #fff;
   font: 700 22px/1.35 var(--slate-font);
-  letter-spacing: 1px;
+  letter-spacing: 0;
   text-shadow: none;
 }
 html[data-skin="slate"]
@@ -345,7 +345,7 @@ html[data-skin="slate"]
   small {
   color: var(--slate-ink);
   font: 600 11px/1.6 var(--slate-font);
-  letter-spacing: 1.5px;
+  letter-spacing: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)

@@ -39,42 +39,75 @@ html[data-skin="slate"] body {
 /* ---------------------------------------------------------------------------
  * 1. Top bar, message rails, utility chips
  * ------------------------------------------------------------------------ */
+/* Liquid glass HUD (2026-09-27): the chrome floating over the court is clear
+ * glass with a smoke tint (`--lg-hud`) and the specular rim; ember stays the
+ * one "act now" colour, now as ember-tinted glass. */
 html[data-skin="slate"] body #app.battle-view .topbar {
-  background: linear-gradient(#000000b3, #00000000);
+  background: linear-gradient(#00000080, #00000000);
 }
 html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .brand strong {
-  font: 600 15px/1.1 var(--slate-font);
-  letter-spacing: 7px;
-  color: var(--arena-brass-hi);
+  font: 700 17px/1.1 var(--slate-font);
+  letter-spacing: 2px;
+  color: var(--slate-ink);
   text-shadow: 0 1px 3px #000c;
 }
 html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .brand small {
-  font: 500 8px/1.6 var(--slate-font);
-  letter-spacing: 4px;
-  color: var(--arena-ink-3);
+  font: 600 8px/1.6 var(--slate-font);
+  letter-spacing: 3px;
+  color: var(--slate-ink-3);
 }
-html[data-skin="slate"] body #app.battle-view .top-actions .icon-btn,
+/* the desktop toolbar: every icon in one glass capsule */
+html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .top-actions {
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--lg-hud);
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
+  box-shadow: var(--glass-rim), var(--lg-lift);
+}
+html[data-skin="slate"] body.touch-layout #app.battle-view .top-actions {
+  /* no padding: the 44px icon targets fill the capsule edge to edge */
+  gap: 0;
+  padding: 0;
+  border-radius: 999px;
+  background: var(--lg-hud);
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
+  box-shadow: var(--glass-rim), var(--lg-lift);
+}
+html[data-skin="slate"] body #app.battle-view .top-actions .icon-btn {
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  box-shadow: none;
+  color: var(--slate-ink);
+  transition:
+    background var(--m-fast),
+    color var(--m-fast);
+}
 html[data-skin="slate"] body:not(.touch-layout) #battle .utility-tab {
-  border: 1px solid #ffffff12;
-  background: #0c0a08b8;
-  box-shadow:
-    inset 0 1px 0 #ffffff12,
-    0 4px 12px #0008;
-  color: var(--arena-ink-2);
+  border: 0;
+  background: var(--lg-hud);
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
+  box-shadow: var(--glass-rim), var(--lg-lift);
+  color: var(--slate-ink);
 }
-html[data-skin="slate"] body #app.battle-view .top-actions .icon-btn:hover,
+html[data-skin="slate"] body #app.battle-view .top-actions .icon-btn:hover {
+  background: #ffffff1f;
+  color: #fff;
+}
 html[data-skin="slate"] body:not(.touch-layout) #battle .utility-tab:hover {
-  background: #1b1712d9;
-  border-color: #c9a45c66;
+  background: var(--lg-hud-hover);
   color: #fff;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #battle
   .utility-tab[aria-expanded="true"] {
-  border-color: #c9a45c99;
-  background: #1b1712;
-  color: var(--arena-brass-hi);
+  background: #ffffff38;
+  color: #fff;
 }
 html[data-skin="slate"]
   body
@@ -102,15 +135,13 @@ html[data-skin="slate"]
   :is(#hint, #toast, #combat-preview, #action-status, #touch-target-bar),
 html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .turn-number,
 html[data-skin="slate"] body.touch-layout #app.battle-view .turn-number {
-  border: 1px solid #c9a45c2e;
-  background: #0c0a08c4;
-  box-shadow:
-    inset 0 1px 0 #ffffff10,
-    0 12px 30px #000a;
-  color: var(--arena-ink);
-  letter-spacing: 1px;
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
+  border: 0;
+  background: var(--lg-hud);
+  box-shadow: var(--glass-rim), var(--lg-lift);
+  color: var(--slate-ink);
+  letter-spacing: 0;
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -119,24 +150,24 @@ html[data-skin="slate"]
   font: 500 15px/1.4 var(--slate-font);
 }
 html[data-skin="slate"] body #app.battle-view #toast[data-kind="error"] {
-  border-color: #e0475a80;
+  background: #5a1a22b8;
   color: #ffd9dc;
 }
 html[data-skin="slate"] body:not(.touch-layout) #app.battle-view #touch-cancel,
 html[data-skin="slate"] body.touch-layout #app.battle-view #touch-cancel {
-  border: 1px solid #c9a45c4d;
-  background: #1b1712d9;
-  color: var(--arena-brass-hi);
-  letter-spacing: 2px;
+  border: 0;
+  background: #ffffff24;
+  box-shadow: var(--lg-rim-soft);
+  color: #fff;
+  letter-spacing: 0;
 }
 html[data-skin="slate"] body #app.battle-view #touch-cancel:hover {
-  background: #2a2119;
-  border-color: var(--arena-brass);
+  background: #ffffff38;
   color: #fff;
 }
 html[data-skin="slate"] body #app.battle-view .board-empty {
-  color: var(--arena-ink-3);
-  letter-spacing: 3px;
+  color: var(--slate-ink-3);
+  letter-spacing: 1px;
 }
 
 /* ---------------------------------------------------------------------------
@@ -705,88 +736,82 @@ html[data-skin="slate"]
 /* ---------------------------------------------------------------------------
  * 5. Command cluster — skill node and deck counters (desktop)
  * ------------------------------------------------------------------------ */
+/* the hero power: a glass lens round its icon; usable = an ember halo */
 html[data-skin="slate"] body:not(.touch-layout) #battle .power-button::before {
-  border: 1px solid #c9a45c80;
-  background: radial-gradient(
-    circle,
-    #ffb15a 0 9px,
-    #c8561a 10px 13px,
-    #1a120c 14px 19px,
-    #2a2118 20px 24px,
-    #3a2f22 25px
-  );
+  border: 0;
+  background: var(--lg-hud);
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
   box-shadow:
-    0 0 20px #ff9b3d40,
-    inset 0 0 8px #000c,
-    0 6px 14px #000a;
+    var(--glass-rim),
+    0 0 0 2px #ffb35ab3,
+    0 0 20px #ff9b3d59,
+    var(--lg-lift);
+  transition:
+    box-shadow var(--m-base),
+    background var(--m-fast);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #battle
   .power-button:hover:not(:disabled)::before {
-  border-color: var(--arena-brass-hi);
+  background: var(--lg-hud-hover);
   box-shadow:
-    0 0 30px #ff9b3d80,
-    inset 0 0 8px #000c,
-    0 6px 14px #000a;
+    var(--glass-rim),
+    0 0 0 2px #ffd39a,
+    0 0 28px #ff9b3d8c,
+    var(--lg-lift);
 }
 html[data-skin="slate"] body:not(.touch-layout) #battle .power-button > span {
   height: auto;
   padding: 0 0 0 12px;
   border: 0;
   background: none;
-  color: var(--arena-brass-hi);
-  font: 600 14px/1 var(--slate-font);
-  letter-spacing: 2px;
+  color: var(--slate-ink);
+  font: 600 15px/1 var(--slate-font);
+  letter-spacing: 0;
   text-shadow: 0 1px 3px #000c;
 }
 html[data-skin="slate"] body:not(.touch-layout) #battle .power-button > b {
-  height: 22px;
+  height: 24px;
   margin-left: 8px;
-  padding: 0 8px;
-  border: 1px solid #c9a45c66;
+  padding: 0 9px;
+  border: 0;
   border-radius: 999px;
-  background: #0c0a08cc;
-  box-shadow: none;
+  background: var(--lg-hud);
+  box-shadow: var(--lg-rim-soft);
   color: var(--slate-blue);
-  font: 700 12px/1 var(--slate-font);
+  font: 700 13px/1 var(--slate-font);
+  font-variant-numeric: tabular-nums;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #battle
   .power-button:disabled::before {
-  border-color: #ffffff1a;
-  background: radial-gradient(
-    circle,
-    #3a342c 0 9px,
-    #241f19 10px 13px,
-    #14110d 14px 19px,
-    #1e1a15 20px
-  );
-  box-shadow: inset 0 0 8px #000c;
+  background: #16181eb3;
+  box-shadow: var(--glass-rim), var(--lg-lift);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #battle
   .power-button:disabled
   > :is(span, b) {
-  border-color: #ffffff14;
-  color: var(--arena-ink-3);
+  color: var(--slate-ink-3);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #app.battle-view
   :is(.enemy-deck, .player-deck) {
   left: 36px;
-  height: 28px;
-  padding: 0 10px 0 8px;
+  height: 30px;
+  padding: 0 12px 0 10px;
   gap: 7px;
-  border: 1px solid #ffffff12;
-  background: #0c0a08c4;
-  box-shadow:
-    inset 0 1px 0 #ffffff10,
-    0 4px 10px #0008;
-  color: var(--arena-ink-2);
+  border: 0;
+  background: var(--lg-hud);
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
+  box-shadow: var(--glass-rim), var(--lg-lift);
+  color: var(--slate-ink-2);
 }
 /* the counter sits under its owner's seat: what you have left, where you sit */
 html[data-skin="slate"] body:not(.touch-layout) #app.battle-view .enemy-deck {
@@ -800,14 +825,14 @@ html[data-skin="slate"]
   #app.battle-view
   :is(.enemy-deck, .player-deck)
   > [data-icon] {
-  width: 14px;
-  height: 18px;
-  border: 1px solid #c9a45c99;
-  border-radius: 2px;
-  background: linear-gradient(160deg, #3a3126, #14110d);
+  width: 12px;
+  height: 16px;
+  border: 1.5px solid #ffffffb3;
+  border-radius: 3px;
+  background: none;
   box-shadow:
-    2px -2px 0 -1px #0c0a08,
-    2px -2px 0 0 #c9a45c66;
+    2px -2px 0 -1px #1d1f26,
+    2px -2px 0 0 #ffffff66;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
@@ -823,16 +848,17 @@ html[data-skin="slate"]
   :is(.enemy-deck, .player-deck)
   .deck-caption {
   display: inline;
-  color: var(--arena-ink-3);
-  font: 500 10px/1 var(--slate-font);
-  letter-spacing: 2px;
+  color: var(--slate-ink-2);
+  font: 500 11px/1 var(--slate-font);
+  letter-spacing: 0;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #app.battle-view
   :is(.enemy-deck, .player-deck)
   .deck-count {
-  color: var(--arena-brass-hi);
+  color: #fff;
+  font-variant-numeric: tabular-nums;
 }
 html[data-skin="slate"] body #battle .contract-open.ready .contract-back {
   box-shadow:
@@ -844,85 +870,89 @@ html[data-skin="slate"] body #battle .contract-open.ready .contract-back {
 /* ---------------------------------------------------------------------------
  * 6. End turn and mana — desktop
  * ------------------------------------------------------------------------ */
+/* End turn: a clear-glass capsule while there is still something to do,
+ * ember-tinted glass once the turn is spent (`.ready-end`). The fills live on
+ * `::before` — the button itself must compute `background-image: none`. */
 html[data-skin="slate"] body:not(.touch-layout) #battle .end-turn {
-  border: 1px solid #c9a45c99;
-  color: var(--arena-brass-hi);
-  font: 600 17px/1 var(--slate-font);
-  letter-spacing: 4px;
-  text-shadow: 0 1px 2px #000c;
+  border: 0;
+  color: var(--slate-ink);
+  font: 600 18px/1 var(--slate-font);
+  letter-spacing: 1px;
+  text-shadow: 0 1px 2px #00000080;
   transition:
-    border-color 0.15s,
-    color 0.15s;
+    color var(--m-fast),
+    transform var(--m-base) var(--e-spring);
 }
 html[data-skin="slate"] body:not(.touch-layout) #battle .end-turn::before {
-  background: linear-gradient(180deg, #2a2119, #14100c);
-  box-shadow:
-    inset 0 1px 0 #ffffff1a,
-    0 8px 20px #000a;
+  background: var(--lg-hud);
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
+  box-shadow: var(--glass-rim), var(--lg-lift);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #battle
   .end-turn:hover:not(:disabled) {
-  border-color: var(--arena-brass-hi);
   color: #fff;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #battle
   .end-turn:hover:not(:disabled)::before {
-  background: linear-gradient(180deg, #3a2f22, #1b1712);
+  background: var(--lg-hud-hover);
+}
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #battle
+  .end-turn:active:not(:disabled) {
+  transform: scale(0.97);
 }
 html[data-skin="slate"] body:not(.touch-layout) #battle .end-turn.ready-end {
-  border-color: #ffd39a;
-  color: #1a0f05;
-  text-shadow: 0 1px 0 #ffffff40;
+  color: #2a1204;
+  text-shadow: 0 1px 0 #ffffff59;
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #battle
   .end-turn.ready-end::before {
-  background: linear-gradient(180deg, #ffc27a, #e0702a);
-  box-shadow:
-    inset 0 1px 0 #ffffff66,
-    0 0 22px #ff9b3d66,
-    0 8px 20px #000a;
+  background: var(--lg-ember);
+  box-shadow: var(--lg-ember-rim);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #battle
   .end-turn.ready-end:hover:not(:disabled)::before {
-  background: linear-gradient(180deg, #ffd39a, #ea7d33);
+  background: var(--lg-ember-hover);
 }
 html[data-skin="slate"] body:not(.touch-layout) #battle .end-turn:disabled {
-  border-color: #ffffff14;
-  color: var(--arena-ink-3);
+  color: var(--slate-ink-3);
 }
 html[data-skin="slate"]
   body:not(.touch-layout)
   #battle
   .end-turn:disabled::before {
-  background: #0c0a08c4;
-  box-shadow: none;
+  background: #16181e99;
+  box-shadow: var(--lg-rim-soft);
 }
 html[data-skin="slate"] body #battle .end-turn.thinking::after {
   border-color: #ffffff2b;
-  border-top-color: var(--arena-brass);
+  border-top-color: #fff;
 }
 html[data-skin="slate"] body:not(.touch-layout) #battle .turn-shortcut {
-  color: var(--arena-ink-3);
-  font: 500 10px/1.4 var(--slate-font);
-  letter-spacing: 2px;
+  color: var(--slate-ink-3);
+  font: 500 11px/1.4 var(--slate-font);
+  letter-spacing: 0.5px;
 }
 html[data-skin="slate"] body:not(.touch-layout) #battle .mana-caption > span,
 html[data-skin="slate"] body.touch-layout #battle .mana-caption > span {
-  color: var(--arena-ink-3);
-  font: 500 10px/1.4 var(--slate-font);
-  letter-spacing: 3px;
+  color: var(--slate-ink-2);
+  font: 500 12px/1.4 var(--slate-font);
+  letter-spacing: 0;
 }
 html[data-skin="slate"] body:not(.touch-layout) #battle .mana-caption strong,
 html[data-skin="slate"] body.touch-layout #battle .mana-caption strong {
-  color: var(--arena-ink);
+  color: var(--slate-ink);
+  font-variant-numeric: tabular-nums;
   text-shadow: 0 1px 3px #000c;
 }
 /* mana crystals: a hexagonal ember gem, dark glass once spent */
@@ -1017,12 +1047,8 @@ html[data-skin="slate"]
   body.touch-layout
   #battle
   :is(.hero.enemy, .hero.player) {
-  --seat-line: var(--arena-iron);
-  --seat-line-soft: #a9b4c259;
-}
-html[data-skin="slate"] body.touch-layout #battle .hero.player {
-  --seat-line: var(--arena-brass);
-  --seat-line-soft: #c9a45c66;
+  --seat-line: #ffffff73;
+  --seat-line-soft: #ffffff33;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1038,7 +1064,6 @@ html[data-skin="slate"]
   border: 1.5px solid var(--seat-line);
   background: #0a0806;
   box-shadow:
-    0 0 0 3px #0c0a08d9,
     inset 0 0 0 1px #00000099,
     0 4px 12px #000a;
 }
@@ -1065,17 +1090,14 @@ html[data-skin="slate"]
   #battle
   :is(.hero.enemy, .hero.player)
   .hero-name {
-  background: linear-gradient(#14110dd9, #0a0806f2);
-  box-shadow: inset 0 1px 0 #ffffff1c;
-  color: var(--arena-brass-hi);
+  background: #16181ee6;
+  box-shadow: inset 0 1px 0 #ffffff26;
+  color: var(--slate-ink);
   font-weight: 600;
-  letter-spacing: 1px;
-}
-html[data-skin="slate"] body.hero-mini #battle .hero.enemy .hero-name {
-  color: var(--arena-iron-hi);
+  letter-spacing: 0.5px;
 }
 html[data-skin="slate"] body.touch-layout #battle .hero-name {
-  color: var(--arena-ink);
+  color: var(--slate-ink);
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1088,9 +1110,7 @@ html[data-skin="slate"]
   :is(.hero.enemy, .hero.player).ready
   .portrait-frame {
   border-color: #ffb35a;
-  box-shadow:
-    0 0 0 3px #0c0a08d9,
-    0 0 14px #ff9b3d99;
+  box-shadow: 0 0 14px #ff9b3d99;
 }
 html[data-skin="slate"]
   body.touch-layout
@@ -1121,12 +1141,15 @@ html[data-skin="slate"]
 html[data-skin="slate"] body.touch-layout #battle :is(.hero-stat, .hero-chip),
 html[data-skin="slate"] body.hero-mini #battle :is(.hero-stat, .hero-chip) {
   gap: 4px;
-  padding: 0 7px 0 6px;
-  border: 1px solid var(--seat-line-soft);
-  background: #0c0a08d0;
-  box-shadow: 0 4px 12px #0009;
-  color: var(--arena-ink);
+  padding: 0 8px 0 7px;
+  border: 0;
+  background: var(--lg-hud);
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
+  box-shadow: var(--glass-rim), 0 3px 10px #0000004d;
+  color: var(--slate-ink);
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 html[data-skin="slate"] body.touch-layout #battle .hero-stat > .badge-frame {
   display: none;
@@ -1151,132 +1174,123 @@ html[data-skin="slate"] body.touch-layout #battle .hero-armor::before {
   mask-image: var(--glyph-shield);
 }
 html[data-skin="slate"] body.touch-layout #battle .hero-health.damaged {
-  border-color: #e0475a80;
   color: #ff9aa4;
 }
 html[data-skin="slate"] body.touch-layout #battle .hero-chip svg {
-  color: var(--arena-brass-hi);
+  color: var(--slate-ink-2);
 }
 html[data-skin="slate"] body.touch-layout #battle .hero-covenant {
   color: var(--arena-brass-hi);
 }
 html[data-skin="slate"] body.touch-layout #battle .hero-covenant.ready {
-  border-color: #ffb35a99;
-  box-shadow: 0 0 8px #ff9b3d55;
+  box-shadow:
+    var(--glass-rim),
+    0 0 0 1.5px #ffb35a99,
+    0 0 8px #ff9b3d55;
 }
 html[data-skin="slate"] body.touch-layout #battle .hero-hand i {
   background: linear-gradient(150deg, #3a3126, #1a1511 55%, #0c0a08);
   box-shadow: 0 0 0 1px #c9a45c80;
 }
 html[data-skin="slate"] body.touch-layout #battle .hero-phase {
-  border-color: #ffffff12;
-  background: #0c0a08b8;
-  color: var(--arena-ink-3);
+  border-color: transparent;
+  background: var(--lg-hud);
+  color: var(--slate-ink-2);
 }
-/* skill node */
+/* skill node: the same glass lens as the desktop node */
 html[data-skin="slate"] body.touch-layout #battle .power-button::before {
-  border: 1px solid #c9a45c80;
-  background: radial-gradient(
-    circle,
-    #ffb15a 0 33%,
-    #c8561a 36% 47%,
-    #1a120c 50% 68%,
-    #2a2118 71% 86%,
-    #3a2f22 89%
-  );
+  border: 0;
+  background: var(--lg-hud);
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
   box-shadow:
-    0 0 20px #ff9b3d40,
-    inset 0 0 8px #000c,
-    0 6px 14px #000a;
+    var(--glass-rim),
+    0 0 0 2px #ffb35ab3,
+    0 0 18px #ff9b3d59,
+    var(--lg-lift);
 }
 html[data-skin="slate"] body.touch-layout #battle .power-button > b {
-  border-color: #c9a45c66;
-  background: #0c0a08d9;
+  border-color: transparent;
+  background: var(--lg-hud);
+  box-shadow: var(--lg-rim-soft);
   color: var(--slate-blue);
 }
 html[data-skin="slate"] body.touch-layout #battle .power-button > span {
-  color: var(--arena-ink-2);
-  letter-spacing: 2px;
+  color: var(--slate-ink-2);
+  letter-spacing: 0;
 }
 html[data-skin="slate"]
   body.touch-layout
   #battle
   .power-button:disabled::before {
-  border-color: #ffffff1a;
-  background: radial-gradient(
-    circle,
-    #3a342c 0 33%,
-    #241f19 36% 47%,
-    #14110d 50% 68%,
-    #1e1a15 71%
-  );
-  box-shadow: inset 0 0 8px #000c;
+  background: #16181eb3;
+  box-shadow: var(--glass-rim), var(--lg-lift);
 }
 html[data-skin="slate"]
   body.touch-layout
   #battle
   .power-button:disabled
   > :is(span, b) {
-  border-color: #ffffff14;
-  color: var(--arena-ink-3);
+  color: var(--slate-ink-3);
 }
-/* round end turn */
+/* round end turn: a glass disc, ember glass once the turn is spent */
 html[data-skin="slate"] body.touch-layout #battle .end-turn {
-  border: 1px solid #c9a45c99;
-  color: var(--arena-brass-hi);
+  border: 0;
+  color: var(--slate-ink);
   font-weight: 600;
-  text-shadow: 0 1px 2px #000c;
+  letter-spacing: 0;
+  text-shadow: 0 1px 2px #00000080;
 }
 html[data-skin="slate"] body.touch-layout #battle .end-turn::before {
-  background: linear-gradient(180deg, #2a2119, #14100c);
-  box-shadow:
-    inset 0 1px 0 #ffffff1a,
-    0 8px 20px #000a;
+  background: var(--lg-hud);
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
+  box-shadow: var(--glass-rim), var(--lg-lift);
 }
 html[data-skin="slate"]
   body.touch-layout
   #battle
   .end-turn:hover:not(:disabled)::before {
-  background: linear-gradient(180deg, #3a2f22, #1b1712);
+  background: var(--lg-hud-hover);
 }
 html[data-skin="slate"] body.touch-layout #battle .end-turn.ready-end {
-  border-color: #ffd39a;
-  color: #1a0f05;
-  text-shadow: 0 1px 0 #ffffff40;
+  color: #2a1204;
+  text-shadow: 0 1px 0 #ffffff59;
 }
 html[data-skin="slate"] body.touch-layout #battle .end-turn.ready-end::before {
-  background: linear-gradient(180deg, #ffc27a, #e0702a);
+  background: var(--lg-ember);
+  box-shadow: var(--lg-ember-rim);
   animation: arena-ember-breathe 2.2s ease-in-out infinite;
 }
 @keyframes arena-ember-breathe {
   0%,
   100% {
     box-shadow:
-      inset 0 1px 0 #ffffff66,
+      var(--lg-ember-rim),
       0 0 0 0 #ff9b3d00;
   }
   50% {
     box-shadow:
-      inset 0 1px 0 #ffffff66,
+      var(--lg-ember-rim),
       0 0 18px 2px #ff9b3d80;
   }
 }
 html[data-skin="slate"] body.touch-layout #battle .end-turn:disabled {
-  border-color: #ffffff14;
-  color: var(--arena-ink-3);
+  color: var(--slate-ink-3);
 }
 html[data-skin="slate"] body.touch-layout #battle .end-turn:disabled::before {
-  background: #0c0a08c4;
-  box-shadow: none;
+  background: #16181e99;
+  box-shadow: var(--lg-rim-soft);
 }
-/* mana: portrait shows the crystals, landscape a brass capsule */
+/* mana: portrait shows the crystals, landscape a glass capsule */
 html[data-skin="slate"] body.mobile-portrait #battle .mana-gem {
   width: 9px;
   height: 14px;
 }
 html[data-skin="slate"] body.mobile-landscape #battle .mana-caption {
-  border-color: #c9a45c59;
-  background: #0c0a08cc;
+  border-color: transparent;
+  background: var(--lg-hud);
+  box-shadow: var(--glass-rim), 0 3px 10px #0000004d;
 }
 html[data-skin="slate"]
   body.mobile-landscape
@@ -1509,6 +1523,20 @@ html[data-skin="slate"] body #app.battle-view #battle-status {
     background 200ms,
     border-color 200ms,
     box-shadow 200ms;
+}
+/* a message gets the HUD glass capsule */
+html[data-skin="slate"] body #app.battle-view #battle-status.has-message {
+  border-color: transparent;
+  background: var(--lg-hud);
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
+  box-shadow: var(--glass-rim), var(--lg-lift);
+}
+html[data-skin="slate"] body #app.battle-view #battle-status #touch-cancel {
+  border-color: transparent;
+  background: #ffffff24;
+  box-shadow: var(--lg-rim-soft);
+  color: #fff;
 }
 
 /* Event labels over the board stay one line: near an edge the shrink-to-fit
