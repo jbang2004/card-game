@@ -506,20 +506,7 @@
   color: #9d9c8d;
   margin-top: 11px;
 }
-.lobby-collection {
-  position: absolute;
-  right: 58px;
-  bottom: 105px;
-  width: 325px;
-  height: 268px;
-  z-index: 7;
-}
-.lobby-collection > .section-label {
-  position: absolute;
-  right: 0;
-  top: 0;
-  font-size: 8px;
-}
+
 .lobby-card {
   position: absolute;
   left: 34px;
@@ -541,19 +528,7 @@
   width: 147px;
   height: 211px;
 }
-.lobby-collection > button {
-  position: absolute;
-  right: 0;
-  bottom: -12px;
-  background: transparent;
-  font-size: 10px;
-  letter-spacing: 1px;
-  color: #bfc6b9;
-}
-.lobby-collection > button span {
-  margin-left: 35px;
-  color: #ddbf91;
-}
+
 .lobby-bottom {
   position: absolute;
   left: 45px;

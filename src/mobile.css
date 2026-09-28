@@ -539,7 +539,6 @@ body.touch-layout .showcase-link {
 body.touch-layout .showcase-link > span:last-child {
   display: none;
 }
-body.touch-layout .lobby-collection,
 body.touch-layout .lobby-feature,
 body.touch-layout .lobby-eclipse {
   display: none;

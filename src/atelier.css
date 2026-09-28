@@ -537,18 +537,7 @@
   min-height: 53px;
   font-size: 16px;
 }
-.lobby-collection {
-  left: 1143px;
-  top: 426px;
-  width: 355px;
-  height: 340px;
-}
-.lobby-collection > .section-label {
-  left: 53px;
-  top: -52px;
-  font: 700 14px var(--serif);
-  letter-spacing: 3px;
-}
+
 .lobby-card {
   left: 8px;
   top: 8px;
@@ -565,12 +554,7 @@
   width: 174px;
   height: 248px;
 }
-.lobby-collection > button {
-  top: 300px;
-  left: 37px;
-  width: 281px;
-  z-index: 3;
-}
+
 .lobby-bottom {
   background: #211a16e0;
   border-color: #a8854855;
@@ -878,10 +862,5 @@ body.mobile-ui #card-preview[data-mode="hover"] {
   body.mobile-ui .lobby-actions .gold-btn {
     min-width: 0;
   }
-  body.mobile-ui .lobby-collection {
-    left: 1112px;
-    top: 448px;
-    transform: scale(0.96);
-    transform-origin: top left;
-  }
+  
 }

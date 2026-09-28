@@ -91,3 +91,7 @@
 验证：`node --test tests/*.test.cjs` 127 通过；`?skin=slate` 下 `home-reference.spec.cjs` 10/10 通过（含 390×844、320×568、844×390、568×320、768×1024 五档触控），`mobile-layout.spec.cjs` 5/5 通过。`responsive-component-style.spec.cjs` 的跨视口材质比对中，`lobby` 一页的差异由 144 条降到 **0** 条。桌面 1672×941 与改动前逐像素比较：单通道最大差 1、无像素差 > 8（即只有 Canvas 场景噪声）。截图见 [output/slate-mobile-scene-20260914/](../../../output/slate-mobile-scene-20260914/README.md)。
 
 已知差异：战场 `body.touch-layout` 不在本任务范围。
+
+## 2026-09-28 收藏入口改为按钮列里的胶囊
+
+用户反馈首页收藏卡组「碍眼」、手机上会遮住按钮。根因：竖屏的收藏货架按 `bottom: 72px` 贴屏幕底部定位，而按钮列从顶部排下来，视口变矮（浏览器工具栏、存档状态行）时两者相撞。上文「三卡平铺、箭头贴卡」一行的错位三卡货架已退役：收藏入口现在是 `.lobby-copy` 里跟在两枚主按钮之后的一枚透明玻璃胶囊（`#lobby-library-btn.home-collection`：三张封面小扇形 `.home-collection-thumb`、「我的收藏 / 浏览全部卡牌与牌组」、`.home-collection-arrow` 圆形箭头），所有布局同一组件，只按布局改尺寸。`home-reference.spec.cjs` 的箭头间距断言改读 `.home-collection-thumb`。规范见 SLATE_DESIGN_SYSTEM.md「版式重塑（2026-09-28）」。

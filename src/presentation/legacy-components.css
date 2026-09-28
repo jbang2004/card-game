@@ -91,7 +91,6 @@ body.touch-layout .gold-btn {
 }
 .ghost-btn,
 body.touch-layout .ghost-btn,
-#lobby-library-btn,
 .atelier-open,
 body.touch-layout .atelier-open {
   background: var(--secondary-fill);
@@ -441,8 +440,7 @@ body:not(.touch-layout) .lobby-title span {
 body .lobby-copy > .eyebrow,
 body .lobby-tagline,
 body .lobby-world-label,
-body .lobby-bottom small,
-body .lobby-collection > .section-label {
+body .lobby-bottom small {
   display: none;
 }
 body .lobby-chinese {
@@ -474,12 +472,7 @@ body .showcase-link {
 body .showcase-link span:last-child {
   display: none;
 }
-body:not(.touch-layout) .lobby-collection {
-  right: 120px;
-  bottom: 124px;
-  transform: scale(0.86);
-  transform-origin: bottom right;
-}
+
 body .lobby-bottom {
   font-size: 12px;
   letter-spacing: 0;
@@ -3158,7 +3151,6 @@ body
     .filter-btn,
     .atelier-open,
     .anime-art-button,
-    .lobby-collection > button,
     .wind-time-setting,
     .touch-library-tabs button,
     .deck-actions > button,
@@ -3230,7 +3222,6 @@ body
     .filter-btn,
     .atelier-open,
     .anime-art-button,
-    .lobby-collection > button,
     .wind-time-setting,
     .touch-library-tabs button,
     .deck-actions > button,
@@ -3264,7 +3255,6 @@ body
     .filter-btn,
     .atelier-open,
     .anime-art-button,
-    .lobby-collection > button,
     .wind-time-setting,
     .touch-library-tabs button,
     .deck-actions > button,
@@ -3352,7 +3342,6 @@ body.touch-layout
     .filter-btn,
     .atelier-open,
     .anime-art-button,
-    .lobby-collection > button,
     .wind-time-setting,
     .touch-library-tabs button,
     .deck-actions > button,
