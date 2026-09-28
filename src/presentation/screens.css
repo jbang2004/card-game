@@ -98,23 +98,7 @@ body .lobby-actions .ghost-btn {
   gap: 35px;
   clip-path: polygon(5% 0, 95% 0, 100% 50%, 95% 100%, 5% 100%, 0 50%);
 }
-body .lobby-collection {
-  position: absolute;
-  left: auto;
-  right: 52px;
-  top: auto;
-  bottom: 116px;
-  width: 330px;
-  height: 242px;
-  transform: none;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  padding: 0;
-}
-body .lobby-collection .section-label {
-  display: none;
-}
+
 body .lobby-card {
   position: absolute;
   left: 17px;
@@ -133,21 +117,7 @@ body .lobby-card .card {
   width: 100%;
   height: 100%;
 }
-body #lobby-library-btn {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  bottom: auto;
-  height: 38px;
-  text-align: left;
-  background: none;
-  border: 0;
-  font: 400 20px var(--ui-display);
-  color: var(--ink);
-  padding: 0 14px;
-}
+
 body .lobby-bottom {
   left: 65px;
   right: 65px;
@@ -1338,13 +1308,7 @@ body.touch-layout .lobby-copy .eyebrow {
   margin-bottom: 18px;
   letter-spacing: 4px;
 }
-body.touch-layout .lobby-collection {
-  display: block;
-  right: 20px;
-  bottom: 68px;
-  width: 180px;
-  height: 145px;
-}
+
 body.touch-layout .lobby-card {
   width: 72px;
   height: 107px;
@@ -1355,11 +1319,7 @@ body.touch-layout .lobby-card.two {
   left: 95px;
   top: 25px;
 }
-body.touch-layout #lobby-library-btn {
-  font-size: 14px;
-  height: 28px;
-  padding: 0;
-}
+
 body.touch-layout .lobby-bottom {
   left: 23px;
   right: 23px;
@@ -1416,12 +1376,7 @@ body.mobile-landscape .lobby-actions :is(.gold-btn, .ghost-btn) {
   width: 179px;
   gap: 10px;
 }
-body.mobile-landscape .lobby-collection {
-  right: 40px;
-  bottom: 46px;
-  width: 185px;
-  height: 145px;
-}
+
 @media (max-height: 600px) and (min-width: 601px) {
   body #modal.folio-host h2 {
     font-size: 25px;
@@ -1652,9 +1607,7 @@ body .atlas-extended .atlas-location:nth-of-type(n) {
   }
 }
 @media (orientation: portrait) and (max-height: 680px) {
-  body.touch-layout .lobby-collection {
-    display: none;
-  }
+  
   body.touch-layout .lobby-copy {
     top: 90px;
   }
@@ -1677,9 +1630,7 @@ body .atlas-extended .atlas-location:nth-of-type(n) {
   body #modal.folio-host[data-type="heroes"] .hero-options {
     grid-template-columns: minmax(0, 1fr);
   }
-  body.mobile-landscape .lobby-collection {
-    display: none;
-  }
+  
   body.mobile-landscape .lobby-copy {
     top: 60px;
   }

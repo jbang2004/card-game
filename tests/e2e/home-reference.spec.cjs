@@ -52,7 +52,9 @@ for (const [width, height, touch] of [
       .locator(".home-collection-arrow svg")
       .boundingBox();
     const cardRight = await page
-      .locator(".home-collection-card")
+      // the collection entry's cover fan (2026-09-28: one capsule in the
+      // action column instead of the three-card shelf)
+      .locator(".home-collection-thumb")
       .evaluateAll((es) =>
         Math.max(...es.map((e) => e.getBoundingClientRect().right)),
       );

@@ -246,24 +246,7 @@ body:not(.touch-layout) .lobby-title {
 .lobby-eclipse {
   display: none;
 }
-.lobby-collection > .section-label {
-  color: #f0e5c7;
-  text-shadow: 0 1px 3px #35442a;
-}
-.lobby-collection > button {
-  background: #e9dfc3;
-  color: #57714f;
-  border: 1px solid #a6ad88;
-  border-radius: 7px;
-  box-shadow: 0 2px #728164;
-}
-body:not(.touch-layout) .lobby-collection {
-  left: 1130px;
-  top: 425px;
-  width: 358px;
-  transform: scale(0.96);
-  transform-origin: center;
-}
+
 .atelier-open {
   color: #ecead2;
   border: 1px solid #bec7a04d;

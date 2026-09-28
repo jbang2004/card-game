@@ -138,9 +138,7 @@ body:not(.mobile-ui) #modal.folio-host .atlas-dossier > img {
 body:not(.mobile-ui) #modal.folio-host .atlas-footer {
   padding-top: 18px;
 }
-body:not(.mobile-ui) #lobby-library-btn {
-  top: -10px;
-}
+
 body:not(.mobile-ui) .lobby-bottom {
   font-size: 13px;
 }

@@ -1896,140 +1896,7 @@ body #modal.folio-host .covenant-side > :is(h3, p) {
   width: 1px;
   background: var(--ink-secondary);
 }
-#lobby .lobby-collection {
-  display: block;
-  position: absolute;
-  top: auto;
-  left: auto;
-  right: 28px;
-  bottom: 127px;
-  width: 400px;
-  height: 230px;
-  padding: 0;
-  margin: 0;
-  border: 0;
-  background: none;
-  transform: none;
-  box-shadow: none;
-}
-#lobby #lobby-library-btn {
-  position: relative;
-  inset: auto;
-  display: block;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0 64px 0 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  text-align: left;
-  color: var(--ink);
-  font: 400 18px/1.4 var(--ui-display);
-}
-#lobby #lobby-library-btn::before {
-  content: "";
-  position: absolute;
-  inset: -20px -14px -18px -38px;
-  z-index: -1;
-  background: var(--home-collection-veil);
-}
-#lobby #lobby-library-btn span {
-  margin: 0;
-  color: inherit;
-  float: none;
-}
-#lobby .home-collection-heading {
-  display: block;
-  height: 34px;
-  padding-left: 10px;
-  font-size: 21px;
-  text-shadow: var(--home-caption-shadow);
-}
-#lobby .home-collection-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  align-items: end;
-  gap: 8px;
-  height: 196px;
-}
-#lobby .home-collection-card {
-  position: relative;
-  display: block;
-  height: 185px;
-  min-width: 0;
-  --card-rise: 7px;
-  --card-lean: -5deg;
-  --card-hover: 0px;
-  transform-origin: 50% 92%;
-  transform: translateY(calc(var(--card-rise) + var(--card-hover)))
-    perspective(700px) rotateY(-8deg) rotateZ(var(--card-lean));
-  z-index: 1;
-  transition: transform 180ms ease;
-}
-#lobby .home-collection-card:nth-child(2) {
-  height: 195px;
-  --card-rise: 1px;
-  --card-lean: -1deg;
-  z-index: 2;
-}
-#lobby .home-collection-card:nth-child(3) {
-  height: 205px;
-  --card-rise: -5px;
-  --card-lean: 3deg;
-  z-index: 3;
-}
-#lobby .home-collection-card img {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: fill;
-  filter: drop-shadow(5px 9px 6px #050b14b3);
-}
-#lobby .home-collection-card > span {
-  position: absolute;
-  bottom: 9px;
-  left: 7px;
-  right: 7px;
-  padding-top: 13px;
-  text-align: center;
-  font-size: 16px;
-  color: var(--ink);
-  background: linear-gradient(transparent, #080e19d9);
-  text-shadow: var(--home-caption-shadow);
-}
-#lobby .home-collection-arrow {
-  position: absolute;
-  right: 0;
-  top: 52%;
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border: 1px solid var(--line-bright);
-  border-radius: 50%;
-  padding: 0;
-  line-height: 0;
-}
-#lobby .home-collection-arrow svg {
-  display: block;
-  width: 20px;
-  height: 20px;
-  margin: 0;
-  transform: none;
-}
-#lobby .home-collection-note {
-  position: absolute;
-  right: 32px;
-  top: 260px;
-  margin: 0;
-  text-align: right;
-  font: italic 18px/1.4 var(--ui-display);
-  letter-spacing: 3px;
-  color: var(--ink-secondary);
-  text-shadow: var(--home-caption-shadow);
-  pointer-events: none;
-}
+
 #lobby .lobby-bottom {
   position: absolute;
   left: 55px;
@@ -2088,15 +1955,13 @@ body #modal.folio-host .covenant-side > :is(h3, p) {
     filter: brightness(1.12) drop-shadow(0 0 8px #9acbff66);
     transform: translateY(-1px);
   }
-  #lobby #lobby-library-btn:hover .home-collection-card {
-    --card-hover: -5px;
-  }
+  
 }
-body.reduced-motion #lobby :is(.home-action, .home-collection-card) {
+body.reduced-motion #lobby .home-action {
   transition: none;
 }
 @media (prefers-reduced-motion: reduce) {
-  #lobby :is(.home-action, .home-collection-card) {
+  #lobby .home-action {
     transition: none;
   }
 }
@@ -2202,45 +2067,7 @@ body.touch-layout #lobby #quick-btn .home-action-symbol {
 body.touch-layout #lobby .home-action-arrow svg {
   width: 28px;
 }
-body.touch-layout #lobby .lobby-collection {
-  right: max(18px, env(safe-area-inset-right));
-  bottom: calc(82px + env(safe-area-inset-bottom));
-  width: 255px;
-  height: 157px;
-}
-body.touch-layout #lobby #lobby-library-btn {
-  padding-right: 54px;
-}
-body.touch-layout #lobby .home-collection-card {
-  --card-rise: 4px;
-  --card-lean: -4deg;
-}
-body.touch-layout #lobby .home-collection-heading {
-  font-size: 17px;
-  height: 30px;
-}
-body.touch-layout #lobby .home-collection-cards {
-  height: 127px;
-  gap: 6px;
-}
-body.touch-layout #lobby .home-collection-card {
-  height: 117px;
-}
-body.touch-layout #lobby .home-collection-card:nth-child(2) {
-  height: 122px;
-}
-body.touch-layout #lobby .home-collection-card:nth-child(3) {
-  height: 127px;
-}
-body.touch-layout #lobby .home-collection-card > span {
-  font-size: 12px;
-  bottom: 6px;
-  left: 4px;
-  right: 4px;
-}
-body.touch-layout #lobby .home-collection-note {
-  display: none;
-}
+
 body.touch-layout #lobby .lobby-bottom {
   left: 24px;
   right: 18px;
@@ -2297,10 +2124,7 @@ body.mobile-landscape #lobby .home-action-symbol {
   width: 37px;
   height: 43px;
 }
-body.mobile-landscape #lobby .lobby-collection {
-  width: 238px;
-  bottom: calc(52px + env(safe-area-inset-bottom));
-}
+
 body.mobile-landscape #lobby .lobby-bottom {
   left: auto;
   right: 22px;
@@ -2340,26 +2164,12 @@ body.mobile-landscape #lobby .lobby-bottom > div {
     height: 49px;
     font-size: 22px;
   }
-  body.touch-layout #lobby .lobby-collection {
-    width: 218px;
-    height: 122px;
-    bottom: calc(53px + env(safe-area-inset-bottom));
-  }
-  body.touch-layout #lobby .home-collection-cards {
-    height: 92px;
-  }
-  body.touch-layout #lobby .home-collection-card {
-    height: 88px;
-  }
-  body.touch-layout #lobby .home-collection-card:nth-child(2) {
-    height: 90px;
-  }
-  body.touch-layout #lobby .home-collection-card:nth-child(3) {
-    height: 92px;
-  }
-  body.touch-layout #lobby .home-collection-card > span {
-    font-size: 10px;
-  }
+  
+  
+  
+  
+  
+  
   body.touch-layout #lobby .lobby-bottom {
     bottom: calc(18px + env(safe-area-inset-bottom));
   }
@@ -2394,17 +2204,11 @@ body.mobile-landscape #lobby .lobby-bottom > div {
     height: 44px;
     font-size: 20px;
   }
-  body.mobile-landscape #lobby .lobby-collection {
-    width: 217px;
-    right: 16px;
-  }
+  
 }
 
 @media (max-height: 620px) and (orientation: portrait) {
-  body.touch-layout #lobby .lobby-collection {
-    bottom: calc(16px + env(safe-area-inset-bottom));
-    height: 122px;
-  }
+  
   body.touch-layout #lobby .lobby-bottom {
     display: none;
   }
