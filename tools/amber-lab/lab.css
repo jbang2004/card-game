@@ -1,13 +1,6 @@
 :root {
   --ink: #f5f5f7;
   --ink-2: #ebebf5b8;
-  --paper: #f3ead6;
-  --paper-2: #e3d3b0;
-  --paper-ink: #2b1b0c;
-  --brass-hi: #fff0c4;
-  --brass: #d6a652;
-  --brass-lo: #6e4513;
-  --ember: #ff8a2a;
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", system-ui, sans-serif;
   --serif: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", serif;
   color-scheme: dark;
@@ -31,179 +24,197 @@ button { font: inherit; color: inherit; }
 #tabs { position: absolute; z-index: 50; left: 50%; top: 64px; transform: translateX(-50%); display: flex; gap: 4px; padding: 4px; border-radius: 999px; }
 #tabs button { border: 0; background: none; padding: 7px 18px; border-radius: 999px; cursor: pointer; color: var(--ink-2); font-size: 13px; }
 #tabs button.on { background: rgba(255, 255, 255, .14); color: var(--ink); }
-
 .view { position: absolute; inset: 0; display: none; }
 .view.on { display: block; }
 
-/* ---------- controls ---------- */
 #controls { position: absolute; z-index: 40; left: 24px; top: 92px; width: 236px; padding: 14px 16px 12px; }
 #controls h2 { margin: 0 0 10px; font-size: 14px; font-weight: 650; letter-spacing: .04em; }
 #controls label { display: block; font-size: 12px; color: var(--ink-2); }
 #controls output { float: right; color: var(--ink); font-weight: 700; }
-#controls input[type=range] { width: 100%; margin: 6px 0 10px; accent-color: var(--ember); }
+#controls input[type=range] { width: 100%; margin: 6px 0 10px; accent-color: #ff8a2a; }
 #controls .row { display: flex; gap: 6px; margin-bottom: 6px; }
 #controls .row button { flex: 1; border: 1px solid rgba(255, 255, 255, .14); background: rgba(255, 255, 255, .07); border-radius: 10px; padding: 7px 0; font-size: 12px; cursor: pointer; }
 #controls .row button:hover { background: rgba(255, 255, 255, .14); }
 #controls .hint { margin: 6px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--ink-2); }
 
-/* ---------- the amber piece ---------- */
-.amber {
+/* ---------- the amber-framed card ---------- */
+.acard {
   --w: 156px;
+  --bleed: calc(var(--w) * .07);
   position: absolute;
   width: var(--w);
-  height: calc(var(--w) * 230 / 156);
+  aspect-ratio: 5 / 7.4;
   container-type: inline-size;
   user-select: none;
 }
-.amber canvas.body { position: absolute; inset: 0; width: 100%; height: 100%; transition: opacity .5s ease; }
-.amber canvas.warm, .amber canvas.live { opacity: 0; }
-.amber.playable canvas.warm { opacity: 1; }
-.amber.live canvas.live { opacity: 1; transition: none; }
-.amber.live canvas.warm, .amber.live canvas.cold { opacity: 0; transition: none; }
+.acard canvas.face {
+  position: absolute;
+  left: calc(var(--bleed) * -1); top: calc(var(--bleed) * -1);
+  width: calc(100% + var(--bleed) * 2); height: calc(100% + var(--bleed) * 2);
+  transition: opacity .45s ease;
+}
+.acard canvas.warm, .acard canvas.live { opacity: 0; }
+.acard.playable canvas.warm { opacity: 1; }
+.acard.live canvas.live { opacity: 1; transition: none; }
+.acard.live canvas.warm, .acard.live canvas.cold { opacity: 0; transition: none; }
 
-/* cost: a brass heat medallion the stone hangs from */
-.amber .cost {
-  position: absolute; z-index: 3; left: 50%; top: 5%;
-  width: 23cqw; aspect-ratio: 1; transform: translate(-50%, -50%);
+/* cost: a brass seal, cold iron until the spark can pay for it */
+.acard .cost {
+  position: absolute; z-index: 3; left: 2%; top: 1.6%;
+  width: 19cqw; aspect-ratio: 1;
   display: grid; place-items: center; border-radius: 50%;
   background:
     radial-gradient(circle at 36% 30%, rgba(255, 255, 255, .55) 0 7%, transparent 22%),
     conic-gradient(from 200deg, #6d6f76, #c9ccd3, #5b5e66, #aeb2ba, #6d6f76);
   box-shadow: inset 0 0 0 1.5px rgba(20, 20, 24, .85), inset 0 0 0 3.5px rgba(210, 214, 222, .35), 0 3px 6px rgba(0, 0, 0, .55);
-  transition: background .5s, box-shadow .5s;
+  transition: background .45s, box-shadow .45s;
 }
-.amber .cost::before {
-  content: ""; position: absolute; inset: 17%; border-radius: 50%;
+.acard .cost::before {
+  content: ""; position: absolute; inset: 16%; border-radius: 50%;
   background: radial-gradient(circle at 50% 42%, #3c4048, #1c1e23 75%);
   box-shadow: inset 0 1.5px 3px rgba(0, 0, 0, .8), 0 .5px 0 rgba(255, 255, 255, .25);
-  transition: background .5s;
+  transition: background .45s;
 }
-.amber .cost span { position: relative; font: 800 12.5cqw/1 var(--font); color: #cfd4dc; text-shadow: 0 1px 1px rgba(0, 0, 0, .8); transition: color .5s; }
-.amber.playable .cost {
+.acard .cost span { position: relative; font: 800 10.5cqw/1 var(--font); color: #d6dbe2; text-shadow: 0 1px 1px rgba(0, 0, 0, .8); transition: color .45s; }
+.acard.playable .cost {
   background:
     radial-gradient(circle at 36% 30%, rgba(255, 255, 255, .7) 0 7%, transparent 22%),
     conic-gradient(from 200deg, #8a5a1c, #f6d58a, #9b6420, #e9bd62, #8a5a1c);
-  box-shadow: inset 0 0 0 1.5px rgba(60, 30, 5, .9), inset 0 0 0 3.5px rgba(255, 230, 160, .35), 0 3px 6px rgba(0, 0, 0, .5), 0 0 14px 2px rgba(255, 140, 40, .55);
+  box-shadow: inset 0 0 0 1.5px rgba(60, 30, 5, .9), inset 0 0 0 3.5px rgba(255, 230, 160, .35), 0 3px 6px rgba(0, 0, 0, .5), 0 0 12px 2px rgba(255, 140, 40, .5);
 }
-.amber.playable .cost::before { background: radial-gradient(circle at 50% 45%, #ffe7a8 0 12%, #ff9c33 42%, #c8480e 78%, #6d1d03); }
-.amber.playable .cost span { color: #2a1302; text-shadow: 0 1px 0 rgba(255, 236, 190, .6); }
+.acard.playable .cost::before { background: radial-gradient(circle at 50% 45%, #ffe7a8 0 12%, #ff9c33 42%, #c8480e 78%, #6d1d03); }
+.acard.playable .cost span { color: #2a1302; text-shadow: 0 1px 0 rgba(255, 236, 190, .6); }
 
-/* the appraisal tag: every stone in a collector's case carries one */
-.amber .tag {
-  position: absolute; z-index: 4; left: 50%; top: 64%;
-  transform: translate(-50%, -50%) rotate(var(--tag-r, -2deg));
-  transform-origin: 12% 50%;
-  min-width: 58cqw; max-width: 92cqw;
-  padding: 1.6cqw 6cqw 1.8cqw 10cqw;
-  color: var(--paper-ink);
+/* name: a brass plaque riveted across the amber divider */
+.acard .title {
+  position: absolute; z-index: 4; left: 50%; top: 56.9%; height: 7.8%;
+  transform: translateX(-50%);
+  max-width: 82%; padding: 0 6cqw;
+  display: flex; align-items: center; justify-content: center; white-space: nowrap;
+  font: 700 7.2cqw/1 var(--serif); letter-spacing: .08em; color: #2e1a05;
+  text-shadow: 0 1px 0 rgba(255, 240, 200, .55);
+  border-radius: 1.6cqw;
   background:
-    radial-gradient(circle at 5.5cqw 50%, #0000 0 1.4cqw, #7b5a2e 1.5cqw 1.9cqw, #0000 2cqw),
-    linear-gradient(180deg, var(--paper), var(--paper-2));
-  clip-path: polygon(4.5cqw 0, 100% 0, 100% 100%, 4.5cqw 100%, 0 50%);
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .6));
-  text-align: center;
-  transition: top .35s cubic-bezier(.2, .8, .2, 1), transform .35s cubic-bezier(.2, .8, .2, 1), max-width .35s;
+    radial-gradient(circle at 3.2cqw 50%, #6b4613 0 .9cqw, #f7df9f 1cqw 1.3cqw, transparent 1.4cqw),
+    radial-gradient(circle at calc(100% - 3.2cqw) 50%, #6b4613 0 .9cqw, #f7df9f 1cqw 1.3cqw, transparent 1.4cqw),
+    linear-gradient(180deg, #fbe7ad, #d9ab55 48%, #b17f2b 52%, #e2bb6a);
+  box-shadow: inset 0 0 0 1px rgba(90, 55, 10, .85), inset 0 1px 0 rgba(255, 250, 225, .7), 0 1.2cqw 2cqw rgba(0, 0, 0, .55);
 }
-.amber .tag::before {
-  content: ""; position: absolute; left: 5.5cqw; top: 50%; width: 3cqw; height: 3cqw; border-radius: 50%;
-  transform: translate(-50%, -50%); background: #161109; box-shadow: inset 0 0 0 .6cqw #8c6a3a;
+/* The plaque's metal is the rarity, as today's bottom band was. */
+.acard[data-rarity="common"] .title {
+  color: #f6e3c4; text-shadow: 0 1px 1px rgba(0, 0, 0, .6);
+  background:
+    radial-gradient(circle at 3.2cqw 50%, #2a1a0c 0 .9cqw, #caa27a 1cqw 1.3cqw, transparent 1.4cqw),
+    radial-gradient(circle at calc(100% - 3.2cqw) 50%, #2a1a0c 0 .9cqw, #caa27a 1cqw 1.3cqw, transparent 1.4cqw),
+    linear-gradient(180deg, #a5774d, #6f4524 48%, #58341a 52%, #7c5332);
+  box-shadow: inset 0 0 0 1px rgba(30, 15, 5, .9), inset 0 1px 0 rgba(255, 220, 180, .35), 0 1.2cqw 2cqw rgba(0, 0, 0, .55);
 }
-.amber .tag b { display: block; font: 700 9.6cqw/1.2 var(--serif); letter-spacing: .04em; white-space: nowrap; }
-.amber .tag .rule, .amber .tag .no { display: none; }
-.amber .tag .rule { margin-top: 2cqw; font: 500 7.2cqw/1.5 var(--font); text-align: left; color: #3a2a18; }
-.amber .tag .rule em { font-style: normal; font-weight: 800; color: #7a2e06; }
-.amber .tag .no { margin-top: 1.4cqw; font: 600 5cqw/1 var(--font); letter-spacing: .12em; color: #8b6f48; text-align: right; }
+.acard[data-rarity="rare"] .title {
+  color: #1d2735; text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
+  background:
+    radial-gradient(circle at 3.2cqw 50%, #33465e 0 .9cqw, #f3f7fc 1cqw 1.3cqw, transparent 1.4cqw),
+    radial-gradient(circle at calc(100% - 3.2cqw) 50%, #33465e 0 .9cqw, #f3f7fc 1cqw 1.3cqw, transparent 1.4cqw),
+    linear-gradient(180deg, #f6f9fd, #c3ccd8 48%, #9ea9b8 52%, #d3dbe5);
+  box-shadow: inset 0 0 0 1px rgba(40, 55, 75, .85), inset 0 1px 0 rgba(255, 255, 255, .8), 0 1.2cqw 2cqw rgba(0, 0, 0, .55);
+}
+.acard[data-rarity="epic"] .title {
+  color: #241440; text-shadow: 0 1px 0 rgba(255, 245, 255, .55);
+  background:
+    radial-gradient(circle at 3.2cqw 50%, #3c2466 0 .9cqw, #f1e8ff 1cqw 1.3cqw, transparent 1.4cqw),
+    radial-gradient(circle at calc(100% - 3.2cqw) 50%, #3c2466 0 .9cqw, #f1e8ff 1cqw 1.3cqw, transparent 1.4cqw),
+    linear-gradient(180deg, #efe6ff, #bba6e6 48%, #967cc9 52%, #cbbcef);
+  box-shadow: inset 0 0 0 1px rgba(50, 30, 90, .85), inset 0 1px 0 rgba(255, 255, 255, .75), 0 1.2cqw 2cqw rgba(0, 0, 0, .55);
+}
+.acard .title.long { font-size: 5.8cqw; letter-spacing: .03em; padding: 0 5cqw; }
+
+/* rules on the dark amber panel */
+.acard .text {
+  position: absolute; z-index: 4; inset: 66.5% 9% 21cqw;
+  display: flex; align-items: center; justify-content: center; text-align: left;
+  font: 500 6.3cqw/1.42 var(--font); color: #f3e4c6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .7);
+}
+.acard .text em { font-style: normal; font-weight: 800; color: #ffc46b; }
+.acard .index { position: absolute; z-index: 4; right: 9%; bottom: 11.4cqw; font: 600 3.9cqw/1 var(--font); letter-spacing: .12em; color: rgba(255, 214, 150, .45); }
+/* the type, engraved into the amber sill */
+.acard .band {
+  position: absolute; z-index: 4; left: 0; right: 0; bottom: 0; height: 10cqw;
+  display: grid; place-items: center;
+  font: 700 4.6cqw/1 var(--font); letter-spacing: .3em; color: rgba(58, 24, 3, .78);
+  text-shadow: 0 .5px 0 rgba(255, 226, 160, .55), 0 -.5px 0 rgba(0, 0, 0, .25);
+}
 
 /* stats: attack in a brass hexagon, health in a drop of blood amber */
-.amber .stat {
-  position: absolute; z-index: 4; bottom: 2%; width: 23cqw; aspect-ratio: 1;
+.acard .stat {
+  position: absolute; z-index: 5; bottom: -3.2%; width: 26cqw; aspect-ratio: 1;
   display: grid; place-items: center;
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .7));
+  filter: drop-shadow(0 .6cqw 1cqw rgba(0, 0, 0, .75));
 }
-.amber .stat span { position: relative; font: 800 12cqw/1 var(--font); color: #fff; text-shadow: 0 0 2px #000, 0 1px 1px #000, 0 0 4px rgba(0, 0, 0, .6); }
-.amber .stat::before { content: ""; position: absolute; inset: 0; }
-.amber .atk { left: 3%; }
-.amber .atk::before {
+.acard .stat span { position: relative; font: 800 12cqw/1 var(--font); color: #fff; text-shadow: 0 0 2px #000, 0 1px 1px #000, 0 0 4px rgba(0, 0, 0, .6); }
+.acard .stat::before { content: ""; position: absolute; inset: 0; }
+.acard .atk { left: -4.2%; }
+.acard .atk::before {
   clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
   background:
     radial-gradient(circle at 50% 48%, #f0a64c 0 30%, #b4561b 55%, #4d1a05 72%, #0000 73%),
     conic-gradient(from 180deg, #6b4413, #f4d690, #7d5217, #e0b45e, #6b4413);
 }
-.amber .hp { right: 3%; }
-.amber .hp::before {
+.acard .hp { right: -4.2%; }
+.acard .hp::before {
   border-radius: 50% 50% 50% 50% / 58% 58% 42% 42%;
   background: radial-gradient(circle at 36% 30%, #ffd3c6 0 6%, #ff5a3c 24%, #b0160a 62%, #520503 100%);
   box-shadow: inset 0 0 0 1.4px rgba(40, 0, 0, .8), inset 0 -2px 3px rgba(0, 0, 0, .4), inset 0 2px 2px rgba(255, 200, 190, .35);
 }
-.amber .hp.ward::before { border-radius: 14% 14% 50% 50%; background: radial-gradient(circle at 36% 30%, #eef3ff 0 6%, #8ea3c7 34%, #3a4a6d 75%, #1a2238); }
-.amber .hp.hurt span { color: #ff8b7a; }
+.acard .hp.ward::before { border-radius: 14% 14% 50% 50%; background: radial-gradient(circle at 36% 30%, #eef3ff 0 6%, #8ea3c7 34%, #3a4a6d 75%, #1a2238); }
 
-/* ---------- battle: the bandolier ---------- */
+/* ---------- battle hand: the real game's fan ---------- */
 #hand { position: absolute; inset: 0; pointer-events: none; }
-#hand .amber {
+#hand .acard {
   pointer-events: auto; cursor: pointer;
-  transform-origin: 50% 5%;
-  transform: translate(var(--x), var(--y)) rotate(var(--rot, 0deg));
-  transition: transform .45s cubic-bezier(.2, .8, .2, 1), filter .3s;
+  transform-origin: 50% 100%;
+  transform: translate(var(--x), var(--y)) rotate(var(--r, 0deg));
+  transition: transform .4s cubic-bezier(.2, .8, .2, 1), filter .35s;
   filter: drop-shadow(0 8px 10px rgba(0, 0, 0, .55));
 }
-#hand .amber.lifted {
+#hand .acard.playable { filter: drop-shadow(0 8px 10px rgba(0, 0, 0, .55)) drop-shadow(0 0 7px rgba(255, 150, 50, .55)); }
+#hand .acard.lifted {
   z-index: 30 !important;
-  transform: translate(var(--x), calc(var(--y) - 290px)) scale(1.42) rotate(0deg);
+  transform: translate(var(--x), calc(var(--y) - 176px)) scale(1.3) rotate(0deg);
   filter: drop-shadow(0 22px 26px rgba(0, 0, 0, .65));
 }
-#hand .amber.lifted .tag { top: 108%; transform: translate(-50%, 0) rotate(0deg) scale(.86); transform-origin: 50% 0; max-width: 118cqw; min-width: 108cqw; }
-#hand .amber.lifted .tag .rule, #hand .amber.lifted .tag .no { display: block; }
-#hand .amber.lifted .tag b { font-size: 10.5cqw; }
-#hand .amber.lifted::after {
-  content: ""; position: absolute; z-index: 3; left: calc(50% - .5px); top: 96%; width: 1px; height: 13%;
-  background: linear-gradient(#b99a6b, #6b5233);
-}
-#hand .amber.drawing { transition: none; }
-#hand .amber.gone { opacity: 0; pointer-events: none; }
+#hand .acard.lifted.playable { filter: drop-shadow(0 22px 26px rgba(0, 0, 0, .65)) drop-shadow(0 0 12px rgba(255, 150, 50, .6)); }
+#hand .acard.gone { opacity: 0; pointer-events: none; }
 
-#strap { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; transition: opacity .4s; }
-#strap.off { opacity: 0; }
+#enemy-hand { position: absolute; left: 1030px; top: 6px; width: 230px; height: 80px; }
+#enemy-hand canvas { position: absolute; transform-origin: 50% 0; filter: drop-shadow(0 4px 5px rgba(0, 0, 0, .6)); }
 
-/* deck = amber case */
-#case {
-  position: absolute; left: 212px; top: 620px; width: 98px; height: 150px; display: none;
-}
-
-/* enemy: raw stones, windows not yet opened */
-#enemy-stones { position: absolute; left: 1030px; top: 8px; width: 230px; height: 76px; }
-#enemy-stones canvas { position: absolute; width: 44px; height: 65px; transform-origin: 50% 0; filter: drop-shadow(0 4px 5px rgba(0, 0, 0, .6)); }
-
-/* awakening */
-#awaken-layer { position: absolute; inset: 0; pointer-events: none; z-index: 60; }
+#fx-layer { position: absolute; inset: 0; pointer-events: none; z-index: 60; }
 .shard { position: absolute; will-change: transform, opacity; }
 .drop { position: absolute; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff3c8, #ffae3c 45%, #b8520c 80%); will-change: transform, opacity; }
 .flash { position: absolute; border-radius: 50%; background: radial-gradient(circle, rgba(255, 236, 190, .95), rgba(255, 150, 50, .55) 35%, transparent 70%); mix-blend-mode: screen; }
 .ghost { position: absolute; will-change: transform, opacity; -webkit-mask: radial-gradient(ellipse 50% 50% at 50% 45%, #000 45%, transparent 72%); mask: radial-gradient(ellipse 50% 50% at 50% 45%, #000 45%, transparent 72%); }
+.sweep { position: absolute; left: 0; top: 700px; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 190, 90, .55), rgba(255, 120, 30, .2) 45%, transparent 70%); mix-blend-mode: screen; }
 .caption { position: absolute; left: 50%; top: 150px; transform: translateX(-50%); padding: 8px 18px; border-radius: 999px; font-size: 15px; letter-spacing: .08em; white-space: nowrap; }
 
-/* ---------- tray: specimen drawer ---------- */
-#tray { background: radial-gradient(ellipse at 50% 30%, #1a1512, #0b0908 70%); overflow: auto; padding: 118px 48px 40px; }
-#tray header { max-width: 1100px; margin: 0 auto 18px; }
+/* ---------- tray ---------- */
+#tray { background: radial-gradient(ellipse at 50% 30%, #1a1512, #0b0908 70%); overflow: auto; padding: 116px 48px 40px; }
+#tray header { max-width: 1100px; margin: 0 auto 16px; }
 #tray h1 { margin: 0 0 6px; font: 700 26px/1.2 var(--serif); letter-spacing: .12em; color: #f1dfb8; }
-#tray header p { margin: 0; color: #cdbb98; font-size: 14px; }
+#tray header p { margin: 0; color: #cdbb98; font-size: 14px; line-height: 1.6; }
 #tray-groups { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 22px; max-width: 1504px; margin: 0 auto; }
 .group {
-  border-radius: 14px; padding: 12px 14px 12px;
-  background: linear-gradient(180deg, #2a1c16, #1a110d);
-  box-shadow: inset 0 0 0 1px rgba(214, 166, 82, .28), inset 0 10px 30px rgba(0, 0, 0, .55), 0 6px 18px rgba(0, 0, 0, .5);
+  border-radius: 14px; padding: 12px 14px 14px;
+  background: linear-gradient(180deg, #221915, #150f0c);
+  box-shadow: inset 0 0 0 1px rgba(214, 166, 82, .24), inset 0 10px 30px rgba(0, 0, 0, .5), 0 6px 18px rgba(0, 0, 0, .5);
 }
 .group.wide { grid-column: 1 / -1; }
 .group h3 { margin: 0 0 2px; font: 700 15px/1.3 var(--serif); color: #f0d9a8; letter-spacing: .1em; }
-.group > p { margin: 0 0 8px; font-size: 12px; color: #b7a27c; }
-.slots { display: flex; gap: 10px; justify-content: space-around; }
-.slot { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.slot .well {
-  position: relative; width: 150px; height: 225px; border-radius: 12px;
-  background: radial-gradient(ellipse at 50% 40%, #3b1f1c, #1d0f0e 75%);
-  box-shadow: inset 0 3px 10px rgba(0, 0, 0, .8), inset 0 0 0 1px rgba(0, 0, 0, .6);
-}
-.slot .well .amber { --w: 136px; left: 7px; top: 12px; }
+.group > p { margin: 0 0 10px; font-size: 12px; color: #b7a27c; }
+.slots { display: flex; gap: 12px; justify-content: space-around; }
+.slot { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.slot .holder { position: relative; width: 150px; height: 222px; }
+.slot .holder .acard { --w: 150px; left: 0; top: 0; }
+.slot .holder img.ref { width: 150px; height: 222px; border-radius: 6px; }
 .slot .plate {
   min-width: 118px; padding: 4px 10px; border-radius: 3px; text-align: center;
   font: 600 12px/1.35 var(--serif); color: #2b1a06;
