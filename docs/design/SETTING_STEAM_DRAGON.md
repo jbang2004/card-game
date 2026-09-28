@@ -1,5 +1,7 @@
 # 《蒸汽与龙》设定草案 v1
 
+> 2026-09-28 更新：核心秘密与结局已由 [SETTING_DEEP_TRUTH.md](SETTING_DEEP_TRUTH.md)（深层设定：第五人）替换；本稿的表层世界仍然有效。
+
 2026-09-28 · 草案，待用户拍板。用户认为以"名"为核心的 [SETTING_NAMES.md](SETTING_NAMES.md) 过于晦涩，要求改用《龙与地下城》、魔法蒸汽时代、《罗德岛战记》的感觉。本稿取代那一版；卡组分析仍见 [WORLD_AND_CARDS.md](WORLD_AND_CARDS.md) 第二部分。
 
 ---
