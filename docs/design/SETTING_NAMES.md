@@ -1,6 +1,6 @@
 # 《唤名》设定草案 v0：从第一性出发
 
-> 2026-09-28 更新：用户认为本稿过于晦涩，已由 [SETTING_STEAM_DRAGON.md](SETTING_STEAM_DRAGON.md)（《蒸汽与龙》）取代，本稿仅作备选存档。
+> 2026-09-28 更新：已被 [SETTING_AMBER.md](SETTING_AMBER.md)（《琥珀与黑玉》完整设定）取代，仅作历史参考。
 
 2026-09-28 · 草案，待用户拍板。本文取代 [WORLD_AND_CARDS.md](WORLD_AND_CARDS.md) 的第三部分（"余火"世界观）；那份文档的卡组分析部分仍然有效。
 
