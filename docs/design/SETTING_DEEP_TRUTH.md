@@ -1,6 +1,6 @@
 # 《蒸汽与龙》深层设定：第五人
 
-> 2026-09-28 更新：已被 [SETTING_AMBER.md](SETTING_AMBER.md)（《琥珀与黑玉》完整设定）取代，仅作历史参考。
+> 2026-09-28 更新：已被 [SETTING_AMBER.md](SETTING_AMBER.md)（《琥珀战记》完整设定）取代，仅作历史参考。
 
 2026-09-28 · 草案，待用户拍板。表层世界（深炉城、铜壶酒馆、井下迷宫、四大势力）沿用 [SETTING_STEAM_DRAGON.md](SETTING_STEAM_DRAGON.md)。本稿替换它的核心秘密（"以太晶是封印墙"）和结局部分。
 
