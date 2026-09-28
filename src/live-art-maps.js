@@ -8,6 +8,14 @@ const EmberLiveArtMaps = Object.freeze({
     "ctrl": "asset:live-art/absolution-ctrl.webp",
     "flags": "asset:live-art/absolution-flags.webp"
   },
+  "acolyte": {
+    "bg": "asset:live-art/acolyte-bg.webp",
+    "body": "asset:live-art/acolyte-body.webp",
+    "front": "asset:live-art/acolyte-front.webp",
+    "depth": "asset:live-art/acolyte-depth.webp",
+    "ctrl": "asset:live-art/acolyte-ctrl.webp",
+    "flags": "asset:live-art/acolyte-flags.webp"
+  },
   "ambush": {
     "bg": "asset:live-art/ambush-bg.webp",
     "body": "asset:live-art/ambush-body.webp",
@@ -15,6 +23,14 @@ const EmberLiveArtMaps = Object.freeze({
     "depth": "asset:live-art/ambush-depth.webp",
     "ctrl": "asset:live-art/ambush-ctrl.webp",
     "flags": "asset:live-art/ambush-flags.webp"
+  },
+  "archbishop": {
+    "bg": "asset:live-art/archbishop-bg.webp",
+    "body": "asset:live-art/archbishop-body.webp",
+    "front": "asset:live-art/archbishop-front.webp",
+    "depth": "asset:live-art/archbishop-depth.webp",
+    "ctrl": "asset:live-art/archbishop-ctrl.webp",
+    "flags": "asset:live-art/archbishop-flags.webp"
   },
   "archer": {
     "bg": "asset:live-art/archer-bg.webp",
@@ -72,6 +88,22 @@ const EmberLiveArtMaps = Object.freeze({
     "ctrl": "asset:live-art/blessing-ctrl.webp",
     "flags": "asset:live-art/blessing-flags.webp"
   },
+  "bloodknight": {
+    "bg": "asset:live-art/bloodknight-bg.webp",
+    "body": "asset:live-art/bloodknight-body.webp",
+    "front": "asset:live-art/bloodknight-front.webp",
+    "depth": "asset:live-art/bloodknight-depth.webp",
+    "ctrl": "asset:live-art/bloodknight-ctrl.webp",
+    "flags": "asset:live-art/bloodknight-flags.webp"
+  },
+  "boar": {
+    "bg": "asset:live-art/boar-bg.webp",
+    "body": "asset:live-art/boar-body.webp",
+    "front": "asset:live-art/boar-front.webp",
+    "depth": "asset:live-art/boar-depth.webp",
+    "ctrl": "asset:live-art/boar-ctrl.webp",
+    "flags": "asset:live-art/boar-flags.webp"
+  },
   "bolt": {
     "bg": "asset:live-art/bolt-bg.webp",
     "body": "asset:live-art/bolt-body.webp",
@@ -79,6 +111,14 @@ const EmberLiveArtMaps = Object.freeze({
     "depth": "asset:live-art/bolt-depth.webp",
     "ctrl": "asset:live-art/bolt-ctrl.webp",
     "flags": "asset:live-art/bolt-flags.webp"
+  },
+  "bonelord": {
+    "bg": "asset:live-art/bonelord-bg.webp",
+    "body": "asset:live-art/bonelord-body.webp",
+    "front": "asset:live-art/bonelord-front.webp",
+    "depth": "asset:live-art/bonelord-depth.webp",
+    "ctrl": "asset:live-art/bonelord-ctrl.webp",
+    "flags": "asset:live-art/bonelord-flags.webp"
   },
   "cleric": {
     "bg": "asset:live-art/cleric-bg.webp",
@@ -104,6 +144,14 @@ const EmberLiveArtMaps = Object.freeze({
     "ctrl": "asset:live-art/colossus-ctrl.webp",
     "flags": "asset:live-art/colossus-flags.webp"
   },
+  "consecrate": {
+    "bg": "asset:live-art/consecrate-bg.webp",
+    "body": "asset:live-art/consecrate-body.webp",
+    "front": "asset:live-art/consecrate-front.webp",
+    "depth": "asset:live-art/consecrate-depth.webp",
+    "ctrl": "asset:live-art/consecrate-ctrl.webp",
+    "flags": "asset:live-art/consecrate-flags.webp"
+  },
   "counterspell": {
     "bg": "asset:live-art/counterspell-bg.webp",
     "body": "asset:live-art/counterspell-body.webp",
@@ -119,6 +167,14 @@ const EmberLiveArtMaps = Object.freeze({
     "depth": "asset:live-art/dagger-depth.webp",
     "ctrl": "asset:live-art/dagger-ctrl.webp",
     "flags": "asset:live-art/dagger-flags.webp"
+  },
+  "dawnrider": {
+    "bg": "asset:live-art/dawnrider-bg.webp",
+    "body": "asset:live-art/dawnrider-body.webp",
+    "front": "asset:live-art/dawnrider-front.webp",
+    "depth": "asset:live-art/dawnrider-depth.webp",
+    "ctrl": "asset:live-art/dawnrider-ctrl.webp",
+    "flags": "asset:live-art/dawnrider-flags.webp"
   },
   "dawnvow": {
     "bg": "asset:live-art/dawnvow-bg.webp",
@@ -192,6 +248,14 @@ const EmberLiveArtMaps = Object.freeze({
     "ctrl": "asset:live-art/frostbolt-ctrl.webp",
     "flags": "asset:live-art/frostbolt-flags.webp"
   },
+  "frostgolem": {
+    "bg": "asset:live-art/frostgolem-bg.webp",
+    "body": "asset:live-art/frostgolem-body.webp",
+    "front": "asset:live-art/frostgolem-front.webp",
+    "depth": "asset:live-art/frostgolem-depth.webp",
+    "ctrl": "asset:live-art/frostgolem-ctrl.webp",
+    "flags": "asset:live-art/frostgolem-flags.webp"
+  },
   "frostking": {
     "bg": "asset:live-art/frostking-bg.webp",
     "body": "asset:live-art/frostking-body.webp",
@@ -199,6 +263,14 @@ const EmberLiveArtMaps = Object.freeze({
     "depth": "asset:live-art/frostking-depth.webp",
     "ctrl": "asset:live-art/frostking-ctrl.webp",
     "flags": "asset:live-art/frostking-flags.webp"
+  },
+  "frostwhisper": {
+    "bg": "asset:live-art/frostwhisper-bg.webp",
+    "body": "asset:live-art/frostwhisper-body.webp",
+    "front": "asset:live-art/frostwhisper-front.webp",
+    "depth": "asset:live-art/frostwhisper-depth.webp",
+    "ctrl": "asset:live-art/frostwhisper-ctrl.webp",
+    "flags": "asset:live-art/frostwhisper-flags.webp"
   },
   "golem": {
     "bg": "asset:live-art/golem-bg.webp",
@@ -215,6 +287,14 @@ const EmberLiveArtMaps = Object.freeze({
     "depth": "asset:live-art/graveoffering-depth.webp",
     "ctrl": "asset:live-art/graveoffering-ctrl.webp",
     "flags": "asset:live-art/graveoffering-flags.webp"
+  },
+  "gravewatch": {
+    "bg": "asset:live-art/gravewatch-bg.webp",
+    "body": "asset:live-art/gravewatch-body.webp",
+    "front": "asset:live-art/gravewatch-front.webp",
+    "depth": "asset:live-art/gravewatch-depth.webp",
+    "ctrl": "asset:live-art/gravewatch-ctrl.webp",
+    "flags": "asset:live-art/gravewatch-flags.webp"
   },
   "guard": {
     "bg": "asset:live-art/guard-bg.webp",
@@ -256,6 +336,14 @@ const EmberLiveArtMaps = Object.freeze({
     "ctrl": "asset:live-art/jingchen-ctrl.webp",
     "flags": "asset:live-art/jingchen-flags.webp"
   },
+  "judgment": {
+    "bg": "asset:live-art/judgment-bg.webp",
+    "body": "asset:live-art/judgment-body.webp",
+    "front": "asset:live-art/judgment-front.webp",
+    "depth": "asset:live-art/judgment-depth.webp",
+    "ctrl": "asset:live-art/judgment-ctrl.webp",
+    "flags": "asset:live-art/judgment-flags.webp"
+  },
   "leech": {
     "bg": "asset:live-art/leech-bg.webp",
     "body": "asset:live-art/leech-body.webp",
@@ -271,6 +359,22 @@ const EmberLiveArtMaps = Object.freeze({
     "depth": "asset:live-art/lifedrain-depth.webp",
     "ctrl": "asset:live-art/lifedrain-ctrl.webp",
     "flags": "asset:live-art/lifedrain-flags.webp"
+  },
+  "magmacore": {
+    "bg": "asset:live-art/magmacore-bg.webp",
+    "body": "asset:live-art/magmacore-body.webp",
+    "front": "asset:live-art/magmacore-front.webp",
+    "depth": "asset:live-art/magmacore-depth.webp",
+    "ctrl": "asset:live-art/magmacore-ctrl.webp",
+    "flags": "asset:live-art/magmacore-flags.webp"
+  },
+  "mirrormage": {
+    "bg": "asset:live-art/mirrormage-bg.webp",
+    "body": "asset:live-art/mirrormage-body.webp",
+    "front": "asset:live-art/mirrormage-front.webp",
+    "depth": "asset:live-art/mirrormage-depth.webp",
+    "ctrl": "asset:live-art/mirrormage-ctrl.webp",
+    "flags": "asset:live-art/mirrormage-flags.webp"
   },
   "mooncall": {
     "bg": "asset:live-art/mooncall-bg.webp",
@@ -335,6 +439,14 @@ const EmberLiveArtMaps = Object.freeze({
     "depth": "asset:live-art/nyx-depth.webp",
     "ctrl": "asset:live-art/nyx-ctrl.webp",
     "flags": "asset:live-art/nyx-flags.webp"
+  },
+  "oathkeeper": {
+    "bg": "asset:live-art/oathkeeper-bg.webp",
+    "body": "asset:live-art/oathkeeper-body.webp",
+    "front": "asset:live-art/oathkeeper-front.webp",
+    "depth": "asset:live-art/oathkeeper-depth.webp",
+    "ctrl": "asset:live-art/oathkeeper-ctrl.webp",
+    "flags": "asset:live-art/oathkeeper-flags.webp"
   },
   "oracle": {
     "bg": "asset:live-art/oracle-bg.webp",
@@ -423,6 +535,14 @@ const EmberLiveArtMaps = Object.freeze({
     "depth": "asset:live-art/sabotage-depth.webp",
     "ctrl": "asset:live-art/sabotage-ctrl.webp",
     "flags": "asset:live-art/sabotage-flags.webp"
+  },
+  "scribe": {
+    "bg": "asset:live-art/scribe-bg.webp",
+    "body": "asset:live-art/scribe-body.webp",
+    "front": "asset:live-art/scribe-front.webp",
+    "depth": "asset:live-art/scribe-depth.webp",
+    "ctrl": "asset:live-art/scribe-ctrl.webp",
+    "flags": "asset:live-art/scribe-flags.webp"
   },
   "selmyra": {
     "bg": "asset:live-art/selmyra-bg.webp",
@@ -528,6 +648,14 @@ const EmberLiveArtMaps = Object.freeze({
     "ctrl": "asset:live-art/squire-ctrl.webp",
     "flags": "asset:live-art/squire-flags.webp"
   },
+  "starshot": {
+    "bg": "asset:live-art/starshot-bg.webp",
+    "body": "asset:live-art/starshot-body.webp",
+    "front": "asset:live-art/starshot-front.webp",
+    "depth": "asset:live-art/starshot-depth.webp",
+    "ctrl": "asset:live-art/starshot-ctrl.webp",
+    "flags": "asset:live-art/starshot-flags.webp"
+  },
   "starweave": {
     "bg": "asset:live-art/starweave-bg.webp",
     "body": "asset:live-art/starweave-body.webp",
@@ -584,6 +712,14 @@ const EmberLiveArtMaps = Object.freeze({
     "ctrl": "asset:live-art/titan-ctrl.webp",
     "flags": "asset:live-art/titan-flags.webp"
   },
+  "tortoise": {
+    "bg": "asset:live-art/tortoise-bg.webp",
+    "body": "asset:live-art/tortoise-body.webp",
+    "front": "asset:live-art/tortoise-front.webp",
+    "depth": "asset:live-art/tortoise-depth.webp",
+    "ctrl": "asset:live-art/tortoise-ctrl.webp",
+    "flags": "asset:live-art/tortoise-flags.webp"
+  },
   "tracking": {
     "bg": "asset:live-art/tracking-bg.webp",
     "body": "asset:live-art/tracking-body.webp",
@@ -599,6 +735,14 @@ const EmberLiveArtMaps = Object.freeze({
     "depth": "asset:live-art/treant-depth.webp",
     "ctrl": "asset:live-art/treant-ctrl.webp",
     "flags": "asset:live-art/treant-flags.webp"
+  },
+  "vowguard": {
+    "bg": "asset:live-art/vowguard-bg.webp",
+    "body": "asset:live-art/vowguard-body.webp",
+    "front": "asset:live-art/vowguard-front.webp",
+    "depth": "asset:live-art/vowguard-depth.webp",
+    "ctrl": "asset:live-art/vowguard-ctrl.webp",
+    "flags": "asset:live-art/vowguard-flags.webp"
   },
   "wisdom": {
     "bg": "asset:live-art/wisdom-bg.webp",

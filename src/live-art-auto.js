@@ -16,6 +16,21 @@ const EmberLiveArtAuto = Object.freeze({
   "particles": "embers",
   "phase": 2.644
  },
+ "acolyte": {
+  "kind": "creature",
+  "box": [
+   28,
+   372,
+   1052,
+   1432
+  ],
+  "centre": [
+   525,
+   958
+  ],
+  "particles": "embers",
+  "phase": 2.385
+ },
  "ambush": {
   "kind": "effect",
   "box": [
@@ -30,6 +45,21 @@ const EmberLiveArtAuto = Object.freeze({
   ],
   "particles": "leaves",
   "phase": 3.404
+ },
+ "archbishop": {
+  "kind": "creature",
+  "box": [
+   20,
+   132,
+   1014,
+   1430
+  ],
+  "centre": [
+   463,
+   965
+  ],
+  "particles": "embers",
+  "phase": 3.128
  },
  "assassin": {
   "kind": "creature",
@@ -106,6 +136,36 @@ const EmberLiveArtAuto = Object.freeze({
   "particles": "embers",
   "phase": 2.633
  },
+ "bloodknight": {
+  "kind": "creature",
+  "box": [
+   76,
+   272,
+   942,
+   1426
+  ],
+  "centre": [
+   520,
+   894
+  ],
+  "particles": "none",
+  "phase": 5.993
+ },
+ "boar": {
+  "kind": "creature",
+  "box": [
+   36,
+   152,
+   1020,
+   1432
+  ],
+  "centre": [
+   521,
+   834
+  ],
+  "particles": "embers",
+  "phase": 3.608
+ },
  "bolt": {
   "kind": "effect",
   "box": [
@@ -120,6 +180,21 @@ const EmberLiveArtAuto = Object.freeze({
   ],
   "particles": "embers",
   "phase": 3.824
+ },
+ "bonelord": {
+  "kind": "creature",
+  "box": [
+   28,
+   276,
+   1036,
+   1428
+  ],
+  "centre": [
+   513,
+   940
+  ],
+  "particles": "none",
+  "phase": 1.149
  },
  "cleric": {
   "kind": "creature",
@@ -166,6 +241,21 @@ const EmberLiveArtAuto = Object.freeze({
   "particles": "embers",
   "phase": 4.198
  },
+ "consecrate": {
+  "kind": "effect",
+  "box": [
+   22,
+   380,
+   1060,
+   1438
+  ],
+  "centre": [
+   533,
+   1181
+  ],
+  "particles": "embers",
+  "phase": 6.095
+ },
  "counterspell": {
   "kind": "effect",
   "box": [
@@ -195,6 +285,21 @@ const EmberLiveArtAuto = Object.freeze({
   ],
   "particles": "frost",
   "phase": 5.937
+ },
+ "dawnrider": {
+  "kind": "creature",
+  "box": [
+   44,
+   110,
+   892,
+   1432
+  ],
+  "centre": [
+   516,
+   840
+  ],
+  "particles": "embers",
+  "phase": 1.964
  },
  "dawnvow": {
   "kind": "effect",
@@ -331,6 +436,36 @@ const EmberLiveArtAuto = Object.freeze({
   "particles": "frost",
   "phase": 2.963
  },
+ "frostgolem": {
+  "kind": "creature",
+  "box": [
+   22,
+   558,
+   998,
+   1438
+  ],
+  "centre": [
+   351,
+   1103
+  ],
+  "particles": "frost",
+  "phase": 4.128
+ },
+ "frostwhisper": {
+  "kind": "effect",
+  "box": [
+   18,
+   218,
+   1034,
+   1428
+  ],
+  "centre": [
+   455,
+   826
+  ],
+  "particles": "frost",
+  "phase": 4.706
+ },
  "golem": {
   "kind": "creature",
   "box": [
@@ -360,6 +495,21 @@ const EmberLiveArtAuto = Object.freeze({
   ],
   "particles": "frost",
   "phase": 3.172
+ },
+ "gravewatch": {
+  "kind": "creature",
+  "box": [
+   32,
+   180,
+   996,
+   1432
+  ],
+  "centre": [
+   523,
+   894
+  ],
+  "particles": "none",
+  "phase": 0.378
  },
  "guard": {
   "kind": "creature",
@@ -421,6 +571,21 @@ const EmberLiveArtAuto = Object.freeze({
   "particles": "frost",
   "phase": 4.395
  },
+ "judgment": {
+  "kind": "effect",
+  "box": [
+   22,
+   272,
+   1034,
+   1438
+  ],
+  "centre": [
+   483,
+   1124
+  ],
+  "particles": "embers",
+  "phase": 4.682
+ },
  "leech": {
   "kind": "creature",
   "box": [
@@ -450,6 +615,36 @@ const EmberLiveArtAuto = Object.freeze({
   ],
   "particles": "none",
   "phase": 1.181
+ },
+ "magmacore": {
+  "kind": "creature",
+  "box": [
+   40,
+   232,
+   990,
+   1430
+  ],
+  "centre": [
+   494,
+   842
+  ],
+  "particles": "embers",
+  "phase": 5.981
+ },
+ "mirrormage": {
+  "kind": "creature",
+  "box": [
+   26,
+   402,
+   1046,
+   1430
+  ],
+  "centre": [
+   525,
+   951
+  ],
+  "particles": "embers",
+  "phase": 3.911
  },
  "mooncall": {
   "kind": "effect",
@@ -555,6 +750,21 @@ const EmberLiveArtAuto = Object.freeze({
   ],
   "particles": "frost",
   "phase": 2.908
+ },
+ "oathkeeper": {
+  "kind": "creature",
+  "box": [
+   80,
+   140,
+   1056,
+   1424
+  ],
+  "centre": [
+   568,
+   892
+  ],
+  "particles": "embers",
+  "phase": 3.695
  },
  "phoenix": {
   "kind": "creature",
@@ -690,6 +900,21 @@ const EmberLiveArtAuto = Object.freeze({
   ],
   "particles": "embers",
   "phase": 5.733
+ },
+ "scribe": {
+  "kind": "creature",
+  "box": [
+   26,
+   192,
+   1020,
+   1428
+  ],
+  "centre": [
+   501,
+   907
+  ],
+  "particles": "embers",
+  "phase": 3.754
  },
  "sentinel": {
   "kind": "creature",
@@ -856,6 +1081,21 @@ const EmberLiveArtAuto = Object.freeze({
   "particles": "embers",
   "phase": 6.236
  },
+ "starshot": {
+  "kind": "effect",
+  "box": [
+   14,
+   74,
+   934,
+   1428
+  ],
+  "centre": [
+   460,
+   619
+  ],
+  "particles": "embers",
+  "phase": 5.115
+ },
  "starweave": {
   "kind": "effect",
   "box": [
@@ -946,6 +1186,21 @@ const EmberLiveArtAuto = Object.freeze({
   "particles": "embers",
   "phase": 1.322
  },
+ "tortoise": {
+  "kind": "creature",
+  "box": [
+   8,
+   1192,
+   1070,
+   1444
+  ],
+  "centre": [
+   512,
+   1367
+  ],
+  "particles": "leaves",
+  "phase": 2.715
+ },
  "tracking": {
   "kind": "effect",
   "box": [
@@ -975,6 +1230,21 @@ const EmberLiveArtAuto = Object.freeze({
   ],
   "particles": "leaves",
   "phase": 1.22
+ },
+ "vowguard": {
+  "kind": "creature",
+  "box": [
+   94,
+   304,
+   992,
+   1418
+  ],
+  "centre": [
+   575,
+   884
+  ],
+  "particles": "embers",
+  "phase": 1.582
  },
  "wisdom": {
   "kind": "effect",

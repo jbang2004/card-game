@@ -1,0 +1,171 @@
+{
+ "provider": "Tripo Studio image page, GPT Image 2.5, 3:4, 2 images per prompt, 2026-09-28",
+ "style": "Finished full-bleed portrait 3:4 card illustration for Emberfall, a fantasy card game. The attached reference images show the game's established ART STYLE only; do not copy their characters. Match it: refined Japanese fantasy anime illustration, confident clean ink contours, elegant idealized anime faces, grouped painted cel shading, luminous color, stylized materials, deliberate negative space. Not chibi, not 3D render, not photorealistic. No text, letters, numbers, frame, card border, logo or watermark.",
+ "minionComposition": "Composition: one main subject, head in the upper third, the whole readable silhouette within the central 80 percent, atmospheric but simple background.",
+ "spellComposition": "Composition: a clear large central magical symbol readable at small size, full-bleed atmospheric background, no characters' faces needed.",
+ "note": "Each prompt = style + composition + ' Subject: ' + subject. refs = the two existing card illustrations uploaded as style references (downscaled to 720x960). The chosen output (1152x1536 PNG) was centre-cropped to 1086x1448 by tools/new_card.py.",
+ "cards": {
+  "scribe": {
+   "refs": [
+    "spark",
+    "oracle"
+   ],
+   "kind": "minion",
+   "subject": "A young boy apprentice scribe in deep navy and violet mage robes with gold trim and round glasses, holding a large open spellbook whose glowing pages float up around him like little stars, a quill of starlight in his other hand. Cozy arcane library tower at night with a round window full of stars. Deep blue, violet and soft gold palette.",
+   "chosen": "g1_0"
+  },
+  "frostgolem": {
+   "refs": [
+    "golem",
+    "nova"
+   ],
+   "kind": "minion",
+   "subject": "A sturdy guardian golem built from pale blue ice crystal and carved runic stone, broad shoulders, a glowing cyan core in its chest, frost mist pouring from its fists, one fist planted forward defensively. Frozen ruined courtyard with falling snow. Ice blue, white and steel palette. Non-human construct with glowing eyes, heavy silhouette.",
+   "chosen": "g1_0"
+  },
+  "mirrormage": {
+   "refs": [
+    "oracle",
+    "spark"
+   ],
+   "kind": "minion",
+   "subject": "A composed young woman battle mage in violet and midnight blue robes with silver armor pieces and a long silver braid, raising a floating hexagonal mirror shield of arcane light that reflects the stars, small runes orbiting her other hand. Arcane observatory balcony at night. Violet, silver and cool blue palette.",
+   "chosen": "g1_0"
+  },
+  "magmacore": {
+   "refs": [
+    "golem",
+    "fireball"
+   ],
+   "kind": "minion",
+   "subject": "A towering fire elemental of cracked black obsidian plates with molten orange lava flowing through the seams, a blazing white-hot core in its chest, flames rising from its shoulders and head like a crown, arms spread amid swirling embers. Volcanic cavern with lava rivers. Ember orange, black and gold palette. Imposing elemental with glowing eyes, no human face.",
+   "chosen": "g1_0"
+  },
+  "frostwhisper": {
+   "refs": [
+    "nova",
+    "frostbolt"
+   ],
+   "kind": "spell",
+   "subject": "A delicate breath of frost: a pale blue whispering wind spiral carrying snowflakes around a single glowing ice-crystal rune, freezing a scatter of falling leaves in mid-air. Night winter forest backdrop. Ice blue and white palette.",
+   "chosen": "g1_0"
+  },
+  "starshot": {
+   "refs": [
+    "bolt",
+    "fireball"
+   ],
+   "kind": "spell",
+   "subject": "Three small blazing star-meteors streaking diagonally down across a deep navy night sky, white-hot cores with golden-orange tails and sparkling star dust, over a distant dark castle silhouette. Ember orange, gold and deep navy palette.",
+   "chosen": "g1_0"
+  },
+  "acolyte": {
+   "refs": [
+    "squire",
+    "cleric"
+   ],
+   "kind": "minion",
+   "subject": "A gentle young acolyte girl in white and gold cathedral robes with a small round golden shield on her arm and a translucent hexagonal holy barrier shimmering in front of her, one hand holding a prayer-bead chain, short light-brown hair. Sunlit white cathedral hall with golden light rays. White, gold and soft blue palette.",
+   "chosen": "g1_1"
+  },
+  "vowguard": {
+   "refs": [
+    "guard",
+    "paladin"
+   ],
+   "kind": "minion",
+   "subject": "A stalwart young knight in polished silver plate armor with a blue cloth tabard, a tall kite shield engraved with a silver sunburst planted in front of him, longsword lowered, calm determined face, short dark hair. Stone rampart at dawn with blue banners. Silver, steel blue and white palette.",
+   "chosen": "g1_1"
+  },
+  "dawnrider": {
+   "refs": [
+    "rider",
+    "squire"
+   ],
+   "kind": "minion",
+   "subject": "A dashing cavalier in white and gold armor riding a white warhorse in full gallop, lance pointed forward, golden cape streaming, a faint hexagonal holy shield glow around horse and rider. Sunrise over a grassy plain. White, gold and warm amber palette. Dynamic diagonal charge.",
+   "chosen": "g1_1"
+  },
+  "archbishop": {
+   "refs": [
+    "cleric",
+    "solaris"
+   ],
+   "kind": "minion",
+   "subject": "A dignified elderly archbishop with a long white beard in a tall white and gold mitre and flowing vestments, raising a golden sun staff that sheds radiant light, two small young recruit soldiers with round shields glowing under his blessing behind him. Grand cathedral altar with a stained-glass sun window. White, gold and sapphire palette. Solemn and powerful.",
+   "chosen": "g1_0"
+  },
+  "consecrate": {
+   "refs": [
+    "rally",
+    "blessing"
+   ],
+   "kind": "spell",
+   "subject": "A ring of holy golden fire bursting up from the ground inside a circle of sun runes, beams of white-gold light and sparks rising, dark shadowy enemy silhouettes recoiling at the edges. Cathedral plaza at dusk. Gold, white and warm orange palette.",
+   "chosen": "g1_1"
+  },
+  "judgment": {
+   "refs": [
+    "blessing",
+    "sunblade"
+   ],
+   "kind": "spell",
+   "subject": "A single radiant spear of golden light descending from parted clouds onto a dark shadow creature, while a gentle halo of healing light rises back upward. Gold, white and sky blue palette.",
+   "chosen": "g1_1"
+  },
+  "boar": {
+   "refs": [
+    "wolf",
+    "treant"
+   ],
+   "kind": "minion",
+   "subject": "A fierce wild boar charging forward, bristling brown-grey mane, big curved ivory tusks, bright green eyes, hooves kicking up dirt and leaves. Dense green forest trail. Nature green and earthy brown palette. Appealing hand-drawn creature anatomy with fur tufts, not realistic individual hairs.",
+   "chosen": "g1_0"
+  },
+  "tortoise": {
+   "refs": [
+    "treant",
+    "wolf"
+   ],
+   "kind": "minion",
+   "subject": "A huge ancient tortoise with a mossy shell covered in ferns, tiny trees and softly glowing green runes, calm wise eyes, broad stone-like legs, standing protectively in a misty forest swamp. Nature green, stone grey and soft gold palette. Appealing creature design.",
+   "chosen": "g1_0"
+  },
+  "gravewatch": {
+   "refs": [
+    "skeleton",
+    "reaper"
+   ],
+   "kind": "minion",
+   "subject": "A gaunt undead cemetery watchman: a skeletal figure in a tattered dark grey hooded cloak holding a lantern with pale green flame and a rusty shovel, standing among crooked gravestones under a full moon. Steel grey, pale green and deep navy palette. Eerie but readable, not gory.",
+   "chosen": "g1_0"
+  },
+  "bloodknight": {
+   "refs": [
+    "leech",
+    "reaper"
+   ],
+   "kind": "minion",
+   "subject": "A menacing undead knight in dark crimson and black plate armor with a horned helm and glowing red eyes, holding a tall dark shield and a blood-red longsword trailing crimson mist, a red moon behind. Blood red, black and silver palette. Not gory.",
+   "chosen": "g1_0"
+  },
+  "bonelord": {
+   "refs": [
+    "necromancer",
+    "skeleton"
+   ],
+   "kind": "minion",
+   "subject": "A regal skeletal king standing before a throne of bones, wearing a tarnished iron crown and a flowing purple royal cloak, holding a bone scepter topped with a glowing violet gem, small skeleton soldiers rising from the ground at his feet. Dark crypt hall with purple ghost fire. Void purple, bone white and black palette. Imposing, not gory.",
+   "chosen": "g2_0 (no style reference attached)"
+  },
+  "oathkeeper": {
+   "refs": [
+    "guard",
+    "berserker"
+   ],
+   "kind": "minion",
+   "subject": "A burly bearded tavern oath-keeper in steel half-armor over a leather apron, a big round wooden shield banded with iron on one arm and a raised tankard in the other hand. Warm tavern interior with hanging lanterns and oath banners. Steel grey, warm amber and brown palette. Friendly but tough.",
+   "chosen": "g1_0"
+  }
+ }
+}

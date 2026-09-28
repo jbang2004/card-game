@@ -4,9 +4,17 @@ const EmberCardReliefMaps = Object.freeze({
     "height": "asset:relief/absolution-height.webp",
     "orm": "asset:relief/absolution-orm.webp"
   },
+  "acolyte": {
+    "height": "asset:relief/acolyte-height.webp",
+    "orm": "asset:relief/acolyte-orm.webp"
+  },
   "ambush": {
     "height": "asset:relief/ambush-height.webp",
     "orm": "asset:relief/ambush-orm.webp"
+  },
+  "archbishop": {
+    "height": "asset:relief/archbishop-height.webp",
+    "orm": "asset:relief/archbishop-orm.webp"
   },
   "archer": {
     "height": "asset:relief/archer-height.webp",
@@ -38,9 +46,21 @@ const EmberCardReliefMaps = Object.freeze({
     "height": "asset:relief/blessing-height.webp",
     "orm": "asset:relief/blessing-orm.webp"
   },
+  "bloodknight": {
+    "height": "asset:relief/bloodknight-height.webp",
+    "orm": "asset:relief/bloodknight-orm.webp"
+  },
+  "boar": {
+    "height": "asset:relief/boar-height.webp",
+    "orm": "asset:relief/boar-orm.webp"
+  },
   "bolt": {
     "height": "asset:relief/bolt-height.webp",
     "orm": "asset:relief/bolt-orm.webp"
+  },
+  "bonelord": {
+    "height": "asset:relief/bonelord-height.webp",
+    "orm": "asset:relief/bonelord-orm.webp"
   },
   "cleric": {
     "height": "asset:relief/cleric-height.webp",
@@ -54,6 +74,10 @@ const EmberCardReliefMaps = Object.freeze({
     "height": "asset:relief/colossus-height.webp",
     "orm": "asset:relief/colossus-orm.webp"
   },
+  "consecrate": {
+    "height": "asset:relief/consecrate-height.webp",
+    "orm": "asset:relief/consecrate-orm.webp"
+  },
   "counterspell": {
     "height": "asset:relief/counterspell-height.webp",
     "orm": "asset:relief/counterspell-orm.webp"
@@ -61,6 +85,10 @@ const EmberCardReliefMaps = Object.freeze({
   "dagger": {
     "height": "asset:relief/dagger-height.webp",
     "orm": "asset:relief/dagger-orm.webp"
+  },
+  "dawnrider": {
+    "height": "asset:relief/dawnrider-height.webp",
+    "orm": "asset:relief/dawnrider-orm.webp"
   },
   "dawnvow": {
     "height": "asset:relief/dawnvow-height.webp",
@@ -100,9 +128,17 @@ const EmberCardReliefMaps = Object.freeze({
     "height": "asset:relief/frostbolt-height.webp",
     "orm": "asset:relief/frostbolt-orm.webp"
   },
+  "frostgolem": {
+    "height": "asset:relief/frostgolem-height.webp",
+    "orm": "asset:relief/frostgolem-orm.webp"
+  },
   "frostking": {
     "height": "asset:relief/frostking-height.webp",
     "orm": "asset:relief/frostking-orm.webp"
+  },
+  "frostwhisper": {
+    "height": "asset:relief/frostwhisper-height.webp",
+    "orm": "asset:relief/frostwhisper-orm.webp"
   },
   "golem": {
     "height": "asset:relief/golem-height.webp",
@@ -111,6 +147,10 @@ const EmberCardReliefMaps = Object.freeze({
   "graveoffering": {
     "height": "asset:relief/graveoffering-height.webp",
     "orm": "asset:relief/graveoffering-orm.webp"
+  },
+  "gravewatch": {
+    "height": "asset:relief/gravewatch-height.webp",
+    "orm": "asset:relief/gravewatch-orm.webp"
   },
   "guard": {
     "height": "asset:relief/guard-height.webp",
@@ -133,6 +173,10 @@ const EmberCardReliefMaps = Object.freeze({
     "normal": "asset:relief/jingchen-normal.webp",
     "orm": "asset:relief/jingchen-orm.webp"
   },
+  "judgment": {
+    "height": "asset:relief/judgment-height.webp",
+    "orm": "asset:relief/judgment-orm.webp"
+  },
   "leech": {
     "height": "asset:relief/leech-height.webp",
     "orm": "asset:relief/leech-orm.webp"
@@ -140,6 +184,14 @@ const EmberCardReliefMaps = Object.freeze({
   "lifedrain": {
     "height": "asset:relief/lifedrain-height.webp",
     "orm": "asset:relief/lifedrain-orm.webp"
+  },
+  "magmacore": {
+    "height": "asset:relief/magmacore-height.webp",
+    "orm": "asset:relief/magmacore-orm.webp"
+  },
+  "mirrormage": {
+    "height": "asset:relief/mirrormage-height.webp",
+    "orm": "asset:relief/mirrormage-orm.webp"
   },
   "mooncall": {
     "height": "asset:relief/mooncall-height.webp",
@@ -173,6 +225,10 @@ const EmberCardReliefMaps = Object.freeze({
   "nyx": {
     "height": "asset:relief/nyx-height.webp",
     "orm": "asset:relief/nyx-orm.webp"
+  },
+  "oathkeeper": {
+    "height": "asset:relief/oathkeeper-height.webp",
+    "orm": "asset:relief/oathkeeper-orm.webp"
   },
   "oracle": {
     "height": "asset:relief/oracle-height.webp",
@@ -219,6 +275,10 @@ const EmberCardReliefMaps = Object.freeze({
   "sabotage": {
     "height": "asset:relief/sabotage-height.webp",
     "orm": "asset:relief/sabotage-orm.webp"
+  },
+  "scribe": {
+    "height": "asset:relief/scribe-height.webp",
+    "orm": "asset:relief/scribe-orm.webp"
   },
   "selmyra": {
     "height": "asset:relief/selmyra-height.webp",
@@ -274,6 +334,10 @@ const EmberCardReliefMaps = Object.freeze({
     "height": "asset:relief/squire-height.webp",
     "orm": "asset:relief/squire-orm.webp"
   },
+  "starshot": {
+    "height": "asset:relief/starshot-height.webp",
+    "orm": "asset:relief/starshot-orm.webp"
+  },
   "starweave": {
     "height": "asset:relief/starweave-height.webp",
     "orm": "asset:relief/starweave-orm.webp"
@@ -302,6 +366,10 @@ const EmberCardReliefMaps = Object.freeze({
     "height": "asset:relief/titan-height.webp",
     "orm": "asset:relief/titan-orm.webp"
   },
+  "tortoise": {
+    "height": "asset:relief/tortoise-height.webp",
+    "orm": "asset:relief/tortoise-orm.webp"
+  },
   "tracking": {
     "height": "asset:relief/tracking-height.webp",
     "orm": "asset:relief/tracking-orm.webp"
@@ -309,6 +377,10 @@ const EmberCardReliefMaps = Object.freeze({
   "treant": {
     "height": "asset:relief/treant-height.webp",
     "orm": "asset:relief/treant-orm.webp"
+  },
+  "vowguard": {
+    "height": "asset:relief/vowguard-height.webp",
+    "orm": "asset:relief/vowguard-orm.webp"
   },
   "wisdom": {
     "height": "asset:relief/wisdom-height.webp",

@@ -123,7 +123,7 @@ npm run test:release
 
 ## 角色制作
 
-统一清单为 `config/characters.json`（每项只有 `staticKey` 与 `focus`）；制作与接入见 [角色制作规范](docs/CHARACTER_AUTHORING.md)。79 张卡图全部为静态插画，4 位英雄和 6 位首领按既有 portraitId 复用。运行 `python3 tools/characters.py --list` 查看完整清单；`tools/animation-demo.html` 可逐项观看战斗演出。2026-09-18 起分层立绘动画已整体移除，移除清单见 [ASSETS.md](docs/ASSETS.md#角色静态插画登记)。其他模型可直接读取项目内 [角色制作 Skill](.agents/skills/character-creation/SKILL.md)。
+统一清单为 `config/characters.json`（每项只有 `staticKey` 与 `focus`）；制作与接入见 [角色制作规范](docs/CHARACTER_AUTHORING.md)。97 张卡图全部为静态插画，4 位英雄和 6 位首领按既有 portraitId 复用。运行 `python3 tools/characters.py --list` 查看完整清单；`tools/animation-demo.html` 可逐项观看战斗演出。2026-09-18 起分层立绘动画已整体移除，移除清单见 [ASSETS.md](docs/ASSETS.md#角色静态插画登记)。其他模型可直接读取项目内 [角色制作 Skill](.agents/skills/character-creation/SKILL.md)。
 
 ## 自适应页面布局
 
