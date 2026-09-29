@@ -42,7 +42,7 @@
       `<canvas class="face cold"></canvas><canvas class="face warm"></canvas><canvas class="face live"></canvas>` +
       `<div class="cost"><span>${c.cost}</span></div>` +
       `<div class="title ${[...c.name].length > 6 ? "long" : ""}">${esc(c.name)}</div>` +
-      `<div class="text"><span>${rule(c.text)}</span></div>` +
+      `<div class="text" data-size="${[...c.text].length <= 18 ? "short" : [...c.text].length <= 36 ? "standard" : "long"}"><span>${rule(c.text)}</span></div>` +
       `<div class="band">${TYPE[c.type] || "随从"} · ${CLASS[c.class] || "中立"}</div>` +
       (stat ? `<div class="stat atk"><span>${c.atk}</span></div><div class="stat hp ${c.type === "weapon" ? "ward" : ""}"><span>${c.hp}</span></div>` : "");
     for (const cv of el.querySelectorAll("canvas.cold,canvas.warm")) {
@@ -395,16 +395,16 @@
     trayBuilt = true;
     const groups = [
       {
-        title: "对照：现在的卡面 → 琥珀卡框",
-        note: "版式不动：插画、名字、规则、费用、攻血都在原位。换掉的是外框、名牌、规则底板和稀有度的表达。",
+        title: "对照：现在的卡牌 → 琥珀卡牌",
+        note: "内容不动：插画、名字、规则、费用、攻血的位置和大小都跟现在一样。变的是外形、名牌、规则底板和稀有度的表达。",
         wide: true,
         slots: [
           ["ref:mirrormage", "现在", "镜盾术士"],
-          ["mirrormage", "琥珀卡框", "镜盾术士"],
+          ["mirrormage", "琥珀卡牌", "镜盾术士"],
           ["ref:nyx", "现在", "星陨女王·妮克丝"],
-          ["nyx", "琥珀卡框", "星陨女王·妮克丝"],
+          ["nyx", "琥珀卡牌", "星陨女王·妮克丝"],
           ["ref:fireball", "现在", "陨火术"],
-          ["fireball", "琥珀卡框", "陨火术"],
+          ["fireball", "琥珀卡牌", "陨火术"],
         ],
       },
       {
@@ -418,18 +418,18 @@
         ],
       },
       {
-        title: "镶嵌 = 稀有度",
-        note: "沿用现在的稀有度色：无镶嵌、银、紫、金。",
+        title: "切工与镶嵌 = 稀有度",
+        note: "沿用现在的稀有度色：无镶嵌、银、紫、金。普通是滚磨的原形，史诗是切角的，传说加叶冠和光晕。",
         slots: [
-          ["spark", "素框", "普通 · 滚磨的哑光琥珀"],
-          ["frostgolem", "银角", "稀有 · 银包角，蓝宝"],
-          ["phoenix", "刻面", "史诗 · 切面框，紫晶"],
+          ["spark", "原形", "普通 · 滚磨的哑光琥珀"],
+          ["frostgolem", "银边", "稀有 · 银丝包边，蓝宝"],
+          ["phoenix", "切角", "史诗 · 切角轮廓，紫晶"],
           ["nyx", "金冠", "传说 · 世界树叶冠，光晕"],
         ],
       },
       {
         title: "亮起来 = 能出",
-        note: "法力够的牌，琥珀框从里面亮起来，费用章变成烧红的黄铜。",
+        note: "法力够的牌，琥珀从里面亮起来，费用章变成烧红的黄铜。",
         slots: [
           ["mirrormage", "法力不够", "", { warm: 0 }],
           ["mirrormage", "可以出", "", { warm: 1 }],
@@ -437,10 +437,12 @@
         ],
       },
       {
-        title: "法术、武器与卡背",
-        note: "法术和武器用同一个框；卡背是一块封着火种的琥珀，黑玉之界的敌人用黑玉。",
+        title: "外形 = 类型，以及卡背",
+        note: "随从是泪滴形，法术更圆，武器是切角形；内容布局三者相同。卡背是一块封着火种的琥珀，黑玉之界的敌人用黑玉。",
         slots: [
-          ["sunblade", "武器", "日耀圣剑"],
+          ["squire", "随从", "泪滴形"],
+          ["fireball", "法术", "更圆"],
+          ["sunblade", "武器", "切角形"],
           ["back:guard", "卡背", "琥珀"],
           ["back-jet:guard", "卡背", "黑玉"],
         ],

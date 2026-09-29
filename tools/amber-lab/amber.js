@@ -1,10 +1,12 @@
-/* Amber-framed cards (docs/design/AMBER_HAND.md): the card keeps its shape and
- * layout — art on top, name, rules, cost and stats where they have always been —
- * but its frame is polished World Tree amber. The art sits in a window; the frame
- * is a bevelled band of resin that refracts the art sealed beneath it; the rules
- * panel is dark cognac amber. One WebGL2 context paints every card into its own
- * 2D canvas: resting cards once per state, the held card every frame. Text,
- * cost and stats stay live DOM above the canvas. Presentation only. */
+/* Amber-shaped cards (docs/design/AMBER_HAND.md): the card's content is exactly
+ * today's — art on top, name plaque, rules, cost and stats — but its silhouette is
+ * a piece of polished World Tree amber: an egg-shaped cabochon, tapered like a
+ * resin tear. The art sits in an arched window; the amber around it is a bevelled
+ * bead that refracts the art sealed beneath it; the rules panel is dark cognac
+ * amber. Rarity is the cut and the setting (tumbled stone, polished, faceted,
+ * crowned). One WebGL2 context paints every card into its own 2D canvas: resting
+ * cards once per state, the held card every frame. Text, cost and stats stay live
+ * DOM above the canvas. Presentation only. */
 const EmberAmber = (() => {
   "use strict";
 
@@ -18,11 +20,20 @@ const EmberAmber = (() => {
     jet: { sigma: [9, 9, 8], body: [0.3, 0.22, 0.42], fluor: [0.25, 0.15, 0.45], name: "黑玉" },
   };
   const RARITY = { common: 0, rare: 1, epic: 2, legendary: 3 };
+  /* Silhouette by type: a superellipse (n) tapered toward the top. Squarer than an
+   * ellipse so the same rectangle of content fits; the shoulders are what make it
+   * read as a stone. Common stones are tumbled (irregular), epic ones are cut
+   * (chamfered). */
+  const SHAPES = {
+    minion: { n: 2.8, taper: 0.16 },
+    spell: { n: 2.5, taper: 0.03 },
+    weapon: { n: 3.3, taper: 0.09 },
+  };
   /* Card geometry, as fractions of the card box, matching card-face.css. */
   const CARD = {
     aspect: 5 / 7.4,
     radius: 0.036, // of width
-    rim: 0.066, // of width
+    rim: 0.072, // of width
     rimBottom: 0.1, // of width: the old rarity band becomes a thicker sill
     divider: 0.608, // centre, from the top, of height
     dividerHalf: 0.012, // of height
@@ -49,6 +60,7 @@ uniform vec3 uSigma,uBody,uFluor;
 uniform vec4 uState;  // warm crack back jet
 uniform vec4 uMisc;   // seed time token gloss
 uniform vec2 uTilt;
+uniform vec4 uShape;  // n taper irregular chamfer
 
 const vec3 LK=normalize(vec3(-.5,.62,.6));
 vec3 V,I;
@@ -76,18 +88,38 @@ vec3 studio(vec3 dir,float roughness){
 }
 
 /* ---- geometry ---- */
-float sdBox(vec2 p,vec2 b){vec2 d=abs(p)-b;return length(max(d,0.))+min(max(d.x,d.y),0.);}
-float sdRound(vec2 p,vec2 b,float r){return sdBox(p,b-r)-r;}
 float hw,hh,rad,rim,rimB,yDiv,divH;
-float dOuter(vec2 p){return sdRound(p,vec2(hw,hh),rad);}
-float dWin(vec2 p){
-  float top=hh-rim,bot=isBack>.5?-hh+rimB:yDiv+divH;
-  return sdRound(p-vec2(0.,(top+bot)*.5),vec2(hw-rim,(top-bot)*.5),rad*.45);
+float smaxk(float a,float b,float k){float h=max(k-abs(a-b),0.)/k;return max(a,b)+h*h*k*.25;}
+/* The amber's outline: a tapered superellipse, tumbled or chamfered by grade. */
+float dOuter(vec2 p){
+  float t=clamp(p.y/hh,-1.,1.);
+  float a=hw*(1.-uShape.y*t)/(1.+uShape.y*.5);
+  vec2 q=max(vec2(abs(p.x)/a,abs(p.y)/hh),vec2(1e-4));
+  float n=uShape.x;
+  float F=pow(pow(q.x,n)+pow(q.y,n),1./n);
+  if(uShape.z>0.){
+    float th=atan(p.y/hh,p.x/hw),sd=seed*6.2831;
+    F/=1.+uShape.z*(.045*sin(3.*th+sd)+.03*sin(5.*th+sd*1.7)+.02*sin(8.*th+sd*2.3));
+  }
+  vec2 g=vec2(pow(q.x,n-1.)/a,pow(q.y,n-1.)/hh)/pow(F,n-1.);
+  float d=(F-1.)/max(length(g),1e-3);
+  if(uShape.w>0.){
+    float dc=((abs(p.x)/hw+abs(p.y)/hh)-uShape.w)/sqrt(1./(hw*hw)+1./(hh*hh));
+    d=max(d,dc);
+  }
+  return d;
 }
+/* The art window: the inset outline above the divider beam (so its top is an arch). */
+float dWin(vec2 p){
+  float inner=dOuter(p)+rim;
+  if(isBack>.5)return inner;
+  return smaxk(inner,(yDiv+divH)-p.y,rim*.6);
+}
+/* The rules panel: the inset outline between the beam and the thick lower sill. */
 float dPan(vec2 p){
   if(isBack>.5)return 9.;
-  float top=yDiv-divH,bot=-hh+rimB;
-  return sdRound(p-vec2(0.,(top+bot)*.5),vec2(hw-rim,(top-bot)*.5),rad*.45);
+  float inner=dOuter(p)+rim;
+  return smaxk(smaxk(inner,p.y-(yDiv-divH),rim*.6),(-hh+rimB)-p.y,rim*.6);
 }
 /* The frame is the card minus its openings. A point in it lies in a band bounded
  * by its two nearest edges; the band is a rounded bead (or, cut, a flat table
@@ -272,40 +304,42 @@ void main(){
   col=mix(col,cp,inPan);
   float alpha=cardA;
 
-  // Fittings: the setting says how rare the card is (colours as on today's band).
+  // Fittings: the setting says how rare the stone is (colours as on today's band).
   float mm=0.;vec3 mc=vec3(0.);
   if(rarity>0.&&isBack<.5){
     vec3 metal=rarity==1.?vec3(.86,.89,.94):(rarity==2.?vec3(.8,.78,.9):vec3(1.,.77,.34));
     float rough=rarity==3.?.14:.2;
-    vec2 cq=vec2(hw-abs(p.x),hh-abs(p.y));
-    float L=p.y>0.?rim*2.4:rimB*1.55;
-    float cap=cq.x/L+cq.y/L;
-    float inF=step(0.,e1)*step(0.,e2);
-    if(cap<1.25&&dO<.004&&inF>0.){
-      vec3 n=normalize(frameNormal(p)+vec3(0.,0.,.4));
-      float engr=rarity==3.?.86+.14*sin((cq.x-cq.y)*160.):(rarity==2.?.9+.1*step(.5,fract((cq.x+cq.y)*40.)):1.);
-      float m=smoothstep(1.25,1.18,cap)*(1.-smoothstep(-.002,.004,dO));
+    // A bezel of metal wire set into the outline.
+    float bw=rarity==1.?rim*.3:(rarity==2.?rim*.5:rim*.56);
+    float u=(dO+bw*.5)/(bw*.5);
+    if(abs(u)<1.15){
+      float e=.0015;
+      vec2 gd=normalize(vec2(dOuter(p+vec2(e,0.))-dOuter(p-vec2(e,0.)),dOuter(p+vec2(0.,e))-dOuter(p-vec2(0.,e)))+1e-6);
+      float uu=clamp(u,-1.,1.);
+      vec3 n=normalize(vec3(gd*uu*.9,sqrt(max(1.-uu*uu,.03))));
+      float ang=atan(p.y,p.x);
+      float engr=rarity==3.?.86+.14*sin(ang*90.):(rarity==2.?.9+.1*step(.5,fract(ang*18.)):1.);
       vec3 c=shadeMetal(n,metal*engr,rough);
-      if(rarity==2.)c=mix(c,vec3(.45,.22,.8)*(.6+.8*max(dot(n,LK),0.)),smoothstep(.012,.0,abs(cap-.95))*.9);
+      float m=smoothstep(1.15,.95,abs(u));
       mm=max(mm,m);mc=mix(mc,c,m);
     }
-    // The stone set at the top centre of the frame.
+    // The stone set at the top of the outline.
     vec2 gc=vec2(0.,hh-rim*.5);
-    float gr=rim*.62;
-    float gd=length(p-gc);
-    if(gd<gr*1.45){
-      float ring=smoothstep(gr*1.45,gr*1.3,gd);
+    float gr=rim*.66;
+    float gd2=length(p-gc);
+    if(gd2<gr*1.45){
+      float ring=smoothstep(gr*1.45,gr*1.3,gd2);
       vec3 rn=normalize(vec3((p-gc)/(gr*1.45)*.8,.6));
       vec3 c=shadeMetal(rn,metal,rough);
-      if(gd<gr){
+      if(gd2<gr){
         vec3 gcol=rarity==1.?vec3(.2,.5,1.):(rarity==2.?vec3(.62,.32,1.):vec3(.95,.22,.1));
-        float q=gd/gr;
+        float q=gd2/gr;
         vec3 n=normalize(vec3((p-gc)/gr*.9,sqrt(max(1.-q*q,.05))));
         c=gcol*(.35+.65*max(dot(n,LK),0.))+pow(max(dot(n,normalize(LK+V)),0.),90.)*1.2+studio(reflect(I,n),.05)*.2;
       }
       mm=max(mm,ring);mc=mix(mc,c,ring);
     }
-    // World Tree leaves crown a legendary card.
+    // World Tree leaves crown a legendary stone.
     if(rarity==3.){
       for(int k=0;k<5;k++){
         float ang=radians(90.+float(k-2)*30.);
@@ -315,10 +349,10 @@ void main(){
         float al=dot(p-c,dir)/(len*.55),ac=dot(p-c,pr);
         float w=.022*pow(max(1.-al*al,0.),.7);
         if(abs(al)<1.&&abs(ac)<w){
-          float u=ac/w;
-          vec3 n=normalize(vec3(pr*u*.8+dir*al*.25,sqrt(max(1.-u*u,.05))));
-          float m=smoothstep(1.,.85,abs(u));
-          mm=max(mm,m);mc=mix(mc,shadeMetal(n,metal*(1.-.35*smoothstep(.16,0.,abs(u))),rough),m);
+          float uu=ac/w;
+          vec3 n=normalize(vec3(pr*uu*.8+dir*al*.25,sqrt(max(1.-uu*uu,.05))));
+          float m=smoothstep(1.,.85,abs(uu));
+          mm=max(mm,m);mc=mix(mc,shadeMetal(n,metal*(1.-.35*smoothstep(.16,0.,abs(uu))),rough),m);
         }
       }
     }
@@ -379,7 +413,7 @@ void main(){
     gl.enableVertexAttribArray(at);
     gl.vertexAttribPointer(at, 2, gl.FLOAT, false, 0, 0);
     uniforms = {};
-    for (const name of ["uArt", "uHeight", "uStudio", "uBox", "uCard", "uLay", "uArtMap", "uSigma", "uBody", "uFluor", "uState", "uMisc", "uTilt"])
+    for (const name of ["uArt", "uHeight", "uStudio", "uBox", "uCard", "uLay", "uArtMap", "uSigma", "uBody", "uFluor", "uState", "uMisc", "uTilt", "uShape"])
       uniforms[name] = gl.getUniformLocation(program, name);
     gl.uniform1i(uniforms.uArt, 0);
     gl.uniform1i(uniforms.uHeight, 1);
@@ -477,6 +511,8 @@ void main(){
       map[1] /= z;
     }
     gl.uniform4f(uniforms.uArtMap, ...map);
+    const sh = SHAPES[s.type] || SHAPES.minion;
+    gl.uniform4f(uniforms.uShape, sh.n, sh.taper, s.rarity === 0 && !state.back ? 1 : 0, s.rarity === 2 && !state.back ? 1.42 : 0);
     const body = state.jet ? BODIES.jet : s.body;
     gl.uniform3f(uniforms.uSigma, ...body.sigma);
     gl.uniform3f(uniforms.uBody, ...body.body);
@@ -495,5 +531,5 @@ void main(){
     studioTex = texture(studio, false);
   }
 
-  return Object.freeze({ BODIES, CARD, MARGIN, box, configure, spec, paint });
+  return Object.freeze({ BODIES, CARD, SHAPES, MARGIN, box, configure, spec, paint });
 })();

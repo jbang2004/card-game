@@ -60,7 +60,7 @@ button { font: inherit; color: inherit; }
 
 /* cost: a brass seal, cold iron until the spark can pay for it */
 .acard .cost {
-  position: absolute; z-index: 3; left: 2%; top: 1.6%;
+  position: absolute; z-index: 3; left: 4%; top: 3.4%;
   width: 19cqw; aspect-ratio: 1;
   display: grid; place-items: center; border-radius: 50%;
   background:
@@ -129,37 +129,39 @@ button { font: inherit; color: inherit; }
 
 /* rules on the dark amber panel */
 .acard .text {
-  position: absolute; z-index: 4; inset: 66.5% 9% 21cqw;
+  position: absolute; z-index: 4; inset: 66.5% 17% 22cqw;
   display: flex; align-items: center; justify-content: center; text-align: left;
-  font: 500 6.3cqw/1.42 var(--font); color: #f3e4c6;
+  font: 500 6.2cqw/1.42 var(--font); color: #f3e4c6;
   text-shadow: 0 1px 2px rgba(0, 0, 0, .7);
 }
+.acard .text[data-size="standard"] { font-size: 5.6cqw; }
+.acard .text[data-size="long"] { font-size: 5cqw; line-height: 1.38; }
 .acard .text em { font-style: normal; font-weight: 800; color: #ffc46b; }
 .acard .index { position: absolute; z-index: 4; right: 9%; bottom: 11.4cqw; font: 600 3.9cqw/1 var(--font); letter-spacing: .12em; color: rgba(255, 214, 150, .45); }
 /* the type, engraved into the amber sill */
 .acard .band {
   position: absolute; z-index: 4; left: 0; right: 0; bottom: 0; height: 10cqw;
   display: grid; place-items: center;
-  font: 700 4.6cqw/1 var(--font); letter-spacing: .3em; color: rgba(58, 24, 3, .78);
+  font: 700 4.6cqw/1 var(--font); letter-spacing: .2em; color: rgba(58, 24, 3, .78);
   text-shadow: 0 .5px 0 rgba(255, 226, 160, .55), 0 -.5px 0 rgba(0, 0, 0, .25);
 }
 
 /* stats: attack in a brass hexagon, health in a drop of blood amber */
 .acard .stat {
-  position: absolute; z-index: 5; bottom: -3.2%; width: 26cqw; aspect-ratio: 1;
+  position: absolute; z-index: 5; bottom: 0.5%; width: 26cqw; aspect-ratio: 1;
   display: grid; place-items: center;
   filter: drop-shadow(0 .6cqw 1cqw rgba(0, 0, 0, .75));
 }
 .acard .stat span { position: relative; font: 800 12cqw/1 var(--font); color: #fff; text-shadow: 0 0 2px #000, 0 1px 1px #000, 0 0 4px rgba(0, 0, 0, .6); }
 .acard .stat::before { content: ""; position: absolute; inset: 0; }
-.acard .atk { left: -4.2%; }
+.acard .atk { left: -3.4%; }
 .acard .atk::before {
   clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
   background:
     radial-gradient(circle at 50% 48%, #f0a64c 0 30%, #b4561b 55%, #4d1a05 72%, #0000 73%),
     conic-gradient(from 180deg, #6b4413, #f4d690, #7d5217, #e0b45e, #6b4413);
 }
-.acard .hp { right: -4.2%; }
+.acard .hp { right: -3.4%; }
 .acard .hp::before {
   border-radius: 50% 50% 50% 50% / 58% 58% 42% 42%;
   background: radial-gradient(circle at 36% 30%, #ffd3c6 0 6%, #ff5a3c 24%, #b0160a 62%, #520503 100%);
