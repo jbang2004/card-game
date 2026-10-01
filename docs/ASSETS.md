@@ -26,9 +26,19 @@ uv run --python 3.12 --no-project --with pillow --with numpy --with onnxruntime 
 
 抛光区域反射的摄影棚环境是共用的 `art/relief/studio.webp`（768×128，约 3 KB），由 `tools/bake_relief_studio.py` 纯程序生成（只需 Pillow 与 numpy）：六块 128² 的球极投影瓦片，从清晰到全粗糙依次高斯预滤波，HDR 以 `sqrt(辐射 / 6)` 存储。场景是正前方一片天花板漫反射（让金属在正视时拿回被着色器去掉的漫反射，亮度守恒）、左上主柔光箱、右侧暖色条灯、底部冷色补光、几颗点光，以及中心偏右的一条黑旗——转动时金属因此同时变亮和变暗。改动布光后重跑该脚本即可，常量 `SPAN` / `RANGE` / 瓦片数须与 `card-relief.js` 的 `studio()` 保持一致。
 
-新增卡牌或英雄时重跑烘焙脚本。`tests/card-relief.test.cjs` 要求注册表、`art/relief/` 文件与 `src/content/cards.js` 的卡牌 ID 三者完全一致，可选英雄的肖像必须带法线贴图，每个稀有度必须有材质档。
+新增英雄时重跑烘焙脚本。`tests/card-relief.test.cjs` 要求注册表与 `art/relief/` 文件完全一致、只覆盖可选英雄的肖像（卡牌不再用浮雕，2026-10-01 起每张卡是琥珀块，见下），肖像必须带法线贴图，每个稀有度必须有材质档。
 
 ### 活立绘（live-art）
+
+只给英雄选择页的预览卡（四位可选英雄的肖像：星焰法师、圣卫、游侠、渡魂引路人，手工绑定，`presentation/live-art.js`、`live-art-rigs.js`）。2026-10-01 起卡牌不再有浮雕/活立绘，旧的 93 张卡牌素材与自动绑定已删除。
+
+`art/live-art/<id>-{bg,body,front,depth,ctrl,flags}.webp`（id 为英雄 portraitId）：`bg` 背景（人物区已补底）；`body` 人物颜色＋alpha；`front` 道具颜色＋alpha；`depth` 半尺寸，RGB 分别是三层深度（白 = 近）；`ctrl` 半尺寸，R 星光/流水、G 金属流光、B 辉光遮罩；`flags` 半尺寸，B 为道具遮罩。注册表 `src/live-art-maps.js` 由 `tools/bake_live_art.py` 生成。
+
+### 琥珀卡牌分层（amber）
+
+每张卡的封存场景：`art/amber/<id>-{bg,body,front?,depth}.webp`（约 15.5 MB，97 张）与注册表 `src/amber-layers.js`，由 `tools/bake_amber_layers.py` 生成；重分层（真实抠像 + 画出来的背景板）见 `tools/amber_relayer/`，渲染见 `docs/design/reference-pages/amber-card.md`。没有分层的卡运行时封存其平面插画。
+
+## 活立绘（live-art）
 
 英雄选择页的预览卡，以及单独呈现的卡（放大详情卡、神祇舞台、图鉴卡片舞台）若有活立绘，就不再画浮雕卡面，而是活立绘（`presentation/live-art.js`，2026-09-23 用户要求"建模必须和卡片上的图片完全一致"）。四位可选英雄与六张试点卡（星焰神·烬辰、冥月神·瑟弥拉、星陨女王·妮克丝、白霜之王、终焰·阿什拉、雷霆 `storm`）是手工绑定；其余卡牌由烘焙脚本自动绑定（`--auto`）：按深度的 Otsu 阈值分出人物与背景，从剪影算出"主体"（呼吸/浮动）与"外缘"（发丝、衣摆、翅膀、火焰，随风摆动）两张权重写进 `flags` 的 R/G，按卡牌类型套动作模板（随从 = 生物：从脚下呼吸、外缘摆动；法术 = 效果：脉动、外缘闪动；武器 = 物件：浮沉、微转），辉光按颜色流动、细小亮点闪烁、金属扫光，辉光的色相决定粒子（火星 / 冰晶 / 奥术光点 / 叶光）。参数写入 `art/live-art/auto.json` 并生成 `src/live-art-auto.js`，着色器模板在 `live-art.js` 的 `autoRig`；某张卡需要眨眼时，在 `live-art-rigs.js` 里写 `{ auto: true, eyes: [...] }` 只补眼睛（侧脸可以只有一只），动作仍用模板；烘焙时会把与眼睛深度相近的头部并入人物层，否则仰拍角色的头可能被分进背景，既不眨眼、颈部也会随呼吸错开。需要刚性道具层时在 `tools/bake_live_art.py` 的 `AUTO_PROPS` 里写道具多边形：道具随呼吸整体起伏、不随外缘摆动。目前的传说卡与契约神都已补齐：逐日者·索拉（眼睛 + 盾）、蚀月狼王（单眼）、守灯巨兽（盾与握盾的手；头盔无眼）、曙日神·奥瑞恩（眼睛 + 按剑的手与长剑）、荒猎神·芬洛斯（单眼）。自动卡只在卡牌画窗里出现，颜色层存 768×1024、遮罩 384×512。模型就是卡面原画本身：`assets/anime/overrides/<portraitId>.png`（1086×1448）拆成背景、人物、手持道具（星盘与手、长剑与手、弓箭与手、提灯）三层，每层有自己的深度并重建为网格；镜头回正、动作归零时画面与原画逐像素一致（离线测得平均差约 1/255）。被遮挡处用 push-pull 插值补底，只在镜头转动时露出窄边。
 

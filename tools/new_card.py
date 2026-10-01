@@ -9,7 +9,8 @@ For each card (already defined in src/content/cards.js):
      individual source (assets/anime/overrides/<id>.png + overrides.json + a manifest entry);
   2. config/characters.json gets the card with a default crop focus (edit it after looking at the hand/board crop);
   3. tools/pack_card_assets.py packs every card WebP;
-  4. the card-relief maps (tools/bake_card_relief.py) and the automatic live artwork (tools/bake_live_art.py --auto)
+  4. the amber layers: a card with none seals its flat illustration; to give it parallax add its subject to
+     tools/amber_relayer/descs.json and run tools/amber_relayer/relayer.sh
      are baked for these ids;
   5. python3 build.py.
 
@@ -68,8 +69,9 @@ def register(pairs, note):
 
 
 def bake(ids):
-    subprocess.check_call(UV + ["tools/bake_card_relief.py", *ids], cwd=ROOT)
-    subprocess.check_call(UV + ["tools/bake_live_art.py", "--auto", *ids], cwd=ROOT)
+    # cards are amber blocks (EmberAmber): a new card shows its flat illustration until it is re-layered
+    # (tools/amber_relayer/relayer.sh); relief and live artwork are only for the selectable heroes now
+    subprocess.check_call(UV + ["tools/bake_amber_layers.py"], cwd=ROOT)
     subprocess.check_call([sys.executable, "build.py"], cwd=ROOT)
 
 

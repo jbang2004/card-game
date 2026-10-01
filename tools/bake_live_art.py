@@ -215,66 +215,6 @@ def fine_points(p, where):
     return ss(0.08, 0.25, p.lum - p.blur(p.lum, 6)) * ss(0.5, 0.75, p.lum) * where
 
 
-def jingchen(p):
-    return dict(fig=0.18, front=np.zeros_like(p.lum), ctrl=_jingchen_ctrl)
-
-
-def _jingchen_ctrl(p, figure, front, bgk, body):
-    sun = (1 - ss(250, 340, np.hypot(p.xx - 620, p.yy - 120))) * ss(0.45, 0.8, p.lum) * bgk
-    gold = ss(0.5, 0.8, p.lum) * ss(0.15, 0.4, p.sat) * (p.rgb[..., 0] > p.rgb[..., 2]) * body
-    return fine_points(p, bgk * (1 - sun)), gold, sun
-
-
-def selmyra(p):
-    return dict(fig=0.16, front=np.zeros_like(p.lum), ctrl=_selmyra_ctrl)
-
-
-def _selmyra_ctrl(p, figure, front, bgk, body):
-    corona = ss(0.3, 0.65, p.lum) * bgk * (p.yy < 1000)
-    water = fine_points(p, (p.yy > 1230).astype(np.float32))
-    silver = ss(0.6, 0.9, p.lum) * ss(0.15, 0.05, p.sat) * body * (p.yy < 600)
-    return water, silver, corona
-
-
-def nyx(p):
-    # The staff reads only half apart from the gown in depth; it stays in the figure layer.
-    return dict(fig=0.35, front=np.zeros_like(p.lum), ctrl=_nyx_ctrl)
-
-
-def _nyx_ctrl(p, figure, front, bgk, body):
-    stars = (1 - ss(60, 110, np.hypot(p.xx - 240, p.yy - 70))) + (1 - ss(120, 210, np.hypot(p.xx - 760, p.yy - 210)))
-    glow = np.clip(stars, 0, 1) * ss(0.5, 0.85, p.lum)
-    silver = ss(0.6, 0.9, p.lum) * ss(0.2, 0.07, p.sat) * np.maximum(body, front)
-    return fine_points(p, np.ones_like(p.lum)) * (1 - glow), silver, glow
-
-
-def frostking(p):
-    sword = p.poly([(222, 280), (332, 280), (334, 370), (348, 460), (334, 1270), (248, 1270), (242, 460), (212, 420)])
-    return dict(fig=0.18, front=p.near(sword, 0.06), plane=True, ctrl=_frostking_ctrl)
-
-
-def _frostking_ctrl(p, figure, front, bgk, body):
-    crown = (1 - ss(70, 120, np.hypot(p.xx - 565, p.yy - 215)))
-    ice = ss(0.7, 0.95, p.lum) * ss(0.3, 0.08, p.sat) * np.clip(front + crown, 0, 1)
-    blade = front * ss(0.55, 0.85, p.lum)
-    return fine_points(p, np.ones_like(p.lum)), ice, blade
-
-
-def ashdragon(p):
-    return dict(fig=0.25, front=np.zeros_like(p.lum), ctrl=_ashdragon_ctrl)
-
-
-def _ashdragon_ctrl(p, figure, front, bgk, body):
-    r, g, b = p.rgb[..., 0], p.rgb[..., 1], p.rgb[..., 2]
-    lava = ss(0.4, 0.75, p.lum) * ss(0.3, 0.55, p.sat) * ((r > g) & (g > b))
-    return np.zeros_like(p.lum), np.zeros_like(p.lum), lava
-
-
-def storm(p):
-    # The flying debris sits at the depth of the clouds; it moves within the figure layer.
-    return dict(fig=0.15, front=np.zeros_like(p.lum), ctrl=_storm_ctrl)
-
-
 def _storm_ctrl(p, figure, front, bgk, body):
     bolt = ss(0.65, 0.92, p.lum)
     return np.zeros_like(p.lum), np.zeros_like(p.lum), bolt
@@ -392,9 +332,7 @@ def auto_params(key, p, figure, glow):
     }
 
 
-RIGS = {"oracle": oracle, "paladin": paladin, "archer": archer, "soulguide": soulguide,
-        "jingchen": jingchen, "selmyra": selmyra, "nyx": nyx, "frostking": frostking,
-        "ashdragon": ashdragon, "storm": storm}
+RIGS = {"oracle": oracle, "paladin": paladin, "archer": archer, "soulguide": soulguide}
 
 
 def bake(key, session):

@@ -45,3 +45,6 @@ tests/*-run.log
 
 # Disposable working files (captures, probes, one-off scripts); never tracked.
 /tools/.scratch/
+
+# Re-layered amber art: working images (tools/amber_relayer)
+/tools/amber_relayer/work/

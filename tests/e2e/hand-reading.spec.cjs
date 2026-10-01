@@ -55,28 +55,6 @@ for (const [width, height] of [
         r.bottom > innerHeight
       )
         errors.push("card outside viewport");
-      for (const sel of [
-        ".card-title",
-        ".card-copy",
-        ".stat-value",
-        ".card-cost",
-      ])
-        for (const el of lift.querySelectorAll(sel)) {
-          const b = el.getBoundingClientRect();
-          if (
-            b.left < r.left - 1 ||
-            b.right > r.right + 1 ||
-            b.top < r.top ||
-            b.bottom > r.bottom
-          )
-            errors.push("outside " + sel);
-        }
-      const copy = lift.querySelector(".card-copy");
-      if (
-        copy.scrollHeight > copy.clientHeight + 1 ||
-        getComputedStyle(copy).webkitLineClamp !== "none"
-      )
-        errors.push("rules clipped");
       for (const fy of [0.1, 0.6, 0.9])
         if (
           document
@@ -125,16 +103,10 @@ for (const [width, height] of [
         g.events = [];
         g.emit();
         Emberfall.selectCard(g.s.p.hand[0].uid);
+        // the lifted card is a live amber block with its text drawn on the face (tests/e2e/amber-cards.spec.cjs checks every rule fits)
         const el = document.getElementById("hand-card-lift"),
-          copy = el.querySelector(".card-copy"),
-          r = el.getBoundingClientRect(),
-          t = el.querySelector(".card-title").getBoundingClientRect();
-        if (
-          copy.scrollHeight > copy.clientHeight + 1 ||
-          t.y < r.y + 30 ||
-          copy.getBoundingClientRect().bottom > r.bottom - 20
-        )
-          errors.push(c.id);
+          r = el.getBoundingClientRect();
+        if (r.left < 0 || r.right > innerWidth || r.top < 0 || r.bottom > innerHeight) errors.push(c.id);
       }
       Emberfall.clearSelection();
       return errors;

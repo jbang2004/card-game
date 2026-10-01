@@ -318,11 +318,9 @@ const EmberContractUI = (() => {
       /* The relief face belongs to the card in front, like the tilt: it follows
        * the stage's own tilt rather than adding a second one. */
       const front = stageCtx.cards[stageCtx.focus];
-      EmberLiveArt.mountCard(front.querySelector(".god-card-front .card"), {
+      EmberAmber.mountCard(front.querySelector(".god-card-front .card"), {
         id: c.id,
-        rarity: c.rarity,
         steer: "follow",
-        tilt: false,
         anchor: front,
       });
       holder.innerHTML = ritualHTML(game.s.p, c);
@@ -351,7 +349,7 @@ const EmberContractUI = (() => {
       stageCtx = null;
       /* The slabs stay for the return flight (the cards turn over again); the
        * whole stage is dropped after it. */
-      if (el.querySelector(".card-relief-canvas")) EmberCardRelief.release();
+      if (el.querySelector(".amber-live-canvas")) EmberAmber.release();
       document.removeEventListener("keydown", stageKey, true);
       const drop = () => el.remove();
       if (!animate) return drop();
@@ -432,20 +430,6 @@ const EmberContractUI = (() => {
         cardW: width,
       };
       stageFocus(0);
-      /* Every card in the stack is a slab from the start: turning over in flight is
-       * where the thickness shows. The back of each is seated that far behind its
-       * face (card-relief.css). */
-      stageCtx.cards.forEach((node) => {
-        const slab = EmberCardRelief.slab(
-          node.querySelector(".god-card-front .card"),
-        );
-        if (!slab) return;
-        node.style.setProperty("--relief-depth", slab.depth + "px");
-        node.style.setProperty(
-          "--relief-flange",
-          slab.flange.toFixed(2) + "px",
-        );
-      });
       /* FLIP: the slot's measured rect is the take-off pose. Every `.god-card`
        * is `inset: 0` inside `.god-cards`, so they all share one untransformed
        * box. Measure that container so focus offsets cannot displace the
@@ -527,7 +511,7 @@ const EmberContractUI = (() => {
       };
       el.addEventListener("pointermove", move, { passive: true });
       for (const card of stageCtx.cards)
-        EmberCardRelief.bindTouch(card, () => {
+        EmberAmber.bindTouch(card, () => {
           card.style.removeProperty("--tilt-x");
           card.style.removeProperty("--tilt-y");
         });
@@ -537,7 +521,7 @@ const EmberContractUI = (() => {
           const card = stageCtx?.cards[stageCtx.focus];
           card?.style.removeProperty("--tilt-x");
           card?.style.removeProperty("--tilt-y");
-          EmberCardRelief.rest();
+          EmberAmber.rest();
         },
         { passive: true },
       );

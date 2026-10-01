@@ -1,42 +1,10 @@
-/* Skin "slate" — THE CARD FACE (v7) and the card back.
- *
- * This file is the ONE definition of the collectible card face. Every other
- * layer's card-face geometry has been deleted; nothing here is an override of
- * a surviving block. It is loaded LAST in the `skin` layer so a page file can
- * still position a card, but never repaints one.
- *
- * ---------------------------------------------------------------------------
- * STRUCTURE
- *   .card        no rim, no background of its own. It is only the positioning
- *                box + the container, so `.card-cost` and the two stat gems
- *                can overhang the plate. `overflow: visible`.
- *   .card-inner  the plate: art, fade, name pill, rules, index and the rarity
- *                band. `inset: 0`, `overflow: hidden`, so nothing escapes the
- *                rounded boundary. It also carries the plate's shadows.
- *   .card-cost / .stat.atk / .stat.hp are DIRECT children of `.card`.
- *
- * One card, two states: default (hand / preview / collection) and the board
- * state — art edge to edge, gems and the rarity band only. The board state is
- * `.card.is-board`, and is entered automatically under 110px.
- *
- * ---------------------------------------------------------------------------
- * UNITS — the one rule that matters here
- *   `cqw` inside a DESCENDANT of `.card` resolves against `.card` (it declares
- *   `container-type: inline-size`), so every internal dimension is exact at
- *   any card width. But `cqw` in `.card`'s OWN properties resolves against the
- *   nearest ANCESTOR container — the viewport in most of this app — which is
- *   why a `cqw` radius collapsed small cards into pills during prototyping.
- *   Therefore, on `.card` itself:
- *     - `border-radius` uses PERCENTAGES (3.6% of width, matched vertically
- *       against the 5 / 7.4 ratio), which are always exact;
- *     - lengths that cannot take a percentage (shadow spread/blur) use
- *       `--u`, i.e. 1% of the width declared by the context.
- *   `--w` is therefore set per context below. Getting it wrong only softens a
- *   glow; it can no longer deform the card.
- *
- * The rim stays neutral at every rarity; RARITY is carried by the bottom metal
- * band, FACTION by the name-pill border and the keyword tint.
- * ------------------------------------------------------------------------ */
+/* Skin "slate" — the card. Every card is an amber block painted by EmberAmber
+ * (presentation/amber-cards.js, amber-volume.js): the picture is this element's
+ * background and, for the card held up to read, a live canvas inside it. The
+ * DOM underneath (name, cost, numbers, rules) stays real text for reading,
+ * tests and assistive tech; it is visually hidden once the picture is ready and
+ * shown on a plain plate when WebGL2 is missing (html.amber-off).
+ * Battlefield miniature tokens keep their own board geometry below. */
 
 /* keyword glyphs — 16x16 masks, tinted by the faction colour */
 html[data-skin="slate"] body {
@@ -52,30 +20,19 @@ html[data-skin="slate"] body {
 html[data-skin="slate"] body .card {
   --w: 140px;
   --u: calc(var(--w) / 100);
-  --panel: #0a1119;
-  --accent: #9eb4c8;
-  --rim-glow: #0000;
-  --band-hi: #dbe4ee;
-  --band-mid: #a9b8c8;
-  --band-lo: #6c7f95;
-  --band-ink: #1f2c3a;
   position: relative;
   box-sizing: border-box;
   aspect-ratio: var(--card-face-ratio, 5 / 7.4);
   container-type: inline-size;
   overflow: visible;
   border: 0;
-  /* ONE radius for the whole card stack: a CIRCULAR corner of 3.6% of the
-   * width. The vertical half of a `/` radius is a share of the HEIGHT, so it
-   * is the horizontal share DIVIDED by the aspect ratio (3.6 / 1.48 = 2.432),
-   * not multiplied by it — multiplying stretches every corner into a tall
-   * ellipse, which is what made these corners read as "not perfect". */
-  border-radius: 3.6% / 2.432%;
+  border-radius: 0;
   background: none;
   box-shadow: none;
   outline: 0;
-  color: #f3f6fa;
+  color: #fff0d0;
 }
+
 /* Width per context. Only shadow softness depends on this being right. */
 html[data-skin="slate"] body .hand-card > .card {
   --w: var(--desktop-card-w, 131px);
@@ -108,662 +65,112 @@ html[data-skin="slate"] body .card-motion-content > .card {
   --w: var(--desktop-card-w, 131px);
 }
 
-/* The plate, and the ONLY painted edge in the whole card stack.
- *
- * The edge is the house card-container line from the design system §3 and the
- * hero-select preview card (`heroes.css .scene-showcase`): one light hairline
- * seated on one dark line, nothing else. 1.5px at that card's 300px is
- * 0.5cqw, so the card scales the same line and never lets it fall under 1px.
- * Every wrapper is transparent (§10) and every selection ring rides
- * `--card-ring` on THIS element, so each ring shares this radius and is
- * concentric with the corner by construction. */
-html[data-skin="slate"] body .card > .card-inner {
-  /* The edge must be an OUTER ring, not an inset one: `.card-art` is a
-   * positioned child filling the plate, and children paint over their
-   * parent's inset shadows — an inset hairline would simply disappear under
-   * the artwork. Outside the border box nothing can cover it. */
-  --card-edge: max(1px, 0.5cqw);
-  --card-edge-color: #d6dfe9aa;
-  --card-ring: 0 0 0 0 #0000;
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: auto;
-  height: auto;
-  min-height: 0;
-  box-sizing: border-box;
-  border: 0;
-  border-radius: inherit;
-  overflow: hidden;
-  background: var(--panel);
-  box-shadow:
-    0 0 0 var(--card-edge) var(--card-edge-color),
-    0 0 0 calc(var(--card-edge) + 1px) #030a16cc,
-    var(--card-ring),
-    0 0 3cqw 0.6cqw var(--rim-glow),
-    0 0.8cqw 2cqw #030a16b0;
-}
-/* The legacy layers own `.card-inner::before` / `::after` and hide both
- * (legacy-components.css). Nothing here revives them: the edge is one
- * hairline on the element itself. */
 
-/* rarity = metal band + (legendary only) rim glow */
-html[data-skin="slate"] body .card.common {
-  --band-hi: #dbe4ee;
-  --band-mid: #a9b8c8;
-  --band-lo: #6c7f95;
-  --band-ink: #1f2c3a;
+/* ===== 2. the amber picture =============================================== */
+/* Until the picture is drawn: a plain amber egg, so a card never flashes empty. */
+html[data-skin="slate"] body .card.amber-card:not(.amber-ready) {
+  border-radius: 50% 50% 46% 46% / 42% 42% 26% 26%;
+  background:
+    radial-gradient(70% 50% at 38% 22%, #ffe29a66, #0000 70%),
+    radial-gradient(120% 100% at 50% 20%, #e9a22a, #9a520c 62%, #4a2206);
+  box-shadow: inset 0 0 0 max(1px, 1.2cqw) #ffd37a55;
 }
-html[data-skin="slate"] body .card.rare {
-  --band-hi: #e9f6ff;
-  --band-mid: #93c9ef;
-  --band-lo: #3f86c2;
-  --band-ink: #0f3557;
+html[data-skin="slate"] body .card.amber-card.amber-ready {
+  background: var(--amber-img) center / 100% 100% no-repeat;
+  filter: drop-shadow(0 calc(var(--u) * 3) calc(var(--u) * 4) #000a);
 }
-html[data-skin="slate"] body .card.epic {
-  --band-hi: #f1e9ff;
-  --band-mid: #bca8e8;
-  --band-lo: #6d55b0;
-  --band-ink: #2a1d57;
-}
-html[data-skin="slate"] body .card.legendary {
-  --band-hi: #fff4d2;
-  --band-mid: #e4c27c;
-  --band-lo: #a47727;
-  --band-ink: #47300a;
-  --rim-glow: #e0b25a4d;
-}
-
-/* faction tint */
-html[data-skin="slate"] body .card.school-arcane,
-html[data-skin="slate"] body .card[data-class="mage"] {
-  --accent: #5b8dea;
-}
-html[data-skin="slate"] body .card.school-gold,
-html[data-skin="slate"] body .card[data-class="paladin"] {
-  --accent: #e9c46a;
-}
-html[data-skin="slate"] body .card.school-nature,
-html[data-skin="slate"] body .card[data-class="ranger"] {
-  --accent: #6fcf97;
-}
-html[data-skin="slate"] body .card.school-moon,
-html[data-skin="slate"] body .card[data-class="moon"] {
-  --accent: #9aa8ff;
-}
-html[data-skin="slate"] body .card.school-steel,
-html[data-skin="slate"] body .card[data-class="neutral"] {
-  --accent: #9eb4c8;
-}
-html[data-skin="slate"] body .card.school-ember {
-  --accent: #f08a4b;
-}
-
-/* ===== 2. art ============================================================= */
-html[data-skin="slate"] body .card .card-art {
+/* The live block draws into a canvas that overhangs the card box (the side wall and the
+ * turn need room): the card is 85% of the canvas width, centred. */
+html[data-skin="slate"] body .card > canvas.amber-live-canvas {
   position: absolute;
-  z-index: 1;
-  inset: 0 0 auto;
-  left: 0;
-  right: 0;
-  top: 0;
-  width: 100%;
-  height: 60%;
-  border: 0;
-  border-radius: 0;
-  background: var(--panel);
-  box-shadow: none;
-  overflow: hidden;
-}
-html[data-skin="slate"] body .card .card-art img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  max-width: none;
-  max-height: none;
-  object-fit: cover;
-  object-position: var(--art-pos, 50% 22%);
-  transform: none;
-  border-radius: 0;
-  opacity: 1;
-  filter: saturate(0.88) contrast(1.02);
-}
-html[data-skin="slate"] body .card .card-art::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border: 0;
-  box-shadow: none;
+  left: -8.82%;
+  top: -6.8%;
+  width: 117.65%;
+  height: 113.6%;
+  z-index: 5;
   pointer-events: none;
-  background:
-    radial-gradient(
-      46% 32% at 6% 2%,
-      #04090fc7 0%,
-      #04090f66 46%,
-      #04090f00 78%
-    ),
-    radial-gradient(
-      40% 26% at 96% 2%,
-      #04090f8f 0%,
-      #04090f42 46%,
-      #04090f00 78%
-    ),
-    linear-gradient(
-      180deg,
-      #0a111900 66%,
-      #0a111917 73%,
-      #0a11193d 78%,
-      #0a11196b 83%,
-      #0a11199e 88%,
-      #0a1119c9 92%,
-      #0a1119e8 96%,
-      #0a1119 100%
-    );
-}
-html[data-skin="slate"] body .card .card-art::before {
-  content: none;
-}
-
-/* ===== 3. cost seal: smoked-glass disc in a thin steel ring =============== */
-html[data-skin="slate"] body .card > .card-cost {
-  position: absolute;
-  z-index: 6;
-  top: 3.2%;
-  left: 3.6%;
-  right: auto;
-  bottom: auto;
-  /* The disc must hold TWO digits: a 10-cost card exists, and on a 320px
-   * phone the hand card is ~104px, where a proportional 16cqw disc is 16.6px
-   * and the 9px floor of the numeral no longer fits inside it. The floor here
-   * is the two-digit minimum, so the disc stops shrinking before the number
-   * does. */
-  width: max(18px, 16cqw);
-  height: auto;
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  clip-path: none;
-  background: none;
-  box-shadow: none;
-  filter: none;
-  /* The numeral font belongs on the seal itself, not only on the value span:
-   * the value is the seal's own text content as far as layout is concerned,
-   * and `font: inherit` here let it fall back to the 16px body face. */
-  font: 700 clamp(9px, 10cqw, 26px) / 1 var(--ui-font);
-  letter-spacing: 0;
-  text-shadow: none;
-}
-html[data-skin="slate"] body .card > .card-cost > .gem {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 215deg,
-    #e3edf6 0deg,
-    #8ea3b8 55deg,
-    #eef5fb 120deg,
-    #6a8098 190deg,
-    #d5e2ee 250deg,
-    #8ea3b8 300deg,
-    #e3edf6 360deg
-  );
-  box-shadow:
-    0 0 0 1px #05091acc,
-    0 0.5cqw 1cqw #000000c4;
-}
-html[data-skin="slate"] body .card > .card-cost > .gem::before {
-  content: "";
-  position: absolute;
-  inset: 9%;
-  border-radius: 50%;
-  background:
-    radial-gradient(
-      58% 40% at 50% 20%,
-      #ffffffa6 0%,
-      #ffffff33 42%,
-      #ffffff00 72%
-    ),
-    radial-gradient(48% 48% at 50% 64%, #2a3d55 0%, #131f2e 62%, #06090f 100%);
-  box-shadow:
-    inset 0 0 0 1px #00000073,
-    inset 0 -0.8cqw 1.2cqw #00000099,
-    0 0 0 0.3cqw #04091a;
-}
-html[data-skin="slate"] body .card > .card-cost > .badge-value {
-  position: relative;
-  z-index: 1;
   display: block;
-  width: auto;
-  height: auto;
-  font: inherit;
-  color: #fff;
-  -webkit-text-stroke: 0;
-  text-shadow:
-    0 1px 2px #000000e0,
-    0 0 0.9cqw #000000a6;
-  transform: none;
-  font-variant-numeric: tabular-nums;
+  filter: drop-shadow(0 calc(var(--u) * 3) calc(var(--u) * 4) #000a);
 }
-
-/* ===== 4. stat gems: shape == meaning ====================================
- * attack = crossed swords over an amber diamond, health = ruby heart,
- * weapon durability = cyan shield. EmberArt.statGem draws each one. */
-html[data-skin="slate"] body .card > .stat {
-  position: absolute;
-  z-index: 7;
-  width: 28cqw;
-  height: auto;
-  aspect-ratio: 1;
-  bottom: -3.2%;
-  top: auto;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  clip-path: none;
+html[data-skin="slate"] body .card.amber-card.amber-live {
   background: none;
-  box-shadow: none;
   filter: none;
-  font: 700 clamp(9px, 12.5cqw, 30px) / 1 var(--ui-font);
-  letter-spacing: 0;
-  text-shadow: none;
-}
-html[data-skin="slate"] body .card > .stat.atk {
-  left: -4.2%;
-  right: auto;
-}
-html[data-skin="slate"] body .card > .stat.hp {
-  right: -4.2%;
-  left: auto;
-}
-html[data-skin="slate"] body :is(.card, .minion) .stat > .stat-gem {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  filter: drop-shadow(0 0.55cqw 1cqw #000000c4);
-}
-html[data-skin="slate"] body .card > .stat > .stat-value {
-  position: relative;
-  z-index: 1;
-  display: block;
-  width: auto;
-  height: auto;
-  font: inherit;
-  color: #fff;
-  -webkit-text-stroke: 0;
-  text-shadow:
-    0 1px 2px #000000e6,
-    0 0 1cqw #000000a6;
-  transform: none;
-  font-variant-numeric: tabular-nums;
-}
-html[data-skin="slate"] body .card > .stat.hp > .stat-value {
-  transform: translateY(-6%);
-}
-html[data-skin="slate"] body .card > .stat.hp.ward > .stat-value {
-  transform: translateY(-4%);
-}
-html[data-skin="slate"] body .card > .stat.hp.hurt > .stat-value {
-  color: #ffd3d3;
-  text-shadow:
-    0 1px 2px #000,
-    0 0 1.2cqw #ff2a4a99;
-}
-html[data-skin="slate"] body .card > .stat.hp.hurt > .stat-gem {
-  filter: drop-shadow(0 0.55cqw 1cqw #000000c4) saturate(0.55) brightness(0.75);
 }
 
-/* ===== 5. name pill, straddling art / panel =============================== */
-html[data-skin="slate"] body .card .card-title {
+/* The text stays in the DOM, out of sight once the picture carries it. */
+html:not(.amber-off)[data-skin="slate"] body .card.amber-card.amber-ready > :not(canvas),
+html:not(.amber-off)[data-skin="slate"] body .card.amber-card.amber-live > :not(canvas) {
   position: absolute;
-  z-index: 5;
-  top: 56.8%;
-  bottom: auto;
-  left: 50%;
-  right: auto;
-  transform: translateX(-50%);
-  width: auto;
-  height: 8%;
-  min-height: 0;
-  max-width: 80%;
-  padding: 0 5cqw;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  pointer-events: none;
+}
+/* Without WebGL2: the text on a plain plate. */
+html.amber-off[data-skin="slate"] body .card.amber-card {
+  border-radius: 50% 50% 46% 46% / 42% 42% 26% 26%;
+  background: radial-gradient(120% 100% at 50% 20%, #e9a22a, #9a520c 62%, #4a2206);
+  display: block;
+  padding: 16% 10% 8%;
   text-align: center;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  clip-path: none;
-  background:
-    linear-gradient(#111a26f2, #111a26f2) padding-box,
-    linear-gradient(
-        180deg,
-        color-mix(in srgb, var(--accent) 88%, #ffffff),
-        color-mix(in srgb, var(--accent) 52%, #050c15)
-      )
-      border-box;
-  box-shadow:
-    0 0.5cqw 1.2cqw #030a12b8,
-    inset 0 1px 0 #ffffff1f;
-  font:
-    600 clamp(8px, 7.2cqw, 19px) / 1 "Songti SC",
-    "STSong",
-    "SimSun",
-    Georgia,
-    serif;
-  letter-spacing: 0.08em;
-  color: #f3f6fa;
-  text-shadow: 0 1px 2px #000a;
+  overflow: hidden;
+  filter: none;
 }
-html[data-skin="slate"] body .card .card-title.long {
-  font-size: clamp(6.5px, 5.6cqw, 15px);
-  letter-spacing: 0.03em;
-  padding: 0 3.4cqw;
-}
-
-/* ===== 6. rule panel ===================================================== */
-html[data-skin="slate"] body .card .card-text {
-  position: absolute;
-  z-index: 4;
-  inset: 65% 5% 24cqw;
+html.amber-off[data-skin="slate"] body .card.amber-card > :not(canvas) {
+  position: static;
+  inset: auto;
+  transform: none;
+  width: auto;
   height: auto;
-  max-height: none;
-  display: flex;
-  align-items: safe center;
-  justify-content: flex-start;
-  overflow: hidden;
+  margin: 1.5cqw 0;
   padding: 0;
-  border: 0;
-  background: none;
-  text-align: left;
-  font:
-    400 clamp(9px, 6.3cqw, 15px) / 1.4 "PingFang SC",
-    system-ui,
-    sans-serif;
-  color: #dfe9f3;
-  text-shadow: none;
-  letter-spacing: 0;
+  clip-path: none;
+  white-space: normal;
+  overflow: visible;
+  pointer-events: auto;
 }
-html[data-skin="slate"] body .card[data-rule-size="standard"] .card-text {
-  font-size: clamp(9px, 6.3cqw, 15px);
-  line-height: 1.4;
+html.amber-off[data-skin="slate"] body .card .card-title { font-weight: 700; font-size: 8cqw; }
+html.amber-off[data-skin="slate"] body .card .card-text { font-size: 6cqw; line-height: 1.3; }
+html.amber-off[data-skin="slate"] body .card .card-type { font-size: 5cqw; opacity: .7; }
+html.amber-off[data-skin="slate"] body .card .card-cost { position: absolute; top: 6cqw; left: 8cqw; font-size: 10cqw; font-weight: 800; }
+html.amber-off[data-skin="slate"] body .card .stat { position: absolute; bottom: 7cqw; font-size: 10cqw; font-weight: 800; }
+html.amber-off[data-skin="slate"] body .card .stat.atk { left: 8cqw; }
+html.amber-off[data-skin="slate"] body .card .stat.hp { right: 8cqw; }
+
+/* A pinned detail is read and turned by touch: its card takes the finger (the wrapper itself is click-through). */
+html[data-skin="slate"] body .card-preview[data-mode="pinned"] > .card {
+  pointer-events: auto;
 }
-/* v7 floors the long-rule ramp at 8px, which is authored for its 230px demo
- * card. The game's desktop hand card is 156px, where 8px is below this
- * project's readability floor (tests/e2e/card-reading.spec.cjs), so the ramp
- * keeps v7's slope and its 12px ceiling but floors at 9px. */
-html[data-skin="slate"] body .card[data-rule-size="long"] .card-text {
-  font-size: clamp(9px, 5.2cqw, 12px);
-  line-height: 1.4;
+
+/* State is warmth, painted over the picture: a card you can play glows, one you cannot afford goes cold. */
+html[data-skin="slate"] body .hand-card.playable > .card.amber-ready {
+  filter: drop-shadow(0 0 4px #ffb44aa6) drop-shadow(0 0 12px #ff9a2a55) drop-shadow(0 calc(var(--u) * 3) calc(var(--u) * 4) #000a);
 }
-/* The rule box is a fixed share of the face, so the number of lines that fit
- * falls with the card width. Clamping to the lines that actually fit is what
- * keeps `.card-text` from overflowing its own box at hand and rail sizes. */
-html[data-skin="slate"] body .card .card-copy {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
-  /* The copy is the flex item inside `.card-text`; without an explicit width
-   * a `-webkit-box` flex item sizes to its content and wraps early, so the
-   * rule box has to be claimed here (the legacy sheets used to do it). */
-  flex: 1 1 auto;
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-  max-height: 100%;
-  overflow: hidden;
+html[data-skin="slate"] body .hand-card.unaffordable > .card.amber-ready {
+  filter: saturate(0.55) brightness(0.72) drop-shadow(0 calc(var(--u) * 3) calc(var(--u) * 4) #000a);
 }
-@container (max-width: 200px) {
-  html[data-skin="slate"] body .card .card-copy {
-    -webkit-line-clamp: 3;
-  }
+html[data-skin="slate"] body .hand-card.selected > .card,
+html[data-skin="slate"] body .mulligan-card.replace > .card {
+  filter: drop-shadow(0 0 6px #ffe29a) drop-shadow(0 0 18px #ffb44acc) drop-shadow(0 calc(var(--u) * 3) calc(var(--u) * 4) #000a);
 }
-@container (max-width: 128px) {
-  html[data-skin="slate"] body .card .card-copy {
-    -webkit-line-clamp: 2;
-  }
+html[data-skin="slate"]
+  body
+  :is(.hand-card, .library-item, .mulligan-card, .discover-card):focus-visible
+  > .card {
+  filter: drop-shadow(0 0 4px #fff0c1) drop-shadow(0 0 9px #efad4670);
 }
-html[data-skin="slate"] body .card .card-text b.kw {
-  font-family: inherit;
-  font-weight: 700;
-  color: var(--accent);
-  display: inline-flex;
-  align-items: center;
+html[data-skin="slate"] body .hand-card.selected {
+  filter: none;
 }
-html[data-skin="slate"] body .card .card-text b.kw::before {
-  content: "";
-  flex: none;
-  width: 1em;
-  height: 1em;
-  margin-right: 0.18em;
-  background: currentColor;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-  -webkit-mask-size: contain;
-  mask-size: contain;
-}
-/* a keyword without a glyph must not reserve the mask box */
-html[data-skin="slate"] body .card .card-text b.kw:not([data-kw])::before {
+html[data-skin="slate"] body .hand-card::before,
+html[data-skin="slate"] body .hand-card::after,
+html[data-skin="slate"] body .card::before,
+html[data-skin="slate"] body .card::after {
   content: none;
-}
-html[data-skin="slate"] body .card .card-text b.kw[data-kw="spell"]::before {
-  -webkit-mask-image: var(--ic-spell);
-  mask-image: var(--ic-spell);
-}
-html[data-skin="slate"]
-  body
-  .card
-  .card-text
-  b.kw[data-kw="battlecry"]::before {
-  -webkit-mask-image: var(--ic-horn);
-  mask-image: var(--ic-horn);
-}
-html[data-skin="slate"] body .card .card-text b.kw[data-kw="taunt"]::before {
-  -webkit-mask-image: var(--ic-shield);
-  mask-image: var(--ic-shield);
-}
-html[data-skin="slate"] body .card .card-text b.kw[data-kw="divine"]::before {
-  -webkit-mask-image: var(--ic-bubble);
-  mask-image: var(--ic-bubble);
-}
-html[data-skin="slate"]
-  body
-  .card
-  .card-text
-  b.kw[data-kw="deathrattle"]::before {
-  -webkit-mask-image: var(--ic-skull);
-  mask-image: var(--ic-skull);
-}
-html[data-skin="slate"]
-  body
-  .card
-  .card-text
-  b.kw[data-kw="lifesteal"]::before {
-  -webkit-mask-image: var(--ic-drop);
-  mask-image: var(--ic-drop);
-}
-
-/* ===== 7. collection number ============================================== */
-html[data-skin="slate"] body .card .card-index {
-  position: absolute;
-  z-index: 5;
-  right: 23cqw;
-  bottom: 12.4cqw;
-  left: auto;
-  top: auto;
-  display: block;
-  font:
-    500 clamp(5px, 3.2cqw, 7.5px) / 1 ui-monospace,
-    "SF Mono",
-    Menlo,
-    monospace;
-  letter-spacing: 0.1em;
-  color: #4f6076;
-  white-space: nowrap;
-}
-html[data-skin="slate"] body .card.spell .card-index {
-  right: 5%;
-}
-
-/* ===== 8. the rarity band — a polished metal strip inlaid into the face === */
-html[data-skin="slate"] body .card .card-type {
-  position: absolute;
-  z-index: 4;
-  inset: auto 0 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  top: auto;
-  height: 9.6cqw;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 24cqw;
-  border: 0;
-  border-radius: 0;
-  background:
-    /* vertical bevel: lit lip on top, shadow toward the bottom */
-    linear-gradient(
-      180deg,
-      #ffffff73 0%,
-      #ffffff2e 22%,
-      #ffffff00 48%,
-      #00000030 78%,
-      #0000005c 100%
-    ),
-    /* horizontal polish: brightest at centre, falling off to the ends */
-      linear-gradient(
-        90deg,
-        var(--band-lo) 0%,
-        var(--band-mid) 24%,
-        var(--band-hi) 47%,
-        var(--band-hi) 53%,
-        var(--band-mid) 76%,
-        var(--band-lo) 100%
-      );
-  box-shadow:
-    inset 0 1px 0 #ffffffb0,
-    inset 0 2px 0 #ffffff2a,
-    inset 0 -1px 0 #08101ad9,
-    0 -1px 0 #04090f,
-    0 -0.6cqw 1.4cqw #04090f8c;
-  font-family: var(--ui-font);
-  font-size: clamp(6.5px, 4.3cqw, 9.5px);
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: 0.2em;
-  color: var(--band-ink);
-  text-shadow: 0 1px 0 #ffffff8a;
-  white-space: nowrap;
-  overflow: hidden;
-}
-html[data-skin="slate"] body .card .card-type > span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-html[data-skin="slate"] body .card.spell .card-type {
-  padding: 0 4cqw;
-}
-
-/* ===== 9. board state ==================================================== */
-html[data-skin="slate"] body .card.is-board :is(.card-cost, .stat) {
-  display: none;
-}
-html[data-skin="slate"]
-  body
-  .card.is-board
-  :is(.card-title, .card-text, .card-index) {
-  display: none;
-}
-html[data-skin="slate"] body .card.is-board .card-art {
-  height: 100%;
-}
-html[data-skin="slate"] body .card.is-board .card-art::after {
-  background:
-    radial-gradient(52% 34% at 50% 4%, #04090f7a 0%, #04090f00 76%),
-    linear-gradient(180deg, #0a111900 76%, #0a11192e 88%, #0a11197a 100%);
-}
-@container (max-width: 130px) {
-  html[data-skin="slate"] body .card .card-type {
-    letter-spacing: 0.06em;
-    padding: 0 23.5cqw;
-  }
-  html[data-skin="slate"] body .card.spell .card-type {
-    padding: 0 3cqw;
-  }
-}
-/* Auto board state under 110px. It must NOT reach a card the player still has
- * to READ: a short-landscape hand rail draws cards below 110px and the rules
- * have to stay (tests/e2e/hand-drag.spec.cjs drags from `.card-text`), so the
- * collapse is excluded from every reading wrapper and only catches a loose
- * thumbnail or an explicit `.is-board`. */
-@container (max-width: 110px) {
-  html[data-skin="slate"]
-    body
-    :not(
-      .hand-card,
-      .card-preview,
-      .library-item,
-      .mulligan-card,
-      .discover-card,
-      .card-detail-art,
-      .drag-ghost,
-      .card-motion-content
-    )
-    > .card
-    :is(.card-cost, .card-title, .card-text, .card-index) {
-    display: none;
-  }
-  html[data-skin="slate"]
-    body
-    :not(
-      .hand-card,
-      .card-preview,
-      .library-item,
-      .mulligan-card,
-      .discover-card,
-      .card-detail-art,
-      .drag-ghost,
-      .card-motion-content
-    )
-    > .card
-    .card-art {
-    height: 100%;
-  }
-  html[data-skin="slate"]
-    body
-    :not(
-      .hand-card,
-      .card-preview,
-      .library-item,
-      .mulligan-card,
-      .discover-card,
-      .card-detail-art,
-      .drag-ghost,
-      .card-motion-content
-    )
-    > .card
-    .card-art::after {
-    background:
-      radial-gradient(52% 34% at 50% 4%, #04090f7a 0%, #04090f00 76%),
-      linear-gradient(180deg, #0a111900 76%, #0a11192e 88%, #0a11197a 100%);
-  }
-  html[data-skin="slate"] body .card .card-type {
-    letter-spacing: 0.02em;
-    word-spacing: -0.22em;
-  }
 }
 
 /* ===== 10. wrappers: transparent positioning boxes =======================
@@ -795,52 +202,6 @@ html[data-skin="slate"]
 html[data-skin="slate"] body .card-preview {
   filter: drop-shadow(0 14px 26px #000b);
 }
-/* The hand rail's old "playable" cue was a 2px bar floating above the card
- * (refinement.css `.hand-card.playable::before`) — a second edge fragment that
- * cannot line up with a rounded corner. The ring below replaces it. */
-html[data-skin="slate"] body .hand-card::before,
-html[data-skin="slate"] body .hand-card::after,
-html[data-skin="slate"] body .card::before,
-html[data-skin="slate"] body .card::after {
-  content: none;
-}
-
-/* --- state rings -----------------------------------------------------------
- * A state does not ADD a second outline: it recolours and thickens the card's
- * ONE edge and adds a soft glow behind it. Both live on `.card-inner`, so both
- * share the card's radius and stay concentric with the corner at any zoom.
- * The colours are the ones these states already had. */
-html[data-skin="slate"] body .hand-card.playable > .card > .card-inner {
-  --card-edge-color: var(--positive);
-  --card-ring: 0 0 calc(var(--u) * 9) #90d8db66;
-}
-/* NOTE: `--accent` is redefined ON `.card` as the FACTION colour, so a
- * selection ring written as `var(--accent)` would come out gold on a paladin
- * card. Selection states name the UI accent literally. */
-html[data-skin="slate"] body .hand-card.selected > .card > .card-inner {
-  --card-edge: max(2px, 1cqw);
-  --card-edge-color: #bbdff9;
-  --card-ring: 0 0 calc(var(--u) * 16) #85c5f177;
-}
-html[data-skin="slate"] body .mulligan-card.replace > .card > .card-inner {
-  --card-edge: max(2px, 0.9cqw);
-  --card-edge-color: #8cc4ff;
-  --card-ring: 0 0 calc(var(--u) * 10) #8dd2ff99;
-}
-/* The legacy hand rail also hung a GOLD halo behind a selected card
- * (`refinement.css .hand-card.selected`, and `mobile.css` on the card itself).
- * That halo is a second, blurry outline in a colour selection never uses here,
- * and a blur cannot follow a rounded corner cleanly — the blue edge and glow
- * above are the whole affordance now. */
-html[data-skin="slate"] body .hand-card.selected,
-html[data-skin="slate"] body .hand-card.selected > .card {
-  filter: none;
-}
-/* Left deliberately without a ring, because these states never had one and a
- * ring would invent an affordance: `.library-item:hover` and `.hand-card:hover`
- * lift and brighten, and `.discover-card:is(:hover,:focus-visible)` already
- * glows with a `drop-shadow` on the card's own alpha (dialogs.css) — which
- * follows the rounded corner exactly, so it needs nothing from here. */
 /* The stat gems overhang the plate by 3.2%; the desktop hand rail was laid out
  * for a card that ended at its own edge, so the bottom row of gems landed
  * exactly on the app boundary. Lift the rail by the overhang, keeping the
@@ -1238,7 +599,7 @@ html[data-skin="slate"] body .minion .ready-dot {
   display: none;
 }
 
-/* ===== 12. the card back — polished mirror steel-blue ====================
+/* ===== 12. the card back — amber enclosing a fire seed ====================
  * No texture, no emblem, no text. All layers are percentages, so the same
  * plate is correct at 42x64 in the enemy hand and stretched to 100%/100%
  * inside the draw-flight proxy. `.card-back` is its own query container, so
@@ -1265,12 +626,12 @@ html[data-skin="slate"] body .card-back {
   isolation: isolate;
   overflow: hidden;
   border: 0;
-  border-radius: 3.6% / 2.4%;
-  --r-hi: #eaf3fb;
-  --r-lit: #bcd6ec;
-  --r-mid: #54769a;
-  --r-low: #32506f;
-  --r-deep: #223a53;
+  border-radius: 50% 50% 43% 43% / 48% 48% 20% 20%;
+  --r-hi: #fff0b8;
+  --r-lit: #f7cf69;
+  --r-mid: #bc701b;
+  --r-low: #86400c;
+  --r-deep: #4b2107;
   background:
     linear-gradient(
       126deg,
@@ -1284,21 +645,21 @@ html[data-skin="slate"] body .card-back {
     ),
     radial-gradient(
       62% 42% at 33% 25%,
-      #f4fbff9e 0%,
-      #dcecfb44 45%,
+      #fff4cc9e 0%,
+      #ffd26444 45%,
       #ffffff00 100%
     ),
     radial-gradient(
       26% 18% at 50% 42%,
-      #eef7ffcc 0%,
-      #cfe3f68c 38%,
-      #a9c6e03d 68%,
+      #ffeeb6cc 0%,
+      #ffcf668c 38%,
+      #dc8c283d 68%,
       #ffffff00 100%
     ),
     radial-gradient(
       104% 86% at 74% 92%,
-      #0b1727a8 0%,
-      #12243866 40%,
+      #351305a8 0%,
+      #59270b66 40%,
       #0000 82%
     ),
     conic-gradient(
@@ -1306,23 +667,23 @@ html[data-skin="slate"] body .card-back {
       var(--r-mid) 0deg,
       var(--r-lit) 30deg,
       var(--r-low) 64deg,
-      #9fbdd8 100deg,
+      #e1a843 100deg,
       var(--r-deep) 134deg,
       var(--r-hi) 172deg,
       var(--r-low) 206deg,
-      #8fb0cd 242deg,
+      #d79b32 242deg,
       var(--r-deep) 276deg,
-      #adc8de 306deg,
-      #3d5e80 334deg,
+      #efc576 306deg,
+      #b26b20 334deg,
       var(--r-mid) 360deg
     ),
-    #3f5f80;
+    #a05a13;
   box-shadow:
-    0 0 0 1px #cfe2f322,
-    inset 1px 1px 2px #f0f8ff5c,
-    inset -1px -1px 2px #060c1499,
-    inset 0 0 0 1px #0a1119a8,
-    0 2px 5px #030a1690;
+    0 0 0 1px #ffe5a922,
+    inset 1px 1px 2px #fff1c15c,
+    inset -1px -1px 2px #36160599,
+    inset 0 0 0 1px #3c1907a8,
+    0 2px 5px #21100890;
   opacity: 1;
 }
 /* second, offset conic at low opacity + blur: softens the ray edges and adds
@@ -1340,16 +701,16 @@ html[data-skin="slate"] body .card-back::before {
   background: conic-gradient(
     from -26deg at 50% 44%,
     #ffffff00 0deg,
-    #eef6ff66 22deg,
+    #fff0bc66 22deg,
     #14243800 58deg,
     #ffffff00 92deg,
-    #dceaf75e 124deg,
+    #ffdc895e 124deg,
     #16273c00 158deg,
     #ffffff00 196deg,
-    #e7f2ff70 224deg,
+    #ffe9a870 224deg,
     #12223600 262deg,
     #ffffff00 300deg,
-    #d6e6f556 326deg,
+    #fbd47e56 326deg,
     #ffffff00 360deg
   );
   filter: blur(4.6cqw);
@@ -1367,20 +728,23 @@ html[data-skin="slate"] body .card-back::after {
   background: none;
   color: transparent;
   font-size: 0;
-  border: 0.34cqw solid #e7f2fd2b;
-  border-top-color: #f4faff59;
-  border-left-color: #eef7ff42;
-  border-bottom-color: #06101a4d;
-  border-right-color: #08121d3d;
-  border-radius: 2.4cqw;
+  border: 0.34cqw solid #ffdb882b;
+  border-top-color: #fff1bf59;
+  border-left-color: #ffe8a242;
+  border-bottom-color: #5023084d;
+  border-right-color: #5424093d;
+  border-radius: 50% 50% 43% 43% / 48% 48% 20% 20%;
   box-shadow:
-    inset 0 0 0 0.3cqw #0a121b30,
-    0 0 1.4cqw #9fc7ef1a;
+    inset 0 0 0 0.3cqw #54280730,
+    0 0 1.4cqw #ffd3781a;
 }
 
 /* Dense touch rows overlap by 10px. Keep BOTH values in the exposed strip;
  * lifting only the badge's z-index cannot escape its card's stacking context. */
-html[data-skin="slate"] body.touch-layout .minion[data-stacked="true"] > .stat.hp {
+html[data-skin="slate"]
+  body.touch-layout
+  .minion[data-stacked="true"]
+  > .stat.hp {
   right: 12px;
 }
 
@@ -1435,9 +799,18 @@ html[data-skin="slate"] body .minion .sleep-z:nth-child(3) {
   animation-delay: -0.6s;
 }
 @keyframes slate-sleep-rise {
-  0% { opacity: 0; transform: translate(-1px, 4px) scale(.86) rotate(3deg); }
-  30%, 65% { opacity: 1; }
-  100% { opacity: 0; transform: translate(2px, -6px) scale(1.08) rotate(-3deg); }
+  0% {
+    opacity: 0;
+    transform: translate(-1px, 4px) scale(0.86) rotate(3deg);
+  }
+  30%,
+  65% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(2px, -6px) scale(1.08) rotate(-3deg);
+  }
 }
 /* Reduced motion keeps the marker as a still: all three visible, no drift. */
 html[data-skin="slate"] body.reduced-motion .minion .sleep-z {
@@ -1445,5 +818,8 @@ html[data-skin="slate"] body.reduced-motion .minion .sleep-z {
   opacity: 1;
 }
 @media (prefers-reduced-motion: reduce) {
-  html[data-skin="slate"] body .minion .sleep-z { animation: none; opacity: 1; }
+  html[data-skin="slate"] body .minion .sleep-z {
+    animation: none;
+    opacity: 1;
+  }
 }

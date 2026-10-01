@@ -15,14 +15,14 @@ const maps = new Function(
   read("src/card-relief-maps.js") + ";return EmberCardReliefMaps;",
 )();
 
-test("relief maps cover every card illustration exactly", () => {
-  const expected = cards.map((c) => c.id).sort();
+test("relief maps cover exactly the selectable heroes' portraits (cards are amber blocks, see amber-layers.js)", () => {
+  const expected = [...new Set(campaign.heroes.map((h) => h.portraitId))].sort();
   assert.deepEqual(
     Object.keys(maps).sort(),
     expected,
-    "Run tools/bake_card_relief.py --cards (it also rewrites src/card-relief-maps.js).",
+    "Run tools/bake_card_relief.py <portrait ids> (it also rewrites src/card-relief-maps.js).",
   );
-  assert.ok(expected.length >= 79);
+  assert.ok(expected.length >= 4);
   const referenced = new Set();
   for (const [id, set] of Object.entries(maps)) {
     assert.ok(set.height && set.orm, id + " needs height and orm");

@@ -20,5 +20,6 @@
 | 手机竖屏战斗 | [battle-portrait.md](battle-portrait.md) | 当前实装、真实入口与对照证据 |
 | 手机横屏战斗 | [battle-landscape.md](battle-landscape.md) | 当前实装、真实入口与对照证据 |
 | 二级状态 | [secondary.md](secondary.md) | 当前实装、真实入口与对照证据 |
+| 共用琥珀卡面 | [amber-card.md](amber-card.md) | 2026-09-29 设计稿实装、实时文字、弧形边界与验证 |
 
 新页面使用 [TEMPLATE.md](TEMPLATE.md)。页面 ID 用稳定英文短名，图片和实测输出放项目素材/输出目录；档案内链接到具体文件，不以端口 URL 或临时系统路径作为唯一来源。

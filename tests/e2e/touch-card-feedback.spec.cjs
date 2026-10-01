@@ -12,6 +12,27 @@ async function touch(cdp, type, x, y) {
     type, touchPoints: type === 'touchEnd' || type === 'touchCancel' ? [] : [{ x, y }],
   });
 }
+/* The card held up to read is a live amber block: a finger rubbing it turns it (EmberAmber.angles). */
+async function rubAmber(page, cdp, card, distance = 45) {
+  await expect(card).toHaveClass(/amber-live/, { timeout: 20000 });
+  // the card may still be settling into place (a pinned detail opens by scaling up)
+  let r = await card.boundingBox();
+  for (let i = 0; i < 20; i++) {
+    await page.waitForTimeout(120);
+    const next = await card.boundingBox();
+    const still = Math.abs(next.x - r.x) + Math.abs(next.y - r.y) + Math.abs(next.width - r.width) < 0.5;
+    r = next;
+    if (still) break;
+  }
+  const x = r.x + r.width * .5, y = r.y + r.height * .45;
+  await touch(cdp, 'touchStart', x, y);
+  for (let d = 5; d <= distance; d += 5) {
+    await touch(cdp, 'touchMove', x + d, y);
+    await page.waitForTimeout(20);
+  }
+  await expect.poll(() => page.evaluate(() => Math.abs(EmberAmber.angles().y))).toBeGreaterThan(.03);
+  await touch(cdp, 'touchEnd');
+}
 async function rub(page, cdp, card, property, distance = 45) {
   await card.evaluate(el => el.scrollIntoView({ block: "nearest", inline: "nearest" }));
   const r = await card.boundingBox();
@@ -80,7 +101,7 @@ test('rubbing an opening choice does not toggle it; a tap still does', async ({ 
   for (let i = 1; i <= 6; i++) await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: box.x + box.width * (0.2 + 0.1 * i), y: box.y + box.height / 2 }] });
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   await expect(choice).not.toHaveClass(/replace/);
-  expect(Math.abs(parseFloat(await choice.locator('> .card').evaluate((el) => el.style.getPropertyValue('--relief-ry'))) || 0)).toBeLessThan(1);
+  expect(Math.abs((await page.evaluate(() => EmberAmber.angles().y)) || 0)).toBeLessThan(0.02);
   await choice.tap();
   await expect(choice).toHaveClass(/replace/);
   await context.close();
@@ -160,8 +181,7 @@ test('pinned battlefield detail follows the finger and cancellation returns it t
   await page.waitForTimeout(600);
   await touch(cdp, 'touchEnd');
   const detail = page.locator('#card-preview[data-mode=pinned]');
-  await expect(detail.locator('.card-art')).toHaveClass(/card-relief-ready|live-art-ready/);
-  await rub(page, cdp, detail.locator('> .card'), '--relief-ry', 35);
+  await rubAmber(page, cdp, detail.locator('> .card'), 35);
   await expect(detail).toBeVisible();
   const box = await detail.boundingBox();
   await touch(cdp, 'touchStart', box.x + box.width * .8, box.y + box.height / 2);
@@ -169,7 +189,7 @@ test('pinned battlefield detail follows the finger and cancellation returns it t
   await touch(cdp, 'touchCancel');
   // The relief settles through zero and may then sway; sample every frame so the
   // pass through rest is never missed by a sparse poll.
-  await page.waitForFunction(() => Math.abs(parseFloat(document.querySelector('#card-preview[data-mode=pinned] > .card').style.getPropertyValue('--relief-ry'))) < 1, null, { timeout: 8000 });
+  await page.waitForFunction(() => Math.abs(EmberAmber.angles().y) < 0.02, null, { timeout: 8000 });
   await context.close();
 });
 
@@ -183,8 +203,7 @@ test('an unaffordable lifted hand card still turns under the finger without play
   const before = await page.evaluate(() => JSON.stringify(EmberDebug.game.s));
   await page.locator('#hand .hand-card').tap();
   const card = page.locator('#hand-card-lift > .card');
-  await expect(card.locator('.card-art')).toHaveClass(/card-relief-ready|live-art-ready/);
-  await rub(page, cdp, card, '--relief-ry', 40);
+  await rubAmber(page, cdp, card, 40);
   expect(await page.evaluate(() => JSON.stringify(EmberDebug.game.s))).toBe(before);
   await context.close();
 });

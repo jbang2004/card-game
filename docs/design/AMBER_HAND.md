@@ -1,6 +1,6 @@
 # 琥珀卡牌
 
-2026-09-29 · 设计稿，实验室原型已完成，未接入游戏。
+2026-09-29 · 用户认可新绘制的琥珀设计稿后，已用 imagegen 生成透明分层素材并接入共用卡牌组件。当前实现、范围与参考差异见 [琥珀卡面档案](reference-pages/amber-card.md)。下文保留先前实验室的设计与接入提案，不能视为本轮所有功能均已实现。
 
 方向的演变，都是用户在同一段对话里逐步给出的：
 
@@ -10,7 +10,7 @@
 
 设定依据：[SETTING_AMBER.md](SETTING_AMBER.md) 第三节、第十一节。每张牌是一块琥珀；法力是持有者的火种之温；出牌是把琥珀焐热、唤醒里面的生命。
 
-原型：`tools/amber-lab/`（8012 端口起本地服务后打开 `/tools/amber-lab/`）。截图：[战场](img/amber-shape-battle.jpg)、[图谱上半](img/amber-shape-tray.jpg)、[图谱下半](img/amber-shape-tray-2.jpg)。
+早期原型：`tools/amber-lab/`（8012 端口起本地服务后打开 `/tools/amber-lab/`），未用于生产卡面渲染。截图：[战场](img/amber-shape-battle.jpg)、[图谱上半](img/amber-shape-tray.jpg)、[图谱下半](img/amber-shape-tray-2.jpg)。
 
 ---
 

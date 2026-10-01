@@ -23,7 +23,7 @@ const EmberCampaignScreens = (() => {
         "discover",
         true,
       );
-      EmberCardRelief.attend(
+      EmberAmber.attend(
         [...document.querySelectorAll("[data-discover]")],
         (b) => ({
           id: b.dataset.discover,
