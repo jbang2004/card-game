@@ -2,7 +2,6 @@
  * No game state, input handlers or persistence. Shared by all card contexts. */
 const EmberCards = (() => {
   "use strict";
-  const A = EmberArt;
   const escape = (s) =>
     String(s ?? "").replace(
       /[&<>"']/g,
@@ -77,12 +76,6 @@ const EmberCards = (() => {
       "--art-scale": String(meta.scale ?? 1.13),
     });
   }
-  function ruleSize(c) {
-    const length = [...String(c?.text ?? "")].length;
-    if (length <= 18) return "short";
-    if (length <= 42) return "standard";
-    return "long";
-  }
   /* The rarity band says type and class only; rarity is carried by the metal
    * itself and tribe is deliberately omitted — three terms do not fit. */
   function typeName(c) {
@@ -91,30 +84,17 @@ const EmberCards = (() => {
   function bandLabel(c) {
     return `${typeName(c)} · ${EmberData.classNames[c.class] || "中立"}`;
   }
-  /* The collection has no authored card number, so the catalogue position is
-   * the number: collectibles first in authoring order, tokens after them. */
-  let collectionIndex = null;
-  function cardIndex(c) {
-    if (!collectionIndex) {
-      collectionIndex = Object.create(null);
-      const all = (typeof EmberData !== "undefined" && EmberData.cards) || [];
-      const collectible = all.filter((x) => !x.token);
-      collectible.forEach((x, i) => (collectionIndex[x.id] = i + 1));
-      all
-        .filter((x) => x.token)
-        .forEach(
-          (x, i) => (collectionIndex[x.id] = collectible.length + i + 1),
-        );
-    }
-    return String(collectionIndex[c.id] ?? 0).padStart(3, "0");
-  }
+  /* The card is live DOM: name, cost, numbers and rules stay readable text (tests,
+   * screen readers, copy-paste). Its picture is the amber block that EmberAmber
+   * paints behind it (presentation/amber-cards.js), which draws the same text on
+   * its own face; until that image is ready, or without WebGL2, the text shows
+   * on a plain amber plate (card-face.css). */
   function cardHTML(c, opts = {}) {
     const stat = c.type === "minion" || c.type === "weapon",
-      size = ruleSize(c),
       ward = c.type === "weapon",
       hp = opts.hp ?? c.hp,
       name = escape(c.name);
-    return `<div data-card-key="${c.id}" data-class="${c.class}" data-rule-size="${size}" class="card school-${c.palette} art-painted ${c.rarity} ${c.type === "minion" ? "type-minion" : c.type}"><div class="card-inner"><div class="card-art"><img src="${A.card(c)}" alt="${name}" draggable="false" data-art-key="${artKeyForCard(c)}" style="${artStyleForCard(c, "card")}"></div><div class="card-title ${[...c.name].length > 6 ? "long" : ""}">${name}</div><div class="card-text"><span class="card-copy">${formatText(c.text)}</span></div><span class="card-index">EMBERFALL · No.${cardIndex(c)}</span><div class="card-type"><span>${bandLabel(c)}</span></div></div><div class="card-cost"><span class="gem" aria-hidden="true"></span><span class="badge-value">${opts.cost ?? c.cost}</span></div>${stat ? `<div class="stat atk">${A.statGem("blade")}<span class="stat-value">${opts.atk ?? c.atk}</span></div><div class="stat hp ${ward ? "ward" : ""} ${hp < c.hp ? "hurt" : ""}">${A.statGem(ward ? "shield" : "heart")}<span class="stat-value">${hp}</span></div>` : ""}</div>`;
+    return `<div data-card-key="${c.id}" data-class="${c.class}" class="card amber-card school-${c.palette} ${c.rarity} ${c.type === "minion" ? "type-minion" : c.type}" role="img" aria-label="${name}"><div class="card-cost"><span class="badge-value">${opts.cost ?? c.cost}</span></div><div class="card-title"><span class="card-title-value">${name}</span></div><div class="card-text"><span class="card-copy">${formatText(c.text)}</span></div><div class="card-type"><span>${bandLabel(c)}</span></div>${stat ? `<div class="stat atk"><span class="stat-value">${opts.atk ?? c.atk}</span></div><div class="stat hp ${ward ? "ward" : ""} ${hp < c.hp ? "hurt" : ""}"><span class="stat-value">${hp}</span></div>` : ""}</div>`;
   }
   return Object.freeze({
     escape,
@@ -122,10 +102,8 @@ const EmberCards = (() => {
     artKeyForCard,
     artStyleForCard,
     artStyleForHero,
-    ruleSize,
     typeName,
     bandLabel,
-    cardIndex,
     cardHTML,
   });
 })();

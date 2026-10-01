@@ -81,14 +81,6 @@ const EmberCardStage = (() => {
       el.classList.add("flying");
       setTimeout(() => el.classList.remove("flying"), 620);
     } else el.classList.add("instant");
-    // Thickness from the start: the card turning over is where it shows. Its back is
-    // seated that far behind the face (card-relief.css).
-    const slab = EmberCardRelief.slab(node.querySelector(".god-card-front .card"));
-    if (slab) {
-      node.style.setProperty("--relief-depth", slab.depth + "px");
-      node.style.setProperty("--relief-flange", slab.flange.toFixed(2) + "px");
-    }
-
     el.querySelector(".god-scrim").onclick = () => close();
     document.addEventListener("keydown", state.key, true);
 
@@ -106,7 +98,7 @@ const EmberCardStage = (() => {
       node.style.setProperty("--tilt-x", (-py * 6).toFixed(2) + "deg");
     };
     el.addEventListener("pointermove", lean, { passive: true });
-    EmberCardRelief.bindTouch(node, () => {
+    EmberAmber.bindTouch(node, () => {
       node.style.removeProperty("--tilt-x");
       node.style.removeProperty("--tilt-y");
     });
@@ -115,15 +107,13 @@ const EmberCardStage = (() => {
       () => {
         node.style.removeProperty("--tilt-x");
         node.style.removeProperty("--tilt-y");
-        EmberCardRelief.rest();
+        EmberAmber.rest();
       },
       { passive: true },
     );
-    EmberLiveArt.mountCard(node.querySelector(".god-card-front .card"), {
+    EmberAmber.mountCard(node.querySelector(".god-card-front .card"), {
       id: card.id,
-      rarity: card.rarity,
       steer: "follow",
-      tilt: false,
       anchor: node,
     });
     bind?.(el, close);
@@ -139,7 +129,7 @@ const EmberCardStage = (() => {
     document.removeEventListener("keydown", state.key, true);
     // The slab stays for the return flight (the card turns over again); the whole
     // stage is dropped after it.
-    if (el.querySelector(".card-relief-canvas")) EmberCardRelief.release();
+    if (el.querySelector(".amber-live-canvas")) EmberAmber.release();
     const drop = () => {
       el.remove();
       if (state.returnFocus?.isConnected)

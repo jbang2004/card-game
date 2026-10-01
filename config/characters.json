@@ -316,6 +316,78 @@
     "huntinghorn": {
       "staticKey": "huntinghorn",
       "focus": 40
+    },
+    "scribe": {
+      "staticKey": "scribe",
+      "focus": 18
+    },
+    "frostgolem": {
+      "staticKey": "frostgolem",
+      "focus": 18
+    },
+    "mirrormage": {
+      "staticKey": "mirrormage",
+      "focus": 18
+    },
+    "magmacore": {
+      "staticKey": "magmacore",
+      "focus": 18
+    },
+    "frostwhisper": {
+      "staticKey": "frostwhisper",
+      "focus": 30
+    },
+    "starshot": {
+      "staticKey": "starshot",
+      "focus": 30
+    },
+    "acolyte": {
+      "staticKey": "acolyte",
+      "focus": 18
+    },
+    "vowguard": {
+      "staticKey": "vowguard",
+      "focus": 18
+    },
+    "dawnrider": {
+      "staticKey": "dawnrider",
+      "focus": 18
+    },
+    "archbishop": {
+      "staticKey": "archbishop",
+      "focus": 18
+    },
+    "consecrate": {
+      "staticKey": "consecrate",
+      "focus": 30
+    },
+    "judgment": {
+      "staticKey": "judgment",
+      "focus": 30
+    },
+    "boar": {
+      "staticKey": "boar",
+      "focus": 18
+    },
+    "tortoise": {
+      "staticKey": "tortoise",
+      "focus": 18
+    },
+    "gravewatch": {
+      "staticKey": "gravewatch",
+      "focus": 18
+    },
+    "bloodknight": {
+      "staticKey": "bloodknight",
+      "focus": 18
+    },
+    "bonelord": {
+      "staticKey": "bonelord",
+      "focus": 18
+    },
+    "oathkeeper": {
+      "staticKey": "oathkeeper",
+      "focus": 18
     }
   }
 }

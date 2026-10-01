@@ -24,6 +24,7 @@ TOKEN = re.compile(r'/\*([A-Z_]+)\*/')
 EMPTY_REGISTRY = {
     'LIVE_ART_MAPS': 'const EmberLiveArtMaps = Object.freeze({});\n',
     'LIVE_ART_AUTO': 'const EmberLiveArtAuto = Object.freeze({});\n',
+    'AMBER_LAYERS': 'const EmberAmberLayers = Object.freeze({});\n',
 }
 MEDIA = re.compile(r'data:(?:image|audio)/(png|webp|jpeg|gif|mpeg);base64,([A-Za-z0-9+/=]+)')
 

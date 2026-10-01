@@ -1327,13 +1327,7 @@
       el.addEventListener("mouseleave", hidePreview);
     });
     restoreHandScroll();
-    EmberCardRelief.warm(
-      [...document.querySelectorAll("#hand .hand-card")].map((el) => ({
-        id: el.dataset.cardid,
-        image: el.querySelector(".card-art img"),
-      })),
-    );
-    EmberLiveArt.warm(
+    EmberAmber.warm(
       [...document.querySelectorAll("#hand .hand-card")].map((el) => el.dataset.cardid),
     );
     window.EmberMobile?.afterRender(s);
@@ -1391,9 +1385,8 @@
       el.classList.add("open");
     });
     if (!detail.pinned) placeHoverDetail();
-    EmberLiveArt.mountCard(el.querySelector(".card"), {
+    EmberAmber.mountCard(el.querySelector(".card"), {
       id: c.id,
-      rarity: c.rarity,
       anchor: pinned ? el.querySelector(".card") : detail.source,
     });
   }
@@ -1432,7 +1425,7 @@
     detail.source = null;
     document.body.classList.remove("has-card-detail");
     const el = $("card-preview");
-    if (el.querySelector(".card-relief-canvas")) EmberCardRelief.release();
+    if (el.querySelector(".amber-live-canvas")) EmberAmber.release();
     el.classList.remove("open");
     el.style.display = "none";
     el.setAttribute("aria-hidden", "true");
@@ -1468,7 +1461,7 @@
     detail.source = null;
     document.body.classList.remove("has-card-detail");
     const el = $("card-preview");
-    if (el.querySelector(".card-relief-canvas")) EmberCardRelief.release();
+    if (el.querySelector(".amber-live-canvas")) EmberAmber.release();
     el.classList.remove("open");
     el.style.display = "none";
     el.setAttribute("aria-hidden", "true");
@@ -1776,7 +1769,7 @@
       "aria-label",
       source.getAttribute("aria-label") + "；再次点击收起",
     );
-    lift.innerHTML = cardHTML(D.byId[card.cid], { cost: game.cost(card) });
+    lift.innerHTML = cardHTML(D.byId[card.cid], { cost: game.cost(card), reading: true });
     app.classList.add("reading-hand");
     source.classList.add("reading-source");
     source.setAttribute("aria-expanded", "true");
@@ -1805,11 +1798,7 @@
       insetR = 12 + (mobile ? EmberViewport.safe.right : 0);
     // in portrait the first cards sit under the hero's console: the risen card steps aside, clear of the hero
     const hero = mobile && EmberViewport.portrait && EmberViewport.layout?.player;
-    const copy = lift.querySelector(".card-copy"),
-      text = lift.querySelector(".card-text"),
-      title = lift.querySelector(".card-title");
-    let rulesTop = 0;
-    for (let pass = 0; pass < 6; pass++) {
+    for (let pass = 0; pass < 1; pass++) {
       let x = Math.max(
         insetL,
         Math.min(EmberViewport.width - width - insetR, origin.x - width / 2),
@@ -1822,23 +1811,7 @@
         width: width + "px",
         height: height + "px",
       });
-      // Reserve rules by their actual line count, rather than hiding overflow.
-      const rulesHeight = Math.max(42, copy.scrollHeight);
-      rulesTop = height - width * 0.24 - rulesHeight - 8;
-      // the phone's risen card grows (in proportion) until its name clears the top and its rules all show
-      if (!mobile || rulesTop - 36 >= 32 || height >= maxH - 0.5) break;
-      height = Math.min(maxH, height * 1.12);
-      width = Math.min(maxW, height / ratio);
     }
-    text.style.top = rulesTop + "px";
-    title.style.top = rulesTop - 36 + "px";
-    // a long name on the phone's smaller risen card steps its type down until it fits the face
-    if (mobile) {
-      title.style.fontSize = "";
-      let fs = parseFloat(getComputedStyle(title).fontSize) || 14;
-      while (fs > 9 && title.getBoundingClientRect().width > width - 8) title.style.fontSize = (fs -= 0.5) + "px";
-    }
-    lift.querySelector(".card-art").style.height = rulesTop - 20 + "px";
     if (
       fresh &&
       !settings.reduced &&
@@ -1851,12 +1824,8 @@
         ],
         { duration: 180, easing: "cubic-bezier(.2,.8,.2,1)" },
       );
-    // The card held up to read shows its live artwork, turning under the hand.
-    EmberLiveArt.mountCard(lift.querySelector(".card"), {
-      id: card.cid,
-      rarity: D.byId[card.cid].rarity,
-      steer: "held",
-    });
+    // The card held up to read is a live amber block, turning under the hand.
+    EmberAmber.mountCard(lift.querySelector(".card"), { id: card.cid, steer: "held" });
   }
   function selectCard(uid) {
     if (!inBattle || modalType || EmberFX.busy) return;
@@ -2014,11 +1983,11 @@
         )
         .finished.catch(() => {})
         .then(() => {
-          if (lift.querySelector(".card-relief-canvas")) EmberCardRelief.release();
+          if (lift.querySelector(".amber-live-canvas")) EmberAmber.release();
           lift.remove();
         });
     } else if (lift && !lift.dataset.leaving) {
-      if (lift.querySelector(".card-relief-canvas")) EmberCardRelief.release();
+      if (lift.querySelector(".amber-live-canvas")) EmberAmber.release();
       lift.remove();
     }
     document.querySelectorAll("#hand .reading-source").forEach((el) => {
@@ -2192,7 +2161,6 @@
     const d = drag;
     drag = null;
     if (d.timer) clearTimeout(d.timer);
-    if (d.ghost) EmberCardRelief.release();
     d.ghost?.remove();
     d.el?.classList.remove("drag-source", "drag-armed");
     clearSelection();
@@ -2224,11 +2192,6 @@
     ghost.style.left = d.x + "px";
     ghost.style.top = d.y - (d.lift || 0) + "px";
     const c = D.byId[d.cid];
-    EmberCardRelief.mountCard(ghost.querySelector(".card"), {
-      id: c.id,
-      rarity: c.rarity,
-      steer: "drag",
-    });
     if (c.target) {
       selection = { type: "card", uid: d.uid, cid: d.cid };
       updateSelection();
@@ -2241,7 +2204,6 @@
   function finishDrag(d, e) {
     /* The ghost's markup seeds the card-motion proxy; return it flat first so
      * the proxy does not inherit a frozen lean or an empty canvas. */
-    EmberCardRelief.release();
     const source = d.ghost || d.el;
     const origin = captureCardOrigin({
       side: "p",

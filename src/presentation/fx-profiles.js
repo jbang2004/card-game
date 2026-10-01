@@ -57,6 +57,11 @@ const EmberFXProfiles = (() => {
   register("jingchen", "bolt");
   register("aurion", "slam");
   register("fenlos", "claw");
+  // 扩展包一
+  register("acolyte vowguard dawnrider gravewatch bloodknight bonelord", "blade");
+  register("boar", "claw");
+  register("frostgolem magmacore tortoise oathkeeper", "slam");
+  register("scribe mirrormage archbishop", "bolt");
   const spells = {
     starweave: ["starwell", 480],
     dawnvow: ["aegis", 440],
@@ -93,6 +98,10 @@ const EmberFXProfiles = (() => {
     absolution: ["benediction", 480],
     tracking: ["wildgate", 420],
     sabotage: ["shatter", 420],
+    frostwhisper: ["ice-lance", 420],
+    starshot: ["ember", 440],
+    consecrate: ["sunrise", 600],
+    judgment: ["benediction", 460],
   };
   for (const [id, [cast, windup]] of Object.entries(spells)) {
     records[id] = {
@@ -168,6 +177,11 @@ const EmberFXProfiles = (() => {
     lifedrain: { fx: "siphon" },
     graveoffering: { fx: "siphon" },
     soultether: { fx: "arcane" },
+    // 扩展包一：霜语走冰枪，星陨飞弹是小号陨火，圣焰审判每个敌人一道光柱，裁决之光单道光柱
+    frostwhisper: { fx: "frost" },
+    starshot: { fx: "fireball", scale: 0.7 },
+    consecrate: { fx: "holy", field: true },
+    judgment: { fx: "holy" },
   });
   // 英雄装备后的平砍：剑风，sunblade 金色、dagger 银白
   const fx2Weapons = Object.freeze({
@@ -277,6 +291,10 @@ const EmberFXProfiles = (() => {
     nyx: "starwell",
     ashdragon: "cataclysm",
     frostking: "blizzard",
+    frostgolem: "ice-lance",
+    archbishop: "sunrise",
+    tortoise: "bloom",
+    oathkeeper: "aegis",
   };
   for (const [id, battlecry] of Object.entries(battlecries))
     records[id].battlecry = battlecry;

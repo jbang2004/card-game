@@ -14,9 +14,9 @@ const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 const source = read("src/presentation/live-art.js");
 const KINDS = ["bg", "body", "front", "depth", "ctrl", "flags"];
 
-test("every card and selectable hero has live artwork, rigged by hand or automatically", () => {
-  const known = new Set([...campaign.heroes.map((h) => h.portraitId), ...cards.map((c) => c.id)]);
-  assert.deepEqual(Object.keys(maps).sort(), [...known].sort(), "Run tools/bake_live_art.py (--auto).");
+test("every selectable hero has hand-rigged live artwork (cards are amber blocks)", () => {
+  const known = new Set(campaign.heroes.map((h) => h.portraitId));
+  assert.deepEqual(Object.keys(maps).sort(), [...known].sort(), "Run tools/bake_live_art.py.");
   const hand = Object.keys(rigs).filter((id) => !rigs[id].auto);
   for (const id of Object.keys(maps))
     assert.ok(hand.includes(id) !== !!auto[id], id + ": exactly one of a hand rig or auto parameters");
@@ -76,10 +76,12 @@ test("live portrait is presentation-only and registered ahead of the hero screen
   const screen = read("src/application/screens/heroes.js");
   assert.match(screen, /EmberLiveArt\.mount\([\s\S]*?\.then\(\(ok\) => ok \|\| reliefFace\(\)\)/);
   assert.match(screen, /face: false/);
-  // Cards presented on their own go through EmberLiveArt.mountCard; hand cards do not.
-  for (const file of ["src/ui.js", "src/application/contracts.js", "src/presentation/card-stage.js"])
-    assert.match(read(file), /EmberLiveArt\.mountCard\(/, file);
-  // The card lifted to read is live; the drag ghost (brief, moving fast) keeps the relief.
-  assert.match(read("src/ui.js"), /EmberLiveArt\.mountCard\([^;]*steer: "held"/);
-  assert.doesNotMatch(read("src/ui.js"), /EmberLiveArt\.mountCard\([^;]*steer: "drag"/);
+  // Cards are amber blocks (EmberAmber): the ones presented on their own are live, the rest are still pictures.
+  for (const file of ["src/ui.js", "src/application/contracts.js", "src/presentation/card-stage.js"]) {
+    assert.match(read(file), /EmberAmber\.mountCard\(/, file);
+    assert.doesNotMatch(read(file), /EmberLiveArt\.mountCard\(/, file);
+  }
+  // The card lifted to read is live; the drag ghost (brief, moving fast) stays a still picture.
+  assert.match(read("src/ui.js"), /EmberAmber\.mountCard\([^;]*steer: "held"/);
+  assert.doesNotMatch(read("src/ui.js"), /EmberAmber\.mountCard\([^;]*steer: "drag"/);
 });

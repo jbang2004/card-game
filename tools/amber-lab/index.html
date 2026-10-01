@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>琥珀卡牌实验室</title>
+<link rel="stylesheet" href="lab.css">
+</head>
+<body>
+<div id="viewport">
+  <div id="stage">
+    <img id="backdrop" src="backdrop.webp" alt="" draggable="false">
+    <nav id="tabs" class="glass">
+      <button data-view="battle" class="on">战场手牌</button>
+      <button data-view="tray">琥珀图谱</button>
+    </nav>
+
+    <section id="battle" class="view on">
+      <div id="enemy-hand" aria-label="敌方手牌"></div>
+      <div id="hand"></div>
+      <div id="fx-layer"></div>
+      <aside id="controls" class="glass">
+        <h2>琥珀卡牌 · 实验</h2>
+        <label>法力<output id="mana-out">6</output>
+          <input id="mana" type="range" min="0" max="10" value="6"></label>
+        <div class="row">
+          <button id="turn">新回合</button>
+          <button id="draw">抽一张</button>
+        </div>
+        <div class="row">
+          <button id="enemy-kind">敌方卡背：琥珀</button>
+        </div>
+        <p class="hint">悬停：拿起卡牌，琥珀随视角折光。点击：出牌（琥珀焐热、裂开）。</p>
+      </aside>
+    </section>
+
+    <section id="tray" class="view">
+      <header>
+        <h1>琥珀卡牌</h1>
+        <p>卡牌的内容一点没变：插画、名字、规则、费用、攻血都在原来的位置。变的是外形——卡牌本身是一块抛光的琥珀。颜色说职业，切工与镶嵌说稀有度，亮起来说能出。</p>
+      </header>
+      <div id="tray-groups"></div>
+    </section>
+  </div>
+</div>
+<script src="amber.js"></script>
+<script src="lab.js"></script>
+</body>
+</html>

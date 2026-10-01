@@ -1,0 +1,482 @@
+{
+ "solaris": {
+  "desc": "the golden-haired armored female paladin with the spiked sun crown, her gold-white armor and long white gown, the round gold sun-emblem shield and the sword",
+  "scene": "the pale marble stairs, tall white columns, the big golden sun disc halo and bright cloudy sky behind her",
+  "key": "green"
+ },
+ "nyx": {
+  "desc": "the dark-haired queen with a silver crown, her raised hand, her long blue starry robe and cape",
+  "scene": "the starry night with the large ring and bright white star, the distant castle and waterfall, the astrolabe at the right",
+  "key": "green"
+ },
+ "ashdragon": {
+  "desc": "the huge black fire dragon: its horned head with glowing eyes and fiery mouth, its claws, scales and body",
+  "scene": "the glowing orange fire-sun glow behind it, dark stone ruins and steps, smoke and embers",
+  "key": "green"
+ },
+ "frostking": {
+  "desc": "the white-haired king with the ice crown, his white fur and blue robes, armor, the sword and the king himself sitting",
+  "scene": "the ice throne, tall ice crystal spires and frozen mountains, the icy floor",
+  "key": "green"
+ },
+ "eclipsewolf": {
+  "desc": "the huge dark blue wolf howling at the sky with its silver-grey mane, fur and tail",
+  "scene": "the black eclipse sun disc with a bright rim, the ruined stone arch on the cliff, the cloudy night sky and the rocky ledge",
+  "key": "green"
+ },
+ "moonguard": {
+  "desc": "the armored silver knight with the horned helmet, the blue cape and the large blue crescent-moon shield",
+  "scene": "the shallow reflective water, tall dark stone pillars, the cloudy blue sky",
+  "key": "green"
+ },
+ "selmyra": {
+  "desc": "the pale silver-haired moon goddess with the dark crown, her black robe, her long flowing hair and outstretched hand",
+  "scene": "the huge black eclipse circle in a dark night sky, the stone arched bridge over dark water",
+  "key": "green"
+ },
+ "jingchen": {
+  "desc": "the white-haired god in black and gold robes with the thorn-like crown and his raised hands",
+  "scene": "the giant glowing golden sun orb, the dark rocky cliff with the small lantern tower below",
+  "key": "green"
+ },
+ "aurion": {
+  "desc": "the golden-haired armored sun god with the spiked crown, his gold-white armor and long cape, and the huge golden sword planted in front of him",
+  "scene": "the bright golden sun rays, the white marble staircase, blue banners and the sky",
+  "key": "green"
+ },
+ "necromancer": {
+  "desc": "the dark-hooded pale woman in a black and blue cloak holding a glowing lantern, with the pale ghostly wisps flowing from her",
+  "scene": "the blue night gothic bridge and city with lights",
+  "key": "green"
+ },
+ "paladin": {
+  "desc": "the golden-haired armored female paladin with the halo and crown, her white-gold armor and gown, the greatsword and the round gold-white sun shield",
+  "scene": "the bright golden light, the white castle city and marble stairs behind her",
+  "key": "green"
+ },
+ "huntress": {
+  "desc": "the green-hooded elf huntress leaping with a spear, her green cape, brown hair, leather armor and boots",
+  "scene": "the sunlit forest, the mossy rock cliff and waterfalls",
+  "key": "magenta"
+ },
+ "dragon": {
+  "desc": "the small dark-blue dragon with orange wing membranes holding a flame in its mouth, perched on the stone ledge",
+  "scene": "the deep blue night sky with stars, the gothic stone tower and the stone ledge",
+  "key": "green"
+ },
+ "reaper": {
+  "desc": "the hooded dark grim reaper in a black tattered cloak holding the huge red-bladed scythe",
+  "scene": "the dark gothic arches and spires under a dark red sky, the dark water",
+  "key": "green"
+ },
+ "archbishop": {
+  "desc": "the white-bearded archbishop in the white and gold mitre and long white-gold robes holding the sun staff, together with the two small attendants at the lower left and lower right",
+  "scene": "the stained-glass rose window, pale cathedral columns and golden light rays",
+  "key": "green"
+ },
+ "bonelord": {
+  "desc": "the crowned skeletal lich lord in the purple cloak holding a bone staff with a purple crystal, together with the skulls and skeletons at the bottom",
+  "scene": "the dark purple gothic hall with the spiked bone throne and purple flames in braziers, the skull-lined floor",
+  "key": "green"
+ },
+ "phoenix": {
+  "desc": "the white and blue phoenix bird with spread feathered wings, its head and the small flame at its chest",
+  "scene": "the starry night sky with a comet at the top and the sea of clouds below",
+  "key": "green"
+ },
+ "oracle": {
+  "desc": "the silver-haired woman in a navy star-embroidered cloak holding a large silver astrolabe disc",
+  "scene": "the blue observatory with star rings and a tower",
+  "key": "green"
+ },
+ "wisp": {
+  "desc": "the green-haired elf fairy with translucent green wings and a green dress holding a glowing green orb in her hand",
+  "scene": "the sunlit green forest with layered leaves and light",
+  "key": "magenta"
+ },
+ "assassin": {
+  "desc": "the hooded assassin in dark armor and a black scarf holding a curved dagger",
+  "scene": "the dark red-lit stone wall and wet ground",
+  "key": "green"
+ },
+ "berserker": {
+  "desc": "the red-haired muscular bearded barbarian with the huge warhammer on his shoulder, fur trousers, leather straps and gauntlets",
+  "scene": "the red-orange lava cave glow with embers",
+  "key": "green"
+ },
+ "leech": {
+  "desc": "the pale dark-haired man in the black and red hooded cloak holding a glowing red orb in his hand",
+  "scene": "the huge blood-red moon and dark gothic ruins",
+  "key": "green"
+ },
+ "soulguide": {
+  "desc": "the long silver-haired man in a white hooded cloak and dark armor holding a glowing lantern",
+  "scene": "the misty blue stone bridge, a moon-arch gate and tall pillars, with faint ghosts",
+  "key": "green"
+ },
+ "vowguard": {
+  "desc": "the dark-haired armored knight in the navy tabard holding a large blue shield with a silver star and a sword",
+  "scene": "the stone castle wall, a castle in the distance, blue sky with clouds",
+  "key": "green"
+ },
+ "dawnrider": {
+  "desc": "the brown-haired golden-armored knight riding a white horse and holding a lance, with the horse",
+  "scene": "the golden grass field, the distant castle and the sunlit sky",
+  "key": "green"
+ },
+ "oathkeeper": {
+  "desc": "the red-bearded tavern guard in steel armor and a brown apron raising a wooden mug, with the big round shield",
+  "scene": "the warm tavern interior with lanterns, wooden beams and a hanging banner",
+  "key": "green"
+ },
+ "moonfox": {
+  "desc": "the white nine-tailed fox with its huge fluffy tail, and its reflection in the water",
+  "scene": "the moonlit still water with soft reflections, dark pillars and a misty night",
+  "key": "green"
+ },
+ "bloodknight": {
+  "desc": "the dark spiked horned armored knight with a glowing red sword and a tattered red cape",
+  "scene": "the dark red mist, the blood moon and dark gothic ruins",
+  "key": "green"
+ },
+ "spark": {
+  "desc": "the dark-haired young mage boy in a dark blue jacket holding a glowing fire orb in his hands",
+  "scene": "the blue starry observatory with an orbit ring and instruments",
+  "key": "green"
+ },
+ "squire": {
+  "desc": "the brown-haired braided female squire in white-gold armor holding up the large golden sun-emblem round shield",
+  "scene": "the bright marble hall with a sun disc, tall windows and sky",
+  "key": "green"
+ },
+ "archer": {
+  "desc": "the dark-haired ranger in the green cloak drawing a long bow with an arrow",
+  "scene": "the sunlit forest cliffs with a waterfall and tree trunks",
+  "key": "magenta"
+ },
+ "cleric": {
+  "desc": "the white-veiled blonde priestess in white and gold robes holding a glowing golden orb in both hands",
+  "scene": "the bright white cathedral with a large pale sun halo",
+  "key": "green"
+ },
+ "sentinel": {
+  "desc": "the silver-haired winged armored flyer in blue and white armor diving forward",
+  "scene": "the dark blue space with bright light streaks and planet rings",
+  "key": "green"
+ },
+ "scribe": {
+  "desc": "the dark-haired boy with round glasses writing with a quill in a big open book, in his dark robe",
+  "scene": "the library with bookshelves, warm lights and floating star-map pages (keep the floating pages)",
+  "key": "green"
+ },
+ "acolyte": {
+  "desc": "the golden-haired young priest in white-gold robes holding prayer beads, with the large golden ring-shaped halo prop beside him",
+  "scene": "the sunlit white cathedral with light rays and columns",
+  "key": "green"
+ },
+ "wolf": {
+  "desc": "the grey wolf crouching with blue eyes, with its fur and paws",
+  "scene": "the mossy rock, the green forest with tree trunks and soft light",
+  "key": "magenta"
+ },
+ "guard": {
+  "desc": "the armored knight with the plumed steel helmet holding a spear and a large blue shield with a silver wing emblem, his blue cape",
+  "scene": "the pale stone plaza with tall blue banners and white columns under a bright sky",
+  "key": "green"
+ },
+ "spider": {
+  "desc": "the giant black spider with the glowing green gem on its back and long legs",
+  "scene": "the mossy fallen log and dark green forest",
+  "key": "magenta"
+ },
+ "golem": {
+  "desc": "the grey stone golem with the round shield bearing a glowing green rune",
+  "scene": "the blue sky, tall blue banners and stone steps",
+  "key": "green"
+ },
+ "treant": {
+  "desc": "the huge tree guardian: its bark face with glowing yellow eyes, the leafy crown of branches and its large outstretched wooden hand",
+  "scene": "the sunlit green forest canopy and sky",
+  "key": "magenta"
+ },
+ "rider": {
+  "desc": "the ice-armored white-blue wolf rider with glowing blue eyes, the spiked ice armor and the frost lance, with the wolf",
+  "scene": "the frozen lake with water splashes and snowy mountains",
+  "key": "green"
+ },
+ "titan": {
+  "desc": "the giant dark stone golem with the glowing blue core in its chest",
+  "scene": "the misty grey mountain cliffs and tall pillars",
+  "key": "green"
+ },
+ "colossus": {
+  "desc": "the colossal pale stone golem with the glowing blue gem in its chest",
+  "scene": "the cloudy sky, misty rocky cliff and distant bridge",
+  "key": "green"
+ },
+ "bolt": {
+  "desc": "the blazing orange comet fireball with its flaming tail",
+  "scene": "the deep blue swirling space with a few stars",
+  "key": "green"
+ },
+ "frostbolt": {
+  "desc": "the glowing ice-crystal arrow with its shards",
+  "scene": "the deep blue space background",
+  "key": "green"
+ },
+ "fireball": {
+  "desc": "the big orange fireball with its glowing ring of flame",
+  "scene": "the dark blue night sky and the rocky ledge at the bottom left",
+  "key": "green"
+ },
+ "nova": {
+  "desc": "the large ice-crystal snowflake star burst with its flying shards",
+  "scene": "the frozen lake with reflections and dark blue sky",
+  "key": "green"
+ },
+ "storm": {
+  "desc": "the golden lightning bolt striking down with its sparks and flying rock debris",
+  "scene": "the dark stormy clouds, the dark stone platform and wet ground reflections",
+  "key": "green"
+ },
+ "wisdom": {
+  "desc": "the large open blue book with the glowing white star on its pages and the round table it lies on",
+  "scene": "the starry night sky with a comet, rocky mountains and mist",
+  "key": "green"
+ },
+ "blessing": {
+  "desc": "the round gold-and-white sun-emblem shield leaning on the steps",
+  "scene": "the bright marble stairs, white columns, sky and sun glow",
+  "key": "green"
+ },
+ "renew": {
+  "desc": "the green glowing water pouring from a big leaf into the mossy stone basin, with the basin",
+  "scene": "the sunlit green forest",
+  "key": "magenta"
+ },
+ "execute": {
+  "desc": "the dark red blade slash tearing through the stone door, with the flying stone fragments and the red crack",
+  "scene": "the pale stone door in a dark hall",
+  "key": "green"
+ },
+ "silence": {
+  "desc": "the dark purple crystal shard with the silver compass-star sigil",
+  "scene": "the deep navy background",
+  "key": "green"
+ },
+ "rally": {
+  "desc": "the white banner with the golden sun-star emblem on the golden pole",
+  "scene": "the golden sun glow, clouds and the marble steps",
+  "key": "green"
+ },
+ "wolves": {
+  "desc": "the two glowing green spirit wolves",
+  "scene": "the sunlit forest with ferns and a mossy rock",
+  "key": "magenta"
+ },
+ "shield": {
+  "desc": "the round white-and-gold sun-emblem shield leaning against the steps",
+  "scene": "the white marble stairs and pale castle in the distance",
+  "key": "green"
+ },
+ "lifedrain": {
+  "desc": "the pale hand with black nails gripping the red glowing heart-orb with the flowing red blood stream",
+  "scene": "the dark crimson background",
+  "key": "green"
+ },
+ "dagger": {
+  "desc": "the black and red curved dagger with the silver edge",
+  "scene": "the dark stone wall and red glow",
+  "key": "green"
+ },
+ "sunblade": {
+  "desc": "the tall golden sword with its glowing sun halo",
+  "scene": "the white marble temple with columns, banners, stairs and bright sky",
+  "key": "green"
+ },
+ "polymorph": {
+  "desc": "the fluffy white sheep with the blue glowing ring beneath it and the stone pedestal",
+  "scene": "the deep blue starry background with a bright white star above",
+  "key": "green"
+ },
+ "discovery": {
+  "desc": "the white parchment scroll with the golden star and its two golden rollers",
+  "scene": "the dark blue starry night and the reflective round stone platform",
+  "key": "green"
+ },
+ "ambush": {
+  "desc": "the glowing green arrow flying",
+  "scene": "the sunlit forest with the mossy rock and leaves",
+  "key": "magenta"
+ },
+ "battlecry": {
+  "desc": "the large ornate golden horn with the red ribbon and its golden sound rings",
+  "scene": "the sunlit white castle with banners and clouds",
+  "key": "green"
+ },
+ "coin": {
+  "desc": "the big gold coin with the eight-pointed star, standing on the dark stone block, with the block",
+  "scene": "the soft blue-grey backdrop",
+  "key": "green"
+ },
+ "pup": {
+  "desc": "the small grey wolf pup with big amber eyes resting its paws on the rock",
+  "scene": "the sunlit green forest",
+  "key": "magenta"
+ },
+ "spiritwolf": {
+  "desc": "the glowing translucent green spirit wolf",
+  "scene": "the pale green forest and large moon glow",
+  "key": "magenta"
+ },
+ "skeleton": {
+  "desc": "the skeleton warrior with the spear and the torn dark cloak",
+  "scene": "the dark stone archway with red light",
+  "key": "green"
+ },
+ "stone": {
+  "desc": "the floating carved grey stone slab with the glowing blue crystal sigil and the small floating rocks",
+  "scene": "the misty rocky mountains and waterfall",
+  "key": "green"
+ },
+ "sheep": {
+  "desc": "the fluffy white sheep",
+  "scene": "the starry night meadow with blue flowers and the glittering galaxy swirl",
+  "key": "green"
+ },
+ "recruit": {
+  "desc": "the blonde young female soldier in white-gold armor with sword and round shield",
+  "scene": "the white marble hall with sun-emblem banners and golden halo",
+  "key": "green"
+ },
+ "thorn": {
+  "desc": "the thorny green vine plant with sharp thorns and the yellow bud",
+  "scene": "the mossy rock and sunlit green forest leaves",
+  "key": "magenta"
+ },
+ "counterspell": {
+  "desc": "the large blue ice-crystal mirror shard with its star sigil, and the orange fireball hitting it",
+  "scene": "the blue magic hall with the golden magic circle on the reflective floor",
+  "key": "green"
+ },
+ "icebarrier": {
+  "desc": "the tall wall of blue ice crystals",
+  "scene": "the frozen floor and pale blue sky",
+  "key": "magenta"
+ },
+ "muster": {
+  "desc": "the white banners with golden sun emblems on poles",
+  "scene": "the marble stairs, golden sun glow and clouds",
+  "key": "green"
+ },
+ "absolution": {
+  "desc": "the dome of golden holy light with the beam of light and the compass sigil in it",
+  "scene": "the clouds and white city under it, the circular marble dais",
+  "key": "green"
+ },
+ "tracking": {
+  "desc": "the glowing golden paw prints on the path",
+  "scene": "the mossy forest trail and trees",
+  "key": "magenta"
+ },
+ "sabotage": {
+  "desc": "the dark gloved hand cutting the golden metal rod with orange sparks",
+  "scene": "the dark red-black background",
+  "key": "green"
+ },
+ "duskstag": {
+  "desc": "the dark blue stag with the huge pale antlers and glowing crescent marks",
+  "scene": "the misty moonlit forest and the rocky ledge with the big moon",
+  "key": "green"
+ },
+ "graveoffering": {
+  "desc": "the black ceremonial bowl with the pale blue-white flames rising from it",
+  "scene": "the dark gothic gate and stone stairs in night mist",
+  "key": "green"
+ },
+ "mooncall": {
+  "desc": "the glowing pillar of moonlight water spiral with the crescent moon on top",
+  "scene": "the deep blue night and still water with reflections",
+  "key": "green"
+ },
+ "soultether": {
+  "desc": "the two glowing crystal shards connected by the silver glowing ring line",
+  "scene": "the deep blue cloudy night",
+  "key": "magenta"
+ },
+ "moonlance": {
+  "desc": "the long glowing silver spear with the crescent moon",
+  "scene": "the dark cracked stone pillars, debris and night clouds",
+  "key": "green"
+ },
+ "stillness": {
+  "desc": "the glowing pale moon-stone orb with the thin ripple rings beneath it",
+  "scene": "the deep blue night water with reflection",
+  "key": "green"
+ },
+ "fenlos": {
+  "desc": "the huge green leaf-robed forest god with the antlered leafy head and flowing leaf cape",
+  "scene": "the sunlit forest canopy, misty valley, stone ruins and mountains",
+  "key": "magenta"
+ },
+ "starweave": {
+  "desc": "the glowing white eight-pointed star with the swirling silver light ribbons",
+  "scene": "the dark star ring portal and the starry night",
+  "key": "green"
+ },
+ "dawnvow": {
+  "desc": "the two crossed golden swords",
+  "scene": "the golden sun halo, white marble stairs, columns and banners",
+  "key": "green"
+ },
+ "huntinghorn": {
+  "desc": "the ornate green-and-gold hunting horn lying on the rock",
+  "scene": "the mossy rock cliff and sunlit forest valley",
+  "key": "magenta"
+ },
+ "frostgolem": {
+  "desc": "the icy crystal golem with the glowing blue core in its chest and its large ice fists",
+  "scene": "the ice cavern with crystal pillars and water",
+  "key": "green"
+ },
+ "magmacore": {
+  "desc": "the molten rock golem with the glowing orange core in its chest",
+  "scene": "the lava cavern with fire glow and embers",
+  "key": "green"
+ },
+ "frostwhisper": {
+  "desc": "the ice-crystal snowflake with the swirling frosty wind ribbons and leaves",
+  "scene": "the dark blue frosty pine forest night",
+  "key": "magenta"
+ },
+ "starshot": {
+  "desc": "the three blazing orange meteor fireballs with flame tails",
+  "scene": "the dark blue night sky and the small castle on the hill below",
+  "key": "green"
+ },
+ "consecrate": {
+  "desc": "the golden holy light pillar and the sun-star sigil with its glowing rings",
+  "scene": "the white city, columns and bright sky, and the dark claws of the ground below",
+  "key": "green"
+ },
+ "judgment": {
+  "desc": "the golden holy sword with the radiant light burst and glowing rays",
+  "scene": "the white city and clouds, and the dark clawing hands on the ground",
+  "key": "green"
+ },
+ "boar": {
+  "desc": "the brown wild boar with white tusks and green eyes charging",
+  "scene": "the sunlit forest with leaves and moss",
+  "key": "magenta"
+ },
+ "tortoise": {
+  "desc": "the giant moss-covered stone tortoise with the tree growing on its shell and the green glowing runes",
+  "scene": "the sunlit forest pond, waterfall and trees",
+  "key": "magenta"
+ },
+ "gravewatch": {
+  "desc": "the skeleton gravekeeper in the dark hooded cloak holding a green glowing lantern and a shovel",
+  "scene": "the dark blue night sky with the big moon and gothic ruins",
+  "key": "green"
+ }
+}

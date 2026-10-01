@@ -685,21 +685,8 @@ ${rig.fx}
    * artwork when the card has one, cropped like the <img> underneath; otherwise
    * (or if WebGL gives out) the relief face as before. Options as for
    * EmberCardRelief.mountCard. */
-  function mountCard(card, options) {
-    const art = card?.querySelector(".card-art"),
-      image = art?.querySelector("img");
-    const face = () => card.isConnected && EmberCardRelief.mountCard(card, options);
-    if (!image || !MAPS[options.id] || !rigFor(options.id)) return face();
-    const [x = 50, y = 22] = getComputedStyle(image).objectPosition.split(" ").map(parseFloat);
-    EmberCardRelief.mountCard(card, { ...options, face: false });
-    return mount(art, { id: options.id, focus: [x / 100, y / 100], onFail: face }).then(
-      (ok) => ok || face(),
-    );
-  }
-
   return Object.freeze({
     mount,
-    mountCard,
     warm,
     release,
     has: (id) => !!(MAPS[id] && rigFor(id)),
