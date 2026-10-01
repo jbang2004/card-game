@@ -36,7 +36,7 @@ uv run --python 3.12 --no-project --with pillow --with numpy --with onnxruntime 
 
 ### 琥珀卡牌分层（amber）
 
-每张卡的封存场景：`art/amber/<id>-{bg,body,front?,depth}.webp`（约 15.5 MB，97 张）与注册表 `src/amber-layers.js`，由 `tools/bake_amber_layers.py` 生成；重分层（真实抠像 + 画出来的背景板）见 `tools/amber_relayer/`，渲染见 `docs/design/reference-pages/amber-card.md`。没有分层的卡运行时封存其平面插画。
+每张卡的封存场景：`art/amber/<id>-{bg,body,front?,depth}.webp`（约 16 MB，97 张，全部重分层）与注册表 `src/amber-layers.js`，由 `tools/bake_amber_layers.py` 生成；重分层（真实抠像 + 画出来的背景板）见 `tools/amber_relayer/`，渲染见 `docs/design/reference-pages/amber-card.md`。没有分层的卡运行时封存其平面插画。
 
 ## 活立绘（live-art）
 
