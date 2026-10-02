@@ -311,7 +311,7 @@ const EmberVoxelArena = (() => {
       const k = key(side, uid), u = units.get(k);
       if (!u) return;
       units.delete(k); stats.figures = units.size;
-      live(u, false); sfx?.drop(u);
+      live(u, false); sfx?.drop(u); dropEcho(u);
       const i = queue.indexOf(u); if (i >= 0) queue.splice(i, 1);
       if (animate && shown(u)) { die(u, u.lastFrom); return; }
       if (u.state === "dying") return;                   // its death beat finishes on its own
@@ -348,14 +348,16 @@ const EmberVoxelArena = (() => {
         }
         // where its foe stands (a caster that calls its blow down on it marks the spot as it charges)
         const toward = opts.toward, target = () => { const g = toward && where(toward); if (!g) return null; const v = units.get(key(toward.side, toward.uid)); return { ground: V3(g.x, 0, g.z), center: v?.fig ? center(v) : g.clone().add(V3(0, 0.45 * SIZE, 0)) }; };
-        if (sig && sfx) sfx.attack(u, { t0: u.atk.t0, align: u.atk.alignMs, contact: opts.contactMs, tier: opts.tier || 1, leap: sig.leap, target });
+        if (sig && sfx) sfx.attack(u, { t0: u.atk.t0, align: u.atk.alignMs, contact: opts.contactMs, tier: opts.tier || 1, leap: sig.leap, target, flinch: (k = 0.4) => tap(u, { k, quiet: true }) });
+        // a combo (its sheet's phases marked `hit`): lighter blows of its own before the director's contact
+        if (sig?.combo && opts.toward) u.atk.taps = sig.combo.map((c) => ({ at: u.atk.alignMs * c.at, k: c.k }));
         // the sword of light: every judgment of the coded figure; a signature calls it down on its heavy blows only
         if (a.smite && !shoots && opts.toward && (!sig || ((opts.tier || 1) >= 3 && !sig.fx?.modern))) smite(u, opts.toward, u.atk.t0 + u.atk.alignMs, sig ? { stay: 650, quiet: true } : {});   // (a god's own heavy blow is its kit's)
         // a caster's charge (its model's spell): motes into the casting hand, an orb growing there, a rune circle
         // underfoot, all through the wind-up to the release; a sprite whirls in a ring of light
         const sp = u.fig.spell;
-        if (sp && shoots && fire) {
-          const ch = sig?.fx?.castHand, k = u.fig.root.scale.x, hand = () => (u.fig ? (ch && u.fig.bones[ch] ? u.fig.bones[ch].getWorldPosition(V3()) : emitterOf(u)) : null), feet = () => (u.fig ? u.fig.root.position.clone() : null);
+        if (sp && sp.gather !== false && shoots && fire) {
+          const ch = sig?.fx?.castHand, k = u.fig.root.scale.x, cb = () => u.fig.bones[ch] || u.fig.J?.[ch], hand = () => (u.fig ? (ch && cb() ? cb().getWorldPosition(V3()) : emitterOf(u)) : null), feet = () => (u.fig ? u.fig.root.position.clone() : null);
           fire.gather(hand, feet, u.atk.alignMs, (sp.r ?? 0.075) * k, sp.look, { orb: !u.fig.fire, rise: !!sp.rise });
           if (sp.spin) fire.orbit(() => (u.fig ? center(u) : null), u.atk.alignMs * 0.8, 0.32 * k, sp.look);
         }
@@ -363,6 +365,10 @@ const EmberVoxelArena = (() => {
         // ground flies nothing
         const flies = sig ? (sig.fx?.cast ?? "bolt") === "bolt" : o.shots;
         if (shoots && flies && opts.toward) shots.push({ u, to: opts.toward, at: u.atk.t0 + (opts.liftMs ?? 350), hit: u.atk.t0 + (opts.contactMs ?? 500), tier: opts.tier || 1, style: a.style, tint: a.tint, fire: !!a.fire, from: null, fired: false });
+        // a volley (its sheet's cast.count on a bolt or an arrow): lighter shots leave ahead of the last — each lands
+        // as a lighter blow of its own (tap); the last is the director's contact
+        if (shoots && flies && opts.toward && sig?.fx?.castCount > 1) for (let i = 1, gap = sig.fx.castGap ?? 90; i < sig.fx.castCount; i++)
+          shots.push({ u, to: opts.toward, at: u.atk.t0 + (opts.liftMs ?? 350) - i * gap, hit: u.atk.t0 + (opts.contactMs ?? 500) - i * gap, tier: 1, style: a.style, tint: a.tint, fire: !!a.fire, from: null, fired: false, lead: true });
       } else if (kind === "hurt") {
         const tier = Math.max(1, Math.min(3, opts.tier || 1));
         u.glow = { f: 0, tier };
@@ -468,6 +474,23 @@ const EmberVoxelArena = (() => {
       if (d.lengthSq() < 1e-6) return; d.normalize();
       const lift = a.fig.sig?.fx?.lift ?? 0;                   // a blow that tosses its victim up (a pillar of fire)
       v.kb = { t0: performance.now(), d, amt: (tier >= 3 ? 0.13 : 0.08) * v.fig.root.scale.x * (lift ? 0.3 : 1), up: lift * v.fig.root.scale.x * (tier >= 3 ? 1.2 : 1) };
+    }
+    /** a combo's lighter blow (before the director's contact, which deals the damage): its mark and sparks on the
+     *  victim, which flinches and gives a little; the attacker holds a frame or two on it */
+    function tap(u, c) {
+      const v = u.toward && units.get(key(u.toward.side, u.toward.uid)), g = u.toward && where(u.toward);
+      if (!g) return;
+      const live = v?.fig && v.state === "live";
+      if (!c.quiet) sfx?.tap(u, hitOf(live ? center(v) : g.clone().add(V3(0, 0.45 * SIZE, 0)), u), c.k);       // (quiet: the effect that struck drew its own mark)
+      if (live) {
+        const d = V3(v.fig.root.position.x - u.fig.root.position.x, 0, v.fig.root.position.z - u.fig.root.position.z);
+        if (d.lengthSq() > 1e-6) v.kb = { t0: performance.now(), d: d.normalize(), amt: 0.045 * c.k * v.fig.root.scale.x, up: 0 };
+        if (v.clip !== "attack") { v.clip = "hurt"; v.t = 0; }
+        v.glow = { f: 3, tier: 1 };                           // (its tint only: the white frame is the last blow's)
+      }
+      // (it holds on the blow a frame or two and then catches up: its clock is not put back, so the last blow still
+      // lands on the director's contact)
+      if (u.atk && !u.atk.ranged && !c.quiet) u.hold = 1;
     }
     function knockOffset(v, now) {
       const up = v.kb.up || 0, q = (now - v.kb.t0) / (up ? 700 : 420);
@@ -591,7 +614,7 @@ const EmberVoxelArena = (() => {
     function die(u, from) {
       if (u.state === "dying") return;
       units.delete(u.k); stats.figures = units.size;
-      live(u, false); sfx?.drop(u);                        // its station's sigil and any effect riding it go with it
+      live(u, false); sfx?.drop(u); dropEcho(u);           // its station's sigil and any effect riding it go with it
       if (!u.fig || u.state === "baking") { dropBase(scene, u); return; }
       u.state = "dying"; u.dieF = frame; dying.push(u);
       u.fig.root.visible = true;
@@ -665,9 +688,21 @@ const EmberVoxelArena = (() => {
         // through the landing and the rise; a hop home. A god rises off the ground as it charges and comes down on the blow
         if (r >= d.stay + d.back) return null;
         const sg = u.fig.sig, k = u.fig.root.scale.x;
-        if (r >= d.lift && r < d.contact) { const q = (r - d.lift) / (d.contact - d.lift); s = sg?.dash === "lunge" ? Math.pow(q, 1.8) : 0.25 * q + 0.75 * ease3(q); }
+        // (a combo is there early — sig.arrive: that share of the lead before the blow — for its first hit)
+        if (r >= d.lift && r < d.contact) { const q = Math.min(1, (r - d.lift) / Math.max(1, d.contact * (1 - (sg?.arrive ?? 0)) - d.lift)); s = sg?.dash === "lunge" || sg?.combo ? Math.pow(q, 1.8) : 0.25 * q + 0.75 * ease3(q); }     // (a combo goes in late and fast, onto its first blow)
         else if (r >= d.contact && r < d.stay) s = 1;
         else if (r >= d.stay) { const q = (r - d.stay) / d.back; s = 1 - ease3(q); hop = 0.1 * k * Math.sin(Math.PI * q); }
+        // a combo does not stand at its foe and swing: between its blows it springs back a step and drives in again —
+        // out fast, held a beat, then in late and hard, so every blow (the last most of all) lands with the body behind
+        // it (sig.recoil × its size: how far; less for blows close together)
+        if (sg?.combo && r < d.contact) {
+          const t0 = d.contact * (1 - (sg.arrive ?? 0)), ts = [...sg.combo.map((c) => Math.max(t0, c.at * d.contact)), d.contact], dist = Math.hypot(sx, sz) || 1;
+          for (let i = 0, a = t0; i < ts.length; a = ts[i++]) if (sg.recoil && r > a && r < ts[i] && ts[i] - a > 60) {
+            const q = (r - a) / (ts[i] - a), last = i === ts.length - 1, amt = (sg.recoil ?? 0) * k * Math.min(1, (ts[i] - a) / 260) * (last ? 1 : 0.55);
+            const f = q < 0.4 ? ease3(q / 0.4) : 1 - Math.pow((q - 0.4) / 0.6, 2.2);
+            s -= (amt * f) / dist; hop += (sg.dash === "leap" ? 0 : 0.035) * k * Math.sin(Math.PI * Math.min(1, q / 0.8)) * (q < 0.8 ? 1 : 0);
+          }
+        }
         if (sg?.levitate && r < d.contact) { const q = r / d.contact; hop += sg.levitate * k * (q < 0.8 ? ease3(q / 0.8) : 1 - ((q - 0.8) / 0.2) ** 2); }
         return V3(sx * s, hop, sz * s);
       }
@@ -683,7 +718,7 @@ const EmberVoxelArena = (() => {
       // one burnt the whole body white for a fifth of a second, and its recoil could not be seen)
       const soft = u.fig.model ? 0.55 : 1, D = (u.fig.model ? 7 : 11) + (g.tier >= 2 ? 3 : 0), fl = D + 1 - g.f;
       const ember = g.kill && u.state === "dying" ? 0.22 : 0;
-      if (g.f === 0) R.setHit(u.fig, HOT[0] * (u.fig.model ? 0.8 : 1), HOT[1] * (u.fig.model ? 0.8 : 1), HOT[2] * (u.fig.model ? 0.8 : 1));
+      if (g.f === 0) R.setHit(u.fig, HOT[0] * (u.fig.model ? 0.5 : 1), HOT[1] * (u.fig.model ? 0.5 : 1), HOT[2] * (u.fig.model ? 0.5 : 1));
       else if (fl > 0 || ember) { const q = Math.max(0, Math.min(1, fl / (D - 1))), k = Math.max(ember, q * q * soft), c = g.kill ? TINT[3] : TINT[g.tier]; R.setHit(u.fig, c[0] * k, c[1] * k, c[2] * k); }
       else { R.setHit(u.fig, 0, 0, 0); u.glow = null; }
     }
@@ -745,12 +780,13 @@ const EmberVoxelArena = (() => {
         }
         if (!s.fired) {
           s.fired = true; s.from = emitterOf(s.u);
-          if (s.fire && fire) fire.shoot(s.from, end, Math.max(60, s.hit - now), 0.1 * s.u.fig.root.scale.x);
-          else if (s.u.fig.spell && fire) { const sp = s.u.fig.spell; s.fire = true; fire.shoot(s.from, end, Math.max(60, s.hit - now), (sp.bolt ?? 0.08) * s.u.fig.root.scale.x, sp.look); }
+          const lk = s.lead ? 0.62 : 1, lo = s.lead ? { lite: true } : undefined;
+          if (s.fire && fire) fire.shoot(s.from, end, Math.max(60, s.hit - now), 0.1 * lk * s.u.fig.root.scale.x, undefined, lo);
+          else if (s.u.fig.spell && fire) { const sp = s.u.fig.spell; s.fire = true; fire.shoot(s.from, end, Math.max(60, s.hit - now), (sp.bolt ?? 0.08) * lk * s.u.fig.root.scale.x, sp.look, lo); }
         }
-        if (s.fire && fire) { if (now >= s.hit) shots.splice(i, 1); continue; }
+        if (s.fire && fire) { if (now >= s.hit) { shots.splice(i, 1); if (s.lead && s.u.atk) tap(s.u, { k: 0.45 }); } continue; }
         // a realistic archer (a model figure) has no coded bow clip to fly its arrow: the arena flies a real one
-        if (s.style === "arrow" && s.u.fig.model) { if (flyArrow(s, end, now)) shots.splice(i, 1); continue; }
+        if (s.style === "arrow" && s.u.fig.model) { if (flyArrow(s, end, now)) { shots.splice(i, 1); if (s.lead && s.u.atk) tap(s.u, { k: 0.5 }); } continue; }
         const q = Math.min(1, (now - s.at) / Math.max(60, s.hit - s.at)), p = s.from.clone().lerp(end, q);
         const col = s.tint ? hex3(s.tint, 2.2) : s.style === "breath" ? [2.4, 0.95, 0.28] : [1.6, 1.1, 2.4];
         if (s.style === "breath") fx.embers(p.x, p.y, p.z, 5, 0.07 * S, col);
@@ -765,6 +801,7 @@ const EmberVoxelArena = (() => {
       for (const u of units.values()) {
         if (u.glow) u.glow.f++;
         if (u.freeze > 0) u.freeze--;
+        if (u.hold > 0) u.hold--;
         if (u.pendingHurt && --u.stopF < 0) { u.pendingHurt = false; if (u.clip !== "attack") { u.clip = "hurt"; u.t = 0; } }
       }
       for (let i = dying.length - 1; i >= 0; i--) {
@@ -794,6 +831,32 @@ const EmberVoxelArena = (() => {
         } else if (frame - u.shattered > 21) { scene.remove(u.fig.root); R.dispose(u.fig); dying.splice(i, 1); }
       }
     }
+    /** a figure's reflections (its sheet's charge.echo: how many): mirror images of it that step out as it winds up,
+     *  go round its foe as it closes — one to each side — and strike as it strikes; on the blow they break like glass */
+    function stepEcho(u, now) {
+      const MF = typeof EmberModelFigures !== "undefined" ? EmberModelFigures : null, n = u.fig.sig?.fx?.echo, A = u.atk;
+      if (!u.echo) {
+        if (!n || !MF?.echo || u.clip !== "attack" || !A || !u.toward || now - A.t0 > A.alignMs * 0.5) return;
+        const tint = sfx?.tintOf(u) || [0.6, 0.8, 1.6];
+        u.echo = { t0: A.t0, lead: A.alignMs, tint, figs: Array.from({ length: n }, () => { const e = MF.echo(u.fig, tint); scene.add(e.root); return e; }), broke: 0 };
+      }
+      const E = u.echo, g = u.toward && where(u.toward), q = (now - E.t0) / E.lead, root = u.fig.root;
+      if (!E.broke && (q >= 1.12 || u.clip !== "attack")) {
+        E.broke = now;
+        for (const e of E.figs) sfx?.glass(e.root.position.clone().add(V3(0, 0.5 * root.scale.y, 0)), root.scale.y, E.tint);
+      }
+      const out = ease(Math.min(1, q / 0.45)), gone = E.broke ? Math.min(1, (now - E.broke) / 220) : 0;
+      E.figs.forEach((e, i) => {
+        const ang = (i % 2 ? -1 : 1) * (0.95 + 0.5 * Math.floor(i / 2)) * out, rel = root.position.clone().sub(g || root.position);
+        e.sync(T);
+        e.root.position.copy(g || root.position).add(rel.applyAxisAngle(V3(0, 1, 0), ang));
+        e.root.quaternion.setFromAxisAngle(V3(0, 1, 0), ang).multiply(root.quaternion);
+        e.root.scale.set(-root.scale.x, root.scale.y, root.scale.z);                 // (a mirror image)
+        e.dis.k.value = E.broke ? gone : Math.max(0, 1 - Math.min(1, q / 0.3));
+      });
+      if (E.broke && gone >= 1) dropEcho(u);
+    }
+    function dropEcho(u) { if (!u.echo) return; for (const e of u.echo.figs) { scene.remove(e.root); e.dispose(); } u.echo = null; }
     /** advance and pose everything for this frame (the page renders afterwards); true while anything is on stage */
     function step(now, camera, dt) {
       if (disposed) return false;
@@ -853,7 +916,8 @@ const EmberVoxelArena = (() => {
           // where its foe's body is (a figure may aim its blow at it: EmberModelFigures' aim "foe")
           const tv = u.toward && units.get(key(u.toward.side, u.toward.uid)), tg = u.toward && where(u.toward);
           u.fig.foeAt = tv?.fig ? center(tv) : tg ? tg.clone().add(V3(0, 0.45 * SIZE, 0)) : null;
-          if (u.freeze <= 0) u.t = attackTime(u, now); else u.atk.t0 += dt * 1000;   // hitstop holds the pose
+          if (u.hold > 0) { /* a combo's lighter blow: held, the clock running on */ } else if (u.freeze <= 0) u.t = attackTime(u, now); else u.atk.t0 += dt * 1000;   // hitstop holds the pose
+          while (u.atk.taps?.length && now - u.atk.t0 >= u.atk.taps[0].at) tap(u, u.atk.taps.shift());
           if (!C.pose(u.fig, "attack", u.t, T)) {
             // its clip is over: back to rest — but one still on its way home keeps the hop (a short clip would
             // otherwise drop it onto its station in one frame)
@@ -865,6 +929,7 @@ const EmberVoxelArena = (() => {
           if (!C.pose(u.fig, u.clip, u.t, T) && u.clip !== "idle") { u.clip = "idle"; u.t = 0; }
         }
         if (u.fig.model) sfx?.frame(u, now);
+        if (u.echo || u.fig.sig?.fx?.echo) stepEcho(u, now);
         glowOf(u);
       }
       for (const u of dying) {
@@ -918,7 +983,7 @@ const EmberVoxelArena = (() => {
     }
     function dispose() {
       disposed = true;
-      for (const u of [...units.values(), ...dying]) { if (u.fig) { scene.remove(u.fig.root); R.dispose(u.fig); } dropBase(scene, u); }
+      for (const u of [...units.values(), ...dying]) { dropEcho(u); if (u.fig) { scene.remove(u.fig.root); R.dispose(u.fig); } dropBase(scene, u); }
       for (const s of smites) for (const m of [s.m.sword, s.m.sigil]) { scene.remove(m); m.geometry.dispose(); m.material.dispose(); }
       for (const m of [aimAt.beam, aimAt.ret]) { scene.remove(m); m.geometry.dispose(); m.material.dispose(); }
       units.clear(); dying.length = 0; queue.length = 0; shots.length = 0; smites.length = 0;

@@ -71,10 +71,37 @@ test("a sheet compiles to the suite its figure plays: phases in ms become the si
   assert.deepEqual(g.post, [[0, 33], [0.1, 37, "o"], [0.36, 41, "io"]]);
   assert.deepEqual([g.rise, g.back, g.leap, g.reach, g.dash], [0.34, 0.32, 0.3, 0.42, "leap"]);
   assert.deepEqual(g.hitstop, [0, 3, 5, 7]);
+  assert.equal(g.combo, undefined, "one blow: no lighter ones before it");
   assert.deepEqual(g.flourish, { clip: "gs_pose", every: [9, 14], keys: [[0, 0], [0.85, 30, "io"], [2.3, 58, "io"]], fade: [0.35, 0.55] });
   assert.deepEqual(g.fx, { pal: "holy", sigil: "sun", ground: "crack", bits: "feather", hurt: "shield", aura: { bits: "sparkle" } });
   assert.deepEqual(g.phases, { pre: ["coil", "hold", "spring", "strike"], post: ["follow", "settle"] });
   assert.deepEqual(s.plain, { attack: "gs_downward_slash", hurt: "gs_impact" });
+});
+
+test("a combo: a phase marked hit is a lighter blow before the last, and the figure is there for it", () => {
+  const g = BUILT.SUITES.assassin.sig;
+  assert.deepEqual(g.combo.map((c) => [Math.round(c.at * g.lead), c.k]), [[180, 0.5], [340, 0.5]], "two quick stabs before the last");
+  assert.equal(Math.round(g.arrive * g.lead), 330, "she is on her foe 330 ms before the blow");
+  // (combos are for the quick ones: most figures strike once, cleanly)
+  assert.deepEqual(Object.entries(BUILT.SUITES).filter(([id, s]) => s.sig?.combo && !id.startsWith("mirror")).map(([id]) => id).sort(), ["ada", "amberbody", "assassin", "berserker", "frederia", "gleaner", "solaris"]);
+  for (const [id, s] of Object.entries(BUILT.SUITES)) for (const c of s.sig?.combo || []) {
+    assert.ok(c.at > 0 && c.at < 1 && c.k > 0 && c.k <= 1, `${id}: a lighter blow lands inside the lead`);
+    // (a melee figure must have reached its foe by its first lighter blow)
+    if (sheet(id).kind === "melee" && !s.sig.stay) assert.ok(1 - (s.sig.arrive ?? 0) <= c.at + 1e-9, `${id}: it arrives (${Math.round((1 - (s.sig.arrive ?? 0)) * s.sig.lead)} ms) before its first lighter blow (${Math.round(c.at * s.sig.lead)} ms)`);
+    assert.ok(s.sig.leap < 1 - (s.sig.arrive ?? 0) || sheet(id).kind !== "melee", `${id}: it leaves before it arrives`);
+  }
+  const S = { archetypes: {}, figures: { f: { kind: "melee", attack: { before: { a: { ms: 100, frame: 1 }, b: { ms: 100, frame: 2, hit: true }, c: { ms: 200, frame: 3, hit: 0.9 } }, dash: { kind: "lunge", ms: 350, arrive: 220 } } } } };
+  const sig = MS.suite(MS.resolve(S, "f")).sig;
+  assert.deepEqual(sig.combo, [{ at: 0.5, k: 0.6 }], "true is 0.6; the last phase is the blow itself, never a lighter one");
+  assert.equal(sig.arrive, 0.55);
+  assert.equal(MS.timeline(MS.resolve(S, "f")).phases[1].hit, true);
+});
+
+test("a chain is made of real stretches of real clips, and is as long as it says", () => {
+  for (const [id, c] of Object.entries(MS.CHAINS)) {
+    assert.equal(c.parts.reduce((n, [, f0, f1]) => n + f1 - f0 + 1, 0), c.n, `${id}: n`);
+    for (const [clip, f0, f1] of c.parts) assert.ok(CLIPS[clip.replace(/@m$/, "")] > f1 && f0 >= 0 && f1 > f0, `${id}: ${clip} ${f0}–${f1}`);
+  }
 });
 
 test("every signature's timing holds together", () => {
@@ -103,7 +130,7 @@ test("every signature's timing holds together", () => {
 
 test("a figure inherits from its archetype; null takes away, _replace replaces, a figure can stand on a figure", () => {
   assert.deepEqual(MS.bases("recruit"), ["swordShield", "melee"]);
-  assert.deepEqual(sheet("ada").body, { lower: ["attack"] }, "its archetype's body, kept");
+  assert.deepEqual(sheet("recruit").body, { lower: ["attack"] }, "its archetype's body, kept");
   assert.deepEqual(sheet("recruit").attack.dash, { ...SHEETS.archetypes.swordShield.attack.dash, reach: 0.48 }, "one number of its own, the rest its archetype's");
   assert.equal(sheet("recruit").attack.before.coil.ms, SHEETS.archetypes.swordShield.attack.before.coil.ms);
   assert.deepEqual(BUILT.SUITES.mirrornahira, BUILT.SUITES.nahira);

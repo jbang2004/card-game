@@ -53,7 +53,7 @@ def page(query):
         if path == "content/moves.js":
             src = f"/__review/moves?rev={urllib.parse.quote(rev)}" if rev else f"/src/{path}?t={int(MOVES.stat().st_mtime_ns)}"
         else:
-            src = f"/src/{path}"
+            src = f"/src/{path}?t={int((ROOT / "src" / path).stat().st_mtime_ns)}"
         tags.append(f'<script src="{src}"></script>')
     tags.append('<script src="/tools/voxel-gallery/sfx.js"></script>')
     tags.append(f'<script src="/tools/move-review/app.js?t={int((HERE / "app.js").stat().st_mtime_ns)}"></script>')
@@ -126,7 +126,10 @@ def state():
     MARKS.mkdir(exist_ok=True)
     marks = sorted(int(p.stem) for p in MARKS.glob("*.json") if p.stem.isdigit())
     stamp = NOTES.stat().st_mtime_ns if NOTES.exists() else 0
-    return {"hash": digest(text), "revisions": revisions()[-12:], "marks": marks, "notes": stamp}
+    # the code and the clips the page runs (everything but the sheets): when any of it changes, an open page must load
+    # itself again — new sheets on old code name clips and effects the page does not have, and the figures stand still
+    code = max([(ROOT / "src" / p).stat().st_mtime_ns for p in scripts() if p != "content/moves.js"] + [(HERE / "app.js").stat().st_mtime_ns])
+    return {"hash": digest(text), "revisions": revisions()[-12:], "marks": marks, "notes": stamp, "code": code}
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -146,10 +149,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(data)
 
     def end_headers(self):
-        # the sheets and this folder's own files are always read fresh; the models (large) are revalidated by date
+        # the sheets and this folder's own files are always read fresh; everything else (the engine's code, the clips,
+        # the models — large) is revalidated by date on every load: a browser must never play a stale engine or a
+        # stale clip bundle against new sheets (it did: "clip … is not in EmberModelAnims" after a repack)
         path = urllib.parse.urlparse(self.path).path
         if path.startswith("/src/content/") or path.startswith("/tools/move-review/"):
             self.send_header("Cache-Control", "no-store")
+        else:
+            self.send_header("Cache-Control", "no-cache")
         super().end_headers()
 
     def do_GET(self):

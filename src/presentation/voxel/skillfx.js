@@ -54,7 +54,8 @@ const EmberSkillFx = (() => {
       gl_Position = projectionMatrix * mv;
     }`;
   // shapes: 0 glow · 1 starburst · 2 sparkle · 3 feather · 4 spark · 5 flare · 6 shard · 7 leaf · 8 snowflake ·
-  // 9 crescent · 10 wisp · 11 ring · 12 star · 13 sword of light · 14 crisp blade · 15 rift · 16 speed lines · 17 arc
+  // 9 crescent · 10 wisp · 11 ring · 12 star · 13 sword of light · 14 crisp blade · 15 rift · 16 speed lines · 17 arc ·
+  // 18 cut · 19 glyph · 20 gear · 21 tag · 22 petal
   const SPRITE_FS = /* glsl */ `
     varying vec2 vQ; varying vec3 vC; varying float vK, vS;
     float h1(float x) { return fract(sin(x * 127.1 + 3.7) * 43758.5453); }
@@ -101,7 +102,7 @@ const EmberSkillFx = (() => {
         float d = max(length(q) - 0.85, -(length(q - vec2(0.3, 0.14)) - 0.74));
         k = ((1.0 - smoothstep(-0.02, 0.03, d)) * 0.7 + exp(-abs(d) * 26.0) * 0.6 + exp(-max(d, 0.0) * 7.0) * 0.2) * (1.0 - smoothstep(0.8, 1.0, r));
       } else if (vS < 10.5) {                           // wisp: a soft head with a long tail behind it (drawn along its flight)
-        k = exp(-q.y * q.y * 9.0) * (q.x > 0.0 ? exp(-q.x * q.x * 18.0) : exp(-q.x * q.x * 1.6)) * (1.0 - smoothstep(0.85, 1.0, abs(q.x))) * 1.2;
+        k = exp(-q.y * q.y * (16.0 + 26.0 * (1.0 - smoothstep(-0.9, 0.1, q.x)))) * (q.x > 0.0 ? exp(-q.x * q.x * 18.0) : exp(-q.x * q.x * 1.6)) * (1.0 - smoothstep(0.85, 1.0, abs(q.x))) * 1.2;
       } else if (vS < 11.5) {                           // ring: a hollow circle (a shock seen head-on)
         k = exp(-abs(r - 0.78) * 22.0) * (1.0 - smoothstep(0.93, 1.0, r)) * 1.2;
       } else if (vS < 12.5) {                           // star: five points, a glow
@@ -136,10 +137,33 @@ const EmberSkillFx = (() => {
         float d = max(length(q) - 0.9, -(length(q - vec2(0.16, 0.0)) - 0.86));
         k = (1.0 - smoothstep(-0.006, 0.012, d)) * 0.95 + exp(-max(d, 0.0) * 45.0) * 0.2;
         fill = 1.0 - smoothstep(-0.006, 0.012, d);
-      } else {                                          // cut: a crisp sliver of light, tapering to both ends (a blade's mark)
+      } else if (vS < 18.5) {                           // cut: a crisp sliver of light, tapering to both ends (a blade's mark)
         float w = 0.045 * (1.0 - q.x * q.x);
         k = (1.0 - smoothstep(w * 0.6, w, abs(q.y))) * (1.0 - smoothstep(0.9, 1.0, abs(q.x))) + exp(-abs(q.y) * 38.0) * 0.18 * (1.0 - q.x * q.x);
         tint = mix(vC, vec3(1.7, 1.6, 1.4), 1.0 - smoothstep(0.0, w * 0.5, abs(q.y)));
+      } else if (vS < 19.5) {                           // glyph: a letter of no alphabet — upright, level and slanted strokes, a different one for each (its seed rides in vS)
+        float sd = (vS - 18.6) / 0.8, g = 0.0;
+        for (int i = 0; i < 3; i++) {
+          float fi = float(i);
+          if (h1(sd * 7.0 + fi) > 0.42) g = max(g, (1.0 - smoothstep(0.05, 0.08, abs(q.x - (fi - 1.0) * 0.3))) * step(abs(q.y), 0.62 * (0.55 + 0.45 * h1(sd * 3.0 + fi + 9.0))));
+          if (h1(sd * 11.0 + fi + 3.0) > 0.42) g = max(g, (1.0 - smoothstep(0.05, 0.08, abs(q.y - (fi - 1.0) * 0.5))) * step(abs(q.x), 0.4 * (0.6 + 0.4 * h1(sd * 5.0 + fi + 1.0))));
+        }
+        float sl = h1(sd * 5.0) > 0.5 ? 1.4 : -1.4;
+        if (h1(sd * 13.0) > 0.45) g = max(g, (1.0 - smoothstep(0.03, 0.05, abs(q.y - q.x * sl) * 0.58)) * step(abs(q.x), 0.36) * step(abs(q.y), 0.6));
+        k = g + exp(-r * r * 4.0) * 0.14; fill = g;
+      } else if (vS < 20.5) {                           // gear: eight square teeth, a hub, four spokes
+        float tooth = 0.66 + 0.14 * step(0.0, cos(a * 8.0)), rim = (1.0 - smoothstep(tooth - 0.03, tooth, r)) * smoothstep(0.4, 0.44, r);
+        float spoke = (1.0 - smoothstep(0.05, 0.08, min(abs(q.x), abs(q.y)))) * step(r, 0.5), hub = 1.0 - smoothstep(0.15, 0.18, r);
+        k = (rim + spoke * 0.8 + hub) * (1.0 - 0.6 * (1.0 - smoothstep(0.05, 0.08, r))); fill = clamp(rim + spoke + hub, 0.0, 1.0);
+      } else if (vS < 21.5) {                           // tag: a paper label, one end cut to a point with a hole for its string, lines of writing
+        float pt = clamp((-q.x - 0.4) / 0.4, 0.0, 1.0), body = step(abs(q.y), 0.44 * (1.0 - 0.75 * pt)) * step(abs(q.x), 0.8);
+        float hole = 1.0 - smoothstep(0.05, 0.08, length(q - vec2(-0.52, 0.0)));
+        float ink = step(abs(fract(q.y * 4.2 + 0.5) - 0.5), 0.12) * step(-0.25, q.x) * step(q.x, 0.62) * step(abs(q.y), 0.32);
+        k = body * (1.0 - hole) * (0.85 - 0.5 * ink); fill = body * (1.0 - hole);
+      } else {                                          // petal: a round blade drawn to a point at its root, a fold down its middle
+        float t = (q.y + 0.8) / 1.6, w = 0.55 * pow(max(0.0, sin(3.14159 * clamp(t, 0.0, 1.0))), 0.6) * (0.45 + 0.55 * t);
+        float inside = (1.0 - smoothstep(w - 0.06, w, abs(q.x))) * step(-0.8, q.y) * step(q.y, 0.8);
+        k = inside * (0.55 + 0.35 * abs(q.x) / max(w, 0.01)) + exp(-abs(q.x) * 30.0) * inside * 0.25; fill = inside;
       }
       k *= vK;
       #ifdef DARK
@@ -160,7 +184,7 @@ const EmberSkillFx = (() => {
       gl_FragColor = vec4(c * a, a);
     }`;
   const QUAD = new THREE.PlaneGeometry(1, 1);
-  const SHAPE = { glow: 0, star: 1, sparkle: 2, feather: 3, spark: 4, flare: 5, shard: 6, leaf: 7, snow: 8, crescent: 9, wisp: 10, ring: 11, star5: 12, sword: 13, blade: 14, rift: 15, lines: 16, arc: 17, cut: 18 };
+  const SHAPE = { glow: 0, star: 1, sparkle: 2, feather: 3, spark: 4, flare: 5, shard: 6, leaf: 7, snow: 8, crescent: 9, wisp: 10, ring: 11, star5: 12, sword: 13, blade: 14, rift: 15, lines: 16, arc: 17, cut: 18, glyph: 19, gear: 20, tag: 21, petal: 22 };
   // mode: "add" (light) · "smoke" (soft billows, over) · "dark" (solid dark shapes laid over: the contrast a modern
   // effect keeps — a dark core under the light, black speed lines, the inside of a rift)
   function pool(N, mode) {
@@ -310,33 +334,35 @@ const EmberSkillFx = (() => {
 
   // ------------------------------------------------------------------ decals (ground quads, +y up)
   const DECAL_VS = /* glsl */ `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
-  // fissures: jagged cracks run out from the centre (their tips reached as uGrow → 1), a shattered heart; they burn
-  // at uHot, cool through uMid to uCool from the tips inward (uAge), a glow along them. uRoot: roots instead — more,
-  // thinner, wandering further
+  // fissures: a break in the ground, not a bolt of light on it — dark cracks run out from the point of the blow in
+  // straight runs between kinks (their tips reached as uGrow → 1), the ground at the heart of it broken into plates;
+  // a seam of the blow's own colour (uMid, cooling to uCool) burns down in them a moment, the tips going dark first
+  // (uAge), and the dark break stays until it fades. Laid over (premultiplied): rgb is the seam's light, alpha the dark.
+  // uRoot: roots instead — more of them, thinner, wandering
   const CRACK_FS = /* glsl */ `
     uniform float uAge, uGrow, uK, uSeed, uRoot; uniform vec3 uHot, uMid, uCool; varying vec2 vUv;
     ${NOISE}
+    float kink(float r, float s) { float x = r * 8.0, i = floor(x); return mix(h21(vec2(i, s)), h21(vec2(i + 1.0, s)), x - i) - 0.5; }
     void main() {
-      vec2 p = vUv * 2.0 - 1.0; float r = length(p), a = atan(p.y, p.x), line = 0.0, glow = 0.0;
+      vec2 p = vUv * 2.0 - 1.0; float r = length(p), a = atan(p.y, p.x), line = 0.0, seam = 0.0;
       for (int i = 0; i < 12; i++) {
-        if (uRoot < 0.5 && i >= 9) break;
-        float fi = float(i), ang = fi * (uRoot > 0.5 ? 0.5236 : 0.698) + (h21(vec2(fi, uSeed)) - 0.5) * 0.5;
-        float len = (0.55 + 0.45 * h21(vec2(fi * 3.7, uSeed + 1.0))) * uGrow;
-        float wob = (fbm(vec2(r * 5.0, fi * 5.3 + uSeed)) - 0.5) * (0.6 + 0.5 * uRoot) + (n21(vec2(r * 14.0, fi * 9.1)) - 0.5) * 0.05;
+        if (uRoot < 0.5 && i >= 8) break;
+        float fi = float(i), ang = fi * (uRoot > 0.5 ? 0.5236 : 0.7854) + (h21(vec2(fi, uSeed)) - 0.5) * 0.55;
+        float len = (0.5 + 0.5 * h21(vec2(fi * 3.7, uSeed + 1.0))) * uGrow;
+        float wob = uRoot > 0.5 ? (fbm(vec2(r * 5.0, fi * 5.3 + uSeed)) - 0.5) * 1.1 : kink(r, fi * 7.3 + uSeed) * 0.5 + kink(r * 2.9, fi * 3.1 + uSeed) * 0.14;
         float da = a - ang - wob; da = atan(sin(da), cos(da));
-        float d = abs(da) * r, on = step(r, len) * smoothstep(0.02, 0.1, r);
-        float w = (0.034 - 0.014 * uRoot) * pow(1.0 - r / max(len, 0.01), 1.4) + 0.003;
-        line = max(line, (1.0 - smoothstep(w * 0.35, w, d)) * on);
-        glow = max(glow, exp(-d / (w * 3.5)) * on * (1.0 - r / max(len, 0.01)));
+        float out_ = r / max(len, 0.01), d = abs(da) * r, on = step(r, len) * smoothstep(0.02, 0.08, r);
+        float w = (0.02 - 0.008 * uRoot) * pow(max(0.0, 1.0 - out_), 0.8) + 0.0025;
+        line = max(line, (1.0 - smoothstep(w * 0.5, w, d)) * on);
+        seam = max(seam, (1.0 - smoothstep(0.0, w * 0.5, d)) * on * (1.0 - out_));
       }
-      float heart = (1.0 - smoothstep(0.035, 0.07, cells(p * 7.0, uSeed))) * (1.0 - smoothstep(0.12, 0.3, r)) * step(0.03, r) * (1.0 - uRoot);
-      line = max(line, heart);
-      float heat = clamp(1.0 - uAge * 1.25 - r * 0.6 * uAge, 0.0, 1.0);                        // the tips cool first
-      vec3 hot = mix(uCool, uMid, smoothstep(0.15, 0.6, heat));
-      hot = mix(hot, uHot, smoothstep(0.8, 1.0, heat));
-      float fade = 1.0 - smoothstep(0.55, 1.0, uAge);
-      vec3 c = hot * line * 1.1 + mix(uCool, hot, 0.5) * glow * 0.5 * (0.3 + 0.7 * heat) + uMid * exp(-r * 8.0) * 0.5 * heat;
-      gl_FragColor = linearToOutputTexel(vec4(c * uK * fade * (1.0 - smoothstep(0.92, 1.0, r)), 0.0));
+      float ce = cells(p * 6.0, uSeed), heart = (1.0 - smoothstep(0.14, 0.4, r)) * step(0.02, r) * (1.0 - uRoot) * uGrow;
+      line = max(line, (1.0 - smoothstep(0.03, 0.06, ce)) * heart);
+      seam = max(seam, (1.0 - smoothstep(0.0, 0.025, ce)) * heart * 0.7);
+      float heat = clamp(1.0 - uAge * 2.4 - r * 0.6 * uAge, 0.0, 1.0);
+      float gone = 1.0 - smoothstep(0.6, 1.0, uAge), edge = 1.0 - smoothstep(0.9, 1.0, r);
+      vec3 light = mix(uCool, uMid, smoothstep(0.1, 0.7, heat)) * seam * heat * uK * edge;
+      gl_FragColor = vec4(linearToOutputTexel(vec4(light, 1.0)).rgb, line * 0.8 * gone * edge * min(1.0, uK));
     }`;
   const SCORCH_FS = /* glsl */ `
     uniform float uK; uniform vec3 uTint; varying vec2 vUv;
@@ -352,10 +378,10 @@ const EmberSkillFx = (() => {
     ${NOISE}
     void main() {
       vec2 p = vUv * 2.0 - 1.0; float r = length(p), a = atan(p.y, p.x);
-      float R = 0.22 + 0.76 * (1.0 - pow(1.0 - uU, 3.0)), th = 0.06 * (1.0 - uU) + 0.012;
+      float R = 0.22 + 0.76 * (1.0 - pow(1.0 - uU, 3.0)), th = 0.017 * (1.0 - uU) + 0.004;
       float ring = exp(-pow((r - R) / th, 2.0)) * (0.75 + 0.35 * n21(vec2(a * 5.0, uU * 3.0)));
       float k = ring * (1.0 - uU) * (1.0 - uU) * uK;
-      vec3 c = uTint * k + vec3(1.0) * ring * max(0.0, 0.5 - uU) * 0.18 * uK;
+      vec3 c = uTint * k + vec3(1.0) * ring * max(0.0, 0.5 - uU) * 0.06 * uK;
       gl_FragColor = linearToOutputTexel(vec4(c * (1.0 - smoothstep(0.96, 1.0, r)), 0.0));
     }`;
   // sigils, turning (uStyle): 0 sun (twelve rays) · 1 moon (a crescent in the heart) · 2 star (an eight-point star) ·
@@ -364,13 +390,13 @@ const EmberSkillFx = (() => {
     uniform float uK, uRot, uStyle; uniform vec3 uTint; varying vec2 vUv;
     void main() {
       vec2 p = vUv * 2.0 - 1.0; float r = length(p), a = atan(p.y, p.x);
-      float ring = exp(-abs(r - 0.95) * 110.0) + 0.9 * exp(-abs(r - 0.78) * 130.0) + 0.6 * exp(-abs(r - 0.36) * 120.0);
+      float ring = exp(-abs(r - 0.95) * 190.0) + 0.8 * exp(-abs(r - 0.78) * 230.0) + 0.5 * exp(-abs(r - 0.36) * 220.0);
       // edges a pixel soft (fwidth), radially and round the circle: a hard step crawls as the sigil turns
       float aa = max(fwidth(r), 1e-4), px = length(fwidth(p)) / max(r, 1e-3) / 6.2832;
       float ar = a + uRot, w1 = 40.0 * px, w2 = 120.0 * px;
-      float runes = smoothstep(0.8 - aa, 0.8 + aa, r) * (1.0 - smoothstep(0.92 - aa, 0.92 + aa, r))
-        * (1.0 - smoothstep(0.275 - w1, 0.275 + w1, abs(fract(ar * 40.0 / 6.2832) - 0.725)))
-        * (1.0 - smoothstep(0.325 - w2, 0.325 + w2, abs(fract(ar * 120.0 / 6.2832 + 0.4 * sin(ar * 9.0)) - 0.675)));
+      // (a ring of fine ticks, every sixth one longer — not a band of blocks: a sigil is drawn in hairlines)
+      float tk = abs(fract(ar * 60.0 / 6.2832) - 0.5), long6 = step(abs(fract(ar * 10.0 / 6.2832) - 0.5), 0.09);
+      float runes = smoothstep(mix(0.855, 0.82, long6) - aa, mix(0.855, 0.82, long6) + aa, r) * (1.0 - smoothstep(0.9 - aa, 0.9 + aa, r)) * (1.0 - smoothstep(0.07, 0.07 + 60.0 * px, tk));
       float inner = 0.0, ai = a - uRot * 0.5;
       if (uStyle < 0.5) {
         float f = abs(fract(ai * 12.0 / 6.2832) - 0.5) * 2.0;
@@ -383,11 +409,38 @@ const EmberSkillFx = (() => {
         for (int k = 0; k < 4; k++) { float th = ai + float(k) * 0.7854; float d = abs(sin(th) * r); inner += exp(-d * 90.0) * (1.0 - smoothstep(0.2, 0.76, r)) * (k % 2 == 0 ? 1.0 : 0.6); }
       } else if (uStyle < 3.5) {
         for (int k = 0; k < 6; k++) { float th = ai + float(k) * 1.0472; vec2 n = vec2(cos(th), sin(th)); inner += exp(-abs(dot(p, n) - 0.36) * 110.0) * (1.0 - smoothstep(0.76 - aa, 0.76 + aa, r)); }
-      } else {
+      } else if (uStyle < 4.5) {
         float t = fract(ai * 12.0 / 6.2832) - 0.5, rl = (r - 0.56) / 0.17;
         inner = (1.0 - smoothstep(0.75, 1.0, length(vec2(t * 3.2, rl)))) * 0.6 + exp(-abs(t) * 40.0) * (1.0 - smoothstep(0.9 - aa / 0.17, 0.9 + aa / 0.17, abs(rl))) * 0.5;
+      } else {
+        // a clock face (it does not turn: its hands do — the minute hand by uRot, the hour hand a twelfth of that)
+        float hr = abs(fract(a * 12.0 / 6.2832 + 0.5) - 0.5), mn = abs(fract(a * 60.0 / 6.2832 + 0.5) - 0.5);
+        float band = smoothstep(0.56 - aa, 0.56 + aa, r) * (1.0 - smoothstep(0.74 - aa, 0.74 + aa, r));
+        inner = (1.0 - smoothstep(0.045, 0.045 + 12.0 * px, hr)) * band + (1.0 - smoothstep(0.12, 0.12 + 60.0 * px, mn)) * smoothstep(0.68 - aa, 0.68 + aa, r) * (1.0 - smoothstep(0.74 - aa, 0.74 + aa, r)) * 0.6;
+        for (int k = 0; k < 2; k++) {
+          float th = k == 0 ? 1.5708 - uRot : 2.6 - uRot / 12.0, L = k == 0 ? 0.64 : 0.4, w = k == 0 ? 0.012 : 0.022;
+          vec2 dv = vec2(cos(th), sin(th)); float al = dot(p, dv), pe = abs(dot(p, vec2(-dv.y, dv.x)));
+          inner += (1.0 - smoothstep(w, w + aa * 1.5, pe)) * step(-0.07, al) * (1.0 - smoothstep(L - 0.02, L, al)) * 1.2;
+        }
+        inner += 1.0 - smoothstep(0.03, 0.04, r);
+        runes = 0.0; ring = exp(-abs(r - 0.95) * 190.0) + 0.8 * exp(-abs(r - 0.78) * 230.0);
       }
-      float c = ring + 0.8 * inner + 0.5 * runes + 0.4 * exp(-r * 5.0);
+      float c = ring + 0.75 * inner + 0.45 * runes + 0.08 * exp(-r * 5.0);
+      if (uStyle > 5.5) {
+        // astral: drawn in hairlines, nothing filled — two fine rings, a ring of ticks turning one way, a five-point star
+        // of thin lines turning the other, a point of light at each of its tips
+        float cs = cos(uRot * 0.5), sn = sin(uRot * 0.5); vec2 q = vec2(cs * p.x - sn * p.y, sn * p.x + cs * p.y);
+        float fine = (1.0 - smoothstep(0.004, 0.004 + aa * 1.5, abs(r - 0.93))) + 0.55 * (1.0 - smoothstep(0.003, 0.003 + aa * 1.5, abs(r - 0.68)));
+        float tick = smoothstep(0.855 - aa, 0.855 + aa, r) * (1.0 - smoothstep(0.895 - aa, 0.895 + aa, r)) * (1.0 - smoothstep(0.06, 0.06 + 36.0 * px, abs(fract(ar * 36.0 / 6.2832) - 0.5)));
+        float star = 0.0, dots = 0.0;
+        for (int k = 0; k < 5; k++) {
+          float t0 = float(k) * 1.2566, t1 = float(k + 2) * 1.2566; vec2 v0 = 0.68 * vec2(cos(t0), sin(t0)), v1 = 0.68 * vec2(cos(t1), sin(t1)), e = v1 - v0;
+          float d = length(q - v0 - e * clamp(dot(q - v0, e) / dot(e, e), 0.0, 1.0));
+          star = max(star, 1.0 - smoothstep(0.003, 0.003 + aa * 1.5, d));
+          dots = max(dots, 1.0 - smoothstep(0.018, 0.018 + aa * 1.5, length(q - v0)));
+        }
+        c = fine + 0.5 * tick + 0.6 * star + 1.1 * dots;
+      }
       gl_FragColor = linearToOutputTexel(vec4(uTint * c * uK * (1.0 - smoothstep(0.97, 1.0, r)), 0.0));
     }`;
   // frost: rime spreading out (uGrow), crystal cells and six long needles, white at the heart, blue at the rim
@@ -463,7 +516,7 @@ const EmberSkillFx = (() => {
     }`;
   const STRIP = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
   const DISC = new THREE.PlaneGeometry(2, 2).rotateX(-Math.PI / 2);
-  const SIGILS = { sun: 0, moon: 1, star: 2, rune: 3, leaf: 4 };
+  const SIGILS = { sun: 0, moon: 1, star: 2, rune: 3, leaf: 4, clock: 5, astral: 6 };
 
   // ------------------------------------------------------------------ beams (a column of light, turned to the camera)
   const BEAM_FS = /* glsl */ `
@@ -471,10 +524,10 @@ const EmberSkillFx = (() => {
     ${NOISE}
     void main() {
       float x = (vUv.x - 0.5) * 2.0, y = vUv.y;
-      float body = exp(-x * x * 4.5), core = exp(-x * x * 70.0);
+      float body = exp(-x * x * 18.0) * 0.6, core = exp(-x * x * 320.0);
       float streak = 0.6 + 0.6 * fbm(vec2(x * 5.0 + uSeed, y * 2.5 - uTime * 3.0));
       float v = smoothstep(0.0, 0.04, y) * (1.0 - smoothstep(0.35, 1.0, y));
-      vec3 c = (uTint * body * streak * 0.7 + vec3(1.3, 1.1, 0.8) * core) * v * uK;
+      vec3 c = (uTint * body * streak * 0.7 + mix(uTint, vec3(1.25), 0.45) * core) * v * uK;
       gl_FragColor = linearToOutputTexel(vec4(c, 0.0));
     }`;
   const COLUMN = new THREE.PlaneGeometry(1, 1).translate(0, 0.5, 0);
@@ -587,7 +640,8 @@ const EmberSkillFx = (() => {
 
   // ------------------------------------------------------------------ palettes (linear; > 1 burns toward white)
   // core: the flash's heart · glow: the light · deep: where it cools · trail: the swoosh's band · mote · dust (smoke) ·
-  // rock (solid debris) · emit (a spike's glowing rim)
+  // rock (solid debris) · emit (a spike's glowing rim) · seam (× the light in the cracks it leaves: stone breaks dark) ·
+  // petal (the dark of a black flower's petal, lit only at its edge)
   const PAL = {
     holy: { core: [2.4, 2.2, 1.8], glow: [1.9, 1.35, 0.55], deep: [0.9, 0.18, 0.02], trail: [1.2, 0.68, 0.18], mote: [2.0, 1.25, 0.42], dust: [0.52, 0.46, 0.4] },
     sun: { core: [2.6, 2.0, 1.1], glow: [2.3, 0.95, 0.22], deep: [1.1, 0.12, 0.02], trail: [1.5, 0.55, 0.08], mote: [2.4, 0.9, 0.2], dust: [0.45, 0.36, 0.3] },
@@ -597,21 +651,27 @@ const EmberSkillFx = (() => {
     star: { core: [2.3, 2.5, 2.8], glow: [0.95, 1.3, 2.5], deep: [0.25, 0.3, 1.1], trail: [0.6, 0.85, 1.7], mote: [1.6, 1.9, 2.6], dust: [0.5, 0.52, 0.6] },
     wild: { core: [2.2, 2.6, 1.6], glow: [0.8, 1.9, 0.45], deep: [0.15, 0.6, 0.08], trail: [0.5, 1.25, 0.3], mote: [1.3, 2.2, 0.6], dust: [0.5, 0.47, 0.37], leaf: [0.7, 1.5, 0.35] },
     verdant: { core: [2.6, 2.5, 1.4], glow: [1.4, 1.9, 0.35], deep: [0.4, 0.75, 0.05], trail: [1.0, 1.35, 0.25], mote: [2.0, 2.1, 0.6], dust: [0.48, 0.44, 0.34], leaf: [1.0, 1.6, 0.3], rock: [0.3, 0.24, 0.14], emit: [0.35, 0.9, 0.1] },
-    earth: { core: [2.3, 1.8, 1.1], glow: [1.6, 0.8, 0.3], deep: [0.7, 0.2, 0.04], trail: [0.9, 0.55, 0.25], mote: [0.6, 1.5, 2.6], dust: [0.56, 0.48, 0.4], rock: [0.42, 0.36, 0.3], emit: [0.3, 0.55, 1.1] },
+    earth: { core: [2.3, 1.8, 1.1], glow: [1.6, 0.8, 0.3], deep: [0.7, 0.2, 0.04], trail: [0.9, 0.55, 0.25], mote: [0.6, 1.5, 2.6], dust: [0.56, 0.48, 0.4], rock: [0.42, 0.36, 0.3], emit: [0.3, 0.55, 1.1], seam: 0.35 },
     fire: { core: [2.7, 2.1, 1.1], glow: [2.5, 0.95, 0.15], deep: [1.2, 0.15, 0.02], trail: [1.7, 0.6, 0.1], mote: [2.6, 1.0, 0.2], dust: [0.2, 0.15, 0.13] },
     void: { core: [2.1, 1.5, 2.7], glow: [0.85, 0.3, 1.6], deep: [0.3, 0.02, 0.5], trail: [0.65, 0.2, 1.2], mote: [1.3, 0.5, 2.1], dust: [0.16, 0.1, 0.22] },
-    astral: { core: [2.5, 2.3, 2.9], glow: [1.25, 0.6, 1.9], deep: [0.35, 0.15, 0.95], trail: [0.85, 0.5, 1.5], mote: [1.9, 1.4, 2.6], dust: [0.4, 0.36, 0.5] },
+    astral: { core: [2.1, 1.9, 2.8], glow: [1.05, 0.5, 2.1], deep: [0.35, 0.15, 0.95], trail: [0.85, 0.5, 1.5], mote: [1.9, 1.4, 2.6], dust: [0.4, 0.36, 0.5] },
     necro: { core: [1.7, 2.6, 1.9], glow: [0.35, 1.6, 0.85], deep: [0.35, 0.03, 0.5], trail: [0.3, 1.0, 0.55], mote: [0.6, 2.0, 1.1], dust: [0.16, 0.2, 0.18] },
     steel: { core: [2.2, 2.3, 2.5], glow: [1.2, 1.4, 1.8], deep: [0.3, 0.4, 0.6], trail: [0.6, 0.7, 0.9], mote: [1.4, 1.6, 2.0], dust: [0.5, 0.48, 0.45] },
     bone: { core: [2.0, 2.3, 1.8], glow: [0.9, 1.4, 0.8], deep: [0.3, 0.35, 0.2], trail: [0.6, 0.9, 0.5], mote: [1.2, 1.8, 1.0], dust: [0.4, 0.42, 0.36] },
     shadow: { core: [2.2, 1.3, 1.8], glow: [1.3, 0.22, 0.65], deep: [0.3, 0.02, 0.2], trail: [0.75, 0.1, 0.45], mote: [1.4, 0.4, 1.0], dust: [0.12, 0.08, 0.12] },
     rage: { core: [2.6, 1.6, 0.9], glow: [2.2, 0.45, 0.1], deep: [0.9, 0.08, 0.02], trail: [1.4, 0.3, 0.05], mote: [2.4, 0.6, 0.15], dust: [0.45, 0.3, 0.25], rock: [0.45, 0.22, 0.16], emit: [0.8, 0.2, 0.05] },
     ember: { core: [2.6, 2.0, 1.1], glow: [2.4, 0.9, 0.2], deep: [1.0, 0.15, 0.02], trail: [1.5, 0.6, 0.12], mote: [2.5, 1.0, 0.25], dust: [0.3, 0.24, 0.2] },
-    iron: { core: [2.4, 2.2, 1.9], glow: [1.8, 1.0, 0.4], deep: [0.6, 0.25, 0.08], trail: [0.9, 0.8, 0.7], mote: [2.2, 1.2, 0.4], dust: [0.4, 0.38, 0.36], rock: [0.35, 0.35, 0.38], emit: [0.5, 0.25, 0.08] },
+    iron: { core: [2.4, 2.2, 1.9], glow: [1.8, 1.0, 0.4], deep: [0.6, 0.25, 0.08], trail: [0.9, 0.8, 0.7], mote: [2.2, 1.2, 0.4], dust: [0.4, 0.38, 0.36], rock: [0.35, 0.35, 0.38], emit: [0.5, 0.25, 0.08], seam: 0.5 },
     soul: { core: [1.8, 2.4, 2.8], glow: [0.4, 1.3, 2.0], deep: [0.1, 0.35, 0.7], trail: [0.3, 0.8, 1.3], mote: [0.9, 1.9, 2.6], dust: [0.2, 0.26, 0.32] },
     blood: { core: [2.6, 1.2, 1.3], glow: [2.0, 0.12, 0.25], deep: [0.6, 0.0, 0.05], trail: [1.2, 0.08, 0.15], mote: [2.2, 0.3, 0.4], dust: [0.2, 0.08, 0.08], blood: [2.2, 0.2, 0.3] },
     fey: { core: [2.0, 2.6, 2.2], glow: [0.5, 1.8, 1.0], deep: [0.1, 0.6, 0.5], trail: [0.4, 1.2, 0.8], mote: [1.4, 2.4, 1.4], dust: [0.4, 0.5, 0.45], leaf: [1.2, 2.0, 1.4] },
     phoenix: { core: [2.6, 2.3, 1.5], glow: [0.75, 1.45, 2.6], deep: [0.15, 0.25, 1.0], trail: [0.8, 1.2, 2.2], mote: [2.4, 1.7, 0.8], dust: [0.5, 0.56, 0.72] },
+    hearth: { core: [2.8, 2.3, 1.35], glow: [2.4, 1.15, 0.2], deep: [1.0, 0.2, 0.03], trail: [1.6, 0.7, 0.12], mote: [2.3, 1.3, 0.38], dust: [0.085, 0.07, 0.06], rock: [0.3, 0.2, 0.12], emit: [0.9, 0.4, 0.06], haze: [0.5, 0.33, 0.13] },
+    amber: { core: [2.4, 1.9, 1.0], glow: [2.0, 1.15, 0.3], deep: [0.8, 0.3, 0.04], trail: [1.4, 0.75, 0.2], mote: [2.2, 1.4, 0.5], dust: [0.4, 0.33, 0.25], rock: [0.75, 0.42, 0.1], emit: [0.9, 0.45, 0.08] },
+    brass: { core: [2.3, 2.1, 1.6], glow: [1.7, 1.3, 0.55], deep: [0.55, 0.36, 0.1], trail: [1.1, 0.9, 0.45], mote: [2.0, 1.6, 0.8], dust: [0.42, 0.4, 0.36] },
+    coal: { core: [1.5, 1.4, 1.3], glow: [0.75, 0.62, 0.5], deep: [0.25, 0.12, 0.05], trail: [0.5, 0.42, 0.36], mote: [0.9, 0.8, 0.7], dust: [0.06, 0.055, 0.05], rock: [0.1, 0.1, 0.11], emit: [0.2, 0.1, 0.04], seam: 0.3 },
+    glass: { core: [2.2, 2.4, 2.7], glow: [0.75, 1.25, 2.1], deep: [0.15, 0.25, 0.7], trail: [0.5, 0.85, 1.5], mote: [1.4, 1.8, 2.5], dust: [0.36, 0.4, 0.48] },
+    nightbloom: { core: [1.9, 1.5, 2.3], glow: [0.75, 0.35, 1.1], deep: [0.2, 0.05, 0.35], trail: [0.5, 0.25, 0.8], mote: [1.2, 0.7, 1.7], dust: [0.12, 0.09, 0.16], leaf: [0.55, 0.35, 0.8], petal: [0.035, 0.012, 0.05] },
     rune: { core: [1.8, 2.2, 2.7], glow: [0.45, 1.1, 2.2], deep: [0.1, 0.25, 0.8], trail: [0.4, 0.7, 1.4], mote: [0.8, 1.6, 2.6], dust: [0.5, 0.48, 0.44], rock: [0.42, 0.4, 0.38], emit: [0.25, 0.6, 1.3] },
   };
   const ONE = Object.freeze({ size: 1, gain: 1, life: 1, count: 1 });
@@ -719,6 +779,12 @@ const EmberSkillFx = (() => {
     // how many of it); untuned, every factor is 1
     const tn = (fx, name) => { const t = fx.tune?.[name]; return t ? { size: t.size ?? 1, gain: t.gain ?? 1, life: t.life ?? 1, count: t.count ?? 1 } : ONE; };
     const lit = (c, g) => (g === 1 ? c : c.map((x) => x * g));
+    const glyphShape = () => 18.6 + 0.8 * Math.random();              // (each glyph a letter of its own: the seed rides in the shape)
+    // a petal: its colour over its own dark (a palette's `petal`: a black flower's petal, lit only at its edge)
+    function petal(o2, P) {
+      if (P.petal) put(dark, { ...o2, col: P.petal, k: 0.9, shape: SHAPE.petal });
+      return put(glow, { ...o2, col: P.petal ? P.glow.map((x) => x * 0.55) : P.glow, k: P.petal ? 0.6 : 0.95, shape: SHAPE.petal });
+    }
     // the burst of little things a blow throws (feathers drift, leaves flutter, snow and shards glitter, embers rise)
     function bits(kind, at, n, k, P, dir = null, t0 = NOW()) {
       for (let i = 0; i < n; i++) {
@@ -729,6 +795,9 @@ const EmberSkillFx = (() => {
         else if (kind === "shard") put(glow, { p: at, v: out.multiplyScalar(2.2).setY(rnd(0.8, 2.0) * k), grav: 5 * k, drag: 1.2, t0, life: rnd(500, 900), s0: 0.06 * k, s1: 0.05 * k, rot: rnd(0, 6.28), spin: rnd(-9, 9), col: P.core, k: 1.1, shape: SHAPE.shard, env: "fade", floor: 0.01 });
         else if (kind === "star") put(glow, { p: at, v: out.multiplyScalar(1.4).setY(rnd(0.6, 1.4) * k), grav: 1.2 * k, drag: 2.2, t0: t0 + rnd(0, 80), life: rnd(700, 1200), s0: 0.07 * k, s1: 0.03 * k, rot: rnd(0, 6.28), spin: rnd(-4, 4), col: P.mote, k: 1.3, shape: SHAPE.star5, env: "pop" });
         else if (kind === "wisp") put(glow, { p: at.clone().add(inBall().multiplyScalar(0.15 * k)), v: out.multiplyScalar(0.8).setY(rnd(0.6, 1.3) * k), drag: 1.4, t0: t0 + rnd(0, 120), life: rnd(700, 1100), s0: 0.07 * k, s1: 0.05 * k, col: P.mote, k: 1.2, shape: SHAPE.wisp, env: "mote", stretch: 0.22 });
+        else if (kind === "gear") put(glow, { p: at, v: out.multiplyScalar(1.8).setY(rnd(1.0, 2.2) * k), grav: 6 * k, drag: 1.0, t0, life: rnd(650, 1050), s0: rnd(0.05, 0.09) * k, s1: 0.05 * k, rot: rnd(0, 6.28), spin: rnd(-10, 10), col: P.glow, k: 1.0, shape: SHAPE.gear, env: "fade", floor: 0.01 });
+        else if (kind === "glyph") put(glow, { p: at.clone().add(inBall().multiplyScalar(0.12 * k)), v: out.multiplyScalar(0.7).setY(rnd(0.5, 1.1) * k), drag: 1.8, t0: t0 + rnd(0, 100), life: rnd(700, 1100), s0: 0.075 * k, s1: 0.055 * k, rot: rnd(-0.3, 0.3), col: P.mote, k: 1.1, shape: glyphShape(), env: "late" });
+        else if (kind === "petal") petal({ p: at, v: out.setY(rnd(0.7, 1.4) * k), grav: 0.8 * k, drag: 2.4, sway: 0.3 * k, t0: t0 + rnd(0, 80), life: rnd(1500, 2300), s0: 0.09 * k, s1: 0.075 * k, rot: rnd(0, 6.28), spin: rnd(-2.6, 2.6), env: "late" }, P);
         else put(glow, { p: at.clone().add(inBall().multiplyScalar(0.3 * k)), v: V3(rnd(-0.1, 0.1) * k, rnd(0.25, 0.8) * k, rnd(-0.1, 0.1) * k), drag: 0.6, sway: 0.08 * k, t0: t0 + rnd(0, 250), life: rnd(900, 1700), s0: 0.03 * k, s1: 0.018 * k, col: P.mote, k: 1.3, shape: SHAPE.sparkle, env: "mote" });
       }
     }
@@ -762,8 +831,8 @@ const EmberSkillFx = (() => {
      *  flight, motes shed behind it; land() when it arrives */
     function missile(from, to, t0, t1, m) {
       const obj = new THREE.Object3D(); obj.position.copy(from);
-      const M = { from: from.clone(), to: to.clone(), t0, t1, obj, prev: from.clone(), arc: m.arc || 0, land: m.land, trail: m.trail, shed: 0, heads: [] };
-      for (const h of m.heads) { put(glow, { p: from, track: obj, t0, life: t1 - t0 + 20, env: "hold", ...h }); M.heads.push(glow.P[glow.P.length - 1]); }
+      const M = { from: from.clone(), to: to.clone(), t0, t1, obj, prev: from.clone(), arc: m.arc || 0, bow: m.bow || null, land: m.land, trail: m.trail, shed: 0, heads: [] };
+      for (const { dark: dk, ...h } of m.heads) M.heads.push(put(dk ? dark : glow, { p: from, track: obj, t0, life: t1 - t0 + 20, env: "hold", ...h }));
       missiles.push(M);
       return M;
     }
@@ -814,7 +883,7 @@ const EmberSkillFx = (() => {
       const g = T.ground.clone().setY(0), Rz = 0.62 * k;
       if (!A.zone && q >= 0.04) {
         A.zone = decal(ZONE_FS, g, Rz, A.contact - (now - A.t0) + 380, { uTint: C(P.glow.map((x) => x * 0.8)), uFill: { value: 0 } }); A.zone.env = "zone";
-        A.cr = decal(CRACK_FS, g, Rz * 0.95, A.contact - (now - A.t0) + 200, { uHot: C(P.glow), uMid: C(P.glow.map((x) => x * 0.7)), uCool: C(P.deep) }); A.cr.env = "pre";
+        A.cr = decal(CRACK_FS, g, Rz * 0.95, A.contact - (now - A.t0) + 200, { uHot: C(P.glow), uMid: C(P.glow), uCool: C(P.deep) }, true); A.cr.env = "pre";
       }
       if (A.zone) {
         const fq = Math.min(1, q / 0.95); A.zone.fill = 1 - Math.pow(1 - fq, 2); A.zone.rot = now * 0.0011;
@@ -876,9 +945,276 @@ const EmberSkillFx = (() => {
       }
       A.lastC = now;
     }
+    /** stars called down, the modern way — nothing white and round: each is a needle of light (a small hard point, a
+     *  long thin tail, drawn over its own dark so it reads against anything), all of them falling the same way, a
+     *  shower, onto the foe's ground one after another; where one lands a hairline ring runs out and a few splinters
+     *  jump. The last, the largest, falls onto the foe itself as the blow lands (starBlow). A heavy blow calls two more */
+    function castSky(u, A, q, now, T, P, k, fx) {
+      const n = (fx.castCount || 3) + (A.tier >= 3 ? 2 : 0), fall = 280, gap = 95;
+      const slant = A.slant || (A.slant = V3(rnd(-0.75, -0.6), 2.6, rnd(0.25, 0.4)));
+      while (A.calls < n) {
+        const landAt = A.t0 + A.contact - (n - 1 - A.calls) * gap;
+        if (now < landAt - fall) break;
+        const final = A.calls === n - 1, s = final ? 1.5 : rnd(0.8, 1.05), a = A.calls * 2.4 + 0.6;
+        const to = final ? T.center.clone() : T.ground.clone().add(V3(Math.cos(a), 0, Math.sin(a)).multiplyScalar(rnd(0.2, 0.42) * k)).setY(0.03 * k);
+        const from = to.clone().addScaledVector(slant, k);
+        missile(from, to, now, Math.max(now + 80, landAt), { trail: final ? P.mote : null, heads: [
+          { dark: true, s0: 0.12 * k * s, s1: 0.12 * k * s, col: [0.03, 0.01, 0.07], k: 0.75, shape: SHAPE.wisp, stretch: 0.075 },
+          { s0: 0.06 * k * s, s1: 0.06 * k * s, col: P.glow, k: 1.25, shape: SHAPE.wisp, stretch: 0.07 },
+          { s0: 0.024 * k * s, s1: 0.024 * k * s, col: P.core, k: 1.3, shape: SHAPE.spark, stretch: 0.025 },
+          { s0: 0.085 * k * s, s1: 0.085 * k * s, rot: 0.785, col: P.core.map((x) => x * 0.75), k: 1.0, shape: SHAPE.sparkle }],
+          land: (p) => {
+            if (final) return;
+            const t = NOW(), g = V3(p.x, 0, p.z);
+            put(glow, { p, t0: t, life: 130, s0: 0.12 * k * s, s1: 0.26 * k * s, rot: 0.785, col: P.core.map((x) => x * 0.7), k: 1.0, shape: SHAPE.sparkle });
+            decal(SHOCK_FS, g, 0.42 * k * s, 280, { uTint: C(P.glow.map((x) => x * 0.5)) }).env = "u";
+            for (let i = 0; i < 4; i++) put(glow, { p, v: inBall().setY(Math.random() + 0.3).normalize().multiplyScalar(rnd(0.8, 1.7) * k), grav: 4.5 * k, drag: 1.6, t0: t, life: rnd(260, 420), s0: 0.03 * k, s1: 0.02 * k, rot: rnd(0, 6.28), spin: rnd(-8, 8), col: P.mote, k: 1.1, shape: SHAPE.shard, env: "fade", floor: 0.01 });
+            shakes.push({ t0: t, a: 0.008 * k, life: 140 }); A.flinch?.(0.35);
+          } });
+        A.calls++;
+      }
+    }
+    /** the last star on the foe: one thin lance of light down through it and a level streak across it (a lens's, not a
+     *  ball's), both gone in a few frames; hairline cuts thrown out from the point; the dark under it deepens a moment */
+    function starBlow(c, g, k, heavy, P, t) {
+      const z = heavy ? 1.25 : 1;
+      put(dark, { p: c, t0: t, life: 200, s0: 0.5 * k * z, s1: 0.9 * k * z, col: [0.02, 0.0, 0.05], k: 0.55, shape: SHAPE.glow, env: "pop" });
+      const pin = new THREE.Object3D(); pin.position.copy(c).add(V3(0, 0.75 * k * z, 0));
+      put(glow, { p: pin.position, track: pin, v: V3(0, 2.4 * k * z, 0), t0: t, life: 150, s0: 0.05 * k, s1: 0.02 * k, col: P.glow, k: 1.2, shape: SHAPE.spark, env: "pop", stretch: 1 });
+      put(glow, { p: c, t0: t, life: 130, s0: 0.9 * k * z, s1: 1.5 * k * z, col: P.glow.map((x) => x * 0.8), k: 0.8, shape: SHAPE.cut, env: "pop" });
+      lines(c, heavy ? 9 : 7, k, P.core.map((x) => x * 0.75), z, t);
+    }
+    /** a stream of small things sent at the foe (cast.bits: glyph · petal · sparkle · wisp · tag; cast.count of them):
+     *  they leave one after another, fanned out a little, and land one after another — the last on the blow */
+    function castStream(u, A, q, now, T, P, k, fx, src) {
+      const n = fx.castCount || 7, kind = fx.castBits || "sparkle", S = A.stream || (A.stream = { sent: 0 });
+      // (they leave through the release — its last quarter-second — each as long in the air as the last, which lands
+      // on the blow)
+      const gap = n > 1 ? 200 / (n - 1) : 0, flight = A.contact - A.align + 60;
+      while (S.sent < n) {
+        const i = S.sent, landAt = A.t0 + A.contact - (n - 1 - i) * gap;
+        if (now < landAt - flight) break;
+        const from = src(), final = i === n - 1, to = T.center.clone().add(final ? V3() : inBall().multiplyScalar(0.12 * k));
+        const side = V3(-(to.z - from.z), 0, to.x - from.x).normalize(), loose = kind === "sparkle" || kind === "wisp" ? 1.7 : 1;
+        const bow = kind === "tag" ? V3(0, 0.04 * k, 0) : side.multiplyScalar((i % 2 ? 1 : -1) * rnd(0.06, 0.26) * k * loose).add(V3(0, rnd(0.04, 0.26) * k * loose, 0));
+        const rot = rnd(-0.3, 0.3), spin = kind === "petal" ? rnd(-7, 7) : kind === "tag" ? 14 : 0, size = (kind === "tag" ? 0.2 : kind === "glyph" ? 0.11 : kind === "petal" ? 0.1 : 0.07) * k;
+        const heads = kind === "petal" ? [...(P.petal ? [{ dark: true, s0: size, s1: size, rot, spin, col: P.petal, k: 0.9, shape: SHAPE.petal }] : []), { s0: size, s1: size, rot, spin, col: P.glow.map((x) => x * (P.petal ? 0.55 : 1)), k: P.petal ? 0.6 : 1, shape: SHAPE.petal }]
+          : kind === "glyph" ? [{ s0: size, s1: size, rot, col: P.core.map((x) => x * 0.75), k: 1.15, shape: glyphShape() }, { s0: size * 1.6, s1: size * 1.6, col: P.glow.map((x) => x * 0.35), k: 0.5, shape: SHAPE.glow }]
+          : kind === "tag" ? [{ s0: size, s1: size, rot: 0.3, spin, col: [1.5, 1.32, 0.95], k: 1.0, shape: SHAPE.tag }, { s0: size * 0.5, s1: size * 0.5, col: P.glow, k: 0.9, shape: SHAPE.wisp, stretch: 0.05 }]
+          : kind === "wisp" ? [{ s0: size * 1.2, s1: size * 1.2, col: P.mote, k: 1.2, shape: SHAPE.wisp, stretch: 0.06 }]
+          : [{ s0: size, s1: size, col: P.core, k: 1.3, shape: SHAPE.sparkle }, { s0: size * 2, s1: size * 2, col: P.glow.map((x) => x * 0.5), k: 0.7, shape: SHAPE.glow }];
+        missile(from, to, now, Math.max(now + 90, landAt), { bow, trail: loose > 1 ? P.mote : null, heads, land: (p) => {
+          const t = NOW();
+          if (!final && (i % 3 === 0 || n <= 4)) A.flinch?.(0.3);                 // (the foe flinches under them as they land)
+          if (kind === "glyph") put(glow, { p, t0: t, life: 240, s0: 0.12 * k, s1: 0.22 * k, rot, col: P.glow, k: 1.0, shape: glyphShape(), env: "pop" });
+          else if (kind === "tag") put(glow, { p, t0: t, life: 420, s0: 0.2 * k, s1: 0.22 * k, rot: 0.25, col: [1.5, 1.32, 0.95], k: 1.0, shape: SHAPE.tag, env: "late" });
+          else put(glow, { p, t0: t, life: 130, s0: 0.1 * k, s1: 0.16 * k, col: P.core.map((x) => x * 0.6), k: 0.9, shape: SHAPE.sparkle });
+        } });
+        S.sent++;
+      }
+    }
+    /** one star lifted off what the caster holds (it grows there as the charge builds), tossed up and over onto the foe */
+    function castLob(u, A, q, now, T, P, k, fx, src) {
+      const L = A.lob || (A.lob = { star: null, sent: false, o: new THREE.Object3D() }), g = Math.min(1, Math.max(0, (q - 0.25) / 0.55));
+      if (L.sent) return;
+      L.o.position.copy(src()).add(V3(0, (0.04 + 0.1 * g) * k, 0));
+      if (!L.star && q >= 0.25) L.star = [
+        put(glow, { p: L.o.position, track: L.o, t0: now, life: 1e6, s0: 0.02 * k, s1: 0.02 * k, spin: 2.5, col: P.core.map((x) => x * 0.8), k: 1.2, shape: SHAPE.star5, env: "on" }),
+        put(glow, { p: L.o.position, track: L.o, t0: now, life: 1e6, s0: 0.05 * k, s1: 0.05 * k, col: P.glow.map((x) => x * 0.5), k: 0.7, shape: SHAPE.glow, env: "on" })];
+      if (L.star) { L.star[0].s0 = L.star[0].s1 = (0.03 + 0.11 * g) * k; L.star[1].s0 = L.star[1].s1 = (0.08 + 0.2 * g) * k; }
+      if (L.star && q >= 0.8) {
+        L.sent = true; L.star.forEach((sp) => end(sp, now));
+        missile(L.o.position, T.center, now, A.t0 + A.contact, { arc: 0.5 * k, trail: P.mote, heads: [
+          { s0: 0.15 * k, s1: 0.15 * k, spin: 7, col: P.core.map((x) => x * 0.85), k: 1.25, shape: SHAPE.star5 },
+          { s0: 0.07 * k, s1: 0.07 * k, col: P.glow, k: 1.1, shape: SHAPE.wisp, stretch: 0.07 },
+          { s0: 0.26 * k, s1: 0.26 * k, col: P.glow.map((x) => x * 0.45), k: 0.7, shape: SHAPE.glow }] });
+      }
+    }
+    /** light gathered through a lens into a ray: a point of light grows in the lens and a thin line finds the foe as
+     *  the charge builds, a spot warming on it; on the release the ray burns — a hot core in a soft sheath, smoke off
+     *  what it strikes — through the blow, and is gone */
+    function castRay(u, A, q, now, T, P, k, fx, src) {
+      const R = A.ray || (A.ray = { mid: new THREE.Object3D(), a: new THREE.Object3D(), b: new THREE.Object3D(), parts: null, smoke: 0, over: false });
+      if (R.over) return;
+      const from = src(), to = T.center, since = now - A.t0 - A.align, flight = A.contact - A.align;
+      R.a.position.copy(from); R.b.position.copy(to); R.mid.position.copy(from).lerp(to, 0.5);
+      if (!R.parts && q >= 0.3) {
+        const on = (o2) => put(glow, { p: from, t0: now, life: 1e6, s0: 0.01, s1: 0.01, k: 0, env: "on", ...o2 });
+        R.parts = { lens: on({ track: R.a, col: P.core, shape: SHAPE.sparkle, spin: 2 }), sheath: on({ track: R.mid, col: P.glow.map((x) => x * 0.5), shape: SHAPE.spark, stretch: 1 }),
+          core: on({ track: R.mid, col: P.core, shape: SHAPE.flare, stretch: 1 }), spot: on({ track: R.b, col: P.glow, shape: SHAPE.glow }), star: on({ track: R.b, col: P.core.map((x) => x * 0.7), shape: SHAPE.star, spin: 5 }) };
+      }
+      if (!R.parts) return;
+      const { lens, sheath, core, spot, star } = R.parts, v = to.clone().sub(from), g = Math.min(1, Math.max(0, (q - 0.3) / 0.7));
+      const burn = since < 0 ? 0 : since < flight + 90 ? 1 : Math.max(0, 1 - (since - flight - 90) / 160), fl = 1 + 0.12 * Math.sin(now * 0.06);
+      for (const sp of [sheath, core]) sp.v.copy(v);
+      lens.s0 = lens.s1 = (0.06 + 0.1 * g + 0.08 * burn) * k; lens.k = 0.5 + 0.8 * g;
+      core.s0 = core.s1 = (burn ? 0.075 * fl : 0.016) * k; core.k = burn ? 1.5 * burn : 0.3 * g;
+      sheath.s0 = sheath.s1 = 0.13 * k * fl; sheath.k = 0.5 * burn;
+      spot.s0 = spot.s1 = (0.08 + 0.1 * g + 0.2 * burn) * k; spot.k = 0.25 * g + 0.6 * burn;
+      star.s0 = star.s1 = 0.34 * k * fl; star.k = 0.9 * burn;
+      if (burn > 0.3) for (R.smoke += 30 * Math.min(0.05, (now - (R.last ?? now)) / 1000); R.smoke >= 1; R.smoke--) {
+        put(smoke, { p: to.clone().add(inBall().multiplyScalar(0.05 * k)), v: V3(rnd(-0.1, 0.1), rnd(0.4, 0.8), rnd(-0.1, 0.1)).multiplyScalar(k), drag: 1.5, t0: now, life: rnd(400, 650), s0: 0.06 * k, s1: 0.16 * k, col: P.dust, k: 0.4, shape: rnd(0, 9), env: "pop" });
+        put(glow, { p: to.clone(), v: inBall().normalize().multiplyScalar(rnd(0.8, 1.6) * k), grav: 4 * k, drag: 2, t0: now, life: rnd(160, 300), s0: 0.014 * k, s1: 0.008 * k, col: P.core, k: 1.4, shape: SHAPE.spark, env: "fade", stretch: 0.05 });
+      }
+      R.last = now;
+      if (since > flight + 250) { R.over = true; for (const sp of Object.values(R.parts)) end(sp, now); }
+    }
+    /** a blaster's fuse: a cord runs out along the ground from her feet to the foe's as she readies it; she puts a
+     *  flame to it (cast.at: that share of the lead) and the spark runs down it, spitting, the cord burning away behind
+     *  — it reaches the foe on the blow (the blast is the blow's own) */
+    function castFuse(u, A, q, now, T, P, k, fx, src) {
+      const F = A.fuse || (A.fuse = { cord: null, head: null, mid: new THREE.Object3D(), tip: new THREE.Object3D(), shed: 0, over: false });
+      if (F.over) return;
+      const at = fx.castAt ?? 0.6, b = T.ground.clone().setY(0.015), base = u.fig.root.position.clone().setY(0.015), a = base.clone().lerp(b, Math.min(0.4, (0.32 * k) / Math.max(0.01, base.distanceTo(b))));
+      const tLit = A.t0 + A.align * at, tEnd = A.t0 + A.contact, run = Math.min(1, Math.max(0, (now - tLit) / Math.max(1, tEnd - tLit)));
+      const laid = Math.min(1, Math.max(0, (q - 0.1) / Math.max(0.05, at - 0.15))), near = a.clone().lerp(b, run), far = a.clone().lerp(b, 1 - Math.pow(1 - laid, 2));
+      if (!F.cord && q >= 0.1) F.cord = [
+        put(dark, { p: a, track: F.mid, t0: now, life: 1e6, s0: 0.03 * k, s1: 0.03 * k, col: [0.03, 0.02, 0.015], k: 1, shape: SHAPE.flare, env: "on", stretch: 1 }),
+        put(glow, { p: a, track: F.mid, t0: now, life: 1e6, s0: 0.022 * k, s1: 0.022 * k, col: [0.42, 0.3, 0.16], k: 0.7, shape: SHAPE.flare, env: "on", stretch: 1 })];
+      if (F.cord) { F.mid.position.copy(near).lerp(far, 0.5); for (const c of F.cord) c.v.copy(far).sub(near); }
+      if (!F.head && now >= tLit) {
+        F.head = [put(glow, { p: a, track: F.tip, t0: now, life: 1e6, s0: 0.2 * k, s1: 0.2 * k, spin: 9, col: P.core.map((x) => x * 0.8), k: 1.2, shape: SHAPE.star, env: "on" }),
+          put(glow, { p: a, track: F.tip, t0: now, life: 1e6, s0: 0.12 * k, s1: 0.12 * k, col: P.glow, k: 0.9, shape: SHAPE.glow, env: "on" })];
+        put(glow, { p: a, t0: now, life: 140, s0: 0.2 * k, s1: 0.34 * k, col: P.core.map((x) => x * 0.7), k: 1.0, shape: SHAPE.sparkle });   // the match struck
+      }
+      if (F.head) {
+        F.tip.position.copy(near).setY(0.03 * k);
+        F.head[0].s0 = F.head[0].s1 = (0.16 + 0.05 * Math.sin(now * 0.08)) * k;
+        for (F.shed += 150 * Math.min(0.05, (now - (F.last ?? now)) / 1000); F.shed >= 1; F.shed--) {
+          put(glow, { p: F.tip.position, v: inBall().setY(Math.random()).normalize().multiplyScalar(rnd(0.6, 1.6) * k), grav: 5 * k, drag: 1.5, t0: now, life: rnd(180, 340), s0: 0.016 * k, s1: 0.008 * k, col: Math.random() < 0.4 ? P.core : P.glow, k: 1.5, shape: SHAPE.spark, env: "fade", stretch: 0.05, floor: 0.01 });
+          if (Math.random() < 0.25) put(smoke, { p: F.tip.position, v: V3(0, rnd(0.2, 0.4) * k, 0), drag: 1.5, t0: now, life: rnd(350, 550), s0: 0.04 * k, s1: 0.1 * k, col: P.dust, k: 0.35, shape: rnd(0, 9), env: "pop" });
+        }
+      }
+      F.last = now;
+      if (now >= tEnd) { F.over = true; for (const sp of [...(F.cord || []), ...(F.head || [])]) end(sp, now); }
+    }
+    /** an appraiser's eye: a reticle opens round the foe and closes on its weak point as he studies it — a ring, four
+     *  ticks turning — locks as he points (a line of light from his hand to it), and what it marked breaks on the blow */
+    function castMark(u, A, q, now, T, P, k, fx, src) {
+      const M = A.mark || (A.mark = { o: new THREE.Object3D(), mid: new THREE.Object3D(), parts: null, line: false, over: false });
+      if (M.over || !cam) return;
+      M.o.position.copy(T.center);
+      if (!M.parts && q >= 0.15) M.parts = { ring: put(glow, { p: T.center, track: M.o, t0: now, life: 1e6, s0: 0.01, s1: 0.01, col: P.glow, k: 0, shape: SHAPE.ring, env: "on" }),
+        ticks: [0, 1, 2, 3].map(() => put(glow, { p: T.center, t0: now, life: 1e6, s0: 0.01, s1: 0.01, col: P.core.map((x) => x * 0.8), k: 0, shape: SHAPE.cut, env: "on" })) };
+      if (!M.parts) return;
+      const g = Math.min(1, Math.max(0, (q - 0.15) / 0.8)), e = 1 - Math.pow(1 - g, 2), rad = (0.6 - 0.36 * e) * k, locked = q >= 1, th = locked ? 0.7854 : now * 0.0022;
+      const right = V3(1, 0, 0).applyQuaternion(cam.quaternion), up = V3(0, 1, 0).applyQuaternion(cam.quaternion);
+      M.parts.ring.s0 = M.parts.ring.s1 = rad / 0.39; M.parts.ring.k = (locked ? 1.0 : 0.25 + 0.35 * g);
+      M.parts.ticks.forEach((tk, i) => {
+        const a = th + i * 1.5708;
+        tk.p.copy(T.center).addScaledVector(right, Math.cos(a) * rad).addScaledVector(up, Math.sin(a) * rad);
+        tk.rot = a; tk.s0 = tk.s1 = (0.16 + 0.1 * (1 - e)) * k; tk.k = locked ? 1.4 : 0.5 + 0.6 * g; tk.v.set(0, 0, 0);
+      });
+      if (locked && !M.line) {
+        M.line = true;
+        const from = src(); M.mid.position.copy(from).lerp(T.center, 0.5);
+        put(glow, { p: M.mid.position, track: M.mid, v: T.center.clone().sub(from), t0: now, life: Math.max(110, A.contact - A.align), s0: 0.03 * k, s1: 0.012 * k, col: P.core, k: 1.3, shape: SHAPE.flare, env: "fade", stretch: 1 });
+        put(glow, { p: T.center, t0: now, life: 140, s0: 0.3 * k, s1: 0.5 * k, col: P.core.map((x) => x * 0.6), k: 0.9, shape: SHAPE.sparkle });
+      }
+      if (now >= A.t0 + A.contact) { M.over = true; end(M.parts.ring, now); M.parts.ticks.forEach((tk) => end(tk, now)); }
+    }
+    /** the igniter's dust: a handful of amber dust sown at the foe (cast.at: that share of the lead) — thrown, it slows
+     *  and hangs in the air between them, thickest round the foe, glittering. He raises his hand (a point of light
+     *  wakes at his fingertips) and snaps his fingers on the release: a spark there, and the flame runs through the
+     *  dust — each mote going up as the front passes it — to reach the foe on the blow (igniteBlast) */
+    function castIgnite(u, A, q, now, T, P, k, fx, src) {
+      const I = A.ign || (A.ign = { motes: null, haze: [], pilot: null, lit: false, tip: new THREE.Object3D() });
+      if (I.lit) return;
+      const tSnap = A.t0 + A.align, tHit = A.t0 + A.contact, ts = tn(fx, "stream");
+      if (!I.motes && q >= (fx.castAt ?? 0.4)) {
+        const from = src(), to = T.center, dir = to.clone().sub(from), len = dir.length() || 1, n = Math.round(46 * ts.count);
+        dir.divideScalar(len);
+        const side = V3(-dir.z, 0, dir.x), throwV = () => dir.clone().multiplyScalar(len * rnd(2.6, 3.6)).add(inBall().multiplyScalar(0.5 * k)).add(V3(0, rnd(0.2, 0.7) * k, 0));
+        I.motes = [];
+        for (let i = 0; i < n; i++) {
+          // where it comes to hang: round the foe itself, or strung out along the way to it (more of it the nearer)
+          const round = i < n * 0.45, s = round ? 1 : 0.1 + 0.85 * Math.pow(Math.random(), 0.65);
+          const home = round ? to.clone().add(inBall().multiplyScalar(0.36 * k)) : from.clone().lerp(to, s).addScaledVector(side, rnd(-0.12, 0.12) * k * (0.5 + s)).add(V3(0, (rnd(-0.1, 0.12) - 0.1 * Math.sin(Math.PI * s)) * k, 0));
+          home.y = Math.max(0.05 * k, home.y);
+          const big = Math.random() < 0.25;
+          const sp = put(glow, { p: from, v: throwV(), drag: 5, pull: home, pullK: rnd(3.2, 5.2), sway: 0.05 * k, t0: now + rnd(0, 50), life: 1e6, s0: (big ? 0.05 : 0.028) * k * ts.size, s1: (big ? 0.05 : 0.028) * k * ts.size,
+            rot: rnd(0, 6.28), spin: rnd(-3, 3), col: (big ? P.mote : P.glow).map((x) => x * 0.6), k: (big ? 1.0 : 0.85) * ts.gain, shape: big ? SHAPE.sparkle : SHAPE.glow, env: "on" });
+          I.motes.push({ sp, s, round });
+        }
+        // (the body of the cloud: a thin amber haze the motes glitter in)
+        for (let i = 0; i < 9; i++) {
+          const s = i < 5 ? 1 : rnd(0.35, 0.9), home = (i < 5 ? to.clone().add(inBall().multiplyScalar(0.24 * k)) : from.clone().lerp(to, s)).setY(Math.max(0.12 * k, from.y + (to.y - from.y) * s + rnd(-0.06, 0.06) * k));
+          I.haze.push(put(smoke, { p: from, v: throwV(), drag: 5, pull: home, pullK: 3.6, t0: now + rnd(0, 60), life: Math.max(300, tHit - now + 80), s0: 0.1 * k, s1: (i < 5 ? 0.42 : 0.3) * k, col: P.haze || P.dust, k: 0.2, shape: rnd(0, 9), env: "late" }));
+        }
+        // a puff where it leaves his hand
+        for (let i = 0; i < 6; i++) put(glow, { p: from, v: throwV().multiplyScalar(0.35), drag: 6, t0: now, life: rnd(160, 260), s0: 0.03 * k, s1: 0.012 * k, col: P.mote.map((x) => x * 0.7), k: 1.0, shape: SHAPE.spark, env: "fade", stretch: 0.03 });
+      }
+      // the fingertips: a point of light as the hand comes up, steadier and whiter the nearer the snap
+      const tipB = fx.castHand && bone(u.fig, fx.castHand);
+      if (!I.pilot && q >= 0.72 && tipB) I.pilot = [put(glow, { p: src(), track: tipB, t0: now, life: 1e6, s0: 0.01, s1: 0.01, spin: 4, col: P.core, k: 0, shape: SHAPE.sparkle, env: "on" }),
+        put(glow, { p: src(), track: tipB, t0: now, life: 1e6, s0: 0.01, s1: 0.01, col: P.glow.map((x) => x * 0.6), k: 0, shape: SHAPE.glow, env: "on" })];
+      if (I.pilot) { const g = Math.min(1, Math.max(0, (q - 0.72) / 0.26)), fl = 1 + 0.15 * Math.sin(now * 0.05); I.pilot[0].s0 = I.pilot[0].s1 = (0.03 + 0.07 * g) * k * fl; I.pilot[0].k = 0.4 + 0.9 * g; I.pilot[1].s0 = I.pilot[1].s1 = (0.06 + 0.1 * g) * k; I.pilot[1].k = 0.5 * g; }
+      if (now < tSnap) return;
+      // the snap
+      I.lit = true;
+      if (I.pilot) for (const sp of I.pilot) end(sp, now);
+      const from = src(), flight = Math.max(60, tHit - tSnap);
+      put(glow, { p: from, t0: now, life: 110, s0: 0.14 * k, s1: 0.3 * k, rot: rnd(0, 1), col: P.core.map((x) => x * 0.85), k: 1.1, shape: SHAPE.star });
+      put(glow, { p: from, t0: now, life: 70, s0: 0.1 * k, s1: 0.16 * k, col: P.core, k: 1.3, shape: SHAPE.sparkle });
+      for (let i = 0; i < 9; i++) put(glow, { p: from, v: inBall().normalize().multiplyScalar(rnd(0.9, 2.0) * k), grav: 5 * k, drag: 2.5, t0: now, life: rnd(140, 260), s0: 0.014 * k, s1: 0.007 * k, col: P.core, k: 1.5, shape: SHAPE.spark, env: "fade", stretch: 0.045 });
+      // the front: a spark racing down the line of dust
+      missile(from, T.center, now, tHit - 8, { heads: [{ s0: 0.03 * k, s1: 0.03 * k, col: P.core, k: 1.4, shape: SHAPE.spark, stretch: 0.012 }, { s0: 0.07 * k, s1: 0.07 * k, spin: 9, col: P.core.map((x) => x * 0.8), k: 1.1, shape: SHAPE.sparkle }] });
+      for (const m of I.motes || []) {
+        const tI = tSnap + (flight - 14) * Math.pow(m.s, 0.85) - (m.round ? rnd(0, 26) : 0);
+        later.push({ at: tI, fn: () => {
+          const t = NOW(), p = m.sp.p; end(m.sp, t);
+          put(glow, { p, t0: t, life: rnd(120, 190), s0: 0.05 * k, s1: rnd(0.11, 0.17) * k, col: Math.random() < 0.35 ? P.core.map((x) => x * 0.7) : P.glow, k: 0.95, shape: SHAPE.glow });
+          if (Math.random() < 0.5) put(glow, { p, v: V3(rnd(-0.3, 0.3), rnd(0.5, 1.3), rnd(-0.3, 0.3)).multiplyScalar(k), grav: 2.5 * k, drag: 1.5, t0: t, life: rnd(220, 420), s0: 0.014 * k, s1: 0.006 * k, col: P.mote, k: 1.4, shape: SHAPE.spark, env: "fade", stretch: 0.04 });
+          if (!m.round && Math.random() < 0.3) put(smoke, { p, v: V3(0, rnd(0.2, 0.45) * k, 0), drag: 1.4, t0: t + 40, life: rnd(420, 640), s0: 0.05 * k, s1: 0.15 * k, col: P.dust, k: 0.4, shape: rnd(0, 9), env: "pop" });
+        } });
+      }
+      for (const h of I.haze) h.life = Math.max(1, tHit - h.t0 + 60);
+    }
+    /** what the lit dust does to the foe: the cloud round it goes up at once, then smaller blasts walk up through what is left of the cloud, soot rolling up off
+     *  it, embers left drifting */
+    function igniteBlast(c, g, k, heavy, P, t) {
+      const n = heavy ? 4 : 2;
+      for (let i = 1; i <= n; i++) later.push({ at: t + 75 * i, fn: () => {
+        const t2 = NOW(), a = rnd(0, 6.28), p = c.clone().add(V3(Math.cos(a) * rnd(0.12, 0.26) * k, (0.05 + 0.13 * i) * k, Math.sin(a) * rnd(0.12, 0.26) * k));
+        if (o.fire) o.fire.burst(p, (0.034 - 0.003 * i) * k);
+        put(glow, { p, t0: t2, life: 90, s0: 0.2 * k, s1: 0.34 * k, rot: rnd(0, 1), col: P.glow.map((x) => x * 0.8), k: 0.8, shape: SHAPE.star });
+        for (let j = 0; j < 7; j++) put(glow, { p, v: inBall().normalize().multiplyScalar(rnd(1.2, 2.6) * k), grav: 5 * k, drag: 1.8, t0: t2, life: rnd(200, 380), s0: 0.016 * k, s1: 0.008 * k, col: Math.random() < 0.4 ? P.core : P.glow, k: 1.5, shape: SHAPE.spark, env: "fade", stretch: 0.05, floor: 0.01 });
+        shakes.push({ t0: t2, a: 0.016 * k, life: 160 });
+      } });
+      for (let i = 0; i < (heavy ? 8 : 6); i++) put(smoke, { p: c.clone().add(inBall().multiplyScalar(0.14 * k)), v: V3(rnd(-0.18, 0.18), rnd(0.35, 0.75), rnd(-0.18, 0.18)).multiplyScalar(k), drag: 1.1, t0: t + 90 + i * 45, life: rnd(900, 1300), s0: 0.16 * k, s1: 0.44 * k, col: P.dust, k: 0.5, shape: rnd(0, 9), env: "pop" });
+      for (let i = 0; i < (heavy ? 22 : 14); i++) put(glow, { p: c.clone().add(inBall().multiplyScalar(0.3 * k)), v: V3(rnd(-0.15, 0.15), rnd(0.12, 0.45), rnd(-0.15, 0.15)).multiplyScalar(k), drag: 0.5, sway: 0.1 * k, t0: t + rnd(120, 420), life: rnd(900, 1700), s0: 0.022 * k, s1: 0.01 * k, col: P.mote, k: 1.3, shape: SHAPE.sparkle, env: "mote" });
+    }
+    /** impact lines: thin cuts of light thrown out from a point, as the camera sees it (what a blow's flash is made
+     *  of — never a ball of white) */
+    function lines(c, n, k, col, z = 1, t = NOW()) {
+      const q = cam ? cam.quaternion : new THREE.Quaternion(), Rr = V3(1, 0, 0).applyQuaternion(q), U = V3(0, 1, 0).applyQuaternion(q);
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * 6.283 + rnd(-0.25, 0.25), d = Rr.clone().multiplyScalar(Math.cos(a)).addScaledVector(U, Math.sin(a));
+        put(glow, { p: c.clone().addScaledVector(d, 0.17 * k), v: d.multiplyScalar(rnd(2.0, 3.2) * k * z), drag: 6, t0: t, life: rnd(160, 240), s0: 0.16 * k * z, s1: 0.3 * k * z, rot: a, col, k: 1.0, shape: SHAPE.cut, env: "pop" });
+      }
+    }
+    /** a combo's lighter blow on its victim (the arena calls it for every phase a sheet marks `hit`; the last blow is
+     *  impact): a short crisp mark — a cut, slanted the other way each time; a fist's or a foot's a small ring and a
+     *  few lines — sparks along the blow, a jolt. No ground, no shock ring, no flash to speak of */
+    function tap(u, hit, kk = 0.6) {
+      const s = stOf(u), fx = recipe(u), P = palOf(fx), k = K(u) * (fx.scale || 1), t = performance.now(), c = hit.at, dir = hit.dir.clone().setY(0).normalize(), z = 0.55 + 0.6 * kk;
+      const n = s.atk ? (s.atk.tapN = (s.atk.tapN || 0) + 1) : 1;
+      if (fx.limb || fx.slash === false) {
+        lines(c, 5, k * 0.8, P.core.map((x) => x * 0.7), z, t);
+        if (fx.limb) put(glow, { p: c, t0: t, life: 110, s0: 0.08 * k, s1: 0.26 * k * z, col: P.glow.map((x) => x * 0.6), k: 0.7, shape: SHAPE.ring, env: "pop" });
+      } else {
+        const rot = (n % 2 ? 0.7 : -0.6) + rnd(-0.15, 0.15), at = c.clone().add(V3(0, 0.05 * k, 0));
+        put(dark, { p: at, t0: t, life: 170, s0: 0.34 * k * z, s1: 0.9 * k * z, rot, col: [0, 0, 0], k: 0.4, shape: SHAPE.flare, env: "pop" });
+        put(glow, { p: at, t0: t, life: 180, s0: 0.3 * k * z, s1: 0.85 * k * z, rot, col: P.core.map((x) => x * 0.75), k: 1.0, shape: SHAPE.cut, env: "pop" });
+      }
+      put(glow, { p: c, t0: t, life: 70, s0: 0.1 * k, s1: 0.22 * k * z, rot: 0.785, col: P.core.map((x) => x * 0.6), k: 0.9, shape: SHAPE.sparkle });
+      for (let i = 0, m = Math.round(9 * z); i < m; i++) put(glow, { p: c, v: dir.clone().multiplyScalar(rnd(0.4, 1.2)).add(inBall().multiplyScalar(0.8)).normalize().multiplyScalar(rnd(1.2, 2.6) * k), grav: 5 * k, drag: 2, t0: t, life: rnd(180, 340), s0: 0.016 * k, s1: 0.008 * k, col: Math.random() < 0.4 ? P.core : P.glow, k: 1.4, shape: SHAPE.spark, env: "fade", stretch: 0.05 });
+      if (fx.bits) bits(fx.bits, c, 2, k * 0.8, P, dir, t);
+      shakes.push({ t0: t, a: 0.014 * k * kk * (fx.shake || 1), life: 140 });
+    }
     // soul wisps drawn out of the victim and home into the attacker (life drained)
     function drain(from, to, n, k, col) {
-      for (let i = 0; i < n; i++) put(glow, { p: from.clone().add(inBall().multiplyScalar(0.18 * k)), v: inBall().multiplyScalar(1.2 * k).setY(rnd(0.6, 1.4) * k), seek: to, seekK: 22, drag: 3.5, t0: NOW() + 80 + i * 35, life: 620, s0: 0.08 * k, s1: 0.05 * k, col, k: 1.2, shape: SHAPE.wisp, env: "mote", stretch: 0.18 });
+      for (let i = 0; i < n; i++) put(glow, { p: from.clone().add(inBall().multiplyScalar(0.18 * k)), v: inBall().multiplyScalar(1.2 * k).setY(rnd(0.6, 1.4) * k), seek: to, seekK: 22, drag: 3.5, t0: NOW() + 80 + i * 35, life: 620, s0: 0.05 * k, s1: 0.03 * k, col, k: 1.0, shape: SHAPE.wisp, env: "mote", stretch: 0.3 });
     }
 
     // ---------------------------------------------------------------- beats
@@ -889,8 +1225,8 @@ const EmberSkillFx = (() => {
     function attack(u, plan) {
       const s = stOf(u), k = K(u), fx = recipe(u), P = palOf(fx), now = performance.now();
       if (s.atk?.rib) s.atk.rib.open = false;
-      s.atk = { t0: plan.t0, align: plan.align, contact: plan.contact ?? plan.align + 150, tier: plan.tier || 1, glint: false, rib: null, hit: false, charge: 0, rise: 0, leap: plan.leap ?? 0.3, target: plan.target, calls: 0, sky: null };
-      if (fx.sigil !== false && !u.fig.spell) {
+      s.atk = { t0: plan.t0, align: plan.align, contact: plan.contact ?? plan.align + 150, tier: plan.tier || 1, glint: false, rib: null, hit: false, charge: 0, rise: 0, leap: plan.leap ?? 0.3, target: plan.target, calls: 0, sky: null, flinch: plan.flinch || null };
+      if (fx.sigil !== false && !(u.fig.spell && u.fig.spell.gather !== false)) {
         const ts = tn(fx, "sigil");
         const d = decal(SIGIL_FS, u.fig.root.position, 0.62 * k * (fx.scale || 1) * ts.size, (plan.align * 0.55 + 260) * ts.life, { uTint: C(P.glow.map((c) => c * 0.85 * ts.gain)), uStyle: { value: SIGILS[fx.sigil] ?? 0 } });
         d.env = "pop"; d.spin = 1.6;
@@ -911,8 +1247,12 @@ const EmberSkillFx = (() => {
       }
       // a call from the sky or the ground: its sigil opens on the foe's ground as the caster charges
       if (T && (fx.cast === "sky" || fx.cast === "ground")) {
-        const d = decal(SIGIL_FS, T.ground, 0.7 * k, plan.align + 420, { uTint: C(P.glow), uStyle: { value: SIGILS[fx.callSigil || fx.sigil] ?? 2 } }); d.env = "grow"; d.spin = -1.2; d.gain = 0.7;
-        if (fx.cast === "ground") { const v = decal(VOID_FS, T.ground, 0.6 * k, plan.align + 700, {}, true); v.env = "grow"; v.spin = 1; }
+        const clock = fx.callSigil === "clock";
+        const d = decal(SIGIL_FS, T.ground, 0.7 * k, (plan.contact ?? plan.align) + 420, { uTint: C(P.glow), uStyle: { value: SIGILS[fx.callSigil || fx.sigil] ?? 2 } }); d.env = "grow"; d.gain = 0.7;
+        // (a clock's minute hand goes twice round as he winds it, and stands at twelve on the blow)
+        d.spin = clock ? (Math.PI * 4) / ((plan.contact ?? plan.align) / 1000) : -1.2;
+        if (fx.cast === "ground" && !clock) { const v = decal(VOID_FS, T.ground, 0.6 * k, plan.align + 700, {}, true); v.env = "grow"; v.spin = 1; }
+        if (fx.callSigil === "astral") { d.gain = 0.95; d.spin = 0.9; const v = decal(VOID_FS, T.ground, 0.72 * k, (plan.contact ?? plan.align) + 500, {}, true); v.env = "grow"; v.spin = 0.6; }
       }
       // the sun that gathers over the foe (a god's judgment), brightening until the blow falls from it
       if (T && fx.sky === "sun") {
@@ -935,17 +1275,24 @@ const EmberSkillFx = (() => {
         // the flash: a glow, a starburst, a lens streak (fx.flash < 1: a smaller, dimmer one — a beast's blow is its mark)
         // (kept small and short: the flash marks the blow, the victim's own recoil is what should be seen)
         const fl = (fx.flash ?? 1) * tf.gain, fs = (0.45 + 0.55 * (fx.flash ?? 1)) * tf.size;
-        put(glow, { p: c, t0: t, life: 60 * tf.life, s0: 0.3 * k * fs, s1: 0.4 * k * fs, col: P.core.map((x) => x * 0.5 * fl), k: 0.8, shape: SHAPE.glow });
-        put(glow, { p: c, t0: t, life: (heavy ? 130 : 100) * tf.life, s0: (heavy ? 0.8 : 0.6) * k * fs, s1: (heavy ? 1.0 : 0.72) * k * fs, rot: rnd(0, 1), spin: 0.8, col: P.glow.map((x) => x * 0.8 * fl), k: 0.8, shape: SHAPE.star });
-        put(glow, { p: c, t0: t, life: 90 * tf.life, s0: 1.3 * k * fs, s1: 1.6 * k * fs, col: P.glow.map((x) => x * 0.5 * fl), k: 0.45, shape: SHAPE.flare });
+        // (no ball of light, no starburst: a small hard glint, thin lines thrown out from it, its own dark under it)
+        put(dark, { p: c, t0: t, life: 170 * tf.life, s0: 0.4 * k * fs, s1: 0.7 * k * fs, col: [0.01, 0.008, 0.012], k: 0.4 * Math.min(1, fl), shape: SHAPE.glow, env: "pop" });
+        put(glow, { p: c, t0: t, life: 80 * tf.life, s0: 0.16 * k * fs, s1: (heavy ? 0.42 : 0.32) * k * fs, rot: 0.785, col: P.core.map((x) => x * 0.75 * fl), k: 1.0, shape: SHAPE.sparkle });
+        lines(c, Math.round((heavy ? 8 : 6) * Math.min(1.2, 0.5 + 0.6 * fl)), k * fs, P.glow.map((x) => x * 0.85 * fl), heavy ? 1.2 : 1, t);
         // the mark the weapon leaves across the victim: a line along the blow, a cross, a crescent, a piercing streak
         const km = k * tm.size, mk = (o) => put(o.dark ? dark : glow, { ...o, life: o.life * tm.life, k: o.k * tm.gain });      // (the mark, tuned)
         const mark = (rot, s0, s1, life = 220) => { const at = c.clone().add(V3(0, 0.06 * km, 0)); mk({ p: at, t0: t, life, s0: s0 * km, s1: s1 * km, rot, col: P.core.map((x) => x * 0.7), k: 1.0, shape: SHAPE.cut, env: "pop" }); mk({ p: at, t0: t, life: life * 0.6, s0: s0 * km, s1: s1 * km, rot, col: P.glow.map((x) => x * 0.5), k: 0.3, shape: SHAPE.flare, env: "pop" }); };
         if (fx.slash === "cross") { mark(0.75, 0.38, 0.95); mark(-0.75, 0.38, 0.95, 260); }
-        else if (fx.slash === "crescent") mk({ p: c.clone().add(V3(0, 0.05 * km, 0)), t0: t, life: 300, s0: 0.4 * km, s1: 0.8 * km, rot: rnd(-0.4, 0.4) + 3.6, col: P.glow.map((x) => x * 0.8), k: 0.9, shape: SHAPE.crescent, env: "pop" });
+        else if (fx.slash === "crescent") {
+          // a new moon cut across it: a thin crisp arc over its own shadow (never a filled disc: that reads as a bubble)
+          const at = c.clone().add(V3(0, 0.05 * km, 0)), rot = rnd(-0.3, 0.3) + 3.6;
+          mk({ dark: true, p: at, t0: t, life: 300, s0: 0.4 * km, s1: 0.78 * km, rot, col: [0.03, 0.0, 0.05], k: 0.7, shape: SHAPE.arc, env: "pop" });
+          mk({ p: at, t0: t, life: 240, s0: 0.36 * km, s1: 0.72 * km, rot, col: P.glow.map((x) => x * 0.9), k: 1.0, shape: SHAPE.arc, env: "pop" });
+          mk({ p: at, t0: t + 30, life: 200, s0: 0.4 * km, s1: 0.95 * km, rot: rot - 1.2, col: P.core.map((x) => x * 0.6), k: 0.9, shape: SHAPE.cut, env: "pop" });
+        }
         else if (fx.slash === "pierce") {
           for (let i = 0; i < 2; i++) mk({ p: c.clone().addScaledVector(dir, 0.15 * km), v: dir.clone().multiplyScalar((3.2 + i) * km), drag: 5, t0: t + i * 30, life: 240, s0: 0.1 * km, s1: 0.05 * km, col: P.core.map((x) => x * 0.8), k: 1.3, shape: SHAPE.wisp, env: "pop", stretch: 0.12 });
-          mk({ p: c.clone().addScaledVector(dir, 0.12 * km), t0: t, life: 260, s0: 0.2 * km, s1: 0.8 * km, col: P.glow, k: 1.0, shape: SHAPE.ring, env: "pop" });
+          // (no ring round the wound: a ring seen head-on reads as a bubble)
         } else if (fx.slash === "claw" || fx.slash === "bite") {
           // a beast's mark, drawn across the victim as the camera sees it: three raking claw-cuts, or two rows of fangs
           // (crescents) snapping shut on it
@@ -959,26 +1306,34 @@ const EmberSkillFx = (() => {
               mk({ dark: true, p, t0: t + (i + 1) * 28, life: 240, s0: 0.4 * km, s1: 1.05 * km, rot: r0, col: [0, 0, 0], k: 0.45, shape: SHAPE.flare, env: "pop" });
             }
           } else {
-            for (const sg of [1, -1]) {
-              mk({ p: at.clone().addScaledVector(U, sg * 0.16 * km), v: U.clone().multiplyScalar(-sg * 1.3 * km), drag: 7, t0: t, life: 240, s0: 0.42 * km, s1: 0.55 * km, rot: sg > 0 ? 0 : Math.PI, col: P.glow, k: 1.2, shape: SHAPE.crescent, env: "pop" });
-              for (let i = -1; i <= 1; i += 2) mk({ p: at.clone().addScaledVector(U, sg * 0.05 * km).addScaledVector(R, i * 0.07 * km), t0: t + 40, life: 160, s0: 0.12 * km, s1: 0.05 * km, rot: rnd(0, 1), col: P.core, k: 1.3, shape: SHAPE.sparkle, env: "pop" });
+            // (fangs: two rows of thin cuts snapping shut on it, over their own dark — never a filled crescent, which
+            // reads as a ball of light round the victim)
+            for (const sg of [1, -1]) for (let i = -1; i <= 1; i++) {
+              const p = at.clone().addScaledVector(U, sg * (0.2 - 0.03 * Math.abs(i)) * km).addScaledVector(R, i * 0.1 * km), v = U.clone().multiplyScalar(-sg * 1.5 * km), rot = Math.PI / 2 + sg * i * 0.22, len = (i ? 0.22 : 0.3) * km;
+              mk({ dark: true, p, v, drag: 7, t0: t + 10, life: 230, s0: len * 1.15, s1: len * 1.3, rot, col: [0, 0, 0], k: 0.4, shape: SHAPE.flare, env: "pop" });
+              mk({ p, v, drag: 7, t0: t, life: 220, s0: len, s1: len * 1.2, rot, col: (i ? P.glow : P.core.map((x) => x * 0.8)), k: 1.1, shape: SHAPE.cut, env: "pop" });
             }
+            mk({ p: at, t0: t + 70, life: 120, s0: 0.1 * km, s1: 0.24 * km, rot: 0.785, col: P.core.map((x) => x * 0.7), k: 1.0, shape: SHAPE.sparkle, env: "pop" });
           }
         } else if (fx.slash !== false) mark(Math.PI / 2 - 0.42, 0.4, 0.9);
         // on the ground: a shock front, a slower, wider one, what the blow leaves there
-        decal(SHOCK_FS, g, (heavy ? 1.2 : 0.9) * k * tsh.size, (heavy ? 400 : 340) * tsh.life, { uTint: C(lit(P.glow, 0.6 * tsh.gain)) }).env = "u";
-        decal(SHOCK_FS, g, (heavy ? 1.8 : 1.35) * k * tsh.size, 650 * tsh.life, { uTint: C(P.deep.map((x) => (x + 0.25) * 0.7 * tsh.gain)) }).env = "u";
+        // (one thin front in the blow's colour, and behind it a faint ring of dust — never a broad coloured band)
+        decal(SHOCK_FS, g, (heavy ? 1.2 : 0.9) * k * tsh.size, (heavy ? 400 : 340) * tsh.life, { uTint: C(lit(P.glow, 0.5 * tsh.gain)) }).env = "u";
+        decal(SHOCK_FS, g, (heavy ? 1.7 : 1.3) * k * tsh.size, 560 * tsh.life, { uTint: C(P.dust.map((x) => (x * 0.35 + 0.07) * tsh.gain)) }).env = "u";
         const R = (heavy ? 0.95 : 0.7) * k * tg.size, GL = tg.life, hotG = lit(P.core, tg.gain), midG = lit(P.glow, tg.gain);
-        if (fx.ground === "crack" || fx.ground === "roots") decal(CRACK_FS, g, R, (heavy ? 1900 : 1500) * GL, { uHot: C(hotG), uMid: C(midG), uCool: C(P.deep), uRoot: { value: fx.ground === "roots" ? 1 : 0 } }).env = "crack";
+        // (what was burnt first, the break over it)
+        if (fx.ground && fx.ground !== "frost" && fx.ground !== "void") decal(SCORCH_FS, g, R * 0.85, 1900 * GL, { uTint: { value: new THREE.Color(0.03, 0.02, 0.015) } }, true).env = "late";
+        if (fx.ground === "crack" || fx.ground === "roots") decal(CRACK_FS, g, R, (heavy ? 2100 : 1700) * GL, { uHot: C(hotG), uMid: C(lit(P.glow, tg.gain * (P.seam ?? 1))), uCool: C(lit(P.deep, P.seam ?? 1)), uRoot: { value: fx.ground === "roots" ? 1 : 0 } }, true).env = "crack";
         else if (fx.ground === "frost") decal(FROST_FS, g, R * 1.15, (heavy ? 2200 : 1800) * GL, { uHot: C(hotG), uMid: C(midG) }).env = "crack";
         else if (fx.ground === "void") { const v = decal(VOID_FS, g, R * 1.3, 1600 * GL, {}, true); v.env = "late"; v.spin = 1.4; const d = decal(SIGIL_FS, g, R * 0.9, 1300 * GL, { uTint: C(midG), uStyle: { value: SIGILS[fx.sigil] ?? 1 } }); d.env = "late"; d.gain = 0.28; }
-        else if (fx.ground === "rune") { const d = decal(SIGIL_FS, g, R * 1.1, 1300 * GL, { uTint: C(midG), uStyle: { value: SIGILS[fx.sigil] ?? 2 } }); d.env = "late"; d.gain = 0.32; }
-        if (fx.ground && fx.ground !== "frost" && fx.ground !== "void") decal(SCORCH_FS, g, R * 0.85, 1900 * GL, { uTint: { value: new THREE.Color(0.03, 0.02, 0.015) } }, true).env = "late";
+        else if (fx.ground === "rune") { const d = decal(SIGIL_FS, g, R * 1.1, 1300 * GL, { uTint: C(midG), uStyle: { value: SIGILS[fx.callSigil || fx.sigil] ?? 2 } }); d.env = "late"; d.gain = fx.callSigil === "astral" ? 0.5 : 0.32; }
         if (fx.ground === "frost") decal(SCORCH_FS, g, R, 2000 * GL, { uTint: { value: new THREE.Color(0.3, 0.42, 0.56) } }, true).env = "late";   // a pale rime under it
         if (fx.beam !== false) beam(g, (heavy ? 2.2 : 1.5) * k * tb.size, (heavy ? 0.32 : 0.2) * k * tb.size, (heavy ? 380 : 280) * tb.life, P.glow, 0.5 * tb.gain, "flash");
         if (fx.spikes) { const tk = tn(fx, "spikes"); spikeRing(fx.spikes, g, k * tk.size, heavy, P, dir, tk.count, tk.life); }
         if (fx.rocks) { const tr = tn(fx, "rocks"); rockBurst(g, (heavy ? 1.5 : 1) * fx.rocks * tr.count, k * tr.size, P); }
         if (fx.flame && o.fire) o.fire.burst(c, 0.052 * k * tn(fx, "flame").size);
+        if (fx.cast === "ignite") igniteBlast(c, g, k, heavy, P, t);
+        if (fx.cast === "sky") starBlow(c, g, k, heavy, P, t);
         // sparks thrown up and away, falling
         for (let i = 0, n = (heavy ? 34 : 24) * tsk.count; i < n; i++) {
           const v = inBall().setY(0).normalize().multiplyScalar(0.6).add(dir.clone().multiplyScalar(rnd(0.3, 0.9))).setY(rnd(0.6, 1.6)).normalize().multiplyScalar(rnd(1.6, 3.4) * k * tsk.size);
@@ -993,7 +1348,7 @@ const EmberSkillFx = (() => {
           put(smoke, { p: g.clone().addScaledVector(d, 0.12 * k).setY(0.05 * k), v: d.multiplyScalar(rnd(0.5, 1.0) * k).setY(rnd(0.05, 0.2) * k), drag: 2.4, t0: t, life: rnd(700, 1100) * td.life, s0: 0.16 * k * td.size, s1: 0.36 * k * td.size, col: P.dust, k: 0.5 * td.gain, shape: rnd(0, 9), env: "pop" });
         }
         if (fx.drain) drain(c, chestOf(u), heavy ? 9 : 6, k, P.blood || P.mote);
-        if (fx.cast === "ground") for (let i = 0, n = heavy ? 34 : 24; i < n; i++) {
+        if (fx.cast === "ground" && fx.callSigil !== "clock") for (let i = 0, n = heavy ? 34 : 24; i < n; i++) {
           const a = rnd(0, 6.28), Rr = rnd(0.03, 0.32) * k;
           put(glow, { p: g.clone().add(V3(Math.cos(a) * Rr, 0.02 * k, Math.sin(a) * Rr)), v: V3(Math.cos(a) * 0.2 * k, rnd(1.6, 3.2) * k, Math.sin(a) * 0.2 * k), drag: 1.6, t0: t + rnd(0, 180), life: rnd(500, 800), s0: rnd(0.08, 0.13) * k, s1: 0.05 * k, col: Math.random() < 0.3 ? P.core : P.mote, k: 1.2, shape: SHAPE.wisp, env: "mote", stretch: 0.16 });
         }
@@ -1028,11 +1383,11 @@ const EmberSkillFx = (() => {
       if (fx.cast === "array") {                       // the sun's judgment: a great crossed cut, a sun stamped on the ground
         for (const [d0, life] of [[0.8, 320], [-0.8, 360]]) put(glow, { p: c, t0: t + (d0 < 0 ? 50 : 0), life, s0: 0.45 * k, s1: 1.0 * k, rot: d0, col: P.glow, k: 0.95, shape: SHAPE.cut, env: "pop" });
         const sg = decal(SIGIL_FS, g, 0.75 * k, 900, { uTint: C(P.glow.map((x) => x * 0.2)), uStyle: { value: 0 } }); sg.env = "pop"; sg.spin = 2;
-        decal(CRACK_FS, g, 0.75 * k, 1500, { uHot: C(P.glow.map((x) => x * 0.34)), uMid: C(P.glow.map((x) => x * 0.26)), uCool: C(P.deep) }).env = "crack";
+        decal(CRACK_FS, g, 0.75 * k, 1500, { uHot: C(P.glow.map((x) => x * 0.34)), uMid: C(P.glow.map((x) => x * 0.5)), uCool: C(P.deep) }, true).env = "crack";
         bits("shard", c, heavy ? 12 : 8, k, P, dir, t);
       } else if (fx.cast === "pillar") {               // the pillar stands; the ground under it molten
-        decal(CRACK_FS, g, 0.85 * k, 2000, { uHot: C(P.glow), uMid: C(P.glow.map((x) => x * 0.7)), uCool: C(P.deep) }).env = "crack";
         decal(SCORCH_FS, g, 0.75 * k, 2200, { uTint: { value: new THREE.Color(0.03, 0.015, 0.01) } }, true).env = "late";
+        decal(CRACK_FS, g, 0.85 * k, 2000, { uHot: C(P.glow), uMid: C(P.glow), uCool: C(P.deep) }, true).env = "crack";
         if (o.fire) later.push({ at: t + 220, fn: () => o.fire.burst(c.clone().add(V3(0, 0.45 * k, 0)), 0.035 * k) });
       } else if (fx.cast === "collapse") {             // the collapse bursts: a black ring out, crescents cut outward, the dark pool
         const vp = decal(VOID_FS, g, 1.0 * k, 1600, {}, true); vp.env = "late"; vp.spin = 1.6;
@@ -1045,7 +1400,7 @@ const EmberSkillFx = (() => {
         }
         bits("wisp", c, 8, k, P, null, t);
       } else if (fx.cast === "spear") {                // the wild answers: roots split the ground, thorns burst up
-        decal(CRACK_FS, g, 0.8 * k, 1600, { uHot: C(P.glow), uMid: C(P.glow.map((x) => x * 0.7)), uCool: C(P.deep), uRoot: { value: 1 } }).env = "crack";
+        decal(CRACK_FS, g, 0.8 * k, 1600, { uHot: C(P.glow), uMid: C(P.glow.map((x) => x * 0.8)), uCool: C(P.deep), uRoot: { value: 1 } }, true).env = "crack";
         spikeRing("thorn", g, k, heavy, P, dir); bits("leaf", c, 8, k, P, dir, t);
       }
       for (let i = 0, n = heavy ? 18 : 12; i < n; i++) {
@@ -1085,8 +1440,8 @@ const EmberSkillFx = (() => {
       if (V.orb) {                                     // a sun, a moon or a star behind the head
         const head = bone(u.fig, "Head");
         const sh = V.orb === "moon" ? SHAPE.crescent : V.orb === "star" ? SHAPE.star5 : SHAPE.star, to = tn(fx, "orb");
-        put(glow, { p, track: head || u.fig.root, off: V3(0, 0.12 * k, 0).addScaledVector(V3(0, 0, -1).applyQuaternion(u.fig.root.quaternion), 0.12 * k), t0: now + 200, life: 1900 * to.life, s0: 0.35 * k * to.size, s1: 0.6 * k * to.size, rot: V.orb === "moon" ? 3.4 : 0, spin: V.orb === "moon" ? 0 : 0.4, col: P.glow.map((x) => x * 0.6), k: 0.6 * to.gain, shape: sh, env: "hold" });
-        put(glow, { p, track: head || u.fig.root, off: V3(0, 0.12 * k, 0), t0: now + 200, life: 1900 * to.life, s0: 0.45 * k * to.size, s1: 0.65 * k * to.size, col: P.glow.map((x) => x * 0.3), k: 0.5 * to.gain, shape: SHAPE.glow, env: "hold" });
+        put(glow, { p, track: head || u.fig.root, off: V3(0, 0.12 * k, 0).addScaledVector(V3(0, 0, -1).applyQuaternion(u.fig.root.quaternion), 0.12 * k), t0: now + 200, life: 1900 * to.life, s0: 0.28 * k * to.size, s1: 0.42 * k * to.size, rot: V.orb === "moon" ? 3.4 : 0, spin: V.orb === "moon" ? 0 : 0.4, col: P.glow.map((x) => x * 0.6), k: 0.6 * to.gain, shape: sh, env: "hold" });
+        put(glow, { p, track: head || u.fig.root, off: V3(0, 0.12 * k, 0), t0: now + 200, life: 1900 * to.life, s0: 0.3 * k * to.size, s1: 0.4 * k * to.size, col: P.glow.map((x) => x * 0.2), k: 0.3 * to.gain, shape: SHAPE.glow, env: "hold" });   // (a faint halo: never a ball of light behind the head)
       }
       if (fx.sigil !== false) { const d = decal(SIGIL_FS, p, 0.8 * k, 2100, { uTint: C(P.glow.map((x) => x * 0.8)), uStyle: { value: SIGILS[fx.sigil] ?? 0 } }); d.env = "hold"; d.spin = 0.7; }
       const rain = V.rain || fx.bits || "feather", tr = tn(fx, "rain");
@@ -1123,18 +1478,28 @@ const EmberSkillFx = (() => {
         if (q < 1) { bk = 0.35 + 1.8 * Math.min(1, Math.max(0, (q - 0.08) / 0.7)); rim = 0.55 * Math.min(1, q / 0.8); }
         // light streams into the weapon (or the casting hand) through the charge
         const tst = tn(fx, "stream");
-        if (q < 0.92 && (pts || hand)) for (A.charge += (40 + 120 * q) * dt * tst.count; A.charge >= 1; A.charge--) {
+        // the casting point: the hand (or the thing) the sheet names — "held": what it holds; "book" — else the arena's
+        const src = () => (fx.castHand && bone(f, fx.castHand) ? bone(f, fx.castHand).getWorldPosition(V3()) : o.hand?.(u) || f.root.position.clone().add(V3(0, 0.6 * k, 0)));
+        // one that sends a stream of things (letters off a page, petals, fireflies out of a lantern): they rise from
+        // where they will leave, instead of light being drawn in
+        if (fx.cast === "stream" && fx.castBits !== "tag") {
+          if (q > 0.1 && q < 0.8) for (A.charge += (8 + 16 * q) * dt * tst.count; A.charge >= 1; A.charge--) {
+            const kind = fx.castBits || "sparkle", o2 = { p: src().add(inBall().multiplyScalar(0.05 * k)), v: V3(rnd(-0.12, 0.12), rnd(0.2, 0.45), rnd(-0.12, 0.12)).multiplyScalar(k), drag: 1.6, sway: 0.1 * k, t0: now, life: rnd(380, 600), s0: 0.045 * k * tst.size, s1: 0.07 * k * tst.size, rot: rnd(-0.3, 0.3), env: "mote" };
+            if (kind === "petal") petal({ ...o2, spin: rnd(-3, 3) }, P); else put(glow, { ...o2, col: P.mote, k: 1.0 * tst.gain, shape: kind === "glyph" ? glyphShape() : SHAPE[kind] ?? SHAPE.sparkle });
+          }
+        } else if (fx.cast === "fuse" || fx.cast === "mark" || fx.cast === "ignite") { /* nothing gathers: the cord, the mark, the dust are the charge */ }
+        else if (q < 0.92 && (pts || hand)) for (A.charge += (40 + 120 * q) * dt * tst.count; A.charge >= 1; A.charge--) {
           const at = pts ? pts[0].clone().lerp(pts[1], Math.random()) : hand.clone(), from = at.clone().add(inBall().normalize().multiplyScalar(rnd(0.25, 0.45) * k));
           put(glow, { p: from, pull: at, pullK: 9, t0: now, life: rnd(220, 320), s0: 0.03 * k * tst.size, s1: 0.012 * k * tst.size, col: Math.random() < 0.3 ? P.core : P.mote, k: 1.4 * tst.gain, shape: fx.chargeShape ? SHAPE[fx.chargeShape] : SHAPE.sparkle, env: "mote" });
         }
         // a god's column of light round it as it charges
-        if (fx.rise && !f.spell && q < 1) for (A.rise += 60 * dt * tn(fx, "column").count; A.rise >= 1; A.rise--) {
+        if (fx.rise && !(f.spell && f.spell.gather !== false) && q < 1) for (A.rise += 60 * dt * tn(fx, "column").count; A.rise >= 1; A.rise--) {
           const a = rnd(0, 6.28), R = rnd(0.28, 0.42) * k, base = f.root.position;
           put(glow, { p: base.clone().add(V3(Math.cos(a) * R, rnd(0, 0.2) * k, Math.sin(a) * R)), v: V3(0, rnd(1.0, 1.8) * k, 0), t0: now, life: 700, s0: 0.035 * k, s1: 0.02 * k, col: P.mote, k: 1.3, shape: fx.riseShape ? SHAPE[fx.riseShape] : SHAPE.sparkle, env: "mote", rot: rnd(0, 6), spin: rnd(-3, 3) });
         }
         // the glint rides the point at the top of the swing, gone as the weapon comes down
         if (weapon && !A.glint && q >= 0.7 && fx.modern) { A.glint = true; put(glow, { p: pts[1], track: f.blade[1], t0: now, life: 160, s0: 0.12 * k, s1: 0.2 * k, col: P.glow, k: 1.1, shape: SHAPE.sparkle }); }
-        if (weapon && !A.glint && q >= 0.7) { const tl = tn(fx, "glint"); A.glint = true; put(glow, { p: pts[1], track: f.blade[1], t0: now, life: 170 * tl.life, s0: 0.3 * k * tl.size, s1: 0.4 * k * tl.size, rot: 0.3, spin: 3, col: P.core.map((x) => x * 0.6), k: 1.2 * tl.gain, shape: SHAPE.star }); put(glow, { p: pts[1], track: f.blade[1], t0: now, life: 150 * tl.life, s0: 0.2 * k * tl.size, s1: 0.1 * k * tl.size, col: P.core, k: 1.4 * tl.gain, shape: SHAPE.sparkle }); }
+        if (weapon && !A.glint && q >= 0.7) { const tl = tn(fx, "glint"); A.glint = true; put(glow, { p: pts[1], track: f.blade[1], t0: now, life: 150 * tl.life, s0: 0.22 * k * tl.size, s1: 0.1 * k * tl.size, rot: 0.785, col: P.core.map((x) => x * 0.8), k: 1.1 * tl.gain, shape: SHAPE.sparkle }); }   // (a small hard glint: never a starburst)
         // the swoosh
         if (pts && fx.trail !== false && q >= (fx.trailFrom ?? 0.76) && !A.rib) { const tt = tn(fx, "trail"); A.rib = ribbon(lit(P.trail, tt.gain), P.core.map((x) => x * 0.55 * tt.gain), fx.trailInner ?? 0.5); o.add(A.rib.mesh); ribs.push(A.rib); }
         const R = A.rib;
@@ -1160,16 +1525,14 @@ const EmberSkillFx = (() => {
           const from = pts ? pts[1].clone() : f.root.position.clone().add(V3(0, 0.6 * k, 0));
           missile(from, T.center, now, A.t0 + A.align, { arc: 0.06 * k, trail: P.mote, heads: [{ s0: 0.38 * k, s1: 0.38 * k, col: P.glow, k: 1.2, shape: SHAPE.blade, stretch: 1e-4 }, { s0: 0.05 * k, s1: 0.05 * k, col: P.core.map((x) => x * 0.7), k: 1.0, shape: SHAPE.spark, stretch: 0.03 }] });
         }
-        if (T && fx.cast === "sky" && o.fire) {
-          const lands = [0.78, 0.93, 1.06];
-          while (A.calls < lands.length && q >= lands[A.calls] - 280 / A.align) {
-            const off = V3(rnd(-0.12, 0.12), 0, rnd(-0.12, 0.12)).multiplyScalar(k), to = T.center.clone().add(off);
-            o.fire.shoot(to.clone().add(V3(-0.5 * k, 2.4 * k, 0.3 * k)), to, 280, 0.05 * k, fx.look || { mode: "energy", tint: P.glow });
-            later.push({ at: now + 280, fn: () => { put(glow, { p: to, t0: NOW(), life: 160, s0: 0.5 * k, s1: 0.7 * k, rot: rnd(0, 1), col: P.glow, k: 0.9, shape: SHAPE.star }); decal(SHOCK_FS, T.ground, 0.7 * k, 320, { uTint: C(P.glow) }).env = "u"; bits("star", to, 3, k, P); } });
-            A.calls++;
-          }
-        }
-        if (T && fx.cast === "ground" && q >= 0.85 && !A.calls) {
+        if (T && fx.cast === "sky") castSky(u, A, q, now, T, P, k, fx);
+        if (T && fx.cast === "stream") castStream(u, A, q, now, T, P, k, fx, src);
+        if (T && fx.cast === "lob") castLob(u, A, q, now, T, P, k, fx, src);
+        if (T && fx.cast === "ray") castRay(u, A, q, now, T, P, k, fx, src);
+        if (T && fx.cast === "fuse") castFuse(u, A, q, now, T, P, k, fx, src);
+        if (T && fx.cast === "mark") castMark(u, A, q, now, T, P, k, fx, src);
+        if (T && fx.cast === "ignite") castIgnite(u, A, q, now, T, P, k, fx, src);
+        if (T && fx.cast === "ground" && fx.callSigil !== "clock" && q >= 0.85 && !A.calls) {
           A.calls = 1;
           for (let i = 0; i < 16; i++) { const a = rnd(0, 6.28), Rr = rnd(0.05, 0.3) * k; put(glow, { p: T.ground.clone().add(V3(Math.cos(a) * Rr, 0.02, Math.sin(a) * Rr)), v: V3(0, rnd(0.8, 1.6) * k, 0), drag: 0.8, t0: now + rnd(0, 300), life: rnd(500, 800), s0: 0.07 * k, s1: 0.04 * k, col: P.mote, k: 1.1, shape: SHAPE.wisp, env: "mote", stretch: 0.2 }); }
         }
@@ -1192,7 +1555,7 @@ const EmberSkillFx = (() => {
         if (v < 2.2) { const e = Math.min(1, Math.max(0, (v - 0.25) / 0.3)) * (v < 1.8 ? 1 : 1 - (v - 1.8) / 0.4); bk = Math.max(bk, 2.6 * e); rim = Math.max(rim, 0.8 * e); }
         else s.vic = 0;
       }
-      if (f.bladeK) { f.bladeK.value = weapon ? bk : 0; f.bladeT.value = now / 1000; f.rimK.value = rim; }
+      if (f.bladeK) { f.bladeK.value = weapon ? bk * tn(fx, "glow").gain : 0; f.bladeT.value = now / 1000; f.rimK.value = rim; }
       // at rest: its element drifts round it now and then, and a faint sigil turns on its station
       const au = fx.aura || {};
       if (u.clip === "idle" && now - s.aura > (au.every ?? 420)) {
@@ -1222,6 +1585,7 @@ const EmberSkillFx = (() => {
         const M = missiles[i], u = (now - M.t0) / Math.max(1, M.t1 - M.t0);
         if (u < 0) continue;
         const q = Math.min(1, u), pos = M.from.clone().lerp(M.to, q).add(V3(0, M.arc * Math.sin(Math.PI * q), 0));
+        if (M.bow) pos.addScaledVector(M.bow, Math.sin(Math.PI * q));
         const vel = dt > 0 ? pos.clone().sub(M.prev).divideScalar(dt) : V3();
         M.obj.position.copy(pos); M.prev.copy(pos);
         for (const h of M.heads) h.v.copy(vel);
@@ -1326,6 +1690,11 @@ const EmberSkillFx = (() => {
           t0: NOW(), life: rnd(450, 850), s0: rnd(0.02, 0.034) * k, s1: 0.006 * k, col: Math.random() < 0.3 ? [1.4, 1.35, 1.25] : col, k: 1.3, shape: Math.random() < 0.5 ? SHAPE.sparkle : SHAPE.glow, env: "fade" });
       }
     }
+    /** something breaks like glass at a point (a reflection struck through): shards in its colour, a small flash */
+    function glass(at, k, col) {
+      const P = { core: col.map((x) => x * 1.3), mote: col, glow: col };
+      bits("shard", at, 12, k, P); put(glow, { p: at, t0: NOW(), life: 140, s0: 0.3 * k, s1: 0.5 * k, rot: rnd(0, 1), col, k: 0.8, shape: SHAPE.star });
+    }
     /** a hero's fall: the stage dimmed round it a moment */
     const gloom = (a = 0.5, life = 1400) => { const t0 = NOW(); dims.push({ t0, peak: t0 + 260, hold: t0 + life - 380, a }); };
     /** something fast is on (a blow's meshes, beams, swooshes, debris, ground marks, shake) — not the idle motes */
@@ -1362,7 +1731,7 @@ const EmberSkillFx = (() => {
       meshes.slice(n0[2]).forEach((M) => M.objs.forEach(keep)); ribs.slice(n0[3]).forEach((R2) => keep(R2.mesh));
       o.fire?.warm();
     }
-    return { attack, impact, hurt, victory, frame, swing, step, shake, punch, dim, drop, dispose, hot, arrive, land, motes, gloom, tintOf, warm };
+    return { attack, impact, tap, hurt, victory, frame, swing, step, shake, punch, dim, drop, dispose, hot, arrive, land, motes, gloom, glass, tintOf, warm };
   }
   return Object.freeze({ create, PAL: Object.keys(PAL) });
 })();
