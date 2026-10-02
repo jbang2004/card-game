@@ -47,22 +47,28 @@
       locked: `第 ${levels(D.bosses[i])} 层`})[condition(i)];
     // a boss offered at this level has its health scaled by the level
     const hpOf = i => (condition(i) === 'current' && EmberRun.foe(D, run.level, D.bosses[i].id)?.hp) || D.bosses[i].hp;
-    const firstOf = kind => D.bosses.findIndex((b, i) => condition(i) === kind);
-    const chapter = Math.max(0, [firstOf('current'), firstOf('locked'), D.bosses.length - 1].find(i => i >= 0));
+    const firstLevel = b => { const at = D.dungeon.stages.findIndex(st => st.pool.includes(b.id)); return at < 0 ? 99 : at; };
+    // the nodes follow the expedition: by the first level a boss may be met at, not by where it sits in the data
+    // a mirror (made for one hero) is on the map only while that hero's run is on
+    const shown = b => !b.forHero || b.forHero === run?.heroId;
+    const order = D.bosses.map((_, i) => i).filter(i => shown(D.bosses[i])).sort((a, b) => firstLevel(D.bosses[a]) - firstLevel(D.bosses[b]) || a - b);
+    const firstOf = kind => order.find(i => condition(i) === kind) ?? -1;
+    const chapter = Math.max(0, [firstOf('current'), firstOf('locked'), order[order.length - 1]].find(i => i >= 0));
     const level = Math.min(run?.level ?? 1, D.dungeon.levels);
     const relics = (run?.relics || []).map(id => D.relics.find(r => r.id === id)).filter(Boolean);
     E.showModal(`<section class="modal-box adventure-atlas" aria-labelledby="atlas-title">
       <span class="atlas-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
       <div class="modal-heading atlas-heading">
         <span class="atlas-emblem">${compass}</span>
-        <div><span class="atlas-kicker">远征图志 · ${String(D.bosses.length).padStart(2, '0')} 境</span><h2 id="atlas-title">冒险地图</h2></div>
+        <div><span class="atlas-kicker">远征图志 · ${String(order.length).padStart(2, '0')} 境</span><h2 id="atlas-title">冒险地图</h2></div>
         <div class="atlas-chapter"><span>${complete ? '远征完成' : run ? '远征层数' : '地下城远征'}</span><strong>${String(level).padStart(2, '0')}<small> / ${String(D.dungeon.levels).padStart(2, '0')}</small></strong></div>
       </div>
       <div data-theme-art="map" class="atlas-stage ${D.bosses.length > 6 ? "atlas-extended" : ""}" aria-label="战役路线" aria-busy="true">
         <div class="atlas-loading" role="status"><span>${compass}</span><p>正在展开远征图…</p><button type="button" hidden>重新加载</button></div>
         <span class="atlas-cartography" aria-hidden="true">${compass}</span>
         <svg class="atlas-paths" aria-hidden="true"><g></g></svg>
-        ${D.bosses.map((boss, i) => {
+        ${order.map((i, n) => {
+          const boss = D.bosses[i];
           return `<article class="atlas-location ${condition(i)}" data-region="${boss.id}">
             <button class="atlas-node" data-map-node="${i}" aria-pressed="${i === chapter}" aria-label="查看${escape(boss.title)}，${status(i)}">
               <span class="atlas-landmark">
@@ -70,7 +76,7 @@
                 <span class="atlas-pennant" aria-hidden="true">${condition(i) === 'locked' ? lock : compass}</span>
                 <span class="atlas-number">${condition(i) === "done" ? A.icon("check") : condition(i) === "locked" ? lock : `<img src="${A.character(boss)}" alt="">`}</span>
               </span>
-              <span class="atlas-location-copy"><strong class="atlas-name"><small>${String(i + 1).padStart(2, "0")}</small>${escape(boss.name)}</strong><span class="atlas-boss">${escape(boss.name)} <span>· ${hpOf(i)} 生命</span></span><span class="atlas-status">${condition(i) === 'done' ? '✓ ' : condition(i) === 'current' ? '◆ ' : ''}${status(i)}</span></span>
+              <span class="atlas-location-copy"><strong class="atlas-name"><small>${String(n + 1).padStart(2, "0")}</small>${escape(boss.name)}</strong><span class="atlas-boss">${escape(boss.name)} <span>· ${hpOf(i)} 生命</span></span><span class="atlas-status">${condition(i) === 'done' ? '✓ ' : condition(i) === 'current' ? '◆ ' : ''}${status(i)}</span></span>
             </button>
           </article>`;
         }).join('')}
@@ -90,11 +96,11 @@
     const wordmark = document.createElement('div');
     wordmark.className = 'atlas-wordmark';
     wordmark.setAttribute('aria-hidden', 'true');
-    wordmark.innerHTML = '<span>烬域</span><small>EMBERFALL</small>';
+    wordmark.innerHTML = '<span>琥珀战记</span><small>AMBER WAR CHRONICLE</small>';
     box.append(wordmark);
     const buttons = [...box.querySelectorAll('[data-map-node]')];
     const select = i => {
-      buttons.forEach((button, n) => button.setAttribute('aria-pressed', String(i === n)));
+      buttons.forEach(button => button.setAttribute('aria-pressed', String(i === Number(button.dataset.mapNode))));
       const boss=D.bosses[i], dossier=box.querySelector('.atlas-dossier');
       dossier.querySelector('img').src=A.character(boss);
       dossier.querySelector('img').alt=boss.name;
@@ -122,14 +128,19 @@
       box.querySelector('.atlas-focus > span').textContent = condition(i) === 'locked'
         ? `远征第 ${levels(D.bosses[i])} 层可能遭遇` : D.bosses[i].quote;
     };
+    const bossOf = button => Number(button.dataset.mapNode);
     buttons.forEach((button, i) => {
-      button.onclick = () => select(i);
+      button.onclick = () => {
+        select(bossOf(button));
+        // a portrait phone stacks the stage above the inspector: bring the tapped boss's page into view
+        if (document.body.classList.contains('mobile-portrait')) box.querySelector('.atlas-dossier').scrollIntoView({block: 'nearest', behavior: 'smooth'});
+      };
       button.onkeydown = event => {
         if (!['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
         event.preventDefault();
         const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1
           : (i + (['ArrowRight', 'ArrowDown'].includes(event.key) ? 1 : -1) + buttons.length) % buttons.length;
-        buttons[next].focus(); select(next);
+        buttons[next].focus(); select(bossOf(buttons[next]));
       };
     });
     select(chapter);
@@ -188,7 +199,7 @@
           c2 = [side, end[1] - (end[1] - start[1]) * .35];
         }
         const d = `M${start} C${c1} ${c2} ${end}`;
-        return `<path class="atlas-route-shadow" d="${d}"/><path class="${condition(i) === 'done' && condition(i + 1) !== 'locked' ? 'traversed' : ''}" d="${d}"/><circle cx="${start[0]}" cy="${start[1]}" r="4"/><circle cx="${end[0]}" cy="${end[1]}" r="4"/>`;
+        return `<path class="atlas-route-shadow" d="${d}"/><path class="${condition(bossOf(buttons[i])) === 'done' && condition(bossOf(buttons[i + 1])) !== 'locked' ? 'traversed' : ''}" d="${d}"/><circle cx="${start[0]}" cy="${start[1]}" r="4"/><circle cx="${end[0]}" cy="${end[1]}" r="4"/>`;
       });
       svg.querySelector('g').innerHTML = paths.join('');
     };

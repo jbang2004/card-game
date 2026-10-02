@@ -11,6 +11,8 @@
     "test:release": "npm run build && npm test && npm run test:e2e",
     "serve": "python3 -m http.server 8000 --bind 127.0.0.1",
     "dev": "python3 build.py && python3 -m http.server 8000 --bind 127.0.0.1 --directory dist",
+    "review:moves": "python3 tools/move-review/serve.py",
+    "audit:moves": "node tools/move-review/audit.cjs",
     "art:anime": "python3 tools/pack_card_assets.py",
     "art:atlas": "python3 tools/build_anime_assets.py",
     "format": "prettier --write src/content src/rules src/presentation src/platform src/data.js src/engine.js src/ui.js",

@@ -5,7 +5,8 @@
   "src/presentation/benchmark-feedback.js": "3e4f09d4094e405776accbd20416c03e6f2951df65505a127380ad4884857bfa",
   "src/vfx3/renderer.js": "480ef9455041ed8dfd4e7bda746db1ca20c11e799e0bb256a9d449706fab9b57",
   "src/engine.js": "4eaa06912d625637e3fa19c9805bb286a5a221884923d7b62b73841c9008447e",
-  "src/content/cards.js": "2d5333be31e8b1e5c82db7982b630f55dd7b87b8291dc1977fb66e2f5edf340b",
-  "src/content/campaign.js": "b5075d1f560b54d5ebb5f8bfc3a8b074540c146eb8e5a3fd5cbcdcdb389ed6bf",
-  "src/presentation/timing.js": "35405a98b161d7f89d97ba1ecea61ea8af246c49f1c71d60d981ed18d2347fb7"
+  "src/content/cards.js": "0b71a2c3d090251abe5bce04d8e171371698b3b05413691ee10811206992fc87",
+  "src/content/campaign.js": "3cf8bb1683140d28748d6c12578c575b60ef3e1e89bc45f499707c442a0cae52",
+  "src/presentation/timing.js": "35405a98b161d7f89d97ba1ecea61ea8af246c49f1c71d60d981ed18d2347fb7",
+  "src/presentation/fx-profiles.js": "aec29ac71f5f997754115cdff1a83dfbcb37c1e8b1ca5ad0b0c5e8d9ee175490"
 }

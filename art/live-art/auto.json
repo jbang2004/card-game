@@ -1,1 +1,62 @@
-{}
+{
+ "frederia": {
+  "kind": "creature",
+  "box": [
+   30,
+   140,
+   888,
+   1428
+  ],
+  "centre": [
+   473,
+   914
+  ],
+  "particles": "embers",
+  "phase": 2.766
+ },
+ "liol": {
+  "kind": "creature",
+  "box": [
+   194,
+   152,
+   908,
+   1432
+  ],
+  "centre": [
+   559,
+   872
+  ],
+  "particles": "none",
+  "phase": 6.224
+ },
+ "nahira": {
+  "kind": "creature",
+  "box": [
+   50,
+   120,
+   936,
+   1428
+  ],
+  "centre": [
+   506,
+   869
+  ],
+  "particles": "embers",
+  "phase": 3.187
+ },
+ "rowan": {
+  "kind": "creature",
+  "box": [
+   12,
+   156,
+   700,
+   1430
+  ],
+  "centre": [
+   323,
+   828
+  ],
+  "particles": "embers",
+  "phase": 3.372
+ }
+}

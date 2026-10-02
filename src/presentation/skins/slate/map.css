@@ -1197,7 +1197,9 @@ html[data-skin="slate"]
   .atlas-stage {
   flex: none;
   width: auto;
-  height: min(35dvh, 320px);
+  /* the stage is as tall as its nodes need (fourteen of them); the page scrolls, and a tapped node
+     brings the inspector into view (adventure-map.js) */
+  height: auto;
   min-height: 230px;
 }
 html[data-skin="slate"]
@@ -1245,8 +1247,19 @@ html[data-skin="slate"]
   flex: 1 1 auto;
   width: auto;
   height: auto;
-  min-height: 0;
+  /* a short screen cannot show fourteen nodes at once: the stage takes the height its
+     nodes need and the pane scrolls (below), the painting and the route with it */
+  align-self: flex-start;
+  min-height: 100%;
   overflow: visible;
+}
+html[data-skin="slate"]
+  body.touch-layout.mobile-landscape
+  #modal.folio-host[data-type="map"]
+  .adventure-atlas
+  .modal-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 html[data-skin="slate"]
   body.touch-layout.mobile-landscape
@@ -1275,6 +1288,10 @@ html[data-skin="slate"]
   .atlas-dossier {
   flex: 0 0 min(300px, 45%);
   width: min(300px, 45%);
+  align-self: flex-start;
+  position: sticky;
+  top: 0;
+  max-height: 100%;
   margin: 0 var(--slate-map-r) 0 -12px;
   padding: 8px 14px 14px;
   border-left: 0;
@@ -1321,4 +1338,47 @@ html[data-skin="slate"]
   #map-continue {
   width: min(300px, 45%);
   flex: 0 0 min(300px, 45%);
+}
+
+/* ---------- more than six opponents: the nodes snake across the grid ----------
+ * The first six nodes used to carry hand-placed offsets (`left`/`top` in components.css); with fourteen they
+ * would sit on top of the inspector. In the extended stage the grid owns the place: row by row, every other
+ * row running back, so the route turns at the edges (drawRoute skirts the labels on a side turn).
+ * Three columns, two up to 600px wide. */
+html[data-skin="slate"]
+  body:not(.touch-layout)
+  #modal.folio-host[data-type="map"]
+  .atlas-stage.atlas-extended {
+  padding: 84px 150px 64px 70px;
+  gap: 24px 0;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-stage.atlas-extended {
+  /* a node whose column lies before the cursor (every other row runs back) fills the hole in its row */
+  grid-auto-flow: row dense;
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host[data-type="map"]
+  .atlas-extended
+  .atlas-location:nth-of-type(n) {
+  left: auto;
+  top: auto;
+  justify-self: center;
+}
+@media (min-width: 601px) {
+  html[data-skin="slate"] body #modal.folio-host[data-type="map"] .atlas-extended .atlas-location:nth-of-type(6n + 1),
+  html[data-skin="slate"] body #modal.folio-host[data-type="map"] .atlas-extended .atlas-location:nth-of-type(6n + 6) { grid-column: 1; }
+  html[data-skin="slate"] body #modal.folio-host[data-type="map"] .atlas-extended .atlas-location:nth-of-type(6n + 2),
+  html[data-skin="slate"] body #modal.folio-host[data-type="map"] .atlas-extended .atlas-location:nth-of-type(6n + 5) { grid-column: 2; }
+  html[data-skin="slate"] body #modal.folio-host[data-type="map"] .atlas-extended .atlas-location:nth-of-type(6n + 3),
+  html[data-skin="slate"] body #modal.folio-host[data-type="map"] .atlas-extended .atlas-location:nth-of-type(6n + 4) { grid-column: 3; }
+}
+@media (max-width: 600px) {
+  html[data-skin="slate"] body #modal.folio-host[data-type="map"] .atlas-extended .atlas-location:nth-of-type(4n + 1),
+  html[data-skin="slate"] body #modal.folio-host[data-type="map"] .atlas-extended .atlas-location:nth-of-type(4n + 4) { grid-column: 1; }
+  html[data-skin="slate"] body #modal.folio-host[data-type="map"] .atlas-extended .atlas-location:nth-of-type(4n + 2),
+  html[data-skin="slate"] body #modal.folio-host[data-type="map"] .atlas-extended .atlas-location:nth-of-type(4n + 3) { grid-column: 2; }
 }

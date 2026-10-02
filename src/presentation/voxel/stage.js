@@ -147,14 +147,14 @@ const EmberMiniatures = (() => {
   }
   // ------------------------------------------------------------------ heroes
   /* On the desktop layout each hero stands as a figure too: the figure of its portrait's card (the art the plate
-   * showed), on its seat — the dais the battlefield scene raises outside the court (EmberArena3D.seat). Its plate stays
+   * showed — a portrait names its figure in content/portraits.js), on its seat — the dais the battlefield scene raises outside the court (EmberArena3D.seat). Its plate stays
    * as the click and focus target and shows only its name and stats (`.hero-dais`). A portrait without a realistic
    * figure keeps its card. Touch layouts keep the plates (their consoles have no room for a dais). */
   const heroesOn = () => !failed && !off && !reduced() && typeof EmberArena3D !== "undefined" && typeof EmberModelFigures !== "undefined";
   const touchLayout = () => document.body.classList.contains("touch-layout");
   function heroSpec(el) {
     const k = el?.querySelector(".portrait-frame img")?.dataset.artKey;
-    const sp = k && specOf(k);
+    const sp = k && typeof EmberPortraits !== "undefined" && EmberPortraits[k]?.figure ? KIT.get(EmberPortraits[k].figure) : null;
     return sp && EmberModelFigures.has(sp.id) ? sp : null;
   }
   const heroEl = (side) => document.getElementById(side === "p" ? "player-hero" : "enemy-hero");

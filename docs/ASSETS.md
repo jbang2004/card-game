@@ -148,12 +148,15 @@ uv run --python 3.12 --no-project --with pillow --with numpy --with onnxruntime 
 | `board` | 棋盘 | [`board.webp`](../assets/windborne/board.webp) | 1600×940 |
 | `leaf-seal` | 叶片徽章 | [`leaf-seal.svg`](../assets/windborne/leaf-seal.svg) | SVG矢量 |
 
-## 英雄和首领的复用关系
+## 英雄、首领与对手的立绘（独立于卡牌）
 
-英雄：星焰法师→`oracle`，黎明圣卫→`paladin`，暗影游侠→`archer`。
-首领：灰烬监守→`berserker`，荆棘女王→`treant`，深渊先知→`necromancer`，霜狱君王→`frostking`，终焉巨龙→`ashdragon`。
+2026-10-02 起，英雄、首领和预设对手不再借用卡牌插画。立绘登记在 `src/content/portraits.js`（`EmberPortraits`），原图 `assets/portraits/<id>.png`（被忽略，同卡牌来源），用 `tools/portrait_assets.py` 转成 768×1024 WebP，构建时镜像到 `art/portraits/`。`portraitId` 必须在注册表里，且**不得等于任何卡牌 ID**（`data.js` 校验）。
 
-注意卡牌`oracle`与深渊先知、卡牌`dragon`与终焉巨龙存在ID重名。`EmberArt.card()`读取卡牌专属图，`EmberArt.character()`读取角色定义中的 `portraitId`。改动后运行`node --test tests/anime_assets.test.cjs`。
+- 英雄：鉴珀师·娜希拉→`nahira`，背誓骑士·菲德莉亚→`frederia`，守林人·罗温→`rowan`，提灯人·利奥尔→`liol`。
+- 首领（id 不变，只换身份）：warden→铁哨`whistle`，queen→根母`rootmother`，oracle→译者`translator`，frost→守根人`rootkeeper`，moonkeeper→守灯之兽`lampbeast`，dragon→点火者·纳坦`nathan`。
+- 切入立绘 `assets/cutin/<portraitId>.webp` 按同一 ID（`tools/cutin_assets.py`）；活立绘与浮雕按需，在注册表里用 `live` / `relief` 声明，对应 `art/live-art`、`art/relief`。
+- 3D 站台模型：注册表的 `figure` 指向 `voxel` 里登记的人物；没有就显示平面立绘。
+- `EmberArt.card()` 读卡牌图，`EmberArt.character()` 读注册表。改动后运行 `node --test tests/anime_assets.test.cjs`。设计依据见 [design/CAST_V2.md](design/CAST_V2.md)。
 
 ## 权利与分发说明
 
@@ -206,7 +209,7 @@ uv run --python 3.12 --no-project --with pillow --with numpy --with onnxruntime 
 
 历史记录：六个新随从（soulguide、moonfox、duskstag、eclipsewolf、moonguard、selmyra）当时制作了背景与主体两层，源图集与处理参数位于已删除的 `assets/motion/moon-sources/`。
 
-莫菈复用 soulguide，断契监誓者复用 moonguard。完整清单见 [CHARACTER_ROSTER.txt](CHARACTER_ROSTER.txt)。
+（旧版曾让英雄和首领复用卡牌图，现已改为独立立绘，见上文。）完整清单见 [CHARACTER_ROSTER.txt](CHARACTER_ROSTER.txt)。
 
 神祇、契兽与四位英雄的正式肖像卡图均保留 768×1024，以支持全屏契约档案及英雄选择底图；普通卡仍为 336×448。该尺寸由统一 packer 依据 contract 元数据和英雄 portraitId 派生，网页与离线单文件使用同一张图。
 
@@ -251,10 +254,20 @@ uv run --python 3.12 --no-project --with pillow --with numpy --with onnxruntime 
 
 ## 2026-09-13 · 地图对应的俯视战场
 
-战场不再是一张位图。`presentation/arena-3d.js` 在 `#arena-gl`（WebGL2）里实时渲染「断裂王庭」（2026-09-23 重做，场景说明见 `docs/design/SLATE_DESIGN_SYSTEM.md` §5.4b）：火山灰石台基、左右熔岩河、柱状玄武岩与紫水晶/祖母绿晶簇，随从的 DOM 包围盒转成接触阴影。它只用 `assets/scenes/lava-forge/` 里的 6 张贴图（ambientCG CC0：Rock035 的法线、粗糙度、AO，Lava001 的法线、颜色、自发光，缩至 512–1024 并重新压缩），颜色由代码里的令牌决定。原来引入的 Lava001 粗糙度与 Metal032 法线/粗糙度三张图着色器从未采样，2026-09-23 已移除。旧的六张俯视场景图（`boss-topdown-v1`）已移除；灰烬监守与练习赛用这一场景，其余五个 Boss 各有自己的实时 3D 战场（`EmberArena3D.setEncounter` 按 Boss 选配方，清单见 SLATE §5.4b），它们不引入新贴图。
+战场不再是一张位图。`presentation/arena-3d.js` 在 `#arena-gl`（WebGL2）里实时渲染「断裂王庭」（2026-09-23 重做，场景说明见 `docs/design/SLATE_DESIGN_SYSTEM.md` §5.4b）：火山灰石台基、左右熔岩河、柱状玄武岩与紫水晶/祖母绿晶簇，随从的 DOM 包围盒转成接触阴影。它只用 `assets/scenes/lava-forge/` 里的 6 张贴图（ambientCG CC0：Rock035 的法线、粗糙度、AO，Lava001 的法线、颜色、自发光，缩至 512–1024 并重新压缩），颜色由代码里的令牌决定。原来引入的 Lava001 粗糙度与 Metal032 法线/粗糙度三张图着色器从未采样，2026-09-23 已移除。旧的六张俯视场景图（`boss-topdown-v1`）已移除；2026-10-02 起它不再分配给任何首领（只在 `?arena-scene=lava` 下显示），战场改为按琥珀战记的设定分配：矿井口、锅炉房、玻璃温室三个新场景加上冰井、月蚀祭坛、黑镜、龙背，各 Boss 有自己的实时 3D 战场（`EmberArena3D.setEncounter` 按 Boss 选配方，清单见 SLATE §5.4b），它们不引入新贴图。
 
 上一轮地面视角图保存在 `output/boss-topdown-20260913/ground-level-sources/`，旧桌面/横竖屏背景保存在 `output/boss-map-20260913/retired/`，均移出生产素材注册。官方参考仅作为研究证据，见 `output/boss-topdown-20260913/RESEARCH.md`，没有复制其图片到游戏。
 
 ## 2026-09-13 · 战场控件与旧运行素材清理
 
 战场辅助按钮与结束回合改为原生细线控件，主题注册不再引用 `polishTurnRing`。旧纸木地图纹理声明和 `WORLD_ASSETS` 注册已移除；早期 `WindborneAssets` 建筑仅保留源文件，不进入当前游戏。画廊消费现有六处 Boss 场景，没有新增或替换卡牌原画。`premium.css` 只保留必要数字与牌面几何，现行材质归属 `components.css`。验证见 [本轮记录](../output/battle-layout-20260913/VALIDATION.md)。
+
+## 2026-10-02 增补：琥珀战记全员重构（docs/design/CAST_V2.md）
+
+| 路径 | 内容 |
+|---|---|
+| `assets/portraits/<id>.png/.webp` | 英雄、首领、劲敌的独立立绘（注册表 `src/content/portraits.js`）；镜中英雄由 `tools/mirror_portraits.py` 生成；`cutin/` 是切入图，`tpose/` 是 3D 参考，`cand/` 是候选 |
+| `assets/portraits/foecards/` | 13 张对手专属卡插画（codex），经 `tools/new_card.py` 登记 |
+| `tools/models/real/<id>.body.glb`、`props-c1..c3.glb` | Tripo 导出的英雄/首领模型与道具页（git 忽略）；`tools/mirror_glb.py` 把英雄模型调成黑玉做镜中英雄 |
+| `assets/ui/logo-v2/`、`assets/ui/home-v2/` | 《琥珀战记》标志、首页主视觉、冒险地图底图的原图（已转入 `assets/ui/home-reference-v1/final/logo.webp` 与 `assets/themes/silverblue/{home,map}.webp`） |
+| `assets/ui/backdrop-v2/` | 页面模糊背景（矿区夜景，codex）的原图，已转入 `assets/themes/silverblue/backdrop.webp`；旧的 mage/paladin/ranger/morla/goddess 五张主题图已无引用，2026-10-02 一并退役（主题清单现为 map/home/backdrop 三张） |

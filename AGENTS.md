@@ -1,4 +1,4 @@
-# Emberfall / 风起之境 — 项目约定
+# 琥珀战记（代号 Emberfall，原名《烬域》）— 项目约定
 
 ## 先阅读
 
@@ -23,7 +23,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 - 组件样式遵循 `legacy → layout → theme → components` 层级；卡图容器与旧主题规则留在 `presentation/components.css`，新配色/材质一律放在 `src/presentation/skins/slate/`（base = 令牌与外壳，页面文件 = 各页几何），手机规则不要另外定义主题颜色。
 - 修改 `src/` 与素材源，然后构建；不要只改生成的 `index.html`。
 - `config/build.json` / `src/template.html` 决定模块顺序。只有当前注册表中的实现进入运行；不能因历史文档提及就恢复已经退役的旧 Three.js 预览、程序化插画或旧素材缓存。战场 3D 角色（Q 版像素风：代码雕刻的 3D 角色渲染成像素精灵，2026-09-25 用户选定；见 `docs/design/MINIATURES.md`；角色馆 `tools/voxel-gallery/`）经用户 2026-09-24 确认使用固定版本的 three.js：唯一来源是 `src/vendor/vesper-three.js`（`npm run vendor:vesper` 生成，全局 `EmberVesperThree`），不经 CDN，不另开第二份 three。仍有引用的 `tavern-ui.js` / `atelier*` 承担当前 UI 和 Canvas 职责。
-- 97 个卡牌 ID（2026-09-28 扩展包一后）必须各有新动漫插画；保持严格映射，不让缺图静默回退到旧程序化角色图。
+- 97 个卡牌 ID（2026-09-28 扩展包一后）必须各有新动漫插画；保持严格映射，不让缺图静默回退到旧程序化角色图。英雄、首领与对手的立绘在 `src/content/portraits.js`，是独立的 ID 空间，不得借用卡牌图（设计见 `docs/design/CAST_V2.md`）。
 - 磨砂青岩（slate）是**唯一**表现层，没有皮肤开关：`src/presentation/theme.js` 无条件写入 `html[data-skin="slate"]`，该属性是皮肤 CSS 的命名空间而不是切换点，必须保留。皮肤本体在 `src/presentation/skins/slate/`（`base.css` = 令牌与两套外壳，其余每页一文件 = 各页几何），规范见 `docs/design/SLATE_DESIGN_SYSTEM.md`；语义原画角色在 `src/presentation/themes/silverblue.js`（文件名沿用历史，内容是当前唯一的主题定义）。新配色/材质一律放皮肤层，不再往 components.css 添加。卡名、费用、攻血和规则文字保持实时 DOM，不烘焙进画面。
 - 手机端是专用横/竖屏布局，不退回到把 1600×940 桌面等比缩小；保留滑动、点牌确认、长按、旋转后的同局状态。
 - `engine.js` 与 `rules/` 是纯规则层，AI 独立在 `rules/ai.js`；不要让画面粒子、昼夜切换、建筑互动改变对局状态。
@@ -39,6 +39,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 ## v0.11 内容与验证
 
 - 卡牌只编辑 `src/content/cards.js` 的具名定义；英雄、首领、遗物编辑 `src/content/campaign.js`；地下城远征（主玩法，取代原线性战役）的层数、对手池、起始牌、卡包主题与价格编辑 `src/content/dungeon.js`，其规则是纯函数模块 `src/rules/run.js`。不要恢复 `battle/effect/value/death` 字段或重复手写规则文案。
+- 战场角色的动作节奏与特效只编辑 `src/content/moves.js`（招式单：命名阶段、按时刻分组的特效、原型继承），由 `presentation/voxel/movesheet.js` 编译给 `models.js` / `skillfx.js`，不要把角色数值写回运行时代码。格式、审片台（`python3 tools/move-review/serve.py`）与自检（`node tools/move-review/audit.cjs`）见 `docs/design/MOVES.md`。
 - 新效果注册字段校验、执行和文案，补充 AI / 必要预览；纯规则不依赖表现。
 - 生产界面使用只读状态和动作接口；仅本地 `?debug=1` 暴露 `EmberDebug.game` 给测试。
 - 当前完整入口为 `npm run test:release`；旧 Python 浏览器脚本已退役，旧 QA 仅作历史记录。

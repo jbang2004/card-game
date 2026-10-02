@@ -25,7 +25,6 @@ def sha(blob):
 def pack():
     data = json.loads(subprocess.check_output(['node', '-e', 'console.log(JSON.stringify(require("./src/data.js")))'], cwd=ROOT))
     cards = {c['id']: c for c in data['cards']}
-    hero_portraits = {h['portraitId'] for h in data['heroes']}
     manifest = json.loads((ART / 'manifest.json').read_text())
     overrides = json.loads(OVERRIDES.read_text()) if OVERRIDES.exists() else {}
     if set(manifest['items']) != set(cards):
@@ -36,7 +35,7 @@ def pack():
         # Covenant art is used as a full-screen dossier backdrop, not only as a
         # hand-sized card. Keep every contract portrait at production size so
         # the two beasts do not soften beside their deity.
-        output_size = (768, 1024) if c.get('contract') or cid in hero_portraits else (336, 448)
+        output_size = (768, 1024) if c.get('contract') else (336, 448)
         if cid in overrides:
             from PIL import Image, ImageOps
             entry = overrides[cid]

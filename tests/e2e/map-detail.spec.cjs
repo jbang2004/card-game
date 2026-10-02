@@ -40,7 +40,8 @@ for (const [width, height] of [
         };
       }),
     );
-    expect(nodes).toHaveLength(6);
+    // a mirror is on the map only during its hero's run
+    expect(nodes).toHaveLength(await page.evaluate(() => EmberData.bosses.filter((b) => !b.forHero).length));
     for (const n of nodes) {
       expect(n.height).toBeLessThan(240);
       for (const t of n.text) {

@@ -87,9 +87,13 @@ const EmberCatalog = (() => {
         "color",
         "phaseEffects",
         "discoverClass",
+        "forHero",   // a boss made for one hero (a mirror): met only by that hero
       ],
       "bosses",
     );
+    for (const b of world.bosses)
+      if (b.forHero !== undefined && !world.heroes.some((h) => h.id === b.forHero))
+        throw Error(b.id + ": forHero names no hero");
     for (const h of [...world.heroes, ...world.bosses]) {
       for (const key of ["title", "art", "palette", "power", "portraitId"])
         text(h[key], h.id + "." + key);
@@ -137,13 +141,15 @@ const EmberCatalog = (() => {
       throw Error("Relics exceed starting mana limit");
     list(
       world.archetypes,
-      ["id", "name", "hero", "classId", "deck", "plan", "strategy"],
+      ["id", "name", "hero", "classId", "deck", "plan", "strategy", "person", "portraitId"],
       "archetypes",
     );
     for (const a of world.archetypes) {
       if (!classExists(a.classId)) throw Error(a.id + ": Invalid classId");
       text(a.plan, a.id + ".plan");
       if (a.strategy !== undefined) text(a.strategy, a.id + ".strategy");
+      if (a.person !== undefined) text(a.person, a.id + ".person");
+      if (a.portraitId !== undefined) text(a.portraitId, a.id + ".portraitId");
     }
     fields(world.deckRules, ["size", "maxCopies", "rarityCopies"], "deckRules");
     integer(world.deckRules.size, 1, "deckRules.size");

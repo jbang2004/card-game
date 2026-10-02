@@ -21,6 +21,16 @@
         "import http.server as h;h.ThreadingHTTPServer.request_queue_size=512;h.ThreadingHTTPServer(('127.0.0.1',8012),h.SimpleHTTPRequestHandler).serve_forever()"
       ],
       "port": 8012
+    },
+    {
+      "name": "move-review",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "tools/move-review/serve.py",
+        "--port",
+        "8013"
+      ],
+      "port": 8013
     }
   ]
 }

@@ -388,6 +388,58 @@
     "oathkeeper": {
       "staticKey": "oathkeeper",
       "focus": 18
+    },
+    "fusecord": {
+      "staticKey": "fusecord",
+      "focus": 30
+    },
+    "glean": {
+      "staticKey": "glean",
+      "focus": 30
+    },
+    "appraise": {
+      "staticKey": "appraise",
+      "focus": 30
+    },
+    "strikecrowd": {
+      "staticKey": "strikecrowd",
+      "focus": 18
+    },
+    "drillbit": {
+      "staticKey": "drillbit",
+      "focus": 18
+    },
+    "clockworksergeant": {
+      "staticKey": "clockworksergeant",
+      "focus": 18
+    },
+    "blackcough": {
+      "staticKey": "blackcough",
+      "focus": 30
+    },
+    "calibrate": {
+      "staticKey": "calibrate",
+      "focus": 30
+    },
+    "earlyroar": {
+      "staticKey": "earlyroar",
+      "focus": 18
+    },
+    "amberplate": {
+      "staticKey": "amberplate",
+      "focus": 30
+    },
+    "pawnticket": {
+      "staticKey": "pawnticket",
+      "focus": 30
+    },
+    "mirrorfile": {
+      "staticKey": "mirrorfile",
+      "focus": 18
+    },
+    "blackbloom": {
+      "staticKey": "blackbloom",
+      "focus": 18
     }
   }
 }

@@ -5,15 +5,15 @@ const AtelierArt = (() => {
       Object.entries(CharacterCatalog).map(([id, c]) => [id, c.focus]),
     ),
   );
-  function framing(key, context = "card") {
-    const pos = focuses[key] ?? 25;
+  function framing(key, context = "card", focus = focuses[key] ?? 25) {
+    const pos = focus;
     return {
       pos: `50% ${context === "card" || context === "option" ? pos : Math.max(12, pos - 3)}%`,
       scale: context === "card" ? 1.025 : context === "option" ? 1.015 : 1.04,
     };
   }
   function frameHero(h, context = "hero") {
-    return framing(h.portraitId, context);
+    return framing(h.portraitId, context, EmberPortraits[h.portraitId].focus);
   }
   return Object.freeze({
     framing,

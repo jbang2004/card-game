@@ -45,7 +45,7 @@ const EmberHeroScreens = (() => {
           : h.powerText;
       const heroSceneFocus = Math.max(
         8,
-        (CharacterCatalog[hero.portraitId]?.focus ?? 24) - 3,
+        EmberPortraits[hero.portraitId].focus - 3,
       );
       // the expedition's ten starter cards, one row per name (cheapest first)
       const starterHTML = () => {

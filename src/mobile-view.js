@@ -262,10 +262,14 @@ const EmberViewport = (() => {
       l.handHints = { x: l.hand.x, y: dockTop + 10, w: l.hand.w, h: peek };
       // Brand / shared round-notice slot / compact menu. Portrait secondary
       // actions remain available in the menu instead of crowding the message.
-      const noticeBand = usableW - (portrait ? 104 : 176),
+      // The wordmark 琥珀战记 is four characters wide (~90px at the 17px phone
+      // scale), so the band starts 98px in; the right-hand reserve is the menu
+      // (portrait) or the sound / settings / menu cluster (landscape).
+      const brandW = 98,
+        noticeBand = usableW - brandW - (portrait ? 48 : 120),
         noticeWidth = Math.min(420, noticeBand);
       l.notice = {
-        x: padL + 56 + (noticeBand - noticeWidth) / 2,
+        x: padL + brandW + (noticeBand - noticeWidth) / 2,
         y: safe.top + (portrait ? 4 : 0),
         w: noticeWidth,
         h: portrait ? 56 : 44,

@@ -48,3 +48,8 @@ tests/*-run.log
 
 # Re-layered amber art: working images (tools/amber_relayer)
 /tools/amber_relayer/work/
+
+# Move review (tools/move-review): kept revisions of the sheets, marked moments, audit output
+/tools/move-review/revisions/
+/tools/move-review/marks/
+/tools/move-review/audits/

@@ -47,6 +47,7 @@ from PIL import Image, ImageDraw, ImageFilter
 ROOT = Path(__file__).resolve().parent.parent
 MODEL = ROOT / "tools/models/depth-anything-v2-small.onnx"
 SOURCE = ROOT / "assets/anime/overrides"
+PORTRAITS = ROOT / "assets/portraits"
 OUT = ROOT / "art/live-art"
 REGISTRY = ROOT / "src/live-art-maps.js"
 AUTO_PARAMS = OUT / "auto.json"
@@ -87,7 +88,9 @@ def pushpull(col, w):
 class Portrait:
     def __init__(self, key, session):
         self.key = key
-        src = Image.open(SOURCE / f"{key}.png").convert("RGB")
+        # a card illustration, or a hero/boss portrait (assets/portraits, content/portraits.js)
+        path = SOURCE / f"{key}.png"
+        src = Image.open(path if path.exists() else PORTRAITS / f"{key}.png").convert("RGB")
         self.W, self.H = src.size
         self.rgb = np.asarray(src, np.float32) / 255
         x = np.asarray(src.resize((756, 1008), Image.BICUBIC), np.float32) / 255

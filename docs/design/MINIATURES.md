@@ -28,6 +28,8 @@
 
 ## 2. 动作
 
+> 写实角色的动作节奏与特效数值写在招式单 `src/content/moves.js`，调校流程见 [MOVES.md](MOVES.md)。本节是共同约定。
+
 - 共享动作库 `EmberVoxelClips`：待机（呼吸、重心摆动）、攻击（由角色的 `moves.attack.clip` 选择）、受击、胜利。
 - 出场：碎块从地面跳回原位拼成角色（约 0.6 秒）。死亡：碎成碎块（见 §3）。
 - 攻击的接触时刻 `moves.attack.hit`（秒）由舞台对齐到导演层的接触拍：接触前的部分按比例压缩或拉伸，接触后按原速播放。远程角色对齐的是出手（`lift`），因为弹道由 EmberFx2 从出手飞到接触。
@@ -65,6 +67,7 @@ presentation/voxel/
   baker.js       EmberVoxelBaker   在 Web Worker 里烘焙：用加载这条管线的同一批脚本（它们加载时自己登记）重建 worker，
                                    结果转移回页面放进烘焙缓存；worker 起不来时退回页面内烘焙（只在两次行动之间）
   clips.js       EmberVoxelClips   共享动作库
+  movesheet.js   EmberMoveSheet    招式单（content/moves.js）的编译器：原型继承、校验、时间轴；models.js 与 skillfx.js 读它的结果
   hitfeel.js     EmberVoxelFx      打击感粒子（voxel-musou 移植）：刀光、星爆、针状火花、碎块、拼合
   arena.js       EmberVoxelArena   角色的全部行为，不依赖页面：烘焙队列、拼合出场、待机朝向、近战冲刺、
                                    受击光与顿帧、接触星爆、挑飞碎裂；页面只回答“某个单位站在哪”

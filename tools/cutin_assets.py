@@ -12,8 +12,8 @@ called from `build.py`. Run it by hand when new art lands:
 Each source `<id>.png|.webp|.jpg` becomes `assets/cutin/<id>.webp`, centre
 cropped to a square and resized to 448x448 at WebP q84. Cut-ins only ever play
 for heroes and legendary minions (`cutinPolicy` in src/presentation/fx-profiles.js),
-so the bank is exactly those 17 ids: the ten hero portraitIds plus the ten
-legendary minions, which overlap on four ids. Ids outside the bank get no
+so the bank is exactly those ids: every hero's and boss's portraitId (the four heroes, the
+bosses, the four mirror heroes, Eve) plus the legendary minions (tests/cutin-coverage.test.cjs). Ids outside the bank get no
 cut-in at all — there is no fallback to the card illustration.
 """
 from pathlib import Path

@@ -4,7 +4,7 @@ const test = require("node:test"),
   assert = require("node:assert/strict"),
   fs = require("node:fs"),
   path = require("node:path");
-const campaign = require("../src/content/campaign.js");
+const portraits = require("../src/content/portraits.js");
 const cards = require("../src/content/cards.js");
 const maps = require("../src/live-art-maps.js");
 const rigs = require("../src/presentation/live-art-rigs.js");
@@ -14,8 +14,8 @@ const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 const source = read("src/presentation/live-art.js");
 const KINDS = ["bg", "body", "front", "depth", "ctrl", "flags"];
 
-test("every selectable hero has hand-rigged live artwork (cards are amber blocks)", () => {
-  const known = new Set(campaign.heroes.map((h) => h.portraitId));
+test("live artwork exists for exactly the portraits that declare `live` (cards are amber blocks)", () => {
+  const known = new Set(Object.keys(portraits).filter((id) => portraits[id].live));
   assert.deepEqual(Object.keys(maps).sort(), [...known].sort(), "Run tools/bake_live_art.py.");
   const hand = Object.keys(rigs).filter((id) => !rigs[id].auto);
   for (const id of Object.keys(maps))

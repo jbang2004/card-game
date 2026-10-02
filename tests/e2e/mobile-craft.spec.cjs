@@ -42,13 +42,13 @@ for (const [width, height] of [
     ).toBeHidden();
     await page.locator("#library-filters > summary").click();
     await page.locator("#library-search").fill("星");
-    await expect(page.locator(".library-item")).toHaveCount(5);
+    await expect(page.locator(".library-item")).toHaveCount(7);   // the mage and neutral cards with 星 in their name or rule (the star observer joined as a collectible)
     await page.locator("#touch-deck-tab").click();
     await page.locator("#touch-card-tab").click();
     await expect(page.locator("#library-search")).toHaveValue("星");
     await page.locator("#library-filters > summary").click();
-    await expect(page.locator("#library-filter-summary")).toContainText("5 张");
-    await expect(page.locator(".library-item")).toHaveCount(5);
+    await expect(page.locator("#library-filter-summary")).toContainText("7 张");
+    await expect(page.locator(".library-item")).toHaveCount(7);   // the mage and neutral cards with 星 in their name or rule (the star observer joined as a collectible)
     // A desktop resize must expose filters even if their mobile disclosure was closed.
     await page.setViewportSize({ width: 1600, height: 940 });
     await expect(page.locator("#library-search")).toBeVisible();

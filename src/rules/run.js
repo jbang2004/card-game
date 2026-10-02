@@ -61,18 +61,23 @@ const EmberRun = (() => {
       const h = data.heroes.find((x) => x.id === a.hero);
       // the preset's cheapest cards first: an early rival plays a small, cheap deck
       const deck = [...a.deck].sort((x, y) => data.byId[x].cost - data.byId[y].cost || x.localeCompare(y)).slice(0, stage.rival.cards);
-      return { id, kind: "rival", archetype: a.id, hero: h.id, name: a.name, title: h.name, hp: stage.rival.hp, deck, strategy: a.strategy };
+      return { id, kind: "rival", archetype: a.id, hero: h.id, name: a.name, title: a.person ?? h.name, hp: stage.rival.hp, deck, strategy: a.strategy };
     }
     const b = data.bosses.find((x) => x.id === id), index = data.bosses.indexOf(b);
     if (!b || !stage.pool.includes(id)) return null;
-    return { id, kind: "boss", bossIndex: index, name: b.name, title: b.title, hp: Math.max(10, Math.round(b.hp * (stage.bossHp ?? 1))), deck: [...b.deck, ...b.deck] };
+    // where the stage names `bossCards`, a boss plays only that many of its cheapest cards (an early boss is a small deck)
+    const deck = [...b.deck, ...b.deck];
+    if (stage.bossCards) deck.sort((x, y) => data.byId[x].cost - data.byId[y].cost || x.localeCompare(y)).splice(stage.bossCards);
+    return { id, kind: "boss", bossIndex: index, name: b.name, title: b.title, hp: Math.max(10, Math.round(b.hp * (stage.bossHp ?? 1))), deck };
   }
   /** the two opponents offered at this level (one where the level has only one) — never one already met */
   function foesFor(data, run) {
     const stage = stageOf(data, run.level), rivals = data.archetypes.map((a) => "rival:" + a.id).filter((id) => !run.seen.includes(id));
-    const bosses = stage.pool.filter((id) => id !== "rival" && !run.seen.includes(id));
+    // a boss made for one hero (a mirror) is met only by that hero
+    const mine = (id) => { const b = data.bosses.find((x) => x.id === id); return !b?.forHero || b.forHero === run.heroId; };
+    const bosses = stage.pool.filter((id) => id !== "rival" && !run.seen.includes(id) && mine(id));
     const candidates = [...(stage.pool.includes("rival") ? rivals : []), ...bosses];
-    const fresh = candidates.length ? candidates : stage.pool.filter((id) => id !== "rival");
+    const fresh = candidates.length ? candidates : stage.pool.filter((id) => id !== "rival" && mine(id));
     // where bosses may appear, one of the two is a boss when any is left
     const first = bosses.length && stage.pool.includes("rival") ? pick(run, bosses) : pick(run, fresh);
     const second = shuffle(run, fresh.filter((id) => id !== first))[0];

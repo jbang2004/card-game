@@ -15,6 +15,7 @@ global.EmberMeshSimplify = require(SRC("presentation/voxel/simplify.js"));
 global.EmberVoxelKit = require(SRC("presentation/voxel/kit.js"));
 global.EmberVoxel = require(SRC("presentation/voxel/voxelize.js"));
 const D = require("../src/data.js");
+const PORTRAITS = require("../src/content/portraits.js");
 const build = JSON.parse(fs.readFileSync(path.join(ROOT, "config/build.json"), "utf8"));
 const template = fs.readFileSync(SRC("template.html"), "utf8");
 const figureTokens = Object.keys(build).filter((k) => k.startsWith("VOXEL_FIG_"));
@@ -38,7 +39,8 @@ test("figures stand for real cards and heroes, one figure per card", () => {
   const seen = new Map();
   for (const id of KIT.ids()) {
     const spec = KIT.get(id);
-    assert.ok(spec.cards.length > 0, `${id} names its cards`);
+    // a figure stands for cards, or (a hero's or boss's) for the portrait of the same id in content/portraits.js
+    assert.ok(spec.cards.length > 0 || PORTRAITS[id], `${id} names its cards or is a portrait's figure`);
     for (const card of spec.cards) {
       if (card.startsWith("hero:")) assert.ok(D.heroes.some((h) => h.id === card.slice(5)), `${id}: hero ${card} exists`);
       else assert.ok(D.byId[card], `${id}: card ${card} exists`);

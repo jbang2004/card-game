@@ -343,13 +343,15 @@ test("a rejected action temporarily replaces its instruction without covering un
   await page.locator("#touch-cancel").click();
 });
 
-test("the gallery shows the six bosses and no retired building bundle", async ({
+test("the gallery shows every boss and no retired building bundle", async ({
   page,
 }) => {
   await page.goto("./?debug=1");
   await ready(page);
   await page.evaluate(() => Emberfall.showAtelier());
-  await expect(page.locator(".atelier-vignette")).toHaveCount(6);
+  const bosses = await page.evaluate(() => EmberData.bosses.length);
+  expect(bosses).toBeGreaterThanOrEqual(18);
+  await expect(page.locator(".atelier-vignette")).toHaveCount(bosses);
   expect(await page.evaluate(() => typeof WindborneAssets)).toBe("undefined");
   expect(
     await page.evaluate(() => {

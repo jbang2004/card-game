@@ -1,0 +1,314 @@
+[
+ {
+  "id": "fusecord",
+  "name": "导火索",
+  "cost": 2,
+  "type": "spell",
+  "target": "enemyMinion",
+  "rarity": "rare",
+  "palette": "ember",
+  "art": "sigil",
+  "onPlay": [
+   {
+    "type": "damage",
+    "amount": 3,
+    "to": "selected",
+    "spell": true
+   },
+   {
+    "type": "damage",
+    "amount": 1,
+    "to": "enemyHero",
+    "spell": true
+   }
+  ],
+  "boss": "fuse",
+  "prompt": "a bundle of fuse cord with a lit spark crawling along it toward a wooden powder keg in a dim mine tunnel, tiny sparks, soot, lantern light, close dramatic composition"
+ },
+ {
+  "id": "glean",
+  "name": "塌方的馈赠",
+  "cost": 1,
+  "type": "spell",
+  "rarity": "common",
+  "palette": "steel",
+  "art": "sigil",
+  "onPlay": [
+   {
+    "type": "mana",
+    "amount": 1
+   },
+   {
+    "type": "draw",
+    "count": 1
+   }
+  ],
+  "boss": "gleaner",
+  "prompt": "a gloved hand pulling a small piece of honey-coloured amber out from under a fallen mine timber beam in rubble, headlamp beam cutting the dust, the amber glowing"
+ },
+ {
+  "id": "appraise",
+  "name": "估价",
+  "cost": 2,
+  "type": "spell",
+  "target": "enemyMinion",
+  "rarity": "rare",
+  "palette": "gold",
+  "art": "sigil",
+  "onPlay": [
+   {
+    "type": "silence",
+    "to": "selected"
+   },
+   {
+    "type": "freeze",
+    "to": "selected"
+   }
+  ],
+  "boss": "appraiser",
+  "prompt": "a monocle held up before a piece of amber with a small paper price tag, a brass balance scale on a velvet cloth, the amber suddenly clouded and still, warm lamp light"
+ },
+ {
+  "id": "strikecrowd",
+  "name": "罢工的人群",
+  "cost": 4,
+  "atk": 3,
+  "hp": 5,
+  "type": "minion",
+  "tags": [
+   "taunt"
+  ],
+  "rarity": "common",
+  "palette": "blood",
+  "art": "knight",
+  "tribe": null,
+  "onPlay": [
+   {
+    "type": "summon",
+    "card": "recruit",
+    "count": 1,
+    "requireSpace": true
+   }
+  ],
+  "boss": "redscarf",
+  "prompt": "a line of tired miners with picks and red headscarves and red banners standing shoulder to shoulder in a mining-town square, a woman with a red headscarf in front, smoke stacks behind"
+ },
+ {
+  "id": "drillbit",
+  "name": "掘进钻头",
+  "cost": 6,
+  "atk": 6,
+  "hp": 7,
+  "type": "minion",
+  "tags": [
+   "taunt"
+  ],
+  "rarity": "rare",
+  "palette": "steel",
+  "art": "golem",
+  "onDeath": [
+   {
+    "type": "damage",
+    "amount": 3,
+    "to": "enemies",
+    "spell": false
+   }
+  ],
+  "boss": "drill",
+  "prompt": "the huge spiral cone of a rusted steam drill head grinding into rock, sparks and steam, an open cockpit window with a pale face behind glass, iron and rivets, dramatic low angle"
+ },
+ {
+  "id": "clockworksergeant",
+  "name": "发条军士",
+  "cost": 3,
+  "atk": 2,
+  "hp": 3,
+  "type": "minion",
+  "rarity": "common",
+  "palette": "steel",
+  "art": "golem",
+  "triggers": [
+   {
+    "event": "turnEnd",
+    "maxPerTurn": 1,
+    "effects": [
+     {
+      "type": "buff",
+      "attack": 1,
+      "health": 0,
+      "to": "self"
+     }
+    ]
+   }
+  ],
+  "boss": "clockmaker",
+  "prompt": "a small brass clockwork soldier with a key in its back and a tin helmet, standing on a workbench among gears and screws, a craftsman's hand adjusting it with a tiny screwdriver, warm workshop light"
+ },
+ {
+  "id": "blackcough",
+  "name": "黑玉咳嗽",
+  "cost": 2,
+  "type": "spell",
+  "rarity": "common",
+  "palette": "void",
+  "art": "sigil",
+  "onPlay": [
+   {
+    "type": "damage",
+    "amount": 2,
+    "to": "enemies",
+    "spell": true
+   },
+   {
+    "type": "heal",
+    "amount": 2
+   }
+  ],
+  "boss": "blacklung",
+  "prompt": "a miner coughing into his fist, a fine spray of black-jade dust and tiny dark crystals bursting out in the lamplight of a mine drift, coal-smeared face, a headlamp"
+ },
+ {
+  "id": "calibrate",
+  "name": "校准",
+  "cost": 3,
+  "type": "spell",
+  "rarity": "rare",
+  "palette": "gold",
+  "art": "sigil",
+  "onPlay": [
+   {
+    "type": "buff",
+    "attack": 1,
+    "health": 1,
+    "to": "friendlyMinions"
+   },
+   {
+    "type": "armor",
+    "amount": 3
+   }
+  ],
+  "boss": "ada",
+  "prompt": "a big wrench resting on a brass pressure gauge whose needle settles into the green, steam and gears, a young engineer's gloved hand on the valve, warm furnace glow"
+ },
+ {
+  "id": "earlyroar",
+  "name": "痛吼",
+  "cost": 6,
+  "atk": 5,
+  "hp": 7,
+  "type": "minion",
+  "tags": [
+   "taunt"
+  ],
+  "rarity": "epic",
+  "palette": "nature",
+  "art": "golem",
+  "onPlay": [
+   {
+    "type": "damage",
+    "amount": 2,
+    "to": "enemyMinions",
+    "spell": false
+   }
+  ],
+  "boss": "earlyriser",
+  "prompt": "a colossal tusked boar-mammoth with amber shards in its hide roaring in pain, its mouth wide and steam bursting, the blast of the roar bending rubble and timber scaffolding"
+ },
+ {
+  "id": "amberplate",
+  "name": "琥珀装甲",
+  "cost": 2,
+  "type": "spell",
+  "rarity": "rare",
+  "palette": "gold",
+  "art": "sigil",
+  "onPlay": [
+   {
+    "type": "armor",
+    "amount": 6
+   },
+   {
+    "type": "grant",
+    "tag": "shield",
+    "to": "friendlyLowest"
+   }
+  ],
+  "boss": "amberbody",
+  "prompt": "honey-coloured amber growing over a soldier's grey-blue uniform sleeve and shoulder like armour plates, the resin glowing from inside, a tired calm hand, cold workshop light"
+ },
+ {
+  "id": "pawnticket",
+  "name": "典当",
+  "cost": 1,
+  "type": "spell",
+  "rarity": "common",
+  "palette": "void",
+  "art": "sigil",
+  "onPlay": [
+   {
+    "type": "draw",
+    "count": 2
+   }
+  ],
+  "boss": "pawnbroker",
+  "prompt": "a paper pawn ticket with an unreadable scribble tied around a piece of amber, passed through the iron grille of a pawnshop counter by an old hand, dim lamp, shelves of tagged amber behind"
+ },
+ {
+  "id": "mirrorfile",
+  "name": "列阵",
+  "cost": 4,
+  "atk": 2,
+  "hp": 5,
+  "type": "minion",
+  "tags": [
+   "taunt"
+  ],
+  "rarity": "rare",
+  "palette": "void",
+  "art": "knight",
+  "onPlay": [
+   {
+    "type": "summon",
+    "card": "recruit",
+    "count": 2,
+    "requireSpace": true
+   }
+  ],
+  "boss": "mirrorlegion",
+  "prompt": "a row of identical black-jade-faced soldiers in grey greatcoats marching in step across a black mirror floor, each reflected upside down, symmetrical cold composition"
+ },
+ {
+  "id": "blackbloom",
+  "name": "黑色的花",
+  "cost": 7,
+  "atk": 4,
+  "hp": 9,
+  "type": "minion",
+  "tags": [
+   "taunt"
+  ],
+  "rarity": "epic",
+  "palette": "nature",
+  "art": "treant",
+  "triggers": [
+   {
+    "event": "turnEnd",
+    "maxPerTurn": 1,
+    "effects": [
+     {
+      "type": "heal",
+      "amount": 3
+     },
+     {
+      "type": "buff",
+      "attack": 0,
+      "health": 1,
+      "to": "friendlyMinions"
+     }
+    ]
+   }
+  ],
+  "boss": "eve",
+  "prompt": "a single black flower with jet-black glossy petals and a faint amber glint at its heart, growing from a clay pot on a glasshouse windowsill, thin black roots curling up the glass, dusk light"
+ }
+]

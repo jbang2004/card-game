@@ -30,6 +30,12 @@ const EmberModelFigures = (() => {
     guard: "thrust", huntress: "thrust", skeleton: "thrust",
     wisp: "caster", spark: "caster", nyx: "caster", necromancer: "caster", soulguide: "caster", oracle: "caster", vesper: "archer",
   };
+  // how strong the golden rim of the "radiant" shade is on a figure (default 1 for a person, 0.4 for a beast): the amber
+  // story's muted, ordinary characters (dark coats, browns and greys) keep their colours under a faint one
+  const AURA = { nahira: 0.3, frederia: 0.3, rowan: 0.3, liol: 0.3, whistle: 0.3, translator: 0.3, rootkeeper: 0.3, rootmother: 0.3, nathan: 0.3, fuse: 0.3, gleaner: 0.3, appraiser: 0.3, redscarf: 0.3, clockmaker: 0.3, blacklung: 0.3, ada: 0.3, amberbody: 0.3, pawnbroker: 0.3, mirrorlegion: 0.3, earlyriser: 0.25, eve: 0.3, mirrornahira: 0.3, mirrorfrederia: 0.3, mirrorrowan: 0.3, mirrorliol: 0.3 };
+  // a held thing its model holds the wrong way round — 罗温's bow came with its string toward the foe and its belly
+  // toward him: turned half round about its own length where the hand grips it (see turnHeld)
+  const TURNED = { rowan: "Left", mirrorrowan: "Left" };
   const V3 = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
   const lin = (D, i) => [0, 1, 2].map((c) => Math.pow(D[i * 4 + c] / 255, 2.2));
   const texel = (M, u, v) => Math.min(M.size[1] - 1, Math.floor(v * M.size[1])) * M.size[0] + Math.min(M.size[0] - 1, Math.floor(u * M.size[0]));
@@ -59,6 +65,26 @@ const EmberModelFigures = (() => {
     }
     return out.buffer;
   }
+  /** what that hand holds (its metal: mt 255, bound to the hand) turned half round about its own long axis, through
+   *  the middle of where it is gripped — a bow's belly and string change sides, the grip stays in the fist */
+  function turnHeld(M, pos, sj, sw, mt, side) {
+    const hand = M.joints.findIndex((j) => j.name === side + "Hand"), ids = [];
+    for (let i = 0; i < mt.length; i++) {
+      if (mt[i] < 253) continue;
+      let d = -1, w = -1; for (let k = 0; k < 4; k++) if (sw[i * 4 + k] > w) { w = sw[i * 4 + k]; d = sj[i * 4 + k]; }
+      if (d === hand) ids.push(i);
+    }
+    if (ids.length < 30) return;
+    const P = (i) => V3(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]), c = ids.reduce((a, i) => a.add(P(i)), V3()).multiplyScalar(1 / ids.length);
+    let ax = V3(0.3, 1, 0.2).normalize();
+    for (let it = 0; it < 30; it++) { const m = V3(); for (const i of ids) { const d = P(i).sub(c); m.addScaledVector(d, d.dot(ax)); } ax = m.normalize(); }
+    let lo = Infinity, hi = -Infinity; for (const i of ids) { const t = P(i).sub(c).dot(ax); lo = Math.min(lo, t); hi = Math.max(hi, t); }
+    // the grip: of its middle tenth, what lies farthest from the line through its ends (a bow's string runs along that line)
+    const off = (i) => { const d = P(i).sub(c); return d.addScaledVector(ax, -d.dot(ax)); };
+    const mid = ids.filter((i) => Math.abs((P(i).sub(c).dot(ax) - lo) / (hi - lo) - 0.5) < 0.05), far = Math.max(...mid.map((i) => off(i).length()));
+    const grip = mid.filter((i) => off(i).length() > far * 0.6), g = grip.reduce((a, i) => a.add(P(i)), V3()).multiplyScalar(1 / grip.length);
+    for (const i of ids) { const d = P(i).sub(g), along = d.dot(ax); d.addScaledVector(ax, -along).negate().addScaledVector(ax, along).add(g); pos[i * 3] = d.x; pos[i * 3 + 1] = d.y; pos[i * 3 + 2] = d.z; }
+  }
   function build0(id, M, raw, texSrc) {
     const n = M.count;
     let off = 0;
@@ -66,6 +92,7 @@ const EmberModelFigures = (() => {
     const q = take(Uint16Array, n * 3), uv = take(Uint16Array, n * 2), sj = take(Uint8Array, n * 4), sw = take(Uint8Array, n * 4), idx = take(M.wide ? Uint32Array : Uint16Array, M.tris * 3);
     const pos = new Float32Array(n * 3);
     for (let i = 0; i < n * 3; i++) { const c = i % 3; pos[i] = M.lo[c] + (q[i] / 65535) * (M.hi[c] - M.lo[c]); }
+    if (TURNED[id] && M.mt) turnHeld(M, pos, sj, sw, Uint8Array.from(atob(M.mt), (c) => c.charCodeAt(0)), TURNED[id]);
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
     geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2, true));
@@ -97,7 +124,7 @@ const EmberModelFigures = (() => {
       const g = cv.getContext("2d", { willReadFrequently: true }); g.drawImage(img, 0, 0, cv.width, cv.height);
       const tex = new THREE.CanvasTexture(cv);
       tex.colorSpace = THREE.SRGBColorSpace; tex.flipY = false; tex.anisotropy = 4;       // glTF uvs: top-left origin
-      const m = { geo, tex, data: g.getImageData(0, 0, cv.width, cv.height).data, size: [cv.width, cv.height], joints: M.joints, ibm: M.ibm, blade: M.blade, hold: M.hold || {}, style: M.style, lit: !!M.lit, noTuck: !!M.lit && !M.shield, beast: !!M.beast, tq: M.tq || null };
+      const m = { geo, tex, data: g.getImageData(0, 0, cv.width, cv.height).data, size: [cv.width, cv.height], joints: M.joints, ibm: M.ibm, blade: M.blade, hold: M.hold || {}, style: M.style, lit: !!M.lit, noTuck: !!M.lit && !M.shield, beast: !!M.beast, aura: AURA[id], tq: M.tq || null };
       m.eyes = m.beast ? null : findEyes(m, pos, sj, sw, uv);
       models.set(id, m);
       onReady.forEach((fn) => fn(id));
@@ -160,7 +187,7 @@ const EmberModelFigures = (() => {
     m.toneMapped = false;
     const E = M.eyes || { a: new THREE.Vector4(9, 9, 9, 9), b: new THREE.Vector4(9, 9, 9, 9), z: 9, skin: V3() };
     m.onBeforeCompile = (s) => {
-      Object.assign(s.uniforms, { uShade: SHADE, uHitC: hit, uBlink: blink, uGlow: glow.k, uGlowC: glow.c, uOrb: glow.at, uEyeA: { value: E.a }, uEyeB: { value: E.b }, uEyeZ: { value: E.z }, uSkin: { value: E.skin }, uAura: { value: M.beast ? 0.4 : 1 }, uHide: { value: hide ? 1 : 0 },
+      Object.assign(s.uniforms, { uShade: SHADE, uHitC: hit, uBlink: blink, uGlow: glow.k, uGlowC: glow.c, uOrb: glow.at, uEyeA: { value: E.a }, uEyeB: { value: E.b }, uEyeZ: { value: E.z }, uSkin: { value: E.skin }, uAura: { value: M.aura ?? (M.beast ? 0.4 : 1) }, uHide: { value: hide ? 1 : 0 },
         uBladeA: lux.a, uBladeB: lux.b, uBladeK: lux.k, uBladeT: lux.t, uRimK: lux.rim, uDisK: dis.k, uDisY: dis.y, uDisC: dis.c,
         uEmitC: look.emitC, uEmitK: look.emitK, uGhost: look.ghost, uGhostC: look.ghostC, uFxT: look.t, uKey: look.key });
       s.vertexShader = "varying vec3 vBind;\n" + s.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n vBind = position;");
@@ -290,49 +317,15 @@ const EmberModelFigures = (() => {
    * mark (a bite, a raking claw, a burst of fire), what it leaves on the ground, how it triumphs, what hangs round it at
    * rest. The rarer it is, the heavier its presence: a legend dims the stage as it strikes, shakes the ground, its
    * element drifting round it; now and then it rears and roars (flourish: its victory clip, every so many seconds).
-   *   sig: windup (ms added to its charge) · leap (the share of the lead when it leaves its station) · dash leap|lunge ·
-   *        reach (× its size, where it strikes from) · hitstop (frames, by tier) · post / rise / back (seconds it
-   *        stays at the foe, and hops home) · stay (it strikes from where it stands) · fx (the recipe)
+   * Written in the move sheets (content/moves.js, compiled by EmberMoveSheet — tune them there):
+   *   sig: windup (ms added to its charge) · draw (a shooter: ms before its shot leaves) · leap (the share of the lead
+   *        when it leaves its station) · dash leap|lunge · reach (× its size, where it strikes from) · hitstop (frames,
+   *        by tier) · post / rise / back (seconds it stays at the foe, and hops home) · stay (it strikes from where it
+   *        stands) · fx (the recipe)
    *   look: emit [r, g, b] (what glows on it: texels of about that colour, emitK strong, pulsing with its clips) ·
    *         ghost (0–1: a spirit — its body lit from within, a flowing glow toward its edges, in ghostC)
    *   blade: [[x, y, z] hilt, [x, y, z] point] in bind space, on bladeBone (a rider's sword: its swoosh) */
-  const bsig = (o) => ({ windup: 160, leap: 0.55, dash: "leap", hitstop: [0, 3, 4, 6], post: [[0, 0], [0.18, 0]], rise: 0.12, back: 0.3, ...o, fx: { flash: 0.4, ...o.fx } });
-  const BEASTS = {
-    // 月影幼狼: a bite that leaves two moonlit crescents closing on the foe
-    wolf: { sig: bsig({ fx: { pal: "moon", sigil: false, slash: "bite", beam: false, bits: "wisp", nbits: 4, hurt: "body", scale: 0.9, victory: { ray: false }, aura: { bits: "sparkle", every: 1400, halo: false } } }) },
-    // 幽灵狼: a wolf cub with a ghost's pale violet glow at its edges
-    pup: { look: { ghost: 0.28, ghostC: [0.62, 0.45, 1.0] }, sig: bsig({ windup: 120, fx: { pal: "void", sigil: false, slash: "bite", beam: false, bits: "wisp", nbits: 3, hurt: "body", scale: 0.75, victory: { ray: false }, aura: { bits: "wisp", every: 1600, halo: false } } }) },
-    // 灵狼: a spirit of the green wood, lit from within
-    spiritwolf: { look: { ghost: 0.75, ghostC: [0.35, 1.25, 0.7] }, sig: bsig({ windup: 140, fx: { pal: "fey", sigil: false, slash: "bite", beam: false, bits: "wisp", nbits: 6, hurt: "body", scale: 0.9, victory: { ray: false }, aura: { bits: "wisp", every: 520, halo: false } } }) },
-    // 银灯灵狐: a fox of lantern light
-    moonfox: { sig: bsig({ windup: 140, fx: { pal: "fey", sigil: false, slash: "bite", beam: false, bits: "wisp", nbits: 5, hurt: "body", scale: 0.9, victory: { ray: false, orb: "moon" }, aura: { bits: "sparkle", every: 900, halo: false } } }) },
-    // 暮角契鹿: antlers lowered, a charge that splits the ground with roots
-    duskstag: { sig: bsig({ windup: 220, leap: 0.45, dash: "lunge", fx: { pal: "dawn", sigil: false, slash: "pierce", ground: "roots", bits: "leaf", beam: false, hurt: "body", victory: { ray: false, rain: "leaf" }, aura: { bits: "leaf", every: 1100, halo: false } } }) },
-    // 幽谷蛛后: fangs, venom, the ground gone dark under her prey
-    spider: { sig: bsig({ windup: 200, leap: 0.5, fx: { pal: "necro", sigil: false, slash: "bite", ground: "void", bits: "wisp", beam: false, hurt: "body", victory: { ray: false }, aura: { bits: "wisp", every: 900, halo: false } } }) },
-    // 烬喉幼龙: a young dragon's gout of fire
-    dragon: { look: { emit: [1.0, 0.45, 0.12], emitK: 0.35 }, emitter: { bone: "jaw", offset: [0, 0.012, 0.07] }, sig: bsig({ windup: 220, fx: { pal: "ember", sigil: false, ground: "crack", flame: true, slash: false, beam: false, hurt: "body", victory: { ray: false, flame: true }, aura: { bits: "sparkle", every: 700, halo: false } } }) },
-    // 终焰·阿什拉 (legendary): lava in the cracks of its hide; it rears, the stage darkens, and it pours a river of fire
-    // on its foe — the ground breaks molten under it, rocks fly; now and then it spreads its wings and roars
-    ashdragon: { look: { emit: [1.0, 0.42, 0.1], emitK: 0.6, key: 0.85 }, flourish: { every: 11, len: 1.6 }, emitter: { bone: "jaw", offset: [0, 0.012, 0.075] },
-      sig: bsig({ windup: 380, fx: { pal: "fire", sigil: false, rise: true, riseShape: "spark", ground: "crack", flame: true, rocks: 6, spikes: "rock", slash: false, beam: false, dim: 0.55, dust: 1.6, shake: 1.8, scale: 1.35, hurt: "body", victory: { ray: false, flame: true, shock: true }, aura: { bits: "sparkle", every: 220, halo: false } } }) },
-    // 蚀月狼王 (legendary): the eclipse over it; a raking blow of the dark moon — three claw-cuts and the void under
-    // them; it howls at the dark moon now and then
-    eclipsewolf: { look: { key: 0.72 }, flourish: { every: 12, len: 1.6 },
-      sig: bsig({ windup: 320, leap: 0.5, dash: "lunge", fx: { pal: "void", sigil: "moon", slash: "claw", ground: "void", bits: "wisp", nbits: 8, limb: ["wriL", "fpawL"], trailFrom: 0.55, trailInner: 0.25, beam: false, dim: 0.5, shake: 1.4, scale: 1.0, hurt: "body", victory: { ray: false, orb: "moon" }, aura: { bits: "wisp", every: 380, halo: false } } }) },
-    // 不灭凤凰 (epic): a gold flame at its heart; it dives wings first, a crescent of blue fire; feathers of light fall
-    phoenix: { look: { emit: [1.0, 0.72, 0.25], emitK: 0.8 }, flourish: { every: 10, len: 1.6 },
-      sig: bsig({ windup: 280, leap: 0.4, fx: { pal: "phoenix", sigil: "star", slash: "crescent", flame: true, bits: "feather", nbits: 6, limb: ["wing2R", "wing3R"], trailFrom: 0.55, trailInner: 0.3, beam: false, dim: 0.35, shake: 1.2, scale: 1.15, hurt: "body", victory: { ray: false, rain: "feather", flame: true }, aura: { bits: "sparkle", every: 320, halo: false } } }) },
-    // 霜牙狼骑: the knight's ice blade cuts as the wolf charges; frost and ice where it lands
-    rider: { blade: { bone: "rHandR", at: [[-0.13, 0.475, 0], [-0.52, 0.7, 0]] },
-      sig: bsig({ windup: 220, leap: 0.45, dash: "lunge", fx: { pal: "frost", sigil: false, slash: "line", ground: "frost", spikes: "ice", bits: "shard", bits2: "snow", trailFrom: 0.6, beam: false, hurt: "body", victory: { ray: true, rain: "snow" }, aura: { bits: "snow", every: 800, halo: false } } }) },
-    // 绵羊: a soft bonk and a few stars
-    sheep: { sig: bsig({ windup: 100, leap: 0.5, dash: "lunge", fx: { pal: "dawn", sigil: false, slash: false, beam: false, bits: "star", nbits: 4, dust: 1.2, shake: 0.5, scale: 0.8, hurt: "body", victory: { ray: false, rain: "star" }, aura: { bits: "sparkle", every: 2400, halo: false } } }) },
-    // 石卫: the rune crystal lit; it slams, the ground cracks and stone spikes out of it
-    stone: { look: { emit: [0.3, 0.7, 1.0], emitK: 0.9 }, sig: bsig({ windup: 200, leap: 0.4, dash: "lunge", fx: { pal: "rune", sigil: false, slash: false, beam: false, ground: "crack", rocks: 5, spikes: "rock", dust: 1.5, shake: 1.4, hurt: "body", victory: { ray: false, shock: true, rain: "rock" }, aura: { bits: "sparkle", every: 1100, halo: false } } }) },
-    // 荆棘树灵: it lashes from where it grows; roots split the ground under its foe and thorns burst up
-    thorn: { sig: bsig({ windup: 180, stay: true, fx: { pal: "verdant", sigil: false, slash: false, beam: false, ground: "roots", spikes: "thorn", bits: "leaf", hurt: "body", victory: { ray: false, rain: "leaf" }, aura: { bits: "leaf", every: 1300, halo: false } } }) },
-  };
+  const BEASTS = {};
 
   /** a beast (tools/beast_prep.cjs): the model skinned to its voxel figure's own skeleton (same bone names, rest
    *  rotations identity), so the figure's clips and custom pose (EmberVoxelClips) move it unchanged */
@@ -734,7 +727,7 @@ const EmberModelFigures = (() => {
   //   for an open hand holds a blade flat) · aim: { clip: [x, y, z] } the point held that way (figure space) all
   //   through the clip · hover: it floats, legs hanging, wings beating · speed: × the clip speeds (a mountain is slow)
   //   Clips ending in _m are Mixamo's mirror (the caster works with the left hand, where its focus is)
-  //   aim: { clip: "up" | "target" | "raised" | [x, y, z] } where the weapon points (see aimFor) · lower: clips whose
+  //   aim: { clip: "up" | "target" | "foe" | "raised" | [x, y, z] } where the weapon points (see aimFor) · lower: clips whose
   //   legs are the idle's (a kneel, a leap or the splits would not suit the figure) · face: the chest turns to the foe
   //   as the blow lands (casting clips turn aside) · upright: clips whose back, neck and head are the idle's too (a
   //   caster stands tall and casts with the arms; a god never stoops) · float: a god hovers that high · spin: a
@@ -743,228 +736,25 @@ const EmberModelFigures = (() => {
   //   body from (else the idle; with it the idle itself can be upright: its arms, the stance's body) · bow: an archer
   //   turns so the arrow (string hand → bow hand) points at the foe
   //   sig: a signature choreography, authored pose to pose the way a MOBA champion's moves are (the capture is the
-  //   reference, the timing is drawn): see SIG below
-  const SUITES = {
-    // 圣光裁决者 — the signature: upright and composed at rest, saluting with the blade now and then; the attack is a
-    // spinning leap behind her shield that slams the blade down on the foe and lands her on one knee as the light
-    // cracks out of the ground, then she rises; she takes a blow on the shield, braced; the holy sword raised high on
-    // victory
-    paladin: { idle: "st_axe", attack: "ss_power", hurt: "ss_impact", victory: "vc_raise_hand", aim: { victory: "raised" },
-      sig: {
-        lead: 600, windup: 340,                                          // ms to the blow; how much longer than the director's plain lunge
-        // before the blow: [share of the lead, clip frame, ease into it] — a slow coil behind the shield, a beat held
-        // at its bottom, the spring up turning (fast off the ground, hanging at the top), the blade down in ~4 frames
-        pre: [[0, 0], [0.22, 11, "io"], [0.3, 12.5, "o"], [0.8, 28, "o"], [1, 33, "i3"]],
-        // after it (seconds): the landing driven into the kneel, held while the light cracks out
-        post: [[0, 33], [0.1, 37, "o"], [0.36, 41, "io"]],
-        rise: 0.34, back: 0.32,                                          // up off the knee to the stance; the hop back to her station
-        leap: 0.3,                                                       // the share of the lead when her feet leave the ground
-        reach: 0.42,                                                     // where she lands short of the foe (× her size): the blade's length
-        hitstop: [0, 3, 5, 7],                                           // frames the blow holds her, by tier (heavier than a plain hit)
-        dash: "leap",                                                    // leap: even through the air · lunge: late and fast
-        // at rest, every 9–14 s: the knight's salute (the blade raised before her face), held, lowered
-        flourish: { clip: "gs_pose", every: [9, 14], keys: [[0, 0], [0.85, 30, "io"], [2.3, 58, "io"]], fade: [0.35, 0.55] },
-        // its effects (EmberSkillFx): holy gold; a sun sigil; the ground cracks; feathers of light; the shield flares
-        fx: { pal: "holy", sigil: "sun", ground: "crack", bits: "feather", hurt: "shield", aura: { bits: "sparkle" } },
-      },
-      plain: { attack: "gs_downward_slash", hurt: "gs_impact" } },       // what the signature replaced (the model demo compares)
-    // the sun god: his sun blade planted point-down before him; he leaps up with it overhead — kept on his feet, a
-    // god's overhead judgment, slow — and raises it to the sky
-    aurion: { idle: "st_idle", attack: "mg_cast_forward", hurt: "gs_impact", victory: "vc_raise_hand", aim: { idle: [0, -1, 0.35], attack: "target", victory: "raised" }, upright: ["attack", "victory"], speed: 0.85, float: 0.04,
-      // 日轮万剑: a god does not swing. Risen a hand's breadth, he draws the sun blade back as a wheel of blades forms
-      // behind him, one by one, facing the world; they turn on his foe, he levels the sword at it, and they are loosed
-      // in quick succession — lines of light, each marking its cut — the last of them the judgment: a great crossed cut
-      sig: { lead: 700, windup: 440, pre: [[0, 0], [0.45, 6, "io"], [0.58, 7, "o"], [0.74, 17, "i3"], [1, 22, "l"]], post: [[0, 22], [0.3, 26, "io"], [0.6, 32, "io"]],
-        rise: 0.45, back: 0, stay: true, levitate: 0.12, hitstop: [0, 3, 4, 5],
-        fx: { pal: "dawn", sigil: "sun", cast: "array", blades: 12, modern: true, dim: 0.7, slash: false, trail: false, hurt: "body", scale: 1.1, shake: 1.2, victory: { orb: "sun" }, aura: { bits: "sparkle", every: 300 } } },
-      plain: { attack: "gs_jump_atk", aim: { idle: [0, -1, 0.35], victory: "raised" }, float: 0 } },
-    // the frost king admires his own blade; one sweeping slash that ends on the blow; a cold salute
-    frostking: { idle: "gs_admire", attack: "gs_power_slash", hurt: "gs_impact", victory: "gs_pose",
-      // 凛冬斩: the blade swung far back as rime climbs it, one wide cut — the ground freezes over and ice bursts from it
-      sig: { lead: 580, windup: 320, pre: [[0, 0], [0.35, 10, "io"], [0.62, 18, "o"], [0.72, 19, "o"], [1, 23, "i3"]], post: [[0, 23], [0.1, 26, "o"], [0.3, 29, "io"]],
-        rise: 0.3, back: 0.3, leap: 0.55, dash: "lunge", reach: 0.45, hitstop: [0, 3, 5, 7],
-        fx: { pal: "frost", sigil: "rune", ground: "frost", spikes: "ice", bits: "shard", bits2: "snow", beam: false, chargeShape: "snow", hurt: "body", victory: { rain: "snow" }, aura: { bits: "snow", every: 500 } } },
-      plain: {} },
-    // the dark-moon reaper: prowling guard, a low reaping sweep in both hands, the scythe raised to the sky
-    reaper: { idle: "gs_look", attack: "gs_low", hurt: "gs_impact", victory: "vc_raise_hand", aim: { idle: "up", victory: "raised" },
-      // 月蚀收割: a long low reap under a dark moon; the crescent it leaves, the victim's life drawn back into him in wisps
-      sig: { lead: 540, windup: 280, pre: [[0, 0], [0.5, 12, "io"], [0.62, 13, "o"], [1, 25, "i3"]], post: [[0, 25], [0.12, 30, "o"], [0.34, 36, "io"]],
-        rise: 0.3, back: 0.3, leap: 0.5, dash: "lunge", reach: 0.5, hitstop: [0, 3, 5, 7], bladeFrom: 0.6,
-        fx: { pal: "moon", sigil: "moon", slash: "crescent", ground: "void", bits: "wisp", drain: true, beam: false, trailInner: 0.55, hurt: "body", victory: { ray: false, orb: "moon", rain: "wisp" }, aura: { bits: "wisp", every: 600 } } },
-      plain: {} },
-    // sword and shield: the squire cheers with his sword up; the sun-chaser swift and bright; the rookie pumps his fist
-    // with the sword high; the moon knight stands tall behind his shield, strikes without leaving the ground, salutes
-    squire: { idle: "ss_idle", attack: "ss_high_attack", hurt: "ss_impact", victory: "mg_cheer", aim: { victory: "raised" },
-      // 晨曦斩: a squire's clean overhead cut behind a raised shield, the dawn's light on the blade
-      sig: { lead: 460, windup: 200, pre: [[0, 0], [0.55, 13, "io"], [0.66, 14, "o"], [1, 20, "i3"]], post: [[0, 20], [0.1, 23, "o"], [0.34, 28, "io"]],
-        rise: 0.28, back: 0.28, leap: 0.5, dash: "lunge", reach: 0.4, hitstop: [0, 3, 4, 6],
-        fx: { pal: "holy", sigil: "sun", beam: false, scale: 0.85, hurt: "shield", victory: { rain: "sparkle" }, aura: { bits: "sparkle", every: 900, halo: false } } },
-      plain: {} },
-    solaris: { idle: "ss_idle", attack: "ss_cross_slash", hurt: "ss_impact", victory: "vc_raise_hand", aim: { victory: "raised" },
-      // 逐日十字斩: in on the foe in two strokes — the second one fast and burning — a cross of sunfire left on it, a
-      // flare of flame, the ground scorched
-      sig: { lead: 500, windup: 240, pre: [[0, 0], [0.2, 6, "io"], [0.5, 17, "o"], [0.62, 18.5, "o"], [1, 25, "i3"]], post: [[0, 25], [0.1, 29, "o"], [0.34, 36, "io"]],
-        rise: 0.3, back: 0.3, leap: 0.4, dash: "lunge", reach: 0.4, hitstop: [0, 3, 5, 7],
-        fx: { pal: "sun", sigil: "sun", slash: "cross", ground: "crack", flame: true, beam: false, trailFrom: 0.15, hurt: "shield", victory: { orb: "sun" }, aura: { bits: "sparkle", every: 380 } } },
-      plain: {} },
-    recruit: { idle: "ss_look", attack: "ss_down", hurt: "ss_impact", victory: "vc_pump", aim: { victory: "raised" },
-      // 新兵劈砍: the rookie's eager chop, a flash of first light
-      sig: { lead: 460, windup: 200, pre: [[0, 0], [0.55, 13, "io"], [0.7, 14, "o"], [1, 19, "i3"]], post: [[0, 19], [0.12, 22, "o"], [0.34, 28, "io"]],
-        rise: 0.28, back: 0.28, leap: 0.5, dash: "lunge", reach: 0.4, hitstop: [0, 3, 4, 6],
-        fx: { pal: "dawn", sigil: "sun", beam: false, scale: 0.85, hurt: "shield", victory: { rain: "sparkle" }, aura: { bits: "sparkle", every: 900, halo: false } } },
-      plain: {} },
-    moonguard: { idle: "st_axe", attack: "ss_down", hurt: "ss_blocked", victory: "gs_pose", lower: ["attack"], speed: 0.92,
-      // 星盾镇击: the lamp-keeper gathers starlight behind his shield and brings the blade down; a star sigil is struck
-      // into the ground, stars scatter; blows ring off his star shield
-      sig: { lead: 560, windup: 300, pre: [[0, 0], [0.55, 13, "io"], [0.7, 14, "o"], [1, 19, "i3"]], post: [[0, 19], [0.12, 22, "o"], [0.34, 28, "io"]],
-        rise: 0.3, back: 0.3, leap: 0.5, dash: "lunge", reach: 0.42, hitstop: [0, 4, 6, 8],
-        fx: { pal: "star", sigil: "star", ground: "rune", bits: "star", hurt: "shield", shake: 1.2, victory: { orb: "star", rain: "star" }, aura: { bits: "sparkle" } } },
-      plain: { attack: "ss_power" } },
-    // spears: upright at rest and on victory, driven point-first at the foe
-    guard: { idle: "st_axe", attack: "sp_bayonet", hurt: "ss_blocked", victory: "vc_raise_hand", aim: { idle: "up", attack: "target", victory: "raised" },
-      // 铁誓突刺: the iron-sworn guard's disciplined thrust, steel ringing
-      sig: { lead: 480, windup: 220, pre: [[0, 0], [0.5, 17, "io"], [0.6, 17.5, "o"], [1, 28, "i3"]], post: [[0, 28], [0.1, 31, "o"], [0.3, 36, "io"]],
-        rise: 0.28, back: 0.3, leap: 0.45, dash: "lunge", reach: 0.55, hitstop: [0, 3, 5, 6], bladeFrom: 0.7,
-        fx: { pal: "steel", sigil: "rune", slash: "pierce", beam: false, trailFrom: 0.6, trailInner: 0.6, hurt: "shield", victory: { rain: "sparkle" }, aura: { bits: "sparkle", every: 900, halo: false } } },
-      plain: {} },
-    huntress: { idle: "ax_look", attack: "sp_bayonet", hurt: "bw_hit_front", victory: "ax_battlecry", aim: { idle: "up", attack: "target", victory: "up" },
-      // 穿林突刺: she charges and drives the spear through — a streak of wind out the far side, leaves torn loose
-      sig: { lead: 460, windup: 200, pre: [[0, 0], [0.5, 17, "io"], [0.6, 17.5, "o"], [1, 28, "i3"]], post: [[0, 28], [0.1, 31, "o"], [0.3, 36, "io"]],
-        rise: 0.28, back: 0.3, leap: 0.45, dash: "lunge", reach: 0.55, hitstop: [0, 3, 4, 6], bladeFrom: 0.7,
-        fx: { pal: "wild", sigil: "leaf", slash: "pierce", bits: "leaf", beam: false, trailFrom: 0.6, trailInner: 0.6, hurt: "body", victory: { ray: false, rain: "leaf" }, aura: { bits: "leaf", every: 700, halo: false } } },
-      plain: {} },
-    skeleton: { idle: "zb_idle", attack: "sp_bayonet", hurt: "zb_stumble", victory: "zb_alert", aim: { idle: "up", attack: "target", victory: "up" },
-      // 骸骨突刺: a lurching jab in a haze of grave-light, bone chips flying
-      sig: { lead: 440, windup: 180, pre: [[0, 0], [0.5, 17, "io"], [0.6, 17.5, "o"], [1, 28, "i3"]], post: [[0, 28], [0.1, 31, "o"], [0.3, 36, "io"]],
-        rise: 0.28, back: 0.3, leap: 0.45, dash: "lunge", reach: 0.55, hitstop: [0, 3, 4, 6], bladeFrom: 0.7,
-        fx: { pal: "bone", sigil: "rune", slash: "pierce", bits: "shard", nbits: 5, beam: false, trailFrom: 0.6, trailInner: 0.6, hurt: "body", victory: { ray: false, rain: "wisp" }, aura: { bits: "wisp", every: 800, halo: false } } },
-      plain: {} },
-    fenlos: { idle: "st_axe", attack: "sp_torch", hurt: "bw_hit_front", victory: "vc_raise_hand", aim: { idle: "up", attack: "target", victory: "raised" }, upright: ["attack"],
-      // 荒猎神矛: the hunt god does not run at his prey. Leaves climb round him as he draws back and levels the spear;
-      // a lance of the wild's light leaves its point and runs the prey through, and the wild answers — roots split the
-      // ground and thorns burst up round it
-      sig: { lead: 580, windup: 320, pre: [[0, 0], [0.55, 19, "io"], [0.66, 20, "o"], [1, 25, "i3"]], post: [[0, 25], [0.15, 28, "o"], [0.4, 33, "io"]],
-        rise: 0.35, back: 0, stay: true, hitstop: [0, 3, 4, 5], bladeFrom: 0.7,
-        fx: { pal: "verdant", sigil: "leaf", rise: true, riseShape: "leaf", cast: "spear", modern: true, dim: 0.5, trail: false, hurt: "body", scale: 1.1, shake: 1.2, victory: { rain: "leaf" }, aura: { bits: "leaf", every: 500 } } },
-      plain: {} },
-    // the assassin: knife in a reverse grip, a stab from the rear hand, then the blade sheathed
-    assassin: { idle: "kn_idle", attack: "kn_stab", hurt: "mu_hit", victory: "kn_sheath",
-      // 影袭: she sinks into shadow, poised, darts in and stabs — a crimson line across the foe, smoke where she was
-      sig: { lead: 440, windup: 180, pre: [[0, 0], [0.3, 8, "o"], [0.62, 19, "io"], [0.72, 21, "o"], [1, 30, "i3"]], post: [[0, 30], [0.1, 33, "o"], [0.3, 38, "io"]],
-        rise: 0.26, back: 0.26, leap: 0.6, dash: "lunge", reach: 0.3, hitstop: [0, 3, 4, 6],
-        fx: { pal: "shadow", sigil: false, vanish: true, bits: "wisp", nbits: 5, beam: false, trailFrom: 0.7, trailInner: 0.3, hurt: "body", victory: { ray: false, rain: "wisp" }, aura: { bits: "wisp", every: 1100, halo: false } } },
-      plain: {} },
-    // the red-rock berserker: crouched and restless, an overhead chop, a battle cry
-    berserker: { idle: "ax_crouch", attack: "ax_down", hurt: "ax_gut", victory: "ax_battlecry",
-      // 狂怒劈斩: the axe hauled up with a roar and brought down; the rock splits red-hot, stones jump
-      sig: { lead: 520, windup: 260, pre: [[0, 0], [0.55, 17, "io"], [0.66, 18.5, "o"], [1, 25, "i3"]], post: [[0, 25], [0.12, 28, "o"], [0.34, 34, "io"]],
-        rise: 0.3, back: 0.3, leap: 0.45, dash: "lunge", reach: 0.42, hitstop: [0, 4, 6, 8],
-        fx: { pal: "rage", sigil: false, ground: "crack", rocks: 5, beam: false, shake: 1.3, hurt: "body", victory: { ray: false, shock: true, rain: "sparkle" }, aura: { bits: "sparkle", every: 700, halo: false } } },
-      plain: {} },
-    // the archer: the bow held ready, drawn to the cheek facing the foe, loosed
-    vesper: { idle: "bw_aim_idle", attack: "bw_aimfire", hurt: "bw_hit_front", victory: "vc_pump_restrained", bow: true,
-      // 逐风之矢: wind gathers on the drawn arrow; it leaves with a crack and runs the foe through
-      sig: { lead: 390, pre: [[0, 0], [0.7, 5, "io"], [0.85, 5.5, "o"], [1, 7, "i3"]], post: [[0, 7], [0.2, 12, "o"], [0.5, 20, "io"]], rise: 0.3, back: 0,
-        fx: { pal: "wild", sigil: "leaf", cast: "bolt", slash: "pierce", bits: "leaf", nbits: 5, beam: false, trail: false, hurt: "body", victory: { ray: false, rain: "leaf" }, aura: { bits: "leaf", every: 900, halo: false } } },
-      plain: {} },
-    // casters, their bodies to the foe as the spell leaves, on their feet
-    spark: { idle: "mg_idle", attack: "mg_cast_forward", hurt: "mg_hit_right", victory: "mg_cheer", upright: ["attack"], face: true, spell: { fire: true },
-      // 火花弹: the apprentice's fireball, fed until it roars, flung — it bursts and scorches
-      sig: { lead: 790, pre: [[0, 0], [0.7, 20, "io"], [0.8, 22, "o"], [1, 24, "i3"]], post: [[0, 24], [0.15, 28, "o"], [0.45, 36, "io"]], rise: 0.35, back: 0,
-        fx: { pal: "fire", sigil: "sun", cast: "bolt", flame: true, ground: "crack", slash: false, weapon: false, scale: 0.8, hurt: "body", victory: { ray: false, flame: true }, aura: { bits: "sparkle", every: 500, halo: false } } },
-      plain: {} },
-    jingchen: { idle: "st_idle", attack: "cs_upwards", hurt: "mg_hit_right", victory: "cs_upwards", upright: ["attack", "victory"], face: true, float: 0.05, spell: { fire: true, rise: true, windup: 850, bolt: 0.11 },
-      // 焚天炎柱: the star-flame god throws nothing. The ground under his foe is marked — a crisp ring filling as he lifts
-      // the fire in his hand to the sky — and as he raises it, a vortex of fire tears up out of the ground, tossing the
-      // foe; black smoke rolls from its foot, the ground left molten; it burns out from the top
-      sig: { lead: 940, pre: [[0, 0], [0.5, 11, "io"], [0.66, 13, "o"], [0.85, 18, "o"], [1, 20, "l"]], post: [[0, 20], [0.3, 24, "io"], [0.6, 30, "io"]], rise: 0.45, back: 0,
-        fx: { pal: "fire", sigil: "sun", cast: "pillar", modern: true, dim: 0.65, lift: 0.3, slash: false, weapon: false, hurt: "body", scale: 1.1, shake: 1.3, victory: { ray: false, orb: "sun", flame: true }, aura: { bits: "sparkle", every: 350 } } },
-      plain: { attack: "mg_conjure_throw" } },
-    cleric: { idle: "pr_sway", attack: "cs_two_fwd", hurt: "mg_hit_right", victory: "mg_heal", upright: ["attack", "victory"], face: true, spell: { tint: [1.5, 1.15, 0.45] },
-      // 曙光圣击: a prayer gathered in both hands and sent; light comes down where it strikes, feathers of it
-      sig: { lead: 790, pre: [[0, 0], [0.66, 27, "io"], [0.78, 29, "o"], [1, 34, "i3"]], post: [[0, 34], [0.12, 37, "o"], [0.4, 44, "io"]], rise: 0.4, back: 0,
-        fx: { pal: "holy", sigil: "sun", cast: "bolt", ground: "rune", bits: "feather", nbits: 5, slash: false, weapon: false, scale: 0.9, hurt: "body", victory: { ray: false, rain: "feather" }, aura: { bits: "sparkle", every: 600 } } },
-      plain: {} },
-    // the necromancer holds his lantern out before him, calls the dead up from the ground, and lifts the lantern high
-    necromancer: { idle: "mg_idle", attack: "mg_ground@m", hurt: "mg_hit_right", victory: "vc_raise_hand", upright: ["attack"], face: true, spell: { tint: [0.35, 1.3, 0.7] }, keep: { attack: "Right" }, castSide: "L",
-      // 亡魂之手: the lantern (right) is held steady and burns brighter as the dead answer; his free hand calls down
-      // into the ground — a circle opens under his foe and the dead rise out of it in a column
-      sig: { lead: 790, pre: [[0, 0], [0.68, 26, "io"], [0.8, 28, "o"], [1, 31, "i3"]], post: [[0, 31], [0.12, 34, "o"], [0.4, 42, "io"]], rise: 0.4, back: 0,
-        fx: { pal: "necro", sigil: "rune", cast: "ground", lantern: true, castHand: "LeftHand", ground: "void", bits: "wisp", slash: false, weapon: false, hurt: "body", victory: { ray: false, rain: "wisp" }, aura: { bits: "wisp", every: 600 } } },
-      plain: { attack: "mg_ground", keep: null, castSide: null, spell: { tint: [0.55, 0.2, 1.1] } } },
-    // the ferryman leads with his lantern (left): the soul-light is cast from it, and on victory the lantern is raised
-    soulguide: { idle: "st_suitcase_m", attack: "cs_one", hurt: "mg_hit_right", victory: "vc_raise_hand_m", upright: ["attack"], face: true, spell: { tint: [0.45, 0.95, 1.4] }, keep: { attack: "Left" }, castSide: "R",
-      // 渡魂之光: the lantern (left) stays steady and brightens as the souls' light gathers; the free hand sends it
-      sig: { lead: 790, pre: [[0, 0], [0.68, 21, "io"], [0.78, 23, "o"], [1, 26, "i3"]], post: [[0, 26], [0.15, 30, "o"], [0.45, 38, "io"]], rise: 0.4, back: 0,
-        fx: { pal: "soul", sigil: "moon", cast: "bolt", lantern: true, castHand: "RightHand", bits: "wisp", slash: false, weapon: false, hurt: "body", victory: { ray: false, rain: "wisp" }, aura: { bits: "wisp", every: 700 } } },
-      plain: { attack: "cs_one_m", keep: null, castSide: null } },
-    // the stargazer, standing, sweeps the sky with her astrolabe and holds it up to the stars
-    oracle: { idle: "st_look", attack: "mg_sweep_m", hurt: "mg_hit_right", victory: "vc_raise_hand_m", upright: ["attack"], face: true, spell: { tint: [0.6, 0.8, 1.7] },
-      // 星轨: the astrolabe swept across the sky, a star plucked from it and sent; a star sigil where it lands
-      sig: { lead: 790, pre: [[0, 0], [0.66, 24, "io"], [0.78, 26, "o"], [1, 29, "i3"]], post: [[0, 29], [0.12, 32, "o"], [0.4, 38, "io"]], rise: 0.4, back: 0,
-        fx: { pal: "star", sigil: "star", cast: "bolt", ground: "rune", bits: "star", nbits: 5, slash: false, weapon: false, hurt: "body", victory: { ray: false, orb: "star", rain: "star" }, aura: { bits: "star5", every: 700 } } },
-      plain: {} },
-    // the star-fallen queen: scepter upright, raised to call the stars down, raised again in triumph
-    nyx: { idle: "st_idle2", attack: "cs_upwards_m", hurt: "mg_hit_right", victory: "vc_raise_hand_m", aim: { idle: "up", attack: "up", victory: "up" }, upright: ["attack", "victory"], face: true, float: 0.03, spell: { tint: [1.1, 0.45, 1.6], rise: true, windup: 800 },
-      // 星陨: she raises the scepter, a star sigil opens under her foe and three stars fall on it, the last on the blow
-      sig: { lead: 890, pre: [[0, 0], [0.62, 12, "io"], [0.76, 14, "o"], [1, 19, "i3"]], post: [[0, 19], [0.12, 22, "o"], [0.4, 30, "io"]], rise: 0.4, back: 0,
-        fx: { pal: "astral", sigil: "star", cast: "sky", ground: "rune", bits: "star", slash: false, trail: false, look: { mode: "energy", tint: [1.1, 0.45, 1.6] }, hurt: "body", victory: { orb: "star", rain: "star" }, aura: { bits: "star5", every: 450 } } },
-      plain: {} },
-    // the dark-moon goddess: the orb held before her, its power pulled in and blasted out standing, arms spread wide
-    selmyra: { idle: "mg_idle", stance: "st_idle", attack: "mg_blast", hurt: "mg_hit_right", victory: "pr_arms_up", upright: ["idle", "attack", "victory"], face: true, float: 0.05, spell: { tint: [0.75, 0.25, 1.4], rise: true, windup: 850, bolt: 0.1 },
-      // 月蚀坍缩: the dark-moon goddess draws the dark in with both hands, three crescents wheeling round her; before her
-      // foe the air tears open and a black hole swells in the rift, pulling the light in; she thrusts her hands out and
-      // it collapses to a point — and bursts: a black ring, crescents cutting outward, a pool of dark
-      sig: { lead: 940, pre: [[0, 0], [0.55, 20, "io"], [0.8, 24, "o"], [1, 30, "i3"]], post: [[0, 30], [0.12, 33, "o"], [0.45, 40, "io"]], rise: 0.4, back: 0,
-        fx: { pal: "void", sigil: "moon", cast: "collapse", modern: true, dim: 0.75, lift: 0.12, slash: false, beam: false, weapon: false, hurt: "body", scale: 1.1, shake: 1.2, victory: { ray: false, orb: "moon", rain: "wisp" }, aura: { bits: "wisp", every: 500 } } },
-      plain: { attack: "mg_blast" } },
-    // the blood-moon walker casts left-handed and exults, arms spread to the sky
-    leech: { idle: "st_idle2", attack: "cs_one_m", hurt: "mg_hit_right", victory: "pr_arms_up", upright: ["attack"], face: true, spell: { tint: [1.5, 0.08, 0.15] },
-      // 血月汲取: a bolt of blood-moon light; the wound's life runs back to her in red wisps
-      sig: { lead: 790, pre: [[0, 0], [0.66, 22, "io"], [0.78, 23.5, "o"], [1, 27, "i3"]], post: [[0, 27], [0.15, 31, "o"], [0.45, 38, "io"]], rise: 0.4, back: 0,
-        fx: { pal: "blood", sigil: "moon", cast: "bolt", drain: true, bits: "wisp", nbits: 5, slash: false, weapon: false, hurt: "body", victory: { ray: false, orb: "moon", rain: "wisp" }, aura: { bits: "wisp", every: 700 } } },
-      plain: {} },
-    // the twilight sprite floats on her wings
-    wisp: { idle: "mg_idle_m", attack: "cs_two_fwd", hurt: "mg_hit_right", victory: "pr_arms_up", hover: 0.3, spin: true, face: true, spell: { tint: [0.45, 1.6, 0.8], windup: 750 },
-      // 暮光花雨: she whirls in the air, petals of light round her, and sends a mote of dusk; it bursts in petals
-      sig: { lead: 840, pre: [[0, 0], [0.6, 24, "io"], [0.74, 26, "o"], [1, 31, "i3"]], post: [[0, 31], [0.12, 34, "o"], [0.4, 40, "io"]], rise: 0.4, back: 0,
-        fx: { pal: "fey", sigil: "leaf", cast: "bolt", bits: "leaf", nbits: 8, slash: false, weapon: false, hurt: "body", victory: { ray: false, rain: "leaf" }, aura: { bits: "sparkle", every: 400 } } },
-      plain: {} },
-    // the ember-wing scout: a fighter's bounce, a flying kick, a boxer's win
-    sentinel: { idle: "fi_bounce", attack: "kk_bicycle", hurt: "mu_hit", victory: "vc_boxing",
-      // 烬翼飞踢: a leaping kick trailing embers; it lands in a burst of flame
-      sig: { lead: 460, windup: 200, pre: [[0, 0], [0.6, 5, "io"], [0.7, 5.5, "o"], [1, 8, "i3"]], post: [[0, 8], [0.12, 12, "o"], [0.4, 19, "io"]],
-        rise: 0.28, back: 0.3, leap: 0.45, dash: "leap", reach: 0.32, hitstop: [0, 3, 5, 6],
-        fx: { pal: "ember", sigil: false, limb: ["RightLeg", "RightToeBase"], trailFrom: 0.55, trailInner: 0.2, flame: true, ground: "crack", slash: false, beam: false, scale: 0.85, hurt: "body", victory: { ray: false, flame: true }, aura: { bits: "sparkle", every: 600, halo: false } } },
-      plain: {} },
-    // stone, iron, bark and mountain: the golem swipes; the titan throws a straight cross and pounds his chest; the
-    // treant lashes a branch-arm across, rooted; the mountain brings both fists down from overhead, slowly
-    golem: { idle: "mu_idle", attack: "mu_swipe", hurt: "mu_hit", victory: "mu_roar",
-      // 符文横扫: the runes on the stone wake one by one, a heavy swipe — the ground cracks blue, stones burst up
-      sig: { lead: 560, windup: 300, pre: [[0, 0], [0.6, 22, "io"], [0.72, 24, "o"], [1, 30, "i3"]], post: [[0, 30], [0.12, 33, "o"], [0.4, 40, "io"]],
-        rise: 0.35, back: 0.35, leap: 0.5, dash: "lunge", reach: 0.4, hitstop: [0, 4, 6, 8],
-        fx: { pal: "rune", sigil: "rune", limb: ["LeftForeArm", "LeftHand"], trailFrom: 0.72, trailInner: 0.2, ground: "crack", spikes: "rock", rocks: 5, slash: false, beam: false, weapon: false, shake: 1.3, scale: 1.1, hurt: "body", victory: { ray: false, shock: true, rain: "rock" }, aura: { bits: "sparkle", every: 900, halo: false } } },
-      plain: {} },
-    titan: { idle: "mu_idle", attack: "pu_cross", hurt: "mu_hit", victory: "ax_chest", speed: 0.9,
-      // 玄铁重拳: the iron titan winds up and throws a straight cross — sparks and a ringing shock
-      sig: { lead: 500, windup: 240, pre: [[0, 0], [0.55, 4, "io"], [0.68, 4.5, "o"], [1, 8, "i3"]], post: [[0, 8], [0.1, 10, "o"], [0.35, 18, "io"]],
-        rise: 0.3, back: 0.32, leap: 0.5, dash: "lunge", reach: 0.4, hitstop: [0, 4, 6, 8],
-        fx: { pal: "iron", sigil: false, limb: ["RightForeArm", "RightHand"], trailFrom: 0.55, trailInner: 0.2, slash: false, beam: false, weapon: false, shake: 1.4, scale: 1.15, hurt: "body", victory: { ray: false, shock: true }, aura: { bits: "sparkle", every: 1000, halo: false } } },
-      plain: {} },
-    treant: { idle: "mu_idle", attack: "zb_swipe", hurt: "mu_hit", victory: "mu_roar", lower: ["attack"], speed: 0.9,
-      // 古木鞭挞: the old tree draws its branch-arm back and lashes; roots split the ground, thorns spring up, leaves fall
-      sig: { lead: 560, windup: 300, pre: [[0, 0], [0.4, 13, "io"], [0.66, 26, "o"], [1, 31, "i3"]], post: [[0, 31], [0.15, 36, "o"], [0.42, 42, "io"]],
-        rise: 0.35, back: 0.35, leap: 0.5, dash: "lunge", reach: 0.42, hitstop: [0, 4, 6, 8],
-        fx: { pal: "verdant", sigil: "leaf", limb: ["RightForeArm", "RightHand"], trailFrom: 0.7, trailInner: 0.2, ground: "roots", spikes: "thorn", bits: "leaf", beam: false, weapon: false, shake: 1.2, scale: 1.1, hurt: "body", victory: { ray: false, rain: "leaf" }, aura: { bits: "leaf", every: 800, halo: false } } },
-      plain: {} },
-    colossus: { idle: "mu_idle", attack: "mu_jump_attack", hurt: "mu_hit", victory: "mu_roar", speed: 0.8,
-      // 山崩: the mountain crouches, heaves itself into the air and comes down fists first — the ground breaks, stone
-      // spikes burst up, boulders fly, the dust rolls out; a long hold on the blow
-      sig: { lead: 700, windup: 440, pre: [[0, 0], [0.25, 12, "io"], [0.33, 13.5, "o"], [0.68, 29, "o"], [0.76, 32, "l"], [1, 50, "i3"]], post: [[0, 50], [0.15, 55, "o"], [0.45, 66, "io"]],
-        rise: 0.45, back: 0.4, leap: 0.33, dash: "leap", reach: 0.4, hitstop: [0, 5, 7, 9], hipScale: 0.35,
-        fx: { pal: "earth", sigil: "rune", ground: "crack", spikes: "rock", rocks: 10, slash: false, beam: false, dust: 2, weapon: false, trail: false, hurt: "body", scale: 1.3, shake: 1.8, victory: { ray: false, rain: "rock", shock: true }, aura: { bits: "sparkle", every: 900, halo: false } } },
-      plain: { lower: ["attack"] } },
-  };
+  //   reference, the timing is drawn):
+  //     lead (ms to the blow) · windup (how much longer than the director's plain lunge; an archer: draw)
+  //     pre [[share of the lead, clip frame, ease into it] …] the coil, the beat held, the spring, the blade down
+  //     post [[seconds after the blow, frame, ease] …] the landing, held · rise / back (s): up into the stance, the
+  //     hop home · leap (the share of the lead when its feet leave the ground) · dash leap (even through the air) |
+  //     lunge (late and fast) · stay (it strikes from where it stands) · levitate · reach (× its size: where it
+  //     lands short of the foe) · hitstop (frames the blow holds it, by tier) · hipScale · bladeFrom · flourish
+  //     { clip, every [s, s], keys, fade } (at rest, now and then) · fx (its effects: EmberSkillFx) · plain (what
+  //     the signature replaced: the model demo compares)
+  //   Written in the move sheets (content/moves.js: named phases in ms, effects by the moment they play, archetypes) and
+  //   compiled into this table by EmberMoveSheet — tune a figure there, never here.
+  const SUITES = {};
+  /** the suites and the beasts' signatures, compiled from the sheets as they are now (the review page calls this
+   *  again after it reloads content/moves.js; a figure built before then keeps what it was built with) */
+  function loadSheets() {
+    const T = { SUITES: EmberMoveSheet.SUITES, BEASTS: EmberMoveSheet.BEASTS };
+    for (const [table, from] of [[SUITES, T.SUITES], [BEASTS, T.BEASTS]]) { for (const k of Object.keys(table)) delete table[k]; Object.assign(table, from); }
+  }
+  loadSheets();
   const SPEED = { attack: 1.35, hurt: 1.2, victory: 1.1, idle: 1 }, BLEND = 0.18, BLEND_IDLE = 0.5;
   const clips = new Map();
   function clipData(name) {
@@ -1097,8 +887,13 @@ const EmberModelFigures = (() => {
     let q = new THREE.Quaternion().setFromUnitVectors(cur, want);
     if (fore) {
       const f = hand.getWorldPosition(V3()).sub(fore.getWorldPosition(V3())).normalize(), r = new THREE.Quaternion(), c = V3();
+      // (two rolls can serve an aim almost equally, and the nearer one changes from frame to frame: the roll keeps to
+      // the one it had and turns toward a new one at a wrist's pace — never a flip of the blade in one frame)
+      const was = fig.aimRoll?.[side], held = was && fig.nowT != null && fig.nowT >= was.T && fig.nowT - was.T < 0.12 ? was : null;
       let best = 0, bd = Infinity;
-      for (let a = -1.9; a <= 1.9; a += 0.1) { c.copy(cur).applyQuaternion(r.setFromAxisAngle(f, a)); const d = c.angleTo(want) + 0.25 * Math.abs(a); if (d < bd) { bd = d; best = a; } }
+      for (let a = -1.9; a <= 1.9; a += 0.1) { c.copy(cur).applyQuaternion(r.setFromAxisAngle(f, a)); const d = c.angleTo(want) + 0.25 * Math.abs(a) + (held ? 0.2 * Math.abs(a - held.a) : 0); if (d < bd) { bd = d; best = a; } }
+      if (held) { const step = fig.nowT === held.T ? 0 : 9 * (fig.nowT - held.T); best = held.a + Math.max(-step, Math.min(step, best - held.a)); }
+      if (fig.nowT != null) (fig.aimRoll ||= {})[side] = { a: best, T: fig.nowT };
       const roll = new THREE.Quaternion().setFromAxisAngle(f, best), rolled = cur.clone().applyQuaternion(roll);
       const bend = new THREE.Quaternion().setFromUnitVectors(rolled, want), ang = rolled.angleTo(want);
       if (ang > WRIST.swing) bend.slerp(new THREE.Quaternion(), 1 - WRIST.swing / ang).normalize();   // (slerp toward identity by the excess)
@@ -1162,6 +957,17 @@ const EmberModelFigures = (() => {
     if (a === "target") {
       const h = C.timing(fig).hit, w = t < h ? ease((t - h * 0.4) / (h * 0.6)) : 1 - ease((t - h - 0.3) / 0.35);
       return aimBlade(fig, POINT.target, w);
+    }
+    // foe: at its foe's body as the blow lands (the arena says where that is: fig.foeAt) — a tall figure's level cut
+    // passes over a small foe's head; this brings the last of the swing down (or up) onto it, and lets go after
+    if (a === "foe") {
+      const hand = fig.bones[fig.weapon.R ? "RightHand" : "LeftHand"];
+      if (!fig.foeAt || !hand) return;
+      const h = C.timing(fig).hit, w = t < h ? ease((t - h * 0.7) / (h * 0.3)) : 1 - ease((t - h - 0.1) / 0.3);
+      if (w <= 0) return;
+      fig.root.updateMatrixWorld(true);
+      const dir = fig.foeAt.clone().sub(hand.getWorldPosition(V3())).applyQuaternion(fig.root.getWorldQuaternion(new THREE.Quaternion()).invert());
+      return aimBlade(fig, dir, w);
     }
     aimBlade(fig, Array.isArray(a) ? V3(...a) : POINT[a], 1);
   }
@@ -1239,6 +1045,7 @@ const EmberModelFigures = (() => {
   /** clip ∈ idle | attack | hurt | victory | rest; t = seconds into the clip, T = global time → false once it ended */
   function pose(fig, clip, t, T) {
     const suite = suiteOf(fig);
+    fig.nowT = T;
     if (suite && suite[clip]) {
       // remember the pose the figure leaves, to blend the new clip in from it
       const key = clip + ":" + suite[clip];
@@ -1321,5 +1128,5 @@ const EmberModelFigures = (() => {
     return r;
   };
 
-  return Object.freeze({ has, ids: () => [...models.keys()], on, LAYER, onReady: (fn) => onReady.add(fn), setShade: (k) => { SHADE.value = k; }, setMocap: (on) => { MOCAP.on = !!on; }, setSig: (on) => { MOCAP.sig = !!on; }, setWrist: (on) => { WRIST.on = !!on; }, setSuite: (id, clip, name) => { (SUITES[id] ||= {})[clip] = name; }, suite: (id) => ({ ...SUITES[id] }), mocap: (id) => !!SUITES[id], shade: () => SHADE.value, eyes: (id) => { const e = models.get(id)?.eyes; return e ? [e.a, e.b] : null; } });
+  return Object.freeze({ has, ids: () => [...models.keys()], on, LAYER, onReady: (fn) => onReady.add(fn), setShade: (k) => { SHADE.value = k; }, setMocap: (on) => { MOCAP.on = !!on; }, setSig: (on) => { MOCAP.sig = !!on; }, setWrist: (on) => { WRIST.on = !!on; }, setSuite: (id, clip, name) => { (SUITES[id] ||= {})[clip] = name; }, reload: loadSheets, suite: (id) => ({ ...SUITES[id] }), mocap: (id) => !!SUITES[id], shade: () => SHADE.value, eyes: (id) => { const e = models.get(id)?.eyes; return e ? [e.a, e.b] : null; } });
 })();

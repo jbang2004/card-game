@@ -54,6 +54,10 @@ const BEASTS = {
   }, tips: { rHead: [0, 0.7, -0.02], rCape: [0, 0.36, -0.32], rHandL: [0.06, 0.41, 0.1] },
     rider: (p) => (p[0] < -0.13 && p[1] > 0.43) || (p[1] > 0.41 && p[2] > -0.36 && p[2] < 0.1), blade: (p) => p[0] < -0.13 && p[1] > 0.43 },
   ashdragon: { front: "-x", mt: 0, height: 0.68, bodyU: [0.05, 0.45, 0.85], legs: "upright" },
+  // the Lamp Beast (boss portrait lampbeast): a great white lion-wolf with the old lantern on its harness, facing -x
+  lampbeast: { front: "-x", mt: 0, height: 0.61 },
+  // the Early Riser (boss portrait earlyriser): a stocky tusked boar-mammoth set with amber shards, facing -x
+  earlyriser: { front: "-x", mt: 0, height: 0.36 },
   // no legs: one rigid bone (the stone ward) · a stalk bent by height (the thorn spirit)
   // the phoenix: its wings raised in a V as its voxel figure's are; joints read off its views (a wing is its side's
   // wing bones only, the body and the plumes never take them)
