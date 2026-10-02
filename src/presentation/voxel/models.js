@@ -36,6 +36,9 @@ const EmberModelFigures = (() => {
   // a held thing its model holds the wrong way round — 罗温's bow came with its string toward the foe and its belly
   // toward him: turned half round about its own length where the hand grips it (see turnHeld)
   const TURNED = { rowan: "Left", mirrorrowan: "Left" };
+  // a held thing its model left standing beside the hand — 黯月收割者's scythe came a hand's breadth in front of his
+  // closed fist: brought into the fist (see seatHeld)
+  const SEATED = { reaper: "Right" };
   const V3 = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
   const lin = (D, i) => [0, 1, 2].map((c) => Math.pow(D[i * 4 + c] / 255, 2.2));
   const texel = (M, u, v) => Math.min(M.size[1] - 1, Math.floor(v * M.size[1])) * M.size[0] + Math.min(M.size[0] - 1, Math.floor(u * M.size[0]));
@@ -85,6 +88,82 @@ const EmberModelFigures = (() => {
     const grip = mid.filter((i) => off(i).length() > far * 0.6), g = grip.reduce((a, i) => a.add(P(i)), V3()).multiplyScalar(1 / grip.length);
     for (const i of ids) { const d = P(i).sub(g), along = d.dot(ax); d.addScaledVector(ax, -along).negate().addScaledVector(ax, along).add(g); pos[i * 3] = d.x; pos[i * 3 + 1] = d.y; pos[i * 3 + 2] = d.z; }
   }
+  /** of the hand's held surface (mt 255, bound to the hand): the fist is the part joined to the arm; the rest — islands
+   *  of mesh that touch nothing but held surface — is the thing itself → { thing: its vertices, fist: the fist's middle } */
+  function looseHeld(M, pos, q, sj, sw, mt, idx, side) {
+    const n = mt.length, hand = M.joints.findIndex((j) => j.name === side + "Hand"), held = new Uint8Array(n);
+    for (let i = 0; i < n; i++) {
+      if (mt[i] < 253) continue;
+      let d = -1, w = -1; for (let k = 0; k < 4; k++) if (sw[i * 4 + k] > w) { w = sw[i * 4 + k]; d = sj[i * 4 + k]; }
+      if (d === hand) held[i] = 1;
+    }
+    // (vertices split along uv seams are one: joined by where they are, then by the triangles)
+    const key = new Map(), par = new Int32Array(n);
+    for (let i = 0; i < n; i++) { const k = q[i * 3] + "," + q[i * 3 + 1] + "," + q[i * 3 + 2]; if (!key.has(k)) key.set(k, i); par[i] = key.get(k); }
+    const find = (a) => { while (par[a] !== a) a = par[a] = par[par[a]]; return a; };
+    for (let t = 0; t < idx.length; t += 3) { const a = find(idx[t]); par[find(idx[t + 1])] = a; par[find(idx[t + 2])] = a; }
+    const joined = new Set(); for (let i = 0; i < n; i++) if (!held[i]) joined.add(find(i));
+    const fist = V3(), thing = []; let nf = 0;
+    for (let i = 0; i < n; i++) if (held[i]) { if (joined.has(find(i))) { fist.x += pos[i * 3]; fist.y += pos[i * 3 + 1]; fist.z += pos[i * 3 + 2]; nf++; } else thing.push(i); }
+    if (!nf || thing.length < 30) return null;
+    return { thing, fist: fist.multiplyScalar(1 / nf) };
+  }
+  /** the thing's own long axis (through its middle) and how far it runs along it either way */
+  function axisOf(pos, ids) {
+    const P = (i) => V3(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]), c = ids.reduce((a, i) => a.add(P(i)), V3()).multiplyScalar(1 / ids.length);
+    let ax = V3(0.3, 1, 0.2).normalize();
+    for (let it = 0; it < 30; it++) { const m = V3(); for (const i of ids) { const d = P(i).sub(c); m.addScaledVector(d, d.dot(ax)); } ax = m.normalize(); }
+    let lo = Infinity, hi = -Infinity; for (const i of ids) { const t = P(i).sub(c).dot(ax); lo = Math.min(lo, t); hi = Math.max(hi, t); }
+    return { c, ax, lo, hi, P };
+  }
+  /** what that hand holds brought into its fist: moved across its own length until its shaft runs through the middle
+   *  of the fist → the shift (bind space) */
+  function seatHeld(M, pos, q, sj, sw, mt, idx, side) {
+    const L = looseHeld(M, pos, q, sj, sw, mt, idx, side); if (!L) return null;
+    const { c, ax, P } = axisOf(pos, L.thing);
+    // the shaft where the fist is along it (a scythe's blade, a guard or a pommel lie elsewhere along the length)
+    const t0 = L.fist.clone().sub(c).dot(ax), near = L.thing.filter((i) => Math.abs(P(i).sub(c).dot(ax) - t0) < 0.04);
+    if (near.length < 6) return null;
+    const off = L.fist.clone().sub(near.reduce((a, i) => a.add(P(i)), V3()).multiplyScalar(1 / near.length));
+    off.addScaledVector(ax, -off.dot(ax));
+    for (const i of L.thing) { pos[i * 3] += off.x; pos[i * 3 + 1] += off.y; pos[i * 3 + 2] += off.z; }
+    return off;
+  }
+  /** the two ends of the thing that hand holds (bind space): [the end by the fist, its far end] — where the thing
+   *  itself is (a blade's line runs beside the wrist, not through it) */
+  function thingEnds(M, pos, q, sj, sw, mt, idx, side) {
+    const L = looseHeld(M, pos, q, sj, sw, mt, idx, side); if (!L) return null;
+    const { c, ax, lo, hi } = axisOf(pos, L.thing), a = c.clone().addScaledVector(ax, lo), b = c.clone().addScaledVector(ax, hi);
+    return a.distanceTo(L.fist) < b.distanceTo(L.fist) ? [a, b] : [b, a];
+  }
+  /** fingers given back their own bones on that hand (the converter binds a whole hand to its hand bone: nothing in
+   *  it can close). A hand's vertex past a knuckle goes to the finger joint whose bone it lies along — rigidly; enough
+   *  for a fist (see fists). The thumb's root stays with the palm */
+  function fingerSkin(M, pos, sj, sw, mt, S) {
+    const J = M.joints, idx = (n) => J.findIndex((j) => j.name === n), hand = idx(S + "Hand"), m1 = idx(S + "HandMiddle1");
+    if (hand < 0 || m1 < 0) return;
+    const P = J.map((_, i) => V3().setFromMatrixPosition(new THREE.Matrix4().fromArray(M.ibm, i * 16).invert()));
+    const segs = [], near = 0.26 * P[m1].distanceTo(P[hand]);
+    for (const F of ["Index", "Middle", "Ring", "Pinky", "Thumb"]) for (let k = F === "Thumb" ? 2 : 1; k <= 3; k++) {
+      const j = idx(S + "Hand" + F + k), c = idx(S + "Hand" + F + (k + 1));
+      if (j >= 0 && c >= 0) segs.push({ j, a: P[j], d: P[c].clone().sub(P[j]), first: k === 1, last: k === 3 });
+    }
+    const p = V3(), v = V3();
+    for (let i = 0; i < pos.length / 3; i++) {
+      if (mt && mt[i] >= 253) continue;                   // (what it holds, and the hand round it, stay as they are)
+      let d = -1, w = -1; for (let k = 0; k < 4; k++) if (sw[i * 4 + k] > w) { w = sw[i * 4 + k]; d = sj[i * 4 + k]; }
+      if (d !== hand) continue;
+      p.set(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]);
+      let best = null, bd = near;
+      for (const sg of segs) {
+        const t = v.copy(p).sub(sg.a).dot(sg.d) / sg.d.lengthSq();
+        if (t < (sg.first ? 0.12 : -0.2) || (t > 1.25 && !sg.last)) continue;
+        const dist = v.copy(sg.a).addScaledVector(sg.d, Math.min(1, Math.max(0, t))).distanceTo(p);
+        if (dist < bd) { bd = dist; best = sg; }
+      }
+      if (best) { sj.set([best.j, 0, 0, 0], i * 4); sw.set([255, 0, 0, 0], i * 4); }
+    }
+  }
   function build0(id, M, raw, texSrc) {
     const n = M.count;
     let off = 0;
@@ -93,6 +172,20 @@ const EmberModelFigures = (() => {
     const pos = new Float32Array(n * 3);
     for (let i = 0; i < n * 3; i++) { const c = i % 3; pos[i] = M.lo[c] + (q[i] / 65535) * (M.hi[c] - M.lo[c]); }
     if (TURNED[id] && M.mt) turnHeld(M, pos, sj, sw, Uint8Array.from(atob(M.mt), (c) => c.charCodeAt(0)), TURNED[id]);
+    // one whose move closes its hands (its sheet's body.fists) or works its fingers (body.hands): its fingers get
+    // their bones back
+    const fz = EmberMoveSheet.SUITES[id]?.fists || EmberMoveSheet.SUITES[id]?.hands, mt0 = M.mt ? Uint8Array.from(atob(M.mt), (c) => c.charCodeAt(0)) : null;
+    if (fz && !M.beast) for (const S of fz === "both" ? ["Left", "Right"] : [fz]) fingerSkin(M, pos, sj, sw, mt0, S);
+    // one that carries a sheath: where its blade itself lies (thingEnds)
+    const thing = EmberMoveSheet.SUITES[id]?.carry === "sheath" && mt0 ? thingEnds(M, pos, q, sj, sw, mt0, idx, "Right") : null;
+    // (what the converter measured on the thing — its blade, its centre — moves with it)
+    let blade = M.blade, hold = M.hold || {};
+    const seat = SEATED[id] && M.mt ? seatHeld(M, pos, q, sj, sw, Uint8Array.from(atob(M.mt), (c) => c.charCodeAt(0)), idx, SEATED[id]) : null;
+    if (seat) {
+      const mv = (p) => p && [p[0] + seat.x, p[1] + seat.y, p[2] + seat.z], S = SEATED[id][0];
+      if (blade && S === "R") blade = blade.map(mv);
+      hold = { ...hold, [S]: mv(hold[S]) };
+    }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
     geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2, true));
@@ -124,7 +217,7 @@ const EmberModelFigures = (() => {
       const g = cv.getContext("2d", { willReadFrequently: true }); g.drawImage(img, 0, 0, cv.width, cv.height);
       const tex = new THREE.CanvasTexture(cv);
       tex.colorSpace = THREE.SRGBColorSpace; tex.flipY = false; tex.anisotropy = 4;       // glTF uvs: top-left origin
-      const m = { geo, tex, data: g.getImageData(0, 0, cv.width, cv.height).data, size: [cv.width, cv.height], joints: M.joints, ibm: M.ibm, blade: M.blade, hold: M.hold || {}, style: M.style, lit: !!M.lit, noTuck: !!M.lit && !M.shield, beast: !!M.beast, aura: AURA[id], tq: M.tq || null };
+      const m = { geo, tex, data: g.getImageData(0, 0, cv.width, cv.height).data, size: [cv.width, cv.height], joints: M.joints, ibm: M.ibm, blade, hold, thing, style: M.style, lit: !!M.lit, noTuck: !!M.lit && !M.shield, beast: !!M.beast, aura: AURA[id], tq: M.tq || null };
       m.eyes = m.beast ? null : findEyes(m, pos, sj, sw, uv);
       models.set(id, m);
       onReady.forEach((fn) => fn(id));
@@ -298,7 +391,12 @@ const EmberModelFigures = (() => {
           }
           #endif
           diffuseColor.rgb += uHitC * (0.45 + 0.55 * diffuseColor.rgb);
+          // (what it holds lights up — the lantern, the orb, the blade — not the coat that hangs beside it at rest)
+          #ifdef LIT
+          if (uGlow > 0.0) diffuseColor.rgb += uGlowC * uGlow * (1.0 - smoothstep(0.4, 1.0, distance(vBind, uOrb.xyz) / uOrb.w)) * step(0.9, vMetal);
+          #else
           if (uGlow > 0.0) diffuseColor.rgb += uGlowC * uGlow * (1.0 - smoothstep(0.4, 1.0, distance(vBind, uOrb.xyz) / uOrb.w));
+          #endif
           if (uDisK > 0.0) {                                  // the front: gone above it (a death) / not yet below it (an arrival)
             float hh = clamp((vBind.y - uDisY.x) / max(uDisY.y - uDisY.x, 1e-3), 0.0, 1.0);
             float sw = (1.0 - hh) * 0.84 + (dn(vBind * 18.0) * 0.65 + dn(vBind * 47.0) * 0.35) * 0.16;
@@ -414,6 +512,8 @@ const EmberModelFigures = (() => {
     // a caster's emitter (the spec's attack.emitter bone, e.g. "orb"): the centre of what her off hand holds
     const J = {}, em = spec.moves?.attack?.emitter, hn = side === "L" ? "LeftHand" : "RightHand", hi = M.joints.findIndex((j) => j.name === hn);
     if (em?.bone && held && hi >= 0) { const o = new THREE.Object3D(); o.position.fromArray(held).applyMatrix4(inv[hi]); B[hn].add(o); J[em.bone] = o; }
+    // (and under one name for every figure: what a move sheet's cast.hand "held" means — a lantern, a loupe, an astrolabe)
+    if (held && hi >= 0) { const o = new THREE.Object3D(); o.position.fromArray(held).applyMatrix4(inv[hi]); B[hn].add(o); J.held = o; }
     // the fireball burns where the orb was (at the held thing's centre in the hand)
     let fire = null;
     if (fireCfg && hi >= 0) { fire = EmberFire.ball({ r: fireCfg.r, layer: LAYER }); fire.obj.position.fromArray(held).applyMatrix4(inv[hi]); B[hn].add(fire.obj); }
@@ -428,7 +528,7 @@ const EmberModelFigures = (() => {
       vox: { bone: new Array(cols.length / 3).fill(0), color: new Float32Array(cols) }, phase: Math.random() * 6.28,
       spring: { x: 0, vx: 0, z: 0, vz: 0, prev: null, vel: null, T: null }, nextBlink: 1 + Math.random() * 3,
       bonesArr: bones, restQ: bones.map((b) => b.quaternion.clone()), hipH: B.Hips ? B.Hips.position.y : 0, fire, weapon, chestRest, headRest, spell: spellOf(id),
-      bladeK: lux.k, bladeT: lux.t, rimK: lux.rim, blade: null };
+      bladeK: lux.k, bladeT: lux.t, rimK: lux.rim, blade: null, extras: [], inv };
     // the blade's root and point, riding the weapon hand (the swoosh is drawn between them)
     if (span && !M.beast) {                   // every model's weapon is tracked (a plain figure's swoosh too); a signature's lights up
       const hn = wh ? (weapon.R ? "RightHand" : "LeftHand") : "RightHand", hi = M.joints.findIndex((j) => j.name === hn);
@@ -444,7 +544,8 @@ const EmberModelFigures = (() => {
   function spellOf(id) {
     const sp = SUITES[id]?.spell;
     if (!sp) return null;
-    return { look: { mode: sp.fire ? "fire" : "energy", tint: sp.tint || [1, 0.5, 0.1] }, rise: !!sp.rise, spin: !!SUITES[id].spin, windup: sp.windup ?? 700, r: sp.r, bolt: sp.bolt };
+    // (gather false: nothing is drawn into its hand as it charges — its move sheet's cast shows the charge instead)
+    return { look: { mode: sp.fire ? "fire" : "energy", tint: sp.tint || [1, 0.5, 0.1] }, rise: !!sp.rise, spin: !!SUITES[id].spin, windup: sp.windup ?? 700, r: sp.r, bolt: sp.bolt, gather: sp.gather !== false };
   }
   /** what a hand holds, if it is long (a sword, a spear, a scythe, a scepter): the principal axis of the held surface
    *  bound to that hand (mt 255, found in bind space), pointing away from the fist toward its far end — a holder on
@@ -771,6 +872,32 @@ const EmberModelFigures = (() => {
         for (let i = 0; i < hip.length; i += 3) hip[i] = -hip[i];
         out = { ...B, q, hip, bones: B.bones.map((n) => (/^Left/.test(n) ? n.replace(/^Left/, "Right") : n.replace(/^Right/, "Left"))) };
       }
+    } else if (EmberMoveSheet.CHAINS?.[name]) {
+      // a chain: stretches of clips one after another, each eased in over `blend` frames from where the last one ended
+      const ch = EmberMoveSheet.CHAINS[name], parts = ch.parts.map(([c, f0, f1]) => ({ c: clipData(c), f0, f1 })).filter((x) => x.c), bl = ch.blend ?? 7;
+      if (parts.length === ch.parts.length) {
+        const bones = parts[0].c.bones, nb = bones.length, n = parts.reduce((k, x) => k + x.f1 - x.f0 + 1, 0), q = new Float32Array(n * nb * 4), hip = new Float32Array(n * 3);
+        const qa = new THREE.Quaternion(), qb = new THREE.Quaternion();
+        let at = 0;
+        parts.forEach((x, pi) => {
+          const map = bones.map((b) => x.c.bones.indexOf(b)), xn = x.c.bones.length;
+          for (let f = x.f0; f <= x.f1; f++, at++) {
+            const w = pi > 0 && f - x.f0 < bl ? ease((f - x.f0 + 1) / (bl + 1)) : 1;
+            for (let b = 0; b < nb; b++) {
+              const o = (at * nb + b) * 4, src = map[b] >= 0 ? (f * xn + map[b]) * 4 : -1;
+              if (src >= 0) qb.set(x.c.q[src], x.c.q[src + 1], x.c.q[src + 2], x.c.q[src + 3]); else qb.identity();
+              if (w < 1) { const pv = ((at - (f - x.f0) - 1) * nb + b) * 4; qa.set(q[pv], q[pv + 1], q[pv + 2], q[pv + 3]); qb.copy(qa.slerp(qb, w)); }
+              q[o] = qb.x; q[o + 1] = qb.y; q[o + 2] = qb.z; q[o + 3] = qb.w;
+            }
+            for (let c = 0; c < 3; c++) { const v = x.c.hip[f * 3 + c]; hip[at * 3 + c] = w < 1 ? hip[(at - (f - x.f0) - 1) * 3 + c] * (1 - w) + v * w : v; }
+          }
+        });
+        out = { n, fps: 30, bones, loop: false, hit: null, q, hip };
+      }
+    } else if (CODED[name]) {
+      // a coded move (EmberMoveSheet.CODED: its frames, its contact, the motion-captured clip under it if any)
+      const c = EmberMoveSheet.CODED?.[name] || {};
+      out = { n: c.n ?? 31, fps: 30, bones: [], loop: false, hit: c.hit, q: new Float32Array(0), hip: new Float32Array(0), coded: CODED[name], base: c.base || null };
     } else if (A) {
       const raw = (b) => Uint8Array.from(atob(b), (c) => c.charCodeAt(0)).buffer;
       const q = new Int16Array(raw(A.q)), hp = new Int16Array(raw(A.hip));
@@ -791,7 +918,7 @@ const EmberModelFigures = (() => {
     return { hit: (A.hit ?? A.n * 0.45) / A.fps / k, length: (A.n - 1) / A.fps / k };
   }
   // the eases a signature's keys name: io in-out · o out (fast, then settling) · i3 in (slow, then fast: a strike)
-  const EASES = { io: ease, o: (x) => 1 - (1 - x) * (1 - x), o3: (x) => 1 - Math.pow(1 - x, 3), i3: (x) => x * x * x, l: (x) => x };
+  const EASES = { io: ease, o: (x) => 1 - (1 - x) * (1 - x), o3: (x) => 1 - Math.pow(1 - x, 3), i2: (x) => x * x, i3: (x) => x * x * x, l: (x) => x };
   /** keys [[x, frame, ease], …] → the clip frame at x */
   function keyed(keys, x) {
     if (x <= keys[0][0]) return keys[0][1];
@@ -804,6 +931,14 @@ const EmberModelFigures = (() => {
     const A = clipData(name); if (!A) return null;
     const k = (SPEED[clip] ?? 1) * (suiteOf(fig)?.speed ?? 1), last = A.n - 1;
     let u = frame != null ? Math.min(last, Math.max(0, frame)) : clip === "idle" ? ((T + fig.phase * 3) * A.fps) % last : Math.min(last, t * A.fps * k);
+    if (A.coded) {
+      // under it: the motion-captured clip it reshapes, frame for frame — or the stance, breathing on
+      const suite = suiteOf(fig);
+      if (A.base) playClip(fig, clip, A.base, t, T, Math.min(u, clipData(A.base).n - 1)); else playClip(fig, "idle", suite?.stance || suite?.idle, 0, T);
+      A.coded(fig, u, T);
+      fig.glow.k.value = 0;
+      return clip === "idle" || u < last || (clip === "victory" && t < 1.6);
+    }
     const f0 = Math.floor(u), f1 = Math.min(last, f0 + 1), fr = u - f0;
     // per bone: the clip's world turn for this frame
     const idxs = fig.clipIdxs || (fig.clipIdxs = new Map());         // (per clip: a blend plays two a frame)
@@ -925,7 +1060,7 @@ const EmberModelFigures = (() => {
       if (_tw.lengthSq() < 1e-10) _tw.identity(); else _tw.normalize();
       _sw.copy(_e).multiply(_ri.copy(_tw).invert());                           // e = swing · twist
       const ang = 2 * Math.acos(Math.min(1, Math.abs(_sw.w))), A = fig.bones[S + "Arm"];
-      if (ang > WRIST.swing && A) {
+      if (ang > WRIST.swing && A && fig.reached !== S) {    // (an arm a reach has placed stays where it was put)
         // the excess, turned in the world at the shoulder: g = Fw · x · Fw⁻¹ (x the excess in the forearm's frame)
         _x.identity().slerp(_sw, 1 - WRIST.swing / ang);
         _sw.copy(_x).invert().multiply(_ri.copy(_e).multiply(_th.copy(_tw).invert()));       // the swing kept (x⁻¹ · swing)
@@ -1035,6 +1170,440 @@ const EmberModelFigures = (() => {
     const flap = Math.sin(T * (28 + 20 * beat) + fig.phase) * (0.16 + 0.25 * beat), rest = 0.18 - 0.35 * beat;
     turn(fig, "WingL", Y, rest + flap); turn(fig, "WingR", Y, -(rest + flap));
   }
+  // ---- reaching: limbs put where a move wants them (two-bone IK in the figure's own space: +z toward its foe, +y up,
+  // its left +x), over whatever clip is playing — a coded move's fists and feet, a thing carried in front of the body
+  const at = (fig, b) => fig.root.worldToLocal(b.getWorldPosition(V3()));
+  const _mq = new THREE.Quaternion(), _mp = new THREE.Quaternion();
+  /** the bone turned (about itself) so the line from it to `child` runs along `want` (figure space) */
+  function aimBone(fig, bone, child, want) {
+    fig.root.updateMatrixWorld(true);
+    const a = at(fig, bone), cur = at(fig, child).sub(a).normalize();
+    const q = new THREE.Quaternion().setFromUnitVectors(cur, want.clone().normalize());
+    modelQ(bone, fig.root, _mq); modelQ(bone.parent, fig.root, _mp);
+    bone.quaternion.copy(_mp.invert().multiply(q.multiply(_mq)));
+  }
+  /** a bone given this orientation in the figure's space (a foot kept flat while its leg bends) */
+  function setModelQ(fig, bone, q) { modelQ(bone.parent, fig.root, _mp); bone.quaternion.copy(_mp.invert().multiply(q)); }
+  /** upper → lower → end reaches `target` (figure space), the joint between them bent toward `pole` (a direction); w < 1
+   *  goes only part of the way from where the clip had them */
+  function reach(fig, upper, lower, end, target, pole, w = 1) {
+    if (w <= 0 || !upper || !lower || !end) return;
+    const was = w < 1 ? [upper.quaternion.clone(), lower.quaternion.clone()] : null;
+    fig.root.updateMatrixWorld(true);
+    const A = at(fig, upper), la = A.distanceTo(at(fig, lower)), lb = at(fig, lower).distanceTo(at(fig, end));
+    const d0 = target.clone().sub(A), d = Math.max(Math.abs(la - lb) + 1e-3, Math.min((la + lb) * 0.995, d0.length())), dir = d0.normalize();
+    const x = (la * la - lb * lb + d * d) / (2 * d), h = Math.sqrt(Math.max(0, la * la - x * x));
+    const pd = pole.clone().addScaledVector(dir, -pole.dot(dir));
+    if (pd.lengthSq() < 1e-6) pd.set(0, -1, 0).addScaledVector(dir, dir.y);
+    const E = A.clone().addScaledVector(dir, x).addScaledVector(pd.normalize(), h);
+    aimBone(fig, upper, lower, E.clone().sub(A));
+    aimBone(fig, lower, end, A.clone().addScaledVector(dir, d).sub(E));
+    if (was) { upper.quaternion.copy(was[0].slerp(upper.quaternion, w)); lower.quaternion.copy(was[1].slerp(lower.quaternion, w)); }
+  }
+  const armLen = (fig, S) => { const B = fig.bones; return at(fig, B[S + "Arm"]).distanceTo(at(fig, B[S + "ForeArm"])) + at(fig, B[S + "ForeArm"]).distanceTo(at(fig, B[S + "Hand"])); };
+  const SX = { Left: 1, Right: -1 };
+  /** the feet kept where they stand while the hips move (the knees take it up) → call the returned function after
+   *  moving the hips */
+  function plant(fig) {
+    const B = fig.bones; fig.root.updateMatrixWorld(true);
+    const feet = ["Left", "Right"].map((S) => ({ S, p: at(fig, B[S + "Foot"]), q: modelQ(B[S + "Foot"], fig.root, new THREE.Quaternion()), knee: at(fig, B[S + "Leg"]).sub(at(fig, B[S + "UpLeg"])) }));
+    return (move = null) => { for (const f of feet) {
+      const tgt = move ? move(f.S, f.p.clone()) : f.p;
+      reach(fig, B[f.S + "UpLeg"], B[f.S + "Leg"], B[f.S + "Foot"], tgt, V3(SX[f.S] * 0.55, 0, 1).addScaledVector(f.knee.setY(0), 2));
+      setModelQ(fig, B[f.S + "Foot"], f.q);
+    } };
+  }
+  /** fingers curled into a fist ("Left" | "Right" | "both"): a model's open hand does not punch. Each finger joint
+   *  turns about the line of the knuckles, toward the palm (found once on the model as it stands at rest) */
+  function fists(fig, which) {
+    const C = fig.curl || (fig.curl = curlOf(fig));
+    for (const S of which === "both" ? ["Left", "Right"] : [which]) for (const c of C[S] || []) c.bone.quaternion.copy(c.q);
+  }
+  /** the model as it stands at rest, in its own space (from the joints themselves: nothing is posed for this):
+   *  every joint's orientation W and place P; per hand its fingers' line, its knuckles' line and the way its palm faces */
+  function restOf(M) {
+    if (M.restPose) return M.restPose;
+    const W = [], P = [], idx = (n) => M.joints.findIndex((j) => j.name === n), hands = {};
+    M.joints.forEach((j, i) => {
+      const q = new THREE.Quaternion().fromArray(j.r), p = V3().fromArray(j.t);
+      if (j.parent >= 0) { W[i] = W[j.parent].clone().multiply(q); P[i] = p.applyQuaternion(W[j.parent]).add(P[j.parent]); } else { W[i] = q; P[i] = p; }
+    });
+    for (const S of ["Left", "Right"]) {
+      const i1 = idx(S + "HandIndex1"), p1 = idx(S + "HandPinky1"), m1 = idx(S + "HandMiddle1"), m3 = idx(S + "HandMiddle3"), h = idx(S + "Hand");
+      if (i1 < 0 || p1 < 0 || m1 < 0 || m3 < 0 || h < 0) continue;
+      const knuckles = P[p1].clone().sub(P[i1]).normalize(), finger = P[m3].clone().sub(P[m1]).normalize();
+      // the palm faces down and in toward the body as the arm hangs or is held out
+      const palm = V3(-SX[S] * 0.5, -1, 0).addScaledVector(finger, -V3(-SX[S] * 0.5, -1, 0).dot(finger)).normalize();
+      hands[S] = { h, knuckles, finger, palm, len: P[m1].distanceTo(P[h]) };
+    }
+    return (M.restPose = { W, P, idx, hands });
+  }
+  /** one hand's fingers, each closed as far as asked ({ Index, Middle, Ring, Pinky, Thumb }: 0 open as the model
+   *  stands … 1 as in a fist) — a pinch, a snap, a hand round a handful of dust (needs body.hands or body.fists) */
+  function fingers(fig, S, amt) {
+    const C = fig.curl || (fig.curl = curlOf(fig));
+    for (const c of C[S] || []) c.bone.quaternion.copy(c.rest).slerp(c.q, Math.min(1.15, Math.max(0, amt[c.f] ?? 0)));
+  }
+  function curlOf(fig) {
+    const out = {}, B = fig.bones, M = fig.M, { W, P: Pm, idx, hands } = restOf(M);
+    for (const S of ["Left", "Right"]) {
+      if (!hands[S]) continue;
+      const { knuckles, finger, palm } = hands[S];
+      const sign = Math.sign(V3().crossVectors(knuckles, finger).dot(palm)) || 1, list = [];
+      for (const [F, angs] of [["Index", [1.25, 1.5, 1.0]], ["Middle", [1.3, 1.5, 1.0]], ["Ring", [1.35, 1.5, 1.0]], ["Pinky", [1.4, 1.5, 1.0]]]) angs.forEach((a, k) => {
+        const j = idx(S + "Hand" + F + (k + 1)); if (j < 0 || !B[M.joints[j].name]) return;
+        const ax = knuckles.clone().applyQuaternion(W[M.joints[j].parent].clone().invert());
+        list.push({ bone: B[M.joints[j].name], f: F, rest: new THREE.Quaternion().fromArray(M.joints[j].r), q: new THREE.Quaternion().setFromAxisAngle(ax, sign * a).multiply(new THREE.Quaternion().fromArray(M.joints[j].r)) });
+      });
+      // the thumb folds over them
+      const t1 = idx(S + "HandThumb1"), t3 = idx(S + "HandThumb3");
+      if (t1 >= 0 && t3 >= 0) {
+        const th = Pm[t3].clone().sub(Pm[t1]).normalize(), tax = V3().crossVectors(th, palm).normalize();
+        [0.35, 0.5, 0.6].forEach((a, k) => {
+          const j = idx(S + "HandThumb" + (k + 1)); if (j < 0) return;
+          const ax = tax.clone().applyQuaternion(W[M.joints[j].parent].clone().invert());
+          list.push({ bone: B[M.joints[j].name], f: "Thumb", rest: new THREE.Quaternion().fromArray(M.joints[j].r), q: new THREE.Quaternion().setFromAxisAngle(ax, a).multiply(new THREE.Quaternion().fromArray(M.joints[j].r)) });
+        });
+      }
+      out[S] = list;
+    }
+    return out;
+  }
+
+  // ---- coded moves (EmberMoveSheet.CODED): a pose for each frame, over the stance or over a motion-captured clip.
+  // The sheets re-time them like any clip (their phases name these frames)
+  const lerp3 = (a, b, t) => a.clone().lerp(b, Math.min(1, Math.max(0, t)));
+  const CODED = {
+    // 马步冲拳 — 0 standing · 10 sunk into the horse stance, both fists drawn back to the waist · 13.5 the left fist out
+    // · 18 the right fist driven straight out at shoulder height as the left comes back to the waist · 22 held out ·
+    // 30 drawn back · 40 risen
+    pc_horse_punch(fig, f) {
+      const B = fig.bones, H = fig.hipH, s = ease(f / 10) * (1 - ease((f - 30) / 10)), p = ease((f - 14) / 4) * (1 - ease((f - 22) / 8));
+      if (s <= 0 || !B.Hips) return;
+      const feet = plant(fig);
+      B.Hips.position.y -= 0.27 * H * s;
+      feet((S, at0) => at0.lerp(V3(SX[S] * 0.43 * H, at0.y, 0.02 * H), s));
+      // the back straight and square to the foe, the punching shoulder turned in behind the fist
+      turn(fig, "Spine1", Y, (0.34 * p - 0.1 * (1 - p)) * s);
+      fig.root.updateMatrixWorld(true);
+      const hips = at(fig, B.Hips);
+      for (const S of ["Left", "Right"]) {
+        const sh = at(fig, B[S + "Arm"]), L = armLen(fig, S), sx = SX[S];
+        const waist = V3(hips.x + sx * 0.27 * H, hips.y + 0.36 * H, hips.z - 0.03 * H);
+        const out = V3(sx * 0.06 * H, sh.y - 0.03 * H, sh.z + 0.97 * L), pp = S === "Right" ? p : ease((f - 10.5) / 3) * (1 - ease((f - 14) / 3.5));     // (the left fist goes first — 14 — and comes back as the right goes out)
+        if (S === "Left") waist.z -= 0.06 * H * p;                      // the other fist pulls back as the punch goes out
+        reach(fig, B[S + "Arm"], B[S + "ForeArm"], B[S + "Hand"], lerp3(waist, out, pp), V3(sx * (0.25 + 0.3 * pp), -0.5 - 0.5 * pp, -1 + 0.8 * pp), Math.min(1, s * 2.5));
+      }
+    },
+    // 以镜观敌 — the hand that holds the loupe raises it into her line of sight to the foe (0 → 11), holds it there
+    // through the ray (to 25) and lowers it (to 36); the rest of her keeps its stance
+    pc_loupe(fig, f) {
+      const B = fig.bones, S = fig.side === "R" ? "Right" : "Left", held = fig.J.held, w = ease(f / 11) * (1 - ease((f - 25) / 10));
+      if (w <= 0 || !held || !B.Head) return;
+      fig.root.updateMatrixWorld(true);
+      const eye = at(fig, B.Head).add(V3(0, 0.055, 0.07)), foe = fig.foeAt ? fig.root.worldToLocal(fig.foeAt.clone()) : V3(0, eye.y - 0.15, 2);
+      const lens = eye.clone().addScaledVector(foe.sub(eye).normalize(), 0.6 * armLen(fig, S)), was = [B[S + "Arm"].quaternion.clone(), B[S + "ForeArm"].quaternion.clone()];
+      const tgt = at(fig, B[S + "Hand"]).add(lens).sub(at(fig, held));
+      for (let i = 0; i < 3; i++) { reach(fig, B[S + "Arm"], B[S + "ForeArm"], B[S + "Hand"], tgt, V3(SX[S] * 0.7, -1, 0)); fig.root.updateMatrixWorld(true); tgt.add(lens).sub(at(fig, held)); }
+      B[S + "Arm"].quaternion.copy(was[0].slerp(B[S + "Arm"].quaternion, w)); B[S + "ForeArm"].quaternion.copy(was[1].slerp(B[S + "ForeArm"].quaternion, w));
+      turn(fig, "Spine1", X, 0.08 * w);                  // she leans in to look
+    },
+    // 看表 — his triumph is not a cheer: the left hand brings the stopped watch up before his chest (0 → 16), he bows his
+    // head to it and is still (to 48), and puts it away (to 60); the right hand hangs
+    pc_watch(fig, f) {
+      const B = fig.bones, H = fig.hipH, w = ease(f / 16) * (1 - ease((f - 48) / 12)), R0 = restOf(fig.M), Hd = R0.hands.Left;
+      if (fig.carried?.group) fig.carried.group.visible = w > 0.15;
+      if (w <= 0 || !B.Spine2 || !B.LeftArm || !Hd) return;
+      turn(fig, "Spine1", X, 0.05 * w); turn(fig, "Spine1", Y, -0.1 * w);
+      fig.root.updateMatrixWorld(true);
+      const up = V3(0.1, 0.86, -0.5).normalize(), fwd = V3(-0.62, 0.25, 0.74).addScaledVector(up, -V3(-0.62, 0.25, 0.74).dot(up)).normalize();
+      const from = new THREE.Matrix4().makeBasis(Hd.finger, Hd.palm.clone().negate(), V3().crossVectors(Hd.finger, Hd.palm.clone().negate())), to = new THREE.Matrix4().makeBasis(fwd, up, V3().crossVectors(fwd, up));
+      const was = B.LeftHand.quaternion.clone();
+      reach(fig, B.LeftArm, B.LeftForeArm, B.LeftHand, at(fig, B.Spine2).add(V3(0.1 * H, -0.06 * H, 0.27 * H)), V3(0.8, -1, -0.2), w);
+      setModelQ(fig, B.LeftHand, new THREE.Quaternion().setFromRotationMatrix(to.multiply(from.invert())).multiply(R0.W[Hd.h]));
+      B.LeftHand.quaternion.copy(was.slerp(B.LeftHand.quaternion, w));
+      fig.reached = "Left";
+      fingers(fig, "Left", { Index: 0.3 * w, Middle: 0.35 * w, Ring: 0.4 * w, Pinky: 0.45 * w, Thumb: 0.3 * w });
+      // the head bowed to it, turned a little its way; a breath let out as he looks
+      turn(fig, "Neck", X, 0.16 * w); turn(fig, "Head", X, 0.3 * w); turn(fig, "Head", Y, 0.14 * w);
+      B.Hips.position.y -= 0.012 * H * bell(f, 18, 44);
+    },
+    // 星陨 (STARFALL above). Posed in her own frame first, then the whole of her turned by the whirl
+    pc_starfall(fig, f) {
+      const B = fig.bones, H = fig.hipH, K = STARFALL, w = Math.min(1, Math.max(0, curve(K.w, f)));
+      if (w <= 0 || !B.Hips || !B.RightArm) return;
+      const S = fig.weapon.L && !fig.weapon.R ? "Left" : "Right", O = S === "Right" ? "Left" : "Right", sx = SX[S], hip = curve(K.hip, f);
+      B.Hips.position.x += sx * hip[0] * H * w; B.Hips.position.y += hip[1] * H * w; B.Hips.position.z += hip[2] * H * w;
+      const yaw = -sx * curve(K.yaw, f) * w, lean = curve(K.lean, f) * w, side = -sx * curve(K.side, f) * w;
+      // (the bend is shared out along the whole back — hips, three spine joints, the neck — so she curves, never hinges)
+      turn(fig, "Spine", Y, 0.22 * yaw); turn(fig, "Spine1", Y, 0.33 * yaw); turn(fig, "Spine2", Y, 0.45 * yaw);
+      turn(fig, "Spine", X, 0.3 * lean); turn(fig, "Spine1", X, 0.35 * lean); turn(fig, "Spine2", X, 0.35 * lean);
+      turn(fig, "Spine", Z, 0.5 * side); turn(fig, "Spine2", Z, 0.5 * side);
+      const kn = curve(K.knee, f) * w;
+      turn(fig, S + "UpLeg", X, -0.42 * kn); turn(fig, S + "Leg", X, 0.85 * kn); turn(fig, O + "UpLeg", X, 0.1 * kn); turn(fig, O + "Leg", X, 0.3 * kn);
+      fig.root.updateMatrixWorld(true);
+      for (const [T2, hk, ek, s2] of [[S, K.rod, K.rodElbow, sx], [O, K.free, K.freeElbow, -sx]]) {
+        const L = armLen(fig, T2), sh = at(fig, B[T2 + "Arm"]), h = curve(hk, f), e = curve(ek, f);
+        reach(fig, B[T2 + "Arm"], B[T2 + "ForeArm"], B[T2 + "Hand"], sh.add(V3(s2 * h[0] * L, h[1] * L, h[2] * L)), V3(s2 * e[0], e[1], e[2]), w);
+      }
+      fig.reached = S;
+      const a = curve(K.aim, f); aimBlade(fig, V3(sx * a[0], a[1], a[2]), w);
+      const hd = curve(K.head, f); turn(fig, "Neck", X, 0.4 * hd[0] * w); turn(fig, "Head", X, 0.6 * hd[0] * w); turn(fig, "Head", Z, -sx * hd[1] * w);
+      turn(fig, "Hips", Y, -sx * Math.PI * 2 * (f < 22 ? curve(K.spin, f) : 0));          // (a full turn done is no turn)
+      eyesFront(fig, Math.min(1, Math.max(0, curve(K.eyes, f))));
+    },
+    // 点火 (IGNITE above)
+    pc_ignite(fig, f) {
+      const B = fig.bones, H = fig.hipH, K = IGNITE, w = Math.min(1, Math.max(0, curve(K.w, f)));
+      if (w <= 0 || !B.Hips || !B.RightArm) return;
+      const feet = plant(fig), hip = curve(K.hip, f);
+      B.Hips.position.x += hip[0] * H * w; B.Hips.position.y += hip[1] * H * w; B.Hips.position.z += hip[2] * H * w;
+      // (he steps into the throw: the left foot goes forward under the sweep, and comes back as he settles)
+      const st = ease((f - 10) / 5.5), bk0 = ease((f - 35) / 9), step = st * (1 - bk0);
+      feet((S, p) => (S === "Left" ? p.add(V3(0, 0.04 * H * (Math.sin(Math.PI * st) + Math.sin(Math.PI * bk0)) * w, 0.14 * H * step * w)) : p));
+      // the turn runs up the back (the hips a little, the chest most), the lean with it; the head stays on the foe
+      const yaw = curve(K.yaw, f) * w, lean = curve(K.lean, f) * w, side = curve(K.side, f) * w;
+      turn(fig, "Spine", Y, 0.25 * yaw); turn(fig, "Spine1", Y, 0.35 * yaw); turn(fig, "Spine2", Y, 0.4 * yaw);
+      turn(fig, "Spine", X, 0.5 * lean); turn(fig, "Spine1", X, 0.5 * lean); turn(fig, "Spine1", Z, side);
+      eyesFront(fig, Math.min(1, w * 1.5));
+      turn(fig, "Head", X, -0.12 * bell(f, 20, 30) * w);                             // the chin up as he holds the pose
+      fig.root.updateMatrixWorld(true);
+      const L = armLen(fig, "Right"), sh = at(fig, B.RightArm), h = curve(K.hand, f), e = curve(K.elbow, f);
+      // (the shoulder travels with the turn of the chest: the hand's place is taken from where the shoulder stands at
+      // rest over the hips, so the arm is thrown by the body, not carried round with it)
+      const base = at(fig, B.Hips).add(V3(-0.5 * (at(fig, B.LeftArm).distanceTo(sh)), sh.y - at(fig, B.Hips).y, 0)).lerp(sh, 0.55);
+      reach(fig, B.RightArm, B.RightForeArm, B.RightHand, base.add(V3(-h[0] * L, h[1] * L, h[2] * L)), V3(-e[0], e[1], e[2]), w);
+      fig.reached = "Right";
+      fingers(fig, "Right", { Index: curve(K.index, f), Middle: curve(K.middle, f), Ring: curve(K.ring, f), Pinky: curve(K.ring, f), Thumb: curve(K.thumb, f) });
+      const bk = Math.min(1, Math.max(0, curve(K.back, f)));
+      if (bk > 0 && B.LeftArm) {
+        fig.root.updateMatrixWorld(true);
+        const hp = at(fig, B.Hips);
+        reach(fig, B.LeftArm, B.LeftForeArm, B.LeftHand, V3(hp.x + 0.02 * H, hp.y + 0.1 * H, hp.z - 0.17 * H), V3(1, -0.2, -0.7), ease(bk));
+        fingers(fig, "Left", { Index: 0.7 * bk, Middle: 0.75 * bk, Ring: 0.8 * bk, Pinky: 0.8 * bk, Thumb: 0.4 * bk });
+      }
+    },
+  };
+
+  // a coded move's own curves: values keyed on frames ([[frame, v | [x, y, z]] …]), a smooth curve through them
+  // (Catmull-Rom: it flows through a key instead of stopping on it, and overshoots a little where the keys ask it to)
+  function curve(keys, f) {
+    const n = keys.length;
+    if (f <= keys[0][0]) return keys[0][1];
+    if (f >= keys[n - 1][0]) return keys[n - 1][1];
+    let i = 1; while (keys[i][0] < f) i++;
+    const t = (f - keys[i - 1][0]) / (keys[i][0] - keys[i - 1][0]), p0 = keys[Math.max(0, i - 2)][1], p1 = keys[i - 1][1], p2 = keys[i][1], p3 = keys[Math.min(n - 1, i + 1)][1];
+    const cr = (a, b, c, d) => 0.5 * (2 * b + (c - a) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (3 * b - a - 3 * c + d) * t * t * t);
+    return Array.isArray(p1) ? p1.map((_, k) => cr(p0[k], p1[k], p2[k], p3[k])) : cr(p0, p1, p2, p3);
+  }
+  /** the eyes kept on the foe (+z) whatever the body under them does, by w */
+  function eyesFront(fig, w) {
+    const B = fig.bones; if (w <= 0 || !fig.headRest || !B.Head) return;
+    fig.root.updateMatrixWorld(true);
+    const f = V3(0, 0, 1).applyQuaternion(fig.headRest.clone().invert()).applyQuaternion(modelQ(B.Head, fig.root, new THREE.Quaternion()));
+    const e = Math.max(-1.2, Math.min(1.2, yawOf(f))) * w;
+    turn(fig, "Neck", Y, -0.4 * e); turn(fig, "Head", Y, -0.6 * e);
+  }
+  // 星陨 — the starfall queen's own move: a dancer's, the whole body in it (nothing of her is held still while one arm
+  // works), frames:
+  //   0 standing · 8 gathered: sunk a little and wound away from her foe, the scepter drawn low behind her, the free
+  //   hand across her breast · 20 the whirl: she unwinds through a full turn as she rises, the scepter climbing round
+  //   her in a spiral, the free arm opening out · 27 the pose, held aloft: the back arched, the scepter high and tipped
+  //   back, the free arm long and low behind · 31 the command: the scepter brought down to point at her foe, the body
+  //   following it over · 37 the arm carried on past · 60 come down and standing, with a last small sway
+  // (x: toward her scepter side; hands are from their shoulders, × the arm)
+  const STARFALL = {
+    w: [[0, 0], [5, 0.8], [8, 1], [40, 1], [52, 0.4], [60, 0]],
+    spin: [[0, 0], [8, -0.12], [11, 0.12], [15, 0.56], [18.5, 0.93], [20, 1.01], [22, 1]],        // × a full turn, toward her scepter side first
+    yaw: [[0, 0], [8, -0.5], [14, -0.1], [20, 0.18], [27, 0.1], [31, 0.5], [34, 0.42], [40, 0.12], [50, -0.04], [60, 0]],
+    lean: [[0, 0], [8, 0.13], [14, 0.0], [20, -0.2], [27, -0.24], [31, 0.22], [34, 0.2], [42, 0.03], [50, -0.03], [60, 0]],
+    side: [[0, 0], [8, -0.1], [14, 0.14], [20, -0.1], [27, -0.07], [31, 0.08], [40, -0.04], [50, 0.02], [60, 0]],
+    hip: [[0, [0, 0, 0]], [8, [-0.03, -0.055, -0.05]], [14, [0, 0.17, 0]], [20, [0, 0.33, -0.02]], [27, [0, 0.36, -0.03]], [31, [0, 0.3, 0.07]], [37, [0, 0.17, 0.05]], [46, [0, 0.0, 0.01]], [52, [0, -0.02, 0]], [60, [0, 0, 0]]],
+    rod: [[0, [0.25, -0.8, 0.15]], [8, [0.42, -0.5, -0.3]], [14, [0.85, 0.05, 0.1]], [20, [0.34, 0.78, -0.06]], [27, [0.3, 0.84, -0.14]], [29.5, [0.3, 0.7, 0.4]], [31, [0.14, 0.2, 0.93]], [34, [0.22, 0.02, 0.9]], [40, [0.32, -0.35, 0.6]], [60, [0.25, -0.8, 0.15]]],
+    rodElbow: [[0, [0.4, -0.6, -1]], [8, [0.8, 0, -0.8]], [14, [0.5, -1, -0.3]], [20, [1, -0.4, -0.3]], [27, [1, -0.4, -0.4]], [31, [0.7, -0.8, 0]], [40, [0.5, -0.8, -0.6]], [60, [0.4, -0.6, -1]]],
+    aim: [[0, [0.05, 1, 0.1]], [8, [0.45, 0.55, -0.7]], [14, [0.9, 0.55, 0]], [20, [0.1, 1, -0.3]], [27, [0.05, 0.95, -0.42]], [31, [-0.02, 0.2, 1]], [34, [0, 0.1, 1]], [40, [0.05, 0.6, 0.8]], [50, [0.05, 1, 0.2]], [60, [0.05, 1, 0.1]]],
+    free: [[0, [0.2, -0.85, 0.1]], [8, [-0.32, -0.2, 0.5]], [14, [0.72, -0.12, 0.18]], [20, [0.78, -0.36, -0.3]], [27, [0.72, -0.4, -0.42]], [31, [0.5, -0.5, -0.6]], [36, [0.55, -0.55, -0.4]], [46, [0.3, -0.8, 0]], [60, [0.2, -0.85, 0.1]]],
+    freeElbow: [[0, [0.4, -0.6, -1]], [8, [0.9, -0.6, 0]], [14, [0.3, -1, -0.5]], [27, [0.3, -0.8, -0.8]], [60, [0.4, -0.6, -1]]],
+    knee: [[0, 0], [8, 0.25], [14, 0.5], [20, 1], [27, 1], [31, 0.8], [40, 0.3], [48, 0], [60, 0]],     // her legs drawn up under her as she hangs in the air
+    head: [[0, [0, 0]], [8, [0.12, -0.08]], [20, [-0.2, 0.1]], [27, [-0.24, 0.08]], [31, [0.1, -0.05]], [40, [0, 0]], [60, [0, 0]]],   // [nod (+ down), tilt]
+    eyes: [[0, 0], [6, 1], [10, 1], [12.5, 0], [16, 0], [18.5, 1], [45, 1], [60, 0]],                 // her eyes on her foe (she spots it through the turn: the head leaves late and arrives early)
+  };
+  // 点火 — the igniter's own move, keyed the way a champion's is (anticipation · the throw · the pose held · a small,
+  // sharp release · the follow-through), frames:
+  //   0 standing · 9 the right hand dipped into the coat pocket at the hip, the right shoulder drawn back, the weight on
+  //   the back foot, the left hand gone behind his back · 16 the handful sown: the arm swept low and wide up to his foe,
+  //   the body turned through behind it, a step forward under it with the left foot · 23 the hand carried on up beside his head, thumb on
+  //   the middle finger, the body upright again and still (held to 25) · 27 the snap: a flick of the wrist, nothing
+  //   else moves · 34 the hand let fall open · 48 standing
+  const IGNITE = {
+    w: [[0, 0], [5, 0.75], [9, 1], [34, 1], [41, 0.45], [48, 0]],                 // how much of the move is on, over the stance
+    yaw: [[0, 0], [9, -0.42], [13, 0.1], [16, 0.5], [18.5, 0.4], [23, 0.14], [25, 0.12], [27, 0.2], [34, 0.06], [48, 0]],     // the chest: + turns the right shoulder to the foe
+    lean: [[0, 0], [9, 0.1], [16, 0.16], [19, 0.06], [23, -0.07], [25, -0.08], [27, 0.0], [30, -0.03], [48, 0]],             // + forward
+    side: [[0, 0], [9, -0.07], [16, 0.03], [23, 0.0], [48, 0]],                    // + leans to his left
+    hip: [[0, [0, 0, 0]], [9, [-0.035, -0.05, -0.07]], [16, [0.02, -0.045, 0.12]], [23, [0, -0.005, 0.06]], [25, [0, -0.003, 0.055]], [27, [0, -0.02, 0.07]], [31, [0, -0.005, 0.06]], [38, [0, -0.01, 0.03]], [48, [0, 0, 0]]],   // × hip height
+    // the right hand, from the right shoulder (× the arm: x to his right, y up, z to the foe)
+    hand: [[0, [0.2, -0.86, 0.12]], [9, [0.3, -0.78, -0.22]], [12.5, [0.68, -0.5, 0.36]], [16, [0.2, -0.04, 0.96]], [18, [0.1, 0.16, 0.86]], [23, [0.2, 0.44, 0.42]], [25, [0.21, 0.45, 0.41]], [27, [0.16, 0.36, 0.56]], [29, [0.17, 0.33, 0.52]], [34, [0.2, -0.3, 0.4]], [48, [0.2, -0.86, 0.12]]],
+    elbow: [[0, [0.3, -0.5, -1]], [9, [0.7, -0.1, -1]], [16, [0.6, -0.9, -0.2]], [23, [0.95, -0.7, 0.05]], [27, [0.9, -0.8, 0.1]], [34, [0.5, -0.8, -0.6]], [48, [0.3, -0.5, -1]]],
+    // its fingers (× a fist): closed on the dust, flung open, the pinch, the snap, let go
+    index: [[0, 0.15], [9, 0.95], [13, 0.9], [16, -0.1], [20, 0.1], [23, 0.3], [25, 0.3], [27, 0.22], [34, 0.2], [48, 0.15]],
+    middle: [[0, 0.15], [9, 1], [13, 0.95], [16, -0.1], [20, 0.25], [23, 0.62], [25, 0.64], [26, 0.7], [27, 1.1], [31, 0.9], [36, 0.25], [48, 0.15]],
+    ring: [[0, 0.2], [9, 1], [13, 0.95], [16, -0.05], [20, 0.5], [23, 0.9], [27, 1], [31, 0.9], [36, 0.3], [48, 0.2]],
+    thumb: [[0, 0.1], [9, 0.9], [13, 0.9], [16, -0.2], [20, 0.4], [23, 1], [25, 1.05], [27, 0.1], [34, 0.2], [48, 0.1]],
+    // the left hand behind his back (how far it has gone there)
+    back: [[0, 0], [4, 0], [10, 1], [36, 1], [46, 0], [48, 0]],
+  };
+  // ---- props: small things a figure carries that its model came without (a sheath at the hip, a book in the hand).
+  // Plain shaded meshes on the figures' layer; gone with the figure as it burns away or before it has formed
+  const PROP_VS = /* glsl */ `varying vec3 vN; void main() { vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
+  const PROP_FS = /* glsl */ `
+    uniform vec3 uC, uE, uHitC; uniform float uDisK; varying vec3 vN;
+    void main() {
+      if (uDisK > 0.4) discard;
+      vec3 N = normalize(vN) * (gl_FrontFacing ? 1.0 : -1.0);
+      float wrap = clamp((dot(N, normalize(vec3(-0.45, 0.75, 0.6))) + 0.4) / 1.4, 0.0, 1.0), rim = pow(1.0 - clamp(N.z, 0.0, 1.0), 3.0);
+      vec3 c = uC * (0.72 + 0.55 * wrap) + vec3(1.0, 0.76, 0.34) * rim * 0.22 + uE;
+      c += uHitC * (0.45 + 0.55 * c);
+      gl_FragColor = linearToOutputTexel(vec4(c, 1.0));
+    }`;
+  function propMesh(fig, geo, color, emit = null) {
+    const m = new THREE.Mesh(geo, new THREE.ShaderMaterial({ vertexShader: PROP_VS, fragmentShader: PROP_FS, side: THREE.DoubleSide,
+      uniforms: { uC: { value: new THREE.Color(...color) }, uE: emit || { value: V3() }, uHitC: fig.hit, uDisK: fig.dis.k } }));
+    m.material.customProgramCacheKey = () => "ember-model-prop";
+    m.frustumCulled = false; m.layers.set(LAYER); fig.extras.push(m);
+    return m;
+  }
+  /** what a figure carries (its suite's `carry`), built the first time it is posed and kept in its place every frame */
+  function carry(fig, suite, clip, t, T) {
+    const kind = suite.carry; if (!kind) return;
+    if (fig.carried === undefined) fig.carried = kind === "sheath" ? makeSheath(fig, suite) : kind === "book" ? makeBook(fig) : kind === "watch" ? makeWatch(fig) : kind === "pick" || kind === "crowbar" ? makeTool(fig, kind) : null;
+    if (kind === "watch" && fig.carried && clip !== "victory") fig.carried.group.visible = false;
+    if (kind === "book" && fig.carried) holdBook(fig, suite, clip, t, T);
+  }
+  /** a sheath at the hip, where the blade comes to rest when it is put away (the last frame of the victory clip) */
+  function makeSheath(fig, suite) {
+    // (worn, not floating: hung at the left hip against the body — its mouth just above the hip joint on the body's
+    // own surface there, measured on the model; its point down along the thigh and a little back. Where the victory
+    // clip happens to leave the knife is not where a sheath hangs)
+    const B = fig.bones, thigh = B.Hips, ends = fig.M.thing, R0 = restOf(fig.M), hi = R0.idx("Hips"), li = R0.idx("LeftUpLeg");
+    if (!ends || !thigh || hi < 0 || li < 0) return null;
+    const hip = R0.P[li], pos = fig.M.geo.attributes.position.array;
+    let side = hip.x, front = 0;
+    for (let k = 0; k < pos.length; k += 3) if (Math.abs(pos[k + 1] - hip.y) < 0.025 && pos[k] > 0 && Math.abs(pos[k + 2] - hip.z) < 0.05) side = Math.max(side, pos[k]);
+    side = Math.min(side, hip.x * 2.2);                                       // (the cloak hangs wider than the hip: not out there)
+    const len = ends[0].distanceTo(ends[1]) * 0.72, R = 0.02, dirF = V3(0.1, -0.9, -0.42).normalize();
+    const inv = fig.inv[hi], qi = R0.W[hi].clone().invert();
+    const mouth = V3(side + R * 0.6, hip.y + 0.045, hip.z + 0.03 + front).applyMatrix4(inv), dir = dirF.clone().applyQuaternion(qi);
+    const g = new THREE.Group();
+    g.position.copy(mouth); g.quaternion.setFromUnitVectors(Y, dir);
+    const body = propMesh(fig, new THREE.CylinderGeometry(R * 0.5, R, len, 8, 1).translate(0, len / 2, 0), [0.1, 0.07, 0.06]);
+    const throat = propMesh(fig, new THREE.CylinderGeometry(R * 1.12, R * 1.12, len * 0.1, 8, 1).translate(0, len * 0.05, 0), [0.62, 0.48, 0.24]);
+    const chape = propMesh(fig, new THREE.CylinderGeometry(R * 0.2, R * 0.58, len * 0.14, 8, 1).translate(0, len * 0.95, 0), [0.62, 0.48, 0.24]);
+    const strap = propMesh(fig, new THREE.CylinderGeometry(R * 1.25, R * 1.25, len * 0.06, 8, 1).translate(0, len * 0.4, 0), [0.2, 0.13, 0.09]);
+    g.add(body, throat, chape, strap); g.scale.setScalar(1 / (thigh.getWorldScale(V3()).x / fig.root.getWorldScale(V3()).x || 1));
+    thigh.add(g);
+    return { group: g };
+  }
+  /** a pocket watch lying in the left palm: a brass case, a pale face, its lid stood open (shown only while a move
+   *  has it out: pc_watch) */
+  function makeWatch(fig) {
+    const R0 = restOf(fig.M), Hd = R0.hands.Left, B = fig.bones; if (!Hd || !B.LeftHand) return null;
+    const g = new THREE.Group(), r = 0.021, face = { value: V3(0.5, 0.36, 0.14) };
+    g.add(propMesh(fig, new THREE.CylinderGeometry(r, r, 0.007, 20), [0.7, 0.52, 0.2]));
+    g.add(propMesh(fig, new THREE.CylinderGeometry(r * 0.84, r * 0.84, 0.002, 20).translate(0, 0.0045, 0), [0.9, 0.86, 0.74], face));
+    const lid = propMesh(fig, new THREE.CylinderGeometry(r, r, 0.0025, 20).translate(0, 0, r), [0.62, 0.45, 0.17]);
+    lid.position.set(0, 0.004, -r); lid.rotation.x = -1.9; g.add(lid);
+    g.add(propMesh(fig, new THREE.SphereGeometry(0.0045, 8, 6).translate(0, 0, -r - 0.004), [0.7, 0.52, 0.2]));     // the crown
+    // (in the palm: past the wrist along the fingers, a little off the palm — in the hand bone's own space)
+    const inv = fig.inv[Hd.h], out = Hd.palm.clone().negate();
+    g.position.copy(R0.P[Hd.h]).addScaledVector(Hd.finger, Hd.len * 0.8).addScaledVector(out, 0.014).applyMatrix4(inv);
+    const side = V3().crossVectors(Hd.finger, out).normalize(), wq = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(side, out, V3().crossVectors(side, out)));
+    g.quaternion.copy(R0.W[Hd.h].clone().invert().multiply(wq));
+    g.scale.setScalar(1 / (B.LeftHand.getWorldScale(V3()).x / fig.root.getWorldScale(V3()).x || 1));
+    g.visible = false; B.LeftHand.add(g);
+    return { group: g };
+  }
+  /** a miner's tool in the right fist (its model came empty-handed): a pick — an ash haft, a double-pointed iron head —
+   *  or a crowbar, hooked at its end. It stands out of the thumb side of the fist, along the knuckles; its far part is
+   *  the figure's blade (the swoosh follows it). Wants body.fists "Right" */
+  function makeTool(fig, kind) {
+    const R0 = restOf(fig.M), Hd = R0.hands.Right, B = fig.bones; if (!Hd || !B.RightHand) return null;
+    // (a haft does not stand square to the forearm: the wrist cocks it forward — about fifty degrees toward the fingers)
+    const up0 = Hd.knuckles.clone().negate(), f0 = Hd.finger.clone().addScaledVector(up0, -Hd.finger.dot(up0)).normalize();
+    const g = new THREE.Group(), up = up0.clone().multiplyScalar(Math.cos(0.87)).addScaledVector(f0, Math.sin(0.87)).normalize(), fwd = f0.clone().multiplyScalar(Math.cos(0.87)).addScaledVector(up0, -Math.sin(0.87)).normalize();
+    const iron = [0.2, 0.2, 0.22], L = kind === "pick" ? 0.46 : 0.4;
+    if (kind === "pick") {
+      g.add(propMesh(fig, new THREE.CylinderGeometry(0.011, 0.013, L, 8).translate(0, L / 2 - 0.09, 0), [0.4, 0.27, 0.15]));
+      for (const sg of [1, -1]) g.add(propMesh(fig, new THREE.CylinderGeometry(0.004, 0.016, 0.17, 6).rotateZ(-sg * Math.PI / 2).translate(sg * 0.085, L - 0.1, 0).rotateZ(0).translate(0, 0, 0), iron));
+      g.add(propMesh(fig, new THREE.BoxGeometry(0.04, 0.04, 0.034).translate(0, L - 0.1, 0), iron));
+    } else {
+      g.add(propMesh(fig, new THREE.CylinderGeometry(0.008, 0.008, L, 6).translate(0, L / 2 - 0.07, 0), iron));
+      g.add(propMesh(fig, new THREE.CylinderGeometry(0.004, 0.008, 0.07, 6).rotateZ(-1.0).translate(0.028, L - 0.055, 0), iron));
+    }
+    // (in the fist: at the root of the fingers, on the palm's side — in the hand bone's own space; x: the way the fingers point)
+    const side = V3().crossVectors(up, fwd).normalize(), wq = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(fwd, up, V3().crossVectors(fwd, up)));
+    g.position.copy(R0.P[Hd.h]).addScaledVector(Hd.finger, Hd.len * 0.95).addScaledVector(Hd.palm, -0.022).applyMatrix4(fig.inv[Hd.h]);
+    g.quaternion.copy(R0.W[Hd.h].clone().invert().multiply(wq));
+    B.RightHand.add(g);
+    if (!fig.blade) fig.blade = [0.3, 1].map((t) => { const o = new THREE.Object3D(); o.position.set(0, (L - 0.09) * t, 0); g.add(o); return o; });
+    return { group: g };
+  }
+  /** an open book: two boards hinged on its spine (the group's +y), the pages up (+z) */
+  function makeBook(fig) {
+    const g = new THREE.Group(), glow = { value: V3() }, W = 0.078, Hh = 0.108;
+    const halves = [1, -1].map((sx) => {
+      const piv = new THREE.Group();
+      piv.add(propMesh(fig, new THREE.BoxGeometry(W, Hh, 0.005).translate(sx * W / 2, 0, -0.0045), [0.2, 0.07, 0.06]));
+      piv.add(propMesh(fig, new THREE.BoxGeometry(W * 0.93, Hh * 0.93, 0.009).translate(sx * W * 0.48, 0, 0.0025), [0.8, 0.74, 0.6], glow));
+      g.add(piv); return { piv, sx };
+    });
+    g.add(propMesh(fig, new THREE.BoxGeometry(0.012, Hh, 0.012).translate(0, 0, -0.004), [0.16, 0.05, 0.05]));
+    fig.root.add(g);
+    fig.J.book = new THREE.Object3D(); fig.J.book.position.set(0, 0, 0.02); g.add(fig.J.book);
+    return { group: g, halves, glow, open: 0.8 };
+  }
+  const BOOK_Q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(V3(-1, 0, 0), V3(0, 0.62, 0.78).normalize(), V3(0, 0.78, -0.62).normalize()));
+  /** the book held open before the chest in the left hand (whatever the clip does with that arm): read at rest — the
+   *  head bowed to it — and raised to the foe as he casts, its pages alight */
+  function holdBook(fig, suite, clip, t, T) {
+    const B = fig.bones, bk = fig.carried; if (!B.Spine2 || !B.LeftHand) return;
+    const a = clip === "attack" ? toFoe(fig, suite, t) : 0, shut = clip === "hurt" ? 1 - ease(t / 0.35) : 0;
+    fig.root.updateMatrixWorld(true);
+    // (the arm starts from its rest each frame, not from where the clip threw it: the same reach, the same turn of
+    // the forearm, whatever the clip does — no wringing of the wrist as the other arm swings)
+    for (const n of ["LeftShoulder", "LeftArm", "LeftForeArm", "LeftHand"]) if (B[n]) B[n].quaternion.copy(fig.restQ[fig.bonesArr.indexOf(B[n])]);
+    fig.root.updateMatrixWorld(true);
+    const chest = at(fig, B.Spine2), pos = chest.clone().add(V3(0.075, -0.1 + 0.05 * a, 0.2 + 0.06 * a));
+    // the hand lies open under it, palm to its boards, fingers along its spine: the wrist goes where that puts the palm
+    const R0 = restOf(fig.M), H = R0.hands.Left;
+    fig.reached = "Left";
+    if (H) {
+      const up = V3(0, 0.78, -0.62), fwd = V3(-0.3, 0.6, 0.74).addScaledVector(up, -V3(-0.3, 0.6, 0.74).dot(up)).normalize();
+      const from = new THREE.Matrix4().makeBasis(H.finger, H.palm.clone().negate(), V3().crossVectors(H.finger, H.palm.clone().negate())), to = new THREE.Matrix4().makeBasis(fwd, up, V3().crossVectors(fwd, up));
+      const turnQ = new THREE.Quaternion().setFromRotationMatrix(to.multiply(from.invert()));
+      reach(fig, B.LeftArm, B.LeftForeArm, B.LeftHand, pos.clone().addScaledVector(up, -0.016).addScaledVector(fwd, -H.len * 0.75), V3(0.7, -1, -0.3));
+      setModelQ(fig, B.LeftHand, turnQ.multiply(R0.W[H.h]));
+    }
+    bk.group.position.copy(pos); bk.group.quaternion.copy(BOOK_Q);
+    const open = Math.max(0.12, 0.82 + 0.1 * a - 0.6 * shut);
+    for (const h of bk.halves) h.piv.rotation.y = -h.sx * ((Math.PI / 2 - 0.05) * (1 - open) + 0.1 * open);
+    bk.glow.value.set(...(suite.spell?.tint || [0.9, 0.7, 0.35])).multiplyScalar(0.55 * a);
+    if (clip === "idle") { turn(fig, "Neck", X, 0.14); turn(fig, "Head", X, 0.24); }
+  }
+  /** a reflection of a figure: the same skin on bones of its own, lit like a spirit in `tint`; sync(T) takes the
+   *  figure's pose as it is now. The arena places it (mirrored: a negative x scale) and burns it away (dis.k) */
+  function echo(fig, tint = [0.6, 0.8, 1.6]) {
+    const M = fig.M, root = new THREE.Group();
+    const bones = M.joints.map((j) => { const b = new THREE.Bone(); b.name = j.name; b.position.fromArray(j.t); b.quaternion.fromArray(j.r); b.scale.fromArray(j.s); return b; });
+    M.joints.forEach((j, i) => (j.parent >= 0 ? bones[j.parent] : root).add(bones[i]));
+    const look = NO_LOOK(), dis = disOf(M);
+    look.ghost.value = 0.9; look.ghostC.value.set(...tint); dis.c.value.set(...tint); dis.k.value = 1;
+    const mat = material(M, { value: V3() }, { value: 0 }, { k: { value: 0 }, c: { value: V3() }, at: { value: new THREE.Vector4(0, -9, 0, 0.09) } }, false, NO_LUX, dis, look);
+    const mesh = new THREE.SkinnedMesh(M.geo, mat);
+    mesh.frustumCulled = false; mesh.layers.set(LAYER); root.add(mesh); root.updateMatrixWorld(true);
+    mesh.bind(new THREE.Skeleton(bones, fig.inv), new THREE.Matrix4());
+    return { root, dis, sync(T) { fig.bonesArr.forEach((b, i) => { bones[i].quaternion.copy(b.quaternion); bones[i].position.copy(b.position); }); look.t.value = T; }, dispose() { mat.dispose(); mesh.skeleton.dispose(); } };
+  }
+
   /** the held fireball: it swells as the cast gathers, is gone from the release (it flies) and re-forms in the hand */
   function fireStep(fig, clip, t, T) {
     if (!fig.fire) return;
@@ -1066,10 +1635,16 @@ const EmberModelFigures = (() => {
       if (suite.hover) hover(fig, clip, t, T);
       // a god stands a hand's breadth above the ground, rising and settling slowly (its idle stance kept)
       if (suite.float && fig.bones.Hips) fig.bones.Hips.position.y += fig.hipH * (suite.float + 0.012 * Math.sin(T * 1.3 + fig.phase));
+      // one that rises as it casts (levitate: × its hip height at the full of the charge), and sinks back after
+      if (suite.levitate && clip === "attack" && fig.bones.Hips) fig.bones.Hips.position.y += fig.hipH * suite.levitate * toFoe(fig, suite, t);
       // a sprite whirls once round as it gathers its spell
       if (suite.spin && clip === "attack") { const h = C.timing(fig).hit; turn(fig, "Hips", Y, Math.PI * 2 * ease(t / (h * 0.8))); }
       aimFor(fig, suite, clip, t);
-      if (clip === "attack" && !sig) lookAtFoe(fig, suite, t);          // (a signature's spin keeps its own head)
+      carry(fig, suite, clip, t, T);
+      // the eyes on the foe: a plain attack's, and a signature's that casts or shoots (its head would otherwise keep
+      // looking where its stance looks — off to the side); a signature that spins or leaps keeps its own head
+      if (clip === "attack" && (!sig || ((suite.face || suite.bow) && !suite.spin))) lookAtFoe(fig, suite, t);
+      if (suite.fists) fists(fig, suite.fists);
       wristCare(fig);
       spring(fig, T);
       if (T > fig.nextBlink + 0.14) fig.nextBlink = T + 2 + Math.random() * 3;
@@ -1107,7 +1682,7 @@ const EmberModelFigures = (() => {
   const base = { build: R.build, cached: R.cached, dispose: R.dispose, setHit: R.setHit, setEmit: R.setEmit, setFace: R.setFace, setPixelRatio: R.setPixelRatio, voxelsWorld: R.voxelsWorld, pose: C.pose };
   R.cached = (id) => (has(id) ? READY : base.cached(id));
   R.build = (id, o) => (has(id) ? build(id) : base.build(id, o));
-  R.dispose = (fig) => { if (!fig.model) return base.dispose(fig); for (const m of fig.mats) m.dispose(); fig.mesh.skeleton.dispose(); fig.fire?.dispose(); };
+  R.dispose = (fig) => { if (!fig.model) return base.dispose(fig); for (const m of fig.mats) m.dispose(); fig.mesh.skeleton.dispose(); fig.fire?.dispose(); for (const m of fig.extras || []) { m.geometry.dispose(); m.material.dispose(); } };
   R.setHit = (fig, r, g, b) => (fig.model ? fig.hit.value.set(r, g, b) : base.setHit(fig, r, g, b));
   // a beast's glow follows its clips' emission (a dragon drawing breath, a crystal charging)
   R.setEmit = (fig, k) => (fig.model ? (fig.look && (fig.look.emitK.value = fig.emitBase * k)) : base.setEmit(fig, k));
@@ -1128,5 +1703,5 @@ const EmberModelFigures = (() => {
     return r;
   };
 
-  return Object.freeze({ has, ids: () => [...models.keys()], on, LAYER, onReady: (fn) => onReady.add(fn), setShade: (k) => { SHADE.value = k; }, setMocap: (on) => { MOCAP.on = !!on; }, setSig: (on) => { MOCAP.sig = !!on; }, setWrist: (on) => { WRIST.on = !!on; }, setSuite: (id, clip, name) => { (SUITES[id] ||= {})[clip] = name; }, reload: loadSheets, suite: (id) => ({ ...SUITES[id] }), mocap: (id) => !!SUITES[id], shade: () => SHADE.value, eyes: (id) => { const e = models.get(id)?.eyes; return e ? [e.a, e.b] : null; } });
+  return Object.freeze({ has, ids: () => [...models.keys()], on, LAYER, onReady: (fn) => onReady.add(fn), setShade: (k) => { SHADE.value = k; }, setMocap: (on) => { MOCAP.on = !!on; }, setSig: (on) => { MOCAP.sig = !!on; }, setWrist: (on) => { WRIST.on = !!on; }, setSuite: (id, clip, name) => { (SUITES[id] ||= {})[clip] = name; }, reload: loadSheets, echo, suite: (id) => ({ ...SUITES[id] }), mocap: (id) => !!SUITES[id], shade: () => SHADE.value, eyes: (id) => { const e = models.get(id)?.eyes; return e ? [e.a, e.b] : null; } });
 })();

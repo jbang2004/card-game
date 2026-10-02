@@ -200,7 +200,7 @@
   const seek = (ms) => play(take.act, Math.max(0, ms));
 
   // ------------------------------------------------------------------ the take's phases on one clock
-  const EASE = { io: (x) => x * x * (3 - 2 * x), o: (x) => 1 - (1 - x) * (1 - x), o3: (x) => 1 - Math.pow(1 - x, 3), i3: (x) => x * x * x, l: (x) => x };
+  const EASE = { io: (x) => x * x * (3 - 2 * x), o: (x) => 1 - (1 - x) * (1 - x), o3: (x) => 1 - Math.pow(1 - x, 3), i2: (x) => x * x, i3: (x) => x * x * x, l: (x) => x };
   /** the hero's attack as the sheet names it, laid on the take's real clock (the hit-stop a segment of its own) */
   function layout(tk) {
     const plan = tk.plan, u = unit(HERO), fig = u?.fig, total = plan.len + TAIL;
@@ -219,6 +219,7 @@
     const end = segs[segs.length - 1].x1, last = Math.max(end, plan.contact + 900) + 500;
     segs.push({ id: "linger", label: "余韵", side: "other", x0: end, x1: last });
     const ticks = plan.ranged ? [{ x: plan.lift, label: "出手" }, { x: plan.contact, label: "命中" }] : [{ x: plan.contact, label: "命中" }];
+    for (const p of tl.phases) if (p.side === "before" && p.hit && p.t1 < tl.lead) ticks.unshift({ x: p.t1 * k, label: "轻击" });
     return { total: last, segs, ticks, tl, H };
   }
   /** what the hero is doing now, read off its clip time → { phase, nominal (ms on the sheet's clock), frame, frozen } */
@@ -476,11 +477,15 @@
     if (compareOn) loadBase();
     toast(problems.length ? `招式单已更新，但有 ${problems.length} 处问题` : "招式单已更新，重播中", problems.length > 0);
   }
+  let codeStamp = 0;
   async function poll() {
     try {
       const s = await (await fetch("/__review/state", { cache: "no-store" })).json();
       revs = s.revisions || [];
       if (!EMBED && s.notes !== notesStamp && !noteDirty) { notesStamp = s.notes; await loadNotes(); }     // (Claude answered, or the first load)
+      // (the engine or the clips changed under the page: load it all again, on the same figure and act)
+      if (codeStamp && s.code && s.code !== codeStamp) { location.reload(); return; }
+      codeStamp = s.code || codeStamp;
       if (sheetsHash && s.hash !== sheetsHash && !REV) { sheetsHash = s.hash; await reloadSheets(); }
       sheetsHash = s.hash;
     } catch {}

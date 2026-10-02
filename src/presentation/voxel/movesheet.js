@@ -9,16 +9,21 @@
  *     name · move · note            what the review page shows
  *     kind                          melee | caster | archer | beast
  *     clips { idle, attack, hurt, victory, stance }      humanoid: clip names (EmberModelAnims; "<clip>@m" mirrored)
- *     speed · aim { clip: … } · body { upright, lower, keep, castSide, face, bow, float, hover, spin }
- *     spell { fire | tint, rise, bolt, r }               a caster's charge and bolt (its wind-up is the lead below)
+ *     speed · aim { clip: … } · body { upright, lower, keep, castSide, face, bow, float, hover, spin, levitate,
+ *                                      fists (Left | Right | both: fingers closed), hands (the same: fingers that
+ *                                      a coded move works), carry (sheath | book | watch | pick | crowbar: a prop) }
+ *     spell { fire | tint, rise, bolt, r, gather }       a caster's charge and bolt (its wind-up is the lead below;
+ *                                                        gather false: nothing is drawn into its hand)
  *     attack
  *       before { <phase>: { ms, frame, ease } … }        to the blow, in order: each phase's length, the clip frame it
- *                                                        ends on, the ease into it (io · o · o3 · i3 · l)
+ *                                                        ends on, the ease into it (io · o · o3 · i2 · i3 · l)
  *       after  { <phase>: { ms, frame, ease } …, rise: { ms }, home: { ms } }   from the blow: the landing's phases,
  *                                                        then up into the stance (rise) and the hop home
  *       start                                            the first frame (default 0)
  *       stretch { before, after }                        × every phase's length on that side of the blow
- *       dash { kind: leap | lunge | stay, ms, reach, levitate, hipScale }   ms: how long before the blow it leaves
+ *       before.<phase>.hit                               that phase ends on a blow of its own, a lighter one (a combo)
+ *       dash { kind: leap | lunge | stay, ms, arrive, reach, levitate, hipScale }   ms: how long before the blow it leaves (arrive: how long before the blow it is there — a combo's first hit)
+ *       (was) dash                                       ms: how long before the blow it leaves
  *                                                        its station (a beast: at, the share of its lead when it does)
  *       hitstop [tier 1, 2, 3]                           frames the blow holds it
  *       bladeFrom                                        where along the weapon its light and swoosh begin (0–1)
@@ -36,7 +41,24 @@
 const EmberMoveSheet = (() => {
   const T = (typeof EmberTiming !== "undefined" && EmberTiming.attack) || { lift: 110, lunge: 150, rangedRecoil: 90 };
   const DIRECTOR = Object.freeze({ lift: T.lift, lunge: T.lunge, recoil: T.rangedRecoil });
-  const KINDS = ["melee", "caster", "archer", "beast"], EASES = ["io", "o", "o3", "i3", "l"];
+  const KINDS = ["melee", "caster", "archer", "beast"], EASES = ["io", "o", "o3", "i2", "i3", "l"];
+  // coded moves (EmberModelFigures poses them, frame by frame): n frames, the contact's frame, and — base — a
+  // motion-captured clip to reshape, frame for frame (none: over the figure's stance). A sheet names one like any clip
+  // and re-times it by these frames
+  const CODED = Object.freeze({
+    pc_horse_punch: { n: 41, hit: 18 },                 // 马步冲拳: 10 sunk · 14 held · 18 the fist out · 22 · 30 drawn back · 40 risen
+    pc_loupe: { n: 37, hit: 18 },                       // 以镜观敌: 11 the loupe raised into her line of sight · 25 held · 36 lowered
+    pc_starfall: { n: 61, hit: 31 },                   // 星陨: 8 gathered · 20 the whirl, risen · 27 the pose held aloft · 31 the scepter brought down at her foe · 37 · 60
+    pc_ignite: { n: 49, hit: 27 },                     // 点火: 9 the hand in the pocket · 16 the dust sown · 23–25 the pose · 27 the snap · 34 · 48
+    pc_watch: { n: 61, hit: 30 },                      // 看表: 16 the watch up before his chest, his head bowed to it · 48 held · 60 put away
+  });
+  // chained clips: stretches of motion-captured clips played one after another as one clip (a combo made of two cuts,
+  // a jab and a cross) — [clip, first frame, last frame] each, `blend` frames of the next eased in from where the last
+  // one ended. A sheet names a chain like any clip; its frames run on from part to part (n: how many in all)
+  const CHAINS = Object.freeze({
+    // 夜幕刺客: two quick stabs (13, 29: Mixamo's are left-handed — mirrored), then the stab from the rear hand (40)
+    ch_stabs: { n: 61, parts: [["kb_v1@m", 6, 38], ["kn_stab", 19, 46]] },
+  });
   const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
   const clone = (v) => (Array.isArray(v) ? v.map(clone) : isObj(v) ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, clone(x)])) : v);
 
@@ -86,12 +108,13 @@ const EmberMoveSheet = (() => {
     ["sigil", "charge", "sigil"], ["chargeShape", "charge", "motes"], ["dim", "charge", "dim"], ["lantern", "charge", "lantern"], ["vanish", "charge", "vanish"],
     ["weapon", "weapon", "glow"], ["limb", "weapon", "limb"],
     ["cast", "cast", "kind"], ["castHand", "cast", "hand"], ["blades", "cast", "blades"], ["sky", "cast", "sky"], ["look", "cast", "look"], ["callSigil", "cast", "sigil"],
+    ["castBits", "cast", "bits"], ["castCount", "cast", "count"], ["castGap", "cast", "gap"], ["castAt", "cast", "at"], ["echo", "charge", "echo"],
     ["flash", "hit", "flash"], ["slash", "hit", "mark"], ["beam", "hit", "beam"], ["ground", "hit", "ground"], ["spikes", "hit", "spikes"], ["rocks", "hit", "rocks"],
     ["bits", "hit", "bits"], ["nbits", "hit", "bitsCount"], ["bits2", "hit", "bits2"], ["dust", "hit", "dust"], ["shake", "hit", "shake"], ["flame", "hit", "flame"],
     ["drain", "hit", "drain"], ["implode", "hit", "implode"], ["lift", "hit", "lift"],
     ["hurt", "hurt", "at"],
   ];
-  const FX_GROUPS = { charge: ["sigil", "motes", "column", "dim", "lantern", "vanish"], weapon: ["glow", "limb", "trail"], cast: ["kind", "hand", "blades", "sky", "look", "sigil"],
+  const FX_GROUPS = { charge: ["sigil", "motes", "column", "dim", "lantern", "vanish", "echo"], weapon: ["glow", "limb", "trail"], cast: ["kind", "hand", "blades", "sky", "look", "sigil", "bits", "count", "gap", "at"],
     hit: ["flash", "mark", "beam", "ground", "spikes", "rocks", "bits", "bitsCount", "bits2", "dust", "shake", "flame", "drain", "implode", "lift"],
     hurt: ["at"], victory: ["ray", "orb", "rain", "flame", "shock"], idle: ["bits", "every", "halo"] };
   // an element given as { kind, size, gain, life, count } is that element tuned: × its size, its brightness, how long
@@ -99,7 +122,7 @@ const EmberMoveSheet = (() => {
   // of its own (the shock rings, the sparks) is always on and only ever tuned
   const TUNE_KEYS = ["size", "gain", "life", "count"];
   const TUNABLE = {
-    sigil: ["charge", "sigil"], stream: ["charge", "stream"], column: ["charge", "column"], glint: ["weapon", "glint"], trail: ["weapon", "trail"],
+    sigil: ["charge", "sigil"], stream: ["charge", "stream"], column: ["charge", "column"], glint: ["weapon", "glint"], trail: ["weapon", "trail"], glow: ["weapon", "glow"],
     flash: ["hit", "burst"], mark: ["hit", "mark"], shock: ["hit", "shock"], beam: ["hit", "beam"], ground: ["hit", "ground"], spikes: ["hit", "spikes"], rocks: ["hit", "rocks"],
     sparks: ["hit", "sparks"], bits: ["hit", "bits"], dust: ["hit", "dust"], flame: ["hit", "flame"], hurt: ["hurt", "flash"],
     ray: ["victory", "ray"], orb: ["victory", "orb"], rain: ["victory", "rain"], aura: ["idle", "bits"], halo: ["idle", "halo"],
@@ -144,18 +167,22 @@ const EmberMoveSheet = (() => {
     const s = {}, c = sheet.clips || {}, b = sheet.body || {}, A = sheet.attack;
     for (const k of ["idle", "attack", "hurt", "victory", "stance"]) if (c[k] !== undefined) s[k] = c[k];
     if (sheet.aim) s.aim = clone(sheet.aim);
-    for (const k of ["upright", "lower", "keep", "castSide", "face", "bow", "float", "hover", "spin"]) if (b[k] !== undefined) s[k] = clone(b[k]);
+    for (const k of ["upright", "lower", "keep", "castSide", "face", "bow", "float", "hover", "spin", "levitate", "fists", "hands", "carry"]) if (b[k] !== undefined) s[k] = clone(b[k]);
     if (sheet.speed !== undefined) s.speed = sheet.speed;
     if (sheet.spell) s.spell = clone(sheet.spell);
     if (A?.before) {
       const before = phasesOf(A.before), after = phasesOf(A.after, ["rise", "home"]), kb = A.stretch?.before ?? 1, ka = A.stretch?.after ?? 1;
       const lead = sum(before, kb), first = A.start ?? 0, d = A.dash || {};
       const sig = { lead, pre: keys(before, first, kb, lead) };
+      // a combo: every phase marked `hit` ends on a lighter blow of its own (hit: its weight, true = 0.6) before the last
+      // phase's, which is the director's contact — [{ at: its share of the lead, k }]
+      { let t = 0; const combo = []; before.forEach(([, p], i) => { t += p.ms * kb; if (p.hit && i < before.length - 1) combo.push({ at: t / lead, k: p.hit === true ? 0.6 : p.hit }); }); if (combo.length) sig.combo = combo; }
+      if (d.arrive !== undefined) sig.arrive = d.arrive / lead;
       sig.post = keys(after, before.length ? before[before.length - 1][1].frame : first, ka, 1000);
       sig.rise = ((A.after?.rise?.ms ?? 0) * ka) / 1000; sig.back = ((A.after?.home?.ms ?? 0) * ka) / 1000;
       if (d.kind === "stay") sig.stay = true; else if (d.kind) sig.dash = d.kind;
       if (d.ms !== undefined) sig.leap = (lead - d.ms) / lead;
-      for (const k of ["reach", "levitate", "hipScale"]) if (d[k] !== undefined) sig[k] = d[k];
+      for (const k of ["reach", "levitate", "hipScale", "recoil"]) if (d[k] !== undefined) sig[k] = d[k];
       if (A.hitstop) sig.hitstop = [0, ...A.hitstop];
       if (A.bladeFrom !== undefined) sig.bladeFrom = A.bladeFrom;
       // the director's beats make up the rest of the lead: what is left is this figure's own wind-up
@@ -202,12 +229,14 @@ const EmberMoveSheet = (() => {
   // what the phases and the effects are called (zh): a phase or element a sheet names itself (label) wins
   const LABELS = {
     phase: { coil: "蓄力", hold: "蓄满", draw: "后引", sink: "潜影", poise: "蓄势", crouch: "下蹲", spring: "腾空", heave: "腾空", hang: "滞空", first: "第一击", level: "指剑", lift: "上举",
-      gather: "聚能", pull: "拉弓", strike: "出手", loose: "放箭", volley: "齐射", release: "释放", follow: "随势", settle: "定格", rise: "起身", home: "回位", charge: "蓄势", dash: "冲刺", stay: "停留", raise: "举起", lower: "放下" },
+      gather: "聚能", pull: "拉弓", strike: "出手", loose: "放箭", volley: "齐射", release: "释放", follow: "随势", settle: "定格", rise: "起身", home: "回位", charge: "蓄势", dash: "冲刺", stay: "停留", raise: "举起", lower: "放下",
+      wind: "起手", cut: "斩", chop: "劈", swing: "抡", back: "反手", heave: "举起", reap: "镰斩", spin: "旋身", turn: "翻腕", bash: "盾击", thrust: "刺", lash: "鞭", kick: "踢", jab: "刺拳",
+      left: "左拳", punch: "拳", hook: "勾拳", stab: "刺", again: "再刺", one: "一", two: "二", three: "三", whirl: "旋身", pose: "定势", command: "一指", dip: "探囊", sow: "撒尘", snap: "响指", stoop: "弓身" },
     group: { charge: "蓄力", weapon: "武器", cast: "施法", hit: "命中", hurt: "受击", victory: "胜利", idle: "待机" },
     fx: { palette: "配色", size: "整体大小", style: "风格",
-      "charge.sigil": "脚下法印", "charge.motes": "聚能光点", "charge.stream": "聚能光流", "charge.column": "升腾光柱", "charge.dim": "舞台压暗", "charge.lantern": "提灯变亮", "charge.vanish": "遁影烟",
+      "charge.sigil": "脚下法印", "charge.motes": "聚能光点", "charge.stream": "聚能光流", "charge.column": "升腾光柱", "charge.dim": "舞台压暗", "charge.lantern": "提灯变亮", "charge.vanish": "遁影烟", "charge.echo": "倒影分身",
       "weapon.glow": "武器发光", "weapon.limb": "拳脚刀光", "weapon.trail": "刀光", "weapon.glint": "刃尖闪光",
-      "cast.kind": "施法方式", "cast.hand": "施法手", "cast.blades": "光剑数量", "cast.sky": "天象", "cast.look": "弹道外观", "cast.sigil": "落点法印",
+      "cast.kind": "施法方式", "cast.hand": "施法手", "cast.blades": "光剑数量", "cast.sky": "天象", "cast.look": "弹道外观", "cast.sigil": "落点法印", "cast.bits": "飞出之物", "cast.count": "数量", "cast.gap": "连发间隔", "cast.at": "点燃时刻",
       "hit.flash": "闪光强度", "hit.burst": "命中闪光", "hit.mark": "刀痕", "hit.shock": "冲击环", "hit.beam": "光柱", "hit.ground": "地面痕迹", "hit.spikes": "地刺", "hit.rocks": "碎石", "hit.sparks": "火花",
       "hit.bits": "飞散物", "hit.bitsCount": "飞散物数量", "hit.bits2": "第二种飞散物", "hit.dust": "尘土", "hit.shake": "震屏", "hit.flame": "爆燃", "hit.drain": "吸取", "hit.implode": "内吸", "hit.lift": "挑飞",
       "hurt.at": "受击部位", "hurt.flash": "受击闪光", "victory.ray": "天光", "victory.orb": "身后天体", "victory.rain": "飘落物", "victory.flame": "火焰", "victory.shock": "震地",
@@ -215,10 +244,11 @@ const EmberMoveSheet = (() => {
     // what the values are called (the review page reads a sheet out in these words)
     value: { crack: "地裂", roots: "根须", frost: "霜冻", void: "虚空池", rune: "符印", line: "一道", cross: "十字", crescent: "新月", pierce: "贯穿", claw: "爪痕", bite: "咬痕",
       ice: "冰刺", rock: "岩石", thorn: "荆棘", feather: "光羽", leaf: "叶片", snow: "雪花", shard: "碎晶", star: "星", star5: "五角星", wisp: "魂丝", sparkle: "光点", spark: "火星",
-      sun: "日", moon: "月", shield: "盾上", body: "身上", bolt: "飞弹", sky: "天降", ground: "地涌", array: "剑阵", pillar: "火柱", collapse: "坍缩", spear: "灵矛",
+      sun: "日", moon: "月", shield: "盾上", body: "身上", bolt: "飞弹", sky: "星坠", ground: "地涌", array: "剑阵", pillar: "火柱", collapse: "坍缩", spear: "灵矛",
+      stream: "连发", lob: "抛星", ray: "聚光", fuse: "引信", mark: "鉴定标记", ignite: "粉尘点火", clock: "钟面", astral: "星轨", glyph: "字符", gear: "齿轮", petal: "花瓣", tag: "当票", held: "手持物", book: "书",
       leap: "跃起", lunge: "突进", stay: "原地", modern: "现代", true: "有", false: "无" },
     palette: { holy: "圣光金", sun: "烈日橙", dawn: "晨曦", frost: "霜蓝", moon: "暗月紫", star: "星辉蓝", wild: "荒野绿", verdant: "翠金", earth: "大地", fire: "烈火", void: "虚空紫", astral: "星界",
-      necro: "冥绿", steel: "钢灰", bone: "骨白", shadow: "暗影红", rage: "怒红", ember: "余烬", iron: "玄铁", soul: "魂蓝", blood: "血红", fey: "精灵青", phoenix: "凤凰蓝金", rune: "符文蓝" },
+      necro: "冥绿", nightbloom: "夜花紫", hearth: "炉火", amber: "琥珀", brass: "黄铜", coal: "煤黑", glass: "镜蓝", steel: "钢灰", bone: "骨白", shadow: "暗影红", rage: "怒红", ember: "余烬", iron: "玄铁", soul: "魂蓝", blood: "血红", fey: "精灵青", phoenix: "凤凰蓝金", rune: "符文蓝" },
     kind: { melee: "近战", caster: "施法", archer: "弓手", beast: "兽类" },
   };
   const label = (id, own) => own || LABELS.phase[id] || id;
@@ -239,7 +269,7 @@ const EmberMoveSheet = (() => {
     if (!A?.before) return null;
     const kb = A.stretch?.before ?? 1, ka = A.stretch?.after ?? 1, out = [];
     let t = 0, f = A.start ?? 0;
-    for (const [id, p] of phasesOf(A.before)) { out.push({ id, label: label(id, p.label), side: "before", t0: t, t1: (t += p.ms * kb), frame0: f, frame1: (f = p.frame), ease: p.ease }); }
+    for (const [id, p] of phasesOf(A.before)) { out.push({ id, label: label(id, p.label), side: "before", t0: t, t1: (t += p.ms * kb), frame0: f, frame1: (f = p.frame), ease: p.ease, hit: p.hit || undefined }); }
     const lead = t;
     for (const [id, p] of phasesOf(A.after)) out.push({ id, label: label(id, p.label), side: "after", t0: t, t1: (t += p.ms * ka), frame0: f, frame1: (f = p.frame ?? f), ease: p.ease });
     const d = A.dash;
@@ -257,12 +287,15 @@ const EmberMoveSheet = (() => {
   // ------------------------------------------------------------------ checks
   const SHEET_KEYS = ["base", "label", "name", "move", "note", "kind", "clips", "speed", "aim", "body", "spell", "attack", "flourish", "fx", "look", "emitter", "blade", "plain"];
   const ENUM = { "hit.mark": ["line", "cross", "crescent", "pierce", "claw", "bite", false], "hit.ground": ["crack", "roots", "frost", "void", "rune", false],
-    "hit.spikes": ["ice", "rock", "thorn", false], "cast.kind": ["bolt", "sky", "ground", "array", "pillar", "collapse", "spear"], "hurt.at": ["shield", "body"],
-    "charge.sigil": ["sun", "moon", "star", "rune", "leaf", false], "dash": ["leap", "lunge", "stay"] };
+    "hit.spikes": ["ice", "rock", "thorn", false], "cast.kind": ["bolt", "sky", "ground", "array", "pillar", "collapse", "spear", "stream", "lob", "ray", "fuse", "mark", "ignite"], "hurt.at": ["shield", "body"],
+    "cast.bits": ["glyph", "petal", "sparkle", "wisp", "tag"], "cast.sigil": ["sun", "moon", "star", "rune", "leaf", "clock", "astral"],
+    "charge.sigil": ["sun", "moon", "star", "rune", "leaf", "clock", false], "dash": ["leap", "lunge", "stay"] };
   /** what is wrong with the sheets → [message]. known: { clips: { name: frames }, palettes: [name], shapes: [name] }
    *  (each optional: what the page has loaded) */
   function validate(S, known = {}) {
     const bad = [], say = (id, msg) => bad.push(`${id}: ${msg}`);
+    if (known.clips) known = { ...known, clips: { ...known.clips, ...Object.fromEntries(Object.entries(CODED).map(([k, c]) => [k, c.n])), ...Object.fromEntries(Object.entries(CHAINS).map(([k, c]) => [k, c.n])) } };   // (a coded move is a clip too, and a chain)
+    if (known.clips) for (const [k, c] of Object.entries(CHAINS)) for (const [part, f0, f1] of c.parts) { const n = known.clips[part.replace(/@m$/, "")]; if (n === undefined) bad.push(`chain ${k}: clip "${part}" is not in EmberModelAnims`); else if (f0 < 0 || f1 > n - 1 || f1 <= f0) bad.push(`chain ${k}: ${part} ${f0}–${f1} is outside its ${n} frames`); }
     for (const id of Object.keys(S.archetypes)) if (S.figures[id]) say(id, "is both an archetype and a figure");
     for (const [where, table] of [["archetype", S.archetypes], ["figure", S.figures]]) for (const [id, raw] of Object.entries(table)) {
       for (const k of Object.keys(raw)) if (!SHEET_KEYS.includes(k)) say(id, `unknown key "${k}"`);
@@ -314,7 +347,7 @@ const EmberMoveSheet = (() => {
   /** new sheets (the review page reloads content/moves.js as it is edited) → the tables compiled again */
   function use(S) { sheets = S; built = null; return tables(); }
   return Object.freeze({
-    DIRECTOR, LABELS, KINDS, EASES, FX_GROUPS, TUNABLE,
+    DIRECTOR, LABELS, KINDS, EASES, FX_GROUPS, TUNABLE, CODED, CHAINS,
     merge, resolve, compile, suite, beast, fxRecipe, timeline, effects, validate, use,
     get sheets() { return sheets; },
     get SUITES() { return tables().SUITES; },

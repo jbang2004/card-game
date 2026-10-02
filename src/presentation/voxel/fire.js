@@ -66,17 +66,21 @@ const EmberFire = (() => {
       gl_FragColor = vec4(col, 0.0);
       gl_FragColor = linearToOutputTexel(gl_FragColor);
     }`;
-  // the rune circle on the ground: rings, a turning band of runes, a six-point star, a soft centre
+  // the rune circle on the ground: fine rings, a turning ring of ticks, a thin six-point star
   const SIGIL_VS = /* glsl */ `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
   const SIGIL_FS = /* glsl */ `
     uniform float uK, uRot; uniform vec3 uTint; varying vec2 vUv;
     void main() {
       vec2 p = vUv * 2.0 - 1.0; float r = length(p), a = atan(p.y, p.x) + uRot;
-      float ring = exp(-abs(r - 0.93) * 60.0) + 0.8 * exp(-abs(r - 0.72) * 70.0) + 0.5 * exp(-abs(r - 0.4) * 80.0);
-      float runes = step(0.75, r) * step(r, 0.9) * step(0.5, fract(a * 24.0 / 6.2832)) * step(0.3, fract(a * 72.0 / 6.2832 + 0.5 * sin(a * 5.0)));
+      // (drawn in hairlines: two fine rings, a ring of ticks — every sixth one longer — a thin six-point star; no band of
+      // blocks, no glowing centre)
+      float aa = max(fwidth(r), 1e-4), px = length(fwidth(p)) / max(r, 1e-3) / 6.2832;
+      float ring = (1.0 - smoothstep(0.004, 0.004 + aa * 1.5, abs(r - 0.93))) + 0.6 * (1.0 - smoothstep(0.003, 0.003 + aa * 1.5, abs(r - 0.7)));
+      float long6 = step(abs(fract(a * 10.0 / 6.2832) - 0.5), 0.09), lo = mix(0.855, 0.82, long6);
+      float runes = smoothstep(lo - aa, lo + aa, r) * (1.0 - smoothstep(0.9 - aa, 0.9 + aa, r)) * (1.0 - smoothstep(0.07, 0.07 + 60.0 * px, abs(fract(a * 60.0 / 6.2832) - 0.5)));
       float star = 0.0;
-      for (int k = 0; k < 3; k++) { float th = a * 1.0 + float(k) * 1.0472; vec2 d = vec2(cos(th), sin(th)) * r; star += exp(-abs(d.y) * 90.0) * step(r, 0.72); }
-      float c = ring + 0.7 * runes + 0.45 * star + 0.35 * exp(-r * 4.0);
+      for (int k = 0; k < 3; k++) { float th = a * 1.0 + float(k) * 1.0472; vec2 d = vec2(cos(th), sin(th)) * r; star = max(star, (1.0 - smoothstep(0.003, 0.003 + aa * 1.5, abs(d.y))) * step(r, 0.7)); }
+      float c = ring + 0.5 * runes + 0.4 * star + 0.06 * exp(-r * 4.0);
       gl_FragColor = vec4(uTint * c * uK * (1.0 - smoothstep(0.95, 1.0, r)), 0.0);
       gl_FragColor = linearToOutputTexel(gl_FragColor);
     }`;
@@ -197,13 +201,13 @@ const EmberFire = (() => {
         }
         for (let i = shots.length - 1; i >= 0; i--) {
           const s = shots[i], q = Math.min(1, (now - s.t0) / s.dur);
-          const p = s.from.clone().lerp(s.to, q); p.y += Math.sin(q * Math.PI) * s.r * 2.5;     // a slight arc
+          const p = s.from.clone().lerp(s.to, q);                                          // (straight at its mark: a bolt is thrown level, not lobbed)
           const f = 1 + 0.06 * Math.sin(T * 17) + 0.04 * Math.sin(T * 29);
           s.ms.forEach((m, k) => { m.position.copy(p); m.scale.setScalar(f); m.material.uniforms.uTime.value = T * (k ? 1.3 : 1); });
           // the trail: puffs shed behind it drifting up and back, and sparks
-          const back = s.from.clone().sub(s.to).normalize().multiplyScalar(s.r * 3).add(V3(0, s.r * 4, 0));
+          const back = s.from.clone().sub(s.to).normalize().multiplyScalar(s.r * 3).add(V3(0, s.r * 1.2, 0));   // (what it sheds hangs along its line)
           for (s.emit += dt * (s.lite ? 36 : 70); s.emit >= 1; s.emit--) {
-            puff(p.clone().add(rnd().multiplyScalar(s.r * 0.5)), back, s.r * (1.3 + Math.random()), 260 + Math.random() * 160, 0.95, s.look);
+            puff(p.clone().add(rnd().multiplyScalar(s.r * 0.5)), back, s.r * (1.3 + Math.random()), 200 + Math.random() * 120, 0.95, s.look);
             if (Math.random() < 0.5) puff(p.clone(), rnd().multiplyScalar(s.r * 8), s.r * 0.6, 350, 1.1, s.look, 2);
           }
           if (q >= 1) {

@@ -55,10 +55,18 @@ Object.assign(CLIPS, {
 Object.assign(CLIPS, {
   // second pass (the motion review): a real draw and loose, a sheathing, a scythe's low sweep, a leaping great-sword
   // blow (its legs are replaced by the idle's: an overhead slam), chest-pounding, the left-handed raise and upward cast
-  bw_aimfire: { hand: "RightHand" }, bw_power: { hand: "RightHand" }, bw_aim_idle: { loop: true }, kn_sheath: {},
+  bw_aimfire: { hand: "RightHand" }, bw_power: { hand: "RightHand" }, bw_aim_idle: { loop: true }, kn_sheath: { to: 36 },      // (ends with the knife home at the left hip: after that the clip draws it again)
   zb_swipe: { hand: "RightHand" }, gs_low: { hand: "RightHand" }, gs_jump_atk: { hand: "RightHand" }, ax_chest: {},
   vc_raise_hand_m: { to: 78 }, cs_upwards_m: { hand: "LeftHand" },
 });
+Object.assign(CLIPS, {
+  // third pass (the notes of 2026-10-02): a real uppercut (left-handed: played mirrored), a torch held out to look by
+  // (a lantern-bearer's), a look down and a pointed finger
+  pu_uppercut: { hand: "LeftHand", whole: true }, tc_inspect: { whole: true }, pt_forward: { hand: "RightHand", whole: true },
+});
+// fourth pass (2026-10-03, the whole cast re-made with combos): Mixamo's combos, slashes, punches, kicks, casts,
+// shots and triumphs, kept whole — a move sheet picks its frames (their Mixamo names: tools/models/anims/mixamo-2026-10-03.json)
+for (const id of ["kk_armada", "hv_bash", "bb_v1", "bb_v2", "bb_v3", "sc_casting", "dd_stab", "dw_combo", "bx_elbow", "sc_fireball", "kf_v1", "kf_v2", "bx_flyknee", "ga_attack", "ga_casting", "ga_spin", "gk_v1", "gk_v2", "gl_v1", "gl_v2", "gl_v3", "gl_v4", "ga_slide", "hv_swing", "hv_slammer", "kk_hurricane", "bx_headbutt", "bj_v1", "bj_v2", "bx_knees", "sc_magic", "km_v1", "km_v2", "km_v3", "km_v4", "km_v5", "mu_punch", "cb_one", "os_combo", "py_v1", "py_v2", "py_v3", "py_v4", "py_v5", "bx_combo", "bx_quad", "vc_formalbow", "kr_v1", "kr_v2", "ar_shoot", "kk_side", "sw_advance", "hv_smash", "sc_cast", "sc_spell", "kk_spinflip", "kb_v1", "kb_v2", "sw_inward", "sw_outward", "mh_cast", "mh_one", "mh_two", "mh_three", "mt_cast", "mr_one", "mr_two", "mt_one", "mt_two", "mt_three", "mt_four", "mt_five", "ar_overdraw", "ar_recoil", "ar_draw", "ma_high", "ma_low", "ma_back", "ma_down", "ma_horiz", "mc_one", "mc_two", "mc_three", "tn_battlecry", "to_one", "to_two", "to_three", "to_stab", "as_v1", "as_v2", "sa_v1", "sa_v2", "sa_v3", "sa_v4", "sg_v1", "sg_v2", "sk_kick", "sl_v1", "sl_v2", "sl_v3", "sl_v4", "sl_v5", "tn_v1", "tn_v2", "tn_v3", "tn_v4", "tn_v5", "sc_throw", "sw_thrust", "cb_two", "sc_twohand", "ts_combo", "bx_upperjab", "sw_upward", "vi_v1", "vi_v2", "vi_v3", "vv_v1", "vv_v2", "vv_v3", "za_v1", "za_v2", "zp_v1", "zp_v2"]) CLIPS[id] = { whole: true };
 CLIPS.gs_power_slash = { hand: "RightHand", post: 7 };     // the frost king's slash ends on the blow (it re-raised after)
 CLIPS.cs_upwards = { hand: "RightHand" };
 // the conjure-and-throw clip spends five seconds conjuring: keep the gather and the throw
@@ -136,12 +144,14 @@ function convert(id, file) {
   return { fps: FPS, n, bones: used.map(nameOf), q: b64(q), hip: b64(hip), ...(cfg.loop ? { loop: 1 } : {}), ...(hit != null ? { hit } : {}) };
 }
 
-// only what a figure's suite plays is embedded (SUITES in the runtime); the other clips stay on disk as candidates
-const suites = fs.readFileSync(path.join(ROOT, "src", "presentation", "voxel", "models.js"), "utf8").match(/const SUITES = \{[\s\S]*?\n  \};/)[0];
-const used = new Set([...suites.matchAll(/"([a-z]{2}_[a-z0-9_]+)(?:@m)?"/g)].map((m) => m[1]));   // (a clip mirrored at run time, "<clip>@m", needs its clip)
+// only what a figure's move sheet plays is embedded (src/content/moves.js: its clips, a flourish, a plain suite); the
+// other clips stay on disk as candidates
+// (and the clip a coded move reshapes: EmberMoveSheet.CODED's base, in presentation/voxel/movesheet.js)
+const sheets = fs.readFileSync(path.join(ROOT, "src", "content", "moves.js"), "utf8") + fs.readFileSync(path.join(ROOT, "src", "presentation", "voxel", "movesheet.js"), "utf8").match(/const CODED = [\s\S]*?\}\);/)[0] + (fs.readFileSync(path.join(ROOT, "src", "presentation", "voxel", "movesheet.js"), "utf8").match(/const CHAINS = [\s\S]*?\}\);/) || [""])[0];
+const used = new Set([...sheets.matchAll(/"([a-z]{2}_[a-z0-9_]+)(?:@m)?"/g)].map((m) => m[1]));   // (a clip mirrored at run time, "<clip>@m", needs its clip)
 const out = [];
 for (const id of Object.keys(CLIPS)) {
-  if (!used.has(id) && !process.env.ANIM_ALL) { console.log(`${id}: no suite plays it — left out`); continue; }   // ANIM_ALL=1: every clip (a scratch bundle to choose from)
+  if (!used.has(id) && !process.env.ANIM_ALL) { console.log(`${id}: no move sheet plays it — left out`); continue; }   // ANIM_ALL=1: every clip (a scratch bundle to choose from)
   const f = path.join(SRC, id + ".fbx");
   if (!fs.existsSync(f)) { console.log(`${id}: no ${id}.fbx yet — skipped`); continue; }
   out.push(`  ${id}: ${JSON.stringify(convert(id, f))},`);
