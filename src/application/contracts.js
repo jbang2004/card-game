@@ -410,7 +410,7 @@ const EmberContractUI = (() => {
       el.className = "god-stage god-stage-" + shape;
       el.setAttribute("role", "dialog");
       el.setAttribute("aria-modal", "true");
-      el.setAttribute("aria-label", "诸神契约");
+      el.setAttribute("aria-label", "神之琥珀");
       el.style.setProperty("--god-card-w", width + "px");
       el.innerHTML = `<div class="god-scrim"></div><div class="god-shell"><div class="god-cards" data-count="${ids.length}">${ids
         .map((id) => {

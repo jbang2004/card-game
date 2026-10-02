@@ -1,12 +1,12 @@
-/* The expedition (地下城远征): a run of eight levels. Data only — EmberRun (rules/run.js) plays it.
+/* The expedition (地下城远征): a run of nine levels. Data only — EmberRun (rules/run.js) plays it.
  *
  * A run starts from a small class deck and grows it: after each win the player takes one of three themed bundles of
  * three cards; after levels 1, 3, 5 and 7 one of three treasures (a relic, a covenant, a legendary or epic card); the
- * tavern opens after levels 2, 4 and 6 (buy cards, strike one from the deck). Every battle starts at full health; one
+ * tavern opens after levels 2, 4, 6 and 8 (buy cards, strike one from the deck). Every battle starts at full health; one
  * loss ends the run. At each level two opponents are offered and the player picks one: a rival (one of the preset
  * decks, cut down and weakened for the early levels) or a boss (its health scaled by the level). */
 const EmberDungeon = {
-  levels: 8,
+  levels: 9,
   // the class decks a run starts from (ten cards each: cheap, plain, the class's basics)
   starters: {
     mage: ["spark", "spark", "bolt", "bolt", "wisp", "frostbolt", "wisdom", "guard", "sentinel", "cleric"],
@@ -15,19 +15,21 @@ const EmberDungeon = {
     morla: ["moonfox", "moonfox", "wolf", "graveoffering", "soultether", "soulguide", "spider", "guard", "sentinel", "cleric"],
   },
   // who can be met at each level: "rival" = a preset deck (EmberCampaign.archetypes), otherwise a boss id.
-  // rival: its health and how many of its deck's cheapest cards it plays with; bossHp: × the boss's own health
+  // rival: its health and how many of its deck's cheapest cards it plays with; bossHp: × the boss's own health;
+  // bossCards: a boss met here plays only its cheapest cards (the first levels' bosses are small decks)
   stages: [
-    { pool: ["rival"], rival: { hp: 10, cards: 10 } },
-    { pool: ["rival"], rival: { hp: 14, cards: 14 } },
-    { pool: ["rival", "warden", "queen"], rival: { hp: 18, cards: 18 }, bossHp: 0.6 },
-    { pool: ["rival", "warden", "queen"], rival: { hp: 21, cards: 22 }, bossHp: 0.65 },
-    { pool: ["rival", "queen", "oracle", "frost"], rival: { hp: 24, cards: 26 }, bossHp: 0.7 },
-    { pool: ["rival", "oracle", "frost", "moonkeeper"], rival: { hp: 27, cards: 30 }, bossHp: 0.8 },
-    { pool: ["oracle", "frost", "moonkeeper"], bossHp: 0.9 },
+    { pool: ["rival", "fuse", "gleaner"], rival: { hp: 10, cards: 10 }, bossHp: 0.4, bossCards: 10 },
+    { pool: ["rival", "appraiser", "redscarf", "pawnbroker"], rival: { hp: 14, cards: 14 }, bossHp: 0.5, bossCards: 14 },
+    { pool: ["rival", "warden", "drill", "pawnbroker"], rival: { hp: 18, cards: 18 }, bossHp: 0.6, bossCards: 18 },
+    { pool: ["rival", "warden", "clockmaker", "blacklung", "earlyriser", "amberbody"], rival: { hp: 21, cards: 22 }, bossHp: 0.65, bossCards: 22 },
+    { pool: ["rival", "oracle", "frost", "clockmaker", "blacklung", "earlyriser", "amberbody"], rival: { hp: 24, cards: 26 }, bossHp: 0.7, bossCards: 26 },
+    { pool: ["rival", "frost", "queen", "moonkeeper", "mirrorlegion", "mirrornahira", "mirrorfrederia", "mirrorrowan", "mirrorliol"], rival: { hp: 27, cards: 30 }, bossHp: 0.8 },
+    { pool: ["queen", "moonkeeper", "ada", "mirrorlegion", "mirrornahira", "mirrorfrederia", "mirrorrowan", "mirrorliol"], bossHp: 0.9 },
     { pool: ["dragon"], bossHp: 1 },
+    { pool: ["eve"], bossHp: 1 },
   ],
   treasureAfter: [1, 3, 5, 7],
-  tavernAfter: [2, 4, 6],
+  tavernAfter: [2, 4, 6, 8],
   // gold for a win: base + perLevel × the level won
   gold: { base: 10, perLevel: 5 },
   prices: { common: 20, rare: 30, epic: 45, legendary: 70, remove: 25, removeStep: 10 },

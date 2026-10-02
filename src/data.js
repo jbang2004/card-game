@@ -13,6 +13,10 @@ const EmberData = (() => {
     typeof EmberCampaign !== "undefined"
       ? EmberCampaign
       : require("./content/campaign.js");
+  const portraits =
+    typeof EmberPortraits !== "undefined"
+      ? EmberPortraits
+      : require("./content/portraits.js");
   const Decks =
     typeof EmberDeckRules !== "undefined"
       ? EmberDeckRules
@@ -233,8 +237,13 @@ const EmberData = (() => {
         );
     }
     for (const h of [...heroes, ...bosses]) {
-      if (!byId[h.portraitId]) throw Error(h.id + ": Invalid portrait ID");
+      if (!portraits[h.portraitId]) throw Error(h.id + ": Invalid portrait ID");
+      if (byId[h.portraitId]) throw Error(h.id + ": A portrait ID may not be a card ID");
       targeted(h.powerEffects, h.id, h.target);
+    }
+    for (const a of archetypes) {
+      if (a.portraitId && !portraits[a.portraitId]) throw Error(a.id + ": Invalid portrait ID");
+      if (a.portraitId && byId[a.portraitId]) throw Error(a.id + ": A portrait ID may not be a card ID");
     }
     for (const b of bosses) {
       if (

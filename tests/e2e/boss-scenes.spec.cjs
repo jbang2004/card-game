@@ -6,13 +6,15 @@ test('every boss fights on its own live battlefield, and the arena follows the l
   await page.locator('#quick-btn').click();
   await page.waitForFunction(()=>Emberfall.inBattle&&!EmberFX.busy);
   await page.waitForFunction(()=>EmberArena3D.active&&EmberArena3D.ready,null,{timeout:20000});
-  expect(await page.evaluate(()=>EmberArena3D.sceneId)).toBe('lava');
-  const field={warden:'lava',queen:'pavilion',frost:'frost',moonkeeper:'clouds',oracle:'abyss',dragon:'dragon'};
+  expect(await page.evaluate(()=>EmberArena3D.sceneId)).toBe('mine');
+  const field={warden:'mine',fuse:'mine',gleaner:'mine',redscarf:'mine',drill:'mine',blacklung:'mine',earlyriser:'mine',ada:'boiler',clockmaker:'boiler',amberbody:'boiler',appraiser:'boiler',pawnbroker:'boiler',queen:'glass',eve:'glass',frost:'frost',moonkeeper:'clouds',oracle:'abyss',mirrorlegion:'abyss',mirrornahira:'abyss',mirrorfrederia:'abyss',mirrorrowan:'abyss',mirrorliol:'abyss',dragon:'dragon'};
   const ids=await page.evaluate(()=>EmberData.bosses.map(b=>b.id));
   expect(ids.sort()).toEqual(Object.keys(field).sort());
   for(const id of ids){
     await page.evaluate(id=>EmberArena3D.setEncounter(id),id);
     expect(await page.evaluate(()=>EmberArena3D.sceneId)).toBe(field[id]);
+    /* only the abyss and the dragon keep a tidy arena; every other field fits its platform to the place */
+    expect(await page.evaluate(()=>EmberArena3D.board.shape)).toBe({mine:'deck',boiler:'catwalk',glass:'clearing',frost:'floe',clouds:'island'}[field[id]]||null);
     await page.waitForTimeout(400);
     expect(await page.evaluate(()=>EmberArena3D.failed)).toBe(false);
   }

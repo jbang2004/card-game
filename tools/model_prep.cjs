@@ -22,7 +22,9 @@ const ROOT = path.resolve(__dirname, ".."), SRC = path.join(ROOT, "tools", "mode
 //   grip:  { hand, len (tip to tip, the figure ≈ 0.97 tall), at (grip point, 0 = the piece's bottom … 1 = top),
 //            out ("top" | "bottom": the end that leaves the fist on the thumb side), turn (rad about the prop's axis),
 //            axis / face (world directions: the top end / the broad face, instead of the knuckle line and the hand) }
-//   hang:  { hand, len }                      shield: { arm, h, yaw, out, drop, fwd }
+//   hang:  { hand, len }                      shield: { arm, h, yaw, out, drop, fwd, front: "-z" for one modelled facing the other way }
+//   any prop: upright: true — a piece modelled lying slantwise is stood upright first (long axis y, wider end up)
+//   back:  { len (height), lean (rad, + = top toward the figure's right), back (behind the spine), up, side, bone }
 //   orb:   { hand, r, color }                 pose:   { arm, elbow, wrist, roll } (radians)
 const REAL = {
   paladin: { props: [
@@ -68,6 +70,24 @@ const REAL = {
     { sheet: "props-b1", piece: 1, kind: "shield", arm: "L", h: 0.5, yaw: 0.9 },
   ] },
   selmyra: { props: [{ kind: "orb", hand: "R", r: 0.038, color: [150, 70, 220] }] },
+  // the amber story's heroes and bosses (content/portraits.js, docs/design/CAST_V2.md). Props are the existing sheets' until
+  // their own are modelled (queue: assets/portraits/props): Rowan the longbow, Liol the lantern, Frederia the squire's
+  // round shield and arming sword, the Root Keeper the round shield
+  nahira: { props: [{ sheet: "props-c3", piece: 0, kind: "grip", hand: "R", len: 0.16, at: 0.2, out: "top", upright: true }] },   // her brass loupe (props-c3, made from text)
+  frederia: { props: [
+    { sheet: "props-b3", piece: 1, kind: "grip", hand: "R", len: 0.5, at: 0.86, out: "bottom" },
+    { sheet: "props-c1", piece: 0, kind: "shield", arm: "L", h: 0.36, yaw: 0.9 },   // her own scraped round shield
+  ] },
+  rowan: { props: [
+    { sheet: "props-c2", piece: 0, kind: "grip", hand: "L", len: 0.8, at: 0.5, axis: [0, 1, 0.12], face: [0, 0, 1] },   // props-c2: 0 bow, 1 quiver, 2 lantern
+    { sheet: "props-c2", piece: 1, kind: "back", len: 0.4, lean: 0.3, back: 0.1 },
+  ] },
+  liol: { props: [{ sheet: "props-c2", piece: 2, kind: "hang", hand: "L", len: 0.2 }] },
+  whistle: { props: [] },
+  translator: { props: [] },
+  rootkeeper: { props: [{ sheet: "props-c1", piece: 1, kind: "shield", arm: "L", h: 0.38, yaw: 0.9, front: "-z" }] },   // his own frost-rimed shield (props-c1: 0 scraped wood, 1 frost)
+  rootmother: { props: [] },
+  nathan: { props: [] },
   jingchen: { props: [{ kind: "orb", hand: "R", r: 0.05, color: [255, 150, 40] }] },
   aurion: { props: [{ sheet: "props-b4", piece: 3, kind: "grip", hand: "R", len: 0.62, at: 0.87, out: "bottom" }] },
   fenlos: { props: [{ sheet: "props-b2", piece: 0, kind: "grip", hand: "R", len: 0.95, at: 0.42, axis: [0, 1, 0.1], face: [1, 0, 0] }] },
@@ -75,7 +95,22 @@ const REAL = {
     { sheet: "props-b4", piece: 3, kind: "grip", hand: "R", len: 0.55, at: 0.87, out: "bottom" },
     { sheet: "props-b4", piece: 4, kind: "shield", arm: "L", h: 0.42, yaw: 0.9 },
   ] },
+  // the first batch of new opponents (docs/design/CAST_V2.md): no props yet
+  fuse: { props: [] },
+  gleaner: { props: [] },
+  appraiser: { props: [] },
+  redscarf: { props: [] },
+  clockmaker: { props: [] },
+  blacklung: { props: [] },
+  ada: { props: [] },
+  eve: { props: [] },
+  // the second batch
+  amberbody: { props: [] },
+  pawnbroker: { props: [] },
+  mirrorlegion: { props: [] },
 };
+// the mirror heroes (tools/mirror_glb.py): the heroes' black-jade twins carry what the heroes carry
+for (const h of ["nahira", "frederia", "rowan", "liol"]) REAL["mirror" + h] = REAL[h];
 
 function readGlb(file) {
   const b = fs.readFileSync(file), len = b.readUInt32LE(12);
@@ -116,8 +151,45 @@ function pieces(G) {
   // the sheet lays its things side by side: components whose x ranges overlap belong to one thing
   let groups = [...comps.values()].map((ids) => ({ idx: ids, ...box(ids) })).sort((a, b) => a.lo[0] - b.lo[0]);
   const out = [];
-  for (const g of groups) { const last = out[out.length - 1]; if (last && g.lo[0] < last.hi[0]) { last.idx = last.idx.concat(g.idx); Object.assign(last, box(last.idx)); } else out.push({ ...g }); }
+  // (two broad things that merely touch at the edges — a pair of round shields — stay two: merge only a substantial overlap)
+  const overlaps = (a, b) => b.lo[0] < a.hi[0] && (a.hi[0] - b.lo[0]) > 0.25 * Math.min(a.hi[0] - a.lo[0], b.hi[0] - b.lo[0]);
+  for (const g of groups) { const last = out[out.length - 1]; if (last && overlaps(last, g)) { last.idx = last.idx.concat(g.idx); Object.assign(last, box(last.idx)); } else out.push({ ...g }); }
   return out.filter((g) => g.idx.length > n * 0.01);
+}
+
+/** a piece modelled lying at an angle (a loupe seen slantwise on its sheet) stood upright: the long axis becomes y with
+ *  the wider (lens) end up, the other in-plane axis x and the thickness z. Rewrites the vertices of `gpos` in place and
+ *  returns the piece with its bounds. */
+function standUp(pc, gpos) {
+  const n = pc.idx.length, c = [0, 0, 0];
+  for (const i of pc.idx) for (let k = 0; k < 3; k++) c[k] += gpos[i * 3 + k] / n;
+  const C = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+  for (const i of pc.idx) { const d = [0, 1, 2].map((k) => gpos[i * 3 + k] - c[k]); for (let a = 0; a < 3; a++) for (let b = 0; b < 3; b++) C[a][b] += (d[a] * d[b]) / n; }
+  // Jacobi eigen decomposition of the symmetric 3×3 covariance
+  const V = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+  for (let sweep = 0; sweep < 30; sweep++) {
+    let off = 0; for (let a = 0; a < 3; a++) for (let b = a + 1; b < 3; b++) off += C[a][b] * C[a][b];
+    if (off < 1e-20) break;
+    for (let a = 0; a < 3; a++) for (let b = a + 1; b < 3; b++) {
+      if (Math.abs(C[a][b]) < 1e-30) continue;
+      const th = (C[b][b] - C[a][a]) / (2 * C[a][b]), t = Math.sign(th || 1) / (Math.abs(th) + Math.sqrt(th * th + 1)), co = 1 / Math.sqrt(t * t + 1), si = t * co;
+      for (let k = 0; k < 3; k++) { const x = C[k][a], y = C[k][b]; C[k][a] = co * x - si * y; C[k][b] = si * x + co * y; }
+      for (let k = 0; k < 3; k++) { const x = C[a][k], y = C[b][k]; C[a][k] = co * x - si * y; C[b][k] = si * x + co * y; }
+      for (let k = 0; k < 3; k++) { const x = V[k][a], y = V[k][b]; V[k][a] = co * x - si * y; V[k][b] = si * x + co * y; }
+    }
+  }
+  const ev = [0, 1, 2].map((k) => ({ val: C[k][k], vec: [V[0][k], V[1][k], V[2][k]] })).sort((a, b) => b.val - a.val);
+  let up = ev[0].vec; const side = ev[1].vec;
+  // the lens end is the broader one: compare the spread across the axis in the two halves
+  const along = pc.idx.map((i) => dot([0, 1, 2].map((k) => gpos[i * 3 + k] - c[k]), up));
+  const across = pc.idx.map((i, q) => { const d = [0, 1, 2].map((k) => gpos[i * 3 + k] - c[k]); return Math.hypot(...d.map((x, k) => x - along[q] * up[k])); });
+  let hi = 0, lo = 0, nh = 0, nl = 0; along.forEach((t, q) => { if (t > 0) { hi += across[q]; nh++; } else { lo += across[q]; nl++; } });
+  if (hi / Math.max(nh, 1) < lo / Math.max(nl, 1)) up = up.map((x) => -x);
+  const z = cross(side, up);
+  for (const i of pc.idx) { const d = [0, 1, 2].map((k) => gpos[i * 3 + k] - c[k]); gpos.set([dot(d, side), dot(d, up), dot(d, z)], i * 3); }
+  const lo3 = [9, 9, 9], hi3 = [-9, -9, -9];
+  for (const i of pc.idx) for (let k = 0; k < 3; k++) { lo3[k] = Math.min(lo3[k], gpos[i * 3 + k]); hi3[k] = Math.max(hi3[k], gpos[i * 3 + k]); }
+  return { idx: pc.idx, lo: lo3, hi: hi3 };
 }
 
 function prep(id, cfg) {
@@ -202,9 +274,12 @@ function prep(id, cfg) {
       verts = V.map((v) => [palm[0] + v[0] * r, palm[1] + r * 1.1 + v[1] * r, palm[2] + v[2] * r]); tris = F.flat(); uvs = null; color = pr.color || [120, 255, 170];
       bone = JI(Hn); sheet = null;
     } else {
-      const { G, gp, parts } = loaded[pr.sheet], pc = parts[pr.piece];
+      const { G, gp, parts } = loaded[pr.sheet];
+      let pc = parts[pr.piece];
       if (!pc) throw new Error(`${id}: ${pr.sheet} has ${parts.length} pieces, no piece ${pr.piece}`);
-      const gpos = G.read(gp.attributes.POSITION), guv = G.read(gp.attributes.TEXCOORD_0), gidx = G.read(gp.indices), mine = new Map(pc.idx.map((i, k) => [i, k]));
+      const gpos = G.read(gp.attributes.POSITION);
+      if (pr.upright) pc = standUp(pc, gpos);
+      const guv = G.read(gp.attributes.TEXCOORD_0), gidx = G.read(gp.indices), mine = new Map(pc.idx.map((i, k) => [i, k]));
       const H = pc.hi[1] - pc.lo[1], cx = (pc.lo[0] + pc.hi[0]) / 2, cz = (pc.lo[2] + pc.hi[2]) / 2;
       if (pr.kind === "grip") {
         // the grip axis is the knuckle line (pinky → index, the thumb side); the broad face turns along the hand
@@ -222,8 +297,16 @@ function prep(id, cfg) {
       } else if (pr.kind === "shield") {
         const Fa = side === "R" ? "RightForeArm" : "LeftForeArm", el = P1(Fa), wr = P1(Hn), mid = el.map((x, c) => (x + wr[c]) / 2), s = side === "L" ? 1 : -1;
         const k = (pr.h ?? 0.4) / H, at = [mid[0] + s * (pr.out ?? 0.05), mid[1] - (pr.drop ?? 0.06), mid[2] + (pr.fwd ?? 0.02)];
-        M = mul(T(at), mul(axisAngle([0, 1, 0], s * (pr.yaw ?? 0.9)), mul(S(k), T([cx, (pc.lo[1] + pc.hi[1]) / 2, pc.lo[2]].map((x) => -x)))));
+        // front: "-z" — a shield modelled facing the other way (its dome toward -z): turned half round about its middle first
+        const back = pr.front === "-z" ? pc.hi[2] : pc.lo[2], turn = pr.front === "-z" ? axisAngle([0, 1, 0], Math.PI) : trs();
+        M = mul(T(at), mul(axisAngle([0, 1, 0], s * (pr.yaw ?? 0.9)), mul(S(k), mul(turn, T([cx, (pc.lo[1] + pc.hi[1]) / 2, back].map((x) => -x))))));
         bone = JI(Fa);
+      } else if (pr.kind === "back") {
+        // slung on the back (a quiver): its middle on the spine, behind the trunk, leaning over the shoulder (lean: radians
+        // about z, + = the top toward the figure's right), len = its height
+        const bn = pr.bone ?? "Spine2", sp = P1(bn), k = (pr.len ?? 0.4) / H;
+        M = mul(T([sp[0] + (pr.side ?? 0), sp[1] + (pr.up ?? 0), sp[2] - (pr.back ?? 0.1)]), mul(axisAngle([0, 0, 1], pr.lean ?? 0.3), mul(S(k), T([cx, (pc.lo[1] + pc.hi[1]) / 2, cz].map((x) => -x)))));
+        bone = JI(bn);
       } else throw new Error(`${id}: unknown prop kind ${pr.kind}`);
       verts = pc.idx.map((i) => app(M, [gpos[i * 3], gpos[i * 3 + 1], gpos[i * 3 + 2]]));
       uvs = pc.idx.map((i) => [guv[i * 2], guv[i * 2 + 1]]);

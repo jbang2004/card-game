@@ -2,12 +2,12 @@
 const EmberThemeDefinition = Object.freeze({
   id: "silverblue",
   name: "星海银蓝",
-  title: "烬域 · 风起之境",
+  title: "琥珀战记 · 铜壶酒馆",
   copy: Object.freeze({
-    eyebrow: "旅人的星海序章",
-    subtitle: "灰烬酒馆",
+    eyebrow: "矿区黄昏的序章",
+    subtitle: "铜壶酒馆",
     tagline: "每一手，都是新的故事。",
-    footer: "EMBERFALL / A JOURNEY AMONG STARS",
+    footer: "AMBER WAR CHRONICLE / A TAVERN BY THE SHAFT",
   }),
   art: Object.freeze({
     home: "asset:themes/silverblue/home.webp",
@@ -15,17 +15,16 @@ const EmberThemeDefinition = Object.freeze({
     homePortal: "asset:ui/home-reference-v1/final/card-portal.webp",
     homeTree: "asset:ui/home-reference-v1/final/card-tree.webp",
     homeDragon: "asset:ui/home-reference-v1/final/card-dragon.webp",
-    relicHeart: "asset:ui/page-reference-v1/relic-heart.webp",
-    relicLens: "asset:ui/page-reference-v1/relic-lens.webp",
-    relicCrown: "asset:ui/page-reference-v1/relic-crown.webp",
+    // the six relics of the amber story (docs/design/CAST_V2.md): ordinary working things with a speck of amber
+    relicHeart: "asset:ui/relics-v2/relic-heart.webp",
+    relicLens: "asset:ui/relics-v2/relic-lens.webp",
+    relicCrown: "asset:ui/relics-v2/relic-crown.webp",
+    relicFeather: "asset:ui/relics-v2/relic-feather.webp",
+    relicEmber: "asset:ui/relics-v2/relic-ember.webp",
+    relicBanner: "asset:ui/relics-v2/relic-banner.webp",
     victorySigil: "asset:ui/page-reference-v1/victory-sigil.webp",
     map: "asset:themes/silverblue/map.webp",
     backdrop: "asset:themes/silverblue/backdrop.webp",
-    mage: "asset:themes/silverblue/mage.webp",
-    paladin: "asset:themes/silverblue/paladin.webp",
-    ranger: "asset:themes/silverblue/ranger.webp",
-    morla: "asset:themes/silverblue/morla.webp",
-    goddess: "asset:themes/silverblue/goddess.webp",
   }),
   scenes: Object.freeze({
     home: Object.freeze({
@@ -52,7 +51,7 @@ const EmberThemeDefinition = Object.freeze({
   scenery: Object.freeze([
     {
       id: "chimney",
-      name: "观星长廊",
+      name: "窗边的铜灯",
       hint: "轻触铜灯，点亮桌边的暖光",
       focus: [145, 160],
       warm: true,

@@ -67,7 +67,7 @@ test("web build: all assets decode, no external dependencies, actual spells, mel
       }
       return EmberData.cards.length;
     }),
-  ).toBe(97);
+  ).toBe(110);
   await page.screenshot({ path: path.join(out, "desktop.png") });
   await page
     .locator('#hand [data-cardid="frostbolt"]')
@@ -605,7 +605,9 @@ test("production API is read-only and has one renderer/art implementation", asyn
   ).toBe(26);
   await page.locator("#home-btn").click();
   await page.locator("#atelier-open").click();
-  expect(await page.locator(".atelier-vignette img").count()).toBe(6);
+  expect(await page.locator(".atelier-vignette img").count()).toBe(
+    await page.evaluate(() => EmberData.bosses.length),
+  );
   await page.locator("#atelier-done").click();
   await page.evaluate(() => Emberfall.showFullArt("cleric"));
   await expect(page.locator(".anime-viewer img")).toBeVisible();

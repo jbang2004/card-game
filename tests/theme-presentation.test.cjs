@@ -47,8 +47,8 @@ function runtime(definition) {
 test("theme artwork has independent roles, verified local payloads and provenance", sources, () => {
   const dir = path.join(root, "assets/themes/silverblue");
   const manifest = JSON.parse(fs.readFileSync(path.join(dir, "manifest.json")));
-  assert.equal(manifest.assets.length, 8);
-  assert.equal(new Set(manifest.assets.map((a) => a.role)).size, 8);
+  assert.equal(manifest.assets.length, 3);
+  assert.equal(new Set(manifest.assets.map((a) => a.role)).size, 3);
   for (const entry of manifest.assets) {
     const bytes = fs.readFileSync(path.join(dir, entry.file));
     assert.equal(bytes.toString("ascii", 0, 4), "RIFF");

@@ -2142,13 +2142,15 @@ const EmberFX = (() => {
         const heroId =
           ref.side === "e"
             ? !s?.opponentHero && EmberData.bosses[s?.bossIndex]
-              ? EmberData.bosses[s.bossIndex].portraitId
+              ? EmberData.bosses[s.bossIndex].id
               : s?.opponentHero
             : s?.heroId;
         const hero =
           EmberData.heroes.find((h) => h.id === heroId) ||
           EmberData.bosses.find((h) => h.id === heroId);
-        id = hero?.portraitId || null;
+        // a rival or practice opponent wears its preset's own face, which has no cut-in still
+        const arch = ref.side === "e" && s?.opponentHero ? EmberData.archetypes.find((a) => a.id === s.opponent) : null;
+        id = arch?.portraitId ? null : hero?.portraitId || null;
       }
       return id ? stage.cutinArt(id) : null;
     } catch {

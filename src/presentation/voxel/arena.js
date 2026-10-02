@@ -370,7 +370,7 @@ const EmberVoxelArena = (() => {
         if (u.fig && u.state === "live") { u.stopF = Math.min(TIER[tier].freeze, 3); u.pendingHurt = true; }
         const a = opts.from && units.get(key(opts.from.side, opts.from.uid));
         if (a && a.fig && a.state === "live") {
-          if (a.clip === "attack") a.freeze = a.fig.sig?.hitstop?.[tier] ?? TIER[tier].freeze;
+          if (a.clip === "attack") land(a, tier);
           if (opts.direction === "outgoing" && (!a.spec.moves?.attack?.ranged || o.shots || a.fig.sig)) {
             if (a.fig.sig && sfx && u.fig) { sfx.impact(a, hitOf(u.fig ? center(u) : where(u), a), tier); knock(u, a, tier); }
             else burst(u, a, tier, a.spec.moves?.attack?.style);
@@ -407,13 +407,20 @@ const EmberVoxelArena = (() => {
       else {
         const a = opts.from && units.get(key(opts.from.side, opts.from.uid));
         if (!a || !a.fig || a.state !== "live" || (a.spec.moves?.attack?.ranged && !o.shots && !a.fig.sig) || opts.direction !== "outgoing") return false;
-        if (a.clip === "attack") a.freeze = a.fig.sig?.hitstop?.[tier] ?? TIER[tier].freeze;
+        if (a.clip === "attack") land(a, tier);
         const g = where(ref); if (!g) return false;
         if (a.fig.sig && sfx) sfx.impact(a, hitOf(g.clone().add(V3(0, 0.45 * SIZE, 0)), a), tier);
         else burst(ghost(g, a), a, tier, a.spec.moves?.attack?.style);
       }
       wake();
       return true;
+    }
+    /** the attacker's blow lands: the hit-stop holds it — on the pose of the blow itself. The contact arrives a frame
+     *  or so before the clip reaches it (the last, fastest part of a strike), and the hold would otherwise freeze the
+     *  weapon short of its target: a melee figure still coming onto its contact is set on it */
+    function land(a, tier) {
+      a.freeze = a.fig.sig?.hitstop?.[tier] ?? TIER[tier].freeze;
+      if (a.atk && !a.atk.ranged && a.t < a.atk.H) { a.t = a.atk.H; a.atk.t0 = performance.now() - a.atk.alignMs; }
     }
     // a stand-in victim for a unit without a figure (a flat token or a hero): its ground point and a figure-sized box
     const ghost = (g, a) => ({ fig: { root: { position: g, scale: { x: SIZE } }, mesh: { geometry: { boundingBox: { min: { y: 0 }, max: { y: 0.9 } } } }, vox: a.fig.vox }, spec: { scale: 1 }, pal: paletteOf(a) });
@@ -427,7 +434,8 @@ const EmberVoxelArena = (() => {
       if (!owns(side, uid)) return null;
       const u = units.get(key(side, uid)), a = u.spec.moves?.attack || {};
       // shots: a signature caster flies its own (the page leaves its projectile out)
-      return { melee: !a.ranged, windup: a.ranged ? u.fig?.spell?.windup ?? a.windup ?? 260 : u.fig?.sig?.windup ?? 0, shots: !!(a.ranged && u.fig?.sig) };
+      // (a shooter's draw: a caster's spell, else its move sheet's — an archer's, a dragon's — else its sculpt's)
+      return { melee: !a.ranged, windup: a.ranged ? u.fig?.spell?.windup ?? u.fig?.sig?.draw ?? a.windup ?? 260 : u.fig?.sig?.windup ?? 0, shots: !!(a.ranged && u.fig?.sig) };
     }
 
     // contact burst on the victim (voxel-musou: pixel star with 13 spikes + needle sparks, warm → cool with the tier)
@@ -671,10 +679,12 @@ const EmberVoxelArena = (() => {
     const ease3 = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
     function glowOf(u) {
       const g = u.glow; if (!g) { R.setHit(u.fig, 0, 0, 0); return; }
-      const D = 11 + (g.tier >= 2 ? 3 : 0), fl = D + 1 - g.f;
+      // (a realistic figure's glow is shorter and weaker than a sculpt's: on its painted, mostly pale surface the full
+      // one burnt the whole body white for a fifth of a second, and its recoil could not be seen)
+      const soft = u.fig.model ? 0.55 : 1, D = (u.fig.model ? 7 : 11) + (g.tier >= 2 ? 3 : 0), fl = D + 1 - g.f;
       const ember = g.kill && u.state === "dying" ? 0.22 : 0;
-      if (g.f === 0) R.setHit(u.fig, ...HOT);
-      else if (fl > 0 || ember) { const q = Math.max(0, Math.min(1, fl / (D - 1))), k = Math.max(ember, q * q), c = g.kill ? TINT[3] : TINT[g.tier]; R.setHit(u.fig, c[0] * k, c[1] * k, c[2] * k); }
+      if (g.f === 0) R.setHit(u.fig, HOT[0] * (u.fig.model ? 0.8 : 1), HOT[1] * (u.fig.model ? 0.8 : 1), HOT[2] * (u.fig.model ? 0.8 : 1));
+      else if (fl > 0 || ember) { const q = Math.max(0, Math.min(1, fl / (D - 1))), k = Math.max(ember, q * q * soft), c = g.kill ? TINT[3] : TINT[g.tier]; R.setHit(u.fig, c[0] * k, c[1] * k, c[2] * k); }
       else { R.setHit(u.fig, 0, 0, 0); u.glow = null; }
     }
     // a shot the arena flies itself (gallery): arrow / bolt / breath from the shooter's emitter to the target
@@ -807,7 +817,10 @@ const EmberVoxelArena = (() => {
           u.base.position.copy(u.pos); u.base.scale.setScalar(b.r);
           paintHalo(u.base, u.side, b, T);
         } else if (u.base) dropBase(scene, u);
-        if (u.state === "live" && u.atk?.dash) { const off = dashOffset(u, u.pos, now); if (off) u.fig.root.position.add(off); }
+        if (u.state === "live" && u.atk?.dash) {
+          const off = dashOffset(u, u.pos, now);
+          if (off) u.fig.root.position.add(off); else if (u.atk.over) { u.toward = null; u.atk = null; }
+        }
         if (u.kb) { const off = knockOffset(u, now); if (off) u.fig.root.position.add(off); }
         if (u.state === "arrive") {        // its token just landed: it assembles there (bake and compile were off-frame)
           facing(u, u.fig.root.position);
@@ -837,9 +850,16 @@ const EmberVoxelArena = (() => {
         if (u.state !== "live") continue;
         facing(u, u.fig.root.position);
         if (u.clip === "attack") {
+          // where its foe's body is (a figure may aim its blow at it: EmberModelFigures' aim "foe")
+          const tv = u.toward && units.get(key(u.toward.side, u.toward.uid)), tg = u.toward && where(u.toward);
+          u.fig.foeAt = tv?.fig ? center(tv) : tg ? tg.clone().add(V3(0, 0.45 * SIZE, 0)) : null;
           if (u.freeze <= 0) u.t = attackTime(u, now); else u.atk.t0 += dt * 1000;   // hitstop holds the pose
-          if (!C.pose(u.fig, "attack", u.t, T)) { u.clip = "idle"; u.t = 0; u.toward = null; u.atk = null; C.pose(u.fig, "idle", 0, T); }
-          else attacker = u;
+          if (!C.pose(u.fig, "attack", u.t, T)) {
+            // its clip is over: back to rest — but one still on its way home keeps the hop (a short clip would
+            // otherwise drop it onto its station in one frame)
+            u.clip = "idle"; u.t = 0; C.pose(u.fig, "idle", 0, T);
+            if (u.atk?.dash && dashOffset(u, u.pos, now)) u.atk.over = true; else { u.toward = null; u.atk = null; }
+          } else attacker = u;
         } else {
           u.t += dt;
           if (!C.pose(u.fig, u.clip, u.t, T) && u.clip !== "idle") { u.clip = "idle"; u.t = 0; }

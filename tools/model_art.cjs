@@ -60,6 +60,31 @@ const FIGURES = {
   jingchen: { right: "held", skirt: 0.065, style: "caster", line: [], lit: true, tex: 2048, yaw: 0 },   // realistic
   aurion: { right: "held", blade: true, skirt: 0.065, style: "judgment", line: [], lit: true, tex: 2048, yaw: 0 },   // realistic
   fenlos: { right: "held", blade: true, style: "thrust", line: [], lit: true, tex: 2048, yaw: 0 },   // realistic
+  // the amber story's heroes and bosses (tools/model_prep.cjs REAL)
+  nahira: { right: "held", skirt: 0.065, style: "caster", line: [], lit: true, tex: 2048, yaw: 0 },
+  frederia: { right: "held", left: "shield", blade: true, skirt: 0.065, style: "melee", line: [], lit: true, tex: 2048, yaw: 0 },
+  rowan: { left: "held", style: "bow", line: [], lit: true, tex: 2048, yaw: 0 },
+  liol: { left: "held", skirt: 0.065, style: "caster", line: [], lit: true, tex: 2048, yaw: 0 },
+  whistle: { skirt: 0.065, style: "melee", line: [], lit: true, tex: 2048, yaw: 0 },
+  translator: { style: "caster", line: [], lit: true, tex: 2048, yaw: 0 },
+  rootkeeper: { left: "shield", skirt: 0.065, style: "melee", line: [], lit: true, tex: 2048, yaw: 0 },
+  rootmother: { skirt: 0.065, style: "caster", line: [], lit: true, tex: 2048, yaw: 0 },
+  nathan: { skirt: 0.065, style: "melee", line: [], lit: true, tex: 2048, yaw: 0 },
+  lampbeast: { beast: true, mt: 0, tex: 1536 },
+  earlyriser: { beast: true, mt: 0, tex: 1536 },
+  // the first batch of new opponents
+  fuse: { style: "caster", line: [], lit: true, tex: 2048, yaw: 0 },
+  gleaner: { style: "melee", line: [], lit: true, tex: 2048, yaw: 0 },
+  appraiser: { skirt: 0.065, style: "caster", line: [], lit: true, tex: 2048, yaw: 0 },
+  redscarf: { skirt: 0.065, style: "melee", line: [], lit: true, tex: 2048, yaw: 0 },
+  clockmaker: { style: "caster", line: [], lit: true, tex: 2048, yaw: 0 },
+  blacklung: { skirt: 0.065, style: "melee", line: [], lit: true, tex: 2048, yaw: 0 },
+  ada: { skirt: 0.04, style: "melee", line: [], lit: true, tex: 2048, yaw: 0 },
+  eve: { skirt: 0.065, style: "caster", line: [], lit: true, tex: 2048, yaw: 0 },
+  // the second batch
+  amberbody: { skirt: 0.065, style: "melee", line: [], lit: true, tex: 2048, yaw: 0 },
+  pawnbroker: { style: "caster", line: [], lit: true, tex: 2048, yaw: 0 },
+  mirrorlegion: { skirt: 0.065, style: "melee", line: [], lit: true, tex: 2048, yaw: 0 },
   // beasts on their voxel figures' skeletons (tools/beast_prep.cjs): the figures' own clips move them
   wolf: { beast: true, mt: 0, tex: 1536 }, moonfox: { beast: true, mt: 0, tex: 1536 }, duskstag: { beast: true, mt: 0, tex: 1536 },
   dragon: { beast: true, mt: 0, tex: 1536 }, spider: { beast: true, mt: 128, tex: 1536 },
@@ -67,6 +92,7 @@ const FIGURES = {
   rider: { beast: true, mt: 128, tex: 1536 }, sheep: { beast: true, mt: 0, tex: 1536 }, pup: { beast: true, mt: 0, tex: 1536 },
   spiritwolf: { beast: true, mt: 0, tex: 1536 }, stone: { beast: true, mt: 128, tex: 1536 }, thorn: { beast: true, mt: 0, tex: 1536 },
 };
+for (const h of ["nahira", "frederia", "rowan", "liol"]) FIGURES["mirror" + h] = FIGURES[h];   // the mirror heroes
 
 function readGlb(file) {
   const b = fs.readFileSync(file), len = b.readUInt32LE(12);
@@ -518,7 +544,7 @@ function beastEntry(id, cfg, { tex, joints, ibm, pos, uv, idx, J, W, n }) {
 
 // written in chunks of at most CHUNK bytes (an Artifact serves files up to 15 MB; the build keeps one script per module):
 // model-art.js starts the table, model-art-2.js … add to it; the build lists SLOTS of them, unused ones stay empty
-const CHUNK = 7.5 * 1024 * 1024, SLOTS = 16;
+const CHUNK = 7.5 * 1024 * 1024, SLOTS = 24;
 const files = fs.existsSync(SRC) ? fs.readdirSync(SRC).filter((f) => f.endsWith(".glb")).sort() : [];
 const chunks = [[]];
 let size = 0;

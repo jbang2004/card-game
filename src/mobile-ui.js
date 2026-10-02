@@ -65,7 +65,9 @@
       d =
         side === "p"
           ? D.heroes.find((h) => h.id === s.heroId)
-          : D.bosses[s.bossIndex];
+          : s.opponentHero
+            ? A.rivalFace(D.heroes.find((h) => h.id === s.opponentHero), D.archetypes.find((a) => a.id === s.opponent))
+            : D.bosses[s.bossIndex];
     const usable = side === "p" && !$("power-btn").disabled,
       canAttack = side === "p" && E.game.canAttack("p", "hero");
     E.showModal(
@@ -408,9 +410,9 @@
     syncDeck,
     showMenu,
   };
-  document.title = "烬域 · 鎏金酒馆";
+  document.title = "琥珀战记 · 铜壶酒馆";
   document.querySelector(".lobby-copy>.eyebrow").textContent = "诸神同辉";
-  document.querySelector(".lobby-bottom small").textContent = "烬域 · 鎏金酒馆";
+  document.querySelector(".lobby-bottom small").textContent = "琥珀战记 · 铜壶酒馆";
   const prev = V.mobile;
   V.resize();
   if (prev && E.game.s) afterRender(E.game.s);

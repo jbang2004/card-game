@@ -7,7 +7,7 @@ const test = require("node:test"),
   fs = require("node:fs"),
   path = require("node:path");
 const cards = require("../src/content/cards.js");
-const campaign = require("../src/content/campaign.js");
+const portraits = require("../src/content/portraits.js");
 const root = path.resolve(__dirname, "..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 const source = read("src/presentation/card-relief.js");
@@ -15,14 +15,13 @@ const maps = new Function(
   read("src/card-relief-maps.js") + ";return EmberCardReliefMaps;",
 )();
 
-test("relief maps cover exactly the selectable heroes' portraits (cards are amber blocks, see amber-layers.js)", () => {
-  const expected = [...new Set(campaign.heroes.map((h) => h.portraitId))].sort();
+test("relief maps cover exactly the portraits that declare `relief` (cards are amber blocks, see amber-layers.js)", () => {
+  const expected = Object.keys(portraits).filter((id) => portraits[id].relief).sort();
   assert.deepEqual(
     Object.keys(maps).sort(),
     expected,
     "Run tools/bake_card_relief.py <portrait ids> (it also rewrites src/card-relief-maps.js).",
   );
-  assert.ok(expected.length >= 4);
   const referenced = new Set();
   for (const [id, set] of Object.entries(maps)) {
     assert.ok(set.height && set.orm, id + " needs height and orm");
@@ -41,9 +40,8 @@ test("relief maps cover exactly the selectable heroes' portraits (cards are ambe
   assert.deepEqual(baked.sort(), [...referenced].sort(), "unused maps in art/relief");
 });
 
-test("selectable hero portraits are shown large, so they carry a baked normal map", () => {
-  for (const hero of campaign.heroes)
-    assert.ok(maps[hero.portraitId]?.normal, hero.portraitId);
+test("relief portraits are shown large, so they carry a baked normal map", () => {
+  for (const id of Object.keys(maps)) assert.ok(maps[id].normal, id);
 });
 
 test("relief is presentation-only and registered ahead of its callers", () => {

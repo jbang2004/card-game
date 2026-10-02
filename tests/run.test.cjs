@@ -31,14 +31,15 @@ function play(heroId, seed, outcome = () => "p") {
   return { run, steps };
 }
 
-test("the expedition content: eight stages, starter decks of the class, a dragon at the end", () => {
-  assert.equal(D.dungeon.levels, 8);
-  assert.equal(D.dungeon.stages.length, 8);
+test("the expedition content: nine stages, starter decks of the class, a dragon and then Eve at the end", () => {
+  assert.equal(D.dungeon.levels, 9);
+  assert.equal(D.dungeon.stages.length, 9);
   for (const h of D.heroes) {
     assert.equal(D.dungeon.starters[h.id].length, 10);
     assert.ok(R.legalDeck(D, D.dungeon.starters[h.id], h.id));
   }
   assert.deepEqual(D.dungeon.stages[7].pool, ["dragon"]);
+  assert.deepEqual(D.dungeon.stages[8].pool, ["eve"]);
   for (const [i, st] of D.dungeon.stages.entries())
     for (const id of st.pool.filter((x) => x !== "rival"))
       assert.ok(R.foe(D, i + 1, id), id + " can be met at level " + (i + 1));
@@ -50,20 +51,20 @@ test("a run is seeded: the same seed and choices give the same run", () => {
   assert.notDeepEqual(a.run.deck, c.run.deck);
 });
 
-test("the eight levels: treasure after 1/3/5/7, bundle after every win, tavern after 2/4/6", () => {
+test("the nine levels: treasure after 1/3/5/7, bundle after every win, tavern after 2/4/6/8", () => {
   for (const h of D.heroes) {
     const { run, steps } = play(h.id, 99);
     assert.equal(run.step, "won");
-    assert.equal(run.wins, 8);
+    assert.equal(run.wins, 9);
     // (the spoils of level N are taken while the run is still at level N)
     assert.deepEqual(
       steps.filter((s) => /treasure|tavern/.test(s)),
-      ["1:treasure", "2:tavern", "3:treasure", "4:tavern", "5:treasure", "6:tavern", "7:treasure"],
+      ["1:treasure", "2:tavern", "3:treasure", "4:tavern", "5:treasure", "6:tavern", "7:treasure", "8:tavern"],
     );
-    assert.equal(steps.filter((s) => s.endsWith(":bundle")).length, 7);
-    assert.equal(steps.filter((s) => s.endsWith(":route")).length, 8);
-    // seven bundles of three, at most one card struck per tavern
-    assert.ok(run.deck.length >= 10 + 7 * 3 - 3);
+    assert.equal(steps.filter((s) => s.endsWith(":bundle")).length, 8);
+    assert.equal(steps.filter((s) => s.endsWith(":route")).length, 9);
+    // eight bundles of three, at most one card struck per tavern
+    assert.ok(run.deck.length >= 10 + 8 * 3 - 4);
   }
 });
 
@@ -84,12 +85,18 @@ test("opponents: two to choose from, never met twice, rivals cut down early and 
   assert.equal(r.offer.foes.length, 2);
   for (const id of r.offer.foes) {
     const f = R.foe(D, 1, id);
-    assert.equal(f.kind, "rival");
-    assert.equal(f.hp, 10);
-    assert.equal(f.deck.length, 10);
+    if (f.kind === "rival") {
+      assert.equal(f.hp, 10);
+      assert.equal(f.deck.length, 10);
+    } else {
+      // the first levels meet only the cheap bosses (a miner's apprentice, not a god): scaled down, never below 10
+      const b = D.bosses.find((x) => x.id === id);
+      assert.equal(f.kind, "boss");
+      assert.equal(f.hp, Math.max(10, Math.round(b.hp * D.dungeon.stages[0].bossHp)));
+    }
   }
-  const queen = R.foe(D, 3, "queen"), boss = D.bosses.find((b) => b.id === "queen");
-  assert.equal(queen.hp, Math.round(boss.hp * D.dungeon.stages[2].bossHp));
+  const queen = R.foe(D, 6, "queen"), boss = D.bosses.find((b) => b.id === "queen");
+  assert.equal(queen.hp, Math.round(boss.hp * D.dungeon.stages[5].bossHp));
   assert.ok(queen.hp < boss.hp);
   assert.equal(queen.deck.length, boss.deck.length * 2);
   assert.equal(R.foe(D, 1, "queen"), null, "a boss appears only where its stage allows");
@@ -129,7 +136,7 @@ test("the tavern: gold buys each card once, striking a card costs more each time
   assert.equal(twice.removals, 2);
   assert.ok(R.remove(D, { ...twice, deck: twice.deck.slice(0, 5) }, twice.deck[0]).error);
   assert.ok(R.remove(D, { ...twice, gold: 0 }, twice.deck[0]).error);
-  assert.ok(R.remove(D, twice, "dragon").error);
+  assert.ok(R.remove(D, twice, "no-such-card").error);   // a card that is not in the deck
   assert.equal(ok(R.leave(D, twice)).level, 3);
 });
 

@@ -1062,7 +1062,7 @@
       rival = s.mode === "run" && s.opponentHero ? EmberRun.foe(D, s.run.level, s.run.foe) : null,
       boss = s.opponentHero
         ? {
-            ...D.heroes.find((h) => h.id === s.opponentHero),
+            ...A.rivalFace(D.heroes.find((h) => h.id === s.opponentHero), D.archetypes.find((a) => a.id === s.opponent)),
             en: rival ? "RIVAL" : "PRACTICE DUEL",
             phaseText: rival ? `劲敌「${rival.name}」，没有觉醒阶段。` : "双方 30 血，无遗物与首领觉醒。",
           }

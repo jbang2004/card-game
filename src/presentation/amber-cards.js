@@ -20,6 +20,15 @@ const EmberAmber = (() => {
   const stats = { status: "idle", id: null, steer: null, frames: 0, stills: 0 };
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
 
+  /* Device pixels the live block needs across its card. A card held up arrives through a scale-in (the stage zooms it from
+   * small), so its on-screen rect at mount time can be a fraction of where it settles: measure the layout width too and
+   * take the larger, and measure again once the arrival is over (a transform never wakes the ResizeObserver). */
+  const dprNow = () => Math.min(2, window.devicePixelRatio || 1);
+  const livePx = (card) => Math.max(card.offsetWidth || 0, card.getBoundingClientRect().width, 96) * dprNow();
+  function refit(card) {
+    for (const wait of [260, 700, 1500]) setTimeout(() => { if (liveCard === card && liveRenderer && card.isConnected) liveRenderer.resize(livePx(card)); }, wait);
+  }
+
   function fail(error) {
     if (!off) {
       off = true;
@@ -191,7 +200,7 @@ const EmberAmber = (() => {
     if (!handle || ticket !== mounting || !card.isConnected) return false;
     const { r, canvas } = handle;
     const { over } = describe(card);
-    const px = Math.max(card.getBoundingClientRect().width, 96) * Math.min(2, window.devicePixelRatio || 1);
+    const px = livePx(card);
     const same = liveCard && liveId === id && liveRenderer === r && JSON.stringify(handle.over || {}) === JSON.stringify(over);
     liveRenderer = r;
     if (liveCard && liveCard !== card) liveCard.classList.remove("amber-live");
@@ -202,8 +211,9 @@ const EmberAmber = (() => {
     card.append(canvas);
     card.classList.add("amber-live");
     r.start();
+    refit(card);
     stats.status = "ready"; stats.id = id; stats.steer = options.steer || "pointer";
-    (resizeWatch ||= new ResizeObserver(() => { if (liveCard && liveRenderer) liveRenderer.resize(Math.max(liveCard.getBoundingClientRect().width, 96) * Math.min(2, window.devicePixelRatio || 1)); })).disconnect();
+    (resizeWatch ||= new ResizeObserver(() => { if (liveCard && liveRenderer) liveRenderer.resize(livePx(liveCard)); })).disconnect();
     resizeWatch.observe(card);
     return true;
   }
@@ -297,7 +307,7 @@ const EmberAmber = (() => {
     holds: (element) => !!element && liveCard === element,
     /* The live block's current turn in radians ({ x: about the horizontal axis, y: about the vertical axis}). */
     angles: () => liveRenderer?.angles() ?? { x: 0, y: 0 },
-    diagnostics: () => ({ ...stats, frames: liveRenderer?.perf().draws ?? 0, cached: cache.size }),
+    diagnostics: () => ({ ...stats, frames: liveRenderer?.perf().draws ?? 0, cached: cache.size, perf: liveRenderer?.perf() ?? null }),
     /* Review hook: hold the live card at a pose (radians about the vertical and horizontal axes). */
     pose: (ay, ax) => liveRenderer?.setPose(ay ?? 0, ax ?? 0),
     ready: () => !off,

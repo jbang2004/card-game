@@ -25,15 +25,18 @@ for (const name of [
   "anime-assets.js",
   "relic-assets.js",
   "character-catalog.js",
+  "content/portraits.js",
   "atelier-art.js",
   "art.js",
 ])
   vm.runInContext(fs.readFileSync(path.join(root, "src", name), "utf8"), ctx);
 const evalJS = (code) => vm.runInContext(code, ctx);
 const sha = (b) => crypto.createHash("sha256").update(b).digest("hex");
-test("97 manifest entries match collectible, token and contract IDs", sources, () => {
-  assert.equal(manifest.cards, 97);
-  assert.equal(D.cards.filter((c) => !c.token).length, 83);
+test("110 manifest entries match collectible, token, contract and opponent-card IDs", sources, () => {
+  assert.equal(manifest.cards, 110);
+  // 83 collectible cards of the heroes' classes + 13 opponent-only cards (class "foe")
+  assert.equal(D.cards.filter((c) => !c.token && c.class !== "foe").length, 83);
+  assert.equal(D.cards.filter((c) => c.class === "foe").length, 13);
   assert.equal(D.cards.filter((c) => c.token).length, 14);
   assert.deepEqual(
     Object.keys(manifest.items).sort(),
@@ -42,19 +45,18 @@ test("97 manifest entries match collectible, token and contract IDs", sources, (
 });
 test("Every output is distinct and matches its recorded file hash", sources, () => {
   const hashes = new Set();
-  const heroPortraits = new Set(D.heroes.map((hero) => hero.portraitId));
   for (const [id, m] of Object.entries(manifest.items)) {
     const blob = fs.readFileSync(path.join(root, "assets/anime", m.file));
     assert.equal(sha(blob), m.sha256);
     hashes.add(m.sha256);
     assert.deepEqual(
       m.outputSize,
-      D.byId[id].contract || heroPortraits.has(id)
+      D.byId[id].contract
         ? [768, 1024]
         : [336, 448],
     );
   }
-  assert.equal(hashes.size, 97);
+  assert.equal(hashes.size, 110);
 });
 test("Every image retains verifiable source provenance", sources, () => {
   const atlases = new Set();
@@ -69,14 +71,14 @@ test("Every image retains verifiable source provenance", sources, () => {
     manifest.sourceAtlases,
   );
 });
-test("All 97 card routes resolve directly to their own embedded anime image", () => {
+test("All 110 card routes resolve directly to their own embedded anime image", () => {
   fallbackCalls = 0;
   assert.ok(
     evalJS("EmberData.cards.every(c=>EmberArt.card(c)===AnimeAssets[c.id])"),
   );
   assert.equal(
     evalJS("new Set(EmberData.cards.map(c=>EmberArt.card(c))).size"),
-    97,
+    110,
   );
   assert.equal(fallbackCalls, 0);
 });
@@ -88,14 +90,14 @@ test("Missing future card art fails visibly rather than reverting to old vectors
   assert.equal(fallbackCalls, 0);
 });
 test("Characters use explicit portrait IDs, independent of card ID or palette collisions", () => {
+  // heroes and bosses have their own portraits (content/portraits.js); none of them is a card's art or a card id
   assert.ok(
-    evalJS("EmberArt.character(EmberData.bosses[2])===AnimeAssets.necromancer"),
+    evalJS(
+      "[...EmberData.heroes,...EmberData.bosses].every(h=>EmberArt.character(h)===EmberPortraits[h.portraitId].image&&!EmberData.byId[h.portraitId])",
+    ),
   );
   assert.ok(
     evalJS("EmberArt.card(EmberData.byId.oracle)===AnimeAssets.oracle"),
-  );
-  assert.ok(
-    evalJS("EmberArt.character(EmberData.bosses[4])===AnimeAssets.ashdragon"),
   );
   assert.ok(
     evalJS("EmberArt.card(EmberData.byId.dragon)===AnimeAssets.dragon"),
@@ -104,9 +106,15 @@ test("Characters use explicit portrait IDs, independent of card ID or palette co
 test("Every character and relic uses an explicit available image", () => {
   assert.ok(
     evalJS(
-      "[...EmberData.heroes,...EmberData.bosses].every(h=>Object.values(AnimeAssets).includes(EmberArt.character(h)))",
+      "[...EmberData.heroes,...EmberData.bosses].every(h=>EmberArt.character(h).startsWith('asset:portraits/'))",
     ),
   );
+  for (const [id, p] of Object.entries(vm.runInContext("EmberPortraits", ctx)))
+    assert.ok(
+      fs.existsSync(path.join(root, "art", p.image.slice("asset:".length))) ||
+        fs.existsSync(path.join(root, "assets", p.image.slice("asset:".length))),
+      id + ": portrait image is missing",
+    );
   assert.ok(
     evalJS(
       'EmberData.relics.every(r=>EmberArt.relic(r.id).startsWith("data:image/"))',

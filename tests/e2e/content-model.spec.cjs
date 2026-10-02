@@ -200,7 +200,8 @@ test("a second mage and sixth boss work through production screens with only con
   await expect(page.locator('#modal .run-box[data-run-step="treasure"]')).toBeVisible();
   await page.locator("#run-home").click();
   await page.locator("#adventure-nav").click();
-  await expect(page.locator(".atlas-location")).toHaveCount(D.bosses.length + 1);
+  // (the mirrors, each made for one hero, are on the map only during that hero's run)
+  await expect(page.locator(".atlas-location")).toHaveCount(D.bosses.filter((b) => !b.forHero).length + 1);
   await expect(page.locator('.atlas-location.done[data-region="sixth"]')).toHaveCount(1);
   expect(errors).toEqual([]);
 });

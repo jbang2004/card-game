@@ -92,7 +92,7 @@ test("reference pages: live settings, guide chapters, hero modes and public cont
   await page.locator(".atlas-ready").waitFor();
   await page.locator('[data-map-node="1"]').click();
   await shot(page, "map");
-  await expect(page.locator(".atlas-dossier h3")).toHaveText("荆棘女王");
+  await expect(page.locator(".atlas-dossier h3")).toHaveText("根母");
   await page.keyboard.press("Escape");
   await page.locator("#start-btn").click();
   await shot(page, "heroes");

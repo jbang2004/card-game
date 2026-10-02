@@ -1,0 +1,258 @@
+<title>招式审片台</title>
+<style>
+  /* The model demo's look (the battlefield at dusk): obsidian glass, ember for what you can press, brass for labels. */
+  :root {
+    color-scheme: dark;
+    --ground: #0d0b09;
+    --glass: rgba(26, 21, 17, 0.82);
+    --glass-2: rgba(255, 255, 255, 0.055);
+    --rim: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+    --ink: #f6efe2;
+    --ink-2: #cdbfa6;
+    --ink-3: #8f8471;
+    --ember: #ff9b3d;
+    --ember-hi: #ffd39a;
+    --brass: #c9a45c;
+    --crimson: #e0475a;
+    --cool: #7fb6ff;
+    --serif: "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", "SimSun", serif;
+    --sans: "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+    --gutter: 16px;
+    --side: 0px;
+  }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: 14px/1.5 var(--sans); overflow: hidden; }
+  button, select, input { font: inherit; color: inherit; }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--ember-hi); outline-offset: 2px; }
+  #app { position: relative; height: 100%; overflow: hidden; }
+  .glass { background: var(--glass); box-shadow: var(--rim), 0 18px 50px rgba(0, 0, 0, 0.45); backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%); border-radius: 16px; }
+
+  /* the stage: the live take; with the comparison open, the kept revision plays beside it */
+  #stages { position: absolute; inset: 0 var(--side) 0 0; display: grid; grid-template-columns: 1fr; }
+  #app.compare #stages { grid-template-columns: 1fr 1fr; gap: 2px; background: #000; }
+  .view { position: relative; overflow: hidden; background: var(--ground); min-width: 0; }
+  .view canvas, .view iframe { position: absolute; inset: 0; width: 100%; height: 100%; display: block; border: 0; }
+  #stage { touch-action: none; cursor: grab; }
+  #stage:active { cursor: grabbing; }
+  #room, #dimmer { pointer-events: none; }
+  #dimmer { position: absolute; inset: 0; opacity: 0; background: radial-gradient(ellipse at 50% 55%, rgba(4, 2, 8, 0.6) 0%, rgba(4, 2, 8, 0.85) 55%, rgba(2, 1, 4, 0.97) 100%); }
+  #base-view { display: none; }
+  #app.compare #base-view { display: block; }
+  .tag { position: absolute; top: 64px; left: 50%; transform: translateX(-50%); padding: 3px 12px; border-radius: 999px; font-size: 12px; letter-spacing: 0.12em; background: rgba(0, 0, 0, 0.55); color: var(--ink-2); pointer-events: none; display: none; white-space: nowrap; }
+  #app.compare .tag { display: block; }
+  #live-view .tag { color: var(--ember-hi); }
+  #base-view .tag { pointer-events: auto; padding: 2px 6px 2px 12px; }
+  #rev { background: transparent; border: 0; color: var(--ink); padding: 2px 4px; }
+
+  .top { position: absolute; left: var(--gutter); top: 14px; display: flex; flex-direction: column; gap: 1px; z-index: 2; }
+  .eyebrow { font-size: 11px; letter-spacing: 0.28em; color: var(--brass); font-weight: 500; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7); }
+  #pick { border: 0; background: transparent; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: 8px; text-align: left; }
+  h1 { margin: 0; font: 900 26px/1.15 var(--serif); letter-spacing: 0.06em; text-shadow: 0 2px 14px rgba(0, 0, 0, 0.7); }
+  #pick::after { content: ""; width: 9px; height: 9px; border-right: 2px solid var(--ember); border-bottom: 2px solid var(--ember); transform: translateY(-3px) rotate(45deg); transition: transform 0.2s; }
+  #pick[aria-expanded="true"]::after { transform: translateY(2px) rotate(-135deg); }
+  #move-name { font-size: 13px; color: var(--ink-2); text-shadow: 0 1px 8px rgba(0, 0, 0, 0.9); }
+
+  .tools { position: absolute; right: calc(var(--side) + var(--gutter)); top: 14px; display: flex; gap: 6px; z-index: 2; }
+  .tool { height: 36px; padding: 0 12px; border: 0; border-radius: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); font-size: 13px; white-space: nowrap; }
+  .tool:hover, .tool[aria-pressed="true"], .tool[aria-expanded="true"] { color: var(--ember-hi); }
+  .tool[aria-pressed="true"] { box-shadow: var(--rim), inset 0 0 0 1px rgba(255, 155, 61, 0.5); }
+  .tool svg { width: 18px; height: 18px; }
+
+  .pop { position: absolute; top: 60px; padding: 12px; max-height: calc(100% - 230px); overflow-y: auto; scrollbar-width: thin; z-index: 4; }
+  .pop[hidden] { display: none; }
+  #picker { left: var(--gutter); width: min(640px, calc(100% - var(--side) - 2 * var(--gutter))); }
+  #panel { right: calc(var(--side) + var(--gutter)); width: 300px; max-width: calc(100% - 2 * var(--gutter)); }
+  .group + .group { margin-top: 10px; }
+  .role { font-size: 11px; letter-spacing: 0.2em; color: var(--brass); margin-bottom: 5px; }
+  .who { display: flex; flex-wrap: wrap; gap: 4px; }
+  .who button { border: 0; cursor: pointer; padding: 5px 10px; border-radius: 9px; background: var(--glass-2); color: var(--ink-2); font-size: 13px; white-space: nowrap; }
+  .who button:hover { color: var(--ink); background: rgba(255, 155, 61, 0.16); }
+  .who button[aria-pressed="true"] { background: var(--ember); color: #1c0f05; font-weight: 700; }
+  .who button[disabled] { opacity: 0.35; cursor: default; }
+  .seg { display: flex; gap: 3px; padding: 3px; background: var(--glass-2); border-radius: 11px; flex-wrap: wrap; }
+  .seg button { border: 0; background: transparent; padding: 4px 9px; border-radius: 9px; color: var(--ink-2); cursor: pointer; font-size: 13px; font-weight: 500; white-space: nowrap; }
+  .seg button[aria-pressed="true"] { background: var(--ember); color: #1c0f05; font-weight: 700; }
+  .seg button:not([aria-pressed="true"]):hover { background: var(--glass-2); color: var(--ink); }
+  .opt { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .opt + .opt { margin-top: 8px; }
+  .opt > span { color: var(--ink-2); font-size: 13px; white-space: nowrap; }
+  .hint { color: var(--ink-3); font-size: 12px; margin-top: 10px; }
+
+  /* the sheet: what this figure's move is made of, in the words to ask for a change with */
+  #sheet { position: absolute; right: 0; top: 0; bottom: 0; width: var(--side); border-radius: 0; overflow-y: auto; scrollbar-width: thin; padding: 60px 14px 20px; box-sizing: border-box; display: none; z-index: 1; }
+  #app.sheet { --side: 320px; }
+  #app.sheet #sheet { display: block; }
+  #sheet h2 { margin: 16px 0 6px; font-size: 11px; letter-spacing: 0.2em; color: var(--brass); font-weight: 500; }
+  #sheet h2:first-child { margin-top: 0; }
+  #sheet .chain { color: var(--ink-2); font-size: 12.5px; }
+  #sheet .note { color: var(--ink-2); font-size: 12.5px; margin: 6px 0 0; }
+  .rows { display: grid; grid-template-columns: auto 1fr auto; gap: 3px 10px; font-size: 13px; align-items: baseline; }
+  .rows .k { color: var(--ink); white-space: nowrap; }
+  .rows .v { color: var(--ink-2); font-variant-numeric: tabular-nums; text-align: right; }
+  .rows .id { color: var(--ink-3); font: 11px/1.4 ui-monospace, "SF Mono", Menlo, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rows .on .k { color: var(--ember-hi); }
+  .rows > div { display: contents; }
+  .sum { color: var(--ink-3); font-size: 12px; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .fxg { margin-top: 8px; }
+  .fxg > b { font-weight: 600; font-size: 12.5px; color: var(--ink-2); }
+  .fxg.on > b { color: var(--ember-hi); }
+  .bad { margin: 0 0 10px; padding: 8px 10px; border-radius: 10px; background: rgba(224, 71, 90, 0.16); color: #ffc2ca; font-size: 12.5px; white-space: pre-wrap; }
+  /* the reviewer's say on each act: what they write here is what gets changed */
+  #note { margin: 0 0 14px; padding: 12px; border-radius: 14px; background: rgba(255, 155, 61, 0.08); box-shadow: inset 0 0 0 1px rgba(255, 155, 61, 0.22); }
+  #note h2 { margin: 0 0 8px; color: var(--ember-hi); }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+  .chips button { position: relative; border: 0; cursor: pointer; padding: 3px 9px; border-radius: 999px; background: var(--glass-2); color: var(--ink-2); font-size: 12.5px; }
+  .chips button[aria-pressed="true"] { background: var(--ember); color: #1c0f05; font-weight: 700; }
+  .chips button.has::after { content: ""; position: absolute; top: 1px; right: 1px; width: 7px; height: 7px; border-radius: 50%; background: var(--crimson); }
+  .chips button.has.ok::after { background: #6fd08c; }
+  .chips button.has.done::after { background: var(--cool); }
+  #note-verdict { display: inline-flex; margin-bottom: 8px; }
+  #note-verdict button[data-verdict="ok"][aria-pressed="true"] { background: #6fd08c; }
+  #note-text { width: 100%; box-sizing: border-box; resize: vertical; min-height: 78px; padding: 8px 10px; border-radius: 10px; border: 0; background: rgba(0, 0, 0, 0.35); font: 13.5px/1.5 var(--sans); color: var(--ink); }
+  #note-text::placeholder { color: var(--ink-3); }
+  .note-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; font-size: 12px; color: var(--ink-2); }
+  .note-row label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+  #note-state { color: var(--ink-3); }
+  #note-reply { margin-top: 8px; padding: 7px 10px; border-radius: 10px; background: rgba(127, 182, 255, 0.12); font-size: 12.5px; color: var(--ink); white-space: pre-wrap; }
+  #note-reply b { color: var(--cool); font-weight: 600; }
+  #note-all { margin-top: 8px; width: 100%; font-size: 12.5px; }
+  #notes-pop { right: calc(var(--side) + var(--gutter)); width: min(460px, calc(100% - 2 * var(--gutter))); }
+  .nrow { display: block; width: 100%; text-align: left; border: 0; cursor: pointer; padding: 8px 10px; border-radius: 10px; background: var(--glass-2); color: var(--ink); font-size: 13px; }
+  .nrow + .nrow { margin-top: 5px; }
+  .nrow:hover { background: rgba(255, 155, 61, 0.16); }
+  .nrow .who2 { color: var(--ember-hi); font-weight: 600; }
+  .nrow .st { float: right; font-size: 11.5px; color: var(--ink-3); }
+  .nrow .st.open { color: #ffc2ca; }
+  .nrow .tx { display: block; color: var(--ink-2); margin-top: 2px; white-space: pre-wrap; }
+  .nrow .rp { display: block; color: var(--cool); margin-top: 2px; }
+  .who button.noted::after { content: " ●"; color: var(--crimson); font-size: 9px; vertical-align: top; }
+  .who button.noted.okd::after { color: #6fd08c; }
+  .who button.noted.answered::after { color: var(--cool); }
+  .mark { display: grid; grid-template-columns: 84px 1fr; gap: 8px; margin-top: 8px; align-items: start; }
+  .mark img { width: 84px; border-radius: 6px; cursor: pointer; display: block; }
+  .mark .what { font-size: 12.5px; color: var(--ink); }
+  .mark .what b { color: var(--ember-hi); }
+  .mark input { width: 100%; box-sizing: border-box; margin-top: 4px; padding: 4px 7px; border-radius: 7px; border: 0; background: var(--glass-2); font-size: 12.5px; }
+  .mark .copy { border: 0; background: transparent; color: var(--ink-3); cursor: pointer; font-size: 12px; padding: 2px 0; }
+  .mark .copy:hover { color: var(--ember-hi); }
+
+  /* the reading: which phase is playing, to the millisecond */
+  #hud { position: absolute; left: var(--gutter); bottom: 156px; pointer-events: none; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.95), 0 0 2px rgba(0, 0, 0, 0.9); z-index: 2; }
+  #phase { font: 900 30px/1.1 var(--serif); letter-spacing: 0.08em; color: var(--ember-hi); }
+  #phase.after { color: var(--cool); }
+  #phase.rest { color: var(--ink-2); }
+  #read { font-size: 13px; color: var(--ink); font-variant-numeric: tabular-nums; margin-top: 2px; }
+  #fxnow { font-size: 12.5px; color: var(--ink-2); margin-top: 2px; }
+
+  /* the bar: the take's phases on one clock, the transport, the actions */
+  #bar { position: absolute; left: var(--gutter); right: calc(var(--side) + var(--gutter)); bottom: 14px; padding: 10px 12px; z-index: 3; }
+  #line { position: relative; height: 34px; border-radius: 9px; background: var(--glass-2); cursor: pointer; overflow: hidden; touch-action: none; }
+  .ph { position: absolute; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; white-space: nowrap; overflow: hidden; color: #1c0f05; font-weight: 600; box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.35); }
+  .ph.before { background: linear-gradient(180deg, #ffb566, #e98728); }
+  .ph.before:nth-child(odd) { background: linear-gradient(180deg, #ffc78a, #f09a41); }
+  .ph.stop { background: repeating-linear-gradient(45deg, #fff3da 0 4px, #e9d3a5 4px 8px); }
+  .ph.after { background: linear-gradient(180deg, #9cc6ff, #5d95e0); }
+  .ph.after:nth-child(odd) { background: linear-gradient(180deg, #b4d4ff, #73a6ea); }
+  .ph.other { background: rgba(255, 255, 255, 0.14); color: var(--ink-2); }
+  .ph.now { box-shadow: inset 0 0 0 2px #fff, inset -1px 0 0 rgba(0, 0, 0, 0.35); }
+  .tick { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff; opacity: 0.9; pointer-events: none; }
+  .tick::after { content: attr(data-label); position: absolute; top: -1px; left: 4px; font-size: 10px; color: #fff; text-shadow: 0 1px 3px #000; white-space: nowrap; }
+  #head { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--crimson); box-shadow: 0 0 6px var(--crimson); pointer-events: none; }
+  .row { display: flex; align-items: center; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .btn { border: 0; cursor: pointer; padding: 6px 11px; border-radius: 10px; background: var(--glass-2); color: var(--ink); font-size: 13px; white-space: nowrap; }
+  .btn:hover { background: rgba(255, 155, 61, 0.18); }
+  .btn.lethal { color: #ffc2ca; }
+  .btn.mark-btn { background: rgba(224, 71, 90, 0.22); color: #ffd9de; font-weight: 600; }
+  .btn[aria-pressed="true"] { background: var(--ember); color: #1c0f05; font-weight: 700; }
+  .btn kbd { font: 10px/1 ui-monospace, Menlo, monospace; opacity: 0.6; margin-left: 4px; }
+  .sep { width: 1px; height: 18px; background: rgba(255, 255, 255, 0.12); margin: 0 2px; flex: none; }
+  .grow { flex: 1; }
+
+  #toast { position: absolute; left: 50%; top: 18px; transform: translate(-50%, -8px); padding: 7px 16px; border-radius: 999px; font-size: 13px; opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none; z-index: 6; background: rgba(0, 0, 0, 0.72); color: var(--ember-hi); white-space: nowrap; }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  #toast.bad { color: #ffc2ca; }
+
+  /* embedded (the kept revision beside the live take): the stage alone */
+  body.embed .top, body.embed .tools, body.embed #bar, body.embed #hud, body.embed #sheet, body.embed .pop, body.embed #toast, body.embed .tag { display: none !important; }
+  @media (max-width: 640px) { #app.sheet { --side: 0px !important; } #app.sheet #sheet { width: min(320px, 88%) !important; z-index: 5; } }
+  @media (max-width: 900px) {
+    #app.sheet { --side: 280px; }
+    #app.sheet #sheet { width: 280px; }
+    h1 { font-size: 21px; }
+    .eyebrow { display: none; }
+    #phase { font-size: 24px; }
+  }
+</style>
+<div id="app">
+  <div id="stages">
+    <div class="view" id="base-view"><iframe id="base" title="上一版" tabindex="-1"></iframe><div class="tag">对照 <select id="rev" aria-label="对照的版本"></select></div></div>
+    <div class="view" id="live-view"><canvas id="stage" aria-label="舞台：拖动旋转，滚轮缩放"></canvas><div id="dimmer"></div><div class="tag">当前</div></div>
+  </div>
+  <div class="top">
+    <span class="eyebrow">琥珀战记 · 招式审片台</span>
+    <button id="pick" type="button" aria-expanded="false" aria-controls="picker"><h1 id="who-name">…</h1></button>
+    <span id="move-name"></span>
+  </div>
+  <section class="pop glass" id="picker" hidden aria-label="选择角色"></section>
+  <div class="tools">
+    <button class="tool glass" id="compare" type="button" aria-pressed="false" title="和上一版并排播放">对比上一版</button>
+    <button class="tool glass" id="sheet-btn" type="button" aria-pressed="true" title="你的意见，和这个角色的招式单">意见 · 招式单</button>
+    <button class="tool glass" id="gear" type="button" aria-label="观看设置" aria-expanded="false" aria-controls="panel">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+    </button>
+  </div>
+  <section class="pop glass" id="panel" hidden aria-label="观看设置">
+    <div class="opt"><span>视角</span><div class="seg" role="group" aria-label="视角" id="views">
+      <button type="button" data-view="battle" aria-pressed="false">对局</button><button type="button" data-view="front" aria-pressed="true">正面</button><button type="button" data-view="side" aria-pressed="false">侧面</button><button type="button" data-view="close" aria-pressed="false">特写</button><button type="button" data-view="top" aria-pressed="false">俯视</button></div></div>
+    <div class="opt"><span>镜头</span><div class="seg" role="group" aria-label="镜头" id="spin">
+      <button type="button" data-spin="0" aria-pressed="true">固定</button><button type="button" data-spin="1" aria-pressed="false">自动旋转</button></div></div>
+    <div class="opt"><span>对手</span><div class="seg" role="group" aria-label="对手" id="foe">
+      <button type="button" data-foe="squire" aria-pressed="true">晨曦侍从</button><button type="button" data-foe="golem" aria-pressed="false">符文石像</button><button type="button" data-foe="wolf" aria-pressed="false">月影幼狼</button></div></div>
+    <div class="opt"><span>声音</span><div class="seg" role="group" aria-label="声音" id="sound">
+      <button type="button" data-sound="0" aria-pressed="true">关</button><button type="button" data-sound="1" aria-pressed="false">开</button></div></div>
+    <div class="hint">拖动旋转 · 滚轮缩放 · 双击回到当前视角。暂停时也能转镜头看定格的一帧。</div>
+  </section>
+  <aside id="sheet" class="glass" aria-label="意见与招式单">
+    <section id="note" aria-label="你的意见">
+      <h2>你的意见</h2>
+      <div class="chips" id="note-acts" role="group" aria-label="对哪个动作"></div>
+      <div class="seg" id="note-verdict" role="group" aria-label="评价">
+        <button type="button" data-verdict="ok" aria-pressed="false">满意</button><button type="button" data-verdict="fix" aria-pressed="false">要改</button></div>
+      <textarea id="note-text" rows="4" placeholder="这个动作哪里想改？随便写，比如：蓄力太长、收招拖、白光还是大、想更有重量感、换个颜色…"></textarea>
+      <div class="note-row"><label><input type="checkbox" id="note-at"> 附上暂停的这一刻</label><span id="note-state"></span></div>
+      <div id="note-reply" hidden></div>
+      <button type="button" class="btn" id="note-all">全部留言</button>
+    </section>
+    <div id="sheet-body"></div>
+  </aside>
+  <section class="pop glass" id="notes-pop" hidden aria-label="全部留言"></section>
+  <div id="hud" aria-live="off"><div id="phase" class="rest">待机</div><div id="read"></div><div id="fxnow"></div></div>
+  <div id="bar" class="glass">
+    <div id="line" role="slider" aria-label="时间轴：点击跳到那一刻" tabindex="0"><div id="head"></div></div>
+    <div class="row">
+      <button class="btn" type="button" data-do="replay" title="从头再放一遍">重播<kbd>R</kbd></button>
+      <button class="btn" type="button" data-do="toggle" id="toggle" title="播放 / 暂停">暂停<kbd>空格</kbd></button>
+      <button class="btn" type="button" data-do="back" title="后退一帧">◀ 帧<kbd>←</kbd></button>
+      <button class="btn" type="button" data-do="fwd" title="前进一帧">帧 ▶<kbd>→</kbd></button>
+      <div class="seg" role="group" aria-label="速度" id="speed">
+        <button type="button" data-speed="1" aria-pressed="true">1×</button><button type="button" data-speed="0.5" aria-pressed="false">½</button><button type="button" data-speed="0.25" aria-pressed="false">¼</button><button type="button" data-speed="0.1" aria-pressed="false">⅒</button></div>
+      <button class="btn" type="button" data-do="loop" id="loop" aria-pressed="true" title="放完自动重播">循环</button>
+      <span class="grow"></span>
+      <button class="btn mark-btn" type="button" data-do="mark" title="记下这一刻：角色、阶段、毫秒和截图">标记这一刻<kbd>M</kbd></button>
+    </div>
+    <div class="row" id="acts">
+      <button class="btn" type="button" data-act="attack">攻击</button>
+      <button class="btn" type="button" data-act="heavy">重击</button>
+      <button class="btn lethal" type="button" data-act="kill">致命一击</button>
+      <button class="btn" type="button" data-act="victory">胜利</button>
+      <span class="sep" aria-hidden="true"></span>
+      <button class="btn" type="button" data-act="hurt">受击</button>
+      <button class="btn" type="button" data-act="hurt3">重创</button>
+      <button class="btn lethal" type="button" data-act="die">阵亡</button>
+      <button class="btn" type="button" data-act="enter">登场</button>
+      <button class="btn" type="button" data-act="idle">待机</button>
+    </div>
+  </div>
+  <div id="toast" role="status"></div>
+</div>
+<!--SCRIPTS-->

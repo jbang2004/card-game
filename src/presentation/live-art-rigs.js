@@ -178,5 +178,10 @@ const EmberLiveArtRigs = Object.freeze({
     ].join("\n"),
   },
   // 星焰神·烬辰：呼吸、转头、托举太阳的双手缓缓运转、白发与披风；太阳表面翻涌、星光、金饰流光。
+  // 琥珀战记的四位英雄（content/portraits.js）：共用的自动待机，加上会眨的眼睛（中心、半宽高、倾角；1086x1448 原图像素）
+  nahira: { auto: true, eyes: [{c: [457, 238], hs: [30, 13], tilt: 8}, {c: [566, 267], hs: [22, 11], tilt: 14}] },
+  frederia: { auto: true, eyes: [{c: [488, 208], hs: [24, 10], tilt: -6}, {c: [575, 190], hs: [20, 9], tilt: -10}] },
+  rowan: { auto: true, eyes: [{c: [412, 314], hs: [26, 11], tilt: -8}, {c: [503, 298], hs: [20, 9], tilt: -10}] },
+  liol: { auto: true, eyes: [{c: [505, 228], hs: [22, 9], tilt: -6}, {c: [593, 220], hs: [18, 8], tilt: -6}] },
 });
 if (typeof module !== "undefined") module.exports = EmberLiveArtRigs;

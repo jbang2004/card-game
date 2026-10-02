@@ -62,6 +62,9 @@ const EmberFXProfiles = (() => {
   register("boar", "claw");
   register("frostgolem magmacore tortoise oathkeeper", "slam");
   register("scribe mirrormage archbishop", "bolt");
+  // 对手专属卡（class "foe"）：人群与钻头砸，发条军士挥剑，早醒者撞，黑色的花的"攻击"是植物的鞭打
+  register("strikecrowd mirrorfile clockworksergeant", "blade");
+  register("drillbit earlyroar blackbloom", "slam");
   const spells = {
     starweave: ["starwell", 480],
     dawnvow: ["aegis", 440],
@@ -102,6 +105,14 @@ const EmberFXProfiles = (() => {
     starshot: ["ember", 440],
     consecrate: ["sunrise", 600],
     judgment: ["benediction", 460],
+    // 对手专属法术
+    fusecord: ["ember", 420],
+    glean: ["aether", 360],
+    appraise: ["dispel", 440],
+    blackcough: ["siphon", 460],
+    calibrate: ["aegis", 440],
+    amberplate: ["aegis", 440],
+    pawnticket: ["aether", 360],
   };
   for (const [id, [cast, windup]] of Object.entries(spells)) {
     records[id] = {
@@ -179,9 +190,17 @@ const EmberFXProfiles = (() => {
     soultether: { fx: "arcane" },
     // 扩展包一：霜语走冰枪，星陨飞弹是小号陨火，圣焰审判每个敌人一道光柱，裁决之光单道光柱
     frostwhisper: { fx: "frost" },
-    starshot: { fx: "fireball", scale: 0.7 },
+    starshot: { fx: "fireball", perTarget: true, stagger: [60, 90], scale: 0.55 },
     consecrate: { fx: "holy", field: true },
     judgment: { fx: "holy" },
+    // 对手专属法术：导火索是小号火球，塌方的馈赠/典当走金光，估价沉默走虚空，黑玉咳嗽走汲取，校准/琥珀装甲走圣金护盾
+    fusecord: { fx: "fireball", scale: 0.6 },
+    glean: { fx: "holy" },
+    pawnticket: { fx: "holy" },
+    appraise: { fx: "void" },
+    blackcough: { fx: "siphon" },
+    calibrate: { fx: "holy" },
+    amberplate: { fx: "holy" },
   });
   // 英雄装备后的平砍：剑风，sunblade 金色、dagger 银白
   const fx2Weapons = Object.freeze({
@@ -295,6 +314,9 @@ const EmberFXProfiles = (() => {
     archbishop: "sunrise",
     tortoise: "bloom",
     oathkeeper: "aegis",
+    strikecrowd: "sunrise",
+    mirrorfile: "mirror",
+    earlyroar: "warcry",
   };
   for (const [id, battlecry] of Object.entries(battlecries))
     records[id].battlecry = battlecry;

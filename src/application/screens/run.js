@@ -82,7 +82,7 @@ const EmberRunScreens = (() => {
       `<button class="run-option lg-group ${cls}" ${data} aria-pressed="false"><span class="run-art">${art}</span><span class="run-copy">${pick}${copy}</span></button>`;
     function route(run) {
       const cards = run.offer.foes.map((id) => {
-        const f = R.foe(D, run.level, id), boss = f.kind === "boss" ? D.bosses[f.bossIndex] : null, hero = boss ? null : D.heroes.find((h) => h.id === f.hero);
+        const f = R.foe(D, run.level, id), boss = f.kind === "boss" ? D.bosses[f.bossIndex] : null, hero = boss ? null : A.rivalFace(D.heroes.find((h) => h.id === f.hero), D.archetypes.find((a) => a.id === f.archetype));
         const face = boss || hero, power = boss ? boss.power : hero.power, powerText = boss ? boss.powerText : hero.powerText;
         return tile(`run-foe run-foe-${f.kind}`, `data-foe="${id}"`, `<img src="${A.character(face)}" alt="${escape(face.name)}" draggable="false">`,
           `<span class="run-kind">${boss ? "首领" : "劲敌"}</span><h3>${escape(f.name)}</h3><small class="run-foe-title">${escape(f.title)}</small><span class="run-foe-stats"><span>生命 <b>${f.hp}</b></span><span>牌库 <b>${f.deck.length}</b> 张</span></span><p><strong>${escape(power)}</strong>${powerText ? " · " + escape(powerText) : ""}</p>${boss ? `<p class="run-phase">半血觉醒：${escape(boss.phaseText)}</p>` : ""}`);
@@ -132,7 +132,7 @@ const EmberRunScreens = (() => {
       const counts = {};
       for (const id of run.deck) counts[id] = (counts[id] || 0) + 1;
       const options = Object.keys(counts).sort((a, b) => D.byId[a].cost - D.byId[b].cost).map((id) => `<option value="${id}">${D.byId[id].cost}费 · ${escape(D.byId[id].name)}${counts[id] > 1 ? " ×" + counts[id] : ""}</option>`).join("");
-      page(run, `鎏金酒馆 · 第 ${run.level} 层之后`, "在酒馆整备", "用赢来的金币买牌，或从牌组里删去一张。",
+      page(run, `铜壶酒馆 · 第 ${run.level} 层之后`, "在酒馆整备", "用赢来的金币买牌，或从牌组里删去一张。",
         `<div class="run-tavern"><section class="run-shelf" aria-label="出售的卡牌"><h3>货架</h3><div class="run-wares">${wares}</div></section><section class="run-remove lg-group"><h3>删去一张牌</h3><p>牌组越精简，关键牌来得越快。每删一次，价格上涨。</p><select id="run-remove-card" class="library-search" aria-label="要删去的牌">${options}</select><button class="ghost-btn" id="run-remove" ${run.gold < run.offer.removePrice || run.deck.length <= 5 ? "disabled" : ""}>删去 · ${A.icon("gem")}${run.offer.removePrice}</button></section></div>`,
         foot("", "离开酒馆"));
       document.querySelectorAll("[data-buy]").forEach((b) => (b.onclick = () => { const next = apply(R.buy(D, run, +b.dataset.buy)); if (next) tavern(next); }));
@@ -142,7 +142,7 @@ const EmberRunScreens = (() => {
     function end(run) {
       const won = run.step === "won";
       clearRun();
-      page(run, won ? "远征完成" : "远征终结", won ? "余火不灭" : "火种未熄", won ? "八层之门尽数洞开，终焉在你面前熄灭。" : `你在第 ${run.level} 层倒下。每一次陨落，都是下一次重燃的序章。`,
+      page(run, won ? "远征完成" : "远征终结", won ? "余火不灭" : "火种未熄", won ? "九层之门尽数洞开。黑色的花在另一边的窗台上，轻轻晃了一下。" : `你在第 ${run.level} 层倒下。每一次陨落，都是下一次重燃的序章。`,
         `<div class="result-stats run-summary lg-group"><div><strong>${run.wins}</strong><span>胜场</span></div><div><strong>${run.deck.length}</strong><span>牌组</span></div><div><strong>${run.relics.length + run.contracts.length}</strong><span>宝物</span></div></div>`,
         foot("", "新的远征"));
       $("run-confirm").onclick = () => { closeModal(false); showHeroes("campaign"); };

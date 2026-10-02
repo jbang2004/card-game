@@ -75,6 +75,28 @@ test("a card held up to read is a live block that turns with the pointer", async
   await expect(page.locator(".amber-live-canvas")).toHaveCount(0);
 });
 
+/* A card held up arrives through a scale-in; its live canvas must end up as sharp as the card is on screen (device
+ * pixels across the card), not as sharp as the card was while it was still small. */
+test("a card held up is drawn at the resolution it settles at", async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 1600, height: 940 }, deviceScaleFactor: 2 });
+  const page = await context.newPage();
+  await ready(page);
+  await page.locator("#collection-nav").evaluate((e) => e.click());
+  await page.waitForSelector("[data-library-inspect]");
+  await page.locator("[data-library-inspect]").first().click();
+  await page.waitForSelector(".card.amber-live .amber-live-canvas", { timeout: 20000 });
+  await page.waitForTimeout(2500);
+  const m = await page.evaluate(() => {
+    const canvas = document.querySelector(".amber-live-canvas"), card = canvas.closest(".card");
+    return { px: canvas.width, card: card.offsetWidth, q: EmberAmber.diagnostics().perf?.qscale ?? 1 };
+  });
+  // the canvas is the card's width / 0.85 in device pixels, scaled by the adaptive quality (never below 0.55)
+  const want = (m.card * 2) / 0.85;
+  expect(m.px).toBeGreaterThanOrEqual(want * 0.5);
+  expect(m.px).toBeGreaterThanOrEqual(want * m.q * 0.95);
+  await context.close();
+});
+
 test("the collection paints the cards in view", async ({ page }) => {
   await ready(page);
   await page.locator("#lobby-library-btn").click();

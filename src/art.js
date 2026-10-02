@@ -6,8 +6,16 @@ const EmberArt = (() => {
     if (!image) throw Error("Missing anime artwork for card: " + c?.id);
     return image;
   }
+  // heroes, bosses and rivals have their own portraits (content/portraits.js), never a card's art
   function character(h) {
-    return card({ id: h.portraitId });
+    const image = EmberPortraits[h.portraitId]?.image;
+    if (!image) throw Error("Missing portrait artwork: " + h.portraitId);
+    return image;
+  }
+  /** an expedition rival or practice opponent: the preset's own person and face over the hero whose rules it plays */
+  function rivalFace(hero, archetype) {
+    if (!archetype) return hero;
+    return { ...hero, ...(archetype.person ? { name: archetype.person } : {}), ...(archetype.portraitId ? { portraitId: archetype.portraitId } : {}) };
   }
   function relic(id) {
     const role = "relic" + id[0].toUpperCase() + id.slice(1);
@@ -615,5 +623,5 @@ const EmberArt = (() => {
   for (const c of EmberData.cards) card(c);
   for (const h of [...EmberData.heroes, ...EmberData.bosses]) character(h);
   for (const r of EmberData.relics) relic(r.id);
-  return Object.freeze({ card, character, relic, icon, badgeFrame, statGem });
+  return Object.freeze({ card, character, rivalFace, relic, icon, badgeFrame, statGem });
 })();

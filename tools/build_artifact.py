@@ -30,7 +30,7 @@ TOKEN = re.compile(r"/\*([A-Z_]+)\*/")
 MIME = {".png": "png", ".webp": "webp", ".jpg": "jpeg"}
 FILE_LIMIT = 15 * 1024 * 1024
 COUNT_LIMIT = 255
-TITLE = "烬域 · 战场试玩"
+TITLE = "琥珀战记 · 战场试玩"
 
 
 def data_uri(rel):

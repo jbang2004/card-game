@@ -16,7 +16,7 @@ def main():
  font=ImageFont.truetype(font_path,15);heading=ImageFont.truetype(font_path,28);small=ImageFont.truetype(font_path,12)
  w,h=196,298;pad=20
  out=Image.new('RGB',(w*7+pad*2,8*h+104),'#ede3cd');d=ImageDraw.Draw(out)
- d.text((pad,15),'烬域 · 全卡池动漫原画',font=heading,fill='#443224')
+ d.text((pad,15),'琥珀战记 · 全卡池动漫原画',font=heading,fill='#443224')
  d.text((pad,56),'48 张可组牌卡 + 8 张衍生牌 · 56 张独立图版 · 从 8 张确认素材表拆分',font=font,fill='#886b4b')
  for i,(cid,item) in enumerate(m['items'].items()):
   x=pad+(i%7)*w;y=94+(i//7)*h

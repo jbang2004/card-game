@@ -1,19 +1,25 @@
 /* 3D battle arenas. Presentation only: it never reads rules.
  *
  * Every boss fights on its own battlefield (SCENES, picked by SCENE_OF through
- * setEncounter). All of them share one court — a raised plinth whose top
+ * setEncounter). All of them share one court — a raised platform (an arena's
+ * is a rounded rectangle; the other fields give it an outline of their own, see
+ * makePlat: ragged boards, a cut-cornered steel plate, a floor eaten by the
+ * garden, a plate of ice, a floating rock) whose top
  * carries a designed graphic layer drawn once per layout into an RGBA mask
  * (relief, inlay, accent, sheen) — the camera, the contact shadows and the HUD
  * avoidance; a recipe sets the palette and light rig, how the court's mask is
  * painted, what lies round the court and which set pieces and particles it
  * builds.
  *
- * The first, 断裂王庭 (warden and practice), is a court of pressed volcanic ash
- * between two rivers of lava that swing round the hero seat pads, columnar
- * basalt on the banks, and amethyst and emerald druses lit from within,
- * placed only where the camera sees them and no HUD box covers them. The
- * other five (see SCENES) replace the rivers with a forest deck, an ice
- * plaza, a black mirror, or nothing but a cloud sea far below.
+ * The amber story's own fields (mine, boiler, glass) are timber, riveted steel
+ * and glass round the same plinth; the older courts remain for the bosses that
+ * still fit them. 断裂王庭 (lava) is a court of pressed volcanic ash between
+ * two rivers of lava that swing round the hero seat pads, columnar basalt on
+ * the banks, and amethyst and emerald druses lit from within, placed only
+ * where the camera sees them and no HUD box covers them; it is no longer
+ * assigned to any boss and only shows with ?arena-scene=lava. The others (see
+ * SCENES) replace the rivers with a forest deck, an ice plaza, a black mirror,
+ * or nothing but a cloud sea far below.
  *
  * Everything is drawn into `#arena-gl` (WebGL2, one context) beneath
  * `#battle`; the DOM minions, heroes and hand stay exactly where the game puts
@@ -54,12 +60,15 @@ const EmberArena3D = (() => {
   /* One recipe per battlefield. The camera, court, contact shadows and HUD
    * avoidance are shared; a recipe holds the palette (court stone, ground,
    * glow, light rig), which set pieces it builds and how its court is drawn.
-   *   lava      灰烬监守 · 断裂王庭: ash court between two lava rivers, moonlit
-   *   pavilion  荆棘女王 · 低语密林: a stained silk court in a lacquer pavilion the forest has taken back, moonlit
-   *   frost     霜狱君王 · 永冻王座: ice court under creeping frost; bubbles, shards and snow stopped in mid-air
-   *   clouds    断契监誓者 · 月蚀祭坛: a night star-map altar over the cloud sea, an eclipse, broken chains, hanging blades
-   *   abyss     深渊先知 · 无光圣所: black glass over an endless black mirror, a ring of pillars, jellyfish, shafts of light
-   *   dragon    终焉巨龙 · 世界之烬: bronze court on the living dragon's back, spines rising, a burning cloud sea below
+   *   mine      铁哨 · 第七矿井口: plank deck over a pair of rails, a timber portal, amber carts, lanterns, a headframe
+   *   boiler    艾达 · 锅炉房: riveted steel plates, brass-banded drums, copper pipes, gears and furnace mouths
+   *   glass     伊芙 · 玻璃温室: the pavilion's black-flowered tiles under an iron-and-glass roof, panes missing
+   *   lava      断裂王庭（旧）: ash court between two lava rivers, moonlit; only with ?arena-scene=lava
+   *   pavilion  根母 · 低语密林（旧）: a stained silk court in a lacquer pavilion the forest has taken back, moonlit
+   *   frost     守根人 · 永冻王座: ice court under creeping frost; bubbles, shards and snow stopped in mid-air
+   *   clouds    守灯之兽 · 月蚀祭坛: a night star-map altar over the cloud sea, an eclipse, broken chains, hanging blades
+   *   abyss     译者 · 无光圣所: black glass over an endless black mirror, a ring of pillars, jellyfish, shafts of light
+   *   dragon    点火者·纳坦 · 世界之烬: bronze court on the living dragon's back, spines rising, a burning cloud sea below
    * inlay/accent colour the court art's G and B channels (metal and glow per recipe); `ground` is what lies
    * round the court (lava rivers, deck, plaza, water, or nothing: a sheet far below); fall/dust name the particles. */
   const SCENES = {
@@ -71,21 +80,40 @@ const EmberArena3D = (() => {
       ground: "deck", glow: [0.9, 300, 30], fall: "petals", dust: "fireflies", inlayMetal: 1, inlayGlow: 0.22, bloom: 0.9 },
     frost: { id: 2, stone: [0.28, 0.4, 0.52], stone2: [0.36, 0.5, 0.62], rock: [0.2, 0.26, 0.34], rock2: [0.3, 0.37, 0.46], fogK: 0.35, bloom: 0.5, expo: 1.05, ember: [0.55, 0.85, 1], lacquer: [0.8, 0.92, 1], inlay: [0.6, 0.9, 1],
       pal: { key: [0.9, 1.05, 1.35], pool: [0.9, 1.0, 1.15], sky: [0.14, 0.2, 0.32], groundAmb: [0.07, 0.1, 0.15], fog: [0.2, 0.28, 0.4] }, seat: { p: [0.35, 0.8, 1.4], e: [0.8, 0.95, 1.5] },
-      ground: "plaza", glow: [0.8, 320, 120], fall: "frozen", dust: "diamond", inlayGlow: 0.5, accentGlow: 0.4 },
+      ground: "plaza", glow: [0.8, 320, 120], fall: "frozen", dust: "diamond", inlayGlow: 0.5, accentGlow: 0.4, shape: "floe" },
     clouds: { id: 3, stone: [0.3, 0.31, 0.38], stone2: [0.4, 0.41, 0.48], rock: [0.03, 0.05, 0.13], rock2: [0.3, 0.36, 0.58], fogK: 0.35, bloom: 1, expo: 1.1, ember: [0.4, 0.7, 1], lacquer: [1, 0.78, 0.4], inlay: [0.72, 0.82, 1],
       pal: { key: [0.62, 0.68, 0.95], pool: [1.2, 1.15, 1.25], sky: [0.05, 0.07, 0.16], groundAmb: [0.03, 0.04, 0.08], fog: [0.05, 0.07, 0.17] }, seat: { p: [0.4, 0.8, 1.4], e: [1.3, 0.55, 0.8] },
-      ground: null, under: -760, glow: [1.2, 420, -60], fall: "stars", dust: "glint", inlayMetal: 0.7, inlayGlow: 0.9, accentGlow: 1.6, deep: true },
+      ground: null, under: -760, glow: [1.2, 420, -60], fall: "stars", dust: "glint", inlayMetal: 0.7, inlayGlow: 0.9, accentGlow: 1.6, deep: true, shape: "island", bottom: -460, taper: 0.3 },
     abyss: { id: 4, stone: [0.012, 0.014, 0.02], stone2: [0.03, 0.036, 0.052], rock: [0.03, 0.034, 0.045], rock2: [0.06, 0.07, 0.09], ember: [0.25, 0.85, 1], lacquer: [0.65, 0.42, 1], inlay: [0.4, 0.95, 1],
       pal: { key: [0.12, 0.16, 0.24], pool: [0.55, 0.68, 0.8], sky: [0.012, 0.02, 0.036], groundAmb: [0.004, 0.006, 0.012], fog: [0.004, 0.008, 0.018] }, seat: { p: [0.35, 0.8, 1.5], e: [0.9, 0.5, 1.5] },
       ground: "water", glow: [1.3, 420, 20], fall: "jelly", dust: "souls", inlayGlow: 1.6, accentGlow: 1 },
     dragon: { id: 5, stone: [0.2, 0.13, 0.09], stone2: [0.3, 0.2, 0.12], rock: [0.02, 0.012, 0.014], rock2: [0.12, 0.06, 0.06], fogK: 0.5, bloom: 0.9, ember: [0.95, 0.22, 0.06], lacquer: [1, 0.3, 0.06], inlay: [1, 0.7, 0.3],
       pal: { key: [1.8, 0.55, 0.36], pool: [0.8, 0.55, 0.42], sky: [0.07, 0.03, 0.05], groundAmb: [0.06, 0.02, 0.02], fog: [0.1, 0.03, 0.035] }, leak: [0.9, 0.18, 0.08], seat: { p: [0.4, 0.75, 1.4], e: [1.5, 0.35, 0.12] },
       ground: null, under: -700, glow: [1.6, 700, -160], fall: "rising", dust: "dying", inlayMetal: 1, inlayGlow: 0.1, accentGlow: 2.4, deep: true, light: [0.85, 0.3, -0.35] },
+    /* the amber story's own fields (docs/design/CAST_V2.md): a pit-head, a boiler hall, a glasshouse */
+    mine: { id: 6, stone: [0.2, 0.125, 0.07], stone2: [0.3, 0.19, 0.11], rock: [0.085, 0.07, 0.062], rock2: [0.2, 0.155, 0.12], ember: [1, 0.6, 0.2], lacquer: [1, 0.62, 0.12], inlay: [0.5, 0.48, 0.46], fogK: 1.1, bloom: 0.9,
+      pal: { key: [0.7, 0.78, 1.1], pool: [2.0, 1.6, 1.1], sky: [0.08, 0.095, 0.15], groundAmb: [0.1, 0.08, 0.068], fog: [0.05, 0.044, 0.048] }, seat: { p: [0.4, 0.75, 1.4], e: [1.45, 0.5, 0.2] },
+      ground: "rock", glow: [1.5, 560, 80], fall: "motes", dust: "coaldust", inlayMetal: 0.9, inlayGlow: 0, accentGlow: 1.7, stage: 0.18, perBoss: true, shape: "deck" },
+    boiler: { id: 7, stone: [0.19, 0.2, 0.225], stone2: [0.3, 0.31, 0.335], rock: [0.085, 0.085, 0.095], rock2: [0.19, 0.185, 0.195], ember: [1, 0.42, 0.1], lacquer: [1, 0.4, 0.08], inlay: [0.72, 0.52, 0.26], fogK: 1.2, bloom: 0.95,
+      pal: { key: [0.8, 0.62, 0.52], pool: [1.7, 1.4, 1.1], sky: [0.08, 0.065, 0.065], groundAmb: [0.085, 0.06, 0.05], fog: [0.07, 0.048, 0.04] }, seat: { p: [0.4, 0.75, 1.4], e: [1.5, 0.4, 0.15] },
+      ground: "plate", glow: [1.6, 600, 60], fall: "sparks", dust: "steam", inlayMetal: 1, inlayGlow: 0.05, accentGlow: 1.6, stage: 0.18, perBoss: true, shape: "catwalk" },
+    glass: { id: 8, stone: [0.09, 0.15, 0.13], stone2: [0.15, 0.23, 0.2], rock: [0.06, 0.09, 0.075], rock2: [0.12, 0.17, 0.13], ember: [0.85, 1, 0.5], lacquer: [0.012, 0.01, 0.02], inlay: [0.64, 0.52, 0.3], bloom: 0.9,
+      pal: { key: [0.7, 0.86, 1.1], pool: [1.25, 1.3, 1.05], sky: [0.09, 0.13, 0.17], groundAmb: [0.06, 0.09, 0.075], fog: [0.05, 0.075, 0.075] }, seat: { p: [0.4, 0.78, 1.3], e: [0.9, 0.6, 1.4] },
+      ground: "deck", glow: [0.95, 320, 40], fall: "blackpetals", dust: "fireflies", inlayMetal: 1, inlayGlow: 0.18, stage: 0.22, perBoss: true, shape: "clearing" },
   };
-  /* which boss fights on which field; the warden and practice games keep the lava court */
-  const SCENE_OF = { queen: "pavilion", frost: "frost", moonkeeper: "clouds", oracle: "abyss", dragon: "dragon" };
+  /* which boss fights on which field; practice games (and anything unlisted) fall back to the mine */
+  const SCENE_OF = {
+    // the pit-head: the foreman, the blasting girl, the scavenger, the red-scarf strike, the drill, the black lung, the beast cracked out of amber
+    warden: "mine", fuse: "mine", gleaner: "mine", redscarf: "mine", drill: "mine", blacklung: "mine", earlyriser: "mine",
+    // the boiler hall: the engineer, the clockmaker, the amber-bodied soldier, the valuer and the pawnbroker
+    ada: "boiler", clockmaker: "boiler", amberbody: "boiler", appraiser: "boiler", pawnbroker: "boiler",
+    // the glasshouse: the root mother and Eve with her black flower
+    queen: "glass", eve: "glass",
+    // the old courts that still fit: a frozen well, a boundary altar, a black mirror (the translator, the legion and the mirrored heroes), the black-jade dragon
+    frost: "frost", moonkeeper: "clouds", oracle: "abyss", mirrorlegion: "abyss", mirrornahira: "abyss", mirrorfrederia: "abyss", mirrorrowan: "abyss", mirrorliol: "abyss", dragon: "dragon",
+  };
   const FORCED = new URLSearchParams(location.search).get("arena-scene");
-  let SC = SCENES[FORCED] || SCENES.lava;
+  let SC = SCENES[FORCED] || SCENES.mine;
   /* opaque HUD the druses keep out from under (the hero consoles themselves are transparent bars on touch) */
   const HUD_BOXES = "#home-btn, .top-actions > *, #battle-status, #enemy-hand, #log-toggle, #intel-toggle, .hero-card-inner, .hero-stat, .hero-phase, #power-btn, #contract-open, .enemy-deck, .player-deck, #end-turn, .mana-panel, #hand";
   /* amethyst and emerald, the ground's only cool colours: body glow, the core that lights edges and tips */
@@ -120,13 +148,15 @@ void main(){vW=aPos;vN=aN;vX=aX;vSh=uLightVP*vec4(aPos,1.);gl_Position=uVP*vec4(
   const SURF_FS = `#version 300 es
 precision highp float;precision highp sampler2DShadow;
 in vec3 vW,vN;in vec2 vX;in vec4 vSh;layout(location=0) out vec4 o;
-uniform sampler2DShadow uShadow;uniform sampler2D uRockN,uRockR,uRockAO,uLavaC,uLavaN,uLavaE,uCourt;
+uniform sampler2DShadow uShadow;uniform sampler2D uRockN,uRockR,uRockAO,uLavaC,uLavaN,uLavaE,uCourt,uPlat;uniform vec3 uPlatBox;
 uniform float uMode,uTime,uLavaY,uGround,uK,uFogStart,uFogK,uSoft,uRadius,uEngrave,uStage;uniform vec2 uArena;uniform vec4 uRiv,uBulge,uStroke;
 uniform vec3 uEye,uLightDir,uKey,uPool,uSky,uGroundAmb,uFog,uTint,uEmber,uStoneA,uStoneB,uRockA,uRockB,uLacquer,uInlay;uniform float uScene;uniform vec3 uInlayMat;
 uniform vec3 uLightPos[16],uLightCol[16];uniform float uLightRad[16];uniform vec3 uGemGlow[2],uGemCore[2];uniform float uGemGain;
 uniform vec4 uCards[16];uniform vec4 uDecals[8];
 ${NOISE}
 const float PI=3.14159265;
+/* the lacquer pavilion's shading, shared by the glasshouse (scene 8: its own palette and black flowers) */
+#define PAV (abs(uScene-1.)<.5||abs(uScene-8.)<.5)
 float shadow(vec3 n){vec3 q=vSh.xyz/vSh.w*.5+.5;if(q.x<0.||q.x>1.||q.y<0.||q.y>1.||q.z>1.)return 1.;
  float bias=max(.0032*(1.-max(dot(n,uLightDir),0.)),.0009);float s=0.,w=0.;int rad=uSoft>.5?2:1;
  for(int y=-2;y<=2;y++)for(int x=-2;x<=2;x++){if(abs(x)>rad||abs(y)>rad)continue;s+=texture(uShadow,vec3(q.xy+vec2(float(x),float(y))*.9/2048.,q.z-bias));w+=1.;}return s/w;}
@@ -136,8 +166,10 @@ vec3 triN(sampler2D t,vec3 p,vec3 n,vec3 w,float s,float k){vec3 tx=texture(t,p.
  tx=vec3(tx.xy+n.zy,abs(tx.z)*n.x);ty=vec3(ty.xy+n.xz,abs(ty.z)*n.y);tz=vec3(tz.xy+n.xy,abs(tz.z)*n.z);return normalize(tx.zyx*w.x+ty.xzy*w.y+tz.xyz*w.z);}
 vec3 flatN(vec3 nm,float k){return normalize(vec3(nm.x*k,nm.z,nm.y*k));}
 float rrect(vec2 p,vec2 b,float r){vec2 d=abs(p)-b+r;return length(max(d,0.))+min(max(d.x,d.y),0.)-r;}
+/* the platform's edge: signed distance, negative inside — the rounded rectangle of an arena, or the field's own outline from uPlat */
+float plat(vec2 p){if(uPlatBox.z<.5)return rrect(p,uArena,uRadius);return texture(uPlat,(p+uPlatBox.xy)/(2.*uPlatBox.xy)).r;}
 /* the court is the one warmly lit thing: a soft pool from above */
-float pool(vec2 p){float r=length(p*vec2(1.,1.18))/(uArena.x*1.02);float onCourt=1.-smoothstep(-10.,150.,rrect(p,uArena,uRadius));float spot=1.-smoothstep(0.,1.18,r);return (pow(spot,1.3)*.7+.3)*onCourt;}
+float pool(vec2 p){float r=length(p*vec2(1.,1.18))/(uArena.x*1.02);float onCourt=1.-smoothstep(-10.,150.,plat(p));float spot=1.-smoothstep(0.,1.18,r);return (pow(spot,1.3)*.7+.3)*onCourt;}
 /* the two rivers; mirrors riverC()/riverW() on the CPU */
 float rivC(float z,float s){float c=uRiv.x-uRiv.y*z+40.*sin(z*.0045+(s>0.?.6:2.3))+22.*sin(z*.0017+(s>0.?1.9:4.1));vec2 b=s>0.?uBulge.zw:uBulge.xy;c+=b.y*exp(-pow((z-b.x)/210.,2.));return s*c;}
 float rivW(float z,float s){return uRiv.z*(1.+.16*sin(z*.006+(s>0.?3.:1.)));}
@@ -156,19 +188,28 @@ vec4 lit(vec3 alb,float rough,float metal,float ao,vec3 n,vec3 p,vec3 emis){
  c+=emis;float dist=max(0.,length(uEye-p)-uFogStart);c=mix(c,uFog,1.-exp(-dist*dist*uFogK));return vec4(c,dot(emis,vec3(.3,.5,.2)));}
 void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float rough=.7,metal=0.,ao=1.;vec3 w=triW(n);
  if(uMode<.5){ /* ---- the court: pressed ash, the engraved graphic layer, the obsidian inlay ---- */
-  vec2 p=vW.xz;vec2 cuv=(p+uArena)/(2.*uArena);vec4 cm=texture(uCourt,cuv);vec2 ts=1./vec2(textureSize(uCourt,0));
+  vec2 p=vW.xz;vec2 cuv=(p+uArena)/(2.*uArena);vec4 cm=texture(uCourt,cuv);cm*=step(max(abs(cuv.x-.5),abs(cuv.y-.5)),.5);vec2 ts=1./vec2(textureSize(uCourt,0));
   float hL=texture(uCourt,cuv-vec2(ts.x,0.)).r,hR=texture(uCourt,cuv+vec2(ts.x,0.)).r,hD=texture(uCourt,cuv-vec2(0.,ts.y)).r,hU=texture(uCourt,cuv+vec2(0.,ts.y)).r;
   vec3 nm=texture(uRockN,p/230.).rgb*2.-1.;n=normalize(vec3(nm.x*.05,1.,nm.y*.05));
-  if(abs(uScene-1.)<.5){ /* pavilion: stained lilac silk-lacquer, faint ripples, gilt vines (lit a little so they read at any pitch), crimson roses, a pearl sheen */
+  if(PAV){ /* pavilion: stained lilac silk-lacquer, faint ripples, gilt vines (lit a little so they read at any pitch), crimson roses, a pearl sheen */
    float rip=sin(length(p-vec2(-.3,.2)*uArena)*.09-uTime*.35)+sin(length(p-vec2(.4,-.25)*uArena)*.07+uTime*.28);
    n=normalize(vec3(cos(p.x*.09+rip)*.012+nm.x*.02,1.,sin(p.y*.08+rip)*.012+nm.y*.02));
    alb=mix(uStoneA,uStoneB,fbm(p/420.)*.8+fbm(p/90.)*.25)*(1.+(fbm(p/5.)-.5)*.03);rough=.34;float stain=smoothstep(.55,.8,fbm(p/140.+3.))*.35+smoothstep(.6,.9,fbm(p/40.+7.))*.15;alb*=1.-stain;
+   if(abs(uScene-8.)<.5){vec2 q=mat2(.7071,-.7071,.7071,.7071)*p;vec2 c=floor(q/72.),f=fract(q/72.);float sm=min(min(f.x,1.-f.x),min(f.y,1.-f.y))*72.;
+    alb=mix(uStoneA,uStoneB,hash(c)*.55+fbm(p/300.)*.45)*(1.-(1.-smoothstep(.7,2.2,sm))*.4);rough=.3;n=normalize(vec3(nm.x*.015,1.,nm.y*.015));}
    vec3 en=-vec3(hR-hL,0.,hU-hD)*uEngrave*.8;n=normalize(n+en);alb*=1.+cm.r*.05;
    float gd=cm.g;alb=mix(alb,uInlay,gd);metal=mix(metal,uInlayMat.x,gd);rough=mix(rough,.24,gd);emis+=uInlay*gd*uInlayMat.y;
    float lq=cm.b*(1.-gd);alb=mix(alb,uLacquer,lq);rough=mix(rough,.16,lq);
    gloss+=vec3(1.,.93,.98)*cm.a*.05*(.6+.4*sin(uTime*.6+p.x*.01));
-  }else if(uScene>1.5){ /* painted courts: ice tiles, cloud marble, black glass, dragon bronze; G inlay and B accent from the art */
-   if(uScene<2.5){vec2 q=mat2(.7071,-.7071,.7071,.7071)*p;vec2 c=floor(q/64.),f=fract(q/64.);float sm=min(min(f.x,1.-f.x),min(f.y,1.-f.y))*64.;
+  }else if(uScene>1.5){ /* painted courts: ice tiles, cloud marble, black glass, dragon bronze, pit-head planking, boiler plate; G inlay and B accent from the art */
+   if(abs(uScene-6.)<.5){ /* the loading deck at the pit mouth: weathered timber planks laid across the rails, iron nails, amber seams */
+    float pl=floor(p.y/46.),h1=hash(vec2(pl,3.)),along=p.x+h1*320.,gr=fbm(vec2(along/190.,p.y/5.))*.55+fbm(vec2(along/26.,p.y/2.2))*.45;
+    float seam=max(1.-smoothstep(.5,1.7,abs(fract(p.y/46.)*46.-.5)),1.-smoothstep(.5,1.5,abs(fract(along/230.)*230.-.5)));
+    alb=mix(uStoneA,uStoneB,gr*.9+hash(vec2(pl,floor(along/230.)))*.3)*(1.-seam*.6)*(.85+.3*fbm(p/9.));rough=.78-gr*.15;n=normalize(vec3(nm.x*.03,1.,nm.y*.03+seam*.08));ao=1.-seam*.35;
+   }else if(abs(uScene-7.)<.5){ /* the boiler hall: riveted steel plates, rubbed bright where boots wear, soot in the seams */
+    vec2 pc=floor(p/110.),pf=fract(p/110.);vec2 q2=(pf-.5)*110.;float sm=min(min(pf.x,1.-pf.x),min(pf.y,1.-pf.y))*110.;float rv=length(abs(q2)-vec2(47.));float rivet=1.-smoothstep(2.2,3.6,rv);
+    float wear=fbm(p/90.+hash(pc)*5.);alb=mix(uStoneA,uStoneB,hash(pc)*.5+wear*.5)*(1.-(1.-smoothstep(.5,2.4,sm))*.5)*(.8+.35*fbm(p/7.));alb=mix(alb,uStoneB*1.7,rivet);metal=.62+wear*.2;rough=.5-wear*.15;n=normalize(vec3(nm.x*.03,1.,nm.y*.03));
+   }else if(uScene<2.5){vec2 q=mat2(.7071,-.7071,.7071,.7071)*p;vec2 c=floor(q/64.),f=fract(q/64.);float sm=min(min(f.x,1.-f.x),min(f.y,1.-f.y))*64.;
     alb=mix(uStoneA,uStoneB,hash(c)*.5+fbm(p/260.)*.5);alb*=1.-(1.-smoothstep(.6,2.,sm))*.18;rough=.22;n=normalize(vec3(0.,1.,0.)+vec3(nm.x,0.,nm.y)*.02);}
    else if(uScene<3.5){float vein=pow(1.-abs(2.*fbm(p/160.+fbm(p/55.)*1.3)-1.),10.);alb=mix(uStoneA,uStoneB,fbm(p/300.))*(1.-vein*.28);rough=.16;n=normalize(vec3(nm.x*.015,1.,nm.y*.015));}
    else if(uScene<4.5){alb=mix(uStoneA,uStoneB,fbm(p/300.)*.6);rough=.05;n=normalize(vec3(sin(p.x*.02+uTime*.2)*.004,1.,cos(p.y*.02-uTime*.15)*.004));}
@@ -197,25 +238,39 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
   float bz=cm.b;if(bz>.003){alb=mix(alb,vec3(.64,.5,.3),bz);metal=mix(metal,1.,bz);rough=mix(rough,.32,bz);}
   }
   /* the court's rim: one thin cool line of light just inside its edge (the stage's edge reads at a glance) */
-  {float ed=rrect(p,uArena,uRadius),lw=fwidth(ed);emis+=vec3(.5,.78,1.)*.22*(1.-smoothstep(.4,.4+lw*1.5,abs(ed+6.)));}
+  if(uPlatBox.z>.5){ /* a field's own platform: its surface gives way to the place at the edge */
+   float sdp=plat(p),e=smoothstep(-70.,0.,sdp);
+   if(abs(uScene-6.)<.5){ /* deck: dark gaps and end grain where the boards stop */ alb*=1.-.5*smoothstep(-6.,0.,sdp);ao*=1.-.5*smoothstep(-14.,0.,sdp);}
+   else if(abs(uScene-7.)<.5){ /* catwalk: a hazard stripe along the lip */ float band=smoothstep(-31.,-27.,sdp)*(1.-smoothstep(-15.,-11.,sdp));float st=step(.5,fract((p.x+p.y)/36.));
+    alb=mix(alb,mix(vec3(.02),vec3(.7,.5,.05),st),band*.9);metal=mix(metal,.15,band);rough=mix(rough,.62,band);}
+   else if(abs(uScene-8.)<.5){ /* clearing: tiles broken and lost under soil and moss toward the edge */ float n1=fbm(p/40.+3.),n2=fbm(p/13.);float cover=smoothstep(.12,.95,e*1.35+(n1-.5)*.95);
+    vec3 moss=mix(vec3(.022,.05,.03),vec3(.07,.12,.05),n2),soil=vec3(.04,.03,.022)*(.7+.6*n2),cov=mix(soil,moss,smoothstep(.35,.65,n1));
+    alb=mix(alb,cov,cover);rough=mix(rough,.92,cover);metal*=1.-cover;n=normalize(n+vec3((n2-.5)*.5,0.,(fbm(p/9.)-.5)*.5)*cover);ao*=1.-.35*cover;}
+   else if(abs(uScene-2.)<.5){ /* floe: frosted at the rim, cracked across */ float cr=pow(1.-abs(2.*fbm(p/70.+fbm(p/24.)*1.2)-1.),14.);alb=mix(alb,vec3(.9,.96,1.),e*.7);alb*=1.-cr*.35*(1.-e);emis+=vec3(.25,.5,.7)*cr*.08;}
+   else if(abs(uScene-3.)<.5){ /* island: the marble gives way to dark layered rock at its lip */ vec3 rk=mix(vec3(.06,.06,.1),vec3(.2,.2,.28),fbm(vec2(p.x/110.,p.y/18.)));float lp=smoothstep(-30.,-5.,sdp);alb=mix(alb,rk,lp);rough=mix(rough,.85,lp);metal*=1.-lp;}
+  }
+  if(uPlatBox.z<.5){float ed=rrect(p,uArena,uRadius),lw=fwidth(ed);emis+=vec3(.5,.78,1.)*.22*(1.-smoothstep(.4,.4+lw*1.5,abs(ed+6.)));}
   /* the units stand here: their footprints shade the ash */
   float occ=1.;for(int i=0;i<16;i++){vec4 c=uCards[i];if(c.z<=0.)continue;vec2 dd=abs(p-c.xy+vec2(-.18,.15)*c.z)-c.zw;float sdc=length(max(dd,0.))+min(max(dd.x,dd.y),0.)-8.;float blur=12.+c.z*.25;occ*=1.-(1.-smoothstep(-2.,blur,sdc))*.62;}
   ao*=occ;
   for(int i=0;i<8;i++){vec4 dc=uDecals[i];if(dc.z<=0.)continue;float dr=length(p-dc.xy)/dc.z;float nz=fbm(p/26.+dc.xy);float m=1.-smoothstep(.3,1.,dr+nz*.5);float age=clamp((uTime-dc.w)/7.,0.,1.);alb*=1.-m*.7*(1.-age*.6);rough=mix(rough,.95,m);float ember=smoothstep(.55,.9,nz)*(1.-smoothstep(0.,.65,dr))*(1.-age);emis+=uEmber*ember*.9*(.6+.4*sin(uTime*7.+nz*30.));}
  }else if(uMode<1.5){ /* ---- terrain: basalt gravel, river banks, canyon rock ---- */
   vec3 p=vW;vec3 gn=n;
-  if(abs(uScene-1.)<.5){ /* pavilion: dark forest-floor boards strewn with fallen rose petals */
+  if(PAV){ /* pavilion: dark forest-floor boards strewn with fallen rose petals */
    float row=floor(p.z/34.),along=p.x+hash(vec2(row,3.))*400.,board=floor(along/210.);float h1=hash(vec2(row,board));
    float grain=fbm(vec2(along/120.,p.z/6.+row*3.))*.6+fbm(vec2(along/18.,p.z/2.5))*.4;
    float seam=max(1.-smoothstep(.6,1.8,abs(fract(p.z/34.)*34.-.5)),1.-smoothstep(.5,1.6,abs(fract(along/210.)*210.-.5)));
    alb=mix(uRockA,uRockB,grain*.8+h1*.35)*(1.-seam*.55);rough=.34+grain*.2;n=normalize(vec3((grain-.5)*.08,1.,seam*.2));ao=1.-seam*.4;
    vec2 lc=floor(p.xz/26.);float lh=hash(lc+.7),drift=smoothstep(.42,.7,fbm(p.xz/340.+5.));if(lh>.97-.5*drift){vec2 lp=(lc+.2+.6*vec2(hash(lc+1.3),hash(lc+2.9)))*26.;vec2 q=p.xz-lp;float ang=hash(lc+4.1)*6.2831;q=mat2(cos(ang),-sin(ang),sin(ang),cos(ang))*q;
     float rl=length(q*vec2(1.,1.8))/(6.+hash(lc+5.)*4.);float leaf=1.-smoothstep(.8,1.,rl);
-    vec3 lcol=mix(vec3(.3,.01,.02),vec3(.55,.03,.05),hash(lc+6.));alb=mix(alb,lcol,leaf);rough=mix(rough,.5,leaf);}
+    vec3 lcol=abs(uScene-8.)<.5?mix(vec3(.018,.01,.03),vec3(.07,.03,.1),hash(lc+6.)):mix(vec3(.3,.01,.02),vec3(.55,.03,.05),hash(lc+6.));alb=mix(alb,lcol,leaf);rough=mix(rough,.5,leaf);}
    float moss=smoothstep(.5,.75,fbm(p.xz/160.+2.));alb=mix(alb,vec3(.03,.06,.03),moss*.8);
   }else if(abs(uScene-2.)<.5){ /* frost: pale pavers under drifted snow */
    vec2 c=floor(p.xz/72.),f=fract(p.xz/72.);float sm=min(min(f.x,1.-f.x),min(f.y,1.-f.y))*72.;float snow=smoothstep(.58,.8,fbm(p.xz/220.)+fbm(p.xz/40.)*.25);
    alb=mix(uRockA,uRockB,hash(c)*.6+fbm(p.xz/90.)*.4)*(1.-(1.-smoothstep(.8,2.5,sm))*.3);alb=mix(alb,vec3(.93,.96,1.),snow);rough=mix(.5,.85,snow);n=normalize(vec3((fbm(p.xz/12.)-.5)*.1*snow,1.,0.));
+  }else if(abs(uScene-7.)<.5){ /* the boiler hall's floor beyond the court: larger, grimier plates */
+   vec2 pc=floor(p.xz/150.),pf=fract(p.xz/150.);float sm=min(min(pf.x,1.-pf.x),min(pf.y,1.-pf.y))*150.;float soot=fbm(p.xz/120.+hash(pc)*3.);
+   alb=mix(uRockA,uRockB,hash(pc)*.6+soot*.4)*(1.-(1.-smoothstep(.6,3.,sm))*.55);metal=.55;rough=.58;n=normalize(vec3((soot-.5)*.04,1.,0.));ao=.7+.3*smoothstep(0.,4.,sm);
   }else if(abs(uScene-4.)<.5){ /* abyss: an endless black mirror; slow swells */
    float sw=sin(p.x*.012+uTime*.3)*.5+sin(p.z*.017-uTime*.22)*.5+fbm(p.xz/80.+uTime*.02)*.6;n=normalize(vec3(cos(p.x*.012+uTime*.3)*.012,1.,cos(p.z*.017-uTime*.22)*.012+ (sw-.5)*.01));
    alb=uRockA*.2;rough=.035;metal=0.;
@@ -229,7 +284,7 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
   vec2 p=vW.xz;float t=uTime*.012;float c1=fbm(p/1100.+vec2(t,0.)),c2=fbm(p/380.-vec2(0.,t*1.4)),c3=fbm(p/120.+vec2(t*2.,t));
   float dens=smoothstep(.28,.78,c1*.65+c2*.45+c3*.12);n=normalize(vec3((c2-.5)*1.4+(c3-.5)*.5,1.,(c1-.5)*1.4));
   alb=mix(uRockA,uRockB,dens);rough=.95;
-  if(uScene>4.5){float gap_=pow(1.-dens,2.);emis+=uEmber*gap_*(1.6+1.4*c3)+uEmber*.12*dens*smoothstep(.55,.9,c2);}else{emis+=uSky*.35*dens+vec3(1.,.8,.9)*.06*smoothstep(.6,.9,c3);}
+  if(abs(uScene-5.)<.5){float gap_=pow(1.-dens,2.);emis+=uEmber*gap_*(1.6+1.4*c3)+uEmber*.12*dens*smoothstep(.55,.9,c2);}else{emis+=uSky*.35*dens+vec3(1.,.8,.9)*.06*smoothstep(.6,.9,c3);}
  }else if(uMode<2.5){ /* ---- the rivers: open melt down the channel, crust drifting at the banks ---- */
   vec2 p=vW.xz;float sd_=p.x<0.?-1.:1.;float xc=rivC(p.y,sd_),rw=rivW(p.y,sd_);float s=(p.x-xc)/rw,as=abs(s);
   float spd=1.-min(as,1.)*.65;vec2 fp=vec2(p.x,p.y-uTime*26.*sd_*spd);
@@ -257,7 +312,7 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
   if(top<.5){float jnt=smoothstep(.92,1.,sin(p.y*.085+id*6.2831));alb*=1.-jnt*.35;}
   float near=smoothstep(60.,-6.,p.y-uLavaY);float crack=fbm(p.xz/60.+p.y/40.);alb=mix(alb,vec3(.02,.015,.014),near*.6);emis+=uEmber*near*(.1+.9*smoothstep(.55,.85,crack))*1.5;
   if(abs(uScene-4.)<.5){float band=smoothstep(.955,1.,sin(p.y*.045+id*6.2831))*(1.-top);emis+=uInlay*band*(.5+.5*sin(uTime*.8+p.y*.01))*2.4+uInlay*.06*(1.-top);alb*=.8;}
-  if(uScene>4.5){float lc=smoothstep(.58,.74,fbm(p.xz/26.+p.y/30.));emis+=uEmber*lc*2.2+uEmber*smoothstep(-80.,-260.,p.y)*.6;}
+  if(abs(uScene-5.)<.5){float lc=smoothstep(.58,.74,fbm(p.xz/26.+p.y/30.));emis+=uEmber*lc*2.2+uEmber*smoothstep(-80.,-260.,p.y)*.6;}
  }else if(uMode<4.5){ /* ---- dry grass: dark at the root, straw at the tip, the odd ember ---- */
   float t=smoothstep(.05,1.,vX.x);float v=hash(vec2(vX.y,1.7));alb=mix(vec3(.05,.042,.032),mix(vec3(.22,.18,.12),vec3(.3,.25,.17),v),t);rough=.85;
   float fl=.5+.5*sin(uTime*3.+vX.y*7.);emis+=uEmber*step(.965,v)*t*t*(.4+.6*fl)*.5;
@@ -282,7 +337,7 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
    alb=vec3(.035,.035,.04);metal=.5;rough=.45;
    if(upper){float lip=1.-smoothstep(.0,2.2,abs(vW.y-11.));emis+=uTint*lip*.9;alb=mix(alb,vec3(.3,.28,.26),smoothstep(13.,15.,vW.y));metal=mix(metal,.9,smoothstep(13.,15.,vW.y));}
   }
-  if(abs(uScene-1.)<.5&&!wall&&r<105.){ /* pavilion: a gilt medallion on a lacquer drum */
+  if(PAV&&!wall&&r<105.){ /* pavilion: a gilt medallion on a lacquer drum */
    float rim=smoothstep(96.,98.,r),lens=1.-smoothstep(1.,2.4,abs(r-78.));
    float gr=1.-smoothstep(.5,1.5,abs(r-92.))+1.-smoothstep(.5,1.2,abs(r-72.));float disc=1.-smoothstep(96.,98.,r);
    alb=mix(uLacquer,uInlay,max(rim,gr));metal=max(rim,gr);rough=mix(.2,.3,metal);
@@ -299,12 +354,27 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
   alb=cg*.04;rough=.1;metal=0.;
   emis=(cg*body*thick*(.22+1.15*face*face)*veil+cc*(ridge*(.15+.85*h)*.5+tip*.75+glint*h*1.2))*pulse*uGemGain;
  }else if(uMode>7.5&&uMode<8.5){ /* ---- rails and props: lacquer, gilt, trunks and roots, and each field's own material (aX.x) ---- */
-  if(vX.x>2.5&&abs(uScene-1.)<.5){alb=vec3(.02,.035,.02)*(.7+.6*fbm(vW.xz/6.+vW.y*.2));rough=.7;}
+  if(vX.x>4.5&&abs(uScene-8.)<.5){alb=vec3(.1,.16,.15)*.2;rough=.6;emis=vec3(.28,.52,.5)*(.8+.25*fbm(vW.xz/150.+vW.y/200.));}
+  else if(vX.x>3.5&&abs(uScene-8.)<.5){alb=vec3(.2,.26,.1)*.2;rough=.1;emis=vec3(1.,.86,.5)*(1.7+.4*sin(uTime*2.3+vW.x*.03+vW.z*.02));}
+  else if(vX.x>2.5&&PAV){alb=vec3(.02,.035,.02)*(.7+.6*fbm(vW.xz/6.+vW.y*.2));rough=.7;}
   else if(abs(uScene-2.)<.5){alb=vec3(.62,.7,.78);metal=.8;rough=.3;if(vX.x>.5&&vX.x<1.5){emis=uInlay*.6;alb=uInlay;}
    if(vX.x>2.5){vec3 v=normalize(uEye-vW);float fr=pow(1.-abs(dot(n,v)),2.);alb=vec3(.55,.78,.9);metal=0.;rough=.06;emis=vec3(.25,.55,.75)*(.25+fr*.9)+vec3(.8,.95,1.)*pow(fr,4.)*.6;}}
   else if(abs(uScene-3.)<.5&&vX.x>2.5){alb=vec3(.86,.9,.97);metal=1.;rough=.18;}
   else if(abs(uScene-3.)<.5){float vein=pow(1.-abs(2.*fbm(vW.xz/60.+vW.y/50.)-1.),8.);alb=mix(uStoneB,uStoneA,.4)*(1.-vein*.3);rough=.3;if(n.y>.8){alb=uLacquer*.35;rough=.05;emis=uLacquer*(.7+.3*sin(uTime+vW.x*.01));}if(vX.x>.5){alb=uInlay;metal=1.;rough=.25;}}
-  else if(uScene>4.5){float sc=fbm(vW.xz/14.+vW.y/14.);alb=vec3(.07,.02,.018)*(.8+.4*sc);metal=.35;rough=.3;emis=uInlay*smoothstep(160.,380.,vW.y)*.9+uEmber*.05*sc;}
+  else if(abs(uScene-6.)<.5){ /* pit-head: timber (0), iron (1), amber (2), lantern glass (3) */
+   if(vX.x>3.5){alb=vec3(.46,.035,.04)*(.65+.6*fbm(vec2(vW.x*.06+vW.z*.06,vW.y*.04)));rough=.92;}
+   else if(vX.x>2.5){alb=uLacquer*.18;rough=.1;emis=uLacquer*(2.4+.7*sin(uTime*2.1+vW.x*.03+vW.z*.02));}
+   else if(vX.x>1.5){vec3 v_=normalize(uEye-vW);float fr_=pow(1.-max(dot(n,v_),0.),1.5);float vn_=fbm(vW.xz/8.+vW.y/8.);alb=uLacquer*.05;rough=.08;emis=uLacquer*(.3+1.15*fr_+.7*vn_*vn_)*(.9+.2*sin(uTime*1.2+vW.x*.02));}
+   else if(vX.x>.5){alb=vec3(.1,.095,.09)*(.7+.6*fbm(vW.xz/18.+vW.y/26.));metal=.85;rough=.44;}
+   else{float gr=fbm(vec2(vW.x*.04+vW.z*.04,vW.y*.015));alb=vec3(.17,.105,.06)*(.55+.9*gr)*(.85+.3*fbm(vW.xz/6.));rough=.86;}}
+  else if(abs(uScene-7.)<.5){ /* boiler hall: riveted steel (0), brass (1), copper pipe (2), furnace glow (3) */
+   if(vX.x>3.5){vec3 v_=normalize(uEye-vW);float fr_=pow(1.-max(dot(n,v_),0.),1.5);float vn_=fbm(vW.xz/8.+vW.y/8.);alb=vec3(.9,.5,.1)*.05;rough=.08;emis=vec3(1.,.56,.14)*(.3+1.2*fr_+.7*vn_*vn_)*(.9+.2*sin(uTime*1.3+vW.x*.03));}
+   else if(vX.x>2.5){alb=uLacquer*.2;rough=.2;emis=uLacquer*(1.8+.8*sin(uTime*3.1+vW.x*.05));}
+   else if(vX.x>1.5){float pat=fbm(vW.xz/12.+vW.y/20.);alb=mix(vec3(.5,.22,.1),vec3(.18,.28,.2),smoothstep(.55,.8,pat))*(.7+.5*pat);metal=.8;rough=.4;}
+   else if(vX.x>.5){alb=uInlay;metal=1.;rough=.26;}
+   else{float wear=fbm(vW.xz/40.+vW.y/50.);alb=mix(uStoneA,uStoneB,wear)*(.75+.5*fbm(vW.xz/9.+vW.y/9.));
+    float band=smoothstep(.93,1.,sin(vW.y*.12));alb*=1.-band*.4;metal=.7;rough=.42;}}
+  else if(abs(uScene-5.)<.5){float sc=fbm(vW.xz/14.+vW.y/14.);alb=vec3(.07,.02,.018)*(.8+.4*sc);metal=.35;rough=.3;emis=uInlay*smoothstep(160.,380.,vW.y)*.9+uEmber*.05*sc;}
   else if(vX.x>1.5){alb=vec3(.07,.045,.035)*(.7+.6*fbm(vW.xy/9.+vW.z*.1));rough=.8;}
   else if(vX.x>.5){alb=uInlay;metal=1.;rough=.26;}
   else{alb=uLacquer*(.85+.3*fbm(vW.xz/40.+vW.y*.02));rough=.2;float cc=pow(1.-max(dot(n,normalize(uEye-vW)),0.),4.);gloss+=vec3(1.,.8,.7)*cc*.06;}
@@ -312,19 +382,26 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
   bool card=vX.x>1.5;if(card){vec2 q=vec2(vX.x-2.,vX.y)-.5;float th=atan(q.y,q.x),rl=length(q)*2.,e=.55+.42*pow(abs(cos(2.5*th+.3)),.7);if(rl>e)discard;}
   float sd=card?hash(floor(vW.xz/40.)):-vX.x,f=fbm(vW.xz*.05+vW.y*.04+sd*3.1),cells=card?hash(floor(vW.xz*.4)+floor(vW.y*.4)):fbm(vW.xz*.16+vW.y*.13+sd*5.)*1.25-.1;
   vec3 cA=vec3(.02,.05,.035),cB=vec3(.06,.15,.08),cC=vec3(.14,.26,.12);float t=clamp(f*1.2-.2+(hash(vec2(sd,2.))-.5)*.5,0.,1.);
-  alb=t<.5?mix(cA,cB,t*2.):mix(cB,cC,t*2.-1.);alb*=.7+.5*cells;rough=.75;if(!card&&vX.y>.5){alb=vec3(.45,.02,.04)*(.7+.5*cells);rough=.5;}
+  alb=t<.5?mix(cA,cB,t*2.):mix(cB,cC,t*2.-1.);alb*=.7+.5*cells;rough=.75;if(!card&&vX.y>.5){if(abs(uScene-8.)<.5){alb=vec3(.025,.012,.04)*(.7+.5*cells);rough=.3;emis=vec3(.5,.2,.9)*.25*pow(1.-max(dot(n,normalize(uEye-vW)),0.),2.);}else{alb=vec3(.45,.02,.04)*(.7+.5*cells);rough=.5;}}
   float gap=smoothstep(.72,.9,cells);ao=(.55+.45*smoothstep(-.6,.8,n.y))*(1.-gap*.5);if(!card){alb*=.45;ao*=.6;}n=normalize(n+vec3(cells-.5,0.,hash(vec2(cells,1.))-.5)*.5);
   emis=alb*uKey*.22*pow(max(dot(-normalize(vN),normalize(uLightDir)),0.),1.5);
  }else{ /* ---- the court's plinth: chamfer and sides ---- */
   vec3 p=vW;vec3 gn=n;n=triN(uRockN,p,n,w,1./300.,.35);float up=smoothstep(.3,.8,gn.y);float fall=smoothstep(uGround-14.,0.,p.y);
   alb=mix(uStoneA*.5,uStoneB*1.05,up)*(.5+.5*fall);rough=mix(.82,.6,up);ao=.55+.45*fall;
-  if(abs(uScene-1.)<.5){alb=mix(uLacquer,uInlay,up);metal=up;rough=mix(.18,.28,up);ao=.7+.3*fall;}
-  else if(uScene>1.5){alb=mix(uStoneA*.72,uInlay,up*.85);metal=up*uInlayMat.x;rough=mix(.3,.24,up);ao=.7+.3*fall;emis+=uInlay*up*uInlayMat.y*.5;if(uScene>4.5)alb*=mix(.8,1.,up);}
+  if(PAV){alb=mix(uLacquer,uInlay,up);metal=up;rough=mix(.18,.28,up);ao=.7+.3*fall;}
+  else if(uScene>1.5){alb=mix(uStoneA*.72,uInlay,up*.85);metal=up*uInlayMat.x;rough=mix(.3,.24,up);ao=.7+.3*fall;emis+=uInlay*up*uInlayMat.y*.5;if(abs(uScene-5.)<.5)alb*=mix(.8,1.,up);}
+  if(uPlatBox.z>.5){ /* a field's own platform: its side walls are what it is made of */ vec3 q_=p;float g_=fbm(q_.xz/26.+q_.y/14.);
+   if(abs(uScene-6.)<.5){alb=vec3(.17,.105,.06)*(.55+.9*g_)*mix(.45,.85,up);metal=0.;rough=.88;emis=vec3(0.);}
+   else if(abs(uScene-7.)<.5){alb=uStoneB*mix(.45,.85,up)*(.8+.4*g_);metal=.75;rough=.42;emis=vec3(0.);}
+   else if(abs(uScene-8.)<.5){alb=mix(vec3(.05,.07,.055),vec3(.11,.14,.1),g_)*mix(.6,1.,up);metal=0.;rough=.82;emis=vec3(0.);}
+   else if(abs(uScene-2.)<.5){alb=mix(vec3(.45,.62,.78),vec3(.85,.94,1.),up)*(.8+.3*g_);metal=0.;rough=.14;emis=vec3(.12,.3,.45)*(1.-up);}
+   else if(abs(uScene-3.)<.5){alb=mix(uRockA,uRockB,g_)*mix(.55,1.1,up);metal=0.;rough=.8;emis=vec3(0.);}
+  }
  }
  o=lit(alb,rough,metal,ao,n,vW,emis);o.rgb+=gloss;if(abs(uMode-6.)<.5)o.a*=-.85;
  /* the stage light: the court and the daises keep their light; the world round them sinks back — darker, greyer, its
     glow held down — the further from the court the more, so the eye stays on the fight */
- if(uStage>0.&&uMode>.5&&abs(uMode-5.)>.5&&abs(uMode-7.)>.5){float f=uStage*smoothstep(-30.,170.,rrect(vW.xz,uArena,uRadius));
+ if(uStage>0.&&uMode>.5&&abs(uMode-5.)>.5&&abs(uMode-7.)>.5){float f=uStage*smoothstep(-30.,170.,plat(vW.xz));
   float hot=abs(uMode-2.)<.5||abs(uMode-6.)<.5?1.:0.;   /* molten rock and crystal light are HDR: they sink twice as far */
   float k=(1.-f)*(1.-f*hot*.8);o.rgb=mix(o.rgb,vec3(dot(o.rgb,vec3(.3,.5,.2))),f*.75)*k;o.a*=k*k;}
  if(uMode>10.5){vec3 v=normalize(uEye-vW);float ndv=abs(dot(n,v)),fr=pow(1.-ndv,2.2);
@@ -334,7 +411,7 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
    vec3 body=wh?tint:abs(uScene-2.)<.5?mix(vec3(.22,.42,.55),vec3(.75,.88,.95),smoothstep(.55,.85,fbm(vW.xz*.04+vW.y*.05))):vec3(.05,.58,.52);vec3 col=body*(.5+fr*.5)*(.55+.45*max(dot(n,normalize(uLightDir)),0.))+env*(.12+fr*.75)+fc*fr*.35;float a=clamp(.34+fr*.6,0.,.93);
    if(wh){float sp=vX.y,band=.6+.4*sin(sp*40.-uTime*3.);col=tint*(.5+1.4*pow(fr,1.3))*band+env*.2;a=clamp(.22+fr*.7,0.,.95);}
    o=vec4(col,a);
-  }else{float u=vX.x,h=vX.y;float e=pow(sin(u*PI),3.)*pow(1.-h,1.5)*smoothstep(0.,.06,h);o=vec4((abs(uScene-3.)<.5?uLacquer*.7:uInlay)*e*.22*(.85+.15*sin(uTime*.7+vW.x*.01)),0.);}
+  }else{float u=vX.x,h=vX.y;float e=pow(sin(u*PI),3.)*pow(1.-h,1.5)*smoothstep(0.,.06,h);o=vec4((abs(uScene-3.)<.5||abs(uScene-6.)<.5?uLacquer*.7:uInlay)*e*.22*(.85+.15*sin(uTime*.7+vW.x*.01)),0.);}
  }}`;
   const DEPTH_FS = `#version 300 es
 precision highp float;out vec4 o;void main(){o=vec4(1.);}`;
@@ -389,6 +466,111 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     switch (i) { case 0: return [s, -hz, 0, -1]; case 1: return arc(sx, -sz, -Math.PI / 2); case 2: return [hx, -sz + s, 1, 0]; case 3: return arc(sx, sz, 0); case 4: return [sx - s, hz, 0, 1]; case 5: return arc(-sx, sz, Math.PI / 2); case 6: return [-hx, sz - s, -1, 0]; case 7: return arc(-sx, -sz, Math.PI); default: return [-sx + s, -hz, 0, -1]; }
   }
   const rrectPerim = (hx, hz, r) => 4 * (hx - r + hz - r) + 2 * Math.PI * r;
+  /* ------------------------------------------------------------ the platform */
+  /* The court is where the cards are played, so it always reads as one clear flat platform — but only an arena is a tidy rounded
+   * rectangle. The other fields fit it to their place (SC.shape): a deck of boards of uneven length (deck), a steel platform with
+   * cut corners, a landing and a stair well (catwalk), a floor that soil and moss have eaten into (clearing), a plate of ice broken
+   * off a sheet (floe), a floating chunk of rock (island). A shape is a polygon (for the mesh and for placing rails) and its signed
+   * distance, negative inside, which the shader reads from a texture (uPlat). The rectangle HX x HZ stays inside every shape: it is
+   * what the card rows span. */
+  let PLAT = null, platMs = 0;
+  /* a point at arc length s round the platform's rim, pushed `off` outwards, with its outward normal; and the rim's length */
+  const rimAt = (off, s) => (PLAT ? PLAT.at(s, off) : rrectAt(HX + off, HZ + off, RC + off, s)), rimPer = (off) => (PLAT ? PLAT.per : rrectPerim(HX + off, HZ + off, RC + off));
+  const platSD = (x, z) => (PLAT ? PLAT.sd(x, z) : rrectSD(x, z, HX, HZ, RC));
+  function polySD(poly, x, z) {
+    let d = 1e18, inside = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const a = poly[i], b = poly[j], ex = b[0] - a[0], ez = b[1] - a[1], l2 = ex * ex + ez * ez || 1, t = clamp(((x - a[0]) * ex + (z - a[1]) * ez) / l2, 0, 1), px = a[0] + ex * t - x, pz = a[1] + ez * t - z;
+      d = Math.min(d, px * px + pz * pz);
+      if ((a[1] > z) !== (b[1] > z) && x < ((b[0] - a[0]) * (z - a[1])) / (b[1] - a[1]) + a[0]) inside = !inside;
+    }
+    return (inside ? -1 : 1) * Math.sqrt(d);
+  }
+  /* ear clipping: the polygon need not be star-shaped (a deck's ragged ends make pockets) */
+  function earClip(poly) {
+    const n = poly.length, idx = poly.map((_, i) => i); let area = 0;
+    for (let i = 0; i < n; i++) { const a = poly[i], b = poly[(i + 1) % n]; area += a[0] * b[1] - b[0] * a[1]; }
+    if (area < 0) idx.reverse();
+    const out = [], cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const inTri = (p, a, b, c) => cross(a, b, p) >= -1e-9 && cross(b, c, p) >= -1e-9 && cross(c, a, p) >= -1e-9;
+    for (let guard = 0; idx.length > 3 && guard < 20000; guard++) {
+      let clipped = false;
+      for (let k = 0; k < idx.length && !clipped; k++) {
+        const i0 = idx[(k + idx.length - 1) % idx.length], i1 = idx[k], i2 = idx[(k + 1) % idx.length], a = poly[i0], b = poly[i1], c = poly[i2];
+        if (cross(a, b, c) <= 1e-9) continue;
+        let ear = true; for (const j of idx) { if (j === i0 || j === i1 || j === i2) continue; if (inTri(poly[j], a, b, c)) { ear = false; break; } }
+        if (ear) { out.push([i0, i1, i2]); idx.splice(k, 1); clipped = true; }
+      }
+      if (!clipped) break;
+    }
+    if (idx.length === 3) out.push([idx[0], idx[1], idx[2]]);
+    return out;
+  }
+  /* the polygon's own data: counter-clockwise, outward edge and vertex normals, arc length, and a point at arc length s pushed `off` outwards */
+  function finishPlat(poly, sd) {
+    let area = 0; for (let i = 0; i < poly.length; i++) { const a = poly[i], b = poly[(i + 1) % poly.length]; area += a[0] * b[1] - b[0] * a[1]; }
+    if (area < 0) poly = poly.slice().reverse();
+    const n = poly.length, en = [], vn = [], cum = [0];
+    for (let i = 0; i < n; i++) { const a = poly[i], b = poly[(i + 1) % n], dx = b[0] - a[0], dz = b[1] - a[1], l = Math.hypot(dx, dz) || 1; let nx = dz / l, nz = -dx / l; if (sd((a[0] + b[0]) / 2 + nx * 3, (a[1] + b[1]) / 2 + nz * 3) < 0) { nx = -nx; nz = -nz; } en.push([nx, nz]); cum.push(cum[i] + l); }
+    for (let i = 0; i < n; i++) { const p = en[(i + n - 1) % n], q = en[i], x = p[0] + q[0], z = p[1] + q[1], l = Math.hypot(x, z) || 1; vn.push([x / l, z / l]); }
+    const per = cum[n];
+    const at = (s, off = 0) => { s = ((s % per) + per) % per; let i = 0; while (i < n - 1 && cum[i + 1] < s) i++; const t = (s - cum[i]) / ((cum[i + 1] - cum[i]) || 1), a = poly[i], b = poly[(i + 1) % n], u = vn[i], w = vn[(i + 1) % n];
+      let nx = u[0] + (w[0] - u[0]) * t, nz = u[1] + (w[1] - u[1]) * t; const l = Math.hypot(nx, nz) || 1; nx /= l; nz /= l; return [a[0] + (b[0] - a[0]) * t + nx * off, a[1] + (b[1] - a[1]) * t + nz * off, nx, nz]; };
+    return { poly, sd, en, vn, per, at, tris: earClip(poly) };
+  }
+  /* the zero contour of a sampled signed distance (marching squares): the platform's outline as a closed polygon, then thinned */
+  function contour(f, N, bx, bz) {
+    const X = (i) => ((i + 0.5) / N * 2 - 1) * bx, Z = (j) => ((j + 0.5) / N * 2 - 1) * bz, pts = new Map(), link = new Map();
+    const hk = (i, j) => (j * N + i) * 2, vk = (i, j) => (j * N + i) * 2 + 1;
+    const hp = (i, j) => { const k = hk(i, j); if (!pts.has(k)) { const a = f[j * N + i], b = f[j * N + i + 1], t = a / (a - b); pts.set(k, [X(i) + (X(i + 1) - X(i)) * t, Z(j)]); } return k; };
+    const vp = (i, j) => { const k = vk(i, j); if (!pts.has(k)) { const a = f[j * N + i], b = f[(j + 1) * N + i], t = a / (a - b); pts.set(k, [X(i), Z(j) + (Z(j + 1) - Z(j)) * t]); } return k; };
+    const add = (p, q) => { (link.get(p) || link.set(p, []).get(p)).push(q); (link.get(q) || link.set(q, []).get(q)).push(p); };
+    for (let j = 0; j < N - 1; j++) for (let i = 0; i < N - 1; i++) {
+      const a = f[j * N + i], b = f[j * N + i + 1], c = f[(j + 1) * N + i + 1], d = f[(j + 1) * N + i], cr = [];
+      if ((a < 0) !== (b < 0)) cr.push(hp(i, j)); if ((b < 0) !== (c < 0)) cr.push(vp(i + 1, j)); if ((d < 0) !== (c < 0)) cr.push(hp(i, j + 1)); if ((a < 0) !== (d < 0)) cr.push(vp(i, j));
+      if (cr.length === 2) add(cr[0], cr[1]); else if (cr.length === 4) { add(cr[0], cr[3]); add(cr[1], cr[2]); }
+    }
+    let best = [], bestA = 0; const seenK = new Set();
+    for (const start of link.keys()) {
+      if (seenK.has(start)) continue; const loop = []; let prev = -1, cur = start;
+      for (let guard = 0; guard < 100000; guard++) { seenK.add(cur); loop.push(pts.get(cur)); const nb = link.get(cur), nx = nb.find((k) => k !== prev && !(k === start && loop.length < 3)) ?? nb[0]; if (nx === start) break; prev = cur; cur = nx; if (seenK.has(cur) && cur !== start) break; }
+      let ar = 0; for (let i = 0; i < loop.length; i++) { const p = loop[i], q = loop[(i + 1) % loop.length]; ar += p[0] * q[1] - q[0] * p[1]; }
+      if (Math.abs(ar) > bestA) { bestA = Math.abs(ar); best = loop; }
+    }
+    /* thin the straight runs: drop a point that sits within a hair of the line through its neighbours */
+    for (let pass = 0; pass < 3; pass++) { const keep = []; for (let i = 0; i < best.length; i++) { const p = best[(i + best.length - 1) % best.length], q = best[i], r = best[(i + 1) % best.length], ex = r[0] - p[0], ez = r[1] - p[1], l = Math.hypot(ex, ez) || 1, dev = Math.abs((q[0] - p[0]) * ez - (q[1] - p[1]) * ex) / l; if (dev > 0.9) keep.push(q); } if (keep.length < 8) break; best = keep; }
+    return best;
+  }
+  function makePlat() {
+    const kind = SC.shape; if (!kind) return null;
+    const rb = rng(97 + Math.round(HZ) + SC.id * 13), rectSD = (x, z, cx, cz, hx, hz) => { const dx = Math.abs(x - cx) - hx, dz = Math.abs(z - cz) - hz; return Math.hypot(Math.max(dx, 0), Math.max(dz, 0)) + Math.min(Math.max(dx, dz), 0); };
+    let base;
+    if (kind === "deck") { /* planks laid along x in rows 46 deep, each row's boards ending where they were cut (the shader's rows are floor(z / 46) too); a tongue of deck runs out to the tunnel */
+      const z0 = -HZ - 6, z1 = HZ + 6, r0 = Math.floor(z0 / 46), r1 = Math.floor(z1 / 46), right = [], left = [];
+      const hx = (r, s) => HX + 8 + (hash2(r + s * 31, 7.7) - 0.5) * 70 - (hash2(r + s * 31, 3.3) > 0.86 ? 40 : 0) - (s ? 14 : 0);
+      for (let r = r0; r <= r1; r++) { const zt = Math.max(z0, r * 46), zb = Math.min(z1, (r + 1) * 46); right.push([hx(r, 0), zt], [hx(r, 0), zb]); left.push([-hx(r, 1), zt], [-hx(r, 1), zb]); }
+      left.reverse(); const poly = right.concat(left);
+      base = (x, z) => Math.min(polySD(poly, x, z), rectSD(x, z, 0, -HZ - 44, 150, 54));
+    } else if (kind === "catwalk") { /* a steel platform: cut corners, a landing out of the far side, a stair well in the near-left corner */
+      const c = Math.min(110, HZ * 0.26), L = 180, ld = 56, sx = Math.min(150, HX * 0.26), sz = 74;
+      const poly = [[-HX + c, -HZ], [-L, -HZ], [-L, -HZ - ld], [L, -HZ - ld], [L, -HZ], [HX - c, -HZ], [HX, -HZ + c], [HX, HZ - c], [HX - c, HZ], [-HX + sx, HZ], [-HX + sx, HZ - sz], [-HX, HZ - sz], [-HX, -HZ + c]];
+      base = (x, z) => polySD(poly, x, z);
+    } else if (kind === "floe") { /* a plate of ice with straight fractured edges */
+      const bs = (s) => rrectAt(HX + 38, HZ + 38, 34, s), per = rrectPerim(HX + 38, HZ + 38, 34), N = 20, poly = [];
+      for (let i = 0; i < N; i++) { const q = bs((i / N) * per + (rb() - 0.5) * (per / N) * 0.5), j = -26 + rb() * 62 - (rb() < 0.18 ? 34 : 0); poly.push([q[0] + q[2] * j, q[1] + q[3] * j]); }
+      base = (x, z) => polySD(poly, x, z);
+    } else { /* clearing, island: a rounded blob, bigger lobes for the island */
+      const big = kind === "island", A = big ? 30 : 8, rad = Math.min(HX, HZ) * (big ? 0.78 : 0.62), amp = big ? 150 : 100, f = big ? 0.0034 : 0.0046, ph = rb() * 50;
+      base = (x, z) => rrectSD(x, z, HX + A, HZ + A, rad) + (fbm(x * f + ph, z * f + ph * 0.7, 3) - 0.5) * amp - (big ? 16 : 14);
+    }
+    /* the heroes' daises stand just outside: the platform gives way round each */
+    const bites = Object.values(PADS).map((q) => [q[0], q[1], SEAT.r2 * ornK * seatK + 30]);
+    const sd = (x, z) => { let d = base(x, z); for (const [bx, bz, br] of bites) d = Math.max(d, br - Math.hypot(x - bx, z - bz)); return d; };
+    const N = 256, bx = HX + 180, bz = HZ + 180, grid = new Float32Array(N * N);
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) grid[j * N + i] = sd(((i + 0.5) / N * 2 - 1) * bx, ((j + 0.5) / N * 2 - 1) * bz);
+    const poly = contour(grid, N, bx, bz); if (poly.length < 8) return null;
+    const P = finishPlat(poly, sd); P.box = [bx, bz]; P.grid = grid; P.N = N; return P;
+  }
   /* River centre (x) at depth z on one side (s = ±1): further out up the
    * picture, closer to the court near the camera where the view narrows; it
    * swings round a seat pad instead of drowning it. Mirrors rivC(). */
@@ -407,7 +589,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     if (SC !== SCENES.lava) return GROUND - 2 + (fbm(x * 0.004 + 3, z * 0.004 + 1, 2) - 0.5) * 3;
     const s = x < 0 ? -1 : 1, xc = riverC(z, s), rw = riverW(z, s), d = Math.abs(x - xc) - rw;
     let h = GROUND - (GROUND - (LAVA_Y - 26)) * sstep(20, -28, d);
-    h += (fbm(x * 0.011 + 3, z * 0.011 + 1, 3) - 0.5) * 9 * sstep(20, 90, rrectSD(x, z, HX, HZ, RC)) * sstep(10, 60, d);
+    h += (fbm(x * 0.011 + 3, z * 0.011 + 1, 3) - 0.5) * 9 * sstep(20, 90, platSD(x, z)) * sstep(10, 60, d);
     const ridge = Math.pow(1 - Math.abs(2 * fbm(x * 0.0026 + 5, z * 0.0026 + 1, 4) - 1), 1.5);
     const outer = s * (x - xc) - rw - 90;
     h += sstep(0, 300, outer) * (80 + ridge * 280);
@@ -472,7 +654,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
       for (let i = 0; i < 46; i++) { const q = rrectAt(HX - 22 * k, HZ - 22 * k, Math.max(4, R - 22 * k), rb() * per0); grow(q[0], q[1], Math.atan2(-q[3], -q[2]) + (rb() - 0.5) * 0.5, (22 + rb() * 44) * k, 0); }
       const flake = new Path2D(); for (let i = 0; i < 6; i++) { const aa = (i / 6) * Math.PI * 2 - Math.PI / 2, c = Math.cos(aa), sn = Math.sin(aa); flake.moveTo(0, 0); flake.lineTo(c * 96 * k, sn * 96 * k); for (const f of [0.38, 0.62, 0.82]) for (const sd of [-1, 1]) { const b = aa + sd * 0.7, L = (1 - f) * 44 * k; flake.moveTo(c * f * 96 * k, sn * f * 96 * k); flake.lineTo(c * f * 96 * k + Math.cos(b) * L, sn * f * 96 * k + Math.sin(b) * L); } }
       return { R: () => { line(fern, 3.2, 0.55); line(circ(0, 0, 124 * k), 2, 0.4); },
-        G: () => { line(rr(16 * k), 2.2, 0.8); line(rr(26 * k), 1, 0.5); line(flake, 2.6, 1); for (let i = 0; i < 6; i++) { const aa = (i / 6) * Math.PI * 2 - Math.PI / 2; fill(star(Math.cos(aa) * 112 * k, Math.sin(aa) * 112 * k, 9 * k), 1); } line(circ(0, 0, 124 * k), 1.8, 0.8); line(fern, 0.9, 0.55); },
+        G: () => { line(flake, 2.6, 1); for (let i = 0; i < 6; i++) { const aa = (i / 6) * Math.PI * 2 - Math.PI / 2; fill(star(Math.cos(aa) * 112 * k, Math.sin(aa) * 112 * k, 9 * k), 1); } line(circ(0, 0, 124 * k), 1.8, 0.8); line(fern, 0.9, 0.55); },
         B: () => { fill(circ(0, 0, 18 * k), 0.8); },
         A: () => { line(fern, 7, 0.7); for (const [x, z, r] of bok) fill(circ(x, z, r), 0.25); } };
     };
@@ -485,7 +667,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
       const cres = new Path2D(); cres.arc(0, 0, 58 * k, 0, Math.PI * 2); cres.arc(2 * k, -2 * k, 47 * k, 0, Math.PI * 2, true);
       const rays = new Path2D(); for (let i = 0; i < 32; i++) { const aa = (i / 32) * Math.PI * 2, r0 = 74 * k, r1 = (i % 2 ? 94 : 112) * k; rays.moveTo(Math.cos(aa) * r0, Math.sin(aa) * r0); rays.lineTo(Math.cos(aa) * r1, Math.sin(aa) * r1); }
       return { R: () => { fill(circ(0, 0, 66 * k), 0.5); },
-        G: () => { line(rr(20 * k), 3, 1); line(rr(30 * k), 1.2, 0.8); for (const o of orbits) line(o, 1.4, 0.85); for (const c of cons) { line(path(c), 1.2, 0.9); for (const [x, z] of c) fill(circ(x, z, 3.4 * k), 1); } for (const [x, z, r] of stars) fill(circ(x, z, r), 0.95); line(circ(0, 0, 66 * k), 2.6, 1); line(rays, 1.6, 1); line(circ(0, 0, 124 * k), 1.2, 0.8); },
+        G: () => { for (const o of orbits) line(o, 1.4, 0.85); for (const c of cons) { line(path(c), 1.2, 0.9); for (const [x, z] of c) fill(circ(x, z, 3.4 * k), 1); } for (const [x, z, r] of stars) fill(circ(x, z, r), 0.95); line(circ(0, 0, 66 * k), 2.6, 1); line(rays, 1.6, 1); line(circ(0, 0, 124 * k), 1.2, 0.8); },
         B: () => { fill(cres, 1); for (let i = 0; i < 12; i++) { const st = stars[i * 11]; fill(circ(st[0], st[1], st[2] * 2.4), 1); } },
         A: () => { for (const o of orbits) line(o, 12, 0.5); } };
     };
@@ -509,7 +691,51 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
         B: () => { for (const q of cracks) line(q, 2.4, 1); fill(circ(0, 0, 40 * k), 0.9); },
         A: () => { fill(circ(0, 0, 152 * k), 0.3); } };
     };
-    const other = SC === SCENES.frost ? frostArt() : SC === SCENES.clouds ? cloudArt() : SC === SCENES.abyss ? abyssArt() : SC === SCENES.dragon ? dragonArt() : null;
+    /* an engraved inscription across the court's margins (iron lettering): upright for the camera at both ends */
+    const inscribe = (txt, z, size = 19) => { g.save(); g.font = `700 ${size * k}px ${SERIF_CN}`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = col(1); g.fillText(txt, 0, z); g.restore(); };
+    /* 第七矿井口: planks over a pair of rails that run the court's length, a railway turntable at the heart, nail heads, amber seams */
+    const mineArt = () => {
+      const rb = rng(31), gauge = 15 * k, nails = new Path2D(), sleepers = new Path2D(), spokes = new Path2D(), hexes = [];
+      for (let z = -HZ + 30; z < HZ - 20; z += 46) for (const sx of [-1, 1]) { const x = sx * (HX - 36 * k); nails.moveTo(x + 3 * k, z + 23); nails.arc(x, z + 23, 3 * k, 0, Math.PI * 2); }
+      for (let z = -HZ + 44 * k; z < HZ - 30 * k; z += 40 * k) { sleepers.moveTo(-gauge * 2.4, z); sleepers.lineTo(gauge * 2.4, z); }
+      for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2 + Math.PI / 8; spokes.moveTo(Math.cos(a) * 46 * k, Math.sin(a) * 46 * k); spokes.lineTo(Math.cos(a) * 128 * k, Math.sin(a) * 128 * k); }
+      for (let i = 0; i < 26; i++) { const x = (rb() - 0.5) * 1.7 * HX, z = (rb() - 0.5) * 1.62 * HZ; if (Math.hypot(x, z) < 190 * k || Math.abs(x) < gauge * 3.2) continue; const r = (5 + rb() * 9) * k, a0 = rb() * 3, pts = []; for (let j = 0; j < 6; j++) { const a = a0 + (j / 6) * Math.PI * 2, rr2 = r * (0.8 + rb() * 0.4); pts.push([x + Math.cos(a) * rr2, z + Math.sin(a) * rr2]); } hexes.push(path(pts, true)); }
+      const rails = [-gauge, gauge].map((x) => path([[x, -HZ + 20 * k], [x, HZ - 20 * k]])), cross = [-gauge, gauge].map((z) => path([[-150 * k, z], [150 * k, z]]));
+      return { R: () => { line(sleepers, 3.4, 0.55); fill(nails, 0.6); line(circ(0, 0, 150 * k), 2.6, 0.55); },
+        G: () => { for (const q of rails) line(q, 3.6, 1); for (const q of cross) line(q, 3, 1); line(circ(0, 0, 150 * k), 3.8, 1); line(circ(0, 0, 134 * k), 1.4, 0.9); line(spokes, 2.6, 1); line(circ(0, 0, 46 * k), 3.2, 1); fill(nails, 1); inscribe("第 七 矿 井  ·  SHAFT NO. 7", -(HZ - 50 * k)); inscribe("第 七 矿 井  ·  SHAFT NO. 7", HZ - 50 * k); },
+        B: () => { fill(circ(0, 0, 34 * k), 0.95); for (const h of hexes) fill(h, 0.9); },
+        A: () => { fill(circ(0, 0, 150 * k), 0.16); for (const h of hexes) fill(h, 0.5); } };
+    };
+    /* 锅炉房: riveted margin plates, steam pipes round the edge, a pressure dial at the heart, valve wheels at the four corners, glowing grate slots */
+    const boilerArt = () => {
+      const dial = new Path2D(), rivets = new Path2D(), slots = new Path2D(), wheel = new Path2D(), pipeL = new Path2D();
+      for (let i = 0; i < 60; i++) { const a = (i / 60) * Math.PI * 2 - Math.PI / 2, major = i % 5 === 0, r0 = (major ? 100 : 112) * k, r1 = 124 * k; dial.moveTo(Math.cos(a) * r0, Math.sin(a) * r0); dial.lineTo(Math.cos(a) * r1, Math.sin(a) * r1); }
+      const needle = path([[0, 0], [Math.cos(-0.5) * 96 * k, Math.sin(-0.5) * 96 * k]]);
+      { const per = rrectPerim(HX - 40 * k, HZ - 40 * k, Math.max(4, R - 40 * k)); for (let sdst = 0; sdst < per; sdst += 30 * k) { const q = rrectAt(HX - 40 * k, HZ - 40 * k, Math.max(4, R - 40 * k), sdst); rivets.moveTo(q[0] + 3.2 * k, q[1]); rivets.arc(q[0], q[1], 3.2 * k, 0, Math.PI * 2); } }
+      for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; wheel.moveTo(0, 0); wheel.lineTo(Math.cos(a) * 30 * k, Math.sin(a) * 30 * k); }
+      for (const sz of [-1, 1]) { const y = sz * (HZ - 70 * k); pipeL.moveTo(-HX + 70 * k, y); pipeL.lineTo(HX - 70 * k, y); }
+   /* glowing grate slots down both side margins, clear of the play area */
+      const corners = [[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([sx, sz]) => [sx * (HX - 150 * k), sz * (HZ - 104 * k)]);
+      return { R: () => { fill(rivets, 0.7); line(circ(0, 0, 150 * k), 3, 0.5); },
+        G: () => { line(pipeL, 7, 0.9); line(pipeL, 1.4, 1); line(circ(0, 0, 126 * k), 3.6, 1); line(circ(0, 0, 150 * k), 1.6, 0.9); line(dial, 2.2, 1); line(needle, 3.4, 1); fill(circ(0, 0, 8 * k), 1);
+          for (const [x, z] of corners) { g.save(); g.translate(x, z); line(circ(0, 0, 30 * k), 3, 1); line(wheel, 2.6, 1); fill(circ(0, 0, 5 * k), 1); g.restore(); }
+          inscribe("锅 炉 房  ·  BOILER HALL", -(HZ - 38 * k)); inscribe("锅 炉 房  ·  BOILER HALL", HZ - 38 * k); },
+        B: () => { fill(circ(0, 0, 90 * k), 0.12); },
+        A: () => { fill(circ(0, 0, 126 * k), 0.22); } };
+    };
+    /* 玻璃温室: the glass roof's iron laid out on dark tiles, a margin of brass, and a black flower of two rings of petals */
+    const glassArt = () => {
+      const lat = new Path2D(), stepL = 72 * k * Math.SQRT2, ptl = [], pti = [];
+      for (let d = -(HX + HZ); d <= HX + HZ; d += stepL) { lat.moveTo(d - HZ * 1.2, -HZ * 1.2); lat.lineTo(d + HZ * 1.2, HZ * 1.2); lat.moveTo(d + HZ * 1.2, -HZ * 1.2); lat.lineTo(d - HZ * 1.2, HZ * 1.2); }
+      for (const [list, M, off, n, rx, rz] of [[ptl, 64 * k, 0, 8, 54 * k, 21 * k], [pti, 36 * k, 0.5, 8, 34 * k, 14 * k]]) for (let i = 0; i < n; i++) { const a = ((i + off) / n) * Math.PI * 2, q = new Path2D(); q.ellipse(Math.cos(a) * M, Math.sin(a) * M, rx, rz, a, 0, Math.PI * 2); list.push(q); }
+      return { R: () => { line(lat, 1.6, 0.4); for (const q of ptl) fill(q, 0.5); for (const q of pti) fill(q, 0.6); },
+        G: () => { line(lat, 1.5, 0.55); for (const q of ptl) line(q, 2.4, 1); for (const q of pti) line(q, 2, 1); line(circ(0, 0, 120 * k), 3, 1); line(circ(0, 0, 112 * k), 1.2, 0.9); fill(circ(0, 0, 9 * k), 1);
+          inscribe("玻 璃 温 室  ·  THE GLASSHOUSE", -(HZ - 38 * k)); inscribe("玻 璃 温 室  ·  THE GLASSHOUSE", HZ - 38 * k); },
+        B: () => { for (const q of ptl) fill(q, 0.95); for (const q of pti) fill(q, 0.95); },
+        A: () => { for (const q of ptl) fill(q, 0.6); fill(circ(0, 0, 100 * k), 0.25); } };
+    };
+    const sceneKey = Object.keys(SCENES).find((kk) => SCENES[kk] === SC);
+    const other = ({ frost: frostArt, clouds: cloudArt, abyss: abyssArt, dragon: dragonArt, mine: mineArt, boiler: boilerArt, glass: glassArt }[sceneKey] || (() => null))();
     if (other) { draw([other.R, other.G, other.B], false); draw([other.A], true); return { w: TW, h: TH, data, engrave: (1.5 * k * S) / 2, stroke: [0, 0, 1, 0] }; }
     draw([
       /* R: relief — the roses stand a little proud of the silk */
@@ -589,7 +815,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
         const sg = Math.sign((x - sp[bi][0]) * (-tz / tl) + (z - sp[bi][1]) * (tx / tl)) || 1;
         field[j * NX + i] = sg * Math.sqrt(best) + warpAt(i, j);
       }
-      const keep = (x, z) => rrectSD(x, z, HX, HZ, R) < -46 * k && Math.hypot(x, z) > 280 * k && fbm(x / 430 + 11, z / 430 + 5, 3) > 0.4;
+      const keep = (x, z) => platSD(x, z) < -46 * k && Math.hypot(x, z) > 280 * k && fbm(x / 430 + 11, z / 430 + 5, 3) > 0.4;
       const levels = []; for (let lk = 0; lk <= 19; lk++) for (const sg of [-1, 1]) levels.push(sg * (62 + 11 * lk) * k);
       const segsBy = levels.map(() => []);
       for (let j = 0; j < NZ - 1; j++) for (let i = 0; i < NX - 1; i++) {
@@ -663,10 +889,10 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
       { const mer = new Path2D(), x0 = 284 * k, x1 = HX - 92 * k; for (const s of [-1, 1]) { mer.moveTo(s * x0, -3.2 * k); mer.lineTo(s * x1, -3.2 * k); mer.moveTo(s * x0, 3.2 * k); mer.lineTo(s * x1, 3.2 * k); for (let x = x0 + 36 * k; x < x1 - 12 * k; x += 40 * k) { mer.moveTo(s * x, -9 * k); mer.lineTo(s * x, -4 * k); mer.moveTo(s * x, 4 * k); mer.lineTo(s * x, 9 * k); } } line(mer, 0.95, 0.9);
         for (const s of [-1, 1]) { const dx = s * (HX - 81 * k); fill(path([[dx - 7 * k, 0], [dx, -6 * k], [dx + 7 * k, 0], [dx, 6 * k]], true), 0.8); } }
       onArc("THE BROKEN COURT · 断裂王庭", 282 * k, 0, LAT(12.5), 4.2 * k, 0.85);
-      onArc("EMBERFALL · 烬 域 · MMXXVI", 282 * k, Math.PI, LAT(12.5), 4.2 * k, 0.85);
+      onArc("琥 珀 战 记 · MMXXVI", 282 * k, Math.PI, LAT(12.5), 4.2 * k, 0.85);
       /* margins: side inscriptions, the court's name above the ranks, the stage plate below them */
       rotated("FORGED IN EMBER", -HX + 24 * k, -30 * k, -Math.PI / 2, LAT(19), 7 * k, 0.9);
-      rotated("EMBERFALL · 烬域", HX - 24 * k, 48 * k, Math.PI / 2, LAT(19), 7 * k, 0.9);
+      rotated("AMBER WAR CHRONICLE · 琥珀战记", HX - 24 * k, 48 * k, Math.PI / 2, LAT(19), 7 * k, 0.9);
       { const tz = -HZ + 50 * k; spaced("断裂王庭", 8 * k, tz, "700 " + 21 * k + "px " + SERIF_CN, 16 * k, 0.9); const rule = new Path2D(); for (const s of [-1, 1]) { rule.moveTo(s * 96 * k, tz); rule.lineTo(s * 206 * k, tz); } line(rule, 1, 0.85); for (const s of [-1, 1]) fill(path([[s * 204 * k, tz], [s * 209 * k, tz - 5 * k], [s * 214 * k, tz], [s * 209 * k, tz + 5 * k]], true), 0.85); }
       { const px = HX - 90 * k, pz = HZ - 109 * k; line(path([[px - 120 * k, pz - 15 * k], [px, pz - 15 * k]]), 0.9, 0.8); spaced("STAGE I — LAVA FORGE", px, pz, LAT(10, 700), 3.2 * k, 0.85, "end"); spaced("第一关 · 熔岩要塞", px, pz + 18 * k, "500 " + 10 * k + "px " + SANS_CN, 2.4 * k, 0.8, "end"); }
       /* the fissure is the deepest cut of all */
@@ -709,6 +935,8 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
   let prog = null, tex = null, rt = null, geom = null, particles = null;
   let VP = null, eye = null, basis = null, lightVP = null;
   const cam = { pitch: PITCH, dist: 2600, tz: 0 };
+  /* design aid, only honoured with ?debug=1: pull the camera back by this factor and build every set piece, to see the whole field */
+  let WIDE = 1;
   const LIGHT_DEF = V.norm([0.55, 0.5, -0.5]); let LIGHT_DIR = LIGHT_DEF;
   const cardU = new Float32Array(64), decals = new Float32Array(32); let decalI = 0;
   const lightPos = new Float32Array(48), lightCol = new Float32Array(48), lightRad = new Float32Array(16);
@@ -739,6 +967,12 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     art.data = null;
   }
 
+  /** The platform's signed distance as a texture (R16F, negative inside) over a box a little bigger than the platform. */
+  function ensurePlatTex() {
+    if (!PLAT) return; const N = PLAT.N;
+    if (!tex.plat) { tex.plat = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex.plat); for (const [k, v] of [[gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]]) gl.texParameteri(gl.TEXTURE_2D, k, v); } else gl.bindTexture(gl.TEXTURE_2D, tex.plat);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R16F, N, N, 0, gl.RED, gl.FLOAT, PLAT.grid);
+  }
   /** Create the context, programs, static buffers and start the texture loads. */
   function ensure() {
     if (gl || failed) return !!gl;
@@ -799,8 +1033,8 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
       /* the portrait itself: on touch layouts the .hero element is a whole console bar */
       const q = Vp.pos(document.querySelector(sel + " .hero-card-inner") || document.querySelector(sel)); if (!q) continue;
       const f = floorAt(q.x, q.top + q.h); if (!f) continue;
-      let x = f[0], z = f[1] - 36 * ornK; const want = (SEAT.r2 + 22) * ornK * seatK, sd = rrectSD(x, z, HX, HZ, RC);
-      if (sd < want) { const gx = rrectSD(x + 1, z, HX, HZ, RC) - rrectSD(x - 1, z, HX, HZ, RC), gz = rrectSD(x, z + 1, HX, HZ, RC) - rrectSD(x, z - 1, HX, HZ, RC), gl2 = Math.hypot(gx, gz) || 1; x += (gx / gl2) * (want - sd); z += (gz / gl2) * (want - sd); }
+      let x = f[0], z = f[1] - 36 * ornK; const want = (SEAT.r2 + 22) * ornK * seatK, sd = platSD(x, z);
+      if (sd < want) { const gx = platSD(x + 1, z) - platSD(x - 1, z), gz = platSD(x, z + 1) - platSD(x, z - 1), gl2 = Math.hypot(gx, gz) || 1; x += (gx / gl2) * (want - sd); z += (gz / gl2) * (want - sd); }
       out[k] = [x, z];
     }
     return out;
@@ -860,7 +1094,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
       const cT = Math.max(HX + rw + gapMin, HX + 0.55 * (xT - HX)), cB = Math.max(HX + rw + (tall ? 18 : 25), HX + 0.55 * (xB - HX));
       RIV = SC === SCENES.lava ? { a: (cT + cB) / 2, b: (cT - cB) / (2 * HZ), w: rw } : { a: 1e5, b: 0, w: 1 }; }
     seatK = Vp.mobile ? 0.72 : 1;
-    PADS = seats(); BULGE = [0, 0, 0, 0];
+    PLAT = null; PADS = seats(); BULGE = [0, 0, 0, 0]; { const t0 = performance.now(); PLAT = makePlat(); platMs = Math.round(performance.now() - t0); }
     HUD = [...document.querySelectorAll(HUD_BOXES)].map((el) => Vp.pos(el)).filter(Boolean);
     for (const pd of Object.values(PADS)) { const s = pd[0] < 0 ? -1 : 1, need = Math.abs(pd[0]) + (SEAT.r2 + 12) * ornK * seatK + riverW(pd[1], s) + 18 - Math.abs(riverC(pd[1], s)); if (need > 0) { if (s < 0) BULGE[0] = pd[1], BULGE[1] = need; else BULGE[2] = pd[1], BULGE[3] = need; } }
     layoutDirty = false; stillDrawn = false;
@@ -868,6 +1102,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     if (Object.keys(PADS).length < 2 && seatTries++ < 40) layoutDirty = true;
     const key = HX + ":" + Math.round(HZ) + ":" + (Vp.portrait ? "p" : "l") + ":" + Math.round(gemK * 10) + ":" + Object.values(PADS).map((q) => q.map((v) => Math.round(v / 8)).join(",")).join("|");
     if (key !== geomKey) { geomKey = key; build(); }
+    if (WIDE > 1) { cam.dist *= WIDE; updateCamera(); }
   }
 
   /* ---------------------------------------------------------------- build */
@@ -898,7 +1133,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
   function druse(o, g, rnd, idx) {
     const { x: cx, z: cz, sc, hue } = g, away = Math.atan2(-Math.abs(cz), cx), k = 0.88 + rnd() * 0.24;
     const grow = (ox, oz, tilt, az, r, len, tip) => {
-      const bx = cx + ox * sc, bz = cz + oz * sc; if (rrectSD(bx, bz, HX, HZ, RC) < 26 || riverSD(bx, bz) < 4) return;
+      const bx = cx + ox * sc, bz = cz + oz * sc; if (platSD(bx, bz) < 26 || riverSD(bx, bz) < 4) return;
       crystal(o, [bx, terrainAt(bx, bz) - Math.min(10, len * 0.3) * sc, bz], [Math.sin(tilt) * Math.cos(az), Math.cos(tilt), Math.sin(tilt) * Math.sin(az)], r * sc * k, len * sc * k, tip * sc * k, hue, idx++, rnd);
     };
     grow(0, 0, 0.1 + rnd() * 0.12, away + (rnd() - 0.5) * 0.8, 16, 80 + rnd() * 20, 30);
@@ -907,7 +1142,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     for (let i = 0; i < n2; i++) { const a = away + (i - (n2 - 1) / 2) * 1.5 + (rnd() - 0.5) * 0.5, dd = 13 + rnd() * 9; grow(Math.cos(a) * dd, Math.sin(a) * dd, 0.32 + rnd() * 0.28, a, 10 + rnd() * 3, 40 + rnd() * 24, 18); }
     const n3 = 6 + Math.floor(rnd() * 4);
     for (let i = 0; i < n3; i++) { const a = rnd() * Math.PI * 2, dd = 20 + rnd() * 24; grow(Math.cos(a) * dd, Math.sin(a) * dd, 0.55 + rnd() * 0.5, a, 4.5 + rnd() * 3, 12 + rnd() * 18, 8); }
-    for (let i = 0; i < 2; i++) { const a = rnd() * Math.PI * 2, dd = 62 + rnd() * 40, bx = cx + Math.cos(a) * dd * sc, bz = cz + Math.sin(a) * dd * sc; if (rrectSD(bx, bz, HX, HZ, RC) > 40 && riverSD(bx, bz) > 12) grow(Math.cos(a) * dd, Math.sin(a) * dd, 0.2 + rnd() * 0.3, a + (rnd() - 0.5), 6 + rnd() * 2.5, 22 + rnd() * 14, 11); }
+    for (let i = 0; i < 2; i++) { const a = rnd() * Math.PI * 2, dd = 62 + rnd() * 40, bx = cx + Math.cos(a) * dd * sc, bz = cz + Math.sin(a) * dd * sc; if (platSD(bx, bz) > 40 && riverSD(bx, bz) > 12) grow(Math.cos(a) * dd, Math.sin(a) * dd, 0.2 + rnd() * 0.3, a + (rnd() - 0.5), 6 + rnd() * 2.5, 22 + rnd() * 14, 11); }
     return idx;
   }
   /* A beam between two ground points a, b (x,z), from y0 to y1, w wide; aX.x = 1 marks gilt. */
@@ -950,12 +1185,12 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
   }
   const hexRing = (x, z, r) => [0, 1, 2, 3, 4, 5].map((j) => [x + Math.cos(j * Math.PI / 3 + 0.3) * r, z + Math.sin(j * Math.PI / 3 + 0.3) * r]);
   /* only what the camera can see is built */
-  const seen = (x, y, z, r) => { const q = project([x, y, z]), m = r * 1.2; return q[0] > -m && q[0] < W + m && q[1] > -m && q[1] < H + m; };
+  const seen = (x, y, z, r) => { if (WIDE > 1) return true; const q = project([x, y, z]), m = r * 1.2; return q[0] > -m && q[0] < W + m && q[1] > -m && q[1] < H + m; };
   /* a balustrade round the court's rim, open where a seat meets the court; d = post width/height, rail heights */
   function balustrade(rail, nearSeat, d) {
-    const off = 20, per = rrectPerim(HX + off, HZ + off, RC + off), n = Math.max(24, Math.round(per / d.step)), pts = [];
-    for (let i = 0; i < n; i++) { const q = rrectAt(HX + off, HZ + off, RC + off, (i / n) * per); pts.push([q[0], q[1]]); }
-    const open = pts.map((q) => nearSeat(q[0], q[1], 30));
+    const off = 20, per = rimPer(off), n = Math.max(24, Math.round(per / d.step)), pts = [];
+    for (let i = 0; i < n; i++) { const q = rimAt(off, (i / n) * per); pts.push([q[0], q[1]]); }
+    const open = pts.map((q, i) => nearSeat(q[0], q[1], 30) || (d.skip ? d.skip(i, q) : false));
     for (let i = 0; i < n; i++) { const a = pts[i], b = pts[(i + 1) % n], pw = d.post / 2;
       if (!open[i]) { beam(rail, [a[0] - pw, a[1]], [a[0] + pw, a[1]], GROUND - 4, d.postH, d.post); if (d.cap) beam(rail, [a[0] - pw - 3, a[1]], [a[0] + pw + 3, a[1]], d.postH, d.postH + 6, d.post + 6, 1); }
       if (!open[i] && !open[(i + 1) % n]) { beam(rail, a, b, d.top[0], d.top[1], d.top[2]); beam(rail, a, b, d.mid[0], d.mid[1], d.mid[2]); beam(rail, a, b, d.top[1], d.top[1] + 2, d.top[2] - 4, 1); } }
@@ -967,24 +1202,28 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
   }
   function link(o, c, r, axisA, axisB) { const pts = []; for (let i = 0; i <= 12; i++) { const a = (i / 12) * Math.PI * 2; pts.push(V.add(c, V.add(V.scale(axisA, Math.cos(a) * r * 1.5), V.scale(axisB, Math.sin(a) * r)))); } const n0 = o.length; tube(o, pts, () => r * 0.28, 6); for (let q = n0 + 6; q < o.length; q += 8) o[q] = 3; }
   function blade(o, c, len) { const n0 = o.length; beam(o, [c[0], c[2] - 3], [c[0], c[2] + 3], c[1] - len, c[1], 14); beam(o, [c[0] - 22, c[2]], [c[0] + 22, c[2]], c[1], c[1] + 6, 8); beam(o, [c[0] - 3, c[2]], [c[0] + 3, c[2]], c[1] + 6, c[1] + 34, 7); for (let q = n0 + 6; q < o.length; q += 8) o[q] = 3; }
-  /** 霜狱君王 · 冰泡广场: a slim steel rail with a neon strip, and drifts of frozen bubbles on the snow. */
+  /** 守根人 · 冰泡广场: a slim steel rail with a neon strip, and drifts of frozen bubbles on the snow. */
   function buildFrost(rnd, nearSeat) {
     const rail = [], glass = [], lights = [];
-    balustrade(rail, nearSeat, { step: 140, post: 8, postH: 46, cap: 0, top: [38, 44, 8], mid: [16, 19, 4] });
+    if (!PLAT) balustrade(rail, nearSeat, { step: 140, post: 8, postH: 46, cap: 0, top: [38, 44, 8], mid: [16, 19, 4] });
+    else { /* the plate's broken rim: shards of ice standing along it, leaning out */
+      const per = rimPer(0), n = Math.round(per / 70);
+      for (let i = 0; i < n; i++) { const q = rimAt(-4, (i / n) * per + rnd() * 30); if (nearSeat(q[0], q[1], 40) || !seen(q[0], GROUND, q[1], 80)) continue; shard(rail, [q[0], 2, q[1]], 24 + rnd() * 58, 4 + rnd() * 7, [q[2] * (0.25 + rnd() * 0.4), 1, q[3] * (0.25 + rnd() * 0.4)], 3); }
+    }
     /* frozen bubbles hang where time stopped them: in rings round the court, some high, none over the court */
     for (let i = 0; i < 70; i++) { const a = rnd() * Math.PI * 2, x = Math.cos(a) * (HX + 110 + rnd() * 520), z = Math.sin(a) * (HZ + 90 + rnd() * 380);
       const near = z > HZ * 0.55, r = (near ? 16 + rnd() * 26 : 20 + rnd() * 70) * (rnd() < 0.15 ? 1.6 : 1), y = GROUND + r + (near ? rnd() * 40 : rnd() * 360);
-      if (rrectSD(x, z, HX, HZ, RC) < 60 + r || nearSeat(x, z, r + 30) || !seen(x, y, z, r * 2)) continue; sphere(glass, [x, y, z], r); }
+      if (platSD(x, z) < 60 + r || nearSeat(x, z, r + 30) || !seen(x, y, z, r * 2)) continue; sphere(glass, [x, y, z], r); }
     /* shards of ice caught mid-fall */
     for (let i = 0; i < 90; i++) { const a = rnd() * Math.PI * 2, x = Math.cos(a) * (HX + 70 + rnd() * 560), z = Math.sin(a) * (HZ + 60 + rnd() * 420), y = GROUND + 20 + rnd() * (z > HZ * 0.5 ? 60 : 320);
-      if (rrectSD(x, z, HX, HZ, RC) < 40 || nearSeat(x, z, 40) || !seen(x, y, z, 60)) continue; shard(rail, [x, y, z], 10 + rnd() * 26, 3 + rnd() * 5, [rnd() - 0.5, -0.6 - rnd(), rnd() - 0.5], 3); }
+      if (platSD(x, z) < 40 || nearSeat(x, z, 40) || !seen(x, y, z, 60)) continue; shard(rail, [x, y, z], 10 + rnd() * 26, 3 + rnd() * 5, [rnd() - 0.5, -0.6 - rnd(), rnd() - 0.5], 3); }
     /* spires of ice at the far corners and along the sides: the frozen throne's crown */
     for (const [sx, fz, kk] of [[-1, -1.1, 1.3], [1, -1.1, 1.3], [-1, -0.45, 0.9], [1, -0.4, 0.9], [-1, 0.3, 0.6], [1, 0.35, 0.6]]) { const cx = sx * (HX + 160), cz = fz * HZ; if (nearSeat(cx, cz, 110)) continue;
-      for (let j = 0; j < 7; j++) { const x = cx + (rnd() - 0.5) * 120, z = cz + (rnd() - 0.5) * 100; if (rrectSD(x, z, HX, HZ, RC) < 50) continue; shard(rail, [x, GROUND, z], (120 + rnd() * 260) * kk * (fz > 0 ? 0.5 : 1), (14 + rnd() * 14) * kk, [sx * (0.1 + rnd() * 0.3), 1, (rnd() - 0.6) * 0.3], 3); }
+      for (let j = 0; j < 7; j++) { const x = cx + (rnd() - 0.5) * 120, z = cz + (rnd() - 0.5) * 100; if (platSD(x, z) < 50) continue; shard(rail, [x, GROUND, z], (120 + rnd() * 260) * kk * (fz > 0 ? 0.5 : 1), (14 + rnd() * 14) * kk, [sx * (0.1 + rnd() * 0.3), 1, (rnd() - 0.6) * 0.3], 3); }
       if (lights.length < 6) lights.push([cx, cz]); }
     return { rail, glass, lights };
   }
-  /** 断契监誓者 · 云海祭坛: floating marble islands crowned with blue glass, pebbles adrift; the whale is animated per frame. */
+  /** 守灯之兽 · 云海祭坛: floating marble islands crowned with blue glass, pebbles adrift; the whale is animated per frame. */
   function buildClouds(rnd, nearSeat) {
     const rail = [];
     for (const [x, z, kk] of [[-(HX + 330), -HZ * 0.25, 1.15], [HX + 310, -HZ * 0.62, 1], [HX + 370, HZ * 0.55, 0.8], [-(HX + 290), HZ * 0.72, 0.75], [-HX * 0.35, -(HZ + 330), 0.95], [HX * 0.4, -(HZ + 380), 0.7]]) {
@@ -997,7 +1236,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     const beams = [], lights = [];
     for (let c = 0; c < 7; c++) { const a0 = rnd() * Math.PI * 2, R = 1 + 0.25 + rnd() * 0.45, y0 = 60 + rnd() * 220, n = 8 + Math.floor(rnd() * 10);
       for (let i = 0; i < n; i++) { const a = a0 + i * 0.045, x = Math.cos(a) * (HX * R + 60), z = Math.sin(a) * (HZ * R + 60), y = y0 + Math.sin(i * 0.5) * 20 - i * 3;
-        if (rrectSD(x, z, HX, HZ, RC) < 60 || nearSeat(x, z, 60) || !seen(x, y, z, 40)) continue; const tg = V.norm([-Math.sin(a), -0.1, Math.cos(a)]);
+        if (platSD(x, z) < 60 || nearSeat(x, z, 60) || !seen(x, y, z, 40)) continue; const tg = V.norm([-Math.sin(a), -0.1, Math.cos(a)]);
         link(rail, [x, y, z], 9 * ornK, tg, i % 2 ? [0, 1, 0] : V.norm(V.cross(tg, [0, 1, 0]))); } }
     /* blades hanging point-down: the price of the oath */
     for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2 + 0.3, x = Math.cos(a) * (HX + 150 + rnd() * 90), z = Math.sin(a) * (HZ + 130 + rnd() * 70), y = 150 + rnd() * 160;
@@ -1007,7 +1246,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
       for (const [q, h] of [[P(r0, a), 0], [P(r0, b), 0], [P(r1, b), 1], [P(r0, a), 0], [P(r1, b), 1], [P(r1, a), 1]]) beams.push(q[0], q[1], q[2], 0, 1, 0, 0.5, h); } }
     return { rail, beams, lights };
   }
-  /** 深渊先知 · 无光圣所: a ring of drowned pillars with bands of cold light, and shafts of light from far above. */
+  /** 译者 · 无光圣所: a ring of drowned pillars with bands of cold light, and shafts of light from far above. */
   function buildAbyss(rnd, nearSeat) {
     const cols = [], beams = [], lights = [];
     for (let i = 0; i < 20; i++) { const a = (i / 20) * Math.PI * 2 + (rnd() - 0.5) * 0.2, x = Math.cos(a) * (HX + 250 + rnd() * 150), z = Math.sin(a) * (HZ + 210 + rnd() * 120);
@@ -1018,7 +1257,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
         for (const [px, py, pz, u, hh] of [[x - dx, y0, z - dz, 0, 0], [x + dx, y0, z + dz, 1, 0], [x + dx, y1, z + dz, 1, 1], [x - dx, y0, z - dz, 0, 0], [x + dx, y1, z + dz, 1, 1], [x - dx, y1, z - dz, 0, 1]]) beams.push(px, py, pz, 0, 1, 0, u, hh); } }
     return { cols, beams, lights };
   }
-  /** 终焉巨龙 · 世界之烬: the ribs the court rests on, and burning islands adrift in the cloud sea below. */
+  /** 点火者·纳坦 · 世界之烬: the ribs the court rests on, and burning islands adrift in the cloud sea below. */
   function buildDragon(rnd, nearSeat) {
     const rail = [], cols = [], lights = [];
     /* the court rides the living dragon's back: its spines rise in two rows and curve away, taller towards the far end */
@@ -1030,26 +1269,26 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     for (const sg of [-1, 1]) for (const f of [-0.7, 0, 0.7]) lights.push([sg * (HX + 140), f * HZ]);
     return { rail, cols, lights };
   }
-  /** 荆棘女王 · 低语密林: a lacquered pavilion the forest has taken back — roots through the boards, thorns up the rails, roses. */
-  function buildPavilion(rnd, nearSeat) {
+  /** 根母 · 低语密林: a lacquered pavilion the forest has taken back — roots through the boards, thorns up the rails, roses. */
+  function buildPavilion(rnd, nearSeat, bare = false) {
     const rail = [], leaves = [], cards = [], lights = [];
-    balustrade(rail, nearSeat, { step: 118, post: 18, postH: 60, cap: 1, top: [44, 55, 13], mid: [18, 23, 6] });
+    if (!bare) balustrade(rail, nearSeat, { step: 118, post: 18, postH: 60, cap: 1, top: [44, 55, 13], mid: [18, 23, 6] });
     /* thorn vines wound round the top rail, a rose where they knot */
-    { const off = 20, per = rrectPerim(HX + off, HZ + off, RC + off), n = 180;
-      for (let v = 0; v < 2; v++) { const pts = []; for (let i = 0; i <= n; i++) { const q = rrectAt(HX + off, HZ + off, RC + off, (i / n) * per), a = i * 0.9 + v * Math.PI, y = 50 + Math.sin(a) * 7; if (nearSeat(q[0], q[1], 40)) { if (pts.length > 3) { const n0 = rail.length; tube(rail, pts.splice(0), () => 2.4, 5); for (let k2 = n0 + 6; k2 < rail.length; k2 += 8) rail[k2] = 3; } else pts.length = 0; continue; } pts.push([q[0] + q[2] * Math.cos(a) * 8, y, q[1] + q[3] * Math.cos(a) * 8]); }
+    if (!bare) { const off = 20, per = rimPer(off), n = 180;
+      for (let v = 0; v < 2; v++) { const pts = []; for (let i = 0; i <= n; i++) { const q = rimAt(off, (i / n) * per), a = i * 0.9 + v * Math.PI, y = 50 + Math.sin(a) * 7; if (nearSeat(q[0], q[1], 40)) { if (pts.length > 3) { const n0 = rail.length; tube(rail, pts.splice(0), () => 2.4, 5); for (let k2 = n0 + 6; k2 < rail.length; k2 += 8) rail[k2] = 3; } else pts.length = 0; continue; } pts.push([q[0] + q[2] * Math.cos(a) * 8, y, q[1] + q[3] * Math.cos(a) * 8]); }
         if (pts.length > 3) { const n0 = rail.length; tube(rail, pts, () => 2.4, 5); for (let k2 = n0 + 6; k2 < rail.length; k2 += 8) rail[k2] = 3; } }
-      for (let i = 0; i < 26; i++) { const q = rrectAt(HX + off, HZ + off, RC + off, rnd() * per); if (nearSeat(q[0], q[1], 40)) continue; const n0 = leaves.length; clump(leaves, [q[0], 56 + rnd() * 6, q[1]], 7 + rnd() * 4, 0); for (let k2 = n0 + 7; k2 < leaves.length; k2 += 8) leaves[k2] = 1; } }
+      for (let i = 0; i < 26; i++) { const q = rimAt(off, rnd() * per); if (nearSeat(q[0], q[1], 40)) continue; const n0 = leaves.length; clump(leaves, [q[0], 56 + rnd() * 6, q[1]], 7 + rnd() * 4, 0); for (let k2 = n0 + 7; k2 < leaves.length; k2 += 8) leaves[k2] = 1; } }
     /* black roots break up through the boards and dive back under them */
     for (let i = 0; i < 12; i++) { const a = rnd() * Math.PI * 2, r0 = 1.25 + rnd() * 0.5, x0 = Math.cos(a) * HX * r0, z0 = Math.sin(a) * HZ * r0, a1 = a + (rnd() - 0.5) * 0.9, r1 = r0 + 0.3 + rnd() * 0.5, x1 = Math.cos(a1) * HX * r1, z1 = Math.sin(a1) * HZ * r1, hh = 30 + rnd() * 70;
       if (nearSeat(x0, z0, 80) || !seen((x0 + x1) / 2, GROUND, (z0 + z1) / 2, 200)) continue; const pts = [];
       for (let t = 0; t <= 1.0001; t += 1 / 18) pts.push([x0 + (x1 - x0) * t + Math.sin(t * 7 + i) * 12, GROUND - 14 + Math.sin(t * Math.PI) * hh, z0 + (z1 - z0) * t + Math.cos(t * 5 + i) * 12]);
-      if (pts.some((q) => rrectSD(q[0], q[2], HX, HZ, RC) < 40)) continue; const n0 = rail.length; tube(rail, pts, (t) => (8 + 16 * Math.sin(t * Math.PI)) * (1 + 0.15 * Math.sin(t * 30)), 8); for (let k2 = n0 + 6; k2 < rail.length; k2 += 8) rail[k2] = 2; }
+      if (pts.some((q) => platSD(q[0], q[2]) < 40)) continue; const n0 = rail.length; tube(rail, pts, (t) => (8 + 16 * Math.sin(t * Math.PI)) * (1 + 0.15 * Math.sin(t * 30)), 8); for (let k2 = n0 + 6; k2 < rail.length; k2 += 8) rail[k2] = 2; }
     /* the forest: trunks and dark crowns on a ring round the court, larger at the corners, never over a seat */
     { const trees = [], corner = [[-1, -1, 1.25], [1, -1, 1.2], [-1, 1, 0.9], [1, 1, 1.05]];
       for (const [sx, sz, k] of corner) trees.push([sx * (HX + 170 + rnd() * 60), sz * (HZ + 130 + rnd() * 60), k * 1.35]);
       for (let i = 0; i < 80; i++) { const a = rnd() * Math.PI * 2, x = Math.cos(a) * (HX + 170 + rnd() * 460), z = Math.sin(a) * (HZ + 150 + rnd() * 340); trees.push([x, z, 0.8 + rnd() * 0.6]); }
       let seed = 0;
-      for (const [x, z, k] of trees) { if (rrectSD(x, z, HX, HZ, RC) < 150 * k || nearSeat(x, z, 90 * k) || !seen(x, GROUND + 150 * k, z, 140 * k)) continue; seed++;
+      for (const [x, z, k] of trees) { if (platSD(x, z) < 150 * k || nearSeat(x, z, 90 * k) || !seen(x, GROUND + 150 * k, z, 140 * k)) continue; seed++;
         /* the near side stays low: a tall crown there would stand up over the court */
         const near = z > HZ * 0.6 ? 0.55 : 1, h = (150 + rnd() * 110) * k * near, top = GROUND + h; if (lights.length < 6 && rnd() < 0.3) lights.push([x, z]);
         const t0 = rail.length; prism(rail, [0, 1, 2, 3, 4].map((j) => [x + Math.cos(j * 1.2566) * 9 * k, z + Math.sin(j * 1.2566) * 9 * k]), GROUND - 4, top - 30 * k);
@@ -1058,9 +1297,207 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
         for (let j = 0; j < m; j++) { const a = rnd() * Math.PI * 2, rr = (j ? 30 + rnd() * 45 : 0) * k; const cc = [x + Math.cos(a) * rr, top + (rnd() - 0.3) * 40 * k, z + Math.sin(a) * rr], cr = (46 + rnd() * 34) * k * (j ? 0.85 : 1.1); clump(leaves, cc, cr * 0.82, seed + j * 0.01); leafCards(cards, cc, cr, rnd, 56); } } }
     return { rail, leaves, cards, lights };
   }
+  /* ---------------------------------------------------- the amber story's fields */
+  /* aX.x on a prop's vertices picks its material in SURF_FS: mine 0 timber · 1 iron · 2 amber · 3 lantern glass · 4 red cloth;
+   * boiler 0 steel · 1 brass · 2 copper pipe · 3 furnace glow · 4 amber; glass (the pavilion's) 1 gilt iron · 2 dark wood ·
+   * 3 vines · 4 lantern. Only the margins of the court show on screen — about 250px each side on a desktop, a strip along
+   * the far edge, nothing at the sides of a portrait phone — so the dressing stands there: wing() finds the world x that
+   * lies inside that margin on the layout at hand, and every piece is dropped if it would not be seen. */
+  const flagVerts = (o, n0, f) => { for (let q = n0 + 6; q < o.length; q += 8) o[q] = f; };
+  const ngon = (x, z, r, n = 8, rot = 0) => Array.from({ length: n }, (_, j) => [x + Math.cos(rot + (j / n) * Math.PI * 2) * r, z + Math.sin(rot + (j / n) * Math.PI * 2) * r]);
+  /* a circle of radius r about c: axis "z" faces the camera (in the x-y plane), "x" lies in the y-z plane */
+  const wheelPts = (c, r, axis, n = 20) => Array.from({ length: n + 1 }, (_, j) => { const a = (j / n) * Math.PI * 2; return axis === "z" ? [c[0] + Math.cos(a) * r, c[1] + Math.sin(a) * r, c[2]] : [c[0], c[1] + Math.sin(a) * r, c[2] + Math.cos(a) * r]; });
+  function fieldTools(rail, lights, nearSeat, rnd) {
+    const g = GROUND;
+    const T = (f, fn) => { const n0 = rail.length; fn(); flagVerts(rail, n0, f); };
+    const log = (pts, r, f = 0, segs = 7) => T(f, () => tube(rail, pts, () => r, segs));
+    const ball = (c, r, f = 0) => T(f, () => sphere(rail, c, r));
+    /* a box centred on (x, z), len along the yaw ang, wid across it, from y0 to y1 */
+    const slab = (x, z, len, wid, y0, y1, f = 0, ang = 0) => { const c = (Math.cos(ang) * len) / 2, s = (Math.sin(ang) * len) / 2; beam(rail, [x - c, z - s], [x + c, z + s], y0, y1, wid, f); };
+    const cyl = (x, z, r, y0, y1, f = 0, n = 16) => T(f, () => prism(rail, ngon(x, z, r, n), y0, y1));
+    const cone = (x, z, r, y0, y1, f = 0, n = 12) => T(f, () => { const ring = ngon(x, z, r, n, 0.3); for (let i = 0; i < n; i++) { const a = ring[i], b = ring[(i + 1) % n]; tri(rail, [b[0], y0, b[1]], [a[0], y0, a[1]], [x, y1, z]); } });
+    const ring = (c, r, axis, tr = 3, f = 1, n = 20) => log(wheelPts(c, r, axis, n), tr, f, 5);
+    const light = (x, z, y, col = null, rad = 480, gain = 1) => { if (lights.length < 13) lights.push([x, z, y, col, rad, gain]); };
+    /** a lantern on a post: the glass glows and lights the ground round it */
+    const lamp = (x, z, h = 112, col = null, gain = 1, f = 3) => { if (nearSeat(x, z, 56) || !seen(x, g + h / 2, z, 90)) return false;
+      log([[x, g - 4, z], [x, g + h, z]], 4.5, 0, 6); slab(x, z, 22, 22, g + h - 5, g + h, 1); slab(x, z, 16, 16, g + h, g + h + 22, f); slab(x, z, 22, 22, g + h + 22, g + h + 27, 1); light(x, z, g + h + 10, col, 560, gain * 1.35); return true; };
+    /** loose lumps of amber on the ground */
+    const lumps = (x, z, n, spread, r0, r1, f = 2) => { for (let i = 0; i < n; i++) { const a = rnd() * 6.283, d = Math.sqrt(rnd()) * spread, r = r0 + rnd() * (r1 - r0); ball([x + Math.cos(a) * d, g + r * 0.45, z + Math.sin(a) * d], r, f); } };
+    /** a world point (x, z) inside the visible margin on `side` at depth zf (a fraction of the court's half-depth); k is how far across it */
+    const wing = (side, zf, k = 0.55) => { const z = zf * HZ, e = floorAt(side > 0 ? W : 0, project([side * HX, 0, z])[1]), room = e ? Math.abs(e[0]) - HX : 0; return [side * (HX + clamp(room * k, 36, 330)), z, room]; };
+    return { T, log, ball, slab, cyl, cone, ring, light, lamp, lumps, wing };
+  }
+  /** 铁哨 · 第七矿井口: the loading deck at the pit mouth — the timbered tunnel and its rails running to the court, carts of amber, a headframe and a
+   *  foreman's shed in the margins, lanterns on posts; each boss of the pit adds what it brings. */
+  function buildMine(rnd, nearSeat, who) {
+    const rail = [], cols = [], lights = [], g = GROUND;
+    const { T, log, ball, slab, cyl, cone, ring, light, lamp, lumps, wing } = fieldTools(rail, lights, nearSeat, rnd);
+    balustrade(rail, nearSeat, { step: 150, post: 12, postH: 52, cap: 1, top: [38, 44, 10], mid: [15, 20, 7], skip: (i) => hash2(i, 5.5) < 0.34 });
+    { /* the deck stands on trestle posts: along the edges the camera looks at */
+      const per = rimPer(0), n = Math.round(per / 120);
+      for (let i = 0; i < n; i++) { const q = rimAt(-6, (i / n) * per); if (q[3] < 0.3 || nearSeat(q[0], q[1], 40) || !seen(q[0], g, q[1], 60)) continue; log([[q[0], -8, q[1]], [q[0], g - 4, q[1]]], 8, 0, 6); } }
+    const rock = (x, z, r, h, n = 6) => prism(cols, ngon(x, z, r, n, rnd() * 6), g - 60, g + h);
+    const zp = -(HZ + 56);
+    /* the hill with the tunnel mouth in it: timber portal, rock either side, the dark of the shaft, a lamp on each post */
+    if (seen(0, g + 150, zp, 520)) {
+      for (const sx of [-1, 1]) { log([[sx * 235, g - 6, zp], [sx * 238, g + 150, zp], [sx * 235, g + 272, zp]], 19, 0, 8); log([[sx * 235, g + 188, zp + 8], [sx * 122, g + 282, zp + 8]], 9); log([[sx * 214, g + 6, zp + 26], [sx * 214, g + 150, zp + 26]], 5, 1, 5);
+        slab(sx * 258, zp + 34, 14, 14, g + 160, g + 188, 3); slab(sx * 258, zp + 34, 20, 20, g + 188, g + 194, 1); log([[sx * 258, g + 194, zp + 34], [sx * 250, g + 282, zp + 14]], 1.6, 1, 4); light(sx * 258, zp + 56, g + 176, null, 620, 1.7); }
+      log([[-262, g + 284, zp], [0, g + 292, zp], [262, g + 284, zp]], 23, 0, 8); slab(0, zp - 4, 500, 16, g + 306, g + 324, 0);
+      slab(0, zp - 40, 470, 10, g - 4, g + 276, 1); light(0, zp - 6, g + 130, [1, 0.62, 0.22], 560, 1.3);
+      for (const sx of [-1, 1]) { slab(sx * 372, zp + 6, 222, 22, g - 4, g + 250, 0); for (let y = 40; y < 250; y += 52) slab(sx * 372, zp + 18, 226, 5, g + y, g + y + 9, 1); }
+      for (let x = -1900; x <= 1900; x += 96) { if (Math.abs(x) < 330) continue; const t = Math.min(1, (Math.abs(x) - 330) / 1100); rock(x + (rnd() - 0.5) * 50, zp - 34 - rnd() * 90, 54 + rnd() * 36, 250 + 330 * t + rnd() * 170); }
+      prism(cols, [[-440, zp - 20], [440, zp - 20], [440, zp - 220], [-440, zp - 220]], g + 328, g + 560 + rnd() * 120);
+      prism(cols, [[-2100, zp - 240], [2100, zp - 240], [2100, zp - 340], [-2100, zp - 340]], g - 60, g + 1000);
+      for (let i = 0; i < 16; i++) { const sx = rnd() < 0.5 ? -1 : 1, x = sx * (300 + rnd() * 700); if (seen(x, g + 100, zp, 60)) ball([x, g + 50 + rnd() * 230, zp - 30 + rnd() * 30], 9 + rnd() * 17, 2); } }
+    /* the rails from the shaft to the court, sleepers between; the painted rails on the court carry on from them */
+    { const zA = zp + 22, zB = -(HZ + 24); for (const x of [-16, 16]) log([[x, g + 3, zA], [x, g + 3, zB]], 3.6, 1, 5); for (let z = zA + 8; z < zB; z += 34) slab(0, z, 84, 12, g - 1, g + 5, 0); }
+    const cart = (x, cz, loaded) => { if (!seen(x, g + 40, cz, 130)) return;
+      slab(x, cz, 100, 70, g + 16, g + 58, 1); slab(x, cz, 110, 80, g + 56, g + 64, 0);
+      if (loaded) for (let i = 0; i < 11; i++) ball([x + (rnd() - 0.5) * 46, g + 64 + rnd() * 14, cz + (rnd() - 0.5) * 80], 9 + rnd() * 10, 2);
+      for (const sx of [-1, 1]) for (const dz of [-30, 30]) ring([x + sx * 37, g + 14, cz + dz], 14, "x", 3, 1, 14); };
+    cart(0, -(HZ + 70), true); cart(0, -(HZ + 215), true);
+    lumps(0, -(HZ + 40), 6, 90, 5, 11);
+    /* the margins: rock with amber in it, and what stands in front of it */
+    const outcrop = (x, z, w, h) => { if (!seen(x, g + h / 2, z, w * 1.4)) return; for (let i = 0; i < 4; i++) rock(x + (rnd() - 0.5) * w, z + (rnd() - 0.5) * w * 0.7, 30 + rnd() * 26, h * (0.45 + rnd() * 0.55));
+      for (let i = 0; i < 5; i++) ball([x + (rnd() - 0.5) * w * 1.1, g + 8 + rnd() * h * 0.45, z + w * 0.35 + rnd() * 24], 7 + rnd() * 13, 2); light(x, z + w, g + h * 0.35, [1, 0.58, 0.16], 300, 0.55); };
+    const shed = (x, z) => { if (nearSeat(x, z, 120) || !seen(x, g + 60, z, 150)) return; slab(x, z, 150, 110, g - 4, g + 110, 0);
+      prism(rail, [[x - 92, z - 72], [x + 92, z - 72], [x + 92, z + 72], [x - 92, z + 72]], g + 108, g + 128, [0, 0.2]);
+      slab(x - 26, z + 56, 56, 3, g + 52, g + 92, 3); slab(x + 44, z + 56, 30, 3, g, g + 74, 1); cyl(x + 56, z - 24, 8, g + 108, g + 190, 1, 8); light(x - 26, z + 92, g + 72, null, 380, 0.8); };
+    const headframe = (x, z, H = 440) => { if (nearSeat(x, z, 200) || !seen(x, g + H / 2, z, 300)) return false; const top = [x, g + H, z];
+      for (const [ax, az] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) log([[x + ax * 104, g - 6, z + az * 76], [x + ax * 56, g + 260, z + az * 42], top], 10, 0, 7);
+      for (const y of [120, 250]) { const f = 1 - (y / H) * 0.9; for (const az of [-1, 1]) log([[x - 104 * f, g + y, z + az * 76 * f], [x + 104 * f, g + y, z + az * 76 * f]], 5); for (const ax of [-1, 1]) log([[x + ax * 104 * f, g + y, z - 76 * f], [x + ax * 104 * f, g + y, z + 76 * f]], 5); }
+      log([[x - 104, g, z + 76], [x + 80, g + 250, z + 76 * 0.55]], 4.5); log([[x + 104, g, z + 76], [x - 80, g + 250, z + 76 * 0.55]], 4.5);
+      ring([x, g + H - 14, z + 4], 70, "z", 6, 1, 22); for (let a = 0; a < 3; a++) { const an = (a / 3) * Math.PI; log([[x + Math.cos(an) * 70, g + H - 14 + Math.sin(an) * 70, z + 4], [x - Math.cos(an) * 70, g + H - 14 - Math.sin(an) * 70, z + 4]], 3.4, 1, 5); }
+      ball([x, g + H - 14, z + 4], 11, 1); log([[x + 70, g + H - 14, z + 4], [x + 74, g + 260, z + 4], [x + 66, g + 10, z + 4]], 2.2, 1, 4); light(x, z + 90, g + 120, null, 420, 0.7); return true; };
+    const woodpile = (x, z) => { if (!seen(x, g + 20, z, 100)) return; let row = 0; for (const n of [3, 2, 1]) { for (let i = 0; i < n; i++) log([[x - 62, g + 10 + row * 16, z + (i - (n - 1) / 2) * 17], [x + 62, g + 10 + row * 16, z + (i - (n - 1) / 2) * 17]], 8.5, 0, 6); row++; } };
+    const spur = (x, z0, z1, loaded) => { if (!seen(x, g, (z0 + z1) / 2, 160)) return; for (const dx of [-16, 16]) log([[x + dx, g + 3, z0], [x + dx, g + 3, z1]], 3.6, 1, 5); for (let z = z0 + 6; z < z1; z += 34) slab(x, z, 84, 12, g - 1, g + 5, 0); cart(x, (z0 + z1) / 2, loaded); };
+    for (const s of [-1, 1]) { outcrop(...wing(s, -0.62, 1.0).slice(0, 2), 160, 220); outcrop(...wing(s, 0.5, 1.05).slice(0, 2), 150, 200); lamp(...wing(s, -0.96, 0.42).slice(0, 2)); lamp(...wing(s, 0.36, 0.38).slice(0, 2)); }
+    { let [x, z] = wing(-1, -0.5, 0.5); if (!headframe(x, z, 360)) { [x, z] = wing(1, 0.5, 0.5); headframe(x, z, 360); } }
+    { const [x, z] = wing(-1, 0.02, 0.45); woodpile(x, z); lumps(x - 20, z + 52, 5, 36, 5, 10); }
+    { const [x, z] = wing(1, 0.1, 0.62); shed(x, z); }
+    { const [x, z] = wing(1, 0.56, 0.5); spur(x, z - 70, z + 90, true); lumps(x + 50, z + 100, 7, 44, 6, 12); }
+    /* what each pit boss brings */
+    const zl = wing(1, 0, 0.5), zr = wing(-1, 0, 0.5);
+    if (who === "warden") { /* the foreman's steam whistle on a post by the portal, a signal lamp under it */
+      for (const sx of [-1, 1]) if (seen(sx * 330, g + 100, zp + 50, 80)) { log([[sx * 330, g - 4, zp + 50], [sx * 330, g + 230, zp + 50]], 6, 1, 6); cyl(sx * 330, zp + 50, 10, g + 230, g + 270, 1, 8); light(sx * 330, zp + 80, g + 215, [1, 0.7, 0.3], 360, 0.7); } }
+    if (who === "fuse") { /* the blasting girl: kegs of black powder stacked either side of the portal, a fuse burning across its mouth */
+      for (const sx of [-1, 1]) for (let i = 0; i < 4; i++) { const top = i === 3, x = sx * (top ? 278 : 252 + i * 52), y0 = g + (top ? 52 : 0), z = zp + 18; if (!seen(x, y0, z, 60)) continue; cyl(x, z, 22, y0, y0 + 52, 0, 10); cyl(x, z, 24, y0 + 10, y0 + 16, 1, 10); cyl(x, z, 24, y0 + 36, y0 + 42, 1, 10); }
+      if (seen(0, g, zp + 24, 300)) { log([[-250, g + 6, zp + 24], [-120, g + 3, zp + 28], [0, g + 3, zp + 20], [110, g + 3, zp + 28], [250, g + 6, zp + 24]], 1.8, 3, 4); ball([112, g + 6, zp + 28], 6, 3); light(112, zp + 40, g + 20, [1, 0.5, 0.12], 300, 1.1); }
+      if (seen(zr[0], g + 40, zr[1] - 60, 90)) { slab(zr[0], zr[1] - 60, 70, 46, g, g + 34, 0); slab(zr[0], zr[1] - 60, 12, 12, g + 34, g + 70, 1); slab(zr[0], zr[1] - 60, 36, 6, g + 66, g + 72, 1); } }
+    if (who === "gleaner") { /* the scavenger: heaps of scrap, broken wheels, a tarpaulin tent with a lamp */
+      for (let i = 0; i < 16; i++) { const sx = i % 2 ? 1 : -1, x = sx * (250 + rnd() * 200), z = zp - 6 + rnd() * 26, ang = rnd() * 3; if (!seen(x, g + 20, z, 60)) continue; slab(x, z, 30 + rnd() * 50, 10 + rnd() * 18, g + rnd() * 24, g + 14 + rnd() * 40, rnd() < 0.7 ? 1 : 0, ang); }
+      for (const sx of [-1, 1]) ring([sx * 300, g + 26, zp + 18], 26, "z", 4, 1, 14);
+      if (seen(zr[0], g + 50, zr[1] - 70, 120)) { cone(zr[0], zr[1] - 70, 78, g, g + 110, 0, 8); lamp(zr[0] + 90, zr[1] - 40, 70); } }
+    if (who === "redscarf") { /* the strike: a barricade of carts and timbers across the portal, red scarves hung from the lintel */
+      for (let x = -200; x <= 200; x += 66) if (seen(x, g + 200, zp, 60)) slab(x, zp + 16, 3, 34, g + 150 + (x & 7), g + 270, 4, 0.25 * Math.sin(x));
+      for (const sx of [-1, 1]) { if (seen(sx * 150, g, zp + 26, 120)) { slab(sx * 150, zp + 22, 100, 56, g + 16, g + 58, 1, 0.45 * sx); log([[sx * 70, g + 4, zp + 34], [sx * 210, g + 90, zp + 8]], 7, 0, 6); log([[sx * 100, g + 4, zp + 38], [sx * 235, g + 70, zp + 10]], 7, 0, 6); } }
+      for (const s of [-1, 1]) { const [x, z] = wing(s, -0.3, 0.55); if (seen(x, g + 100, z, 100)) { log([[x, g - 4, z], [x, g + 190, z]], 4.5, 0, 6); for (let i = 0; i < 3; i++) slab(x + 14, z, 3, 22 + i * 4, g + 150 - i * 36, g + 186 - i * 36, 4, 0); } } }
+    if (who === "drill") { /* the Number Seven drill: its bit comes out of the shaft, ringed and ribbed, hoses behind */
+      if (seen(0, g + 120, zp + 40, 260)) { const cy = g + 128; for (let i = 0; i < 10; i++) { const t = i / 9, zz = zp - 110 + t * 160; ring([0, cy, zz], 126 * (1 - t * 0.93) + 6, "z", 7, 1, 18); }
+        for (let b = 0; b < 3; b++) { const pts = []; for (let i = 0; i <= 18; i++) { const t = i / 18, a = b * 2.094 + t * 7, r = 126 * (1 - t * 0.93); pts.push([Math.cos(a) * r, cy + Math.sin(a) * r, zp - 110 + t * 160]); } log(pts, 8, 1, 5); }
+        ball([0, cy, zp + 50], 12, 1); for (const sx of [-1, 1]) log([[sx * 90, cy + 40, zp - 90], [sx * 170, g + 160, zp - 60], [sx * 290, g + 20, zp + 10]], 14, 1, 6); light(0, zp + 30, cy + 60, [1, 0.5, 0.2], 400, 0.7); } }
+    if (who === "blacklung") { /* the black lung: a ventilation fan in the shaft's throat, ducts, heaps of coal, the lamps turned low */
+      if (seen(0, g + 140, zp + 30, 260)) { const cy = g + 142; ring([0, cy, zp + 36], 118, "z", 9, 1, 22); ring([0, cy, zp + 36], 60, "z", 4, 1, 16); for (let a = 0; a < 8; a++) { const an = (a / 8) * Math.PI * 2; log([[Math.cos(an) * 14, cy + Math.sin(an) * 14, zp + 36], [Math.cos(an) * 114, cy + Math.sin(an) * 114, zp + 36]], 6, 1, 5); } ball([0, cy, zp + 36], 16, 1);
+        for (const sx of [-1, 1]) log([[sx * 124, cy, zp + 36], [sx * 300, g + 100, zp + 26], [sx * 440, g + 20, zp + 24]], 22, 1, 8); }
+      for (let i = 0; i < 26; i++) { const sx = i % 2 ? 1 : -1, x = sx * (260 + rnd() * 180), z = zp + 6 + rnd() * 18; if (seen(x, g, z, 40)) ball([x, g + 8 + rnd() * 18, z], 10 + rnd() * 16, 1); } }
+    if (who === "earlyriser") { /* the beast cracked out of its amber: the shell split open before the shaft, shards and lumps all about */
+      if (seen(0, g + 120, zp + 60, 300)) { ball([0, g + 120, zp + 10], 118, 1);
+        for (let i = 0; i < 13; i++) { const a = (i / 13) * Math.PI * 2 + rnd() * 0.2, c = [Math.cos(a) * 150, g + 120 + Math.sin(a) * 118, zp + 60 + rnd() * 20]; shard(rail, c, 80 + rnd() * 50, 22 + rnd() * 12, [Math.cos(a) * 0.9, Math.sin(a) * 0.9, 0.5], 2); }
+        for (let i = 0; i < 7; i++) { const a = rnd() * 6.283, d = 40 + rnd() * 90; log([[Math.cos(a) * d * 0.5, g + 120 + Math.sin(a) * d * 0.4, zp + 90], [Math.cos(a) * d * 1.4, g + 120 + Math.sin(a) * d * 1.1, zp + 70]], 3.2, 2, 4); }
+        lumps(0, zp + 120, 12, 190, 8, 18); light(0, zp + 120, g + 120, [1, 0.52, 0.12], 520, 0.7); } }
+    return { rail, cols, lights };
+  }
+  /** 艾达 · 锅炉房: a steel gantry round the court, riveted drums and chimneys against the far wall, copper pipes, a long boiler and a furnace in the margins, a flywheel, furnace mouths glowing; each boss of the hall adds what it brings. */
+  function buildBoiler(rnd, nearSeat, who) {
+    const rail = [], lights = [], g = GROUND;
+    const { T, log, ball, slab, cyl, cone, ring, light, lamp, lumps, wing } = fieldTools(rail, lights, nearSeat, rnd);
+    const pipe = (pts, r, f = 2, segs = 10) => log(pts, r, f, segs);
+    { const sx = Math.min(150, HX * 0.26); balustrade(rail, nearSeat, { step: 112, post: 9, postH: 58, cap: 1, top: [42, 48, 6], mid: [18, 22, 5], skip: (i, q) => q[0] < -HX + sx + 34 && q[1] > HZ - 100 }); }
+    const zw = -(HZ + 120);
+    const drum = (x, z, r, h) => { if (!seen(x, g + h / 2, z, r * 2.4)) return; cyl(x, z, r, g - 6, g + h, 0, 22); for (const y of [0.16, 0.42, 0.7]) cyl(x, z, r + 4, g + h * y, g + h * y + 10, 1, 22); ball([x, g + h, z], r * 0.98, 0); ring([x, g + h * 0.5, z + r + 3], 24, "z", 3, 1, 14); };
+    for (const x of [-430, 0, 430]) drum(x, zw, 108, 470);
+    for (const x of [-250, 260]) drum(x, zw - 360, 140, 650);
+    /* the far gantry: a platform with a rail, legs, copper headers into the drums */
+    if (seen(0, g + 120, zw + 62, 700)) { slab(0, zw + 62, 1700, 46, g + 116, g + 124, 0);
+      for (let x = -800; x <= 800; x += 160) { log([[x, g, zw + 62], [x, g + 116, zw + 62]], 6, 0, 6); beam(rail, [x - 2.5, zw + 84], [x + 2.5, zw + 84], g + 124, g + 168, 5, 1); }
+      beam(rail, [-800, zw + 84], [800, zw + 84], g + 164, g + 170, 5, 1); beam(rail, [-800, zw + 84], [800, zw + 84], g + 140, g + 144, 4, 1);
+      pipe([[-900, g + 330, zw + 120], [900, g + 330, zw + 120]], 13); pipe([[-900, g + 410, zw + 120], [900, g + 410, zw + 120]], 11);
+      for (let x = -800; x <= 800; x += 200) { ball([x, g + 330, zw + 120], 17, 1); ball([x, g + 410, zw + 120], 15, 1); }
+      for (const x of [-430, 0, 430]) { pipe([[x + 30, g + 470, zw + 80], [x + 30, g + 540, zw + 80], [x + 80, g + 540, zw + 90], [x + 80, g + 330, zw + 118]], 10); ball([x + 30, g + 540, zw + 80], 15, 1); } }
+    for (const x of [-250, 250]) { const z = zw + 80; if (!seen(x, g + 60, z, 150)) continue; slab(x, z, 140, 96, g - 4, g + 130, 0); slab(x, z + 50, 90, 6, g + 52, g + 84, 3); slab(x, z, 150, 106, g + 130, g + 140, 1); light(x, z + 90, g + 70, null, 520, 0.9); }
+    for (const sx of [-1, 1]) { const x = sx * (HX + 430), z = -(HZ + 260); if (!nearSeat(x, z, 90) && seen(x, g + 400, z, 120)) { cyl(x, z, 48, g - 6, g + 1050, 0, 14); for (const y of [300, 700, 1010]) cyl(x, z, 52, g + y, g + y + 12, 1, 14); } }
+    /* the margins: the long boiler, the furnace and its chimney, the flywheel, lamps */
+    { const [x, zc] = wing(-1, -0.3, 0.5), L = Math.min(560, HZ * 0.95); if (!nearSeat(x, zc, 160) && seen(x, g + 90, zc, 300)) {
+        pipe([[x, g + 95, zc - L / 2], [x, g + 95, zc + L / 2]], 88, 0, 20); ball([x, g + 95, zc - L / 2], 88, 0); ball([x, g + 95, zc + L / 2], 88, 0);
+        for (let k = 0; k < 5; k++) ring([x, g + 95, zc - L / 2 + (L * (k + 0.5)) / 5], 91, "z", 5, 1, 24);
+        for (const f of [-0.32, 0.32]) slab(x, zc + L * f, 150, 26, g - 4, g + 18, 0);
+        cyl(x, zc - 40, 36, g + 170, g + 214, 1, 12); ball([x, g + 218, zc - 40], 36, 1); pipe([[x, g + 250, zc - 40], [x, g + 330, zc - 40], [x, g + 330, zw + 110]], 9);
+        ring([x, g + 128, zc + L / 2 + 90], 28, "z", 4, 1, 16); for (let a = 0; a < 8; a++) { const an = (a / 8) * Math.PI * 2; log([[x, g + 128, zc + L / 2 + 90], [x + Math.cos(an) * 26, g + 128 + Math.sin(an) * 26, zc + L / 2 + 90]], 2, 1, 4); }
+        light(x + 60, zc + L / 2 + 60, g + 100, null, 380, 0.6); } }
+    { const [x, z] = wing(1, 0.3, 0.5); if (!nearSeat(x, z, 150) && seen(x, g + 100, z, 240)) {
+        slab(x, z, 170, 130, g - 4, g + 150, 0); slab(x, z, 184, 144, g + 150, g + 162, 1); cyl(x - 30, z - 20, 44, g + 162, g + 580, 0, 14); for (const y of [220, 380, 560]) cyl(x - 30, z - 20, 48, g + y, g + y + 12, 1, 14);
+        slab(x, z + 67, 104, 6, g + 40, g + 92, 3); slab(x, z + 70, 120, 8, g + 94, g + 100, 1); light(x, z + 110, g + 70, null, 480, 1.1);
+        for (let i = 0; i < 12; i++) ball([x + (rnd() - 0.5) * 120, g + 8 + rnd() * 14, z + 100 + rnd() * 44], 8 + rnd() * 12, 1); } }
+    { const [x, z] = wing(1, -0.42, 0.5); if (!nearSeat(x, z, 160) && seen(x, g + 130, z, 200)) { const cy = g + 124;
+        ring([x, cy, z], 96, "z", 9, 1, 28); ring([x, cy, z], 44, "z", 5, 1, 16); for (let a = 0; a < 8; a++) { const an = (a / 8) * Math.PI * 2; log([[x, cy, z], [x + Math.cos(an) * 96, cy + Math.sin(an) * 96, z]], 4.5, 1, 5); ball([x + Math.cos(an) * 88, cy + Math.sin(an) * 88, z], 8, 1); }
+        ball([x, cy, z], 18, 1); for (const sx of [-1, 1]) slab(x + sx * 22, z, 12, 24, g - 4, cy - 10, 0); light(x, z + 90, cy, null, 300, 0.4); } }
+    for (const s of [-1, 1]) { lamp(...wing(s, -0.92, 0.42).slice(0, 2), 110, [1, 0.6, 0.24], 0.8); lamp(...wing(s, 0.5, 0.4).slice(0, 2), 110, [1, 0.6, 0.24], 0.8); }
+    /* what each boss of the hall brings */
+    if (who === "ada") { /* the great gauge on the far wall, a drafting bench with its lamp */
+      if (seen(0, g + 300, zw + 100, 200)) { ring([0, g + 300, zw + 100], 74, "z", 7, 1, 28); ring([0, g + 300, zw + 100], 62, "z", 2, 1, 24); for (let i = 0; i < 24; i++) { const a = (i / 24) * Math.PI * 2; log([[Math.cos(a) * 52, g + 300 + Math.sin(a) * 52, zw + 100], [Math.cos(a) * 60, g + 300 + Math.sin(a) * 60, zw + 100]], 1.6, 1, 4); } log([[0, g + 300, zw + 100], [38, g + 322, zw + 100]], 3.4, 1, 4); ball([0, g + 300, zw + 100], 8, 1); }
+      const [x, z] = wing(-1, 0.1, 0.5); if (!nearSeat(x, z, 140) && seen(x, g + 40, z, 120)) { slab(x, z, 150, 56, g + 36, g + 44, 0); for (const dx of [-60, 60]) slab(x + dx, z, 10, 40, g - 2, g + 36, 0); lamp(x + 70, z - 10, 90, [1, 0.7, 0.3], 0.6); } }
+    if (who === "clockmaker") { /* a clock face as big as the far wall, its train of wheels open behind */
+      if (seen(0, g + 330, zw - 20, 300)) { const cy = g + 330, cz = zw - 30; ring([0, cy, cz], 160, "z", 10, 1, 36); ring([0, cy, cz], 148, "z", 2.4, 1, 36); for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2; log([[Math.cos(a) * 124, cy + Math.sin(a) * 124, cz], [Math.cos(a) * 144, cy + Math.sin(a) * 144, cz]], 4.5, 1, 4); }
+        log([[0, cy, cz], [0, cy + 118, cz]], 5, 1, 5); log([[0, cy, cz], [86, cy - 40, cz]], 6.5, 1, 5); ball([0, cy, cz], 14, 1);
+        for (const [gx, gy, gr] of [[-250, cy - 80, 66], [250, cy - 100, 80], [-330, cy + 100, 44]]) { ring([gx, gy, cz], gr, "z", 5, 1, 20); ring([gx, gy, cz], gr * 0.5, "z", 3, 1, 12); for (let a = 0; a < 6; a++) { const an = (a / 6) * Math.PI * 2; log([[gx, gy, cz], [gx + Math.cos(an) * gr, gy + Math.sin(an) * gr, cz]], 3, 1, 4); } } } }
+    if (who === "amberbody") { /* the amber-bodied: tall tanks of amber with steel caps, a dark shape standing in each */
+      for (const x of [-330, -110, 110, 330]) { const z = zw + 56; if (!seen(x, g + 100, z, 120)) continue; cyl(x, z, 52, g, g + 250, 4, 14); cyl(x, z, 58, g - 4, g + 14, 0, 14); cyl(x, z, 58, g + 246, g + 264, 0, 14); light(x, z + 70, g + 120, [1, 0.56, 0.14], 330, 0.45); } }
+    if (who === "appraiser") { /* the valuer: shelves of tagged amber and a balance scale */
+      for (let r = 0; r < 3; r++) if (seen(0, g + 60 + r * 64, zw + 40, 500)) { slab(0, zw + 40, 760, 30, g + 40 + r * 70, g + 46 + r * 70, 0); for (let i = 0; i < 9; i++) ball([-340 + i * 85 + (r & 1) * 30, g + 62 + r * 70, zw + 40], 12 + rnd() * 6, 4); }
+      const [x, z] = wing(-1, 0.05, 0.5); if (!nearSeat(x, z, 140) && seen(x, g + 100, z, 140)) { log([[x, g - 4, z], [x, g + 190, z]], 6, 1, 6); log([[x - 80, g + 190, z], [x + 80, g + 190, z]], 4.5, 1, 6); for (const sx of [-1, 1]) { log([[x + sx * 80, g + 190, z], [x + sx * 80, g + 120, z]], 1.4, 1, 4); cyl(x + sx * 80, z, 30, g + 112, g + 120, 1, 14); }
+        ball([x - 80, g + 128, z], 11, 4); ball([x + 80, g + 140, z], 15, 4); slab(x, z, 70, 34, g - 4, g + 12, 0); } }
+    if (who === "pawnbroker") { /* the pawnbroker: an iron grille before the wall, a counter, tagged amber hung behind the bars */
+      if (seen(0, g + 100, zw + 74, 500)) { for (let x = -330; x <= 330; x += 30) beam(rail, [x - 2, zw + 74], [x + 2, zw + 74], g, g + 190, 4, 1); slab(0, zw + 74, 680, 6, g + 186, g + 194, 1); slab(0, zw + 74, 680, 6, g + 92, g + 98, 1); slab(0, zw + 86, 560, 30, g, g + 40, 0);
+        for (let i = 0; i < 10; i++) { const x = -300 + i * 66; log([[x, g + 186, zw + 50], [x, g + 120 + rnd() * 30, zw + 50]], 1.2, 1, 4); ball([x, g + 108 + rnd() * 24, zw + 50], 12 + rnd() * 6, 4); } light(0, zw + 90, g + 140, [1, 0.6, 0.2], 420, 0.5); } }
+    return { rail, lights };
+  }
+  /** 伊芙 · 玻璃温室: the pavilion's roots, vines and trees under glass — black flowers, brass iron, glass walls along the sides and the far end, some panes gone, iron ribs overhead at the far end. */
+  function buildGlass(rnd, nearSeat, who) {
+    const o = buildPavilion(rnd, nearSeat, true), g = GROUND, glass = [];
+    const { log, ball, slab, ring, lamp, wing, light } = fieldTools(o.rail, o.lights, nearSeat, rnd);
+    const iron = (pts, r, f = 1, segs = 6) => log(pts, r, f, segs);
+    const rose = (x, y, z, r) => { const n0 = o.leaves.length; clump(o.leaves, [x, y, z], r, 0); for (let k = n0 + 7; k < o.leaves.length; k += 8) o.leaves[k] = 1; };
+    /* a glass wall from the ground point a to b, up to y1: brass mullions every bay, transoms, a pane in each cell (a few missing) */
+    const wall = (a, b, y1, bay) => { const L = Math.hypot(b[0] - a[0], b[1] - a[1]), n = Math.max(1, Math.round(L / bay)), dx = (b[0] - a[0]) / n, dz = (b[1] - a[1]) / n, rows = [0, 150, 320, 480, y1].filter((y) => y <= y1);
+      for (let i = 0; i <= n; i++) { const x = a[0] + dx * i, z = a[1] + dz * i; if (seen(x, g + 300, z, 200)) beam(o.rail, [x - 3, z], [x + 3, z], g - 4, g + y1, 7, 1); }
+      for (const y of rows) if (seen((a[0] + b[0]) / 2, g + y, (a[1] + b[1]) / 2, 900)) beam(o.rail, a, b, g + y, g + y + 6, 7, 1);
+      for (let i = 0; i < n; i++) for (let r = 0; r < rows.length - 1; r++) { if (rnd() < 0.14) continue; const x0 = a[0] + dx * i, z0 = a[1] + dz * i, x1 = x0 + dx, z1 = z0 + dz, y0 = g + rows[r] + 8, yy = g + rows[r + 1] - 2; if (!seen((x0 + x1) / 2, (y0 + yy) / 2, (z0 + z1) / 2, 160)) continue;
+        quad(glass, [x0, y0, z0], [x1, y0, z1], [x1, yy, z1], [x0, yy, z0], V.norm([-(z1 - z0), 0, x1 - x0])); } };
+    const zw = -(HZ + 150);
+    if (seen(0, g + 300, zw - 80, 900)) slab(0, zw - 90, 3600, 8, g - 4, g + 900, 5);
+    for (const x of [-520, 0, 520]) light(x, zw + 80, g + 200, [0.62, 0.9, 0.95], 560, 0.9);
+    wall([-1500, zw], [1500, zw], 640, 150);
+    for (const s of [-1, 1]) { const xw = Math.abs(wing(s, 0, 0.8)[0]); wall([s * xw, zw], [s * xw, HZ * 0.75], 560, 130);
+      /* iron ribs arching in from the side walls over the far end only: nearer ones would stand over the court */
+      for (let i = 0; i < 4; i++) { const z = zw + i * 150, x = s * xw; if (!seen(x, g + 520, z, 300)) continue; iron([[x, g + 560, z], [x - s * 70, g + 640, z], [x - s * 170, g + 690, z]], 5); } }
+    /* the floor's edge is eaten by the garden: shrubs and black roses crowd in along the rim */
+    { const per = rimPer(0), n = Math.round(per / 44); for (let i = 0; i < n; i++) { const q = rimAt(-12 + rnd() * 30, (i / n) * per + rnd() * 18); if (nearSeat(q[0], q[1], 56) || !seen(q[0], g + 20, q[1], 90)) continue; const r = 12 + rnd() * 16, c = [q[0], g + 14 + rnd() * 22, q[1]];
+        if (rnd() < 0.38) rose(c[0], c[1], c[2], r); else { clump(o.leaves, c, r * 1.2, i * 0.37); leafCards(o.cards, c, r * 1.3, rnd, 22); } } }
+    /* planters along the walls, black roses in them, lanterns */
+    for (const s of [-1, 1]) for (let i = 0; i < 6; i++) { const [x, z] = wing(s, -0.95 + i * 0.34, 0.62); if (nearSeat(x, z, 90) || !seen(x, g + 30, z, 100)) continue; slab(x, z, 54, 70, g - 4, g + 30, 2); rose(x, g + 44, z, 20 + rnd() * 8); if (i % 2 === 0) rose(x + s * 12, g + 70, z + 8, 14 + rnd() * 6); }
+    for (const s of [-1, 1]) { lamp(...wing(s, -0.7, 0.45).slice(0, 2), 120, [1, 0.84, 0.5], 0.9, 4); lamp(...wing(s, 0.3, 0.4).slice(0, 2), 120, [1, 0.84, 0.5], 0.9, 4); }
+    for (const x of [-420, 0, 420]) { if (seen(x, g + 60, zw + 60, 100)) { slab(x, zw + 60, 110, 60, g - 4, g + 34, 2); rose(x, g + 52, zw + 60, 28); rose(x + 30, g + 80, zw + 56, 18); } }
+    /* what each boss of the glasshouse brings */
+    if (who === "queen") { /* the root mother: great roots breaking through the glass and the boards */
+      for (const x of [-420, -140, 150, 430]) { if (!seen(x, g + 200, zw, 300)) continue; const pts = []; for (let t = 0; t <= 1.0001; t += 1 / 14) pts.push([x + Math.sin(t * 5 + x) * 28 * (1 - t), g + 760 * (1 - t) ** 1.3 - 6, zw - 40 + t * 120 + Math.cos(t * 4 + x) * 10]); const n0 = o.rail.length; tube(o.rail, pts, (t) => 10 + 20 * (1 - t), 8); for (let k = n0 + 6; k < o.rail.length; k += 8) o.rail[k] = 2; }
+      for (let i = 0; i < 7; i++) { const s = i % 2 ? 1 : -1, [x, z] = wing(s, -0.8 + (i >> 1) * 0.4, 0.8); if (nearSeat(x, z, 100) || !seen(x, g + 60, z, 200)) continue; const pts = []; for (let t = 0; t <= 1.0001; t += 1 / 14) pts.push([x + s * (60 - t * 190) + Math.sin(t * 6 + i) * 14, g + 240 * (1 - t) ** 1.4 + Math.sin(t * 5) * 10, z + t * 70 + Math.cos(t * 4 + i) * 12]); const n0 = o.rail.length; tube(o.rail, pts, (t) => 7 + 15 * (1 - t), 8); for (let k = n0 + 6; k < o.rail.length; k += 8) o.rail[k] = 2; } }
+    if (who === "eve") { /* Eve: a black flower as tall as a person at the far wall, its petals open to the court; lanterns hung close */
+      if (seen(0, g + 140, zw + 90, 300)) { slab(0, zw + 100, 150, 90, g - 4, g + 44, 2); for (let i = 0; i < 9; i++) { const a = (i / 9) * Math.PI * 2; rose(Math.cos(a) * 52, g + 150 + Math.sin(a) * 52, zw + 100, 34); } rose(0, g + 150, zw + 100, 40); ball([0, g + 150, zw + 112], 11, 1); light(0, zw + 160, g + 150, [0.75, 0.45, 1], 420, 0.7); } }
+    return o;
+  }
   function build() {
     if (geom) for (const m of geom.all) freeMesh(m);
-    ensureCourtArt();
+    ensureCourtArt(); ensurePlatTex();
     const all = []; const mk = (arr) => { const m = mesh(arr); all.push(m); return m; };
     const rnd = rng(1234 + Math.round(HZ));
     const padList = Object.entries(PADS);
@@ -1072,7 +1509,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
       for (let x = X0; x < X1; ) { xs.push(x); const ax = Math.abs(x); x += ax > HX - 60 && ax < RIV.a + RIV.w + 420 ? 22 : 60; } xs.push(X1);
       for (let z = Z0; z < Z1; ) { zs.push(z); z += z > -(HZ + 800) && z < HZ + 800 ? 26 : 70; } zs.push(Z1);
       const grid = zs.map((z) => xs.map((x) => [x, terrainAt(x, z), z]));
-      const hidden = (p) => rrectSD(p[0], p[2], HX, HZ, RC) < -12;
+      const hidden = (p) => platSD(p[0], p[2]) < -12;
       for (let j = 0; j < zs.length - 1; j++) for (let i = 0; i < xs.length - 1; i++) { const a = grid[j][i], b = grid[j][i + 1], c = grid[j + 1][i + 1], d = grid[j + 1][i]; if (hidden(a) && hidden(b) && hidden(c) && hidden(d)) continue; tri(to, a, c, b); tri(to, a, d, c); }
       const acc = new Map(); for (let k = 0; k < to.length; k += 8) { const key = to[k].toFixed(1) + "," + to[k + 2].toFixed(1); const e = acc.get(key) || [0, 0, 0]; e[0] += to[k + 3]; e[1] += to[k + 4]; e[2] += to[k + 5]; acc.set(key, e); }
       for (let k = 0; k < to.length; k += 8) { const e = V.norm(acc.get(to[k].toFixed(1) + "," + to[k + 2].toFixed(1))); to[k + 3] = e[0]; to[k + 4] = e[1]; to[k + 5] = e[2]; } }
@@ -1080,6 +1517,14 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
 
     /* the plinth: the court top, a chamfer that catches the light, sides down into the gravel */
     const co = [], so = [];
+    if (PLAT) { /* the platform's own outline: the top by ear clipping, a thin bevel, flat walls down into the ground (an island tapers to a point below) */
+      const P = PLAT.poly, vn = PLAT.vn, n = P.length, bot = SC.bottom ?? (SC.deep ? -150 : GROUND - 14), tp = SC.taper ?? 1;
+      for (const [i, j, k] of PLAT.tris) tri(co, [P[i][0], 0, P[i][1]], [P[j][0], 0, P[j][1]], [P[k][0], 0, P[k][1]], [0, 1, 0]);
+      const ring = (off, y, sc = 1) => P.map((q, i) => [q[0] * sc + vn[i][0] * off, y, q[1] * sc + vn[i][1] * off]);
+      const t0 = ring(0, 0), t1 = ring(4, -5), b0 = ring(tp < 1 ? 0 : 4, bot, tp);
+      for (let i = 0; i < n; i++) { const j = (i + 1) % n, ho = [PLAT.en[i][0], 0, PLAT.en[i][1]];
+        for (const [A, B, C, D] of [[t0[i], t0[j], t1[j], t1[i]], [t1[i], t1[j], b0[j], b0[i]]]) { let nn = V.norm(V.cross(V.sub(B, A), V.sub(D, A))); if (V.dot(nn, ho) < 0) nn = V.scale(nn, -1); for (const q of [A, B, C, A, C, D]) vtx(so, q, nn); } }
+    } else
     { const n = 480, per = rrectPerim(HX, HZ, RC), ring = (off, y) => { const out = []; for (let i = 0; i < n; i++) { const q = rrectAt(HX, HZ, RC, (i / n) * per); out.push([q[0] + q[2] * off, y, q[1] + q[3] * off, q[2], q[3]]); } return out; };
       const t0 = ring(0, 0), t1 = ring(7, -7), b0 = ring(7, SC.deep ? -150 : GROUND - 14), up = [0, 1, 0];
       for (let i = 0; i < n; i++) { const j = (i + 1) % n; tri(co, [0, 0, 0], [t0[j][0], 0, t0[j][2]], [t0[i][0], 0, t0[i][2]], up);
@@ -1104,7 +1549,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
         : [[1.1, bank(1, -0.9)], [1.15, bank(-1, -0.78)], [0.95, bank(1, 0.45)], [0.8, bank(-1, -0.36)], [0.85, bank(1, 0.95)], [0.8, bank(-1, 0.95)], [0.8, end(0.75, -90)], [0.8, end(-0.62, -100)]];
       for (const [s0, [x, z]] of plan) {
         const sc = s0 * gemK;
-        if (rrectSD(x, z, HX, HZ, RC) < 36 * sc || riverSD(x, z) < 24 * sc || nearSeat(x, z, 40 * sc) || gems.some((g) => Math.hypot(g.x - x, g.z - z) < 110 * Math.max(sc, g.sc))) continue;
+        if (platSD(x, z) < 36 * sc || riverSD(x, z) < 24 * sc || nearSeat(x, z, 40 * sc) || gems.some((g) => Math.hypot(g.x - x, g.z - z) < 110 * Math.max(sc, g.sc))) continue;
         const g0 = terrainAt(x, z), root = [-20, 0, 20].map((dx) => project([x + dx * sc, g0, z]));
         if (root[1][0] < 8 || root[1][0] > W - 8 || root[1][1] < 8 || root[1][1] > H - 8 || root.some(hidden)) continue;
         /* which spots survive depends on the layout, so each colour is picked against the nearest druse
@@ -1123,7 +1568,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
       const clusters = [[-(HX + 60), -HZ * 0.66, 120, 70], [HX + 60, HZ * 0.66, 120, 70], [-HX * 0.55, -(HZ + 95), 110, 60], [HX * 0.45, -(HZ + 105), 110, 55], [-(HX + 150), HZ * 0.1, 80, 45], [HX + 150, -HZ * 0.05, 80, 45]];
       for (let r = Math.floor(Z0 / (s * 1.5)); r * s * 1.5 < Z1; r++) for (let q = Math.floor(-X / (s * 1.7320508) - r / 2) - 1; ; q++) { const x0 = s * 1.7320508 * (q + r / 2); if (x0 > X) break; if (x0 < -X) continue; const sd = [x0 + (rnd() - 0.5) * s * 0.75, r * s * 1.5 + (rnd() - 0.5) * s * 0.75]; seeds.push(sd); const kk = ck(sd[0], sd[1]); if (!cellOf.has(kk)) cellOf.set(kk, []); cellOf.get(kk).push(sd); }
       const density = (x, z) => {
-        const sd = x < 0 ? -1 : 1, xc = riverC(z, sd), rw = riverW(z, sd), d = Math.abs(x - xc) - rw, outer = sd * (x - xc) - rw, court = rrectSD(x, z, HX, HZ, RC);
+        const sd = x < 0 ? -1 : 1, xc = riverC(z, sd), rw = riverW(z, sd), d = Math.abs(x - xc) - rw, outer = sd * (x - xc) - rw, court = platSD(x, z);
         if (d < 14 || court < 36 || nearSeat(x, z, 26) || nearGem(x, z, 48)) return null;
         if (outer > 0) { const v = sstep(0, 60, outer) * (0.6 + 0.4 * fbm(x / 140, z / 140, 2)) * (1 - sstep(520, 720, outer)); return [v, 50 + 250 * sstep(0, 380, outer) * (0.55 + 0.45 * fbm(x / 90 + 7, z / 90, 2))]; }
         let best = null; for (const [cx, cz, cr, ch] of clusters) { const dd = Math.hypot(x - cx, z - cz); if (dd < cr) { const f = 1 - dd / cr; if (!best || f > best[0]) best = [f, ch]; } }
@@ -1150,7 +1595,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     /* dry grass: along the near banks, the shores and round the basalt */
     const ro = []; let clumps = 0;
     for (let tries = 0; SC === SCENES.lava && clumps < 360 && tries < 16000; tries++) {
-      const x = (rnd() - 0.5) * (RIV.a * 2 + 700), z = -(HZ + 900) + rnd() * (HZ * 2 + 1500), court = rrectSD(x, z, HX, HZ, RC), d = riverSD(x, z);
+      const x = (rnd() - 0.5) * (RIV.a * 2 + 700), z = -(HZ + 900) + rnd() * (HZ * 2 + 1500), court = platSD(x, z), d = riverSD(x, z);
       if (court < 22 || d < 8 || nearSeat(x, z, 8) || nearGem(x, z, 34)) continue;
       const want = (d < 60 ? 0.55 : 0) + (court < 80 ? 0.3 : 0) + (fbm(x * 0.006 + 2, z * 0.006 + 8, 3) > 0.58 ? 0.35 : 0); if (rnd() > want) continue;
       const g0 = terrainAt(x, z), n = 8 + Math.floor(rnd() * 10);
@@ -1177,8 +1622,8 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     /* embers rise from the rivers; three lights down each */
     const spots = []; for (let i = 0; i < 400; i++) { const s = i % 2 ? 1 : -1, z = -(HZ + 700) + Math.random() * (HZ * 2 + 1300), x = riverC(z, s) + (Math.random() - 0.5) * 1.5 * riverW(z, s); if (terrainAt(x, z) < LAVA_Y - 10) spots.push([x, z]); }
     particles.spots = spots; particles.lavaLights = []; if (SC === SCENES.lava) for (const s of [-1, 1]) for (const f of [-0.95, -0.1, 0.72]) { const z = f * HZ; particles.lavaLights.push([riverC(z, s), z]); }
-    const make = { pavilion: buildPavilion, frost: buildFrost, clouds: buildClouds, abyss: buildAbyss, dragon: buildDragon }[Object.keys(SCENES).find((k) => SCENES[k] === SC)];
-    const pav = Object.assign({ rail: [], leaves: [], cards: [], glass: [], beams: [], cols: [], lights: [] }, make ? make(rnd, nearSeat) : {});
+    const make = { pavilion: buildPavilion, frost: buildFrost, clouds: buildClouds, abyss: buildAbyss, dragon: buildDragon, mine: buildMine, boiler: buildBoiler, glass: buildGlass }[Object.keys(SCENES).find((k) => SCENES[k] === SC)];
+    const pav = Object.assign({ rail: [], leaves: [], cards: [], glass: [], beams: [], cols: [], lights: [] }, make ? make(rnd, nearSeat, encounter) : {});
     particles.lavaLights.push(...pav.lights);
     const rail = mk(pav.rail), leaves = mk(pav.leaves), cards = mk(pav.cards), glass = mk(pav.glass), beams = mk(pav.beams), rocks = mk(pav.cols);
     const whale = SC === SCENES.clouds ? mk(new Array(WHALE_MAX * 8).fill(0)) : null;
@@ -1197,6 +1642,11 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     stars: { y: [-300, 420], vy: [3, 9], sway: [10, 10], drift: 0, life: [6, 12], col: [1.2, 1.15, 1.0], size: 1.8, shape: 0, twinkle: true },
     glint: { y: [-100, 300], vy: [-3, 3], sway: [20, 20], drift: 0, life: [5, 10], col: [0.8, 1.0, 1.4], size: 1.2, shape: 0 },
     jelly: { y: [20, 520], vy: [3, 8], sway: [26, 26], drift: 0, life: [14, 24], col: [0.3, 0.95, 1.2], size: 18, shape: 2, n: 36 },
+    motes: { y: [0, 220], vy: [2, 7], sway: [24, 20], drift: 0, life: [6, 12], col: [1.3, 0.76, 0.3], size: 0.5, shape: 0, twinkle: true, n: 110 },
+    coaldust: { y: [200, 700], vy: [-14, -6], sway: [30, 22], drift: 6, life: [12, 20], col: [0.34, 0.3, 0.28], size: 1.8, shape: 0, over: true, n: 150 },
+    steam: { y: [0, 420], vy: [14, 34], sway: [18, 14], drift: 8, life: [6, 11], col: [0.36, 0.36, 0.38], size: 6.5, shape: 0, over: true, n: 70 },
+    sparks: { y: [0, 260], vy: [24, 70], sway: [10, 8], drift: 0, life: [2, 5], col: [2.0, 0.8, 0.2], size: 1.6, shape: 0, n: 110 },
+    blackpetals: { y: [240, 620], vy: [-34, -16], sway: [36, 24], drift: 10, life: [10, 18], col: [0.14, 0.07, 0.22], size: 4.2, shape: 3, over: true, n: 150 },
     rising: { y: [-520, -60], vy: [30, 64], sway: [22, 16], drift: 0, life: [7, 12], col: [1.8, 0.7, 0.16], size: 3, shape: 0 },
   };
   function spawnP(set, i, f) { const r = Math.random; set.st[i] = { x: (r() - 0.5) * (HX * 2 + 1400), y: f.y[0] + r() * (f.y[1] - f.y[0]), z: -(HZ + 800) + r() * (HZ * 2 + 1300), vy: f.vy[0] + r() * (f.vy[1] - f.vy[0]), life: 0, max: f.life[0] + r() * (f.life[1] - f.life[0]), ph: r() * 7 }; }
@@ -1216,7 +1666,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
   /* --------------------------------------------------------------- render */
   const U3 = ["key", "pool", "sky", "groundAmb", "fog"];
   // the stage light (SURF_FS): how far the world round the court sinks back (0 = not at all; a scene may set its own)
-  const STAGE = 0.6;
+  const STAGE = 0.6, SCENE_LIGHT_SLOTS = [0, 1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14, 15];
   function setSurfUniforms(P, t, vp) {
     gl.useProgram(P.p); const u = P.u; gl.uniformMatrix4fv(u.uVP, false, vp || VP); gl.uniformMatrix4fv(u.uLightVP, false, lightVP); if (!u.uEye) return;
     gl.uniform1f(u.uTime, t); gl.uniform1f(u.uLavaY, SC === SCENES.lava ? LAVA_Y : -9999); gl.uniform1f(u.uGround, GROUND); gl.uniform1f(u.uK, ornK); gl.uniform1f(u.uSoft, effTier() >= 2 ? 0 : 1); gl.uniform1f(u.uFogStart, cam.dist * 0.654); gl.uniform1f(u.uFogK, 2.0e-7 * Math.pow(2600 / cam.dist, 2) * (SC.fogK ?? 1)); gl.uniform1f(u.uRadius, RC); gl.uniform1f(u.uEngrave, art ? art.engrave : 1); gl.uniform1f(u.uStage, SC.stage ?? STAGE);
@@ -1228,6 +1678,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, rt.shadowTex); gl.uniform1i(u.uShadow, 0);
     TEXNAMES.forEach((k, i) => { gl.activeTexture(gl.TEXTURE1 + i); gl.bindTexture(gl.TEXTURE_2D, tex[k]); gl.uniform1i(u["u" + k[0].toUpperCase() + k.slice(1)], 1 + i); });
     gl.activeTexture(gl.TEXTURE1 + TEXNAMES.length); gl.bindTexture(gl.TEXTURE_2D, tex.court); gl.uniform1i(u.uCourt, 1 + TEXNAMES.length);
+    gl.activeTexture(gl.TEXTURE2 + TEXNAMES.length); gl.bindTexture(gl.TEXTURE_2D, PLAT && tex.plat ? tex.plat : tex.court); gl.uniform1i(u.uPlat, 2 + TEXNAMES.length); gl.uniform3f(u.uPlatBox, PLAT ? PLAT.box[0] : 1, PLAT ? PLAT.box[1] : 1, PLAT ? 1 : 0);
   }
   /* depthPass skips what casts no shadow; vp is the light's matrix for the shadow map */
   function drawScene(P, t, depthPass, vp) {
@@ -1306,10 +1757,12 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     frameCount++; const T = effTier(); if ((T >= 3 && frameCount % 4) || (T >= 1 && frameCount % 2)) return;
     if (SKIP.has("all") || !canvas.offsetWidth) return;
     ensureTargets(); measureCards(nowMs);
-    for (let i = 0; i < 6; i++) { const s = particles.lavaLights[i] || [0, -9999], fl = SC.glow[0] * (0.85 + 0.15 * Math.sin(t * 1.3 + i * 1.7)); lightPos.set([s[0], s[2] ?? SC.glow[2], s[1]], i * 3); lightCol.set(SC.ember.map((v) => v * fl), i * 3); lightRad[i] = SC.glow[1]; }
+    /* scene lights: [x, z, y?, colour?, radius?, gain?]; the lava court keeps slots 9-15 for its druses, every other court may use them */
+    { const slots = SC === SCENES.lava ? SCENE_LIGHT_SLOTS.slice(0, 6) : SCENE_LIGHT_SLOTS;
+      for (let i = 0; i < slots.length; i++) { const slot = slots[i], s = particles.lavaLights[i] || [0, -9999], fl = (s[5] ?? 1) * SC.glow[0] * (0.85 + 0.15 * Math.sin(t * 1.3 + i * 1.7)); lightPos.set([s[0], s[2] ?? SC.glow[2], s[1]], slot * 3); lightCol.set((s[3] || SC.ember).map((v) => v * fl), slot * 3); lightRad[slot] = s[4] ?? SC.glow[1]; } }
     for (const [slot, k] of [[6, "p"], [7, "e"]]) { const s = PADS[k]; lightPos.set(s ? [s[0], 30, s[1]] : [0, -9999, 0], slot * 3); lightCol.set(s ? SC.seat[k].map((v) => v * 0.55) : [0, 0, 0], slot * 3); lightRad[slot] = s ? 240 * ornK : 1; }
     lightPos.set([0, 1150, 140], 24); lightCol.set([0.7, 0.64, 0.55], 24); lightRad[8] = 1500;
-    for (let i = 0; i < 7; i++) { const g = particles.gemLights[i], slot = 9 + i, c = g ? GEM.glow[g.hue] : [0, 0, 0], f = GEM.light * (0.92 + 0.08 * Math.sin(t * 1.1 + i * 2.3)); lightPos.set(g ? [g.x, g.g0 + 42 * g.sc, g.z] : [0, -9999, 0], slot * 3); lightCol.set([c[0] * f, c[1] * f, c[2] * f], slot * 3); lightRad[slot] = g ? 250 * g.sc : 1; }
+    for (let i = 0; i < 7 && SC === SCENES.lava; i++) { const g = particles.gemLights[i], slot = 9 + i, c = g ? GEM.glow[g.hue] : [0, 0, 0], f = GEM.light * (0.92 + 0.08 * Math.sin(t * 1.1 + i * 2.3)); lightPos.set(g ? [g.x, g.g0 + 42 * g.sc, g.z] : [0, -9999, 0], slot * 3); lightCol.set([c[0] * f, c[1] * f, c[2] * f], slot * 3); lightRad[slot] = g ? 250 * g.sc : 1; }
     gl.enable(gl.DEPTH_TEST); gl.disable(gl.BLEND); gl.depthMask(true);
     gl.bindFramebuffer(gl.FRAMEBUFFER, rt.shadowFbo); gl.viewport(0, 0, SM, SM); gl.clear(gl.DEPTH_BUFFER_BIT); if (!SKIP.has("shadow")) drawScene(prog.depth, t, true, lightVP);
     gl.bindFramebuffer(gl.FRAMEBUFFER, samples ? rt.msFbo : rt.rsFbo); gl.viewport(0, 0, PW, PH); gl.clearColor(SC.pal.fog[0], SC.pal.fog[1], SC.pal.fog[2], 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); if (!SKIP.has("scene")) drawScene(prog.surf, t, false);
@@ -1349,12 +1802,15 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     resize() { layoutDirty = true; stillDrawn = false; seatTries = 0; },
     setQuality(q) { quality = { reduced: !!q?.reduced, low: !!q?.low }; layoutDirty = true; stillDrawn = false; },
     /** Which boss is fought: it picks the battlefield recipe (SCENE_OF). */
-    setEncounter(id) { encounter = id || "warden"; const next = SCENES[FORCED] || SCENES[SCENE_OF[encounter]] || SCENES.lava; if (next !== SC) { SC = next; geomKey = ""; artKey = ""; layoutDirty = true; stillDrawn = false; } },
+    setEncounter(id) { const was = encounter; encounter = id || "warden"; const next = SCENES[FORCED] || SCENES[SCENE_OF[encounter]] || SCENES.mine; if (next === SC && was !== encounter && SC.perBoss) { geomKey = ""; layoutDirty = true; stillDrawn = false; } if (next !== SC) { SC = next; geomKey = ""; artKey = ""; layoutDirty = true; stillDrawn = false; } },
     /** Start the context and texture loads early (the mulligan hides the decode). */
     preload() { ensure(); },
     /** A spell impact scorches the board at a stage box. */
     scorch(at) { if (!gl || !basis || !at) return false; const p = floorAt(at.x, at.y + (at.h || 0) * 0.3); if (!p || Math.abs(p[0]) > HX || Math.abs(p[1]) > HZ) return false; decals.set([p[0], p[1], 70 + Math.random() * 40, performance.now() / 1000], decalI * 4); decalI = (decalI + 1) % 8; stillDrawn = false; return true; },
     frame,
+    /** Debug aid (?debug=1 only): a screen point of a world point, and a wide look at the whole field. */
+    project: (p) => (VP ? project(p) : null),
+    debugWide(f) { if (/[?&]debug=1/.test(location.search)) { WIDE = f > 1 ? f : 1; geomKey = ""; layoutDirty = true; stillDrawn = false; } },
     /** The battlefield recipe on screen (SCENES key). */
     get sceneId() { return Object.keys(SCENES).find((k) => SCENES[k] === SC); },
     get encounter() { return encounter; },
@@ -1371,7 +1827,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     /** Diagnostics: the solved court and camera, the court's screen box in stage pixels, the render tier. */
     get board() {
       const c = VP && [[-HX, -HZ], [HX, -HZ], [HX, HZ], [-HX, HZ]].map(([x, z]) => project([x, 0, z])), xs = c && c.map((p) => p[0]), ys = c && c.map((p) => p[1]);
-      return { hx: HX, hz: HZ, dist: cam.dist, tz: cam.tz, court: c && [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)], gems: geom ? geom.gems : 0, width: W, height: H, backing: [PW, PH], tier: effTier(), samples, gap: Math.round(gapEma * 10) / 10, artMs };
+      return { hx: HX, hz: HZ, dist: cam.dist, tz: cam.tz, court: c && [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)], platMs, shape: SC.shape || null, gems: geom ? geom.gems : 0, width: W, height: H, backing: [PW, PH], tier: effTier(), samples, gap: Math.round(gapEma * 10) / 10, artMs };
     },
   });
 })();

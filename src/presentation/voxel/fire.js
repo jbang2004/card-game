@@ -149,13 +149,14 @@ const EmberFire = (() => {
         for (const m of ms_) { m.position.copy(from); add(m); }
         shots.push({ ms: ms_, from: from.clone(), to: to.clone(), t0: performance.now(), dur: ms, r, look, emit: 0, lite: !!o.lite });
       },
+      // (a burst opens out and is gone: fewer, smaller, cooler puffs than a ball that hides what it struck — 2026-10-02)
       burst(p, r, look = FIRE) {
-        for (let i = 0; i < 14; i++) {
-          const a = Math.random() * Math.PI * 2, e = (Math.random() - 0.3) * 1.2, s = r * (2 + Math.random() * 3);
-          puff(p, V3(Math.cos(a) * s, Math.abs(e) * s + r * 2, Math.sin(a) * s), r * (1.6 + Math.random() * 1.4), 380 + Math.random() * 300, 1.3, look);
+        for (let i = 0; i < 9; i++) {
+          const a = Math.random() * Math.PI * 2, e = (Math.random() - 0.3) * 1.2, s = r * (3 + Math.random() * 3.5);
+          puff(p, V3(Math.cos(a) * s, Math.abs(e) * s + r * 2, Math.sin(a) * s), r * (1.1 + Math.random() * 0.9), 280 + Math.random() * 220, 1.05, look);
         }
         for (let i = 0; i < 16; i++) puff(p, rnd().normalize().multiplyScalar(r * (6 + Math.random() * 6)), r * 0.9, 420 + Math.random() * 300, 1.2, look, 2);
-        puff(p, V3(0, r * 1.5, 0), r * 6, 260, 1.6, look);                           // the flash
+        puff(p, V3(0, r * 1.5, 0), r * 4, 180, 1.25, look);                          // the flash
       },
       step(now) {
         const dt = last == null ? 0 : Math.min(0.05, (now - last) / 1000); last = now;

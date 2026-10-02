@@ -27,6 +27,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parent.parent
 MODEL = ROOT / "tools/models/depth-anything-v2-small.onnx"
 SOURCE = ROOT / "assets/anime"
+PORTRAITS = ROOT / "assets/portraits"
 OUT = ROOT / "art/relief"
 REGISTRY = ROOT / "src/card-relief-maps.js"
 PORTRAIT = (768, 1024)
@@ -57,7 +58,8 @@ def estimate_depth(rgb, infer):
 
 
 def bake(key):
-    rgb = Image.open(SOURCE / f"{key}.webp").convert("RGB")
+    path = SOURCE / f"{key}.webp"
+    rgb = Image.open(path if path.exists() else PORTRAITS / f"{key}.webp").convert("RGB")   # a card, or a portrait (768x1024)
     portrait = rgb.size == PORTRAIT
     # Inference sizes are multiples of 14 at 3:4; filter radii are authored at portrait scale.
     infer, size, unit = ((756, 1008), (384, 512), 1.0) if portrait else ((518, 686), (168, 224), rgb.width / 768)

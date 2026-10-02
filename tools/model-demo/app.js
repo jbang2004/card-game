@@ -112,7 +112,7 @@
     let lift, contact;
     if (ranged) {
       const a = POS.get(A.key(from.side, from.uid)), b = POS.get(A.key(to.side, to.uid));
-      lift = TIMING.recoil + (u.fig?.spell?.windup ?? m.windup ?? 260);
+      lift = TIMING.recoil + (u.fig?.spell?.windup ?? u.fig?.sig?.draw ?? m.windup ?? 260);
       contact = lift + Math.max(TIMING.flightMin, Math.min(TIMING.flightMax, ((a.distanceTo(b) * 150) / TIMING.speed) * 1000));
     } else { lift = TIMING.lift + (u.fig?.sig?.windup ?? 0); contact = lift + TIMING.lunge; }     // a signature coils longer
     const release = contact + stop, duration = release + (ranged ? 0 : TIMING.recover);
