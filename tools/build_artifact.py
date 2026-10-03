@@ -155,6 +155,35 @@ def shrink_models(text):
     return MODEL_LINE.sub(one, text)
 
 
+# A registry module too big for one Artifact file (the amber cards' layers, ~22 MB once its pictures are inlined) is
+# split across several scripts that each push their share of the entries; the module's own script then joins them
+# (same registry, same order of loading: the parts are placed just before it).
+SPLIT = {"AMBER_LAYERS": "EmberAmberLayers"}
+SPLIT_SIZE = 12 * 1024 * 1024
+ENTRY_LINE = re.compile(r"^  [\w$]+: \{.*\},$", re.M)
+
+
+def split_registry(text, name):
+    """the parts' sources and the module's own (which joins them), or None when the module fits as it is"""
+    if len(text.encode()) <= SPLIT_SIZE:
+        return None
+    head, body = text.split(f"const {name} = Object.freeze({{", 1)
+    body, tail = body.rsplit("});", 1)
+    entries = ENTRY_LINE.findall(body)
+    chunks, cur, size = [], [], 0
+    for e in entries:
+        if cur and size + len(e) > SPLIT_SIZE:
+            chunks.append(cur); cur, size = [], 0
+        cur.append(e); size += len(e)
+    last = cur
+    bucket = f"__{name}Parts"
+    parts = [f"var {bucket} = typeof {bucket} !== \"undefined\" ? {bucket} : [];\n{bucket}.push({{\n" + "\n".join(c) + "\n});\n"
+             for c in chunks]
+    own = (head + f"const {name} = Object.freeze(Object.assign({{}}, ...(typeof {bucket} !== \"undefined\" ? {bucket} : []), {{\n"
+           + "\n".join(last) + "\n}));" + tail)
+    return parts, own
+
+
 def main(out):
     out.mkdir(parents=True, exist_ok=True)
     for old in list(out.glob("scripts/*.js")) + list(out.glob("live/*.json")):
@@ -188,8 +217,18 @@ def main(out):
 
     def script(match):
         rel = "scripts/" + registry[match[1]]
-        write(rel, sources[match[1]])
-        return f'<script src="./{rel}" defer></script>'
+        split = split_registry(sources[match[1]], SPLIT[match[1]]) if match[1] in SPLIT else None
+        if not split:
+            write(rel, sources[match[1]])
+            return f'<script src="./{rel}" defer></script>'
+        parts, own = split
+        tags = []
+        for i, part in enumerate(parts, 1):
+            part_rel = rel.replace(".js", f"-{i}.js")
+            write(part_rel, part)
+            tags.append(f'<script src="./{part_rel}" defer></script>')
+        write(rel, own)
+        return "".join(tags) + f'<script src="./{rel}" defer></script>'
 
     page = re.sub(r"<script>/\*([A-Z_]+)\*/</script>", script, template)
     css = []
