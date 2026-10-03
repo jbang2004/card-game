@@ -16,11 +16,12 @@
  * The camera is fitted (its distance and aim) so a full board of both sides and both heroes fills the room the
  * page's chrome leaves (top bar, hand, consoles) — the same camera whatever is on the board, so nothing jumps as units
  * come and go. Pure geometry: no three.js, no WebGL; it works where the figures do not (the tokens still stand on it).
- * `?view=classic` keeps the old row layout (EmberViewport's own), for comparison only. */
+ * `?view=classic` keeps the old row layout (EmberViewport's own), for comparison only; `?view=lateral` shows a screen on
+ * its side as ⑤ 侧视横版 instead of ⑥ (ours left, theirs right, seen square from the side), also for comparison. */
 const EmberBattleView = (() => {
   "use strict";
   const Q = typeof location !== "undefined" ? new URLSearchParams(location.search) : new URLSearchParams();
-  const classic = Q.get("view") === "classic";
+  const classic = Q.get("view") === "classic", lateral = Q.get("view") === "lateral";
   // a hero's dais: its top a little above the court (EmberArena3D's SEAT.top, in its units / K)
   const DAIS = 0.075;
   // the scene's units per world unit (EmberArena3D draws in its own: a court ~1100 across)
@@ -30,6 +31,9 @@ const EmberBattleView = (() => {
   const MODES = {
     side: { fov: 30, pitch: 22, yaw: 44, dx: 1.2, x0: 1.0, gap: 0.95, stag: 0.55, hero: 4.15, heroX: { p: 0, e: 1.2 } },
     front: { fov: 32, pitch: 40, yaw: 0, z: 1.15, back: 0.85, sp: 0.95, hero: 3.7, heroX: { p: 0, e: 0 } },
+    // ⑤ 侧视横版, for comparison (?view=lateral, a screen on its side): the side view's formation seen square from
+    // the side — ours on the left, theirs on the right, the heroes at the two ends of the middle line
+    lateral: { fov: 26, pitch: 30, yaw: 90, dx: 1.0, x0: 1.0, gap: 0.95, stag: 0.32, hero: 3.47, heroX: { p: 0, e: 0 } },
   };
   const rad = (d) => (d * Math.PI) / 180;
   const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -42,7 +46,7 @@ const EmberBattleView = (() => {
   function slot(mode, side, i, n) {
     const s = side === "e" ? -1 : 1, M = MODES[mode];
     n = Math.max(1, Math.min(7, n)); i = clamp(i, 0, n - 1);
-    if (mode === "side") {
+    if (mode === "side" || mode === "lateral") {
       // columns across the board (left to right), two deep — the front one a step from the middle, the back one a
       // column further — and every other column stepped back
       const m = Math.ceil(n / 2), j = Math.floor(i / 2), col = i % 2;
@@ -116,7 +120,7 @@ const EmberBattleView = (() => {
   function tune(mode, o) { Object.assign(MODES[mode], o); key = ""; }
   function current() {
     if (typeof EmberViewport === "undefined") return null;
-    const Vp = EmberViewport, mode = Vp.mobile && Vp.portrait ? "front" : "side", R = room(Vp);
+    const Vp = EmberViewport, mode = Vp.mobile && Vp.portrait ? "front" : lateral ? "lateral" : "side", R = room(Vp);
     const k = [mode, R.W, R.H, R.top, R.bottom, R.left, R.right].map((v) => (typeof v === "number" ? Math.round(v) : v)).join(":");
     if (k !== key) {
       key = k; view = makeView(mode, R); version++;
@@ -159,7 +163,7 @@ const EmberBattleView = (() => {
   }
   /** a side's middle on screen (where a lone token lands, where effects run along a lane) */
   function lane(side) {
-    const v = current(), M = MODES[v.mode], s = side === "e" ? -1 : 1, f = project([0, 0, s * (v.mode === "side" ? M.x0 + M.gap / 2 : M.z)], v);
+    const v = current(), M = MODES[v.mode], s = side === "e" ? -1 : 1, f = project([0, 0, s * (v.mode === "front" ? M.z : M.x0 + M.gap / 2)], v);
     return { x: f.x, y: f.y };
   }
 
