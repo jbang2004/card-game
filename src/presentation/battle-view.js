@@ -121,13 +121,14 @@ const EmberBattleView = (() => {
     const yaw = rad(M.yaw), pitch = rad(M.pitch);
     const dir = [Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch)];
     // what has to be seen: a full board of both sides (their feet, heads and the stats under them) and both heroes —
-    // [x, y, z, px]: a point, and how many pixels of the page's own hang below it (a hero's nameplate and stats row are
-    // a fixed size on the page however far the hero stands; beside the figure they hang nothing below it)
+    // [x, y, z, below, aside]: a point, how many pixels of the page's own hang below it (a hero's nameplate and stats
+    // row are a fixed size on the page however far the hero stands; beside the figure they hang nothing below it) and
+    // how many stand out either side of it (a hero's station is at least 96 px wide, wider than its figure on a phone)
     const pts = [];
     for (const side of ["p", "e"]) {
       for (let i = 0; i < 7; i++) { const p = slot(mode, side, i, 7); pts.push([...p, 0], [p[0], 1.05, p[2], 0], [p[0], -0.22, p[2], 0]); }
       const h = heroAt(mode, side), aside = mode === "front" && side === "e";
-      pts.push([...h, aside ? 8 : plateOf(R) + 10], [h[0], h[1] + 1.2, h[2], 0]);
+      pts.push([...h, aside ? 8 : plateOf(R) + 10, 50], [h[0], h[1] + 1.2, h[2], 0, 50]);
     }
     const sx0 = (R.left / R.W) * 2 - 1, sx1 = (R.right / R.W) * 2 - 1, sy0 = 1 - (R.bottom / R.H) * 2, sy1 = 1 - (R.top / R.H) * 2;
     let T = [0, 0, 0], D = 14;
@@ -135,7 +136,7 @@ const EmberBattleView = (() => {
     for (let it = 0; it < 80; it++) {
       const eye = [T[0] + dir[0] * D, T[1] + dir[1] * D, T[2] + dir[2] * D], B = basis(eye, T);
       let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-      for (const p of pts) { const [x, y0_] = ndc(p, eye, B), y = y0_ - (p[3] * 2) / R.H; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+      for (const p of pts) { const [x, y0_] = ndc(p, eye, B), y = y0_ - (p[3] * 2) / R.H, ax = ((p[4] || 0) * 2) / R.W; x0 = Math.min(x0, x - ax); x1 = Math.max(x1, x + ax); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
       D *= Math.pow(Math.max((x1 - x0) / (sx1 - sx0), (y1 - y0) / (sy1 - sy0)), 0.6);
       const k = D * t, right = norm([B.r[0], 0, B.r[2]]), fwd = norm([B.f[0], 0, B.f[2]]);
       const cx = ((x0 + x1) / 2 - (sx0 + sx1) / 2) * k * aspect, cy = (((y0 + y1) / 2 - (sy0 + sy1) / 2) * k) / Math.max(0.35, Math.sin(pitch));

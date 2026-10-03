@@ -36,10 +36,15 @@ for (const [width, height] of [
     await open(page);
     if (width < 1000) {
       const geometry = await page.evaluate(() => {
-        const { contract, player, arena, standingMage, rows } = EmberViewport.layout;
-        return { contract, player, arena, standingMage, rows, portrait: EmberViewport.portrait };
+        const { contract, player, arena, standingMage, rows, power } = EmberViewport.layout;
+        return { contract, player, arena, standingMage, rows, power, portrait: EmberViewport.portrait, afield: !!document.body.dataset.battleView };
       });
-      if (geometry.standingMage) {
+      if (geometry.afield && !geometry.portrait) {
+        /* The battlefield's view (2026-10-03): the hero stands on the board, so there is no hero card to match — the
+         * covenant heads the left rail's one column, over the hero power, a full touch target. */
+        expect(geometry.contract.w).toBeGreaterThanOrEqual(44);
+        expect(geometry.contract.y + geometry.contract.h).toBeLessThanOrEqual(geometry.power.y);
+      } else if (geometry.standingMage) {
         /* A standing hero model takes the taller stage in the left rail and the
          * covenant keeps the avatar's size below it (reference-pages, 2026-09-20). */
         expect(geometry.contract.w).toBeLessThanOrEqual(geometry.player.w);
