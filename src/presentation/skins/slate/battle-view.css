@@ -62,7 +62,7 @@ html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-a
 }
 /* (seen from the side the enemy stands at the screen's right edge: its row runs leftward from the station's right
  * edge instead, so five chips — weapon, health, armour, covenant, hand — stay on screen) */
-html[data-skin="slate"] body:is([data-battle-view="side"], [data-battle-view="lateral"]).touch-layout #battle .hero.enemy.hero-afield.hero-afield .hero-chips {
+html[data-skin="slate"] body:is([data-battle-view="side"], [data-battle-view="lateral"], [data-battle-view="wanxiang"]).touch-layout #battle .hero.enemy.hero-afield.hero-afield .hero-chips {
   inset: auto 0 0 auto;
   transform: none;
 }

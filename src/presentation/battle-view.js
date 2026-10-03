@@ -21,7 +21,7 @@
 const EmberBattleView = (() => {
   "use strict";
   const Q = typeof location !== "undefined" ? new URLSearchParams(location.search) : new URLSearchParams();
-  const classic = Q.get("view") === "classic", lateral = Q.get("view") === "lateral", noFigures = Q.get("figures") === "0";
+  const classic = Q.get("view") === "classic", lateral = Q.get("view") === "lateral", wanxiang = Q.get("view") === "wanxiang", noFigures = Q.get("figures") === "0";
   /* The view stands figures on the board; without them (motion reduced, ?figures=0, the figures' WebGL failed) the
    * tokens are flat cards, and the old rows were made for those: the page keeps its rows then. */
   function figures() {
@@ -45,6 +45,10 @@ const EmberBattleView = (() => {
     // (tuned past the lab's numbers, 2026-10-03: steeper, the depth rows further apart and stepped out more, the
     // heroes nearer — a full board without a silhouette hidden, and the room's height used)
     lateral: { fov: 26, pitch: 34, yaw: 90, dx: 1.2, x0: 1.0, gap: 0.95, stag: 0.45, hero: 3.1, heroX: { p: 0, e: 0 } },
+    // 万象棋式, for comparison (?view=wanxiang, a screen on its side; the user's reference, 2026-10-03): the board seen
+    // straight on from well above, each side one line of seven facing the other, the heroes at the line's ends — ours
+    // at the near left, theirs at the far right
+    wanxiang: { fov: 28, pitch: 48, yaw: 0, z: 1.25, sp: 1.0, hero: 1.7, heroX: { p: -4.3, e: 4.3 } },
   };
   const rad = (d) => (d * Math.PI) / 180;
   const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -63,6 +67,8 @@ const EmberBattleView = (() => {
       const m = Math.ceil(n / 2), j = Math.floor(i / 2), col = i % 2;
       return [(j - (m - 1) / 2) * M.dx, 0, s * (M.x0 + col * M.gap + (j % 2) * M.stag)];
     }
+    // one line of up to seven (万象棋式)
+    if (mode === "wanxiang") return [(i - (n - 1) / 2) * M.sp, 0, s * M.z];
     // one line up to four; past that the front four and the rest behind them, between
     if (n <= 4) return [(i - (n - 1) / 2) * M.sp, 0, s * M.z];
     const f = Math.ceil(n / 2), back = i >= f, k = back ? i - f : i, c = back ? n - f : f;
@@ -131,7 +137,7 @@ const EmberBattleView = (() => {
   function tune(mode, o) { Object.assign(MODES[mode], o); key = ""; }
   function current() {
     if (typeof EmberViewport === "undefined") return null;
-    const Vp = EmberViewport, mode = Vp.mobile && Vp.portrait ? "front" : lateral ? "lateral" : "side", R = room(Vp);
+    const Vp = EmberViewport, mode = Vp.mobile && Vp.portrait ? "front" : lateral ? "lateral" : wanxiang ? "wanxiang" : "side", R = room(Vp);
     const k = [mode, R.W, R.H, R.top, R.bottom, R.left, R.right].map((v) => (typeof v === "number" ? Math.round(v) : v)).join(":");
     if (k !== key) {
       key = k; view = makeView(mode, R); version++;
@@ -176,7 +182,7 @@ const EmberBattleView = (() => {
   }
   /** a side's middle on screen (where a lone token lands, where effects run along a lane) */
   function lane(side) {
-    const v = current(), M = MODES[v.mode], s = side === "e" ? -1 : 1, f = project([0, 0, s * (v.mode === "front" ? M.z : M.x0 + M.gap / 2)], v);
+    const v = current(), M = MODES[v.mode], s = side === "e" ? -1 : 1, f = project([0, 0, s * (M.z ?? M.x0 + M.gap / 2)], v);
     return { x: f.x, y: f.y };
   }
 
