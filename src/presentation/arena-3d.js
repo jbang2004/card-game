@@ -1132,7 +1132,10 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     { const edgeX = (y) => { const f = floorAt(W, y); return f ? f[0] : HX + 400; }, rw = tall ? 72 : Vp.mobile ? 86 : 100, gapMin = tall ? 18 : 40;
       const xT = edgeX(project([0, 0, -HZ])[1]), xB = edgeX(project([0, 0, HZ])[1]);
       const cT = Math.max(HX + rw + gapMin, HX + 0.55 * (xT - HX)), cB = Math.max(HX + rw + 25, HX + 0.55 * (xB - HX));
-      RIV = SC === SCENES.lava ? { a: (cT + cB) / 2, b: (cT - cB) / (2 * HZ), w: rw } : { a: 1e5, b: 0, w: 1 }; }
+      // (the rivers run along z either side of the court; their place came from the old camera's screen edges, which
+      // under this camera can put one across the court — here they run straight, just outside it and the daises)
+      const out = Math.max(HX, ...["p", "e"].map((sd) => Math.abs(EmberBattleView.hero(sd)[0]) * K + (SEAT.r2 + 12) * ornK)) + rw + 140;
+      RIV = SC === SCENES.lava ? { a: out, b: 0, w: rw } : { a: 1e5, b: 0, w: 1 }; }
     // (a dais as wide as the figure on it needs: the same in every layout now that the heroes stand on the board)
     seatK = 1;
     PLAT = null; BULGE = [0, 0, 0, 0];
@@ -1519,26 +1522,34 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
       for (const y of rows) if (seen((a[0] + b[0]) / 2, g + y, (a[1] + b[1]) / 2, 900)) beam(o.rail, a, b, g + y, g + y + 6, 7, 1);
       for (let i = 0; i < n; i++) for (let r = 0; r < rows.length - 1; r++) { if (rnd() < 0.14) continue; const x0 = a[0] + dx * i, z0 = a[1] + dz * i, x1 = x0 + dx, z1 = z0 + dz, y0 = g + rows[r] + 8, yy = g + rows[r + 1] - 2; if (!seen((x0 + x1) / 2, (y0 + yy) / 2, (z0 + z1) / 2, 160)) continue;
         quad(glass, [x0, y0, z0], [x1, y0, z1], [x1, yy, z1], [x0, yy, z0], V.norm([-(z1 - z0), 0, x1 - x0])); } };
-    const zw = -(HZ + 150);
-    if (seen(0, g + 300, zw - 80, 900)) slab(0, zw - 90, 3600, 8, g - 4, g + 900, 5);
-    for (const x of [-520, 0, 520]) light(x, zw + 80, g + 200, [0.62, 0.9, 0.95], 560, 0.9);
-    wall([-1500, zw], [1500, zw], 640, 150);
-    for (const s of [-1, 1]) { const xw = Math.abs(wing(s, 0, 0.8)[0]); wall([s * xw, zw], [s * xw, HZ * 0.75], 560, 130);
+    /* the glasshouse stands round the court as the camera sees it — its back wall away from the camera, its end walls
+     * at its sides (before the battlefield's view the camera looked down +z, and these were simply −z and ±x); seen
+     * square from the side (versus) the back wall stands behind the court's long side and the end walls beyond the
+     * heroes: F2 takes (across, toward the camera) to the ground */
+    const gC = bvCam ? V.norm([bvCam.eye[0] - bvCam.target[0], 0, bvCam.eye[2] - bvCam.target[2]]) : [0, 0, 1], aC = [gC[2], 0, -gC[0]];
+    const F2 = (x, z) => [x * aC[0] + z * gC[0], x * aC[2] + z * gC[2]], F3 = (x, y, z) => { const q = F2(x, z); return [q[0], y, q[1]]; }, angA = Math.atan2(aC[2], aC[0]);
+    const reach = (d) => Math.max(0, ...Object.values(PADS).map((q) => Math.abs(q[0] * d[0] + q[1] * d[2]) + SEAT.r2 * ornK * seatK));
+    const HXg = Math.abs(aC[0]) * HX + Math.abs(aC[2]) * HZ, HZg = Math.max(Math.abs(gC[0]) * HX + Math.abs(gC[2]) * HZ, bvCam ? reach(gC) : 0);
+    const zw = -(HZg + 150);
+    { const q = F2(0, zw - 90); if (seen(q[0], g + 300, q[1], 900)) slab(q[0], q[1], 3600, 8, g - 4, g + 900, 5, angA); }
+    for (const x of [-520, 0, 520]) light(...F2(x, zw + 80), g + 200, [0.62, 0.9, 0.95], 560, 0.9);
+    wall(F2(-1500, zw), F2(1500, zw), 640, 150);
+    for (const s of [-1, 1]) { const xw = bvCam ? Math.max(HXg + 200, reach(aC) + 140) : Math.abs(wing(s, 0, 0.8)[0]); wall(F2(s * xw, zw), F2(s * xw, HZg * 0.75), 560, 130);
       /* iron ribs arching in from the side walls over the far end only: nearer ones would stand over the court */
-      for (let i = 0; i < 4; i++) { const z = zw + i * 150, x = s * xw; if (!seen(x, g + 520, z, 300)) continue; iron([[x, g + 560, z], [x - s * 70, g + 640, z], [x - s * 170, g + 690, z]], 5); } }
+      for (let i = 0; i < 4; i++) { const z = zw + i * 150, x = s * xw, q = F2(x, z); if (!seen(q[0], g + 520, q[1], 300)) continue; iron([F3(x, g + 560, z), F3(x - s * 70, g + 640, z), F3(x - s * 170, g + 690, z)], 5); } }
     /* the floor's edge is eaten by the garden: shrubs and black roses crowd in along the rim */
     { const per = rimPer(0), n = Math.round(per / 44); for (let i = 0; i < n; i++) { const q = rimAt(-12 + rnd() * 30, (i / n) * per + rnd() * 18); if (nearSeat(q[0], q[1], 56) || !seen(q[0], g + 20, q[1], 90)) continue; const r = 12 + rnd() * 16, c = [q[0], g + 14 + rnd() * 22, q[1]];
         if (rnd() < 0.38) rose(c[0], c[1], c[2], r); else { clump(o.leaves, c, r * 1.2, i * 0.37); leafCards(o.cards, c, r * 1.3, rnd, 22); } } }
     /* planters along the walls, black roses in them, lanterns */
     for (const s of [-1, 1]) for (let i = 0; i < 6; i++) { const [x, z] = wing(s, -0.95 + i * 0.34, 0.62); if (nearSeat(x, z, 90) || !seen(x, g + 30, z, 100)) continue; slab(x, z, 54, 70, g - 4, g + 30, 2); rose(x, g + 44, z, 20 + rnd() * 8); if (i % 2 === 0) rose(x + s * 12, g + 70, z + 8, 14 + rnd() * 6); }
     for (const s of [-1, 1]) { lamp(...wing(s, -0.7, 0.45).slice(0, 2), 120, [1, 0.84, 0.5], 0.9, 4); lamp(...wing(s, 0.3, 0.4).slice(0, 2), 120, [1, 0.84, 0.5], 0.9, 4); }
-    for (const x of [-420, 0, 420]) { if (seen(x, g + 60, zw + 60, 100)) { slab(x, zw + 60, 110, 60, g - 4, g + 34, 2); rose(x, g + 52, zw + 60, 28); rose(x + 30, g + 80, zw + 56, 18); } }
+    for (const x of [-420, 0, 420]) { const q = F2(x, zw + 60); if (seen(q[0], g + 60, q[1], 100)) { slab(q[0], q[1], 110, 60, g - 4, g + 34, 2, angA); rose(q[0], g + 52, q[1], 28); const r = F2(x + 30, zw + 56); rose(r[0], g + 80, r[1], 18); } }
     /* what each boss of the glasshouse brings */
     if (who === "queen") { /* the root mother: great roots breaking through the glass and the boards */
-      for (const x of [-420, -140, 150, 430]) { if (!seen(x, g + 200, zw, 300)) continue; const pts = []; for (let t = 0; t <= 1.0001; t += 1 / 14) pts.push([x + Math.sin(t * 5 + x) * 28 * (1 - t), g + 760 * (1 - t) ** 1.3 - 6, zw - 40 + t * 120 + Math.cos(t * 4 + x) * 10]); const n0 = o.rail.length; tube(o.rail, pts, (t) => 10 + 20 * (1 - t), 8); for (let k = n0 + 6; k < o.rail.length; k += 8) o.rail[k] = 2; }
+      for (const x of [-420, -140, 150, 430]) { const q = F2(x, zw); if (!seen(q[0], g + 200, q[1], 300)) continue; const pts = []; for (let t = 0; t <= 1.0001; t += 1 / 14) pts.push(F3(x + Math.sin(t * 5 + x) * 28 * (1 - t), g + 760 * (1 - t) ** 1.3 - 6, zw - 40 + t * 120 + Math.cos(t * 4 + x) * 10)); const n0 = o.rail.length; tube(o.rail, pts, (t) => 10 + 20 * (1 - t), 8); for (let k = n0 + 6; k < o.rail.length; k += 8) o.rail[k] = 2; }
       for (let i = 0; i < 7; i++) { const s = i % 2 ? 1 : -1, [x, z] = wing(s, -0.8 + (i >> 1) * 0.4, 0.8); if (nearSeat(x, z, 100) || !seen(x, g + 60, z, 200)) continue; const pts = []; for (let t = 0; t <= 1.0001; t += 1 / 14) pts.push([x + s * (60 - t * 190) + Math.sin(t * 6 + i) * 14, g + 240 * (1 - t) ** 1.4 + Math.sin(t * 5) * 10, z + t * 70 + Math.cos(t * 4 + i) * 12]); const n0 = o.rail.length; tube(o.rail, pts, (t) => 7 + 15 * (1 - t), 8); for (let k = n0 + 6; k < o.rail.length; k += 8) o.rail[k] = 2; } }
     if (who === "eve") { /* Eve: a black flower as tall as a person at the far wall, its petals open to the court; lanterns hung close */
-      if (seen(0, g + 140, zw + 90, 300)) { slab(0, zw + 100, 150, 90, g - 4, g + 44, 2); for (let i = 0; i < 9; i++) { const a = (i / 9) * Math.PI * 2; rose(Math.cos(a) * 52, g + 150 + Math.sin(a) * 52, zw + 100, 34); } rose(0, g + 150, zw + 100, 40); ball([0, g + 150, zw + 112], 11, 1); light(0, zw + 160, g + 150, [0.75, 0.45, 1], 420, 0.7); } }
+      { const c = F2(0, zw + 100); if (seen(c[0], g + 140, c[1], 300)) { slab(c[0], c[1], 150, 90, g - 4, g + 44, 2, angA); for (let i = 0; i < 9; i++) { const a = (i / 9) * Math.PI * 2, p = F2(Math.cos(a) * 52, zw + 100); rose(p[0], g + 150 + Math.sin(a) * 52, p[1], 34); } rose(c[0], g + 150, c[1], 40); ball(F3(0, g + 150, zw + 112), 11, 1); light(...F2(0, zw + 160), g + 150, [0.75, 0.45, 1], 420, 0.7); } } }
     return o;
   }
   function build() {

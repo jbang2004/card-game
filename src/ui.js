@@ -1443,8 +1443,9 @@
       source = detail.source;
     if (!source || detail.pinned || el.style.display === "none") return;
     if (modalType !== "library") {
-      el.style.left = "1342px";
-      el.style.top = battleViewDetailTop(el) + "px";
+      const at = battleViewDetail(el);
+      el.style.left = at.left + "px";
+      el.style.top = at.top + "px";
       el.style.zIndex = "45";
       return;
     }
@@ -1462,17 +1463,31 @@
     el.style.left = Math.min(Math.max(pos.x - w / 2, 8), 1600 - w - 8) + "px";
     el.style.top = top + "px";
   }
-  /* Under the battle view the enemy hero stands on the board's far right corner
-   * with its deck chip under it: the rail's free stretch starts below that chip
-   * and ends above the end-turn button. */
-  function battleViewDetailTop(el) {
-    if (typeof EmberBattleView === "undefined" || !EmberBattleView.active) return 300;
+  /* Under the battlefield's view: left and right (versus), the two sides' blocks
+   * leave the board's middle open — the card is read there, centred on the
+   * middle line, at the centre of the eye's travel between them. Seen over our
+   * shoulder (?view=shoulder) the enemy hero stands on the board's far right
+   * corner with its deck chip under it: the rail's free stretch starts below that
+   * chip and ends above the end-turn button. */
+  function battleViewDetail(el) {
+    const rail = { left: 1342, top: 300 };
+    if (typeof EmberBattleView === "undefined" || !EmberBattleView.active) return rail;
+    const card = el.querySelector(".card"),
+      w = card?.offsetWidth || 230,
+      h = el.offsetHeight || 444;
+    if (EmberBattleView.view()?.mode === "versus") {
+      const mid = EmberBattleView.project([0, 0, 0]),
+        handTop = centerOf($("hand"))?.top ?? 787;
+      return {
+        left: Math.round(mid.x - w / 2),
+        top: Math.round(Math.max(84, Math.min(mid.y - h / 2, handTop - 8 - h))),
+      };
+    }
     const deck = centerOf(document.querySelector(".enemy-deck")),
       end = centerOf($("end-turn"));
     const below = deck ? deck.top + deck.h + 10 : 300,
       room = end ? end.top - 8 : 830;
-    const h = el.querySelector(".card")?.offsetHeight || 340;
-    return Math.round(Math.max(300, Math.min(below, room - h)));
+    return { left: rail.left, top: Math.round(Math.max(300, Math.min(below, room - (card?.offsetHeight || 340)))) };
   }
   function closeCardDetail() {
     if (!detail.pinned) return;

@@ -7,21 +7,24 @@
  * where the tokens were).
  *
  * World: x across the board, z toward the player (the enemy's side at −z), y up; one unit is a person's height.
- * Two views, chosen by the screen (the user's choice, 2026-10-03, from the view lab's eight):
- *   side   ⑥ 我方背后斜侧 — a screen on its side (a desktop, a phone held sideways): a low camera over our side's
- *          right shoulder (22° down, turned 44°), each side in two rows a column apart, every other column stepped
- *          back so nothing hides behind anything on a full board; the heroes behind their sides
+ * Two views, chosen by the screen (the user's choice, 2026-10-03):
+ *   versus 左右对战 — a screen on its side (a desktop, a phone held sideways): seen from 万象棋's height (50° down)
+ *          and square from the side, ours on the left and theirs on the right, each side a tidy block two columns
+ *          wide and four rows deep, the heroes at the two ends of the middle line
  *   front  ② 正面·英雄居中 — a phone held upright: from the front, 40° down; a side's line becomes two rows past
  *          four units; the heroes behind their sides
  * The camera is fitted (its distance and aim) so a full board of both sides and both heroes fills the room the
  * page's chrome leaves (top bar, hand, consoles) — the same camera whatever is on the board, so nothing jumps as units
  * come and go. Pure geometry: no three.js, no WebGL; it works where the figures do not (the tokens still stand on it).
- * `?view=classic` keeps the old row layout (EmberViewport's own), for comparison only; `?view=lateral` shows a screen on
- * its side as ⑤ 侧视横版 instead of ⑥ (ours left, theirs right, seen square from the side), also for comparison. */
+ * For comparison only (a screen on its side): `?view=classic` the old row layout (EmberViewport's own),
+ * `?view=shoulder` ⑥ 我方背后斜侧 (the landscape view until versus), `?view=lateral` ⑤ 侧视横版 (versus from lower),
+ * `?view=wanxiang` 万象棋式上下对战 (one line a side, top and bottom). */
 const EmberBattleView = (() => {
   "use strict";
   const Q = typeof location !== "undefined" ? new URLSearchParams(location.search) : new URLSearchParams();
-  const classic = Q.get("view") === "classic", lateral = Q.get("view") === "lateral", wanxiang = Q.get("view") === "wanxiang", wanxiangLR = Q.get("view") === "wanxiang-lr", noFigures = Q.get("figures") === "0";
+  const VIEW = Q.get("view"), classic = VIEW === "classic", noFigures = Q.get("figures") === "0";
+  // a screen on its side: versus, or one of the views it was chosen over (?view=wanxiang-lr was versus's name then)
+  const LANDSCAPE = ["shoulder", "lateral", "wanxiang"].includes(VIEW) ? VIEW : "versus";
   /* The view stands figures on the board; without them (motion reduced, ?figures=0, the figures' WebGL failed) the
    * tokens are flat cards, and the old rows were made for those: the page keeps its rows then. */
   function figures() {
@@ -38,7 +41,13 @@ const EmberBattleView = (() => {
   // a token's foot: the figure stands at FOOT of its token's height (EmberMiniatures: the plate below it)
   const FOOT = 0.6;
   const MODES = {
-    side: { fov: 30, pitch: 22, yaw: 44, dx: 1.2, x0: 1.0, gap: 0.95, stag: 0.55, hero: 4.15, heroX: { p: 0, e: 1.2 } },
+    // 左右对战 (2026-10-03, after the user's 万象棋 reference): 万象棋's height (50°), seen square from the side; nothing
+    // hides behind anything from this high, so the rows need no step and a side reads as a tidy block
+    // (on a phone — the room under 900 px — a unit's stats plate stands as tall as a fifth of a figure, so the rows open
+    // out to fit it between one unit's feet and the next one's head, and the heroes stand clear of the back column)
+    versus: { fov: 28, pitch: 50, yaw: 90, dx: 1.05, x0: 1.0, gap: 0.95, stag: 0, hero: 3.1, heroX: { p: 0, e: 0 }, phone: { dx: 1.25, hero: 3.3 } },
+    // ⑥ 我方背后斜侧, for comparison (?view=shoulder; the landscape view until versus)
+    shoulder: { fov: 30, pitch: 22, yaw: 44, dx: 1.2, x0: 1.0, gap: 0.95, stag: 0.55, hero: 4.15, heroX: { p: 0, e: 1.2 } },
     front: { fov: 32, pitch: 40, yaw: 0, z: 1.15, back: 0.85, sp: 0.95, hero: 3.7, heroX: { p: 0, e: 0 } },
     // ⑤ 侧视横版, for comparison (?view=lateral, a screen on its side): the side view's formation seen square from
     // the side — ours on the left, theirs on the right, the heroes at the two ends of the middle line
@@ -51,10 +60,6 @@ const EmberBattleView = (() => {
     // (pitch 50: the reference's board is foreshortened to about two-thirds and its far edge is ~0.78 of its near one;
     // the figures then stand about a tenth of the screen's height, as there)
     wanxiang: { fov: 28, pitch: 50, yaw: 0, z: 1.25, sp: 1.0, hero: 1.7, heroX: { p: -4.3, e: 4.3 } },
-    // the same view, the sides left and right (?view=wanxiang-lr, the user's question, 2026-10-03): ⑤'s formation —
-    // each side two columns, four rows deep — seen from 万象棋's height; the heroes at the two ends of the middle line
-    // (seen from this high nothing hides behind anything: the rows need no step, and the side reads as a tidy block)
-    wanxianglr: { fov: 28, pitch: 50, yaw: 90, dx: 1.05, x0: 1.0, gap: 0.95, stag: 0, hero: 3.1, heroX: { p: 0, e: 0 } },
   };
   const rad = (d) => (d * Math.PI) / 180;
   const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -64,10 +69,13 @@ const EmberBattleView = (() => {
 
   // ------------------------------------------------------------------ the formation
   /** where the i-th of a side's n units stands: [x, 0, z] */
+  // a mode's numbers on the screen at hand (a mode may carry its own for a phone)
+  let phone = false;
+  const numbers = (mode) => (phone && MODES[mode].phone ? { ...MODES[mode], ...MODES[mode].phone } : MODES[mode]);
   function slot(mode, side, i, n) {
-    const s = side === "e" ? -1 : 1, M = MODES[mode];
+    const s = side === "e" ? -1 : 1, M = numbers(mode);
     n = Math.max(1, Math.min(7, n)); i = clamp(i, 0, n - 1);
-    if (mode === "side" || mode === "lateral" || mode === "wanxianglr") {
+    if (mode === "versus" || mode === "shoulder" || mode === "lateral") {
       // columns across the board (left to right), two deep — the front one a step from the middle, the back one a
       // column further — and every other column stepped back
       const m = Math.ceil(n / 2), j = Math.floor(i / 2), col = i % 2;
@@ -82,7 +90,7 @@ const EmberBattleView = (() => {
   }
   // (a hero behind its side; heroX moves it along: the camera turned as it is, a hero straight behind its side can
   // stand behind one of that side's columns)
-  const heroAt = (mode, side) => [MODES[mode].heroX[side], DAIS, (side === "e" ? -1 : 1) * MODES[mode].hero];
+  const heroAt = (mode, side) => [numbers(mode).heroX[side], DAIS, (side === "e" ? -1 : 1) * numbers(mode).hero];
 
   // ------------------------------------------------------------------ the screen it is fitted into
   /** the room the chrome leaves for the battle, in stage pixels (EmberViewport's coordinates) */
@@ -143,10 +151,10 @@ const EmberBattleView = (() => {
   function tune(mode, o) { Object.assign(MODES[mode], o); key = ""; }
   function current() {
     if (typeof EmberViewport === "undefined") return null;
-    const Vp = EmberViewport, mode = Vp.mobile && Vp.portrait ? "front" : lateral ? "lateral" : wanxiang ? "wanxiang" : wanxiangLR ? "wanxianglr" : "side", R = room(Vp);
+    const Vp = EmberViewport, mode = Vp.mobile && Vp.portrait ? "front" : LANDSCAPE, R = room(Vp);
     const k = [mode, R.W, R.H, R.top, R.bottom, R.left, R.right].map((v) => (typeof v === "number" ? Math.round(v) : v)).join(":");
     if (k !== key) {
-      key = k; view = makeView(mode, R); version++;
+      key = k; phone = R.W < 900; view = makeView(mode, R); version++;
       if (typeof dispatchEvent === "function") dispatchEvent(new CustomEvent("ember:battleview", { detail: { version } }));
     }
     // (the page's chrome is laid out for the view: body[data-battle-view] — skins/slate/battle-view.css; EmberViewport
@@ -209,7 +217,7 @@ const EmberBattleView = (() => {
     extent: () => {
       const v = current(); let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity;
       for (const side of ["p", "e"]) for (let i = 0; i < 7; i++) { const p = slot(v.mode, side, i, 7); x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); z0 = Math.min(z0, p[2]); z1 = Math.max(z1, p[2]); }
-      return { x0, x1, z0, z1, hero: MODES[v.mode].hero };
+      return { x0, x1, z0, z1, hero: numbers(v.mode).hero };
     },
   });
 })();

@@ -19,11 +19,26 @@ function load(screen, search = "") {
 }
 const inside = (p, R, pad = 1) => p.x >= R.left - pad && p.x <= R.right + pad && p.y >= R.top - pad && p.y <= R.bottom + pad;
 
-test("a screen on its side is seen over our shoulder, a phone held upright from the front", () => {
-  assert.equal(load("desk").view().mode, "side");
-  assert.equal(load("land").view().mode, "side");
+test("a screen on its side is a left-and-right duel, a phone held upright is seen from the front", () => {
+  assert.equal(load("desk").view().mode, "versus");
+  assert.equal(load("land").view().mode, "versus");
   assert.equal(load("port").view().mode, "front");
-  assert.equal(load("land", "?view=lateral").view().mode, "lateral");
+  for (const v of ["shoulder", "lateral", "wanxiang"]) assert.equal(load("land", "?view=" + v).view().mode, v);
+  assert.equal(load("desk", "?view=wanxiang-lr").view().mode, "versus");
+});
+
+test("versus: ours on the left, theirs on the right, the heroes at the two ends of the middle line", () => {
+  for (const screen of ["desk", "land"]) {
+    const BV = load(screen), mid = SCREENS[screen].width / 2;
+    for (let i = 0; i < 7; i++) {
+      assert.ok(BV.project(BV.slot("p", i, 7)).x < mid, `our ${i} left of the middle`);
+      assert.ok(BV.project(BV.slot("e", i, 7)).x > mid, `their ${i} right of the middle`);
+    }
+    const ph = BV.project(BV.hero("p")), eh = BV.project(BV.hero("e"));
+    assert.ok(ph.x < Math.min(...Array.from({ length: 7 }, (_, i) => BV.project(BV.slot("p", i, 7)).x)), "our hero left of our units");
+    assert.ok(eh.x > Math.max(...Array.from({ length: 7 }, (_, i) => BV.project(BV.slot("e", i, 7)).x)), "theirs right of theirs");
+    assert.ok(Math.abs(ph.y - eh.y) < 2, "both on the middle line");
+  }
 });
 
 for (const screen of Object.keys(SCREENS))
@@ -54,14 +69,15 @@ for (const screen of Object.keys(SCREENS))
   });
 
 test("a token's box stands its unit at FOOT of its height, nearer tokens over farther ones", () => {
-  const BV = load("desk");
-  const near = BV.minionBox("p", 0, 2), far = BV.minionBox("e", 0, 2);
-  for (const b of [near, far]) {
-    assert.ok(Math.abs(b.y + BV.FOOT * b.h - b.foot.y) <= 1);
-    assert.ok(Math.abs(b.x + b.w / 2 - b.foot.x) <= 1);
+  for (const screen of Object.keys(SCREENS)) {
+    const BV = load(screen), boxes = ["p", "e"].flatMap((s) => Array.from({ length: 7 }, (_, i) => BV.minionBox(s, i, 7)));
+    for (const b of boxes) {
+      assert.ok(Math.abs(b.y + BV.FOOT * b.h - b.foot.y) <= 1);
+      assert.ok(Math.abs(b.x + b.w / 2 - b.foot.x) <= 1);
+    }
+    // (seen from above, nearer is lower on the screen: its token lies over the one behind)
+    for (const a of boxes) for (const b of boxes) if (a.foot.y > b.foot.y + 2) assert.ok(a.z >= b.z, `${screen}: nearer token over farther`);
   }
-  assert.ok(near.z > far.z, "our near unit's token lies over the enemy's");
-  assert.ok(near.w > far.w, "nearer is larger");
 });
 
 test("the enemy's station seen from the front keeps its plate beside the figure", () => {

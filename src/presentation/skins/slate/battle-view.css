@@ -1,13 +1,13 @@
 /* Skin "slate" — the page's chrome laid out for the battlefield's view (EmberBattleView, docs/design/BATTLE_VIEW.md).
- * The view stands the units and both heroes on one board seen from over our side's shoulder (side: a desktop, a
- * phone held sideways) or from the front (front: a phone held upright); body[data-battle-view] says which. The
+ * The view stands the units and both heroes on one board seen from 万象棋's height with ours on the left (versus:
+ * a desktop, a phone held sideways) or from the front (front: a phone held upright); body[data-battle-view] says which. The
  * stations and tokens are placed by the view itself (inline); what is left here is the chrome round them, moved
  * off the figures. ?view=classic leaves the attribute off and the old layout's rules apply. */
 
-/* desktop · side ------------------------------------------------------------ */
+/* desktop · shoulder (⑥, ?view=shoulder) -------------------------------------- */
 /* the hero power: in front of the player's dais, clear of its figure (which now stands where the old corner node was),
  * of its stats row at its widest (attack, health and armour) and of the hand's fan */
-html[data-skin="slate"] body[data-battle-view="side"]:not(.touch-layout) #battle .power-button {
+html[data-skin="slate"] body[data-battle-view="shoulder"]:not(.touch-layout) #battle .power-button {
   left: 342px;
   top: 652px;
 }
@@ -62,7 +62,7 @@ html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-a
 }
 /* (seen from the side the enemy stands at the screen's right edge: its row runs leftward from the station's right
  * edge instead, so five chips — weapon, health, armour, covenant, hand — stay on screen) */
-html[data-skin="slate"] body:is([data-battle-view="side"], [data-battle-view="lateral"], [data-battle-view="wanxiang"], [data-battle-view="wanxianglr"]).touch-layout #battle .hero.enemy.hero-afield.hero-afield .hero-chips {
+html[data-skin="slate"] body:is([data-battle-view="versus"], [data-battle-view="shoulder"], [data-battle-view="lateral"], [data-battle-view="wanxiang"]).touch-layout #battle .hero.enemy.hero-afield.hero-afield .hero-chips {
   inset: auto 0 0 auto;
   transform: none;
 }
@@ -101,4 +101,11 @@ html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-a
  * only rises a step to say which it is — a selected card's full rise would stand it, faded, over the near units */
 html[data-skin="slate"] body[data-battle-view].hand-folded #battle .hand-card.reading-source.reading-source {
   transform: translateY(-10px);
+}
+
+/* desktop · versus ------------------------------------------------------------ */
+/* the enemy's deck counter: the enemy hero now stands at the right end of the middle line, where the counter sat — it
+ * goes to the top-right corner, across the board from ours at the bottom-left */
+html[data-skin="slate"] body[data-battle-view="versus"]:not(.touch-layout) #app.battle-view .enemy-deck {
+  top: 92px;
 }
