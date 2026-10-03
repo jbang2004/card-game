@@ -23,8 +23,6 @@ test("a screen on its side is a left-and-right duel, a phone held upright is see
   assert.equal(load("desk").view().mode, "versus");
   assert.equal(load("land").view().mode, "versus");
   assert.equal(load("port").view().mode, "front");
-  for (const v of ["shoulder", "lateral", "wanxiang"]) assert.equal(load("land", "?view=" + v).view().mode, v);
-  assert.equal(load("desk", "?view=wanxiang-lr").view().mode, "versus");
 });
 
 test("versus: ours on the left, theirs on the right, the heroes at the two ends of the middle line", () => {
@@ -94,9 +92,8 @@ test("our hero held upright stands clear of the mana row, its plate included", (
   assert.ok(b.y + b.h <= SCREENS.port.layout.mana.y, `station ends at ${b.y + b.h}, the mana row starts at ${SCREENS.port.layout.mana.y}`);
 });
 
-test("the view stands down without figures and with ?view=classic", () => {
+test("the view stands down without figures", () => {
   assert.equal(load("desk").active, true);
-  assert.equal(load("desk", "?view=classic").active, false);
   assert.equal(load("desk", "?figures=0").active, false);
   global.EmberMiniatures = { figures: () => false };
   try {

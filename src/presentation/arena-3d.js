@@ -938,7 +938,8 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
   let VP = null, eye = null, basis = null, lightVP = null;
   const cam = { pitch: PITCH, dist: 2600, tz: 0 };
   /* the battlefield's own camera (EmberBattleView, 2026-10-03): eye and target in this scene's units, its lens — the
-   * figures and the page's tokens are drawn through the same one; null: the old solve from the rows (?view=classic) */
+   * figures and the page's tokens are drawn through the same one; null: the old solve from the rows (without figures —
+   * motion reduced — the view stands down and the page keeps its rows) */
   let bvCam = null;
   /* design aid, only honoured with ?debug=1: pull the camera back by this factor and build every set piece, to see the whole field */
   let WIDE = 1;
