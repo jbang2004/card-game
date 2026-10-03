@@ -176,12 +176,12 @@ float rivW(float z,float s){return uRiv.z*(1.+.16*sin(z*.006+(s>0.?3.:1.)));}
 vec3 film(float h){return .5+.5*cos(6.2831*(h+vec3(0.,.33,.67)));}
 vec3 brdf(vec3 alb,float rough,float metal,vec3 n,vec3 v,vec3 l,vec3 rad){vec3 h=normalize(l+v);float NdL=max(dot(n,l),0.),NdV=max(dot(n,v),1e-3),NdH=max(dot(n,h),0.),VdH=max(dot(v,h),0.);
  float a=max(rough*rough,.002),a2=a*a;float dd=NdH*NdH*(a2-1.)+1.;float D=a2/(PI*dd*dd);float k=(rough+1.)*(rough+1.)/8.;float G=(NdV/(NdV*(1.-k)+k))*(NdL/(NdL*(1.-k)+k));
- vec3 F0=mix(vec3(.04),alb,metal);vec3 F=F0+(1.-F0)*pow(1.-VdH,5.);vec3 spec=D*G*F/max(4.*NdV*NdL,1e-3);vec3 kd=(1.-F)*(1.-metal);return (kd*alb/PI+spec)*rad*NdL;}
+ vec3 F0=mix(vec3(.04),alb,metal);vec3 F=F0+(1.-F0)*pow(max(1.-VdH,0.),5.);vec3 spec=D*G*F/max(4.*NdV*NdL,1e-3);vec3 kd=(1.-F)*(1.-metal);return (kd*alb/PI+spec)*rad*NdL;}
 vec4 lit(vec3 alb,float rough,float metal,float ao,vec3 n,vec3 p,vec3 emis){
  vec3 v=normalize(uEye-p);float sh=shadow(n);vec3 c=brdf(alb,rough,metal,n,v,normalize(uLightDir),uKey)*sh;
  vec3 poolCol=uPool*pool(p.xz);
  c+=brdf(alb,rough,metal,n,v,normalize(vec3(.1,1.,.2)),poolCol)*ao+alb*(1.-metal)*poolCol*.08*ao;
- vec3 F0=mix(vec3(.04),alb,metal);float NdV=max(dot(n,v),1e-3);vec3 F=F0+(max(vec3(1.-rough),F0)-F0)*pow(1.-NdV,5.);
+ vec3 F0=mix(vec3(.04),alb,metal);float NdV=max(dot(n,v),1e-3);vec3 F=F0+(max(vec3(1.-rough),F0)-F0)*pow(max(1.-NdV,0.),5.);
  vec3 amb=mix(uGroundAmb,uSky,n.y*.5+.5);vec3 R=reflect(-v,n);vec3 env=mix(uGroundAmb*1.4,uSky*2.2,smoothstep(-.25,.65,R.y))+uEmber*.35*pow(clamp(1.-R.y,0.,1.),3.)+uKey*.5*pow(max(dot(R,normalize(uLightDir)),0.),30.);
  c+=alb*(1.-metal)*amb*ao*(1.-F*.5)+F*env*ao*(1.-rough*.75);
  for(int i=0;i<16;i++){vec3 d=uLightPos[i]-p;float d2=dot(d,d);float att=pow(clamp(1.-d2/(uLightRad[i]*uLightRad[i]),0.,1.),2.)/(1.+d2*2e-6);if(att<=0.)continue;c+=brdf(alb,rough,metal,n,v,d*inversesqrt(d2),uLightCol[i]*att);}
@@ -211,7 +211,7 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
     float wear=fbm(p/90.+hash(pc)*5.);alb=mix(uStoneA,uStoneB,hash(pc)*.5+wear*.5)*(1.-(1.-smoothstep(.5,2.4,sm))*.5)*(.8+.35*fbm(p/7.));alb=mix(alb,uStoneB*1.7,rivet);metal=.62+wear*.2;rough=.5-wear*.15;n=normalize(vec3(nm.x*.03,1.,nm.y*.03));
    }else if(uScene<2.5){vec2 q=mat2(.7071,-.7071,.7071,.7071)*p;vec2 c=floor(q/64.),f=fract(q/64.);float sm=min(min(f.x,1.-f.x),min(f.y,1.-f.y))*64.;
     alb=mix(uStoneA,uStoneB,hash(c)*.5+fbm(p/260.)*.5);alb*=1.-(1.-smoothstep(.6,2.,sm))*.18;rough=.22;n=normalize(vec3(0.,1.,0.)+vec3(nm.x,0.,nm.y)*.02);}
-   else if(uScene<3.5){float vein=pow(1.-abs(2.*fbm(p/160.+fbm(p/55.)*1.3)-1.),10.);alb=mix(uStoneA,uStoneB,fbm(p/300.))*(1.-vein*.28);rough=.16;n=normalize(vec3(nm.x*.015,1.,nm.y*.015));}
+   else if(uScene<3.5){float vein=pow(max(1.-abs(2.*fbm(p/160.+fbm(p/55.)*1.3)-1.),0.),10.);alb=mix(uStoneA,uStoneB,fbm(p/300.))*(1.-vein*.28);rough=.16;n=normalize(vec3(nm.x*.015,1.,nm.y*.015));}
    else if(uScene<4.5){alb=mix(uStoneA,uStoneB,fbm(p/300.)*.6);rough=.05;n=normalize(vec3(sin(p.x*.02+uTime*.2)*.004,1.,cos(p.y*.02-uTime*.15)*.004));}
    else{float wear=fbm(p/40.),scr=fbm(vec2(p.x/3.,p.y/60.));alb=mix(uStoneA,uStoneB,fbm(p/200.)*.7+wear*.3)*(.85+.3*scr);metal=.55;rough=.42-wear*.12;n=normalize(vec3(nm.x*.06,1.,nm.y*.06));}
    vec3 en=-vec3(hR-hL,0.,hU-hD)*uEngrave*.8;n=normalize(n+en);alb*=1.+cm.r*.06;
@@ -246,7 +246,7 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
    else if(abs(uScene-8.)<.5){ /* clearing: tiles broken and lost under soil and moss toward the edge */ float n1=fbm(p/40.+3.),n2=fbm(p/13.);float cover=smoothstep(.12,.95,e*1.35+(n1-.5)*.95);
     vec3 moss=mix(vec3(.022,.05,.03),vec3(.07,.12,.05),n2),soil=vec3(.04,.03,.022)*(.7+.6*n2),cov=mix(soil,moss,smoothstep(.35,.65,n1));
     alb=mix(alb,cov,cover);rough=mix(rough,.92,cover);metal*=1.-cover;n=normalize(n+vec3((n2-.5)*.5,0.,(fbm(p/9.)-.5)*.5)*cover);ao*=1.-.35*cover;}
-   else if(abs(uScene-2.)<.5){ /* floe: frosted at the rim, cracked across */ float cr=pow(1.-abs(2.*fbm(p/70.+fbm(p/24.)*1.2)-1.),14.);alb=mix(alb,vec3(.9,.96,1.),e*.7);alb*=1.-cr*.35*(1.-e);emis+=vec3(.25,.5,.7)*cr*.08;}
+   else if(abs(uScene-2.)<.5){ /* floe: frosted at the rim, cracked across */ float cr=pow(max(1.-abs(2.*fbm(p/70.+fbm(p/24.)*1.2)-1.),0.),14.);alb=mix(alb,vec3(.9,.96,1.),e*.7);alb*=1.-cr*.35*(1.-e);emis+=vec3(.25,.5,.7)*cr*.08;}
    else if(abs(uScene-3.)<.5){ /* island: the marble gives way to dark layered rock at its lip */ vec3 rk=mix(vec3(.06,.06,.1),vec3(.2,.2,.28),fbm(vec2(p.x/110.,p.y/18.)));float lp=smoothstep(-30.,-5.,sdp);alb=mix(alb,rk,lp);rough=mix(rough,.85,lp);metal*=1.-lp;}
   }
   if(uPlatBox.z<.5){float ed=rrect(p,uArena,uRadius),lw=fwidth(ed);emis+=vec3(.5,.78,1.)*.22*(1.-smoothstep(.4,.4+lw*1.5,abs(ed+6.)));}
@@ -284,7 +284,7 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
   vec2 p=vW.xz;float t=uTime*.012;float c1=fbm(p/1100.+vec2(t,0.)),c2=fbm(p/380.-vec2(0.,t*1.4)),c3=fbm(p/120.+vec2(t*2.,t));
   float dens=smoothstep(.28,.78,c1*.65+c2*.45+c3*.12);n=normalize(vec3((c2-.5)*1.4+(c3-.5)*.5,1.,(c1-.5)*1.4));
   alb=mix(uRockA,uRockB,dens);rough=.95;
-  if(abs(uScene-5.)<.5){float gap_=pow(1.-dens,2.);emis+=uEmber*gap_*(1.6+1.4*c3)+uEmber*.12*dens*smoothstep(.55,.9,c2);}else{emis+=uSky*.35*dens+vec3(1.,.8,.9)*.06*smoothstep(.6,.9,c3);}
+  if(abs(uScene-5.)<.5){float gap_=pow(max(1.-dens,0.),2.);emis+=uEmber*gap_*(1.6+1.4*c3)+uEmber*.12*dens*smoothstep(.55,.9,c2);}else{emis+=uSky*.35*dens+vec3(1.,.8,.9)*.06*smoothstep(.6,.9,c3);}
  }else if(uMode<2.5){ /* ---- the rivers: open melt down the channel, crust drifting at the banks ---- */
   vec2 p=vW.xz;float sd_=p.x<0.?-1.:1.;float xc=rivC(p.y,sd_),rw=rivW(p.y,sd_);float s=(p.x-xc)/rw,as=abs(s);
   float spd=1.-min(as,1.)*.65;vec2 fp=vec2(p.x,p.y-uTime*26.*sd_*spd);
@@ -349,7 +349,7 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
   /* each facet bounces the inner light differently; more crystal to look through at the silhouette; the edges and tip carry the core */
   float face=hash(floor(n.xz*6.+.5)+floor(n.y*6.+.5)*vec2(3.1,1.7)+ci*1.37);float veil=.72+.56*fbm(vec2(vW.x*.035+vW.y*.05,vW.z*.035+ci*3.1));
   float e=min(ac,1.-ac),ridge=1.-smoothstep(0.,fwidth(e)*1.1+.022,e);
-  float body=.04+.96*pow(h,1.5),thick=.35+.95*pow(1.-ndv,1.4),tip=smoothstep(.8,1.,h),pulse=.9+.1*sin(uTime*1.1+ci*2.3);
+  float body=.04+.96*pow(h,1.5),thick=.35+.95*pow(max(1.-ndv,0.),1.4),tip=smoothstep(.8,1.,h),pulse=.9+.1*sin(uTime*1.1+ci*2.3);
   float glint=pow(max(0.,sin(uTime*1.7+face*40.)),60.)*step(.6,face);
   alb=cg*.04;rough=.1;metal=0.;
   emis=(cg*body*thick*(.22+1.15*face*face)*veil+cc*(ridge*(.15+.85*h)*.5+tip*.75+glint*h*1.2))*pulse*uGemGain;
@@ -358,17 +358,17 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
   else if(vX.x>3.5&&abs(uScene-8.)<.5){alb=vec3(.2,.26,.1)*.2;rough=.1;emis=vec3(1.,.86,.5)*(1.7+.4*sin(uTime*2.3+vW.x*.03+vW.z*.02));}
   else if(vX.x>2.5&&PAV){alb=vec3(.02,.035,.02)*(.7+.6*fbm(vW.xz/6.+vW.y*.2));rough=.7;}
   else if(abs(uScene-2.)<.5){alb=vec3(.62,.7,.78);metal=.8;rough=.3;if(vX.x>.5&&vX.x<1.5){emis=uInlay*.6;alb=uInlay;}
-   if(vX.x>2.5){vec3 v=normalize(uEye-vW);float fr=pow(1.-abs(dot(n,v)),2.);alb=vec3(.55,.78,.9);metal=0.;rough=.06;emis=vec3(.25,.55,.75)*(.25+fr*.9)+vec3(.8,.95,1.)*pow(fr,4.)*.6;}}
+   if(vX.x>2.5){vec3 v=normalize(uEye-vW);float fr=pow(max(1.-abs(dot(n,v)),0.),2.);alb=vec3(.55,.78,.9);metal=0.;rough=.06;emis=vec3(.25,.55,.75)*(.25+fr*.9)+vec3(.8,.95,1.)*pow(fr,4.)*.6;}}
   else if(abs(uScene-3.)<.5&&vX.x>2.5){alb=vec3(.86,.9,.97);metal=1.;rough=.18;}
-  else if(abs(uScene-3.)<.5){float vein=pow(1.-abs(2.*fbm(vW.xz/60.+vW.y/50.)-1.),8.);alb=mix(uStoneB,uStoneA,.4)*(1.-vein*.3);rough=.3;if(n.y>.8){alb=uLacquer*.35;rough=.05;emis=uLacquer*(.7+.3*sin(uTime+vW.x*.01));}if(vX.x>.5){alb=uInlay;metal=1.;rough=.25;}}
+  else if(abs(uScene-3.)<.5){float vein=pow(max(1.-abs(2.*fbm(vW.xz/60.+vW.y/50.)-1.),0.),8.);alb=mix(uStoneB,uStoneA,.4)*(1.-vein*.3);rough=.3;if(n.y>.8){alb=uLacquer*.35;rough=.05;emis=uLacquer*(.7+.3*sin(uTime+vW.x*.01));}if(vX.x>.5){alb=uInlay;metal=1.;rough=.25;}}
   else if(abs(uScene-6.)<.5){ /* pit-head: timber (0), iron (1), amber (2), lantern glass (3) */
    if(vX.x>3.5){alb=vec3(.46,.035,.04)*(.65+.6*fbm(vec2(vW.x*.06+vW.z*.06,vW.y*.04)));rough=.92;}
    else if(vX.x>2.5){alb=uLacquer*.18;rough=.1;emis=uLacquer*(2.4+.7*sin(uTime*2.1+vW.x*.03+vW.z*.02));}
-   else if(vX.x>1.5){vec3 v_=normalize(uEye-vW);float fr_=pow(1.-max(dot(n,v_),0.),1.5);float vn_=fbm(vW.xz/8.+vW.y/8.);alb=uLacquer*.05;rough=.08;emis=uLacquer*(.3+1.15*fr_+.7*vn_*vn_)*(.9+.2*sin(uTime*1.2+vW.x*.02));}
+   else if(vX.x>1.5){vec3 v_=normalize(uEye-vW);float fr_=pow(1.-clamp(dot(n,v_),0.,1.),1.5);float vn_=fbm(vW.xz/8.+vW.y/8.);alb=uLacquer*.05;rough=.08;emis=uLacquer*(.3+1.15*fr_+.7*vn_*vn_)*(.9+.2*sin(uTime*1.2+vW.x*.02));}
    else if(vX.x>.5){alb=vec3(.1,.095,.09)*(.7+.6*fbm(vW.xz/18.+vW.y/26.));metal=.85;rough=.44;}
    else{float gr=fbm(vec2(vW.x*.04+vW.z*.04,vW.y*.015));alb=vec3(.17,.105,.06)*(.55+.9*gr)*(.85+.3*fbm(vW.xz/6.));rough=.86;}}
   else if(abs(uScene-7.)<.5){ /* boiler hall: riveted steel (0), brass (1), copper pipe (2), furnace glow (3) */
-   if(vX.x>3.5){vec3 v_=normalize(uEye-vW);float fr_=pow(1.-max(dot(n,v_),0.),1.5);float vn_=fbm(vW.xz/8.+vW.y/8.);alb=vec3(.9,.5,.1)*.05;rough=.08;emis=vec3(1.,.56,.14)*(.3+1.2*fr_+.7*vn_*vn_)*(.9+.2*sin(uTime*1.3+vW.x*.03));}
+   if(vX.x>3.5){vec3 v_=normalize(uEye-vW);float fr_=pow(1.-clamp(dot(n,v_),0.,1.),1.5);float vn_=fbm(vW.xz/8.+vW.y/8.);alb=vec3(.9,.5,.1)*.05;rough=.08;emis=vec3(1.,.56,.14)*(.3+1.2*fr_+.7*vn_*vn_)*(.9+.2*sin(uTime*1.3+vW.x*.03));}
    else if(vX.x>2.5){alb=uLacquer*.2;rough=.2;emis=uLacquer*(1.8+.8*sin(uTime*3.1+vW.x*.05));}
    else if(vX.x>1.5){float pat=fbm(vW.xz/12.+vW.y/20.);alb=mix(vec3(.5,.22,.1),vec3(.18,.28,.2),smoothstep(.55,.8,pat))*(.7+.5*pat);metal=.8;rough=.4;}
    else if(vX.x>.5){alb=uInlay;metal=1.;rough=.26;}
@@ -377,12 +377,12 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
   else if(abs(uScene-5.)<.5){float sc=fbm(vW.xz/14.+vW.y/14.);alb=vec3(.07,.02,.018)*(.8+.4*sc);metal=.35;rough=.3;emis=uInlay*smoothstep(160.,380.,vW.y)*.9+uEmber*.05*sc;}
   else if(vX.x>1.5){alb=vec3(.07,.045,.035)*(.7+.6*fbm(vW.xy/9.+vW.z*.1));rough=.8;}
   else if(vX.x>.5){alb=uInlay;metal=1.;rough=.26;}
-  else{alb=uLacquer*(.85+.3*fbm(vW.xz/40.+vW.y*.02));rough=.2;float cc=pow(1.-max(dot(n,normalize(uEye-vW)),0.),4.);gloss+=vec3(1.,.8,.7)*cc*.06;}
+  else{alb=uLacquer*(.85+.3*fbm(vW.xz/40.+vW.y*.02));rough=.2;float cc=pow(1.-clamp(dot(n,normalize(uEye-vW)),0.,1.),4.);gloss+=vec3(1.,.8,.7)*cc*.06;}
  }else if(uMode>8.5&&uMode<9.5){ /* ---- foliage: dark crowns (blob cores, roses where aX.y = 1) and cut-out leaf cards ---- */
   bool card=vX.x>1.5;if(card){vec2 q=vec2(vX.x-2.,vX.y)-.5;float th=atan(q.y,q.x),rl=length(q)*2.,e=.55+.42*pow(abs(cos(2.5*th+.3)),.7);if(rl>e)discard;}
   float sd=card?hash(floor(vW.xz/40.)):-vX.x,f=fbm(vW.xz*.05+vW.y*.04+sd*3.1),cells=card?hash(floor(vW.xz*.4)+floor(vW.y*.4)):fbm(vW.xz*.16+vW.y*.13+sd*5.)*1.25-.1;
   vec3 cA=vec3(.02,.05,.035),cB=vec3(.06,.15,.08),cC=vec3(.14,.26,.12);float t=clamp(f*1.2-.2+(hash(vec2(sd,2.))-.5)*.5,0.,1.);
-  alb=t<.5?mix(cA,cB,t*2.):mix(cB,cC,t*2.-1.);alb*=.7+.5*cells;rough=.75;if(!card&&vX.y>.5){if(abs(uScene-8.)<.5){alb=vec3(.025,.012,.04)*(.7+.5*cells);rough=.3;emis=vec3(.5,.2,.9)*.25*pow(1.-max(dot(n,normalize(uEye-vW)),0.),2.);}else{alb=vec3(.45,.02,.04)*(.7+.5*cells);rough=.5;}}
+  alb=t<.5?mix(cA,cB,t*2.):mix(cB,cC,t*2.-1.);alb*=.7+.5*cells;rough=.75;if(!card&&vX.y>.5){if(abs(uScene-8.)<.5){alb=vec3(.025,.012,.04)*(.7+.5*cells);rough=.3;emis=vec3(.5,.2,.9)*.25*pow(1.-clamp(dot(n,normalize(uEye-vW)),0.,1.),2.);}else{alb=vec3(.45,.02,.04)*(.7+.5*cells);rough=.5;}}
   float gap=smoothstep(.72,.9,cells);ao=(.55+.45*smoothstep(-.6,.8,n.y))*(1.-gap*.5);if(!card){alb*=.45;ao*=.6;}n=normalize(n+vec3(cells-.5,0.,hash(vec2(cells,1.))-.5)*.5);
   emis=alb*uKey*.22*pow(max(dot(-normalize(vN),normalize(uLightDir)),0.),1.5);
  }else{ /* ---- the court's plinth: chamfer and sides ---- */
@@ -399,12 +399,14 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
   }
  }
  o=lit(alb,rough,metal,ao,n,vW,emis);o.rgb+=gloss;if(abs(uMode-6.)<.5)o.a*=-.85;
+ /* a surface the maths got wrong at a grazing angle (NaN, inf) is dark, not a hole the depth of field smears into a band */
+ if(any(isnan(o))||any(isinf(o)))o=vec4(0.,0.,0.,1.);
  /* the stage light: the court and the daises keep their light; the world round them sinks back — darker, greyer, its
     glow held down — the further from the court the more, so the eye stays on the fight */
  if(uStage>0.&&uMode>.5&&abs(uMode-5.)>.5&&abs(uMode-7.)>.5){float f=uStage*smoothstep(-30.,170.,plat(vW.xz));
   float hot=abs(uMode-2.)<.5||abs(uMode-6.)<.5?1.:0.;   /* molten rock and crystal light are HDR: they sink twice as far */
   float k=(1.-f)*(1.-f*hot*.8);o.rgb=mix(o.rgb,vec3(dot(o.rgb,vec3(.3,.5,.2))),f*.75)*k;o.a*=k*k;}
- if(uMode>10.5){vec3 v=normalize(uEye-vW);float ndv=abs(dot(n,v)),fr=pow(1.-ndv,2.2);
+ if(uMode>10.5){vec3 v=normalize(uEye-vW);float ndv=min(abs(dot(n,v)),1.),fr=pow(1.-ndv,2.2);
   if(uMode<11.5){ /* soap-film bubble; with vX.x = 1 the spirit whale */
    vec3 R=reflect(-v,n);vec3 env=mix(uSky*1.2,uSky*2.6+.1,smoothstep(-.3,.8,R.y))+uKey*pow(max(dot(R,normalize(uLightDir)),0.),160.)*2.5;
    vec3 fc=film(fract(fr*1.3+fbm(vW.xz*.015+vW.y*.02)*.9+uTime*.02));bool wh=vX.x>.5;vec3 tint=wh?uEmber:uInlay;
@@ -425,7 +427,7 @@ precision highp float;in float vA,vR;out vec4 o;uniform vec3 uColor;uniform floa
   const POST_VS = `#version 300 es
 layout(location=0) in vec2 aQ;out vec2 vUV;void main(){vUV=aQ*.5+.5;gl_Position=vec4(aQ,0.,1.);}`;
   const BRIGHT_FS = `#version 300 es
-precision highp float;in vec2 vUV;out vec4 o;uniform sampler2D uColor;void main(){vec4 c=texture(uColor,vUV);float l=dot(c.rgb,vec3(.3,.5,.2));float k=smoothstep(.95,2.4,l)*.6+abs(c.a)*.9;o=vec4(c.rgb*k,max(c.a,0.));}`;
+precision highp float;in vec2 vUV;out vec4 o;uniform sampler2D uColor;void main(){vec4 c=texture(uColor,vUV);if(any(isnan(c))||any(isinf(c)))c=vec4(0.);float l=dot(c.rgb,vec3(.3,.5,.2));float k=smoothstep(.95,2.4,l)*.6+abs(c.a)*.9;o=vec4(c.rgb*k,max(c.a,0.));}`;
   const BLUR_FS = `#version 300 es
 precision highp float;in vec2 vUV;out vec4 o;uniform sampler2D uColor;uniform vec2 uDir;void main(){vec4 s=vec4(0.);float w[5]=float[](.227,.194,.121,.054,.016);s+=texture(uColor,vUV)*w[0];for(int i=1;i<5;i++){vec2 off=uDir*float(i)*1.5;s+=texture(uColor,vUV+off)*w[i];s+=texture(uColor,vUV-off)*w[i];}o=s;}`;
   const POST_FS = `#version 300 es
@@ -1222,6 +1224,10 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     for (let i = 0; i < n - 1; i++) for (let j = 0; j < segs; j++) { const a = rings[i][j], b = rings[i][(j + 1) % segs], c = rings[i + 1][(j + 1) % segs], d = rings[i + 1][j]; for (const [pp, nn] of [a, b, c, a, c, d]) o.push(pp[0], pp[1], pp[2], nn[0], nn[1], nn[2], 0, 0); }
   }
   const hexRing = (x, z, r) => [0, 1, 2, 3, 4, 5].map((j) => [x + Math.cos(j * Math.PI / 3 + 0.3) * r, z + Math.sin(j * Math.PI / 3 + 0.3) * r]);
+  /* how far toward the camera a ground point lies, in the court's depth units: z itself with the old camera (straight
+   * in front, +z); under the battle view's camera (low over a corner) the same measure along its own direction, so
+   * "the near side stays low" still means the side between the camera and the court */
+  const frontZ = (x, z) => { if (!bvCam) return z; const g = V.norm([bvCam.eye[0] - bvCam.target[0], 0, bvCam.eye[2] - bvCam.target[2]]); return ((x * g[0] + z * g[2]) * HZ) / (HX * Math.abs(g[0]) + HZ * Math.abs(g[2])); };
   /* only what the camera can see is built */
   const seen = (x, y, z, r) => { if (WIDE > 1) return true; const q = project([x, y, z]), m = r * 1.2; return q[0] > -m && q[0] < W + m && q[1] > -m && q[1] < H + m; };
   /* a balustrade round the court's rim, open where a seat meets the court; d = post width/height, rail heights */
@@ -1250,10 +1256,10 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     }
     /* frozen bubbles hang where time stopped them: in rings round the court, some high, none over the court */
     for (let i = 0; i < 70; i++) { const a = rnd() * Math.PI * 2, x = Math.cos(a) * (HX + 110 + rnd() * 520), z = Math.sin(a) * (HZ + 90 + rnd() * 380);
-      const near = z > HZ * 0.55, r = (near ? 16 + rnd() * 26 : 20 + rnd() * 70) * (rnd() < 0.15 ? 1.6 : 1), y = GROUND + r + (near ? rnd() * 40 : rnd() * 360);
+      const near = frontZ(x, z) > HZ * 0.55, r = (near ? 16 + rnd() * 26 : 20 + rnd() * (bvCam ? 38 : 70)) * (rnd() < 0.15 ? 1.6 : 1), y = GROUND + r + (near ? rnd() * 40 : rnd() * (bvCam ? 120 : 360));
       if (platSD(x, z) < 60 + r || nearSeat(x, z, r + 30) || !seen(x, y, z, r * 2)) continue; sphere(glass, [x, y, z], r); }
     /* shards of ice caught mid-fall */
-    for (let i = 0; i < 90; i++) { const a = rnd() * Math.PI * 2, x = Math.cos(a) * (HX + 70 + rnd() * 560), z = Math.sin(a) * (HZ + 60 + rnd() * 420), y = GROUND + 20 + rnd() * (z > HZ * 0.5 ? 60 : 320);
+    for (let i = 0; i < 90; i++) { const a = rnd() * Math.PI * 2, x = Math.cos(a) * (HX + 70 + rnd() * 560), z = Math.sin(a) * (HZ + 60 + rnd() * 420), y = GROUND + 20 + rnd() * (frontZ(x, z) > HZ * 0.5 ? 60 : 320);
       if (platSD(x, z) < 40 || nearSeat(x, z, 40) || !seen(x, y, z, 60)) continue; shard(rail, [x, y, z], 10 + rnd() * 26, 3 + rnd() * 5, [rnd() - 0.5, -0.6 - rnd(), rnd() - 0.5], 3); }
     /* spires of ice at the far corners and along the sides: the frozen throne's crown */
     for (const [sx, fz, kk] of [[-1, -1.1, 1.3], [1, -1.1, 1.3], [-1, -0.45, 0.9], [1, -0.4, 0.9], [-1, 0.3, 0.6], [1, 0.35, 0.6]]) { const cx = sx * (HX + 160), cz = fz * HZ; if (nearSeat(cx, cz, 110)) continue;
@@ -1278,7 +1284,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
         link(rail, [x, y, z], 9 * ornK, tg, i % 2 ? [0, 1, 0] : V.norm(V.cross(tg, [0, 1, 0]))); } }
     /* blades hanging point-down: the price of the oath */
     for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2 + 0.3, x = Math.cos(a) * (HX + 150 + rnd() * 90), z = Math.sin(a) * (HZ + 130 + rnd() * 70), y = 150 + rnd() * 160;
-      if (nearSeat(x, z, 80) || !seen(x, y, z, 80) || z > HZ * 0.7) continue; blade(rail, [x, y, z], 90 + rnd() * 50); if (lights.length < 6) lights.push([x, z, y - 60]); }
+      if (nearSeat(x, z, 80) || !seen(x, y, z, 80) || frontZ(x, z) > HZ * 0.7) continue; blade(rail, [x, y, z], 90 + rnd() * 50); if (lights.length < 6) lights.push([x, z, y - 60]); }
     /* the eclipse's corona, laid out on the cloud sea round the altar */
     { const r0 = Math.max(HX, HZ) + 520, r1 = r0 + 520, y = -600, n = 96; for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2, b = ((i + 1) / n) * Math.PI * 2, P = (r, t) => [Math.cos(t) * r * 1.15, y, Math.sin(t) * r];
       for (const [q, h] of [[P(r0, a), 0], [P(r0, b), 0], [P(r1, b), 1], [P(r0, a), 0], [P(r1, b), 1], [P(r1, a), 1]]) beams.push(q[0], q[1], q[2], 0, 1, 0, 0.5, h); } }
@@ -1288,7 +1294,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
   function buildAbyss(rnd, nearSeat) {
     const cols = [], beams = [], lights = [];
     for (let i = 0; i < 20; i++) { const a = (i / 20) * Math.PI * 2 + (rnd() - 0.5) * 0.2, x = Math.cos(a) * (HX + 250 + rnd() * 150), z = Math.sin(a) * (HZ + 210 + rnd() * 120);
-      const h = z > HZ * 0.25 ? 30 + rnd() * 60 : 380 + rnd() * 760; if (nearSeat(x, z, 70) || !seen(x, GROUND + Math.min(h, 260), z, 140)) continue;
+      const h = frontZ(x, z) > HZ * 0.25 ? 30 + rnd() * 60 : 380 + rnd() * 760; if (nearSeat(x, z, 70) || !seen(x, GROUND + Math.min(h, 260), z, 140)) continue;
       prism(cols, hexRing(x, z, 30 + rnd() * 22), GROUND - 80, GROUND + h, [0, 0]); if (lights.length < 6) lights.push([x, z]); }
     for (const [x, z, w] of [[-HX * 0.62, -(HZ + 230), 110], [HX * 0.2, -(HZ + 460), 150], [HX + 200, -HZ * 0.2, 90], [-(HX + 220), HZ * 0.25, 80], [HX * 0.75, -(HZ + 120), 70]]) {
       for (const rot of [0, Math.PI / 2]) { const dx = Math.cos(rot) * w / 2, dz = Math.sin(rot) * w / 2, y0 = GROUND, y1 = GROUND + 1900;
@@ -1328,7 +1334,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
       let seed = 0;
       for (const [x, z, k] of trees) { if (platSD(x, z) < 150 * k || nearSeat(x, z, 90 * k) || !seen(x, GROUND + 150 * k, z, 140 * k)) continue; seed++;
         /* the near side stays low: a tall crown there would stand up over the court */
-        const near = z > HZ * 0.6 ? 0.55 : 1, h = (150 + rnd() * 110) * k * near, top = GROUND + h; if (lights.length < 6 && rnd() < 0.3) lights.push([x, z]);
+        const near = frontZ(x, z) > HZ * 0.6 ? (bvCam ? 0.3 : 0.55) : 1, h = (150 + rnd() * 110) * k * near, top = GROUND + h; if (lights.length < 6 && rnd() < 0.3) lights.push([x, z]);
         const t0 = rail.length; prism(rail, [0, 1, 2, 3, 4].map((j) => [x + Math.cos(j * 1.2566) * 9 * k, z + Math.sin(j * 1.2566) * 9 * k]), GROUND - 4, top - 30 * k);
         for (let q = t0 + 6; q < rail.length; q += 8) rail[q] = 2;
         const m = 5 + Math.floor(rnd() * 5);
@@ -1738,8 +1744,15 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
   /* The spirit whale of the cloud sea: a translucent body swimming a slow loop round the altar, tail beating. aX = (1, place along the body). */
   const WHALE_MAX = 2200, whaleBuf = new Float32Array(WHALE_MAX * 8);
   function whaleVerts(m, t) {
-    const L = 320 * gemK, RI = 22, SG = 12, ang = t * 0.085, A = HX + 420, B = HZ + 330, ctr = [Math.cos(ang) * A, 190 + Math.sin(t * 0.4) * 30, Math.sin(ang) * B];
-    const fwd = V.norm([-Math.sin(ang) * A, 0, Math.cos(ang) * B]), up = [0, 1, 0], rt = V.norm(V.cross(fwd, up));
+    const L = 320 * gemK, RI = 22, SG = 12, ang = t * 0.085;
+    /* round the altar; seen from low over a corner (the battle view) that loop would bring it up to the lens, so there
+     * it swims a flat loop behind the court, on the far side from the camera */
+    let ctr, fwd;
+    if (bvCam) { const g = V.norm([bvCam.eye[0] - bvCam.target[0], 0, bvCam.eye[2] - bvCam.target[2]]), away = V.scale(g, -1), across = [-g[2], 0, g[0]], R = Math.max(HX, HZ), A = R + 300, B = 240, c0 = V.scale(away, R + 520);
+      ctr = V.add(V.add(c0, V.scale(across, Math.cos(ang) * A)), V.scale(away, Math.sin(ang) * B)); ctr[1] = 230 + Math.sin(t * 0.4) * 30;
+      fwd = V.norm(V.add(V.scale(across, -Math.sin(ang) * A), V.scale(away, Math.cos(ang) * B))); }
+    else { const A = HX + 420, B = HZ + 330; ctr = [Math.cos(ang) * A, 190 + Math.sin(t * 0.4) * 30, Math.sin(ang) * B]; fwd = V.norm([-Math.sin(ang) * A, 0, Math.cos(ang) * B]); }
+    const up = [0, 1, 0], rt = V.norm(V.cross(fwd, up));
     let k = 0; const put = (p, n, sp) => { if (k >= WHALE_MAX) return; whaleBuf.set([p[0], p[1], p[2], n[0], n[1], n[2], 1, sp], k * 8); k++; };
     const at = (sp, a) => { const along = (sp - 0.55) * L, sway = Math.sin(t * 2.2 - sp * 5) * 16 * Math.pow(1 - sp, 1.5), bob = Math.sin(t * 1.1 - sp * 3) * 6, r = L * 0.11 * Math.pow(Math.sin(Math.PI * Math.min(1, sp * 1.04 + 0.02)), 0.7);
       const c = V.add(ctr, V.add(V.scale(fwd, along), V.add(V.scale(rt, sway), V.scale(up, bob)))), nn = V.add(V.scale(rt, Math.cos(a)), V.scale(up, Math.sin(a))); return [V.add(c, [nn[0] * r, nn[1] * r * 0.82, nn[2] * r]), nn, c]; };

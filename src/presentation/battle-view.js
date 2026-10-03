@@ -29,7 +29,7 @@ const EmberBattleView = (() => {
   const FOOT = 0.6;
   const MODES = {
     side: { fov: 30, pitch: 22, yaw: 44, dx: 1.2, x0: 1.0, gap: 0.95, stag: 0.55, hero: 4.15, heroX: { p: 0, e: 1.2 } },
-    front: { fov: 32, pitch: 40, yaw: 0, z: 1.25, back: 0.9, sp: 0.95, hero: 4.5, heroX: { p: 0, e: 0 } },
+    front: { fov: 32, pitch: 40, yaw: 0, z: 1.15, back: 0.85, sp: 0.95, hero: 3.7, heroX: { p: 0, e: 0 } },
   };
   const rad = (d) => (d * Math.PI) / 180;
   const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -67,7 +67,10 @@ const EmberBattleView = (() => {
       return { W, H, top: 72, bottom: 772, left: 190, right: W - 96 };
     }
     const a = l.arena || { x: 0, y: 0, w: W, h: H };
-    return { W, H, top: a.y + 4, bottom: a.y + a.h - 2, left: a.x + 2, right: a.x + a.w - 2 };
+    // (held upright, our hero stands in the console's band between the hero power and the turn button, its stats
+    // just over the mana row: the room runs down to that row)
+    const bottom = Vp.portrait && l.mana ? l.mana.y - 6 : a.y + a.h - 2;
+    return { W, H, top: a.y + 4, bottom, left: a.x + 2, right: a.x + a.w - 2 };
   }
 
   // ------------------------------------------------------------------ the camera
@@ -140,11 +143,14 @@ const EmberBattleView = (() => {
     const w = Math.round(clamp(h0 * 0.56, v.W < 900 ? 46 : 64, 150)), h = Math.round(w * 1.25);
     return { x: Math.round(f.x - w / 2), y: Math.round(f.y - FOOT * h), w, h, z: Math.round(1000 - f.depth * 20), foot: { x: f.x, y: f.y }, world: p };
   }
-  /** a hero's station: a box round its figure (its foot near the bottom, the nameplate and stats below that) */
+  /** a hero's station: a box round its figure (its foot near the bottom, the nameplate and stats below that). aside:
+   *  the nameplate and stats beside the figure instead — the enemy's, seen from the front: its feet are level with
+   *  its back row's heads, and a plate under them would cover those */
   function heroBox(side) {
     const v = current(), p = heroAt(v.mode, side), f = project(p, v), h0 = person(p, v) * 1.12;
-    const w = Math.round(clamp(h0 * 0.56, 96, 200)), inner = Math.round(h0 * 1.04), plate = v.W < 900 ? 52 : 76;
-    return { x: Math.round(f.x - w / 2), y: Math.round(f.y + 8 - inner), w, h: inner + plate, inner, foot: { x: f.x, y: f.y }, world: p };
+    const aside = v.mode === "front" && side === "e";
+    const w = Math.round(clamp(h0 * 0.56, 96, 200)), inner = Math.round(h0 * 1.04), plate = aside ? 0 : v.W < 900 ? 52 : 76;
+    return { x: Math.round(f.x - w / 2), y: Math.round(f.y + 8 - inner), w, h: inner + plate, inner, aside, foot: { x: f.x, y: f.y }, world: p };
   }
   /** a side's middle on screen (where a lone token lands, where effects run along a lane) */
   function lane(side) {

@@ -60,6 +60,21 @@ html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-a
   inset: -18px auto auto 50%;
   transform: translateX(-50%);
 }
+/* the enemy's station seen from the front (phone upright): its feet are level with its back row's heads, so the
+ * nameplate and the stats stand beside the figure (right), the boss's phase on its other side */
+html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.station-aside.station-aside .hero-card-inner .hero-name {
+  inset: 18% auto auto calc(50% + 22px);
+  transform: none;
+}
+html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.station-aside.station-aside .hero-chips {
+  inset: calc(18% + 24px) auto auto calc(50% + 22px);
+  width: max-content;
+  justify-content: flex-start;
+}
+html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.station-aside.station-aside .hero-phase {
+  inset: 18% calc(50% + 22px) auto auto;
+  transform: none;
+}
 /* the weapon: beside the stats */
 html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.hero-afield .weapon-slot {
   inset: auto -40px 0 auto;

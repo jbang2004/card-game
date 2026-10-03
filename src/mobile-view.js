@@ -175,7 +175,9 @@ const EmberViewport = (() => {
         const infoX = padL + 76,
           turnX = W - padR - 64;
         l.weapon = { x: 76, y: 4, w: 36, h: 40 };
-        l.power = { x: infoX + 44, y: l.playerConsole.y + 2, w: 44, h: 44 };
+        /* (under the battlefield's view our hero stands in the middle of this band: the hero power and the covenant
+         * step to its left, the turn button keeps the right) */
+        l.power = { x: bv ? padL + 2 : infoX + 44, y: l.playerConsole.y + 2, w: 44, h: 44 };
         l.mana = {
           x: infoX,
           y: l.playerConsole.y + 78,

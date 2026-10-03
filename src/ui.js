@@ -1132,6 +1132,7 @@
         EmberViewport.box(el, b);
         el.style.setProperty("--station-inner", b.h - b.inner + "px");
         el.classList.add("hero-afield");
+        el.classList.toggle("station-aside", !!b.aside);
       }
       el.classList.toggle("frozen", p.frozen);
       el.classList.toggle("ready", game.canAttack(side, "hero"));
@@ -1415,7 +1416,7 @@
     if (!source || detail.pinned || el.style.display === "none") return;
     if (modalType !== "library") {
       el.style.left = "1342px";
-      el.style.top = "300px";
+      el.style.top = battleViewDetailTop(el) + "px";
       el.style.zIndex = "45";
       return;
     }
@@ -1432,6 +1433,18 @@
     const top = Math.max(8, handTop - h - 6);
     el.style.left = Math.min(Math.max(pos.x - w / 2, 8), 1600 - w - 8) + "px";
     el.style.top = top + "px";
+  }
+  /* Under the battle view the enemy hero stands on the board's far right corner
+   * with its deck chip under it: the rail's free stretch starts below that chip
+   * and ends above the end-turn button. */
+  function battleViewDetailTop(el) {
+    if (typeof EmberBattleView === "undefined" || !EmberBattleView.active) return 300;
+    const deck = centerOf(document.querySelector(".enemy-deck")),
+      end = centerOf($("end-turn"));
+    const below = deck ? deck.top + deck.h + 10 : 300,
+      room = end ? end.top - 8 : 830;
+    const h = el.querySelector(".card")?.offsetHeight || 340;
+    return Math.round(Math.max(300, Math.min(below, room - h)));
   }
   function closeCardDetail() {
     if (!detail.pinned) return;
