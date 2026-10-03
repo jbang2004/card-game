@@ -1872,15 +1872,17 @@
     const afield = typeof EmberBattleView !== "undefined" && EmberBattleView.active;
     const hero = mobile && EmberViewport.portrait && !afield && EmberViewport.layout?.player;
     /* held sideways under the battlefield's view the hand is folded and the board runs down to it: a card risen over
-     * its own place would cover the near units it may be aimed at, so it rises in the left rail instead (the rail's
-     * covenant and hero power wait under it while it is read) */
-    const rail = mobile && !!EmberViewport.layout?.folded;
+     * its own place would stand on whichever units are above it — it rises over the board's middle instead, the open
+     * ground between the two sides (and while a target is chosen it steps back, faded, taps passing through it:
+     * skins/slate/battle-view.css) */
+    const rail = mobile && !!EmberViewport.layout?.folded,
+      middle = rail && typeof EmberBattleView !== "undefined" ? EmberBattleView.project([0, 0, 0]).x : null;
     for (let pass = 0; pass < 1; pass++) {
       let x = Math.max(
         insetL,
         Math.min(EmberViewport.width - width - insetR, origin.x - width / 2),
       );
-      if (rail) x = insetL;
+      if (middle != null) x = Math.max(insetL, Math.min(EmberViewport.width - width - insetR, Math.round(middle - width / 2)));
       if (hero && bottom - height < hero.y + hero.h + 24)
         x = Math.min(EmberViewport.width - width - insetR, Math.max(x, hero.x + hero.w + 14));
       Object.assign(lift.style, {

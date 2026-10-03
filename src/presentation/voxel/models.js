@@ -19,9 +19,9 @@ const EmberModelFigures = (() => {
   const models = new Map();                  // id → { geo, tex, data, size, joints, ibm, blade, eyes }
   const onReady = new Set();                 // told when a model is ready (the battlefield re-syncs: one may decode late)
   // the light on a lit model (see material): one value for every figure, switchable (the model demo compares them)
-  // 4 radiant: the look the user chose (2026-09-25); ?shade=0|1|2|3|4 tries another (2026-10-03: the user asked to see
-  // the figures in their own colours — 0 bare texture, 2 neutral daylight)
-  const SHADE = { value: (() => { const q = typeof location !== "undefined" && new URLSearchParams(location.search).get("shade"); return q !== null && q !== false && /^[0-4]$/.test(q) ? Number(q) : 4; })() };
+  // 2 soft daylight: the figures in their own colours, lit (the user's choice, 2026-10-03, over 4 radiant — the high-key
+  // golden look chosen 2026-09-25 washed small figures out); ?shade=0|1|2|3|4 tries another
+  const SHADE = { value: (() => { const q = typeof location !== "undefined" && new URLSearchParams(location.search).get("shade"); return q !== null && q !== false && /^[0-4]$/.test(q) ? Number(q) : 2; })() };
   const READY = Object.freeze({ id: "model", ms: 0 });
   // how each model moves: "melee" (a weapon arm, a shield, feet on the ground) · "caster" (hovers on its wings, casts
   // from the off hand)

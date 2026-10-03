@@ -204,13 +204,13 @@ const EmberViewport = (() => {
         };
       } else {
         /* The landscape rail holds the hero card, the skill node beside it and
-         * the mana pill under that. (Under the battlefield's view the hero stands on the board: the rail keeps one
-         * narrow column — the covenant, the hero power, the mana — beside it, and the board takes the rest.) */
-        const rail = bv ? 64 : mini ? (roomyRail ? 180 : 164) : 144,
+         * the mana pill under that. (Under the battlefield's view there is no rail: the hero stands on the board with
+         * its tools under it, and the mana waits by the turn button — see below.) */
+        const rail = bv ? 0 : mini ? (roomyRail ? 180 : 164) : 144,
           /* A 64px round button needs far less of the right edge than the old
            * 124px pill did; the arena takes the difference. */
           right = 76;
-        const arenaX = padL + rail + 8,
+        const arenaX = padL + (rail ? rail + 8 : 0),
           arenaW = W - arenaX - padR - right - 8;
         l.hand.x = arenaX - 4;
         l.hand.w = W - padR - l.hand.x;
@@ -277,15 +277,10 @@ const EmberViewport = (() => {
             w: l.player.w,
             h: l.player.h,
           };
-      /* (held sideways under the battlefield's view our hero stands at the left end of the board's middle line: its
-       * abilities stand in one column right beside it, centred on that line — the covenant, the hero power, the mana) */
-      if (bv && !portrait) {
-        const mid = (l.arena.y + l.arena.y + l.arena.h) / 2,
-          stack = 76 + 8 + 44 + 6 + 24;
-        l.contract = { x: padL + 2, y: Math.round(mid - stack / 2), w: 52, h: 76 };
-        l.power = { x: padL + 6, y: l.contract.y + l.contract.h + 8, w: 44, h: 44 };
-        l.mana = { x: padL, y: l.power.y + l.power.h + 6, w: 56, h: 24 };
-      }
+      /* (held sideways under the battlefield's view: whatever belongs to a thing stands by it — our hero's tools, the
+       * hero power and the covenant, in a row under its stats (placed once the view stands the hero: see below); the
+       * mana, read while cards are played, over the turn button, as on the desktop) */
+      if (bv && !portrait) l.mana = { x: l.turn.x + Math.round((l.turn.w - 56) / 2), y: l.turn.y - 8 - 24, w: 56, h: 24 };
       l.handHints = { x: l.hand.x, y: dockTop + 10, w: l.hand.w, h: peek };
       // Brand / shared round-notice slot / compact menu. Portrait secondary
       // actions remain available in the menu instead of crowding the message.
@@ -325,6 +320,15 @@ const EmberViewport = (() => {
       safe,
       signature,
     };
+    /* our hero's tools by its station (under it, or beside it on a short wide screen: EmberBattleView.heroTools) — the
+     * station is where the battlefield's view stands the hero, so the view is asked now the layout it fits into is
+     * known */
+    const toolsRow = mobile && bv && !portrait;
+    document.body.classList.toggle("hero-tools-row", toolsRow);
+    if (toolsRow) {
+      const tools = EmberBattleView.heroTools();
+      if (tools) Object.assign(l, tools);
+    }
     if (mobile) {
       const roots = {
         arena: l.arena,

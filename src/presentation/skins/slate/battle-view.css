@@ -97,8 +97,8 @@ html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-a
   inset: 0 auto auto calc(100% + 2px);
 }
 
-/* phones held sideways: a tapped card is read in the left rail (ui.js syncHandLift), so its place in the folded hand
- * only rises a step to say which it is — a selected card's full rise would stand it, faded, over the near units */
+/* phones held sideways: a tapped card is read over the board's middle (ui.js syncHandLift), so its place in the folded
+ * hand only rises a step to say which it is — a selected card's full rise would stand it, faded, over the near units */
 html[data-skin="slate"] body[data-battle-view].hand-folded #battle .hand-card.reading-source.reading-source {
   transform: translateY(-10px);
 }
@@ -108,4 +108,11 @@ html[data-skin="slate"] body[data-battle-view].hand-folded #battle .hand-card.re
  * goes to the top-right corner, across the board from ours at the bottom-left */
 html[data-skin="slate"] body[data-battle-view="versus"]:not(.touch-layout) #app.battle-view .enemy-deck {
   top: 92px;
+}
+/* …and while a target is chosen the card read there steps back: faded, and a tap passes through it to the unit
+ * behind (the guide bar's 取消 or the card's own place in the hand still put it away) */
+html[data-skin="slate"] body.hand-folded #app.is-targeting #hand-card-lift {
+  opacity: 0.4;
+  pointer-events: none;
+  transition: opacity 160ms linear;
 }

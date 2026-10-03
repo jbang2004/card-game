@@ -448,29 +448,30 @@ html[data-skin="slate"] body.touch-layout.mobile-portrait #battle .hero.enemy.he
 
 /* ---------------------------------------------------------------------------
  * Portrait covenant: a medallion in the console row beside the hero power
- * (mobile-view.js places it). The gold back becomes a disc with the starfire
+ * (mobile-view.js places it) — and held sideways under the battlefield's view,
+ * in the tools row under our hero's stats (body.hero-tools-row). The gold back becomes a disc with the starfire
  * crest; a thin ring round it fills with the ritual's progress; the count of
  * contracts is a small badge; it breathes when a contract can be woken.
  * ------------------------------------------------------------------------ */
-html[data-skin="slate"] body.mobile-portrait #battle .contract-open {
+html[data-skin="slate"] body:is(.mobile-portrait, .hero-tools-row) #battle .contract-open {
   border-radius: 50%;
 }
-html[data-skin="slate"] body.mobile-portrait #battle .contract-open .contract-back {
+html[data-skin="slate"] body:is(.mobile-portrait, .hero-tools-row) #battle .contract-open .contract-back {
   border-radius: 50%;
 }
-html[data-skin="slate"] body.mobile-portrait #battle .contract-open .contract-back::after {
+html[data-skin="slate"] body:is(.mobile-portrait, .hero-tools-row) #battle .contract-open .contract-back::after {
   inset: 3px;
   border-radius: 50%;
 }
-html[data-skin="slate"] body.mobile-portrait #battle .contract-open .contract-seal {
+html[data-skin="slate"] body:is(.mobile-portrait, .hero-tools-row) #battle .contract-open .contract-seal {
   top: 50%;
   width: 74%;
 }
-html[data-skin="slate"] body.mobile-portrait #battle .contract-open :is(.contract-sigil, .contract-label, small) {
+html[data-skin="slate"] body:is(.mobile-portrait, .hero-tools-row) #battle .contract-open :is(.contract-sigil, .contract-label, small) {
   display: none;               /* (the medallion speaks through its aria-label; a label behind it showed a clipped 神) */
 }
 /* the progress ring (the card stack behind the desktop card is not drawn here) */
-html[data-skin="slate"] body.mobile-portrait #battle .contract-open::before {
+html[data-skin="slate"] body:is(.mobile-portrait, .hero-tools-row) #battle .contract-open::before {
   content: "";
   inset: -4px;
   z-index: 0;
@@ -482,10 +483,10 @@ html[data-skin="slate"] body.mobile-portrait #battle .contract-open::before {
   -webkit-mask: radial-gradient(circle, transparent calc(50% - 2px), #000 calc(50% - 1.5px));
   mask: radial-gradient(circle, transparent calc(50% - 2px), #000 calc(50% - 1.5px));
 }
-html[data-skin="slate"] body.mobile-portrait #battle .contract-open .contract-back {
+html[data-skin="slate"] body:is(.mobile-portrait, .hero-tools-row) #battle .contract-open .contract-back {
   z-index: 1;
 }
-html[data-skin="slate"] body.mobile-portrait #battle .contract-open:not([data-count="1"])::after {
+html[data-skin="slate"] body:is(.mobile-portrait, .hero-tools-row) #battle .contract-open:not([data-count="1"])::after {
   right: -5px;
   top: -5px;
   width: 16px;

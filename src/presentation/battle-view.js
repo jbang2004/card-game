@@ -101,11 +101,13 @@ const EmberBattleView = (() => {
       // (the left column keeps the covenant and the hero power, the right one the deck, the turn and the mana)
       return { W, H, top: 72, bottom: 772, left: 190, right: W - 96 };
     }
-    const a = l.arena || { x: 0, y: 0, w: W, h: H };
+    const a = l.arena || { x: 0, y: 0, w: W, h: H },
+      // (held sideways, our hero's tools — the hero power and the covenant — stand in a row under its stats)
+      tools = !Vp.portrait ? 50 : 0;
     // (held upright, our hero stands in the console's band between the hero power and the turn button, its stats
     // just over the mana row: the room runs down to that row)
     const bottom = Vp.portrait && l.mana ? l.mana.y - 6 : a.y + a.h - 2;
-    return { W, H, top: a.y + 4, bottom, left: a.x + 2, right: a.x + a.w - 2 };
+    return { W, H, top: a.y + 4, bottom, left: a.x + 2, right: a.x + a.w - 2, tools };
   }
 
   // a hero station's plate under the figure: its nameplate and stats row (stage pixels)
@@ -116,19 +118,31 @@ const EmberBattleView = (() => {
     const f = norm(sub(target, eye)), r = norm(cross(f, [0, 1, 0])), u = cross(r, f);
     return { f, r, u };
   }
+  /* Held sideways, our hero's tools (the hero power and the covenant) stand by it: in a row under its stats, or in a
+   * column beside it on the screen's edge side. Both are fitted and the one that stands the figures larger is taken —
+   * a short wide screen has room to spare at its sides and none below, a squarer one the other way round. */
+  const TOOL = 44, TOOL_GAP = 6;
   function makeView(mode, R) {
+    if (!R.tools) return fitView(mode, R, null);
+    const below = fitView(mode, R, "below"), beside = fitView(mode, R, "beside");
+    return beside.dist < below.dist ? beside : below;
+  }
+  function fitView(mode, R, tools) {
     const M = MODES[mode], fov = M.fov, aspect = R.W / R.H, t = Math.tan(rad(fov) / 2);
     const yaw = rad(M.yaw), pitch = rad(M.pitch);
     const dir = [Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch)];
     // what has to be seen: a full board of both sides (their feet, heads and the stats under them) and both heroes —
-    // [x, y, z, below, aside]: a point, how many pixels of the page's own hang below it (a hero's nameplate and stats
-    // row are a fixed size on the page however far the hero stands; beside the figure they hang nothing below it) and
-    // how many stand out either side of it (a hero's station is at least 96 px wide, wider than its figure on a phone)
+    // [x, y, z, below, left, right]: a point, how many pixels of the page's own hang below it (a hero's nameplate and
+    // stats row are a fixed size on the page however far the hero stands; beside the figure they hang nothing below
+    // it) and how many stand out to its left and right (a hero's station is at least 96 px wide, wider than its figure
+    // on a phone; our hero's tools, when they stand beside it, further out on the left)
     const pts = [];
     for (const side of ["p", "e"]) {
       for (let i = 0; i < 7; i++) { const p = slot(mode, side, i, 7); pts.push([...p, 0], [p[0], 1.05, p[2], 0], [p[0], -0.22, p[2], 0]); }
-      const h = heroAt(mode, side), aside = mode === "front" && side === "e";
-      pts.push([...h, aside ? 8 : plateOf(R) + 10, 50], [h[0], h[1] + 1.2, h[2], 0, 50]);
+      const h = heroAt(mode, side), aside = mode === "front" && side === "e", ours = side === "p";
+      const below = aside ? 8 : plateOf(R) + 10 + (ours && tools === "below" ? R.tools : 0),
+        left = 50 + (ours && tools === "beside" ? TOOL_GAP + TOOL : 0);
+      pts.push([...h, below, left, 50], [h[0], h[1] + 1.2, h[2], 0, left, 50]);
     }
     const sx0 = (R.left / R.W) * 2 - 1, sx1 = (R.right / R.W) * 2 - 1, sy0 = 1 - (R.bottom / R.H) * 2, sy1 = 1 - (R.top / R.H) * 2;
     let T = [0, 0, 0], D = 14;
@@ -136,14 +150,28 @@ const EmberBattleView = (() => {
     for (let it = 0; it < 80; it++) {
       const eye = [T[0] + dir[0] * D, T[1] + dir[1] * D, T[2] + dir[2] * D], B = basis(eye, T);
       let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-      for (const p of pts) { const [x, y0_] = ndc(p, eye, B), y = y0_ - (p[3] * 2) / R.H, ax = ((p[4] || 0) * 2) / R.W; x0 = Math.min(x0, x - ax); x1 = Math.max(x1, x + ax); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+      for (const p of pts) {
+        const [x, y0_] = ndc(p, eye, B), y = y0_ - (p[3] * 2) / R.H;
+        x0 = Math.min(x0, x - ((p[4] || 0) * 2) / R.W); x1 = Math.max(x1, x + ((p[5] || 0) * 2) / R.W); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+      }
       D *= Math.pow(Math.max((x1 - x0) / (sx1 - sx0), (y1 - y0) / (sy1 - sy0)), 0.6);
       const k = D * t, right = norm([B.r[0], 0, B.r[2]]), fwd = norm([B.f[0], 0, B.f[2]]);
       const cx = ((x0 + x1) / 2 - (sx0 + sx1) / 2) * k * aspect, cy = (((y0 + y1) / 2 - (sy0 + sy1) / 2) * k) / Math.max(0.35, Math.sin(pitch));
       T = [T[0] + right[0] * cx + fwd[0] * cy, 0, T[2] + right[2] * cx + fwd[2] * cy];
     }
     const eye = [T[0] + dir[0] * D, T[1] + dir[1] * D, T[2] + dir[2] * D];
-    return { mode, fov, aspect, W: R.W, H: R.H, eye, target: T, dist: D, room: R, ...basis(eye, T), t };
+    return { mode, fov, aspect, W: R.W, H: R.H, eye, target: T, dist: D, room: R, tools, ...basis(eye, T), t };
+  }
+  /** where our hero's tools stand (held sideways; null otherwise): { power, contract } boxes in stage pixels */
+  function heroTools() {
+    const v = current(); if (!v || !v.tools) return null;
+    const hb = heroBox("p"), cx = hb.x + hb.w / 2, bottom = hb.y + hb.h;
+    if (v.tools === "below") {
+      const y = Math.round(bottom + 4);
+      return { power: { x: Math.round(cx - TOOL - 5), y, w: TOOL, h: TOOL }, contract: { x: Math.round(cx + 5), y, w: TOOL, h: TOOL } };
+    }
+    const x = Math.round(hb.x - TOOL_GAP - TOOL), py = Math.round(bottom - TOOL);
+    return { power: { x, y: py, w: TOOL, h: TOOL }, contract: { x, y: py - TOOL_GAP - TOOL, w: TOOL, h: TOOL } };
   }
 
   // ------------------------------------------------------------------ the current view (made again as the screen changes)
@@ -213,7 +241,7 @@ const EmberBattleView = (() => {
     project: (p) => project(p),
     ground: (x, y) => ground(x, y),
     person: (p) => person(p),
-    minionBox, heroBox, lane, tune,
+    minionBox, heroBox, heroTools, lane, tune,
     /** the extent of a full board (and the heroes) on the ground: what the court has to hold */
     extent: () => {
       const v = current(); let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity;
