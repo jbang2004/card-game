@@ -1859,7 +1859,7 @@
     /* held sideways under the battlefield's view the hand is folded and the board runs down to it: a card risen over
      * its own place would cover the near units it may be aimed at, so it rises in the left rail instead (the rail's
      * covenant and hero power wait under it while it is read) */
-    const rail = mobile && !EmberViewport.portrait && afield;
+    const rail = mobile && !!EmberViewport.layout?.folded;
     for (let pass = 0; pass < 1; pass++) {
       let x = Math.max(
         insetL,
@@ -2168,8 +2168,11 @@
     const h = $("hand")?.getBoundingClientRect();
     const appRect = app.getBoundingClientRect();
     /* The hand rail overlays the bottom of the arena on short screens; a
-     * release there is a cancel, not a play. */
-    const handTop = h && h.height ? h.top - appRect.top : Infinity;
+     * release there is a cancel, not a play. (Measured from the cards: the
+     * dock's box carries one lift of headroom above them — mobile-view.js —
+     * and a folded hand's headroom lies over the board's near third.) */
+    const lift = parseFloat(getComputedStyle(app).getPropertyValue("--hand-lift")) || 0;
+    const handTop = h && h.height ? h.top - appRect.top + lift : Infinity;
     return { x0: a.x, x1: a.x + a.w, y1: Math.min(a.y + a.h, handTop - 4) };
   }
   function inPlayArea(p) {
@@ -2380,7 +2383,8 @@
       if (!drag.started) {
         const dx = e.clientX - drag.sx,
           dy = e.clientY - drag.sy;
-        if (touch && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) + 4) {
+        const folded = foldedDock();
+        if (touch && Math.abs(dx) > 10 && Math.abs(dx) > (folded ? 2 : 1) * Math.abs(dy) + 4) {
           drag.horizontal = true;
           if (drag.timer) {
             clearTimeout(drag.timer);
@@ -2390,7 +2394,7 @@
         }
         if (touch && drag.horizontal) return;
         const intent = touch
-          ? dy < -14 && -dy > Math.abs(dx) + 6 && !drag.horizontal
+          ? dy < -14 && -dy > (folded ? Math.abs(dx) * 0.5 : Math.abs(dx) + 6) && !drag.horizontal
           : Math.hypot(p.x - drag.x, p.y - drag.y) > 12;
         if (!intent) return;
         startDrag(drag, touch);
@@ -2445,6 +2449,12 @@
    * a stationary long press still inspects it; the panning dock
    * (`.hand-pan`) keeps the browser's native rail. */
   let riffle = null;
+  /* A folded dock (a phone held sideways under the battlefield's view: only a strip of card tops shows, the board right
+   * above it) reads a finger leaving the strip upward as taking the card out — anything steeper than about 27° is a
+   * drag, and a sweep along the strip must be at least twice as wide as it is tall to riffle (docs/design/HAND_GESTURES.md). */
+  function foldedDock() {
+    return EmberViewport.mobile && !!EmberViewport.layout?.folded;
+  }
   function riffleCardAt(clientX) {
     const cards = [...document.querySelectorAll("#hand .hand-card")];
     if (!cards.length) return null;
@@ -2499,7 +2509,7 @@
       if (!riffle.swiping) {
         const dx = e.clientX - riffle.x,
           dy = e.clientY - riffle.y;
-        if (Math.abs(dx) < 10 || Math.abs(dx) <= Math.abs(dy) + 4) return;
+        if (Math.abs(dx) < 10 || Math.abs(dx) <= (foldedDock() ? 2 : 1) * Math.abs(dy) + 4) return;
         riffle.swiping = true;
       }
       /* Leaving the dock drops the raised card back into the row: the lifted

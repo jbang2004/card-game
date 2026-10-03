@@ -74,8 +74,13 @@ const EmberViewport = (() => {
      * to a strip of card tops (a card rises out of it when touched) so the board has the height. */
     const bv = typeof EmberBattleView !== "undefined" && EmberBattleView.active;
     if (!bv) delete document.body.dataset.battleView;
+    /* a phone held sideways under the battlefield's view folds its hand to a strip of card tops (a finger takes a card
+     * out of it); a mouse in a small window keeps the resting cards' faces in view (it lifts them by hovering) */
+    const folded = bv && mobile && !portrait && touch;
+    document.body.classList.toggle("hand-folded", folded);
     const signature = [
       bv,
+      folded,
       mobile,
       compactDesktop,
       portrait,
@@ -141,7 +146,7 @@ const EmberViewport = (() => {
               ? 96
               : 88,
         cardH = Math.round((cardW * 7.4) / 5),
-        peek = bv && !portrait ? Math.round(cardH * 0.3) : Math.round(cardH * (!portrait && H < 380 ? 0.55 : 0.66));
+        peek = folded ? Math.round(cardH * 0.3) : Math.round(cardH * (!portrait && H < 380 ? 0.55 : 0.66));
       /* The dock box extends below the screen: only the top `peek` px of a
        * resting card are visible; a selected or dragged card rises out of it.
        * The box also reaches one lift ABOVE the cards (the skin pads that much
@@ -290,6 +295,7 @@ const EmberViewport = (() => {
       l.cardH = cardH;
       l.cardW = cardW;
       l.peek = peek;
+      l.folded = folded;
       l.tokenScale = roomy ? 1.4 : 1;
       /* The two unit rows split the board in quarters (the covenant no longer
        * sits on the board in portrait, so the rows have its whole height). */
