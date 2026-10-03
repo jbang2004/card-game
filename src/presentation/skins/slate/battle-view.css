@@ -109,9 +109,10 @@ html[data-skin="slate"] body[data-battle-view].hand-folded #battle .hand-card.re
 html[data-skin="slate"] body[data-battle-view="versus"]:not(.touch-layout) #app.battle-view .enemy-deck {
   top: 92px;
 }
-/* …and while a target is chosen the card read there steps back: faded, and a tap passes through it to the unit
- * behind (the guide bar's 取消 or the card's own place in the hand still put it away) */
-html[data-skin="slate"] body.hand-folded #app.is-targeting #hand-card-lift {
+/* …and while a unit is aimed at the card read there steps back: faded, and a tap passes through it to the unit
+ * behind (the guide bar's 取消 or the card's own place in the hand still put it away). Placing a unit it stays as it
+ * is: tapping it puts it away, and an empty spot elsewhere on the board takes the unit */
+html[data-skin="slate"] body.hand-folded #app.is-targeting:not(.is-placing) #hand-card-lift {
   opacity: 0.4;
   pointer-events: none;
   transition: opacity 160ms linear;

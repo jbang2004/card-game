@@ -2074,7 +2074,7 @@
       el.classList.remove("reading-source");
       el.setAttribute("aria-expanded", "false");
     });
-    app.classList.remove("is-targeting");
+    app.classList.remove("is-targeting", "is-placing");
     selection = null;
     lastHit = null;
     document
@@ -2123,6 +2123,8 @@
      * §13.3). It used to be touch-only because it only drove the mobile action
      * bar; the dimming is just as useful with a mouse. */
     app.classList.add("is-targeting");
+    // (placing a unit, not aiming at one: the card being read stays a thing to tap — tapping it puts it away)
+    app.classList.toggle("is-placing", selection.type === "card-play");
     // A preview opened just before the aim started would outlive it; retire it
     // the moment targeting takes over (see `preview`).
     if (!EmberViewport.mobile) hidePreview();
