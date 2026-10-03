@@ -5,10 +5,10 @@
  * off the figures. ?view=classic leaves the attribute off and the old layout's rules apply. */
 
 /* desktop · side ------------------------------------------------------------ */
-/* the hero power: in front of the player's dais, clear of its figure (which now stands where the old corner node was)
- * and of the hand's fan */
+/* the hero power: in front of the player's dais, clear of its figure (which now stands where the old corner node was),
+ * of its stats row at its widest (attack, health and armour) and of the hand's fan */
 html[data-skin="slate"] body[data-battle-view="side"]:not(.touch-layout) #battle .power-button {
-  left: 300px;
+  left: 342px;
   top: 652px;
 }
 
@@ -45,15 +45,26 @@ html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-a
   font-size: 12px;
   line-height: 1;
 }
+/* (one row, centred under the figure and as wide as its chips: a station is narrower than attack, health and armour
+ * side by side, and a wrapped second row would fall behind the mana row) */
 html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.hero-afield .hero-chips {
-  inset: auto 0 0 0;
+  inset: auto auto 0 50%;
+  transform: translateX(-50%);
+  width: max-content;
   height: 22px;
   display: flex;
+  flex-wrap: nowrap;
   justify-content: center;
   gap: 4px;
 }
 html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.hero-afield .hero-chips > * {
   position: static;
+}
+/* (seen from the side the enemy stands at the screen's right edge: its row runs leftward from the station's right
+ * edge instead, so five chips — weapon, health, armour, covenant, hand — stay on screen) */
+html[data-skin="slate"] body[data-battle-view="side"].touch-layout #battle .hero.enemy.hero-afield.hero-afield .hero-chips {
+  inset: auto 0 0 auto;
+  transform: none;
 }
 /* the boss's phase: a small chip over its head */
 html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.hero-afield .hero-phase {
@@ -68,14 +79,20 @@ html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-a
 }
 html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.station-aside.station-aside .hero-chips {
   inset: calc(18% + 24px) auto auto calc(50% + 22px);
+  transform: none;
   width: max-content;
+  max-width: 132px;
+  height: auto;
+  flex-wrap: wrap;
+  row-gap: 4px;
   justify-content: flex-start;
 }
 html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.station-aside.station-aside .hero-phase {
   inset: 18% calc(50% + 22px) auto auto;
   transform: none;
 }
-/* the weapon: beside the stats */
+/* the weapon: beside the figure's head (clear of the figure's box, which effects land on, and of the turn button
+ * level with the hero's feet on a narrow phone) */
 html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.hero-afield .weapon-slot {
-  inset: auto -40px 0 auto;
+  inset: 0 auto auto calc(100% + 2px);
 }

@@ -73,6 +73,9 @@ const EmberBattleView = (() => {
     return { W, H, top: a.y + 4, bottom, left: a.x + 2, right: a.x + a.w - 2 };
   }
 
+  // a hero station's plate under the figure: its nameplate and stats row (stage pixels)
+  const plateOf = (R) => (R.W < 900 ? 52 : 76);
+
   // ------------------------------------------------------------------ the camera
   function basis(eye, target) {
     const f = norm(sub(target, eye)), r = norm(cross(f, [0, 1, 0])), u = cross(r, f);
@@ -82,12 +85,14 @@ const EmberBattleView = (() => {
     const M = MODES[mode], fov = M.fov, aspect = R.W / R.H, t = Math.tan(rad(fov) / 2);
     const yaw = rad(M.yaw), pitch = rad(M.pitch);
     const dir = [Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch)];
-    // what has to be seen: a full board of both sides (their feet, heads and the stats under them) and both heroes
+    // what has to be seen: a full board of both sides (their feet, heads and the stats under them) and both heroes —
+    // [x, y, z, px]: a point, and how many pixels of the page's own hang below it (a hero's nameplate and stats row are
+    // a fixed size on the page however far the hero stands; beside the figure they hang nothing below it)
     const pts = [];
     for (const side of ["p", "e"]) {
-      for (let i = 0; i < 7; i++) { const p = slot(mode, side, i, 7); pts.push(p, [p[0], 1.05, p[2]], [p[0], -0.22, p[2]]); }
-      // (a hero's nameplate and stats hang a little further under its dais than a unit's plate)
-      const h = heroAt(mode, side); pts.push(h, [h[0], h[1] + 1.2, h[2]], [h[0], -0.7, h[2]]);
+      for (let i = 0; i < 7; i++) { const p = slot(mode, side, i, 7); pts.push([...p, 0], [p[0], 1.05, p[2], 0], [p[0], -0.22, p[2], 0]); }
+      const h = heroAt(mode, side), aside = mode === "front" && side === "e";
+      pts.push([...h, aside ? 8 : plateOf(R) + 10], [h[0], h[1] + 1.2, h[2], 0]);
     }
     const sx0 = (R.left / R.W) * 2 - 1, sx1 = (R.right / R.W) * 2 - 1, sy0 = 1 - (R.bottom / R.H) * 2, sy1 = 1 - (R.top / R.H) * 2;
     let T = [0, 0, 0], D = 14;
@@ -95,7 +100,7 @@ const EmberBattleView = (() => {
     for (let it = 0; it < 80; it++) {
       const eye = [T[0] + dir[0] * D, T[1] + dir[1] * D, T[2] + dir[2] * D], B = basis(eye, T);
       let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-      for (const p of pts) { const [x, y] = ndc(p, eye, B); x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+      for (const p of pts) { const [x, y0_] = ndc(p, eye, B), y = y0_ - (p[3] * 2) / R.H; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
       D *= Math.pow(Math.max((x1 - x0) / (sx1 - sx0), (y1 - y0) / (sy1 - sy0)), 0.6);
       const k = D * t, right = norm([B.r[0], 0, B.r[2]]), fwd = norm([B.f[0], 0, B.f[2]]);
       const cx = ((x0 + x1) / 2 - (sx0 + sx1) / 2) * k * aspect, cy = (((y0 + y1) / 2 - (sy0 + sy1) / 2) * k) / Math.max(0.35, Math.sin(pitch));
@@ -149,7 +154,7 @@ const EmberBattleView = (() => {
   function heroBox(side) {
     const v = current(), p = heroAt(v.mode, side), f = project(p, v), h0 = person(p, v) * 1.12;
     const aside = v.mode === "front" && side === "e";
-    const w = Math.round(clamp(h0 * 0.56, 96, 200)), inner = Math.round(h0 * 1.04), plate = aside ? 0 : v.W < 900 ? 52 : 76;
+    const w = Math.round(clamp(h0 * 0.56, 96, 200)), inner = Math.round(h0 * 1.04), plate = aside ? 0 : plateOf(v);
     return { x: Math.round(f.x - w / 2), y: Math.round(f.y + 8 - inner), w, h: inner + plate, inner, aside, foot: { x: f.x, y: f.y }, world: p };
   }
   /** a side's middle on screen (where a lone token lands, where effects run along a lane) */

@@ -81,7 +81,17 @@ async function audit(page) {
         )
           errors.push(nodes[i].className + " overlaps " + nodes[j].className);
       }
-    if (EmberViewport.mobile) {
+    // every hero readout whole on screen (a stats row beside a hero at the edge must not run off it)
+    for (const e of document.querySelectorAll(
+      "#battle .hero-name,#battle .hero-stat,#battle .hero-chip",
+    )) {
+      const a = e.getBoundingClientRect();
+      if (!a.width) continue;
+      if (a.left < -1 || a.right > innerWidth + 1 || a.top < -1 || a.bottom > innerHeight + 1)
+        errors.push("hero readout off screen: " + e.className);
+    }
+    // (the battlefield's view stands the heroes on the board: the name is a plaque by the figure, not inside a portrait)
+    if (EmberViewport.mobile && !document.body.dataset.battleView) {
       for (const e of document.querySelectorAll("#battle .hero-name")) {
         const a = e.getBoundingClientRect(),
           b = e.parentElement.getBoundingClientRect();
@@ -93,6 +103,8 @@ async function audit(page) {
         )
           errors.push("name outside portrait");
       }
+    }
+    if (EmberViewport.mobile) {
       const value = rect(".mana-caption strong"),
         panel = rect(".mana-panel");
       if (

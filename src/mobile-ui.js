@@ -252,8 +252,11 @@
     );
     const tip = document.querySelector(".hand-tip");
     if (tip) tip.textContent = "左右滑动 · 点按选中 · 拖动出牌";
-    // The weapon belongs to the hero, so these are local HUD coordinates.
-    V.box($("weapon-slot"), V.layout.weapon);
+    // The weapon belongs to the hero, so these are local HUD coordinates (the console's). Under the battlefield's
+    // view the hero is a station on the board and the skin stands the weapon beside its figure.
+    const weapon = $("weapon-slot");
+    if (typeof EmberBattleView === "undefined" || !EmberBattleView.active) V.box(weapon, V.layout.weapon);
+    else if (weapon) for (const k of ["left", "top", "width", "height"]) weapon.style.removeProperty(k);
     const arrow = $("target-arrow");
     arrow?.setAttribute("aria-hidden", "true");
     selectionChanged();

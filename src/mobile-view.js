@@ -231,19 +231,23 @@ const EmberViewport = (() => {
           ? { x: padL + 6, y: l.playerConsole.y + 6, w: heroW, h: heroH }
           : { x: padL + 6, y: l.playerConsole.y + 8, w: 44, h: 44 };
         l.power = {
-          x: padL + (mini ? 12 + heroW : 56),
+          x: padL + (bv ? 6 : mini ? 12 + heroW : 56),
           y: l.playerConsole.y + 8,
           w: 44,
           h: 44,
         };
         const supportX = l.power.x - padL;
         l.weapon = { x: supportX, y: 54, w: 36, h: 40 };
-        l.mana = {
-          x: l.power.x + 48,
-          y: l.playerConsole.y + 16,
-          w: rail - supportX - 48,
-          h: 24,
-        };
+        /* (under the battlefield's view our hero stands on the board's near corner, its stats row reaching back over
+         * this rail: the hero power and the mana keep to the rail's outer column, one over the other) */
+        l.mana = bv
+          ? { x: l.power.x - 2, y: l.power.y + l.power.h + 6, w: 52, h: 24 }
+          : {
+              x: l.power.x + 48,
+              y: l.playerConsole.y + 16,
+              w: rail - supportX - 48,
+              h: 24,
+            };
         l.turn = { x: W - padR - 64, y: dockTop - 8 - 64, w: 64, h: 64 };
         l.chip = { x: padL, y: l.header, w: 0, h: 0 };
         l.arena = {
