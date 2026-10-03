@@ -7,6 +7,8 @@ Serves the repository as it is on disk, so there is nothing to build: the page (
 stack straight from src/ (the module list and order come from src/template.html and config/build.json, as the voxel
 gallery's do), plus this folder's page.html and app.js. On top of the files it keeps what a review needs:
 
+    GET  /lab                      the battlefield view lab (lab.html, lab.js): whole boards of figures under the
+                                   candidate cameras, layouts and board shapes
     GET  /__review/state           the move sheets' fingerprint, the revisions kept, the marks made (the page polls it
                                    and reloads the sheets the moment content/moves.js is saved)
     GET  /__review/moves?rev=N     the sheets as they were at revision N (`prev`: before the last save)
@@ -45,8 +47,9 @@ def scripts():
     return [cfg[t] for t in re.findall(r"/\*(VESPER_THREE|VOXEL_[A-Z0-9_]+)\*/", tpl) if t not in SKIP]
 
 
-def page(query):
-    """the review page: page.html with the stack's script tags (the sheets of a kept revision when asked for one)"""
+def page(query, html="page.html", js="app.js"):
+    """the review page: page.html with the stack's script tags (the sheets of a kept revision when asked for one);
+    the battlefield view lab is the same stack with lab.html and lab.js"""
     rev = (query.get("rev") or [""])[0]
     tags = []
     for path in scripts():
@@ -56,8 +59,8 @@ def page(query):
             src = f"/src/{path}?t={int((ROOT / "src" / path).stat().st_mtime_ns)}"
         tags.append(f'<script src="{src}"></script>')
     tags.append('<script src="/tools/voxel-gallery/sfx.js"></script>')
-    tags.append(f'<script src="/tools/move-review/app.js?t={int((HERE / "app.js").stat().st_mtime_ns)}"></script>')
-    body = (HERE / "page.html").read_text(encoding="utf-8").replace("<!--SCRIPTS-->", "\n".join(tags))
+    tags.append(f'<script src="/tools/move-review/{js}?t={int((HERE / js).stat().st_mtime_ns)}"></script>')
+    body = (HERE / html).read_text(encoding="utf-8").replace("<!--SCRIPTS-->", "\n".join(tags))
     return ('<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"></head><body>' + body + "</body></html>")
 
@@ -164,6 +167,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         query = urllib.parse.parse_qs(url.query)
         if url.path in ("/", "/index.html"):
             return self.send(page(query), "text/html; charset=utf-8")
+        if url.path in ("/lab", "/lab/"):
+            return self.send(page(query, "lab.html", "lab.js"), "text/html; charset=utf-8")
         if url.path == "/__review/state":
             return self.send(json.dumps(state(), ensure_ascii=False))
         if url.path == "/__review/moves":

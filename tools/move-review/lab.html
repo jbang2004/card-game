@@ -1,0 +1,83 @@
+<title>战场视角实验台</title>
+<style>
+  /* The review page's look: obsidian glass, ember for what you can press, brass for labels */
+  :root {
+    color-scheme: dark;
+    --ground: #0d0b09; --glass: rgba(26, 21, 17, 0.86); --rim: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+    --ink: #f6efe2; --ink-2: #cdbfa6; --ink-3: #8f8471; --ember: #ff9b3d; --ember-hi: #ffd39a; --brass: #c9a45c;
+    --serif: "Songti SC", "STSong", "Noto Serif CJK SC", serif; --sans: "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", system-ui, sans-serif;
+    --side: 320px; --u: 1px;
+  }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: 14px/1.5 var(--sans); overflow: hidden; }
+  button { font: inherit; color: inherit; }
+  button:focus-visible { outline: 2px solid var(--ember-hi); outline-offset: 2px; }
+
+  /* the screen being judged: a desktop or a phone, letterboxed in what is left of the window */
+  #bay { position: absolute; inset: 0 var(--side) 0 0; display: grid; place-items: center; background: #050403; }
+  #frame { position: relative; overflow: hidden; background: var(--ground); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08); }
+  #frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #stage { touch-action: none; cursor: grab; }
+  #stage:active { cursor: grabbing; }
+  #room { pointer-events: none; }
+
+  /* the game's own chrome, to scale: what the board has to share the screen with */
+  .chrome { position: absolute; pointer-events: none; }
+  #bar { left: 0; right: 0; top: 0; height: calc(64 * var(--u)); background: linear-gradient(rgba(10, 7, 5, 0.85), rgba(10, 7, 5, 0.35)); display: flex; align-items: center; justify-content: center; font: 600 calc(15 * var(--u)) var(--sans); color: var(--ink-2); }
+  #hand { left: 0; right: 0; bottom: 0; height: calc(150 * var(--u)); display: flex; justify-content: center; align-items: flex-end; gap: calc(14 * var(--u)); padding-bottom: calc(6 * var(--u)); }
+  #hand i { width: calc(104 * var(--u)); height: calc(140 * var(--u)); border-radius: 50% 50% calc(14 * var(--u)) calc(14 * var(--u)) / 40% 40% calc(14 * var(--u)) calc(14 * var(--u)); background: linear-gradient(160deg, #6d5a3c, #2c2418); box-shadow: 0 0 0 calc(2 * var(--u)) #b08d4e inset, 0 calc(6 * var(--u)) calc(18 * var(--u)) rgba(0, 0, 0, 0.6); }
+  #endturn { right: calc(40 * var(--u)); bottom: calc(110 * var(--u)); width: calc(160 * var(--u)); height: calc(52 * var(--u)); border-radius: 999px; background: rgba(30, 24, 18, 0.9); box-shadow: var(--rim); display: grid; place-items: center; font: 700 calc(16 * var(--u)) var(--sans); }
+  body.port #hand { height: calc(124 * var(--u)); }
+  body.port #hand i { width: calc(70 * var(--u)); height: calc(98 * var(--u)); }
+  body.port #endturn { right: calc(14 * var(--u)); bottom: calc(132 * var(--u)); width: calc(96 * var(--u)); height: calc(40 * var(--u)); font-size: calc(13 * var(--u)); }
+  body.port #bar, body.land #bar { height: calc(52 * var(--u)); }
+  body.land #hand { height: calc(96 * var(--u)); }
+  body.land #hand i { width: calc(62 * var(--u)); height: calc(86 * var(--u)); }
+  body.land #endturn { bottom: calc(100 * var(--u)); width: calc(110 * var(--u)); height: calc(40 * var(--u)); }
+  /* the stats under each unit, as the game draws them */
+  #plates { position: absolute; inset: 0; pointer-events: none; }
+  .plate { position: absolute; transform: translate(-50%, 0); display: flex; gap: calc(8 * var(--u)); padding: calc(2 * var(--u)) calc(9 * var(--u)); border-radius: 999px; background: rgba(16, 12, 9, 0.88); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12); font: 800 calc(14 * var(--u)) var(--sans); white-space: nowrap; }
+  .plate b { color: #f2e5c8; } .plate em { font-style: normal; color: #ff8f8f; }
+  .plate.e { box-shadow: 0 0 0 1px rgba(255, 110, 110, 0.35); }
+  .plate.hero { font-size: calc(17 * var(--u)); padding: calc(3 * var(--u)) calc(14 * var(--u)); }
+  /* (a phone's plates are the size the game's are there: about a desktop one's at its own screen height) */
+  body.land .plate, body.port .plate { font-size: calc(10 * var(--u)); gap: calc(5 * var(--u)); padding: calc(1 * var(--u)) calc(6 * var(--u)); }
+  body.land .plate.hero, body.port .plate.hero { font-size: calc(12 * var(--u)); }
+  #cap { position: absolute; left: calc(14 * var(--u)); top: calc(70 * var(--u)); font: 900 calc(22 * var(--u)) var(--serif); color: var(--ember-hi); text-shadow: 0 2px 10px #000; pointer-events: none; }
+  body.port #cap, body.land #cap { top: calc(56 * var(--u)); font-size: calc(18 * var(--u)); }
+
+  /* the panel */
+  #side { position: absolute; top: 0; right: 0; bottom: 0; width: var(--side); overflow: auto; padding: 16px; box-sizing: border-box; background: var(--glass); box-shadow: var(--rim); }
+  #side h1 { margin: 0 0 2px; font: 900 22px var(--serif); letter-spacing: 0.06em; }
+  #side .eyebrow { font-size: 11px; letter-spacing: 0.28em; color: var(--brass); }
+  #side h2 { margin: 16px 0 6px; font-size: 12px; letter-spacing: 0.2em; color: var(--brass); font-weight: 600; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { border: 0; border-radius: 10px; padding: 6px 10px; background: rgba(255, 255, 255, 0.06); box-shadow: var(--rim); cursor: pointer; color: var(--ink-2); font-size: 13px; text-align: left; }
+  .chip[aria-pressed="true"] { color: var(--ember-hi); box-shadow: var(--rim), inset 0 0 0 1px rgba(255, 155, 61, 0.6); background: rgba(255, 155, 61, 0.1); }
+  .chips.list { flex-direction: column; }
+  .chips.list .chip { width: 100%; }
+  .chip small { display: block; color: var(--ink-3); font-size: 11.5px; line-height: 1.35; margin-top: 2px; }
+  #about { color: var(--ink-2); font-size: 13px; line-height: 1.6; }
+  #about b { color: var(--ember-hi); font-weight: 600; }
+  .hint { color: var(--ink-3); font-size: 12px; margin-top: 10px; }
+</style>
+<div id="bay"><div id="frame">
+  <canvas id="room"></canvas><canvas id="stage"></canvas>
+  <div id="plates"></div>
+  <div class="chrome" id="bar">第 1 回合 · 你的回合</div>
+  <div class="chrome" id="hand"><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="chrome" id="endturn">结束回合</div>
+  <div id="cap"></div>
+</div></div>
+<aside id="side">
+  <div class="eyebrow">琥珀战记 · 战场视角实验台</div>
+  <h1>战场视角</h1>
+  <h2>方案</h2><div class="chips list" id="schemes"></div>
+  <h2>说明</h2><div id="about"></div>
+  <h2>屏幕</h2><div class="chips" id="screens"></div>
+  <h2>上场人数</h2><div class="chips" id="counts"></div>
+  <h2>演示</h2><div class="chips" id="acts"></div>
+  <h2>镜头</h2><div class="chips" id="cams"></div>
+  <div class="hint">拖动画面可以临时转动镜头，按“复位”回到方案的镜头。角色、特效与节奏都是游戏本身的代码；棋盘、手牌和铭牌是示意。</div>
+</aside>
+<!--SCRIPTS-->

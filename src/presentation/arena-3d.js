@@ -416,7 +416,7 @@ void main(){vec3 n=normalize(vN),alb=vec3(.5),emis=vec3(0.),gloss=vec3(0.);float
   const DEPTH_FS = `#version 300 es
 precision highp float;out vec4 o;void main(){o=vec4(1.);}`;
   const PT_VS = `#version 300 es
-layout(location=0) in vec4 aP;uniform mat4 uVP;uniform float uSize,uTime;out float vA,vR;void main(){gl_Position=uVP*vec4(aP.xyz,1.);gl_PointSize=(uSize+aP.w*uSize)*1100./max(1.,gl_Position.w);vA=aP.w;float id=float(gl_VertexID);vR=id*2.4+uTime*(.6+fract(id*.37)*1.4);}`;
+layout(location=0) in vec4 aP;uniform mat4 uVP;uniform float uSize,uTime;out float vA,vR;void main(){gl_Position=uVP*vec4(aP.xyz,1.);float w=gl_Position.w;gl_PointSize=min((uSize+aP.w*uSize)*1100./max(1.,w),uSize*16.);vA=aP.w*smoothstep(650.,1250.,w);float id=float(gl_VertexID);vR=id*2.4+uTime*(.6+fract(id*.37)*1.4);}`;
   const PT_FS = `#version 300 es
 precision highp float;in float vA,vR;out vec4 o;uniform vec3 uColor;uniform float uShape;void main(){vec2 q=gl_PointCoord-.5;float a;
  if(uShape>2.5){q=mat2(cos(vR),-sin(vR),sin(vR),cos(vR))*q;float r=length(q*vec2(1.,2.1+abs(sin(vR*.5))))*2.;a=(1.-smoothstep(.7,1.,r))*vA;}
@@ -935,6 +935,9 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
   let prog = null, tex = null, rt = null, geom = null, particles = null;
   let VP = null, eye = null, basis = null, lightVP = null;
   const cam = { pitch: PITCH, dist: 2600, tz: 0 };
+  /* the battlefield's own camera (EmberBattleView, 2026-10-03): eye and target in this scene's units, its lens — the
+   * figures and the page's tokens are drawn through the same one; null: the old solve from the rows (?view=classic) */
+  let bvCam = null;
   /* design aid, only honoured with ?debug=1: pull the camera back by this factor and build every set piece, to see the whole field */
   let WIDE = 1;
   const LIGHT_DEF = V.norm([0.55, 0.5, -0.5]); let LIGHT_DIR = LIGHT_DEF;
@@ -1018,9 +1021,11 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
 
   /* --------------------------------------------------------------- camera */
   function updateCamera() {
-    const p = (cam.pitch * Math.PI) / 180; eye = [0, Math.sin(p) * cam.dist, cam.tz + Math.cos(p) * cam.dist];
-    VP = M.mul(M.persp((FOV * Math.PI) / 180, W / H, NEAR, FAR), M.look(eye, [0, 0, cam.tz]));
-    const f = V.norm(V.sub([0, 0, cam.tz], eye)), r = V.norm(V.cross(f, [0, 1, 0])), u = V.cross(r, f); basis = { f, r, u, t: Math.tan((FOV * Math.PI) / 360) };
+    const p = (cam.pitch * Math.PI) / 180, fov = bvCam ? bvCam.fov : FOV, target = bvCam ? bvCam.target : [0, 0, cam.tz];
+    eye = bvCam ? bvCam.eye.slice() : [0, Math.sin(p) * cam.dist, cam.tz + Math.cos(p) * cam.dist];
+    if (bvCam && WIDE > 1) eye = V.add(target, V.scale(V.sub(eye, target), WIDE));
+    VP = M.mul(M.persp((fov * Math.PI) / 180, W / H, NEAR, FAR), M.look(eye, target));
+    const f = V.norm(V.sub(target, eye)), r = V.norm(V.cross(f, [0, 1, 0])), u = V.cross(r, f); basis = { f, r, u, t: Math.tan((fov * Math.PI) / 360) };
   }
   const project = (p) => { const q = M.point(VP, p); return [(q[0] * 0.5 + 0.5) * W, (0.5 - q[1] * 0.5) * H]; };
   /** Stage pixel → point on the board plane (y = 0), or null when the ray misses. */
@@ -1049,6 +1054,8 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     dpr = clamp(cssScale * (devicePixelRatio || 1) * (T >= 2 ? 0.75 : 1), 0.5, quality.low || T >= 2 ? 1 : Vp.mobile ? 1.25 : 1.6);
     PW = Math.max(2, Math.round(W * dpr)); PH = Math.max(2, Math.round(H * dpr));
     if (canvas.width !== PW || canvas.height !== PH) { canvas.width = PW; canvas.height = PH; }
+    if (typeof EmberBattleView !== "undefined" && EmberBattleView.active && relayoutView(Vp)) return;
+    bvCam = null;
     const e = Vp.minion("e", 0, 1), p = Vp.minion("p", 0, 1);
     const yE = e.y + e.h / 2, yP = p.y + p.h / 2;
     const arena = Vp.pos(document.getElementById("arena")) || { left: 270, w: 1060, top: 212, h: 414 };
@@ -1105,6 +1112,37 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     if (WIDE > 1) { cam.dist *= WIDE; updateCamera(); }
   }
 
+  /** The battlefield's view (EmberBattleView): its camera (in this scene's units), a court that holds a full board,
+   *  the heroes' daises where the heroes stand — the scene, the figures and the tokens are one picture */
+  function relayoutView(Vp) {
+    const v = EmberBattleView.view(); if (!v) return false;
+    const K = EmberBattleView.K, ext = EmberBattleView.extent(), tall = v.mode === "front";
+    bvCam = { eye: v.eye.map((x) => x * K), target: v.target.map((x) => x * K), fov: v.fov };
+    cam.dist = Math.hypot(...V.sub(bvCam.eye, bvCam.target)); cam.tz = bvCam.target[2]; cam.pitch = EmberBattleView.MODES[v.mode].pitch;
+    updateCamera();
+    HX = Math.round((Math.max(-ext.x0, ext.x1) + 0.78) * K);
+    HZ = Math.round((Math.max(-ext.z0, ext.z1) + 0.55) * K);
+    RC = Math.min(HX, HZ) * 0.42;
+    ornK = clamp(Math.min(HX, HZ) / 500, 0.55, 1.2);
+    gemK = clamp(Math.min(Math.sqrt((2 * HX) / (project([HX, 0, 0])[0] - project([-HX, 0, 0])[0])), 0.6 + HZ / 500), 1, 1.9);
+    LIGHT_DIR = SC.light ? V.norm(SC.light) : LIGHT_DEF;
+    lightVP = M.mul(M.ortho(-(HX + 1250), HX + 1250, -(HZ + 950), HZ + 950, 10, 6500), M.look(V.scale(LIGHT_DIR, 3000), [0, 0, -HZ * 0.5]));
+    { const edgeX = (y) => { const f = floorAt(W, y); return f ? f[0] : HX + 400; }, rw = tall ? 72 : Vp.mobile ? 86 : 100, gapMin = tall ? 18 : 40;
+      const xT = edgeX(project([0, 0, -HZ])[1]), xB = edgeX(project([0, 0, HZ])[1]);
+      const cT = Math.max(HX + rw + gapMin, HX + 0.55 * (xT - HX)), cB = Math.max(HX + rw + 25, HX + 0.55 * (xB - HX));
+      RIV = SC === SCENES.lava ? { a: (cT + cB) / 2, b: (cT - cB) / (2 * HZ), w: rw } : { a: 1e5, b: 0, w: 1 }; }
+    // (a dais as wide as the figure on it needs: the same in every layout now that the heroes stand on the board)
+    seatK = 1;
+    PLAT = null; BULGE = [0, 0, 0, 0];
+    PADS = { p: [EmberBattleView.hero("p")[0] * K, EmberBattleView.hero("p")[2] * K], e: [EmberBattleView.hero("e")[0] * K, EmberBattleView.hero("e")[2] * K] };
+    { const t0 = performance.now(); PLAT = makePlat(); platMs = Math.round(performance.now() - t0); }
+    HUD = [...document.querySelectorAll(HUD_BOXES)].map((el) => Vp.pos(el)).filter(Boolean);
+    for (const pd of Object.values(PADS)) { const s = pd[0] < 0 ? -1 : 1, need = Math.abs(pd[0]) + (SEAT.r2 + 12) * ornK * seatK + riverW(pd[1], s) + 18 - Math.abs(riverC(pd[1], s)); if (need > 0) { if (s < 0) BULGE[0] = pd[1], BULGE[1] = need; else BULGE[2] = pd[1], BULGE[3] = need; } }
+    layoutDirty = false; stillDrawn = false;
+    const key = "bv:" + EmberBattleView.version + ":" + HX + ":" + HZ + ":" + Math.round(gemK * 10) + ":" + SC.id;
+    if (key !== geomKey) { geomKey = key; build(); }
+    return true;
+  }
   /* ---------------------------------------------------------------- build */
   function stalk(o, x, z, base, h, yaw, lean) { const dx = Math.cos(lean) * h * 0.18, dz = Math.sin(lean) * h * 0.18, wx = Math.cos(yaw) * 1.6, wz = Math.sin(yaw) * 1.6;
     const seed = Math.random(), a = [x - wx, base, z - wz], b = [x + wx, base, z + wz], c = [x + dx * 0.55 + wx * 0.5, base + h * 0.55, z + dz * 0.55 + wz * 0.5], d = [x + dx * 0.55 - wx * 0.5, base + h * 0.55, z + dz * 0.55 - wz * 0.5], e = [x + dx, base + h, z + dz];
@@ -1734,7 +1772,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
         if (els[i].matches(".miniature-ready, .miniature-pending")) continue;   // a voxel unit stands on its own pedestal
         let cx, cy, w;
         if (busy) { const b = Vp.pos(els[i]); if (!b) continue; cx = b.x; cy = b.y + b.h * 0.42; w = b.w; }
-        else { const g = Vp.minion(side, i, count); cx = g.x + g.w / 2; cy = g.y + g.h * 0.92; w = g.w; }
+        else { const g = Vp.minion(side, i, count); cx = g.x + g.w / 2; cy = g.y + g.h * (g.foot ? 0.62 : 0.92); w = g.w; }
         const c = floorAt(cx, cy), l = floorAt(cx - w / 2, cy), r = floorAt(cx + w / 2, cy);
         if (!c || !l || !r) continue;
         const hw = Math.abs(r[0] - l[0]) / 2; cardU.set([c[0], c[1], hw, hw * 0.92], n * 4); n++;
@@ -1789,7 +1827,7 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     if (!SKIP.has("bloom")) { blit(prog.bright, rt.bloomFboA, BW, BH, rt.colorTex); blit(prog.blur, rt.bloomFboB, BW, BH, rt.bloomA, (u) => gl.uniform2f(u.uDir, 1 / BW, 0)); blit(prog.blur, rt.bloomFboA, BW, BH, rt.bloomB, (u) => gl.uniform2f(u.uDir, 0, 1 / BH)); blit(prog.blur, rt.bloomFboB, BW, BH, rt.bloomA, (u) => gl.uniform2f(u.uDir, 2 / BW, 0)); blit(prog.blur, rt.bloomFboA, BW, BH, rt.bloomB, (u) => gl.uniform2f(u.uDir, 0, 2 / BH)); }
     gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, PW, PH); gl.useProgram(prog.post.p);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, rt.colorTex); gl.uniform1i(prog.post.u.uColor, 0); gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, rt.depthTex); gl.uniform1i(prog.post.u.uDepth, 1); gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, rt.bloomA); gl.uniform1i(prog.post.u.uBloom, 2);
-    gl.uniform2f(prog.post.u.uRes, PW, PH); gl.uniform1f(prog.post.u.uNear, NEAR); gl.uniform1f(prog.post.u.uFar, FAR); gl.uniform1f(prog.post.u.uFocus, cam.dist); gl.uniform1f(prog.post.u.uTime, t); gl.uniform1f(prog.post.u.uDof, quality.low || effTier() >= 1 ? 0 : 1); gl.uniform1f(prog.post.u.uFocusScale, cam.dist / 2600); gl.uniform3fv(prog.post.u.uLeak, SC.leak || [0, 0, 0]); gl.uniform1f(prog.post.u.uBloomK, SC.bloom ?? 1); gl.uniform1f(prog.post.u.uExpo, SC.expo ?? 1.15);
+    gl.uniform2f(prog.post.u.uRes, PW, PH); gl.uniform1f(prog.post.u.uNear, NEAR); gl.uniform1f(prog.post.u.uFar, FAR); gl.uniform1f(prog.post.u.uFocus, bvCam ? Math.hypot(...V.sub(eye, bvCam.target)) * 0.92 : cam.dist); gl.uniform1f(prog.post.u.uTime, t); gl.uniform1f(prog.post.u.uDof, quality.low || effTier() >= 1 ? 0 : 1); gl.uniform1f(prog.post.u.uFocusScale, cam.dist / 2600); gl.uniform3fv(prog.post.u.uLeak, SC.leak || [0, 0, 0]); gl.uniform1f(prog.post.u.uBloomK, SC.bloom ?? 1); gl.uniform1f(prog.post.u.uExpo, SC.expo ?? 1.15);
     gl.bindVertexArray(rt.quadVao); if (!SKIP.has("post")) gl.drawArrays(gl.TRIANGLES, 0, 6);
     stillDrawn = pending === 0;
   }

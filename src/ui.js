@@ -462,6 +462,11 @@
       count = board.length,
       lane = EmberViewport.lane("p");
     let candidate = pointerTarget || null;
+    // (the battlefield's formation: the next unit takes the next place in it — EmberBattleView)
+    if (!candidate && count < 7 && typeof EmberBattleView !== "undefined" && EmberBattleView.active) {
+      const next = EmberBattleView.minionBox("p", count, count + 1);
+      return { x: next.x + next.w / 2, y: next.y + next.h / 2 };
+    }
     if (!candidate) {
       if (!count) {
         candidate = lane;
@@ -520,11 +525,13 @@
       $("minions").append(slot);
     }
     const board = game.s?.p?.board || [],
-      size = EmberViewport.minion(
-        "p",
-        Math.max(0, board.length - 1),
-        Math.max(1, board.length),
-      );
+      size = typeof EmberBattleView !== "undefined" && EmberBattleView.active && board.length < 7
+        ? EmberBattleView.minionBox("p", board.length, board.length + 1)
+        : EmberViewport.minion(
+          "p",
+          Math.max(0, board.length - 1),
+          Math.max(1, board.length),
+        );
     Object.assign(slot.style, {
       left: Math.round(at.x - size.w / 2) + "px",
       top: Math.round(at.y - size.h / 2) + "px",
@@ -1118,6 +1125,14 @@
             : "";
       el.innerHTML = `<div class="hero-card-inner"><div class="portrait-frame"><img src="${A.character(data)}" data-art-key="${data.portraitId}" alt="${data.name}" draggable="false" style="${artStyleForHero(data, "hero")}"></div><span class="hero-card-plaque" aria-hidden="true"></span><div class="hero-name">${data.name}</div></div><div class="hero-chips">${stats}${covenant}${handChip}</div>${weaponMarkup}${p.secrets.length ? '<div class="secret-indicator" title="奥秘已布置">?</div>' : ""}${side === "e" && !s.opponentHero ? `<div class="hero-phase">${s.phase2 ? "阶段 II" : "阶段 I"}</div>` : ""}`;
       el.dataset.heroClass = data.classId || "boss";
+      // the battlefield's view stands the hero on the board behind its units: its element is a station there — the
+      // box round its figure (the anchor every effect and aim lands on) with its nameplate and stats under the feet
+      if (typeof EmberBattleView !== "undefined" && EmberBattleView.active) {
+        const b = EmberBattleView.heroBox(side);
+        EmberViewport.box(el, b);
+        el.style.setProperty("--station-inner", b.h - b.inner + "px");
+        el.classList.add("hero-afield");
+      }
       el.classList.toggle("frozen", p.frozen);
       el.classList.toggle("ready", game.canAttack(side, "hero"));
       el.setAttribute(
@@ -1209,7 +1224,7 @@
             // a figure's plate: its taunt and divine shield as chips too (a card token shows them in its frame)
             const fig = figureToken(c, geo),
               wards = fig ? ["taunt", "shield"].filter((t) => m.tags.includes(t)).map((t) => `<span class="kw kw-ward" data-kw="${t}" aria-hidden="true">${WARD_ICON[t]}</span>`).join("") : "";
-            return `<button class="minion ${side === "e" ? "enemy" : "friendly"} ${m.tags.join(" ")} ${ready ? "ready" : ""} ${m.frozen ? "frozen" : ""} ${c.rarity}${fig ? " miniature-pending" : ""}" style="left:${x}px;top:${y}px;width:${geo.w}px;height:${geo.h}px;--unit-w:${geo.w}px;--hp:${Math.max(0, Math.min(1, m.hp / Math.max(1, m.maxHp))).toFixed(3)}" data-compact="${geo.w < 50}" data-stacked="${!!geo.stacked}" data-side="${side}" data-uid="${m.uid}" data-cardid="${c.id}" data-class="${c.class}" aria-label="${c.name}，攻击 ${m.atk}，生命 ${m.hp}，${m.tags.map((t) => D.kw[t]).join("、")}${m.frozen ? "，被冻结" : sleeping ? "，召唤疲劳，休息中" : ""}"><div class="minion-art"><img src="${A.card(c)}" alt="" draggable="false" data-art-key="${artKeyForCard(c)}" style="${artStyleForCard(c, "minion")}"></div><span class="unit-aura" aria-hidden="true"></span><div class="minion-band"><span>${bandLabel(c)}</span></div>${fig ? '<span class="unit-plate" aria-hidden="true"></span><span class="unit-hpbar" aria-hidden="true"></span>' : ""}<span class="stat atk">${A.statGem("blade")}<span class="stat-value">${m.atk}</span></span><span class="stat hp ${m.hp < m.maxHp ? "hurt" : ""}">${A.statGem("heart")}<span class="stat-value">${Math.max(0, m.hp)}</span></span><span class="minion-status">${m.frozen ? '<span class="kw" data-kw="frozen">❄</span>' : specials || wards ? '<span class="special">' + wards + specials + "</span>" : ""}${sleeping ? '<span class="minion-sleep" aria-hidden="true"><span class="sleep-z">Z</span><span class="sleep-z">Z</span><span class="sleep-z">Z</span></span>' : ""}</span>${ready ? '<span class="ready-dot"></span>' : ""}</button>`;
+            return `<button class="minion ${side === "e" ? "enemy" : "friendly"} ${m.tags.join(" ")} ${ready ? "ready" : ""} ${m.frozen ? "frozen" : ""} ${c.rarity}${fig ? " miniature-pending" : ""}" style="left:${x}px;top:${y}px;width:${geo.w}px;height:${geo.h}px;--unit-w:${geo.w}px;${geo.z != null ? `z-index:${geo.z};` : ""}--hp:${Math.max(0, Math.min(1, m.hp / Math.max(1, m.maxHp))).toFixed(3)}" data-compact="${geo.w < 50}" data-stacked="${!!geo.stacked}" data-side="${side}" data-uid="${m.uid}" data-cardid="${c.id}" data-class="${c.class}" aria-label="${c.name}，攻击 ${m.atk}，生命 ${m.hp}，${m.tags.map((t) => D.kw[t]).join("、")}${m.frozen ? "，被冻结" : sleeping ? "，召唤疲劳，休息中" : ""}"><div class="minion-art"><img src="${A.card(c)}" alt="" draggable="false" data-art-key="${artKeyForCard(c)}" style="${artStyleForCard(c, "minion")}"></div><span class="unit-aura" aria-hidden="true"></span><div class="minion-band"><span>${bandLabel(c)}</span></div>${fig ? '<span class="unit-plate" aria-hidden="true"></span><span class="unit-hpbar" aria-hidden="true"></span>' : ""}<span class="stat atk">${A.statGem("blade")}<span class="stat-value">${m.atk}</span></span><span class="stat hp ${m.hp < m.maxHp ? "hurt" : ""}">${A.statGem("heart")}<span class="stat-value">${Math.max(0, m.hp)}</span></span><span class="minion-status">${m.frozen ? '<span class="kw" data-kw="frozen">❄</span>' : specials || wards ? '<span class="special">' + wards + specials + "</span>" : ""}${sleeping ? '<span class="minion-sleep" aria-hidden="true"><span class="sleep-z">Z</span><span class="sleep-z">Z</span><span class="sleep-z">Z</span></span>' : ""}</span>${ready ? '<span class="ready-dot"></span>' : ""}</button>`;
           })
           .join(""),
       )

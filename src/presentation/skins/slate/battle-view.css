@@ -1,0 +1,66 @@
+/* Skin "slate" — the page's chrome laid out for the battlefield's view (EmberBattleView, docs/design/BATTLE_VIEW.md).
+ * The view stands the units and both heroes on one board seen from over our side's shoulder (side: a desktop, a
+ * phone held sideways) or from the front (front: a phone held upright); body[data-battle-view] says which. The
+ * stations and tokens are placed by the view itself (inline); what is left here is the chrome round them, moved
+ * off the figures. ?view=classic leaves the attribute off and the old layout's rules apply. */
+
+/* desktop · side ------------------------------------------------------------ */
+/* the hero power: in front of the player's dais, clear of its figure (which now stands where the old corner node was)
+ * and of the hand's fan */
+html[data-skin="slate"] body[data-battle-view="side"]:not(.touch-layout) #battle .power-button {
+  left: 300px;
+  top: 652px;
+}
+
+/* phones · both views --------------------------------------------------------- */
+/* A hero is a station on the board on every layout now (ui.js boxes it round the figure): on a phone its element is
+ * no longer the console strip. The strip's look goes; the card slot becomes the figure's box (the anchor effects and
+ * aims land on), the name a plaque under the feet, the stats a row under that — as on the desktop. */
+html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.hero-afield {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.hero-afield:not(:focus-visible) {
+  outline: none;
+}
+html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.hero-afield .hero-card-inner {
+  inset: 0 0 var(--station-inner, 52px) 0;
+  width: auto;
+  height: auto;
+}
+html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.hero-afield .hero-card-inner .hero-name {
+  inset: calc(100% + 2px) auto auto 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  min-width: 56px;
+  height: 20px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1;
+}
+html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.hero-afield .hero-chips {
+  inset: auto 0 0 0;
+  height: 22px;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.hero-afield .hero-chips > * {
+  position: static;
+}
+/* the boss's phase: a small chip over its head */
+html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.hero-afield .hero-phase {
+  inset: -18px auto auto 50%;
+  transform: translateX(-50%);
+}
+/* the weapon: beside the stats */
+html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.hero-afield .weapon-slot {
+  inset: auto -40px 0 auto;
+}

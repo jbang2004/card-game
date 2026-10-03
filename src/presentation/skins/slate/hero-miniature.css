@@ -273,10 +273,10 @@ html[data-skin="slate"]
   #battle
   :is(.hero.enemy, .hero.player).hero-station
   .hero-card-inner {
-  inset: 0 0 76px 0;
+  inset: 0 0 var(--station-inner, 76px) 0;
 }
 html[data-skin="slate"] body:not(.touch-layout) #battle .hero.enemy.hero-station .hero-card-inner {
-  bottom: 66px;
+  bottom: var(--station-inner, 66px);
 }
 html[data-skin="slate"]
   body.hero-daises:not(.touch-layout)
