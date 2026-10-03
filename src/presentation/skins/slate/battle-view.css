@@ -1,0 +1,121 @@
+/* Skin "slate" — the page's chrome laid out for the battlefield's view (EmberBattleView, docs/design/BATTLE_VIEW.md).
+ * The view stands the units and both heroes on one board seen from 万象棋's height with ours on the left (versus:
+ * a desktop, a phone held sideways) or from the front (front: a phone held upright); body[data-battle-view] says which. The
+ * stations and tokens are placed by the view itself (inline); what is left here is the chrome round them, moved
+ * off the figures. Without figures (motion reduced) the view stands down, the attribute goes and the old layout's rules
+ * apply. */
+
+/* phones · both views --------------------------------------------------------- */
+/* A hero is a station on the board on every layout now (ui.js boxes it round the figure): on a phone its element is
+ * no longer the console strip. The strip's look goes; the card slot becomes the figure's box (the anchor effects and
+ * aims land on), the name a plaque under the feet, the stats a row under that — as on the desktop. */
+html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.hero-afield {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.hero-afield:not(:focus-visible) {
+  outline: 0;
+}
+html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.hero-afield .hero-card-inner {
+  inset: 0 0 var(--station-inner, 52px) 0;
+  width: auto;
+  height: auto;
+}
+html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.hero-afield .hero-card-inner .hero-name {
+  inset: calc(100% + 2px) auto auto 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  min-width: 56px;
+  height: 20px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1;
+}
+/* (one row, centred under the figure and as wide as its chips: a station is narrower than attack, health and armour
+ * side by side, and a wrapped second row would fall behind the mana row) */
+html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.hero-afield .hero-chips {
+  inset: auto auto 0 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  height: 22px;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 4px;
+}
+html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.hero-afield .hero-chips > * {
+  position: static;
+}
+/* (seen from the side the enemy stands at the screen's right edge: its row runs leftward from the station's right
+ * edge instead, so five chips — weapon, health, armour, covenant, hand — stay on screen) */
+html[data-skin="slate"] body[data-battle-view="versus"].touch-layout #battle .hero.enemy.hero-afield.hero-afield .hero-chips {
+  inset: auto 0 0 auto;
+  transform: none;
+}
+/* the boss's phase: a small chip over its head */
+html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.hero-afield .hero-phase {
+  inset: -18px auto auto 50%;
+  transform: translateX(-50%);
+}
+/* the enemy's station seen from the front (phone upright): its feet are level with its back row's heads, so the
+ * nameplate and the stats stand beside the figure (right), the boss's phase on its other side */
+html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.station-aside.station-aside .hero-card-inner .hero-name {
+  inset: 18% auto auto calc(50% + 22px);
+  transform: none;
+}
+html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.station-aside.station-aside .hero-chips {
+  inset: calc(18% + 24px) auto auto calc(50% + 22px);
+  transform: none;
+  width: max-content;
+  max-width: 132px;
+  height: auto;
+  flex-wrap: wrap;
+  row-gap: 4px;
+  justify-content: flex-start;
+}
+html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.station-aside.station-aside .hero-phase {
+  inset: 18% calc(50% + 22px) auto auto;
+  transform: none;
+}
+/* the weapon: beside the figure's head (clear of the figure's box, which effects land on, and of the turn button
+ * level with the hero's feet on a narrow phone) */
+html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.hero-afield .weapon-slot {
+  inset: 0 auto auto calc(100% + 2px);
+}
+
+/* phones held sideways: a tapped card is read over the board's middle (ui.js syncHandLift), so its place in the folded
+ * hand only rises a step to say which it is — a selected card's full rise would stand it, faded, over the near units */
+html[data-skin="slate"] body[data-battle-view].hand-folded #battle .hand-card.reading-source.reading-source {
+  transform: translateY(-10px);
+}
+
+/* desktop · versus ------------------------------------------------------------ */
+/* the enemy's deck counter: the enemy hero now stands at the right end of the middle line, where the counter sat — it
+ * goes to the top-right corner, across the board from ours at the bottom-left */
+html[data-skin="slate"] body[data-battle-view="versus"]:not(.touch-layout) #app.battle-view .enemy-deck {
+  top: 92px;
+}
+/* …and while a unit is aimed at the card read there steps back: faded, and a tap passes through it to the unit
+ * behind (the guide bar's 取消 or the card's own place in the hand still put it away). Placing a unit it stays as it
+ * is: tapping it puts it away, and an empty spot elsewhere on the board takes the unit */
+html[data-skin="slate"] body.hand-folded #app.is-targeting:not(.is-placing) #hand-card-lift {
+  opacity: 0.4;
+  pointer-events: none;
+  transition: opacity 160ms linear;
+}
+
+/* the smallest phones held sideways (a stage under 360 px tall): figures stand about 32 px, and a 17 px stats plate
+ * would reach up over the next row's heads — the plate comes down a size (its numerals stay 11 px, readable) */
+@media (max-height: 359px) {
+  html[data-skin="slate"] body.hand-folded #minions .minion:is(.miniature-ready, .miniature-pending) {
+    --plate-h: 14px;
+    --plate-bottom: calc(2% + 4px);
+  }
+}

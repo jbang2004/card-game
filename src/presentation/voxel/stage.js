@@ -19,27 +19,14 @@ const EmberMiniatures = (() => {
   // ?figures=0 (tests, a fallback check): the battlefield without figures, as when WebGL fails or motion is reduced
   const off = typeof location !== "undefined" && new URLSearchParams(location.search).get("figures") === "0";
   const enabled = () => !failed && !off && !reduced();
-  const TOKEN_W = 116;          // a desktop token's layout width: figures keep their size relative to their token
-  /* A unit's station is its token box (the layout places tokens; they stay the click and focus targets): the figure
-   * stands at FOOT of its height on a pedestal of PED × its width, its stats sit in front of the pedestal, and it may
-   * rise at most RISE × the token's height above the token and be MAX_W × its width wide — so no figure reaches into
-   * the other line, the top bar or its neighbours. Sizes are measured through the camera at the unit's own spot, so
-   * the far line's figures are as large against their tokens as the near line's. */
-  const FOOT = 0.6, PED = 0.4, RISE = 0.5, MAX_W = 1.3;
+  /* A unit's station is its token box (EmberBattleView stands it where the unit stands; tokens stay the click and
+   * focus targets): the figure stands at FOOT of its height, its stats in front of it. */
+  const FOOT = 0.6;
   // camera layers drawn over the pixel pass at full resolution: sprite figures, then the hit-feel (so a burst in front
   // of a sprite shows)
   const FX_LAYER = 2, OVER = [EmberSpriteFigures.LAYER, FX_LAYER];
   // and the one drawn under it at full resolution: the halos the units stand on
   const BASE_LAYER = 3, UNDER = [BASE_LAYER];
-  const _a = new THREE.Vector3(), _b = new THREE.Vector3();
-  // screen px per world unit at a ground point: across (x) and upright (y)
-  function ppu(p) {
-    const h = box?.h || 1, w = box?.w || 1;
-    _a.copy(p).project(camera); _b.copy(p).add(new THREE.Vector3(1, 0, 0)).project(camera);
-    const across = Math.hypot((_b.x - _a.x) * w / 2, (_b.y - _a.y) * h / 2);
-    _b.copy(p).add(new THREE.Vector3(0, 1, 0)).project(camera);
-    return { across, up: Math.abs(_b.y - _a.y) * h / 2 };
-  }
   const battle = () => document.getElementById("battle");
   const specOf = (cid) => KIT.forCard(cid);
   // a phone draws the stage at 1.5× at most: the figures stay crisp, ~45% fewer pixels than 2× (EMBER perf, 2026-09-27)
@@ -75,16 +62,16 @@ const EmberMiniatures = (() => {
           root.visible = true;
           try { return renderer.compileAsync(scene, camera); } finally { root.visible = false; }
         },
-        scaleOf: (u) => (u.info.hero ? fitHero(u) : fit(u)),
+        scaleOf: (u) => fit(u),
         base: (u) => {
           const el = u.info.el; if (!el?.isConnected || !el.offsetWidth) return null;
           // a hero's dais is the scene's; the stage draws only its state ring round the hero's feet
-          if (u.info.hero) { const q = EmberArena3D.seat?.(u.side), c = el.classList; return q ? { r: q.rx / (u.pos ? ppu(u.pos).across : 150), ring: true, tint: q.tint, state: { ready: c.contains("ready"), frozen: c.contains("frozen"), target: c.contains("valid-target") || c.contains("selected") } } : null; }
+          if (u.info.hero) { const q = EmberArena3D.seat?.(u.side), c = el.classList; return q ? { r: 0.42, ring: true, tint: q.tint, state: { ready: c.contains("ready"), frozen: c.contains("frozen"), target: c.contains("valid-target") || c.contains("selected") } } : null; }
           const c = el.classList;
-          return { r: (PED * el.offsetWidth) / (u.pos ? ppu(u.pos).across : 150), state: { ready: c.contains("ready"), taunt: c.contains("taunt"), frozen: c.contains("frozen"), shield: c.contains("shield"), target: c.contains("valid-target") } };
+          return { r: 0.3, state: { ready: c.contains("ready"), taunt: c.contains("taunt"), frozen: c.contains("frozen"), shield: c.contains("shield"), target: c.contains("valid-target") } };
         },
         where: (ref) => {
-          if (ref.uid === "hero" && box && arena?.has(ref.side, "hero")) { const q = seatOf(ref.side, box); if (q) return q; }
+          if (ref.uid === "hero" && box && arena?.has(ref.side, "hero")) return seatOf(ref.side);
           const own = arena?.unit(ref.side, ref.uid)?.info.el, el = own?.isConnected ? own : refEl(ref);   // (no query per frame)
           return el && el.isConnected && box ? footOf(el, box) : null;
         },
@@ -102,10 +89,13 @@ const EmberMiniatures = (() => {
     clearTokens();
     try { arena?.dispose(); renderer?.dispose(); } catch {}
     arena = null; renderer = null; canvas?.remove(); canvas = null; dimmer?.remove(); dimmer = null;
+    // (without figures the battlefield's view stands down: the page lays its rows out again)
+    if (typeof EmberViewport !== "undefined") setTimeout(() => { EmberViewport.resize(); if (typeof EmberArena3D !== "undefined") EmberArena3D.resize?.(); });
     console.warn("Battle miniatures unavailable; using flat tokens.", stats.error);
   }
 
-  // camera: looks down onto the board like the arena; one world unit ≈ 150 px at the board centre
+  // the battlefield's view (EmberBattleView): the camera the scene and the page's tokens use too — one world unit a
+  // person's height (the stage runs only with figures, and then the view is always on)
   function fitCamera() {
     const b = battle(), w = b.clientWidth, h = b.clientHeight, d = dpr(), px = d;
     if (canvas.width !== Math.round(w * px) || canvas.height !== Math.round(h * px)) {
@@ -114,9 +104,10 @@ const EmberMiniatures = (() => {
       arena.setPixelRatio(d);
     }
     camera.aspect = w / h;
-    const D = h / (2 * Math.tan((camera.fov * Math.PI) / 360) * 150), pitch = (30 * Math.PI) / 180;
-    camera.position.set(0, D * Math.sin(pitch), D * Math.cos(pitch));
-    camera.lookAt(0, 0, 0); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+    const v = EmberBattleView.view();
+    camera.fov = v.fov; camera.near = 0.1; camera.far = 400;
+    camera.position.set(...v.eye); camera.lookAt(...v.target);
+    camera.updateProjectionMatrix(); camera.updateMatrixWorld();
     return { w, h, rect: b.getBoundingClientRect() };
   }
   function ground(px, py, bx) {
@@ -127,29 +118,24 @@ const EmberMiniatures = (() => {
   }
   // a unit stands at FOOT of its token's height; the token's lower band keeps the stats readable
   const footOf = (el, bx) => { const r = el.getBoundingClientRect(); return r.width ? ground(r.left + r.width / 2, r.top + r.height * (el.dataset.uid === "hero" ? 0.8 : FOOT), bx) : null; };
-  // × the figure's board size so it fits its station: as wide against its token as a desktop token's figure at the
-  // board centre (150 px per unit), capped in height and width — a legend (an epic, a rare a little) allowed to tower
-  // over its token and its neighbours: its presence is its size
-  const GRAND = { legendary: 1.4, epic: 1.2, rare: 1.06 };
+  // × the figure's size: a person a world unit tall, a rarer one a little taller (its presence is its size), a hero
+  // taller still; a beast keeps its size against a person's (the people seen so far set the scale), no taller than one
+  // and a tenth
+  const GRAND_VIEW = { legendary: 1.15, epic: 1.08, rare: 1.03 }, people = [];
   function fit(u) {
-    const el = u.info.el, w = el?.offsetWidth, h = el?.offsetHeight;
-    if (!w || !u.fig || !u.pos) return 1;
+    if (!u.fig) return 1;
     const g = u.fig.mesh.geometry; if (!g.boundingBox) g.computeBoundingBox();
-    const bb = g.boundingBox, base = (u.spec.scale || 1) * SIZE, px = ppu(u.pos), k = (w / TOKEN_W) * (150 / px.across);
-    const grow = u.fig.J.head ? 1 + (u.fig.J.head.scale.x - 1) * 0.2 : 1;     // the sprite's enlarged head
-    const tall = bb.max.y * grow * base * k * px.up, wide = (bb.max.x - bb.min.x) * base * k * px.across;
-    // (a touch layout's far line stands right under the top bar: no head or weapon reaches up under it)
-    let room = Infinity;
-    const hdr = touchLayout() && EmberViewport.layout?.header;
-    if (hdr) { const r = el.getBoundingClientRect(), a = document.getElementById("app")?.getBoundingClientRect(); if (a) room = r.top + r.height * FOOT - (a.top + hdr + 4); }
-    const gr = GRAND[["legendary", "epic", "rare"].find((r) => el.classList.contains(r))] || 1;
-    return k * Math.min(1, ((FOOT + RISE * gr * gr) * h) / tall, (MAX_W * gr * w) / wide, Math.max(0.35, room / tall));
+    const nat = Math.max(0.2, g.boundingBox.max.y * (u.spec.scale || 1) * SIZE), el = u.info.el;
+    const gr = u.info.hero ? 1.12 : GRAND_VIEW[["legendary", "epic", "rare"].find((r) => el?.classList.contains(r))] || 1;
+    if (!u.fig.beast) { if (!u.info.hero && people.length < 24 && !people.includes(nat)) people.push(nat); return gr / nat; }
+    const med = people.length ? [...people].sort((a, b) => a - b)[people.length >> 1] : 0.95 * SIZE;
+    return Math.min(1 / med, (1.1 * gr) / nat);
   }
   // ------------------------------------------------------------------ heroes
-  /* On the desktop layout each hero stands as a figure too: the figure of its portrait's card (the art the plate
-   * showed — a portrait names its figure in content/portraits.js), on its seat — the dais the battlefield scene raises outside the court (EmberArena3D.seat). Its plate stays
-   * as the click and focus target and shows only its name and stats (`.hero-dais`). A portrait without a realistic
-   * figure keeps its card. Touch layouts keep the plates (their consoles have no room for a dais). */
+  /* Each hero stands as a figure too: the figure of its portrait's card (a portrait names its figure in
+   * content/portraits.js), on its dais where the battlefield's view stands it (the scene raises the dais:
+   * EmberArena3D.seat). Its station stays the click and focus target and shows only its name and stats (`.hero-dais`).
+   * A portrait without a realistic figure keeps its card. */
   const heroesOn = () => !failed && !off && !reduced() && typeof EmberArena3D !== "undefined" && typeof EmberModelFigures !== "undefined";
   const touchLayout = () => document.body.classList.contains("touch-layout");
   function heroSpec(el) {
@@ -158,26 +144,8 @@ const EmberMiniatures = (() => {
     return sp && EmberModelFigures.has(sp.id) ? sp : null;
   }
   const heroEl = (side) => document.getElementById(side === "p" ? "player-hero" : "enemy-hero");
-  /** a hero's seat on the stage's ground: the dais's top centre, from stage pixels to the page */
-  function seatOf(side, bx) {
-    const q = EmberArena3D.seat?.(side), app = document.getElementById("app");
-    if (!q || !app || typeof EmberViewport === "undefined") return null;
-    const a = app.getBoundingClientRect(), k = a.width / EmberViewport.width;
-    return ground(a.left + q.x * k, a.top + q.y * k, bx);
-  }
-  // how tall a hero stands on screen (× the design height of the page): the player's near, the enemy's across the court
-  const HERO_H = { p: 0.24, e: 0.235 };
-  // on the touch layouts a hero stands in its console's card slot: as tall as the card, and a little more
-  const HERO_TOUCH = { p: 1.3, e: 1.2 };        // (the enemy's across the court: a little smaller)
-  function fitHero(u) {
-    if (!u.fig || !u.pos) return 1;
-    const g = u.fig.mesh.geometry; if (!g.boundingBox) g.computeBoundingBox();
-    // in layout pixels, as ppu measures (the app may be scaled on screen: a compact desktop)
-    const app = document.getElementById("app"), k = app ? app.getBoundingClientRect().height / EmberViewport.height : 1;
-    const slot = touchLayout() && u.info.el?.querySelector(".hero-card-inner")?.getBoundingClientRect();
-    const px = ppu(u.pos), want = slot?.height ? (slot.height / k) * HERO_TOUCH[u.side] : HERO_H[u.side] * EmberViewport.height;
-    return want / (g.boundingBox.max.y * (u.spec.scale || 1) * SIZE * px.up);
-  }
+  /** a hero's seat on the stage's ground: the dais's top centre, where the battlefield's view stands it */
+  function seatOf(side) { const p = EmberBattleView.hero(side); return new THREE.Vector3(p[0], p[1], p[2]); }
   const refEl = (ref) => (ref.uid === "hero" ? document.getElementById(ref.side === "p" ? "player-hero" : "enemy-hero") : document.querySelector(`#minions .minion[data-side="${ref.side}"][data-uid="${ref.uid}"]`));
 
   // ------------------------------------------------------------------ tokens → units
@@ -368,6 +336,7 @@ const EmberMiniatures = (() => {
   };
   if (!watch()) document.addEventListener("DOMContentLoaded", watch, { once: true });
   addEventListener("ember:viewport", later);
+  addEventListener("ember:battleview", later);
   // a model that is ready after the board was drawn (its texture or mesh decoded late) takes its unit's place
   if (typeof EmberModelFigures !== "undefined") EmberModelFigures.onReady?.(later);
 
@@ -375,6 +344,8 @@ const EmberMiniatures = (() => {
     sync, prewarm, cue, contact, has, owns, plan, stands, hero, aim, heroBox, fall,
     /** the heroes stand on their daises here (the desktop layout): the plate's own figure (EmberHeroFigure) stands down */
     heroDesk: () => heroesOn(),
+    /** figures stand on the board (not with motion reduced, ?figures=0, or after a failure): EmberBattleView needs them */
+    figures: () => enabled(),
     diagnostics: () => ({ ...(arena ? arena.diagnostics() : { figures: 0, cues: [], bakeMs: {}, dying: 0, baking: 0, live: 0 }), ...stats }),
   });
 })();

@@ -76,7 +76,9 @@
   // ------------------------------------------------------------------ camera
   const cam = new THREE.PerspectiveCamera(24, 1, 0.05, 200);
   const VIEWS = {
-    battle: { yaw: 0, pitch: 30, dist: 5.8, tx: 0, ty: 0.45, tz: 0 },         // the battle camera: the figure's back
+    // the battle camera, as the game sees a fight (EmberBattleView's versus, 2026-10-03): 50° down and square to the
+    // line between the two (POS: yaw 39°), the figure on the left, its foe on the right, level — two units of facing rows
+    battle: { yaw: 39, pitch: 50, dist: 5.8, tx: 0, ty: 0.3, tz: 0 },
     front: { yaw: -150, pitch: 16, dist: 5.4, tx: -0.1, ty: 0.5, tz: 0 },     // from behind its foe's shoulder: its face
     side: { yaw: -90, pitch: 12, dist: 5.4, tx: 0, ty: 0.5, tz: 0 },
     close: { yaw: -160, pitch: 10, dist: 2.7, tx: -0.55, ty: 0.55, tz: 0.45 },

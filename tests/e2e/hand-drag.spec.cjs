@@ -1128,12 +1128,18 @@ for (const [label, viewport] of [
       const uid = await prepareSingleMinion(page),
         card = page.locator(`#hand [data-hand="${uid}"]`),
         source = await card.boundingBox(),
-        arena = await page.locator("#arena").boundingBox(),
         from = {
           x: source.x + source.width / 2,
           y: source.y + source.height / 2,
         },
-        to = { x: arena.x + arena.width / 2, y: arena.y + arena.height / 2 };
+        /* Released over our own side's lane, where a card is played. (The arena's middle lies between the two sides
+         * under the battlefield's left-and-right view: the ghost would snap a long way to our next place, and the
+         * check below would measure the snap's speed rather than the release's continuity.) */
+        to = await page.evaluate(() => {
+          const a = document.getElementById("app").getBoundingClientRect(),
+            l = EmberViewport.lane("p");
+          return { x: a.left + (l.x * a.width) / EmberViewport.width, y: a.top + (l.y * a.height) / EmberViewport.height };
+        });
       await page.mouse.move(from.x, from.y);
       await page.mouse.down();
       await page.waitForTimeout(30);

@@ -462,6 +462,28 @@
       count = board.length,
       lane = EmberViewport.lane("p");
     let candidate = pointerTarget || null;
+    // (the battlefield's formation: the next unit takes the next place in it — EmberBattleView)
+    if (!candidate && count < 7 && typeof EmberBattleView !== "undefined" && EmberBattleView.active) {
+      const BV = EmberBattleView,
+        next = BV.minionBox("p", count, count + 1),
+        boxes = Array.from({ length: count }, (_, i) => BV.minionBox("p", i, count)),
+        under = (p) => boxes.some((b) => Math.abs(p.x - b.x - b.w / 2) <= b.w / 2 && Math.abs(p.y - b.y - b.h / 2) <= b.h / 2),
+        at = { x: next.x + next.w / 2, y: next.y + next.h / 2 };
+      if (!under(at)) return at;
+      /* The line re-forms round the newcomer only once it lands: until then its place may lie under a unit standing
+       * there now. The cue steps along our line on screen (its +x, then its −x) past the units — the nearest point
+       * sure to be empty before the click, as the old rows anchored on the group's edge. */
+      const a = BV.project([0, 0, next.world[2]]), b = BV.project([1, 0, next.world[2]]),
+        len = Math.hypot(b.x - a.x, b.y - a.y) || 1, ux = (b.x - a.x) / len, uy = (b.y - a.y) / len,
+        step = next.w * 0.25;
+      for (const dir of [1, -1])
+        for (let k = 1; k <= 16; k++) {
+          const p = { x: at.x + dir * ux * step * k, y: at.y + dir * uy * step * k };
+          if (p.x < arena.left + margin || p.x > arena.right - margin) break;
+          if (!under(p)) return p;
+        }
+      return at;
+    }
     if (!candidate) {
       if (!count) {
         candidate = lane;
@@ -520,11 +542,13 @@
       $("minions").append(slot);
     }
     const board = game.s?.p?.board || [],
-      size = EmberViewport.minion(
-        "p",
-        Math.max(0, board.length - 1),
-        Math.max(1, board.length),
-      );
+      size = typeof EmberBattleView !== "undefined" && EmberBattleView.active && board.length < 7
+        ? EmberBattleView.minionBox("p", board.length, board.length + 1)
+        : EmberViewport.minion(
+          "p",
+          Math.max(0, board.length - 1),
+          Math.max(1, board.length),
+        );
     Object.assign(slot.style, {
       left: Math.round(at.x - size.w / 2) + "px",
       top: Math.round(at.y - size.h / 2) + "px",
@@ -591,7 +615,13 @@
     toastTimer = setTimeout(() => $("toast").classList.remove("visible"), 2900);
   }
   function applySettings() {
+    const wasReduced = document.body.classList.contains("reduced-motion");
     document.body.classList.toggle("reduced-motion", !!settings.reduced);
+    // (reduced motion takes the figures off the board, and the battlefield's view with them: the page lays out again)
+    if (wasReduced !== !!settings.reduced) {
+      EmberViewport.resize();
+      if (typeof EmberArena3D !== "undefined") EmberArena3D.resize?.();
+    }
     $("sound-btn").innerHTML = A.icon(settings.sound ? "sound" : "mute");
     $("sound-btn").setAttribute("aria-pressed", String(settings.sound));
     EmberAudio.configure(settings);
@@ -1118,6 +1148,20 @@
             : "";
       el.innerHTML = `<div class="hero-card-inner"><div class="portrait-frame"><img src="${A.character(data)}" data-art-key="${data.portraitId}" alt="${data.name}" draggable="false" style="${artStyleForHero(data, "hero")}"></div><span class="hero-card-plaque" aria-hidden="true"></span><div class="hero-name">${data.name}</div></div><div class="hero-chips">${stats}${covenant}${handChip}</div>${weaponMarkup}${p.secrets.length ? '<div class="secret-indicator" title="奥秘已布置">?</div>' : ""}${side === "e" && !s.opponentHero ? `<div class="hero-phase">${s.phase2 ? "阶段 II" : "阶段 I"}</div>` : ""}`;
       el.dataset.heroClass = data.classId || "boss";
+      // the battlefield's view stands the hero on the board behind its units: its element is a station there — the
+      // box round its figure (the anchor every effect and aim lands on) with its nameplate and stats under the feet
+      if (typeof EmberBattleView !== "undefined" && EmberBattleView.active) {
+        const b = EmberBattleView.heroBox(side);
+        EmberViewport.box(el, b);
+        el.style.setProperty("--station-inner", b.h - b.inner + "px");
+        el.classList.add("hero-afield");
+        el.classList.toggle("station-aside", !!b.aside);
+      } else if (el.classList.contains("hero-afield")) {
+        // (the view stood down — motion reduced, figures failed: the hero goes back to its console, which the page boxes)
+        el.classList.remove("hero-afield", "station-aside");
+        el.style.removeProperty("--station-inner");
+        if (!EmberViewport.mobile) for (const k of ["left", "top", "width", "height"]) el.style.removeProperty(k);
+      }
       el.classList.toggle("frozen", p.frozen);
       el.classList.toggle("ready", game.canAttack(side, "hero"));
       el.setAttribute(
@@ -1209,7 +1253,7 @@
             // a figure's plate: its taunt and divine shield as chips too (a card token shows them in its frame)
             const fig = figureToken(c, geo),
               wards = fig ? ["taunt", "shield"].filter((t) => m.tags.includes(t)).map((t) => `<span class="kw kw-ward" data-kw="${t}" aria-hidden="true">${WARD_ICON[t]}</span>`).join("") : "";
-            return `<button class="minion ${side === "e" ? "enemy" : "friendly"} ${m.tags.join(" ")} ${ready ? "ready" : ""} ${m.frozen ? "frozen" : ""} ${c.rarity}${fig ? " miniature-pending" : ""}" style="left:${x}px;top:${y}px;width:${geo.w}px;height:${geo.h}px;--unit-w:${geo.w}px;--hp:${Math.max(0, Math.min(1, m.hp / Math.max(1, m.maxHp))).toFixed(3)}" data-compact="${geo.w < 50}" data-stacked="${!!geo.stacked}" data-side="${side}" data-uid="${m.uid}" data-cardid="${c.id}" data-class="${c.class}" aria-label="${c.name}，攻击 ${m.atk}，生命 ${m.hp}，${m.tags.map((t) => D.kw[t]).join("、")}${m.frozen ? "，被冻结" : sleeping ? "，召唤疲劳，休息中" : ""}"><div class="minion-art"><img src="${A.card(c)}" alt="" draggable="false" data-art-key="${artKeyForCard(c)}" style="${artStyleForCard(c, "minion")}"></div><span class="unit-aura" aria-hidden="true"></span><div class="minion-band"><span>${bandLabel(c)}</span></div>${fig ? '<span class="unit-plate" aria-hidden="true"></span><span class="unit-hpbar" aria-hidden="true"></span>' : ""}<span class="stat atk">${A.statGem("blade")}<span class="stat-value">${m.atk}</span></span><span class="stat hp ${m.hp < m.maxHp ? "hurt" : ""}">${A.statGem("heart")}<span class="stat-value">${Math.max(0, m.hp)}</span></span><span class="minion-status">${m.frozen ? '<span class="kw" data-kw="frozen">❄</span>' : specials || wards ? '<span class="special">' + wards + specials + "</span>" : ""}${sleeping ? '<span class="minion-sleep" aria-hidden="true"><span class="sleep-z">Z</span><span class="sleep-z">Z</span><span class="sleep-z">Z</span></span>' : ""}</span>${ready ? '<span class="ready-dot"></span>' : ""}</button>`;
+            return `<button class="minion ${side === "e" ? "enemy" : "friendly"} ${m.tags.join(" ")} ${ready ? "ready" : ""} ${m.frozen ? "frozen" : ""} ${c.rarity}${fig ? " miniature-pending" : ""}" style="left:${x}px;top:${y}px;width:${geo.w}px;height:${geo.h}px;--unit-w:${geo.w}px;${geo.z != null ? `z-index:${geo.z};` : ""}--hp:${Math.max(0, Math.min(1, m.hp / Math.max(1, m.maxHp))).toFixed(3)}" data-compact="${geo.w < 50}" data-stacked="${!!geo.stacked}" data-side="${side}" data-uid="${m.uid}" data-cardid="${c.id}" data-class="${c.class}" aria-label="${c.name}，攻击 ${m.atk}，生命 ${m.hp}，${m.tags.map((t) => D.kw[t]).join("、")}${m.frozen ? "，被冻结" : sleeping ? "，召唤疲劳，休息中" : ""}"><div class="minion-art"><img src="${A.card(c)}" alt="" draggable="false" data-art-key="${artKeyForCard(c)}" style="${artStyleForCard(c, "minion")}"></div><span class="unit-aura" aria-hidden="true"></span><div class="minion-band"><span>${bandLabel(c)}</span></div>${fig ? '<span class="unit-plate" aria-hidden="true"></span><span class="unit-hpbar" aria-hidden="true"></span>' : ""}<span class="stat atk">${A.statGem("blade")}<span class="stat-value">${m.atk}</span></span><span class="stat hp ${m.hp < m.maxHp ? "hurt" : ""}">${A.statGem("heart")}<span class="stat-value">${Math.max(0, m.hp)}</span></span><span class="minion-status">${m.frozen ? '<span class="kw" data-kw="frozen">❄</span>' : specials || wards ? '<span class="special">' + wards + specials + "</span>" : ""}${sleeping ? '<span class="minion-sleep" aria-hidden="true"><span class="sleep-z">Z</span><span class="sleep-z">Z</span><span class="sleep-z">Z</span></span>' : ""}</span>${ready ? '<span class="ready-dot"></span>' : ""}</button>`;
           })
           .join(""),
       )
@@ -1399,8 +1443,9 @@
       source = detail.source;
     if (!source || detail.pinned || el.style.display === "none") return;
     if (modalType !== "library") {
-      el.style.left = "1342px";
-      el.style.top = "300px";
+      const at = battleViewDetail(el);
+      el.style.left = at.left + "px";
+      el.style.top = at.top + "px";
       el.style.zIndex = "45";
       return;
     }
@@ -1417,6 +1462,21 @@
     const top = Math.max(8, handTop - h - 6);
     el.style.left = Math.min(Math.max(pos.x - w / 2, 8), 1600 - w - 8) + "px";
     el.style.top = top + "px";
+  }
+  /* Under the battlefield's view (left and right) the two sides' blocks leave
+   * the board's middle open: the card is read there, centred on the middle
+   * line, at the centre of the eye's travel between them. */
+  function battleViewDetail(el) {
+    const rail = { left: 1342, top: 300 };
+    if (typeof EmberBattleView === "undefined" || !EmberBattleView.active) return rail;
+    const w = el.querySelector(".card")?.offsetWidth || 230,
+      h = el.offsetHeight || 444,
+      mid = EmberBattleView.project([0, 0, 0]),
+      handTop = centerOf($("hand"))?.top ?? 787;
+    return {
+      left: Math.round(mid.x - w / 2),
+      top: Math.round(Math.max(84, Math.min(mid.y - h / 2, handTop - 8 - h))),
+    };
   }
   function closeCardDetail() {
     if (!detail.pinned) return;
@@ -1796,13 +1856,21 @@
     const origin = centerOf(source);
     const insetL = 12 + (mobile ? EmberViewport.safe.left : 0),
       insetR = 12 + (mobile ? EmberViewport.safe.right : 0);
-    // in portrait the first cards sit under the hero's console: the risen card steps aside, clear of the hero
-    const hero = mobile && EmberViewport.portrait && EmberViewport.layout?.player;
+    // in portrait the first cards sit under the hero's console: the risen card steps aside, clear of the hero (under
+    // the battlefield's view the hero stands on the board, its figure above the risen card)
+    const afield = typeof EmberBattleView !== "undefined" && EmberBattleView.active;
+    const hero = mobile && EmberViewport.portrait && !afield && EmberViewport.layout?.player;
+    /* held sideways under the battlefield's view the hand is folded and the board runs down to it: a card risen over
+     * its own place would stand on whichever units are above it — it rises over the board's middle instead, the open
+     * ground between the two sides (and while a target is chosen it steps back, faded, taps passing through it:
+     * skins/slate/battle-view.css) */
+    const middle = mobile && EmberViewport.layout?.folded && typeof EmberBattleView !== "undefined" ? EmberBattleView.project([0, 0, 0]).x : null;
     for (let pass = 0; pass < 1; pass++) {
       let x = Math.max(
         insetL,
         Math.min(EmberViewport.width - width - insetR, origin.x - width / 2),
       );
+      if (middle != null) x = Math.max(insetL, Math.min(EmberViewport.width - width - insetR, Math.round(middle - width / 2)));
       if (hero && bottom - height < hero.y + hero.h + 24)
         x = Math.min(EmberViewport.width - width - insetR, Math.max(x, hero.x + hero.w + 14));
       Object.assign(lift.style, {
@@ -1994,7 +2062,7 @@
       el.classList.remove("reading-source");
       el.setAttribute("aria-expanded", "false");
     });
-    app.classList.remove("is-targeting");
+    app.classList.remove("is-targeting", "is-placing");
     selection = null;
     lastHit = null;
     document
@@ -2043,6 +2111,8 @@
      * §13.3). It used to be touch-only because it only drove the mobile action
      * bar; the dimming is just as useful with a mouse. */
     app.classList.add("is-targeting");
+    // (placing a unit, not aiming at one: the card being read stays a thing to tap — tapping it puts it away)
+    app.classList.toggle("is-placing", selection.type === "card-play");
     // A preview opened just before the aim started would outlive it; retire it
     // the moment targeting takes over (see `preview`).
     if (!EmberViewport.mobile) hidePreview();
@@ -2105,8 +2175,11 @@
     const h = $("hand")?.getBoundingClientRect();
     const appRect = app.getBoundingClientRect();
     /* The hand rail overlays the bottom of the arena on short screens; a
-     * release there is a cancel, not a play. */
-    const handTop = h && h.height ? h.top - appRect.top : Infinity;
+     * release there is a cancel, not a play. (Measured from the cards: the
+     * dock's box carries one lift of headroom above them — mobile-view.js —
+     * and a folded hand's headroom lies over the board's near third.) */
+    const lift = parseFloat(getComputedStyle(app).getPropertyValue("--hand-lift")) || 0;
+    const handTop = h && h.height ? h.top - appRect.top + lift : Infinity;
     return { x0: a.x, x1: a.x + a.w, y1: Math.min(a.y + a.h, handTop - 4) };
   }
   function inPlayArea(p) {
@@ -2317,7 +2390,8 @@
       if (!drag.started) {
         const dx = e.clientX - drag.sx,
           dy = e.clientY - drag.sy;
-        if (touch && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) + 4) {
+        const folded = foldedDock();
+        if (touch && Math.abs(dx) > 10 && Math.abs(dx) > (folded ? 2 : 1) * Math.abs(dy) + 4) {
           drag.horizontal = true;
           if (drag.timer) {
             clearTimeout(drag.timer);
@@ -2327,7 +2401,7 @@
         }
         if (touch && drag.horizontal) return;
         const intent = touch
-          ? dy < -14 && -dy > Math.abs(dx) + 6 && !drag.horizontal
+          ? dy < -14 && -dy > (folded ? Math.abs(dx) * 0.5 : Math.abs(dx) + 6) && !drag.horizontal
           : Math.hypot(p.x - drag.x, p.y - drag.y) > 12;
         if (!intent) return;
         startDrag(drag, touch);
@@ -2382,6 +2456,12 @@
    * a stationary long press still inspects it; the panning dock
    * (`.hand-pan`) keeps the browser's native rail. */
   let riffle = null;
+  /* A folded dock (a phone held sideways under the battlefield's view: only a strip of card tops shows, the board right
+   * above it) reads a finger leaving the strip upward as taking the card out — anything steeper than about 27° is a
+   * drag, and a sweep along the strip must be at least twice as wide as it is tall to riffle (docs/design/HAND_GESTURES.md). */
+  function foldedDock() {
+    return EmberViewport.mobile && !!EmberViewport.layout?.folded;
+  }
   function riffleCardAt(clientX) {
     const cards = [...document.querySelectorAll("#hand .hand-card")];
     if (!cards.length) return null;
@@ -2436,7 +2516,7 @@
       if (!riffle.swiping) {
         const dx = e.clientX - riffle.x,
           dy = e.clientY - riffle.y;
-        if (Math.abs(dx) < 10 || Math.abs(dx) <= Math.abs(dy) + 4) return;
+        if (Math.abs(dx) < 10 || Math.abs(dx) <= (foldedDock() ? 2 : 1) * Math.abs(dy) + 4) return;
         riffle.swiping = true;
       }
       /* Leaving the dock drops the raised card back into the row: the lifted

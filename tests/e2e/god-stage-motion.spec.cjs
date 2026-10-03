@@ -36,10 +36,19 @@ for (const [width, height] of [
     await open(page);
     if (width < 1000) {
       const geometry = await page.evaluate(() => {
-        const { contract, player, arena, standingMage, rows } = EmberViewport.layout;
-        return { contract, player, arena, standingMage, rows, portrait: EmberViewport.portrait };
+        const { contract, player, arena, standingMage, rows, power } = EmberViewport.layout;
+        return { contract, player, arena, standingMage, rows, power, portrait: EmberViewport.portrait, afield: !!document.body.dataset.battleView };
       });
-      if (geometry.standingMage) {
+      if (geometry.afield && !geometry.portrait) {
+        /* The battlefield's view (2026-10-03): the hero stands on the board, so there is no hero card to match — the
+         * covenant is one of our hero's tools beside the hero power (a row under the hero, or a column beside it), a
+         * full touch target. */
+        const c = geometry.contract, p = geometry.power;
+        expect(c.w).toBeGreaterThanOrEqual(44);
+        const row = Math.abs(c.y - p.y) < 2 && Math.min(Math.abs(c.x - (p.x + p.w)), Math.abs(p.x - (c.x + c.w))) <= 20,
+          column = Math.abs(c.x - p.x) < 2 && Math.min(Math.abs(c.y - (p.y + p.h)), Math.abs(p.y - (c.y + c.h))) <= 20;
+        expect(row || column).toBe(true);
+      } else if (geometry.standingMage) {
         /* A standing hero model takes the taller stage in the left rail and the
          * covenant keeps the avatar's size below it (reference-pages, 2026-09-20). */
         expect(geometry.contract.w).toBeLessThanOrEqual(geometry.player.w);
@@ -62,7 +71,7 @@ for (const [width, height] of [
           geometry.player.y,
         );
       }
-      if (!geometry.portrait) {
+      if (!geometry.portrait && !geometry.afield) {
         expect(geometry.contract.x + geometry.contract.w).toBeLessThan(
           geometry.arena.x,
         );

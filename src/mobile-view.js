@@ -69,7 +69,18 @@ const EmberViewport = (() => {
      * card it replaces, so the enemy's console drops below the top bar's reach and the covenant lane lifts clear of
      * the player's figure. */
     const daises = mobile && document.body.classList.contains("hero-daises");
+    /* The battlefield's view (EmberBattleView): the heroes stand on the board with their units, not in the consoles.
+     * Upright the console keeps the hero power, the covenant, the mana and the turn; held sideways there is no rail —
+     * the hero's tools stand by the hero and the mana by the turn button (below). */
+    const bv = typeof EmberBattleView !== "undefined" && EmberBattleView.active;
+    if (!bv) delete document.body.dataset.battleView;
+    /* a phone held sideways under the battlefield's view folds its hand to a strip of card tops (a finger takes a card
+     * out of it); a mouse in a small window keeps the resting cards' faces in view (it lifts them by hovering) */
+    const folded = bv && mobile && !portrait && touch;
+    document.body.classList.toggle("hand-folded", folded);
     const signature = [
+      bv,
+      folded,
       mobile,
       compactDesktop,
       portrait,
@@ -135,7 +146,7 @@ const EmberViewport = (() => {
               ? 96
               : 88,
         cardH = Math.round((cardW * 7.4) / 5),
-        peek = Math.round(cardH * (!portrait && H < 380 ? 0.55 : 0.66));
+        peek = folded ? Math.round(cardH * 0.3) : Math.round(cardH * (!portrait && H < 380 ? 0.55 : 0.66));
       /* The dock box extends below the screen: only the top `peek` px of a
        * resting card are visible; a selected or dragged card rises out of it.
        * The box also reaches one lift ABOVE the cards (the skin pads that much
@@ -148,7 +159,7 @@ const EmberViewport = (() => {
         /* §12.1: the hero is the SAME card at every size, just three scales.
          * A mini card needs a taller strip than a 56px avatar did. */
         const consoleH = 96,
-          enemyH = (mini ? 78 : 56) + (daises ? 18 : 0);
+          enemyH = bv ? 0 : (mini ? 78 : 56) + (daises ? 18 : 0);
         l.hand.x = padL - 6;
         l.hand.w = usableW + 6;
         l.enemyConsole = { x: padL, y: l.header + 4, w: usableW, h: enemyH };
@@ -170,7 +181,9 @@ const EmberViewport = (() => {
         const infoX = padL + 76,
           turnX = W - padR - 64;
         l.weapon = { x: 76, y: 4, w: 36, h: 40 };
-        l.power = { x: infoX + 44, y: l.playerConsole.y + 2, w: 44, h: 44 };
+        /* (under the battlefield's view our hero stands in the middle of this band: the hero power and the covenant
+         * step to its left, the turn button keeps the right) */
+        l.power = { x: bv ? padL + 2 : infoX + 44, y: l.playerConsole.y + 2, w: 44, h: 44 };
         l.mana = {
           x: infoX,
           y: l.playerConsole.y + 78,
@@ -182,7 +195,7 @@ const EmberViewport = (() => {
         /* The board takes the whole width between the two console strips;
          * the covenant lane on the left is kept clear by lifting the rows
          * (see `l.rows` below), not by pushing the board aside. */
-        const top = l.enemyConsole.y + enemyH + 6;
+        const top = l.enemyConsole.y + enemyH + (bv ? 0 : 6);
         l.arena = {
           x: padL,
           y: top,
@@ -191,12 +204,13 @@ const EmberViewport = (() => {
         };
       } else {
         /* The landscape rail holds the hero card, the skill node beside it and
-         * the mana pill under that. */
-        const rail = mini ? (roomyRail ? 180 : 164) : 144,
+         * the mana pill under that. (Under the battlefield's view there is no rail: the hero stands on the board with
+         * its tools under it, and the mana waits by the turn button — see below.) */
+        const rail = bv ? 0 : mini ? (roomyRail ? 180 : 164) : 144,
           /* A 64px round button needs far less of the right edge than the old
            * 124px pill did; the arena takes the difference. */
           right = 76;
-        const arenaX = padL + rail + 8,
+        const arenaX = padL + (rail ? rail + 8 : 0),
           arenaW = W - arenaX - padR - right - 8;
         l.hand.x = arenaX - 4;
         l.hand.w = W - padR - l.hand.x;
@@ -259,6 +273,10 @@ const EmberViewport = (() => {
             w: l.player.w,
             h: l.player.h,
           };
+      /* (held sideways under the battlefield's view: whatever belongs to a thing stands by it — our hero's tools, the
+       * hero power and the covenant, in a row under its stats (placed once the view stands the hero: see below); the
+       * mana, read while cards are played, over the turn button, as on the desktop) */
+      if (bv && !portrait) l.mana = { x: l.turn.x + Math.round((l.turn.w - 56) / 2), y: l.turn.y - 8 - 24, w: 56, h: 24 };
       l.handHints = { x: l.hand.x, y: dockTop + 10, w: l.hand.w, h: peek };
       // Brand / shared round-notice slot / compact menu. Portrait secondary
       // actions remain available in the menu instead of crowding the message.
@@ -278,6 +296,7 @@ const EmberViewport = (() => {
       l.cardH = cardH;
       l.cardW = cardW;
       l.peek = peek;
+      l.folded = folded;
       l.tokenScale = roomy ? 1.4 : 1;
       /* The two unit rows split the board in quarters (the covenant no longer
        * sits on the board in portrait, so the rows have its whole height). */
@@ -297,11 +316,20 @@ const EmberViewport = (() => {
       safe,
       signature,
     };
+    /* our hero's tools by its station (under it, or beside it on a short wide screen: EmberBattleView.heroTools) — the
+     * station is where the battlefield's view stands the hero, so the view is asked now the layout it fits into is
+     * known */
+    const toolsRow = mobile && bv && !portrait;
+    document.body.classList.toggle("hero-tools-row", toolsRow);
+    if (toolsRow) {
+      const tools = EmberBattleView.heroTools();
+      if (tools) Object.assign(l, tools);
+    }
     if (mobile) {
       const roots = {
         arena: l.arena,
-        "enemy-hero": l.enemyConsole,
-        "player-hero": l.playerConsole,
+        // (the heroes' stations: the page places them where the battlefield's view stands them — ui.js)
+        ...(bv ? {} : { "enemy-hero": l.enemyConsole, "player-hero": l.playerConsole }),
         "power-btn": l.power,
         "contract-open": l.contract,
         hand: l.hand,
@@ -341,8 +369,7 @@ const EmberViewport = (() => {
        * ends up over the brand mark in the top-left corner. */
       for (const id of [
         "arena",
-        "enemy-hero",
-        "player-hero",
+        ...(bv ? [] : ["enemy-hero", "player-hero"]),
         "power-btn",
         "contract-open",
         "hand",
@@ -506,6 +533,8 @@ const EmberViewport = (() => {
     };
   }
   function minion(side, i, n) {
+    // the battlefield's formation decides where a unit stands; its token is where that lands on the screen
+    if (typeof EmberBattleView !== "undefined" && EmberBattleView.active) return EmberBattleView.minionBox(side, i, n);
     if (!state.mobile)
       return {
         x: 800 + (i - (n - 1) / 2) * 132 - 58,
@@ -574,7 +603,9 @@ const EmberViewport = (() => {
     };
   }
   const lane = (side) =>
-    state.mobile
+    typeof EmberBattleView !== "undefined" && EmberBattleView.active
+      ? EmberBattleView.lane(side)
+      : state.mobile
       ? {
           x: state.layout.arena.x + state.layout.arena.w / 2,
           y: state.layout.rows[side === "e" ? "e" : "p"],
