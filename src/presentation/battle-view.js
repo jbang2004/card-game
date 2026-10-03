@@ -21,7 +21,16 @@
 const EmberBattleView = (() => {
   "use strict";
   const Q = typeof location !== "undefined" ? new URLSearchParams(location.search) : new URLSearchParams();
-  const classic = Q.get("view") === "classic", lateral = Q.get("view") === "lateral";
+  const classic = Q.get("view") === "classic", lateral = Q.get("view") === "lateral", noFigures = Q.get("figures") === "0";
+  /* The view stands figures on the board; without them (motion reduced, ?figures=0, the figures' WebGL failed) the
+   * tokens are flat cards, and the old rows were made for those: the page keeps its rows then. */
+  function figures() {
+    if (noFigures) return false;
+    if (typeof document !== "undefined" && document.body?.classList.contains("reduced-motion")) return false;
+    if (typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
+    if (typeof EmberMiniatures !== "undefined" && EmberMiniatures.figures && !EmberMiniatures.figures()) return false;
+    return true;
+  }
   // a hero's dais: its top a little above the court (EmberArena3D's SEAT.top, in its units / K)
   const DAIS = 0.075;
   // the scene's units per world unit (EmberArena3D draws in its own: a court ~1100 across)
@@ -33,7 +42,9 @@ const EmberBattleView = (() => {
     front: { fov: 32, pitch: 40, yaw: 0, z: 1.15, back: 0.85, sp: 0.95, hero: 3.7, heroX: { p: 0, e: 0 } },
     // ⑤ 侧视横版, for comparison (?view=lateral, a screen on its side): the side view's formation seen square from
     // the side — ours on the left, theirs on the right, the heroes at the two ends of the middle line
-    lateral: { fov: 26, pitch: 30, yaw: 90, dx: 1.0, x0: 1.0, gap: 0.95, stag: 0.32, hero: 3.47, heroX: { p: 0, e: 0 } },
+    // (tuned past the lab's numbers, 2026-10-03: steeper, the depth rows further apart and stepped out more, the
+    // heroes nearer — a full board without a silhouette hidden, and the room's height used)
+    lateral: { fov: 26, pitch: 34, yaw: 90, dx: 1.2, x0: 1.0, gap: 0.95, stag: 0.45, hero: 3.1, heroX: { p: 0, e: 0 } },
   };
   const rad = (d) => (d * Math.PI) / 180;
   const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -124,9 +135,11 @@ const EmberBattleView = (() => {
     const k = [mode, R.W, R.H, R.top, R.bottom, R.left, R.right].map((v) => (typeof v === "number" ? Math.round(v) : v)).join(":");
     if (k !== key) {
       key = k; view = makeView(mode, R); version++;
-      // (the page's chrome is laid out for the view: body[data-battle-view] — skins/slate/battle-view.css)
-      if (typeof document !== "undefined" && document.body && document.body.dataset.battleView !== mode) document.body.dataset.battleView = mode; if (typeof dispatchEvent === "function") dispatchEvent(new CustomEvent("ember:battleview", { detail: { version } }));
+      if (typeof dispatchEvent === "function") dispatchEvent(new CustomEvent("ember:battleview", { detail: { version } }));
     }
+    // (the page's chrome is laid out for the view: body[data-battle-view] — skins/slate/battle-view.css; EmberViewport
+    // takes it off while the view stands down)
+    if (typeof document !== "undefined" && document.body && document.body.dataset.battleView !== mode) document.body.dataset.battleView = mode;
     return view;
   }
   /** a world point → stage pixels (x, y) and its depth along the camera */
@@ -169,8 +182,8 @@ const EmberBattleView = (() => {
 
   return Object.freeze({
     K, DAIS, FOOT, MODES,
-    /** the battle is drawn this way (false only with ?view=classic) */
-    get active() { return !classic; },
+    /** the battle is drawn this way (not with ?view=classic, nor without figures: see figures()) */
+    get active() { return !classic && figures(); },
     get version() { current(); return version; },
     /** { mode, fov, aspect, W, H, eye, target, dist, f, r, u } — the camera in world units */
     view: () => current(),

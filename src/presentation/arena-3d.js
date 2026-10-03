@@ -1368,7 +1368,9 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     /** loose lumps of amber on the ground */
     const lumps = (x, z, n, spread, r0, r1, f = 2) => { for (let i = 0; i < n; i++) { const a = rnd() * 6.283, d = Math.sqrt(rnd()) * spread, r = r0 + rnd() * (r1 - r0); ball([x + Math.cos(a) * d, g + r * 0.45, z + Math.sin(a) * d], r, f); } };
     /** a world point (x, z) inside the visible margin on `side` at depth zf (a fraction of the court's half-depth); k is how far across it */
-    const wing = (side, zf, k = 0.55) => { const z = zf * HZ, e = floorAt(side > 0 ? W : 0, project([side * HX, 0, z])[1]), room = e ? Math.abs(e[0]) - HX : 0; return [side * (HX + clamp(room * k, 36, 330)), z, room]; };
+    /* (under the battle view a margin can lie between the camera and the court — seen square from the side, one of them
+     * does: a piece placed there would stand in front of the units, so it goes to the far side instead) */
+    const wing = (side, zf, k = 0.55) => { const z = zf * HZ, e = floorAt(side > 0 ? W : 0, project([side * HX, 0, z])[1]), room = e ? Math.abs(e[0]) - HX : 0; let x = side * (HX + clamp(room * k, 36, 330)); if (bvCam && frontZ(x, z) > HZ * 1.05) x = -x; return [x, z, room]; };
     return { T, log, ball, slab, cyl, cone, ring, light, lamp, lumps, wing };
   }
   /** 铁哨 · 第七矿井口: the loading deck at the pit mouth — the timbered tunnel and its rails running to the court, carts of amber, a headframe and a

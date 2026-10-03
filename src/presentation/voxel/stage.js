@@ -102,6 +102,8 @@ const EmberMiniatures = (() => {
     clearTokens();
     try { arena?.dispose(); renderer?.dispose(); } catch {}
     arena = null; renderer = null; canvas?.remove(); canvas = null; dimmer?.remove(); dimmer = null;
+    // (without figures the battlefield's view stands down: the page lays its rows out again)
+    if (typeof EmberViewport !== "undefined") setTimeout(() => { EmberViewport.resize(); if (typeof EmberArena3D !== "undefined") EmberArena3D.resize?.(); });
     console.warn("Battle miniatures unavailable; using flat tokens.", stats.error);
   }
 
@@ -400,6 +402,8 @@ const EmberMiniatures = (() => {
     sync, prewarm, cue, contact, has, owns, plan, stands, hero, aim, heroBox, fall,
     /** the heroes stand on their daises here (the desktop layout): the plate's own figure (EmberHeroFigure) stands down */
     heroDesk: () => heroesOn(),
+    /** figures stand on the board (not with motion reduced, ?figures=0, or after a failure): EmberBattleView needs them */
+    figures: () => enabled(),
     diagnostics: () => ({ ...(arena ? arena.diagnostics() : { figures: 0, cues: [], bakeMs: {}, dying: 0, baking: 0, live: 0 }), ...stats }),
   });
 })();

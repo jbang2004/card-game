@@ -464,8 +464,25 @@
     let candidate = pointerTarget || null;
     // (the battlefield's formation: the next unit takes the next place in it — EmberBattleView)
     if (!candidate && count < 7 && typeof EmberBattleView !== "undefined" && EmberBattleView.active) {
-      const next = EmberBattleView.minionBox("p", count, count + 1);
-      return { x: next.x + next.w / 2, y: next.y + next.h / 2 };
+      const BV = EmberBattleView,
+        next = BV.minionBox("p", count, count + 1),
+        boxes = Array.from({ length: count }, (_, i) => BV.minionBox("p", i, count)),
+        under = (p) => boxes.some((b) => Math.abs(p.x - b.x - b.w / 2) <= b.w / 2 && Math.abs(p.y - b.y - b.h / 2) <= b.h / 2),
+        at = { x: next.x + next.w / 2, y: next.y + next.h / 2 };
+      if (!under(at)) return at;
+      /* The line re-forms round the newcomer only once it lands: until then its place may lie under a unit standing
+       * there now. The cue steps along our line on screen (its +x, then its −x) past the units — the nearest point
+       * sure to be empty before the click, as the old rows anchored on the group's edge. */
+      const a = BV.project([0, 0, next.world[2]]), b = BV.project([1, 0, next.world[2]]),
+        len = Math.hypot(b.x - a.x, b.y - a.y) || 1, ux = (b.x - a.x) / len, uy = (b.y - a.y) / len,
+        step = next.w * 0.25;
+      for (const dir of [1, -1])
+        for (let k = 1; k <= 16; k++) {
+          const p = { x: at.x + dir * ux * step * k, y: at.y + dir * uy * step * k };
+          if (p.x < arena.left + margin || p.x > arena.right - margin) break;
+          if (!under(p)) return p;
+        }
+      return at;
     }
     if (!candidate) {
       if (!count) {
@@ -598,7 +615,13 @@
     toastTimer = setTimeout(() => $("toast").classList.remove("visible"), 2900);
   }
   function applySettings() {
+    const wasReduced = document.body.classList.contains("reduced-motion");
     document.body.classList.toggle("reduced-motion", !!settings.reduced);
+    // (reduced motion takes the figures off the board, and the battlefield's view with them: the page lays out again)
+    if (wasReduced !== !!settings.reduced) {
+      EmberViewport.resize();
+      if (typeof EmberArena3D !== "undefined") EmberArena3D.resize?.();
+    }
     $("sound-btn").innerHTML = A.icon(settings.sound ? "sound" : "mute");
     $("sound-btn").setAttribute("aria-pressed", String(settings.sound));
     EmberAudio.configure(settings);
@@ -1133,6 +1156,11 @@
         el.style.setProperty("--station-inner", b.h - b.inner + "px");
         el.classList.add("hero-afield");
         el.classList.toggle("station-aside", !!b.aside);
+      } else if (el.classList.contains("hero-afield")) {
+        // (the view stood down — motion reduced, figures failed: the hero goes back to its console, which the page boxes)
+        el.classList.remove("hero-afield", "station-aside");
+        el.style.removeProperty("--station-inner");
+        if (!EmberViewport.mobile) for (const k of ["left", "top", "width", "height"]) el.style.removeProperty(k);
       }
       el.classList.toggle("frozen", p.frozen);
       el.classList.toggle("ready", game.canAttack(side, "hero"));
@@ -1824,13 +1852,20 @@
     const origin = centerOf(source);
     const insetL = 12 + (mobile ? EmberViewport.safe.left : 0),
       insetR = 12 + (mobile ? EmberViewport.safe.right : 0);
-    // in portrait the first cards sit under the hero's console: the risen card steps aside, clear of the hero
-    const hero = mobile && EmberViewport.portrait && EmberViewport.layout?.player;
+    // in portrait the first cards sit under the hero's console: the risen card steps aside, clear of the hero (under
+    // the battlefield's view the hero stands on the board, its figure above the risen card)
+    const afield = typeof EmberBattleView !== "undefined" && EmberBattleView.active;
+    const hero = mobile && EmberViewport.portrait && !afield && EmberViewport.layout?.player;
+    /* held sideways under the battlefield's view the hand is folded and the board runs down to it: a card risen over
+     * its own place would cover the near units it may be aimed at, so it rises in the left rail instead (the rail's
+     * covenant and hero power wait under it while it is read) */
+    const rail = mobile && !EmberViewport.portrait && afield;
     for (let pass = 0; pass < 1; pass++) {
       let x = Math.max(
         insetL,
         Math.min(EmberViewport.width - width - insetR, origin.x - width / 2),
       );
+      if (rail) x = insetL;
       if (hero && bottom - height < hero.y + hero.h + 24)
         x = Math.min(EmberViewport.width - width - insetR, Math.max(x, hero.x + hero.w + 14));
       Object.assign(lift.style, {

@@ -96,3 +96,9 @@ html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-a
 html[data-skin="slate"] body[data-battle-view].touch-layout #battle .hero.hero-afield.hero-afield .weapon-slot {
   inset: 0 auto auto calc(100% + 2px);
 }
+
+/* phones held sideways: a tapped card is read in the left rail (ui.js syncHandLift), so its place in the folded hand
+ * only rises a step to say which it is — a selected card's full rise would stand it, faded, over the near units */
+html[data-skin="slate"] body[data-battle-view].mobile-landscape #battle .hand-card.reading-source.reading-source {
+  transform: translateY(-10px);
+}

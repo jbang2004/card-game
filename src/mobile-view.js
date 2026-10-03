@@ -73,6 +73,7 @@ const EmberViewport = (() => {
      * the consoles keep the hero power, the covenant, the mana and the turn; a phone held sideways folds its hand down
      * to a strip of card tops (a card rises out of it when touched) so the board has the height. */
     const bv = typeof EmberBattleView !== "undefined" && EmberBattleView.active;
+    if (!bv) delete document.body.dataset.battleView;
     const signature = [
       bv,
       mobile,
