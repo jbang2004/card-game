@@ -48,7 +48,9 @@ const EmberBattleView = (() => {
     // 万象棋式, for comparison (?view=wanxiang, a screen on its side; the user's reference, 2026-10-03): the board seen
     // straight on from well above, each side one line of seven facing the other, the heroes at the line's ends — ours
     // at the near left, theirs at the far right
-    wanxiang: { fov: 28, pitch: 48, yaw: 0, z: 1.25, sp: 1.0, hero: 1.7, heroX: { p: -4.3, e: 4.3 } },
+    // (pitch 50: the reference's board is foreshortened to about two-thirds and its far edge is ~0.78 of its near one;
+    // the figures then stand about a tenth of the screen's height, as there)
+    wanxiang: { fov: 28, pitch: 50, yaw: 0, z: 1.25, sp: 1.0, hero: 1.7, heroX: { p: -4.3, e: 4.3 } },
   };
   const rad = (d) => (d * Math.PI) / 180;
   const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
