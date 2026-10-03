@@ -43,9 +43,12 @@ const EmberBattleView = (() => {
   const MODES = {
     // 左右对战 (2026-10-03, after the user's 万象棋 reference): 万象棋's height (50°), seen square from the side; nothing
     // hides behind anything from this high, so the rows need no step and a side reads as a tidy block
-    // (on a phone — the room under 900 px — a unit's stats plate stands as tall as a fifth of a figure, so the rows open
-    // out to fit it between one unit's feet and the next one's head, and the heroes stand clear of the back column)
-    versus: { fov: 28, pitch: 50, yaw: 90, dx: 1.05, x0: 1.0, gap: 0.95, stag: 0, hero: 3.1, heroX: { p: 0, e: 0 }, phone: { dx: 1.25, hero: 3.3 } },
+    // (on a phone — the room under 900 px wide — a unit's stats plate stands as tall as a fifth of a figure or more, so
+    // the rows open out to fit it between one unit's feet and the next one's head, clear of it, and the heroes stand
+    // clear of the back column; on the smallest — under 340 px tall, the plate already a size smaller — further still)
+    // (rows 1.4 apart everywhere: a row's stats plates sit between its feet and the heads of the row in front — the
+    // screen is wide, so the depth this costs costs the figures little on a desktop: 118 → 111 px at 1600 × 940)
+    versus: { fov: 28, pitch: 50, yaw: 90, dx: 1.4, x0: 1.0, gap: 0.95, stag: 0, hero: 3.1, heroX: { p: 0, e: 0 }, phone: { hero: 3.35 }, tiny: { dx: 1.8, hero: 3.6 } },
     // ⑥ 我方背后斜侧, for comparison (?view=shoulder; the landscape view until versus)
     shoulder: { fov: 30, pitch: 22, yaw: 44, dx: 1.2, x0: 1.0, gap: 0.95, stag: 0.55, hero: 4.15, heroX: { p: 0, e: 1.2 } },
     front: { fov: 32, pitch: 40, yaw: 0, z: 1.15, back: 0.85, sp: 0.95, hero: 3.7, heroX: { p: 0, e: 0 } },
@@ -70,8 +73,8 @@ const EmberBattleView = (() => {
   // ------------------------------------------------------------------ the formation
   /** where the i-th of a side's n units stands: [x, 0, z] */
   // a mode's numbers on the screen at hand (a mode may carry its own for a phone)
-  let phone = false;
-  const numbers = (mode) => (phone && MODES[mode].phone ? { ...MODES[mode], ...MODES[mode].phone } : MODES[mode]);
+  let phone = false, tiny = false;
+  const numbers = (mode) => ({ ...MODES[mode], ...(phone && MODES[mode].phone), ...(tiny && MODES[mode].tiny) });
   function slot(mode, side, i, n) {
     const s = side === "e" ? -1 : 1, M = numbers(mode);
     n = Math.max(1, Math.min(7, n)); i = clamp(i, 0, n - 1);
@@ -183,7 +186,7 @@ const EmberBattleView = (() => {
     const Vp = EmberViewport, mode = Vp.mobile && Vp.portrait ? "front" : LANDSCAPE, R = room(Vp);
     const k = [mode, R.W, R.H, R.top, R.bottom, R.left, R.right].map((v) => (typeof v === "number" ? Math.round(v) : v)).join(":");
     if (k !== key) {
-      key = k; phone = R.W < 900; view = makeView(mode, R); version++;
+      key = k; phone = R.W < 900; tiny = phone && R.H < 340; view = makeView(mode, R); version++;
       if (typeof dispatchEvent === "function") dispatchEvent(new CustomEvent("ember:battleview", { detail: { version } }));
     }
     // (the page's chrome is laid out for the view: body[data-battle-view] — skins/slate/battle-view.css; EmberViewport

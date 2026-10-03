@@ -1126,7 +1126,11 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
     HZ = Math.round((Math.max(-ext.z0, ext.z1) + 0.55) * K);
     RC = Math.min(HX, HZ) * 0.42;
     ornK = clamp(Math.min(HX, HZ) / 500, 0.55, 1.2);
-    gemK = clamp(Math.min(Math.sqrt((2 * HX) / (project([HX, 0, 0])[0] - project([-HX, 0, 0])[0])), 0.6 + HZ / 500), 1, 1.9);
+    // (the crystals' scale against how many pixels a unit of the court spans across the screen — measured along whichever
+    // of its axes lies across it: turned 90° (versus) its x runs up the screen and that measure alone divided by about
+    // nothing, a NaN that reached every surface through the crystals' lights and blacked the court out on a phone)
+    { const across = Math.max(Math.abs(project([HX, 0, 0])[0] - project([-HX, 0, 0])[0]) / (2 * HX), Math.abs(project([0, 0, HZ])[0] - project([0, 0, -HZ])[0]) / (2 * HZ), 1e-3);
+      gemK = clamp(Math.min(Math.sqrt(1 / across), 0.6 + HZ / 500), 1, 1.9); }
     LIGHT_DIR = SC.light ? V.norm(SC.light) : LIGHT_DEF;
     lightVP = M.mul(M.ortho(-(HX + 1250), HX + 1250, -(HZ + 950), HZ + 950, 10, 6500), M.look(V.scale(LIGHT_DIR, 3000), [0, 0, -HZ * 0.5]));
     { const edgeX = (y) => { const f = floorAt(W, y); return f ? f[0] : HX + 400; }, rw = tall ? 72 : Vp.mobile ? 86 : 100, gapMin = tall ? 18 : 40;
@@ -1258,9 +1262,12 @@ void main(){vec2 px=1./uRes;vec4 bl=texture(uBloom,vUV);float heat=smoothstep(.1
       for (let i = 0; i < n; i++) { const q = rimAt(-4, (i / n) * per + rnd() * 30); if (nearSeat(q[0], q[1], 40) || !seen(q[0], GROUND, q[1], 80)) continue; shard(rail, [q[0], 2, q[1]], 24 + rnd() * 58, 4 + rnd() * 7, [q[2] * (0.25 + rnd() * 0.4), 1, q[3] * (0.25 + rnd() * 0.4)], 3); }
     }
     /* frozen bubbles hang where time stopped them: in rings round the court, some high, none over the court */
-    for (let i = 0; i < 70; i++) { const a = rnd() * Math.PI * 2, x = Math.cos(a) * (HX + 110 + rnd() * 520), z = Math.sin(a) * (HZ + 90 + rnd() * 380);
-      const near = frontZ(x, z) > HZ * 0.55, r = (near ? 16 + rnd() * 26 : 20 + rnd() * (bvCam ? 38 : 70)) * (rnd() < 0.15 ? 1.6 : 1), y = GROUND + r + (near ? rnd() * 40 : rnd() * (bvCam ? 120 : 360));
-      if (platSD(x, z) < 60 + r || nearSeat(x, z, r + 30) || !seen(x, y, z, r * 2)) continue; sphere(glass, [x, y, z], r); }
+    /* (seen from above — the battlefield's view — a bubble stands against the dark ground as a pale disc: fewer and
+     * smaller there, none under the page's controls (the top bar, the hand, the turn button) or by a hero's station) */
+    const underHud = (x, y, z, r) => { if (!bvCam) return false; const q = project([x, y, z]), m = r * 1.4; return q[1] < 96 || HUD.some((b) => q[0] > b.left - m && q[0] < b.left + b.w + m && q[1] > b.top - m && q[1] < b.top + b.h + m); };
+    for (let i = 0; i < (bvCam ? 40 : 70); i++) { const a = rnd() * Math.PI * 2, x = Math.cos(a) * (HX + 110 + rnd() * 520), z = Math.sin(a) * (HZ + 90 + rnd() * 380);
+      const near = frontZ(x, z) > HZ * 0.55, r = (near ? 16 + rnd() * 26 : 20 + rnd() * (bvCam ? 26 : 70)) * (rnd() < 0.15 && !bvCam ? 1.6 : 1), y = GROUND + r + (near ? rnd() * 40 : rnd() * (bvCam ? 60 : 360));
+      if (platSD(x, z) < 60 + r || nearSeat(x, z, r + (bvCam ? 90 : 30)) || !seen(x, y, z, r * 2) || underHud(x, y, z, r)) continue; sphere(glass, [x, y, z], r); }
     /* shards of ice caught mid-fall */
     for (let i = 0; i < 90; i++) { const a = rnd() * Math.PI * 2, x = Math.cos(a) * (HX + 70 + rnd() * 560), z = Math.sin(a) * (HZ + 60 + rnd() * 420), y = GROUND + 20 + rnd() * (frontZ(x, z) > HZ * 0.5 ? 60 : 320);
       if (platSD(x, z) < 40 || nearSeat(x, z, 40) || !seen(x, y, z, 60)) continue; shard(rail, [x, y, z], 10 + rnd() * 26, 3 + rnd() * 5, [rnd() - 0.5, -0.6 - rnd(), rnd() - 0.5], 3); }

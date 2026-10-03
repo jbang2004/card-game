@@ -117,3 +117,12 @@ html[data-skin="slate"] body.hand-folded #app.is-targeting:not(.is-placing) #han
   pointer-events: none;
   transition: opacity 160ms linear;
 }
+
+/* the smallest phones held sideways (a stage under 360 px tall): figures stand about 32 px, and a 17 px stats plate
+ * would reach up over the next row's heads — the plate comes down a size (its numerals stay 11 px, readable) */
+@media (max-height: 359px) {
+  html[data-skin="slate"] body.hand-folded #minions .minion:is(.miniature-ready, .miniature-pending) {
+    --plate-h: 14px;
+    --plate-bottom: calc(2% + 4px);
+  }
+}
