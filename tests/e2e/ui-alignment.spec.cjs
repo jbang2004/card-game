@@ -99,6 +99,11 @@ for (const [width, height] of [
         es.every((el) => {
           const r = el.getBoundingClientRect(),
             p = el.parentElement.getBoundingClientRect();
+          /* The battlefield's view stands the hero on the board: its name is a
+           * plaque by the figure (under its feet, or beside it where its feet
+           * are level with its back row's heads) — whole on screen. */
+          if (document.body.dataset.battleView)
+            return r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight;
           /* Touch consoles seat the name beside the round avatar, inside the
            * hero strip; the desktop card keeps it centred on the plaque. */
           if (document.body.classList.contains("touch-layout")) {
