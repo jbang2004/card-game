@@ -21,7 +21,7 @@
 const EmberBattleView = (() => {
   "use strict";
   const Q = typeof location !== "undefined" ? new URLSearchParams(location.search) : new URLSearchParams();
-  const classic = Q.get("view") === "classic", lateral = Q.get("view") === "lateral", wanxiang = Q.get("view") === "wanxiang", noFigures = Q.get("figures") === "0";
+  const classic = Q.get("view") === "classic", lateral = Q.get("view") === "lateral", wanxiang = Q.get("view") === "wanxiang", wanxiangLR = Q.get("view") === "wanxiang-lr", noFigures = Q.get("figures") === "0";
   /* The view stands figures on the board; without them (motion reduced, ?figures=0, the figures' WebGL failed) the
    * tokens are flat cards, and the old rows were made for those: the page keeps its rows then. */
   function figures() {
@@ -51,6 +51,10 @@ const EmberBattleView = (() => {
     // (pitch 50: the reference's board is foreshortened to about two-thirds and its far edge is ~0.78 of its near one;
     // the figures then stand about a tenth of the screen's height, as there)
     wanxiang: { fov: 28, pitch: 50, yaw: 0, z: 1.25, sp: 1.0, hero: 1.7, heroX: { p: -4.3, e: 4.3 } },
+    // the same view, the sides left and right (?view=wanxiang-lr, the user's question, 2026-10-03): ⑤'s formation —
+    // each side two columns, four rows deep — seen from 万象棋's height; the heroes at the two ends of the middle line
+    // (seen from this high nothing hides behind anything: the rows need no step, and the side reads as a tidy block)
+    wanxianglr: { fov: 28, pitch: 50, yaw: 90, dx: 1.05, x0: 1.0, gap: 0.95, stag: 0, hero: 3.1, heroX: { p: 0, e: 0 } },
   };
   const rad = (d) => (d * Math.PI) / 180;
   const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -63,7 +67,7 @@ const EmberBattleView = (() => {
   function slot(mode, side, i, n) {
     const s = side === "e" ? -1 : 1, M = MODES[mode];
     n = Math.max(1, Math.min(7, n)); i = clamp(i, 0, n - 1);
-    if (mode === "side" || mode === "lateral") {
+    if (mode === "side" || mode === "lateral" || mode === "wanxianglr") {
       // columns across the board (left to right), two deep — the front one a step from the middle, the back one a
       // column further — and every other column stepped back
       const m = Math.ceil(n / 2), j = Math.floor(i / 2), col = i % 2;
@@ -139,7 +143,7 @@ const EmberBattleView = (() => {
   function tune(mode, o) { Object.assign(MODES[mode], o); key = ""; }
   function current() {
     if (typeof EmberViewport === "undefined") return null;
-    const Vp = EmberViewport, mode = Vp.mobile && Vp.portrait ? "front" : lateral ? "lateral" : wanxiang ? "wanxiang" : "side", R = room(Vp);
+    const Vp = EmberViewport, mode = Vp.mobile && Vp.portrait ? "front" : lateral ? "lateral" : wanxiang ? "wanxiang" : wanxiangLR ? "wanxianglr" : "side", R = room(Vp);
     const k = [mode, R.W, R.H, R.top, R.bottom, R.left, R.right].map((v) => (typeof v === "number" ? Math.round(v) : v)).join(":");
     if (k !== key) {
       key = k; view = makeView(mode, R); version++;
