@@ -367,7 +367,7 @@ test("portable build decodes embedded audio without asset requests", async ({
   page.on("request", (r) => {
     if (/\.mp3/.test(r.url())) requests.push(r.url());
   });
-  await page.goto("http://127.0.0.1:8000/?debug=1");
+  await page.goto("/?debug=1");
   await page.waitForFunction(() => window.Emberfall);
   await page.locator("#quick-btn").click();
   await page.evaluate(() => EmberAudio.ready);

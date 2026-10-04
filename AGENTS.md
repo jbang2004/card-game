@@ -13,7 +13,7 @@
 ```bash
 python3 build.py
 node --test tests/*.test.cjs
-python3 -m http.server 8000 --bind 127.0.0.1
+python3 tools/serve.py 8000   # 不用 python -m http.server：默认监听队列 5，页面一次加载约 850 个文件会被重置连接
 ```
 
 构建器只使用 Python 标准库；上述 Node 测试只用 Node 内置模块。不要为这些步骤安装没有声明用途的依赖。修改素材按 `requirements-art.txt` 配置；浏览器回归使用 package.json 声明的 Playwright。

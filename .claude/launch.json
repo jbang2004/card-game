@@ -5,11 +5,8 @@
       "name": "emberfall",
       "runtimeExecutable": "python3",
       "runtimeArgs": [
-        "-m",
-        "http.server",
-        "8000",
-        "--bind",
-        "127.0.0.1"
+        "tools/serve.py",
+        "8000"
       ],
       "port": 8000
     },
@@ -17,8 +14,8 @@
       "name": "emberfall-8012",
       "runtimeExecutable": "python3",
       "runtimeArgs": [
-        "-c",
-        "import http.server as h;h.ThreadingHTTPServer.request_queue_size=512;h.ThreadingHTTPServer(('127.0.0.1',8012),h.SimpleHTTPRequestHandler).serve_forever()"
+        "tools/serve.py",
+        "8012"
       ],
       "port": 8012
     },

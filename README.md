@@ -11,10 +11,10 @@
 ```bash
 python3 build.py
 node --test tests/*.test.cjs
-python3 -m http.server 8000 --bind 127.0.0.1
+python3 tools/serve.py 8000
 ```
 
-访问 **http://127.0.0.1:8000/dist/**。`dist/` 是图片和脚本分离的网页版本；根目录 `index.html` 是同源构建的离线单文件版本。修改源码后重新构建。
+访问 **http://127.0.0.1:8000/dist/**。`dist/` 是图片和脚本分离的网页版本；根目录 `index.html` 是同源构建的离线单文件版本。修改源码后重新构建。`tools/serve.py` 只是带深监听队列的静态服务器：页面一次加载约 850 个文件，`python3 -m http.server` 的默认队列会让部分请求被重置、游戏起不来（`npm run serve` 与浏览器回归用的就是它；`PW_PORT` 可改回归端口）。
 
 构建只需要 Python 标准库，单元测试只需要 Node 内置模块。完整浏览器回归使用项目声明的 Playwright：
 

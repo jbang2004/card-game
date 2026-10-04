@@ -29,7 +29,7 @@
 6. 单测 `node --test tests/*.test.cjs`。插画或绑定结构大改运行 `npm run test:release`。只用项目声明的 Playwright 与已有 Chromium。
 7. 截图核对：手牌、场上、卡牌详情、图鉴与结算页的插画取景正确，冻结/圣盾/嘲讽等状态表现不被插画遮挡。检查桌面、手机横/竖屏及满场。
 
-需要 HTTP 时从仓库根目录运行 `python3 -m http.server 8000 --bind 127.0.0.1`，游戏位于 `/dist/?debug=1`。`tools/animation-demo.html` 逐项演示攻击、冻结、变形、死亡、吸血与抽牌的战斗演出。
+需要 HTTP 时从仓库根目录运行 `python3 tools/serve.py 8000`，游戏位于 `/dist/?debug=1`。`tools/animation-demo.html` 逐项演示攻击、冻结、变形、死亡、吸血与抽牌的战斗演出。
 
 ## 表现绑定
 

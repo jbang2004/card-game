@@ -74,7 +74,7 @@ test("collection: all presets, class filters, rule text and expansion artwork", 
       }
       return EmberData.cards.filter((c) => c.set).length;
     }),
-  ).toBe(23);
+  ).toBe(24);
   await page.screenshot({ path: "artifacts/qa/oaths-library.png" });
 });
 test("practice preserves an existing campaign save, survives both hero powers and exits cleanly", async ({
