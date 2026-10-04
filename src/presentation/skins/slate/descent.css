@@ -1,0 +1,1178 @@
+/* Skin "slate" — 下井 / the descent's screens (application/screens/run.js), over run.css's shell.
+ *
+ * Every page of the descent stands in a place: its scene is painted full bleed behind the page
+ * (`.run-backdrop`, the act's own art), dimmed so type stays legible, and the page's own shell
+ * (heading · body · footer, see run.css) floats on it. The bodies added here:
+ *
+ *   .run-intro                         an act's opening: number, name, two paragraphs, the bearer's vow
+ *   .run-map-wrap > .run-map + aside   the act's map (places by --x/--y, the ways as one SVG) and the
+ *                                      place inspector
+ *   .run-scene > figure + .run-story   a face (or a picture) beside the telling and its choices —
+ *                                      encounters, aftermaths, events, the chapel, notes, the tavern
+ *   .run-picks                         a grid of cards to pick from
+ *   .run-notebook                      the pages of the Root-Sea Notebook
+ *   .run-ending                        the last page of a run
+ *   #bark                              an opponent's line during its battle (presentation/barks.js)
+ *
+ * Colour roles: ember (--arena-ember) for the way down and anything warm (embers, the open place),
+ * crimson for a cost or a fall, the slate blue for where the bearer stands. */
+
+/* ==========================================================================
+   the scene behind the page
+   ========================================================================== */
+html[data-skin="slate"] body #modal.folio-host > .run-box > .run-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: #07090d;
+}
+html[data-skin="slate"] body #modal.folio-host > .run-box > .run-backdrop img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.95) brightness(0.82);
+  transform: scale(1.04);
+}
+html[data-skin="slate"] body #modal.folio-host > .run-box > .run-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 90% at 50% 45%, #07090d00 0%, #07090d66 78%, #07090dbf 100%),
+    linear-gradient(180deg, #07090dc7 0%, #07090d40 22%, #07090d4d 70%, #07090de0 100%);
+}
+/* a page of words dims its scene further; the map and the openings let it show */
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .run-box:not([data-run-step="map"], [data-run-step="intro"], [data-run-step="hub"], [data-run-step="won"], [data-run-step="lost"])
+  > .run-backdrop
+  img {
+  filter: saturate(0.8) brightness(0.4) blur(5px);
+}
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .run-box[data-shell="page"]
+  > :is(.modal-heading, .folio-pane, .modal-footer) {
+  /* (flex items take a z-index without being positioned; the footer keeps the shell's own placement) */
+  z-index: 2;
+}
+/* no path track any more: the heading is one row */
+html[data-skin="slate"]
+  body
+  #modal.folio-host
+  > .run-box[data-shell="page"]
+  > .modal-heading.run-heading {
+  grid-template-areas: "title status";
+  align-items: center;
+  row-gap: 0;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-heading h2 {
+  text-shadow: 0 2px 18px #000000a6;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-eyebrow {
+  color: var(--arena-ember-hi);
+  letter-spacing: 0.06em;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .modal-scroll > * {
+  margin-block: auto;
+}
+
+/* ---- the status chips: embers, keepsakes ---------------------------------- */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-embers {
+  gap: 2px;
+  padding: 0 10px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-embers i {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 22px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-flame {
+  width: 18px;
+  height: 18px;
+  fill: #ffffff24;
+  stroke: #ffffff38;
+  stroke-width: 1.2;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-embers i.lit .run-flame,
+html[data-skin="slate"] body #modal.folio-host .run-box .gain-ember .run-flame {
+  fill: var(--arena-ember);
+  stroke: var(--arena-ember-hi);
+  filter: drop-shadow(0 0 6px #ff9b3d99);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-status .run-relic {
+  width: 24px;
+  height: 24px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-status .run-relic img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px #00000080);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-status .run-boon img {
+  filter: drop-shadow(0 0 5px #ffb660cc);
+}
+
+/* ==========================================================================
+   an act's opening
+   ========================================================================== */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-intro {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 760px;
+  margin-inline: auto;
+  text-align: center;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-act-no {
+  color: var(--arena-ember-hi);
+  font: 600 16px/1 var(--slate-font);
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-act-name {
+  margin: 0;
+  color: #fff;
+  font: 700 clamp(44px, 6.4vw, 84px) / 1.1 var(--slate-font);
+  letter-spacing: 0.18em;
+  text-indent: 0.18em;
+  text-shadow: 0 4px 40px #000000cc, 0 0 60px #ff9b3d33;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-intro .run-prose {
+  margin-top: 10px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-prose p {
+  margin: 0 0 0.75em;
+  color: var(--slate-ink);
+  font: 400 18px/1.9 var(--slate-font);
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 12px #000000b3;
+  text-wrap: pretty;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-prose p:last-child {
+  margin-bottom: 0;
+}
+/* the heading already names the act: the big title is the page's own */
+html[data-skin="slate"] body #modal.folio-host > .run-box[data-run-step="intro"] > .run-heading .run-title h2 {
+  font: var(--lg-headline);
+  color: var(--slate-ink-2);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-vow {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  grid-template-areas: "face words" "face name";
+  align-items: center;
+  column-gap: 16px;
+  max-width: 600px;
+  margin: 18px 0 0;
+  padding: 16px 22px 16px 16px;
+  border-radius: 20px;
+  background: var(--lg-hud);
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
+  box-shadow: var(--glass-rim);
+  text-align: left;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-vow img {
+  grid-area: face;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 50% 16%;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-vow p {
+  grid-area: words;
+  margin: 0;
+  color: var(--slate-ink);
+  font: 500 16px/1.7 var(--slate-font);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-vow cite {
+  grid-area: name;
+  color: var(--slate-ink-3);
+  font: 500 13px/1.6 var(--slate-font);
+  font-style: normal;
+}
+
+/* the shaft's speaking tube (Natan's voice at an act's opening): the vow's sheet, edged in brass */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-voice {
+  box-shadow: inset 3px 0 0 #d9a05b;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-voice p {
+  color: var(--slate-ink-2);
+  font-style: italic;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-voice-mute {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "words" "name";
+  padding-left: 22px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-voice + .run-vow {
+  margin-top: 10px;
+}
+
+/* ==========================================================================
+   the map
+   ========================================================================== */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-map-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 28px;
+  align-items: stretch;
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: var(--run-col);
+  min-height: 420px;
+  margin: 0 auto;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-map {
+  position: relative;
+  min-height: calc(var(--rows) * 92px);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-ways {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-ways line {
+  stroke: #ffffff59;
+  stroke-width: 2;
+  stroke-dasharray: 2 7;
+  stroke-linecap: round;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-ways line.closed {
+  stroke: #ffffff1f;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-ways line.live {
+  stroke: var(--arena-ember-hi);
+  stroke-dasharray: 2 6;
+  animation: run-way 1.4s linear infinite;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-ways line.walked {
+  stroke: var(--arena-ember);
+  stroke-width: 3;
+  stroke-dasharray: none;
+  filter: drop-shadow(0 0 5px #ff9b3d99);
+}
+@keyframes run-way {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node {
+  --disc: 62px;
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  width: 120px;
+  margin: calc(var(--disc) / -2) 0 0 -60px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--slate-ink);
+  cursor: pointer;
+  transition: transform var(--m-base) var(--e-spring), opacity var(--m-base);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node-disc {
+  display: grid;
+  place-items: center;
+  width: var(--disc);
+  height: var(--disc);
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--lg-hud);
+  -webkit-backdrop-filter: var(--lg-clear-blur);
+  backdrop-filter: var(--lg-clear-blur);
+  box-shadow: inset 0 0 0 1.5px #ffffff40, var(--lg-lift);
+  transition: box-shadow var(--m-base);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node-disc img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node .run-glyph {
+  width: 28px;
+  height: 28px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node-name {
+  max-width: 120px;
+  padding: 2px 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #07090d99;
+  color: var(--slate-ink);
+  font: 600 13px/18px var(--slate-font);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* kinds */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node.kind-boss {
+  --disc: 88px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node:is(.kind-elite, .kind-mirror) {
+  --disc: 72px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node.kind-elite .run-node-disc {
+  box-shadow: inset 0 0 0 2px var(--arena-crimson), var(--lg-lift);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node.kind-mirror .run-node-disc {
+  box-shadow: inset 0 0 0 2px #a98bff, 0 0 18px #7a5cff66, var(--lg-lift);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node.kind-boss .run-node-disc {
+  box-shadow: inset 0 0 0 2.5px var(--arena-brass-hi), 0 0 26px #ffb66073, var(--lg-lift);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node.kind-chapel .run-glyph {
+  color: var(--arena-ember-hi);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node.kind-shop .run-glyph {
+  color: var(--arena-brass-hi);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node.kind-cache .run-glyph {
+  color: #f3d28a;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node.kind-event .run-glyph {
+  color: var(--slate-blue);
+}
+/* states */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node.is-closed {
+  opacity: 0.32;
+  filter: grayscale(0.7);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node.is-ahead {
+  opacity: 0.86;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node.is-done .run-node-disc {
+  box-shadow: inset 0 0 0 2px var(--arena-ember), var(--lg-lift);
+  filter: brightness(0.7);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node.is-here .run-node-disc {
+  box-shadow: inset 0 0 0 2.5px var(--slate-blue), 0 0 0 5px #0a84ff40, var(--lg-lift);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node.is-open .run-node-disc {
+  animation: run-beckon 1.8s ease-in-out infinite;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node.is-open:hover {
+  transform: translateY(-3px) scale(1.05);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node[aria-pressed="true"] .run-node-disc {
+  animation: none;
+  box-shadow: inset 0 0 0 2.5px #fff, 0 0 0 6px #ffb66066, 0 0 28px #ff9b3d8c, var(--lg-lift);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node:focus {
+  outline: 0;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node:focus-visible .run-node-disc {
+  outline: 2px solid var(--slate-blue);
+  outline-offset: 3px;
+}
+@keyframes run-beckon {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 2px var(--arena-ember-hi), 0 0 0 0 #ff9b3d80, var(--lg-lift);
+  }
+  50% {
+    box-shadow: inset 0 0 0 2px var(--arena-ember-hi), 0 0 0 9px #ff9b3d00, var(--lg-lift);
+  }
+}
+
+/* ---- the place inspector ---------------------------------------------------- */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-node-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-self: center;
+  padding: 24px 22px;
+  border-radius: 24px;
+  color: var(--slate-ink);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box :is(.run-node-info, .run-story) h3 {
+  margin: 0;
+  color: #fff;
+  font: var(--lg-title-sheet);
+  letter-spacing: 0;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box :is(.run-node-info, .run-rules, .run-keepsake) p {
+  margin: 0;
+  color: var(--slate-ink-2);
+  font: 400 15px/1.6 var(--slate-font);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box :is(.run-node-info, .run-rules) p strong {
+  color: var(--slate-ink);
+  font-weight: 600;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-info-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--slate-ink-2);
+  font: 600 13px/18px var(--slate-font);
+  letter-spacing: 0.08em;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-info-kind::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--slate-ink-3);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-info-kind.kind-elite::before {
+  background: var(--arena-crimson);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-info-kind.kind-mirror::before {
+  background: #a98bff;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-info-kind.kind-boss::before {
+  background: var(--arena-brass-hi);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-info-kind:is(.kind-chapel, .kind-shop, .kind-cache)::before {
+  background: var(--arena-ember);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-info-kind.kind-event::before {
+  background: var(--slate-blue);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-info-face {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-info-face img {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  object-fit: cover;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-info-face small {
+  color: var(--slate-ink-3);
+  font: 500 13px/1.5 var(--slate-font);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box p.run-info-hint {
+  color: var(--slate-ink-3);
+  font-size: 13.5px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-legend {
+  display: grid;
+  gap: 8px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--slate-ink-2);
+  font: 400 13.5px/1.55 var(--slate-font);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-legend b {
+  display: inline-block;
+  min-width: 5.2em;
+  color: var(--slate-ink);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   a face beside the telling
+   ========================================================================== */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-scene {
+  display: grid;
+  grid-template-columns: minmax(220px, 360px) minmax(0, 560px);
+  justify-content: center;
+  align-items: center;
+  gap: 48px;
+  width: 100%;
+  max-width: var(--run-col);
+  margin-inline: auto;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-scene:has(> .run-picture) {
+  grid-template-columns: minmax(280px, 560px) minmax(0, 520px);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box :is(.run-portrait, .run-picture) {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 24px;
+  background: #0b0e14;
+  box-shadow: 0 0 0 1px #ffffff2e, 0 30px 80px #000000a6;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-portrait {
+  aspect-ratio: 3 / 4;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-picture {
+  aspect-ratio: 16 / 10;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box :is(.run-portrait, .run-picture) img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-portrait.fallen img {
+  filter: grayscale(0.55) brightness(0.72);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-story {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-quote {
+  margin: 0;
+  padding: 2px 0 2px 18px;
+  border-left: 3px solid var(--arena-ember);
+  color: #fff;
+  font: 500 19px/1.75 var(--slate-font);
+  text-shadow: 0 1px 12px #000000b3;
+  text-wrap: pretty;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-say p {
+  font-size: 18px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-rules {
+  display: grid;
+  gap: 8px;
+  padding: 14px 18px;
+  border-radius: 18px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-fell {
+  display: grid;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: #e0475a1f;
+  box-shadow: inset 0 0 0 1px #e0475a59;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-fell .run-quote {
+  border-left-color: var(--arena-crimson);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-fell p {
+  margin: 0;
+  color: var(--slate-ink);
+  font: 400 15px/1.7 var(--slate-font);
+}
+
+/* ---- choices ------------------------------------------------------------------ */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-choices {
+  display: grid;
+  gap: 10px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-choice {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  min-height: 56px;
+  padding: 14px 18px;
+  border: 0;
+  border-radius: 18px;
+  color: var(--slate-ink);
+  text-align: left;
+  cursor: pointer;
+  transition: transform var(--m-base) var(--e-spring), box-shadow var(--m-base), background var(--m-fast);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-choice strong {
+  color: #fff;
+  font: 600 17px/1.4 var(--slate-font);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-choice:not(:disabled):hover {
+  transform: translateX(4px);
+  box-shadow: inset 0 0 0 1.5px var(--arena-ember-hi), var(--lg-lift);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-choice:not(:disabled):active {
+  transform: scale(0.99);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-choice:focus {
+  outline: 0;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-choice:focus-visible {
+  box-shadow: var(--lg-select-ring);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-choice:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-tag {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #ffffff14;
+  color: var(--slate-ink-2);
+  font: 500 13px/18px var(--slate-font);
+  font-style: normal;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-tag.warm {
+  background: #ff9b3d29;
+  color: var(--arena-ember-hi);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-tag.cost {
+  background: #e0475a29;
+  color: #ff9aa8;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-tag.need {
+  background: none;
+  box-shadow: inset 0 0 0 1px #ffffff40;
+  color: var(--slate-ink);
+}
+
+/* ---- what was gained ------------------------------------------------------------ */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-gains {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-gains li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 16px;
+  background: var(--lg-hud);
+  box-shadow: var(--glass-rim);
+  color: var(--slate-ink-2);
+  font: 400 15px/1.5 var(--slate-font);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-gains b {
+  color: #fff;
+  font-weight: 600;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-gains .ui-icon {
+  width: 18px;
+  height: 18px;
+  color: #f3d28a;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-gains .cost b {
+  color: #ff9aa8;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-gains .gain-relic img {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-gains .gain-relic span {
+  display: grid;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-gains .gain-page {
+  box-shadow: inset 0 0 0 1px #64b4ff66;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-gain-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-gain-cards .run-card {
+  --card-w: 150px;
+}
+
+/* ==========================================================================
+   the basket
+   ========================================================================== */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-tavern {
+  grid-template-columns: auto 360px;
+  grid-template-areas: "letter letter" "shelf side";
+  row-gap: 22px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-letter {
+  grid-area: letter;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  justify-self: center;
+  max-width: 640px;
+  margin: 0;
+  padding: 10px 22px 10px 10px;
+  border-radius: 999px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-letter img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 50% 14%;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-letter p {
+  margin: 0;
+  color: var(--slate-ink);
+  font: 500 15px/1.6 var(--slate-font);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-shelf {
+  grid-area: shelf;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-shop-side {
+  grid-area: side;
+  display: grid;
+  gap: 16px;
+  margin-top: 40px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-shop-side .run-remove {
+  margin-top: 0;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-keepsake {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px 14px;
+  padding: 18px 20px;
+  border-radius: 24px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-keepsake img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-keepsake h3 {
+  margin: 0 0 2px;
+  color: var(--slate-ink);
+  font: var(--lg-headline);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-keepsake .run-buy {
+  grid-column: 1 / -1;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-keepsake.sold img {
+  opacity: 0.35;
+  filter: grayscale(0.8);
+}
+
+/* ==========================================================================
+   a card to pick
+   ========================================================================== */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-picks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px;
+  width: 100%;
+  max-width: var(--run-col);
+  margin-inline: auto;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-pick-card {
+  position: relative;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  cursor: pointer;
+  transition: transform var(--m-base) var(--e-spring);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-pick-card .run-card {
+  --card-w: 148px;
+  pointer-events: none;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-pick-card:hover {
+  transform: translateY(-6px);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-pick-card:focus {
+  outline: 0;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-pick-card:focus-visible {
+  box-shadow: var(--lg-select-ring);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-pick-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  z-index: 4;
+  min-width: 30px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--slate-blue-deep);
+  color: #fff;
+  font: 700 13px/18px var(--slate-font);
+  text-align: center;
+}
+
+/* ==========================================================================
+   the notebook
+   ========================================================================== */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-notebook {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 620px);
+  justify-content: center;
+  align-items: start;
+  gap: 32px;
+  width: 100%;
+  max-width: var(--run-col);
+  margin-inline: auto;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-pages {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-page-tab {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--slate-ink);
+  font: 500 15px/1.5 var(--slate-font);
+  text-align: left;
+  cursor: pointer;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-page-tab small {
+  color: var(--slate-ink-3);
+  font: 500 12px/1 var(--slate-font);
+  font-variant-numeric: tabular-nums;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-page-tab:not(:disabled):hover {
+  background: var(--lg-clear);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-page-tab[aria-pressed="true"] {
+  background: var(--lg-clear-hover);
+  box-shadow: inset 3px 0 0 var(--arena-ember);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-page-tab:disabled {
+  color: var(--slate-ink-3);
+  cursor: default;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-page {
+  position: sticky;
+  top: 0;
+  padding: 34px 36px 38px;
+  border-radius: 24px;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-page h3 {
+  margin: 0 0 16px;
+  color: #fff;
+  font: var(--lg-title-sheet);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-page p {
+  margin: 0;
+  color: var(--slate-ink);
+  font: 400 17px/2 var(--slate-font);
+  text-wrap: pretty;
+}
+
+/* ==========================================================================
+   the end
+   ========================================================================== */
+html[data-skin="slate"] body #modal.folio-host .run-box .run-ending {
+  display: grid;
+  gap: 26px;
+  width: 100%;
+  max-width: 760px;
+  margin-inline: auto;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-ending .run-prose p {
+  font-size: 19px;
+  line-height: 2;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-ending .run-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  max-width: none;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-left {
+  margin: 0;
+  color: var(--slate-ink-2);
+  font: 400 15px/1.7 var(--slate-font);
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-ending .run-left {
+  text-align: center;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-foe-stats > span {
+  white-space: nowrap;
+}
+html[data-skin="slate"] body #modal.folio-host .run-box .run-foe-stats {
+  flex-wrap: wrap;
+}
+html[data-skin="slate"] body #modal.folio-host > .run-box[data-run-step="won"] .run-heading h2,
+html[data-skin="slate"] body #modal.folio-host > .run-box[data-run-step="lost"] .run-heading h2 {
+  letter-spacing: 0.12em;
+}
+
+/* the footer: a page with no primary action keeps the hint on the right */
+html[data-skin="slate"] body #modal.folio-host .run-box #run-skip {
+  min-width: 0;
+  padding: 0 22px;
+}
+
+/* ==========================================================================
+   an opponent's line during its battle
+   ========================================================================== */
+#bark {
+  position: fixed;
+  z-index: 60;
+  max-width: min(360px, calc(100vw - 24px));
+  padding: 10px 16px 12px;
+  border-radius: 18px;
+  background: #14161cf0;
+  box-shadow: inset 0 0 0 1px #ffffff2e, 0 14px 40px #000000a6;
+  color: #f5f5f7;
+  font: 500 15px/1.6 -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(6px) scale(0.97);
+  transition: opacity 0.22s ease, transform 0.26s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+#bark.visible {
+  opacity: 1;
+  transform: none;
+}
+#bark b {
+  display: block;
+  margin-bottom: 2px;
+  color: #ffd39a;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+#bark p {
+  margin: 0;
+}
+#bark::after {
+  content: "";
+  position: absolute;
+  left: var(--tail, 40px);
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  background: #14161cf0;
+  transform: rotate(45deg);
+}
+#bark[data-tail="down"]::after {
+  bottom: -5px;
+  box-shadow: 1px 1px 0 #ffffff2e;
+}
+#bark[data-tail="up"]::after {
+  top: -5px;
+  box-shadow: -1px -1px 0 #ffffff2e;
+}
+
+/* ==========================================================================
+   short windows, phones
+   ========================================================================== */
+@media (max-height: 820px) {
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-scene {
+    grid-template-columns: minmax(180px, 280px) minmax(0, 560px);
+    gap: 36px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-scene:has(> .run-picture) {
+    grid-template-columns: minmax(240px, 440px) minmax(0, 520px);
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-prose p {
+    font-size: 16.5px;
+    line-height: 1.8;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-map {
+    min-height: calc(var(--rows) * 84px);
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-node {
+    --disc: 54px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-node.kind-boss {
+    --disc: 72px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-node:is(.kind-elite, .kind-mirror) {
+    --disc: 62px;
+  }
+}
+@media (max-width: 1100px) {
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-map-wrap {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 18px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-notebook {
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 20px;
+  }
+}
+/* portrait phones and narrow windows: one column */
+@media (max-width: 760px) {
+  html[data-skin="slate"]
+    body.touch-layout
+    #modal.folio-host
+    > .run-box[data-shell="page"]
+    > .modal-heading.run-heading {
+    grid-template-areas:
+      "title"
+      "status";
+    row-gap: 10px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-map-wrap {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    min-height: 0;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-map {
+    min-height: calc(var(--rows) * 84px);
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-node {
+    --disc: 50px;
+    gap: 3px;
+    width: 104px;
+    margin-left: -52px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-node.kind-boss {
+    --disc: 64px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-node:is(.kind-elite, .kind-mirror) {
+    --disc: 56px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-node-info {
+    align-self: stretch;
+    gap: 8px;
+    padding: 12px 16px;
+    border-radius: 20px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-node-info :is(.run-info-hint, .run-phase) {
+    display: none;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-node-info h3 {
+    font: var(--lg-headline);
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-info-face {
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 10px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-info-face img {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-legend {
+    display: none;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-scene,
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-scene:has(> .run-picture) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-portrait {
+    justify-self: center;
+    width: min(46vw, 220px);
+    border-radius: 18px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-picture {
+    border-radius: 18px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-prose p {
+    font-size: 16px;
+    line-height: 1.8;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-quote {
+    font-size: 17px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-act-name {
+    font-size: clamp(36px, 12vw, 56px);
+    letter-spacing: 0.12em;
+    text-indent: 0.12em;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-tavern {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "letter" "shelf" "side";
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-letter {
+    border-radius: 20px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-shop-side {
+    margin-top: 0;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-notebook {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-page {
+    position: static;
+    order: -1;
+    padding: 22px 20px 24px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-pick-card .run-card {
+    --card-w: 104px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-picks {
+    gap: 10px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-ending .run-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 14px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-ending .run-prose p {
+    font-size: 17px;
+    line-height: 1.9;
+  }
+}
+/* phones on their side: the face shrinks, the words keep the room */
+@media (max-height: 500px) {
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-scene {
+    grid-template-columns: minmax(110px, 22vw) minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-scene:has(> .run-picture) {
+    grid-template-columns: minmax(160px, 34vw) minmax(0, 1fr);
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-prose p {
+    font-size: 15px;
+    line-height: 1.7;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-quote {
+    font-size: 16px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-act-name {
+    font-size: 40px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-map-wrap {
+    grid-template-columns: minmax(0, 1fr) 240px;
+    min-height: 0;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-map {
+    min-height: calc(var(--rows) * 74px);
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-node {
+    --disc: 44px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-node.kind-boss {
+    --disc: 56px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-node:is(.kind-elite, .kind-mirror) {
+    --disc: 50px;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-node-info {
+    padding: 14px 16px;
+    align-self: start;
+  }
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-legend {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-node.is-open .run-node-disc,
+  html[data-skin="slate"] body #modal.folio-host .run-box .run-ways line.live {
+    animation: none;
+  }
+}
+
+/* a card whose amber is not painted yet shows the plain egg only, never its loose words */
+html:not(.amber-off)[data-skin="slate"] body #modal.folio-host .run-box .card.amber-card:not(.amber-ready) > :not(canvas) {
+  visibility: hidden;
+}
+/* the tavern's counter: the room stays bright, the words get a darker ground */
+html[data-skin="slate"] body #modal.folio-host > .run-box:is([data-run-step="hub"], [data-run-step="won"], [data-run-step="lost"]) > .run-backdrop img {
+  filter: saturate(0.9) brightness(0.6);
+}
+
+/* the counter and the notebook can be left (the page shell's back chevron): the heading clears it */
+html[data-skin="slate"] body #modal.folio-host > .run-box.run-free[data-shell="page"] > .modal-heading.run-heading,
+html[data-skin="slate"] body.touch-layout #modal.folio-host > .run-box.run-free[data-shell="page"] > .modal-heading.run-heading {
+  padding-left: 60px;
+}

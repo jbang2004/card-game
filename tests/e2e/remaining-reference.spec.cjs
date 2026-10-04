@@ -1,6 +1,6 @@
 const { openCovenantPage } = require("./helpers/covenant.cjs");
 const { test, expect } = require("@playwright/test");
-const { chooseFoe } = require("./helpers/expedition.cjs");
+const { chooseFoe, toBundle } = require("./helpers/expedition.cjs");
 const path = require("node:path");
 const out = path.resolve(
   process.env.REFERENCE_OUTPUT || "output/remaining-reference-20260913",
@@ -89,10 +89,9 @@ test("reference pages: live settings, guide chapters, hero modes and public cont
   await expect(page.locator("#card-stage")).toHaveCount(0);
   await page.keyboard.press("Escape");
   await page.locator("#adventure-nav").click();
-  await page.locator(".atlas-ready").waitFor();
-  await page.locator('[data-map-node="1"]').click();
+  await page.locator('#modal .run-box[data-run-step="notebook"]').waitFor();
   await shot(page, "map");
-  await expect(page.locator(".atlas-dossier h3")).toHaveText("根母");
+  await expect(page.locator(".run-page h3")).toHaveText("空白的手札");
   await page.keyboard.press("Escape");
   await page.locator("#start-btn").click();
   await shot(page, "heroes");
@@ -102,13 +101,16 @@ test("reference pages: live settings, guide chapters, hero modes and public cont
   await page.locator('[data-mode="campaign"]').click();
   await page.locator('[data-hero="morla"]').click();
   await page.locator("#hero-confirm").click();
-  await page.locator("#modal .run-box [data-foe]").first().waitFor();
+  // Amara's send-off, the act's opening, then its map
+  await page.locator("#run-confirm").click();
+  await page.locator("#run-confirm").click();
+  await page.locator("#modal .run-box .run-node[data-foe]").first().waitFor();
   await shot(page, "route");
   // covenants are treasures of a run: give this one Morla's and come back to it, as a resumed run does
   await page.evaluate(() => {
-    const run = JSON.parse(localStorage.getItem("emberfall.run.v1"));
+    const run = JSON.parse(localStorage.getItem("emberfall.run.v2"));
     run.contracts = [...EmberData.heroes.find((h) => h.id === "morla").defaultContracts];
-    localStorage.setItem("emberfall.run.v1", JSON.stringify(run));
+    localStorage.setItem("emberfall.run.v2", JSON.stringify(run));
   });
   await page.locator("#run-home").click();
   await page.locator("#start-btn").click();
@@ -158,10 +160,9 @@ test("reference pages: live settings, guide chapters, hero modes and public cont
   await page.locator("#result-next").waitFor();
   await shot(page, "result");
   await page.locator("#result-next").click();
-  await page.locator("[data-pick]").first().click();
+  await page.locator('#modal .run-box[data-run-step="note"]').waitFor();
   await shot(page, "rewards");
-  await expect(page.locator("#run-confirm")).toBeEnabled();
-  await page.locator("#run-confirm").click();
+  await toBundle(page);
   await page.locator('#modal .run-box[data-run-step="bundle"] [data-pick]').first().click();
   await shot(page, "bundle");
   await page.locator("#run-confirm").click();
@@ -176,6 +177,12 @@ test("reference pages: live settings, guide chapters, hero modes and public cont
   });
   await page.locator("#result-next").waitFor();
   await shot(page, "defeat");
+  // (the last ember: this fall ends the run)
+  await page.evaluate(() => {
+    const run = JSON.parse(localStorage.getItem("emberfall.run.v2"));
+    run.embers = 1;
+    localStorage.setItem("emberfall.run.v2", JSON.stringify(run));
+  });
   await page.locator("#result-next").click();
   await page.locator('#modal .run-box[data-run-step="lost"]').waitFor();
   await shot(page, "run-end");
@@ -185,6 +192,7 @@ test("reference pages: live settings, guide chapters, hero modes and public cont
   await page.locator("#hero-confirm").click();
   await page.locator("#run-home").click();
   await page.locator("#quick-btn").click();
+  await page.locator("#hub-new").click();
   await page.locator("#ok-confirm").waitFor();
   await shot(page, "confirm");
   await page.locator("#cancel-confirm").click();

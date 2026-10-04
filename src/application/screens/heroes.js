@@ -65,7 +65,7 @@ const EmberHeroScreens = (() => {
           )
           .join(
             "",
-          )}</select></label><label class="archetype-picker hero-config-mode">玩法 <select id="game-mode" class="library-search"><option value="campaign">地下城远征 · ${D.dungeon.levels} 层</option><option value="practice">练习对战 · 不覆盖远征存档</option></select></label><section class="hero-composition hero-config-composition" id="hero-composition" aria-label="牌组构成"></section><details class="contract-setup hero-config-contract"><summary>契约栏 <span class="contract-slot-preview" aria-hidden="true"></span><small>最多三张，一位神祇 · 点击配置</small></summary><p>契约不占主卡组，无需抽取；战斗中可查看召唤进度。</p>${
+          )}</select></label><label class="archetype-picker hero-config-mode">玩法 <select id="game-mode" class="library-search"><option value="campaign">下井 · 大竖井</option><option value="practice">练习对战 · 不覆盖远征存档</option></select></label><section class="hero-composition hero-config-composition" id="hero-composition" aria-label="牌组构成"></section><details class="contract-setup hero-config-contract"><summary>契约栏 <span class="contract-slot-preview" aria-hidden="true"></span><small>最多三张，一位神祇 · 点击配置</small></summary><p>契约不占主卡组，无需抽取；战斗中可查看召唤进度。</p>${
           D.cards
             .filter(
               (c) =>
@@ -178,14 +178,14 @@ const EmberHeroScreens = (() => {
         chooser.dataset.play = practice ? "practice" : "expedition";
         $("opponent-picker").hidden = !practice;
         $("hero-confirm").innerHTML =
-          (practice ? "开始练习" : "开始远征") + " " + A.icon("arrow");
-        $("hero-summary").textContent = `${hero.name} · ${practice ? "练习对战" : `地下城远征 · ${D.dungeon.levels} 层`}`;
+          (practice ? "开始练习" : "下井") + " " + A.icon("arrow");
+        $("hero-summary").textContent = `${hero.name} · ${practice ? "练习对战" : "下井 · 四幕"}`;
         document.querySelector("#modal .config-kicker").textContent = practice
           ? "出发准备"
           : `起始牌组 · ${D.dungeon.starters[context.chosenHero].length} 张`;
         document.querySelector("#modal .hero-deck-note").textContent = practice
-          ? `${deckStatus} 选择牌组与契约，和任意套牌对手练习；练习不影响远征存档。`
-          : `闯过 ${D.dungeon.levels} 层：每层二选一迎战，胜后挑选卡牌与宝物，每两层一间酒馆。每战生命全满，一败即终。`;
+          ? `${deckStatus} 选择牌组与契约，和任意套牌对手练习；练习不影响下井的存档。`
+          : `带着十张牌下井，一幕一张地图：自己选路，遇人、遇事、歇脚、补给。每战生命全满；输一场熄一格火种，${D.dungeon.embers} 格熄尽，就被拉回地面。`;
       };
       $("game-mode").value = mode;
       $("game-mode").onchange = syncMode;
@@ -195,7 +195,7 @@ const EmberHeroScreens = (() => {
       modeCards.className = "hero-mode-cards";
       modeCards.setAttribute("role", "group");
       modeCards.setAttribute("aria-label", "游戏模式");
-      modeCards.innerHTML = `<button type="button" class="lg-seg-item" data-mode="campaign" aria-pressed="true">${A.icon("compass-small")}<span>地下城远征<small>${D.dungeon.levels} 层闯关，边打边组牌</small></span></button><button type="button" class="lg-seg-item" data-mode="practice" aria-pressed="false">${A.icon("swords")}<span>练习对战<small>自选牌组与 AI 对战</small></span></button>`;
+      modeCards.innerHTML = `<button type="button" class="lg-seg-item" data-mode="campaign" aria-pressed="true">${A.icon("compass-small")}<span>下井<small>四幕地图，边走边组牌</small></span></button><button type="button" class="lg-seg-item" data-mode="practice" aria-pressed="false">${A.icon("swords")}<span>练习对战<small>自选牌组与 AI 对战</small></span></button>`;
       modePicker.closest("label").after(modeCards);
       const updateModeCards = () =>
         modeCards

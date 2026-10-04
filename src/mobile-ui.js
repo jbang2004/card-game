@@ -162,7 +162,7 @@
   function showMenu() {
     if (F.busy) return;
     const opts = [
-      ["map", "map", "冒险地图"],
+      ["map", "map", "根海手札"],
       ["cards", "book", "卡牌收藏"],
       ["guide", "book", "玩法手册"],
       ["gallery", "gem", "战场画廊"],
@@ -180,7 +180,7 @@
       "touch-menu",
     );
     const fn = {
-      map: () => E.showMap(),
+      map: () => E.showNotebook(),
       cards: () => E.showLibrary(),
       guide: () => E.showHelp(),
       gallery: () => E.showAtelier(),

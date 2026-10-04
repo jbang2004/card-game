@@ -142,14 +142,14 @@ test("a second mage and sixth boss work through production screens with only con
     const body = await response.text();
     await route.fulfill({
       response,
-      body: body + `\nEmberDungeon.stages[0].pool.push('sixth');\n`,
+      body: body + `\nEmberDungeon.acts[0].fights = ['sixth'];\n`,
     });
   });
   await open(page);
   await page.locator("#start-btn").click();
   await expect(page.locator(".hero-option")).toHaveCount(D.heroes.length + 1);
   await expect(page.locator("#game-mode option").first()).toContainText(
-    `${D.dungeon.levels} 层`,
+    "下井",
   );
   await page.locator('[data-hero="arcanist"]').click();
   // decks are a practice duel's (the expedition sets out with its own starter cards)
@@ -174,8 +174,11 @@ test("a second mage and sixth boss work through production screens with only con
   await page.locator('[data-hero="arcanist"]').click();
   await expect(page.locator("#game-mode")).toHaveValue("campaign");
   await page.locator("#hero-confirm").click();
-  await expect(page.locator('[data-foe="sixth"]')).toBeVisible();
-  await chooseFoe(page, await page.locator("[data-foe]").evaluateAll((xs) => xs.findIndex((x) => x.dataset.foe === "sixth")));
+  // (Amara's send-off, the act's opening, then its map)
+  await page.locator("#run-confirm").click();
+  await page.locator("#run-confirm").click();
+  await expect(page.locator('.run-node.is-open[data-foe="sixth"]')).toBeVisible();
+  await chooseFoe(page, await page.locator(".run-node.is-open").evaluateAll((xs) => xs.findIndex((x) => x.dataset.foe === "sixth")));
   await page.locator("#mulligan-confirm").click();
   await page.waitForFunction(() => !EmberFX.busy);
   expect(await page.evaluate(() => Emberfall.game.s.bossIndex)).toBe(
@@ -184,7 +187,7 @@ test("a second mage and sixth boss work through production screens with only con
   expect(await page.evaluate(() => Emberfall.game.s.p.deck.length + Emberfall.game.s.p.hand.length)).toBe(10);
   await page.reload();
   await ready(page);
-  await expect(page.locator("#start-btn")).toContainText("继续远征");
+  await expect(page.locator("#start-btn")).toContainText("继续下井");
   await page.locator("#start-btn").click();
   await page.waitForFunction(() => !EmberFX.busy && Emberfall.inBattle);
   await page.evaluate(() => {
@@ -195,14 +198,15 @@ test("a second mage and sixth boss work through production screens with only con
     g.cleanup();
     g.emit();
   });
-  await expect(page.locator("#result-next")).toContainText("领取战利品");
+  await expect(page.locator("#result-next")).toContainText("继续");
   await page.locator("#result-next").click();
-  await expect(page.locator('#modal .run-box[data-run-step="treasure"]')).toBeVisible();
+  // (the new boss has no story of its own: it falls without words, and the run moves on)
+  await expect(page.locator('#modal .run-box[data-run-step="note"]')).toBeVisible();
   await page.locator("#run-home").click();
+  // the chronicle remembers who was met; the notebook lists every page of the story
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("emberfall.chronicle.v1")).met)).toContain("sixth");
   await page.locator("#adventure-nav").click();
-  // (the mirrors, each made for one hero, are on the map only during that hero's run)
-  await expect(page.locator(".atlas-location")).toHaveCount(D.bosses.filter((b) => !b.forHero).length + 1);
-  await expect(page.locator('.atlas-location.done[data-region="sixth"]')).toHaveCount(1);
+  await expect(page.locator(".run-page-tab")).toHaveCount(D.story.pages.length);
   expect(errors).toEqual([]);
 });
 

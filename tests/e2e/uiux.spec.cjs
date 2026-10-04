@@ -1,36 +1,17 @@
 const { turnTo, assertDialogFit } = require("./helpers/dialog-pages.cjs");
 const { test, expect } = require("@playwright/test");
-const { beginExpedition } = require("./helpers/expedition.cjs");
+const { seedRun, storedRun } = require("./helpers/expedition.cjs");
 async function ready(page) {
   await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
 }
-const storedRun = (page) =>
-  page.evaluate(() => JSON.parse(localStorage.getItem("emberfall.run.v1")));
+
 // the expedition's first treasure, offered as three relics: the first battle is won, the stored run's offer is
 // set, and the run is shown again as a resumed run is
 async function rewardPage(page) {
   await page.goto("./?debug=1");
   await ready(page);
-  await page.locator("#start-btn").click();
-  await beginExpedition(page);
-  await page.locator("#mulligan-confirm").click();
-  await page.waitForFunction(() => !EmberFX.busy);
-  await page.evaluate(() => {
-    Emberfall.settings.reduced = true;
-    EmberFX.configure(true, false);
-    const g = EmberDebug.game;
-    g.s.e.hp = 0;
-    g.cleanup();
-    g.emit();
-  });
-  await page.locator("#result-next").click();
-  await page.locator('#modal .run-box[data-run-step="treasure"]').waitFor();
-  await page.evaluate(() => {
-    const run = JSON.parse(localStorage.getItem("emberfall.run.v1"));
-    run.offer.treasures = ["heart", "lens", "banner"].map((id) => ({ kind: "relic", id }));
-    localStorage.setItem("emberfall.run.v1", JSON.stringify(run));
-  });
-  await page.locator("#run-home").click();
+  // a run standing before a treasure of three relics, a bundle of cards to follow
+  await seedRun(page, "mage", { step: "treasure", queue: ["bundle"], offer: { treasures: ["heart", "lens", "banner"].map((id) => ({ kind: "relic", id })) } });
   await page.locator("#start-btn").click();
   await page
     .locator(".run-option img")
@@ -149,7 +130,7 @@ test("map, rulebook and collection actions have readable surfaces and usable lay
   await page.goto("./?debug=1");
   await ready(page);
   await page.locator("#adventure-nav").click();
-  await assertInk(page, ".atlas-name", ".atlas-node");
+  await assertInk(page, ".run-page p", ".run-page");
   await page.locator(".modal-close").click();
   await page.locator("#guide-nav").click();
   await assertInk(page, ".help-section p b", ".help-section");

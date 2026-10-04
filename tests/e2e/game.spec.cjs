@@ -1,6 +1,6 @@
 const { openDeckTools, finishDeckTools } = require("./helpers/deck-tools.cjs");
 const { test, expect } = require("@playwright/test");
-const { beginExpedition } = require("./helpers/expedition.cjs");
+const { beginExpedition, storedRun, toBundle } = require("./helpers/expedition.cjs");
 const fs = require("node:fs");
 const path = require("node:path");
 const out = path.resolve("artifacts/qa");
@@ -150,7 +150,7 @@ test("real origin: an expedition battle, settings and day/night survive reload; 
   expect(JSON.parse(before).heroId).toBe("paladin");
   await page.reload();
   await ready(page);
-  await expect(page.locator("#start-btn")).toContainText("继续远征");
+  await expect(page.locator("#start-btn")).toContainText("继续下井");
   await page.locator("#start-btn").click();
   await idle(page);
   expect(await page.evaluate(() => JSON.stringify(EmberDebug.game.s))).toBe(
@@ -657,14 +657,14 @@ test("a current expedition match resumes through actual browser storage", async 
     const D = EmberData,
       R = EmberRun;
     let run = R.create(D, "mage", 4242);
-    run = R.choose(D, run, run.offer.foes[0]);
+    run = R.engage(D, R.travel(D, R.begin(D, run), 0));
     const g = new EmberEngine.Game();
     g.start(run.heroId, 0, run.relics, run.deck, 4242, {
-      run: { level: run.level, foe: run.foe },
+      run: { level: run.tier, foe: run.foe, pawned: run.pawned },
       contracts: run.contracts,
     });
     g.mulligan();
-    localStorage.setItem("emberfall.run.v1", JSON.stringify(run));
+    localStorage.setItem("emberfall.run.v2", JSON.stringify(run));
     localStorage.setItem("emberfall.v1", JSON.stringify(g.s));
     return JSON.parse(JSON.stringify(g.s));
   });
@@ -697,18 +697,14 @@ test("expedition spoils and deck editor use the new state boundary", async ({
     EmberDebug.game.emit();
   });
   await page.locator("#result-next").click();
-  // level 1's spoils: a treasure, then a bundle of three cards, then level 2's opponents
-  const run = () =>
-    page.evaluate(() => JSON.parse(localStorage.getItem("emberfall.run.v1")));
-  await expect(page.locator("#modal .run-box [data-pick]")).toHaveCount(3);
-  await page.locator("[data-pick]").first().click();
-  await page.locator("#run-confirm").click();
-  await expect(page.locator('#modal .run-box[data-run-step="bundle"]')).toBeVisible();
+  // the first place's spoils: what the opponent leaves, then a bundle of three cards, then the map again
+  const run = () => storedRun(page);
+  await toBundle(page);
   const before = (await run()).deck.length;
   await page.locator("[data-pick]").first().click();
   await page.locator("#run-confirm").click();
-  await expect(page.locator('#modal .run-box[data-run-step="route"]')).toBeVisible();
-  expect((await run()).level).toBe(2);
+  await expect(page.locator('#modal .run-box[data-run-step="map"]')).toBeVisible();
+  expect((await run()).wins).toBe(1);
   expect((await run()).deck.length).toBe(before + 3);
   await page.locator("#run-home").click();
   await page.locator("#collection-nav").click();
