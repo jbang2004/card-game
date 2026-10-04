@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | 酒馆主页 | [home.md](home.md) | 已实装；按钮/图标、收藏层次、导航高光与真实流程 |
 | 英雄选择 | [heroes.md](heroes.md) | 当前实装、真实入口与对照证据 |
-| 冒险地图 | [map.md](map.md) | 当前实装、真实入口与对照证据 |
+| 冒险地图（已退役） | [map.md](map.md) | 2026-10-03 被下井的 run 页取代，仅作历史记录 |
 | 桌面战斗 | [battle-desktop.md](battle-desktop.md) | 当前实装、真实入口与对照证据 |
 | 图鉴与构筑 | [library.md](library.md) | 当前实装、真实入口与对照证据 |
 | 契约 | [contracts.md](contracts.md) | 当前实装、真实入口与对照证据 |

@@ -9,7 +9,6 @@ const PAGE_SHELL_SIZES = [
   "heroes",
   "library",
   "settings",
-  "route",
   "covenant",
   "help",
   "run",
@@ -212,7 +211,10 @@ async function fingerprint(page, selectors) {
       if (element.matches(".hand-card .card"))
         element.parentElement.classList.remove("playable", "selected");
       const style = getComputedStyle(element);
-      return Object.fromEntries(properties.map((key) => [key, style[key]]));
+      // a painted card face is a fresh blob: URL on every page; only the property's presence is a material
+      return Object.fromEntries(
+        properties.map((key) => [key, style[key].replace(/url\("blob:[^"]*"\)/g, 'url("blob:")')]),
+      );
     }, MATERIAL_PROPERTIES);
   }
   if (process.env.PANEL_AUDIT) {

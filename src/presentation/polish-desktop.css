@@ -2,12 +2,12 @@
  * These rules share the theme palette and do not alter the battle input plane. */
 body:not(.mobile-ui)
   #modal.folio-host
-  > :is(.hero-chooser, .library-box, .adventure-atlas) {
+  > :is(.hero-chooser, .library-box) {
   padding: 28px 40px;
 }
 body:not(.mobile-ui)
   #modal.folio-host
-  :is(.library-heading, .adventure-atlas > .modal-heading)
+  :is(.library-heading)
   h2,
 body:not(.mobile-ui) #modal.folio-host[data-type="heroes"] .modal-heading h2 {
   font-size: 30px;
@@ -122,22 +122,6 @@ body:not(.mobile-ui) #modal.folio-host .library-item .library-count {
   margin-top: 12px;
   line-height: 1.6;
 }
-/* Match map framing to the other workspaces; the art remains the focal point. */
-body:not(.mobile-ui) #modal.folio-host .adventure-atlas .modal-scroll {
-  gap: 28px;
-}
-
-body:not(.mobile-ui) #modal.folio-host .atlas-dossier h3 {
-  font-size: 28px;
-  line-height: 1.4;
-  letter-spacing: 2px;
-}
-body:not(.mobile-ui) #modal.folio-host .atlas-dossier > img {
-  height: clamp(190px, 29vh, 260px);
-}
-body:not(.mobile-ui) #modal.folio-host .atlas-footer {
-  padding-top: 18px;
-}
 
 body:not(.mobile-ui) .lobby-bottom {
   font-size: 13px;
@@ -163,20 +147,6 @@ body:not(.mobile-ui) .lobby-bottom {
     .hero-configuration
     select {
     font-size: 12px;
-  }
-  body:not(.mobile-ui) #modal.folio-host .atlas-location {
-    width: 140px;
-  }
-  body:not(.mobile-ui) #modal.folio-host .atlas-node {
-    gap: 7px;
-    padding: 8px 6px;
-  }
-  body:not(.mobile-ui) #modal.folio-host .atlas-node .atlas-landmark {
-    width: 36px;
-    height: 36px;
-  }
-  body:not(.mobile-ui) #modal.folio-host .atlas-name {
-    font-size: 14px;
   }
 }
 @media (min-width: 1900px) {

@@ -206,11 +206,8 @@
 - 场景：保留 Canvas 场景与昼夜切换；左侧文字可读性靠既有 `--home-veil`，可微调为更中性的深蓝灰。
 - 验收：1672×941、1280×720、1440×900；`tests/e2e/home-reference.spec.cjs` 的几何断言（间距、箭头居中）仍应成立，若断言依赖旧材质请在报告中列出。
 
-### 5.2 冒险地图 map（T5 + T1 预览列）— `src/presentation/adventure-map.js`（`.adventure-atlas`），`dialogSize` = `route`（页面壳）
-- 保留地图原画与路径线。标题行改为返回箭头 + 「冒险地图」；「远征图志 · 06 境」为 ink-3 小字；左下品牌字标改文字。
-- 关卡节点：统一为导航轨节点语言：当前可打 = 56px 蓝光节点；已通关 = 56px 实心节点带勾；未解锁 = 44px 空心点 + 锁图标；编号与名称黑体，名称 20px/700 带阴影。
-- 右栏（380px）：改为磨砂材质列（不透明度略高于浮层，保证文字可读），发丝线分节：首领卡（圆角 12 描边卡，原画 cover）→ 名称 28px/700 + 地区副标 → 引言 15px ink-2 → 属性芯片（生命、技能）→「旅途遗物」节 → 底部主药丸「准备出发」。移除四角 SVG。
-- 验收：1672×941、1280×720；点击不同节点右栏内容切换；`map-detail.spec.cjs` 相关断言。
+### 5.2 冒险地图 map — 已退役
+2026-10-03 起被下井的 run 页取代（`adventure-map.js`、`slate/map.css` 与 `.adventure-atlas` 的全部规则已删除；页面样式见 `skins/slate/descent.css`，流程见 [DESCENT](DESCENT.md)）。旧设计只留在 git 历史与 [map.md](reference-pages/map.md)。
 
 ### 5.3 诸神契约 contracts（T5 + T1 预览列）— `src/application/contracts.js`（`.covenant-box` `.covenant-heading` `.covenant-portrait`），`dialogSize` = `covenant`（页面壳）
 - 左侧神祇原画保留；底部三张契约缩略图改圆角 10 描边卡，选中蓝边 + 发光。
@@ -269,14 +266,14 @@
 1. 在独立 worktree 上工作（基于 main 最新提交）；只修改分配给你的文件：你的页面 CSS 文件（`src/presentation/skins/slate/<page>.css`）、该页归属的 JS/模板区域（仅限为皮肤增加类名或极少量结构调整，不改行为）、该页档案 `docs/design/reference-pages/<page>.md` 的「当前实现」小节、你的输出目录 `output/slate-<page>-20260913/`。
 2. 不修改 `base.css`、`config/build.json`、`src/template.html` 的 `@layer` 区、其他页面文件。需要共享改动时写入最终报告的「需要协调者合并的共享改动」。
 3. 皮肤规则一律以 `html[data-skin="slate"] body:not(.touch-layout)` 开头（手机任务用 `body.touch-layout`）；不用 `!important`；不新增位图；不改变规则层、存档格式与卡牌映射。
-4. 每次修改后 `python3 build.py`；用分配的端口 `python3 -m http.server <port> --bind 127.0.0.1` 在后台服务；Playwright 从 `/Users/yijun/codebase/card-game/node_modules/playwright` 以绝对路径 require，Chrome 为 `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`；页面就绪条件 `window.Emberfall && !AtelierWorld.loading`（120 s 超时），截图前解码 `#modal img`。
+4. 每次修改后 `python3 build.py`；用分配的端口 `python3 tools/serve.py <port>` 在后台服务；Playwright 从 `/Users/yijun/codebase/card-game/node_modules/playwright` 以绝对路径 require，Chrome 为 `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`；页面就绪条件 `window.Emberfall && !AtelierWorld.loading`（120 s 超时），截图前解码 `#modal img`。
 5. 验收：按简报尺寸截图，覆盖 hover/选中/禁用与真实交互；与改动前的同页截图逐像素比对（Canvas 场景、随机手牌与卡图解码之外应为零差）。`node --test tests/*.test.cjs` 必须通过；简报点名的 e2e 规格运行一次，记录通过/失败与原因。
 6. 完成后在 worktree 分支提交（信息前缀 `feat(slate): …`，结尾 `Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>`），不推送。最终报告固定包含：worktree 路径与分支、提交哈希、改动文件、截图目录、测试结果、与简报的偏差及原因、需要协调者合并的共享改动、已知差异。
 7. **皮肤层无条件胜出，隐藏要重说一遍。** `skin` 排在 `components` 之后，层级先于选择器权重结算：组件层里任何「必须保持隐藏」的 `display: none`，只要皮肤规则命中同一元素、或被某条裸后代选择器扫到，就会被皮肤的 `display` 覆盖而复活。命中这类元素时在皮肤规则里重新声明 `display: none`。
 8. **不要用裸 `span` / `svg` 后代选择器。** 裸选择器会连同任何脚本注入的辅助节点一起命中，并且因为皮肤层排在最后，会盖掉组件层对那些节点的 `display: none`。真实事故：`heroes.css` 的 `.hero-mode-cards span { display: block }` 复活了 base.css 已经隐藏的 `.selection-light` 光带（2026-09-14 随光带一起删除）。一律带类名限定（如 `.help-section > svg`、`.atlas-number svg`）。
 9. **药丸按钮上的 `::before` 必须自带 `display`。** base.css 对 `:is(.gold-btn, .ghost-btn, .text-btn, .library-inspect)::before / ::after` 统一写了 `content: none; display: none`，页面规则若要在 `.ghost-btn` / `.gold-btn` 上另建 `::before`（导航节点、指示点等），除 `content` 外还要声明 `display`；`components.css` 同时给这两个伪元素留了 `opacity: .14`，需要一并重置为 `1`，否则节点会发暗（手册导航轨曾因此只剩微光）。
 10. **战斗中弹窗的桌面验收尺寸下限是 1360×700。** `src/mobile-view.js` 会把宽 < 1360 或高 < 700 的战场视图切到 `body.touch-layout`，桌面皮肤规则随即失效。因此涉及对局内弹窗的桌面验收只取 1360×700 及以上，窄桌面统一用 1440×900。
-11. **场景页的文字字标由页面自己拥有。** 旧主题给十三种弹窗统一注入 `.reference-page-brand` 再由 base.css 隐藏；现在只有地图页需要字标，由 `adventure-map.js` 注入 `.atlas-wordmark`，`map.css` 负责桌面定位并在触控下隐藏。新页面需要字标时照此在自己的文件里实现，不要恢复统一注入。
+11. **场景页的文字字标由页面自己拥有。** 旧主题给十三种弹窗统一注入 `.reference-page-brand` 再由 base.css 隐藏；现在没有页面需要字标（唯一用过的旧地图页已退役）。新页面需要字标时在自己的文件里实现，不要恢复统一注入。
 12. **把材质规则从 `body:not(.touch-layout)` 提升到 `body` 会掉一级权重。** 合并桌面与触控的重复声明时，去掉布局守卫等于少了一个类，选择器权重随之下降一级；皮肤层内部按 BASE → HOME → … → MOBILE 排序，于是**排在后面的皮肤文件会因此反超**原本输不掉的规则。典型例子：`dialogs.css` 的页脚规则本来打不过地图页脚，把地图那条提升到 `body` 之后就被 `dialogs.css` 盖住了。提升前先确认没有更靠后的文件命中同一元素；确实需要保留归属时，用对话框根（`.folio-dialog`，或 `[data-dialog-size="…"]`、`[data-type="…"]`）把选择器限定回去，把丢掉的那一级补上。base.css 里那些「刻意打平」的权重结对（`.crafted-panel` 中和 vs 页面壳）也按同一条规则理解：同文件内整体降级不影响相对关系，跨文件才会出问题。
 
 ## 7. 协调者验收清单

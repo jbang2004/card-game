@@ -81,7 +81,6 @@ const EmberDialogs = (() => {
     "touch-log": "journal",
     library: "library",
     heroes: "heroes",
-    map: "route",
     discover: "discover",
     mulligan: "mulligan",
     run: "run",
@@ -97,7 +96,6 @@ const EmberDialogs = (() => {
   const dialogShell = Object.freeze({
     heroes: "page",
     library: "page",
-    route: "page",
     covenant: "page",
     run: "page",
     detail: "stage",

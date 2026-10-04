@@ -1069,30 +1069,12 @@ body .mulligan-card.replace::after {
   }
 }
 
-/* Material reset for inherited decorative pseudos and map label plaques. */
+/* Material reset for inherited decorative pseudos. */
 body .lobby-copy {
   outline: 0;
 }
 body .lobby-chinese {
   text-align: left;
-}
-body .atlas-name,
-body .atlas-status {
-  background: none;
-  border: 0;
-  box-shadow: none;
-  color: var(--ink);
-  clip-path: none;
-}
-body .atlas-name::before,
-body .atlas-name::after,
-body .atlas-status::before,
-body .atlas-status::after {
-  display: none;
-}
-body .atlas-node:hover {
-  background: var(--surface-glass);
-  transform: none;
 }
 body #modal.folio-host .comp-counts > span {
   background: var(--surface-soft);
@@ -1125,12 +1107,6 @@ body .covenant-side h3 {
 body .soul-ledger {
   color: var(--ink-secondary);
   line-height: 1.8;
-}
-body .atlas-dossier-rule {
-  font-size: 14px;
-  line-height: 1.8;
-  border-block: 1px solid var(--line);
-  padding: 18px 0;
 }
 body #modal.folio-host .help-toc {
   background: transparent;
@@ -3058,199 +3034,6 @@ body #modal.folio-host[data-type] .help-key-preview span {
     left: 28px;
     bottom: 20px;
   }
-  body:not(.touch-layout) #modal.folio-host[data-type] > .adventure-atlas {
-    padding: 0;
-    background: var(--surface);
-    gap: 0;
-  }
-  body:not(.touch-layout)
-    #modal.folio-host[data-type]
-    .adventure-atlas
-    > .modal-heading {
-    position: absolute;
-    top: 22px;
-    left: 26px;
-    width: 60%;
-    z-index: 3;
-    border: 0;
-  }
-  body:not(.touch-layout)
-    #modal.folio-host[data-type]
-    .adventure-atlas
-    .atlas-heading
-    h2 {
-    font-family: var(--ui-display);
-    font-size: 48px;
-    font-weight: 500;
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] .atlas-chapter {
-    display: none;
-  }
-  body:not(.touch-layout)
-    #modal.folio-host[data-type]
-    .adventure-atlas
-    .modal-scroll {
-    gap: 0;
-    height: 100%;
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] .atlas-stage {
-    height: 100dvh;
-    min-height: 100dvh;
-    flex: 0 0 75.5%;
-    background-size: 100% 100%;
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] .atlas-dossier {
-    width: 24.5%;
-
-    position: relative;
-
-    isolation: isolate;
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] .atlas-dossier > img {
-    height: 340px;
-    width: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: -1;
-    opacity: 0.68;
-    mask-image: linear-gradient(#000 50%, transparent);
-    border: 0;
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] .atlas-dossier h3 {
-    font: 36px var(--ui-display);
-    min-height: 180px;
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] .atlas-dossier-rule {
-    font: 18px/1.9 var(--ui-display);
-    border-block: 1px solid var(--line);
-    padding: 30px 0;
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] .atlas-footer {
-    position: absolute;
-    bottom: 35px;
-    right: 20px;
-    width: 22%;
-    display: flex;
-    flex-direction: column;
-    padding: 0;
-    gap: 24px;
-  }
-  body:not(.touch-layout)
-    #modal.folio-host[data-type]
-    .atlas-footer
-    .atlas-focus {
-    display: none;
-  }
-  body:not(.touch-layout)
-    #modal.folio-host[data-type]
-    .atlas-footer
-    .atlas-relics {
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    flex-wrap: wrap;
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] .atlas-relic img {
-    width: 74px;
-    height: 74px;
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] #map-continue {
-    width: 100%;
-    min-height: 65px;
-    font: 26px var(--ui-display);
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] .atlas-location {
-    width: 210px;
-  }
-  body:not(.touch-layout)
-    #modal.folio-host[data-type]
-    .atlas-location:nth-of-type(1) {
-    left: 20%;
-    top: 56%;
-  }
-  body:not(.touch-layout)
-    #modal.folio-host[data-type]
-    .atlas-location:nth-of-type(2) {
-    left: 39%;
-    top: 38%;
-  }
-  body:not(.touch-layout)
-    #modal.folio-host[data-type]
-    .atlas-location:nth-of-type(3) {
-    left: 58%;
-    top: 22%;
-  }
-  body:not(.touch-layout)
-    #modal.folio-host[data-type]
-    .atlas-location:nth-of-type(4) {
-    left: 83%;
-    top: 30%;
-  }
-  body:not(.touch-layout)
-    #modal.folio-host[data-type]
-    .atlas-location:nth-of-type(5) {
-    left: 85%;
-    top: 60%;
-  }
-  body:not(.touch-layout)
-    #modal.folio-host[data-type]
-    .atlas-location:nth-of-type(6) {
-    left: 64%;
-    top: 78%;
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] .atlas-node {
-    background: transparent;
-    border: 0;
-    box-shadow: none;
-    gap: 15px;
-  }
-  body:not(.touch-layout)
-    #modal.folio-host[data-type]
-    .atlas-node
-    .atlas-landmark {
-    width: 52px;
-    height: 52px;
-    border: 1px solid #e2e3d3;
-    background: #111924dc;
-  }
-  body:not(.touch-layout)
-    #modal.folio-host[data-type]
-    .atlas-node[aria-pressed="true"]
-    .atlas-landmark {
-    width: 72px;
-    height: 72px;
-    box-shadow:
-      0 0 0 5px #8ae4ff33,
-      0 0 15px #8fe4ff;
-    border: 2px solid #bbf5ff;
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] .atlas-name {
-    font: 22px var(--ui-display);
-    text-shadow: 0 2px 4px #000;
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] .atlas-name small {
-    display: block;
-    font-size: 25px;
-    margin-bottom: 5px;
-  }
-  body:not(.touch-layout) #modal.folio-host[data-type] .atlas-status {
-    display: none;
-  }
-}
-body .atlas-number img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-body .atlas-number svg {
-  width: 24px;
-  height: 24px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
 }
 @media (max-width: 1099px), (max-height: 649px) {
   body #modal.folio-host[data-type] .help-reference-overview {
