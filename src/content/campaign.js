@@ -842,6 +842,22 @@ const EmberCampaign = {
         },
       ],
     },
+    // keepsakes of the descent: what a named opponent leaves, or what an event gives (content/story.js)
+    { id: "whistle", name: "监工的铜哨", icon: "banner", onStart: [{ type: "summon", card: "guard", count: 1 }] },
+    { id: "scale", name: "估价人的天平", icon: "sigil", bounty: 10 },
+    { id: "icekey", name: "守根人的冰钥", icon: "orb", maxHealth: 5, triggers: [{ event: "turnEnd", maxPerTurn: 1, effects: [{ type: "armor", amount: 1 }] }] },
+    { id: "rootsap", name: "根母的嫩枝", icon: "heart", onStart: [{ type: "summon", card: "thorn", count: 2 }] },
+    { id: "lampwick", name: "守灯兽的灯芯", icon: "raven", maxHealth: 4, onTurn: [{ type: "heal", amount: 1 }] },
+    { id: "wrench", name: "艾达的扳手", icon: "sigil", onTurn: [{ type: "armor", amount: 1 }] },
+    { id: "watch", name: "停走的怀表", icon: "orb", onStart: [{ type: "draw", count: 1 }, { type: "armor", amount: 4 }] },
+    { id: "canary", name: "井下的金丝雀", icon: "raven", triggers: [{ event: "friendlyDeath", maxPerTurn: 1, effects: [{ type: "armor", amount: 2 }] }] },
+    // blessings: a relic for one battle only (the run hands them to the next battle and then lets them go); never a
+    // treasure. `like` names the relic whose picture it borrows.
+    { id: "b_vigil", name: "守夜的祝福", icon: "sigil", boon: true, like: "crown", onStart: [{ type: "armor", amount: 6 }] },
+    { id: "b_escort", name: "矿工的掩护", icon: "banner", boon: true, like: "banner", onStart: [{ type: "summon", card: "guard", count: 1 }] },
+    { id: "b_clockwork", name: "下了班的发条兵", icon: "sigil", boon: true, like: "lens", onStart: [{ type: "summon", card: "golem", count: 1 }] },
+    { id: "b_warm", name: "一点余温", icon: "bolt", boon: true, like: "ember", onStart: [{ type: "draw", count: 1 }] },
+    { id: "b_resin", name: "树脂护身", icon: "heart", boon: true, like: "heart", maxHealth: 6 },
   ],
   kw: {
     taunt: "嘲讽",

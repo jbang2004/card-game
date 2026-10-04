@@ -128,13 +128,19 @@ const EmberCatalog = (() => {
         "onStart",
         "onTurn",
         "triggers",
+        "bounty",    // marks added to every win of a run (the run's, not the battle's)
+        "boon",      // a blessing: a relic for one battle, never a treasure
+        "like",      // a blessing borrows this relic's picture
       ],
       "relics",
       false,
     );
     for (const r of world.relics) {
       text(r.icon, r.id + ".icon");
-      for (const key of ["maxHealth", "spellDamage", "startingMana"])
+      if (r.boon !== undefined && r.boon !== true) throw Error(r.id + ": Invalid boon");
+      if (r.like !== undefined && !world.relics.some((x) => x.id === r.like && !x.boon))
+        throw Error(r.id + ": like names no relic");
+      for (const key of ["maxHealth", "spellDamage", "startingMana", "bounty"])
         if (r[key] !== undefined) integer(r[key], 1, r.id + "." + key);
     }
     if (world.relics.reduce((n, r) => n + (r.startingMana || 0), 0) > 10)
