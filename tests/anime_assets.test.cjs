@@ -26,6 +26,7 @@ for (const name of [
   "relic-assets.js",
   "character-catalog.js",
   "content/portraits.js",
+  "content/story-art.js",
   "atelier-art.js",
   "art.js",
 ])
@@ -117,9 +118,16 @@ test("Every character and relic uses an explicit available image", () => {
     );
   assert.ok(
     evalJS(
-      'EmberData.relics.every(r=>EmberArt.relic(r.id).startsWith("data:image/"))',
+      'EmberData.relics.every(r=>/^(data:image\\/|asset:ui\\/relics-v3\\/)/.test(EmberArt.relic(r.id)))',
     ),
   );
+  // the story's own pictures (scenes, events, keepsakes) are files of the repository
+  const story = vm.runInContext("EmberStoryArt", ctx);
+  for (const group of Object.values(story))
+    for (const [id, src] of Object.entries(group))
+      assert.ok(fs.existsSync(path.join(root, "art", src.slice("asset:".length))), id + ": story picture is missing");
+  for (const ev of Object.values(D.story.events)) assert.ok(story.events[ev.art], ev.title + ": no picture");
+  for (const act of D.dungeon.acts) assert.ok(story.scenes[act.scene], act.id + ": no scene");
 });
 test("All focal calibrations are valid and bounded to small non-distorting overscan", () => {
   for (const c of D.cards)

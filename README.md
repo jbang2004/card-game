@@ -4,7 +4,7 @@
 
 > 游戏名自 2026-10-02 起为《琥珀战记》（原《烬域 EMBERFALL》；设定见 [SETTING_AMBER](docs/design/SETTING_AMBER.md)）。仓库、存档键名与部分历史文档仍沿用旧代号 Emberfall。
 
-可离线运行的单人策略卡牌游戏：65 张可组牌卡、8 张普通衍生牌、6 张契约牌、4 位英雄、11 套职业预设、8 层地下城远征（18 位首领，对手池按层数分档）与公平练习对战。故事与角色设定见 [琥珀战记设定](docs/design/SETTING_AMBER.md) 与 [全员重构 v2](docs/design/CAST_V2.md)；英雄、首领与劲敌的立绘有独立注册表 `src/content/portraits.js`。桌面与手机使用同一 Canvas 酒馆场景，手机保留独立横竖屏布局与触屏操作。
+可离线运行的单人策略卡牌游戏：65 张可组牌卡、8 张普通衍生牌、6 张契约牌、4 位英雄、11 套职业预设、主玩法"下井"（四幕分岔地图、23 位具名对手、见闻与《根海手札》）与公平练习对战。故事与角色设定见 [琥珀战记设定](docs/design/SETTING_AMBER.md) 与 [全员重构 v2](docs/design/CAST_V2.md)；英雄、首领与劲敌的立绘有独立注册表 `src/content/portraits.js`。桌面与手机使用同一 Canvas 酒馆场景，手机保留独立横竖屏布局与触屏操作。
 
 ## 开发与运行
 
@@ -40,22 +40,23 @@ npm run test:release
 2. 生成脚本仍在 `tools/`：`characters.py`（角色目录校验）、`audio_assets.py`（Foley 打包）、`fx_shaders.py`（GLSL 打包）、`cutin_assets.py`（切入立绘，`convert()` 需要 `.venv` 的 Pillow）、`ui_assets.py`（界面材质）、`fx2_atlas.py` / `fx2_gradients.py`（特效贴图）、`pack_card_assets.py` / `build_anime_assets.py`（卡面插画）。
 3. 素材更新后重新 `python3 build.py`：生成物和 `art/` 会一并刷新，把它们的改动一起提交。
 
-## 地下城远征
+## 下井
 
-主玩法（取代原先六关线性战役）：从职业的 10 张起始牌出发，闯过 8 层。
+主玩法（2026-10-03 取代"每层二选一"的地下城远征，设计见 [DESCENT](docs/design/DESCENT.md)）：从职业的 10 张起始牌出发，带着神之琥珀下到大竖井的井底。
 
-- 每层两个对手二选一：劲敌（一套职业预设，前几层削减生命与牌数）或首领（生命按层数缩放）；第 8 层固定为最终首领点火者·纳坦（原「终焉巨龙」）。
-- 每场战斗生命全满、玩家先手；输一场，远征即告终结。
-- 每胜一场挑一组三张同主题卡牌；第 1/3/5/7 层后三选一宝物（遗物、神契或传说/高费史诗牌）；第 2/4/6 层后进酒馆，用金币买牌或删牌。
-- 神契的献祭进度在整场远征中累积。练习对战保留，不影响远征。
+- 四幕，每幕一张向下的分岔地图：自己选路，会遇到拦路的人（遭遇、强敌、镜影）、不必动手的见闻、礼拜堂、阿玛拉放下来的铜壶吊篮和根战的遗藏，尽头是这一幕的守关者。同一位持珀者封过根之后再下井，还有第九层。
+- 每场战斗生命全满、玩家先手；输一场熄一格火种（共 3 格），对手仍在原地；熄尽就被拉回地面，带下去的好牌落到典当人手里。
+- 每个对手三拍：战前说明他为什么拦你，战中有台词，战后具名对手要你做一个决定——拿走，还是放手。之后挑一组三张同主题卡牌（可以不拿）。
+- 找到的《根海手札》书页永久保留；酒馆老板娘阿玛拉记得你上一趟倒在哪里。
+- 神契的献祭进度在整趟下井中累积。练习对战保留，不影响下井。
 
-内容在 `src/content/dungeon.js`（层数、对手池、起始牌、主题、价格），规则在纯函数模块 `src/rules/run.js`（同一种子与选择必得同一远征），界面在 `src/application/screens/run.js`。远征存于 `emberfall.run.v1`，只保存正在进行的远征对局。自动筛查：`node tools/playtest-run.cjs`。
+数据在 `src/content/dungeon.js`，文字与选项效果在 `src/content/story.js`，规则在纯函数模块 `src/rules/run.js`（同一种子与选择必得同一趟）与 `src/rules/chronicle.js`（跨局进度），界面在 `src/application/screens/run.js`。存档键 `emberfall.run.v2` 与 `emberfall.chronicle.v1`。平衡模拟：`node tools/playtest-run.cjs`。
 
 ## 修改卡牌
 
 - **卡牌定义：** `src/content/cards.js`。具名字段、参数化 `onPlay` / `onDeath`，规则文字自动生成。
 - **英雄、首领、遗物：** `src/content/campaign.js`。技能、阶段、遗物效果共用效果注册表。
-- **远征：** `src/content/dungeon.js`（数据）与 `src/rules/run.js`（规则）。
+- **下井：** `src/content/dungeon.js`（幕与地图）、`src/content/story.js`（文字与选项）、`src/rules/run.js`（规则）。
 - **新效果类型：** `src/rules/effects.js`。必须定义字段校验、执行与规则文字；AI 在 `rules/ai.js`，确定性预览在 `rules/preview.js`。
 - **职业与构筑规则：** `src/content/campaign.js` 的 `classes` / `tribes` / `deckRules`；英雄用 `classId` 关联职业，用 `defaultDeckId` 引用预设。统一校验在 `src/rules/decks.js`。
 - **命名卡组：** `src/application/decks.js` 管理多套命名卡组，只接受当前命名卡组格式，开局与战役整备使用独立拷贝。

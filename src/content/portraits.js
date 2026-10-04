@@ -51,5 +51,7 @@ const EmberPortraits = {
   stargazer: { image: "asset:portraits/stargazer.webp", focus: 16 },
   churchguard: { image: "asset:portraits/churchguard.webp", focus: 16 },
   villagehunter: { image: "asset:portraits/villagehunter.webp", focus: 16 },
+  // the keeper of the Copper Kettle (the run's hub; she is never fought)
+  amara: { image: "asset:portraits/amara.webp", focus: 16 },
 };
 if (typeof module !== "undefined") module.exports = EmberPortraits;

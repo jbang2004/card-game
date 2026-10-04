@@ -38,9 +38,10 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 ## v0.11 内容与验证
 
-- 卡牌只编辑 `src/content/cards.js` 的具名定义；英雄、首领、遗物编辑 `src/content/campaign.js`；地下城远征（主玩法，取代原线性战役）的层数、对手池、起始牌、卡包主题与价格编辑 `src/content/dungeon.js`，其规则是纯函数模块 `src/rules/run.js`。不要恢复 `battle/effect/value/death` 字段或重复手写规则文案。
+- 卡牌只编辑 `src/content/cards.js` 的具名定义；英雄、首领、遗物（含只管一场战斗的"祝福"）编辑 `src/content/campaign.js`。主玩法是**下井**（2026-10-03 取代"每层二选一"的远征，见 `docs/design/DESCENT.md`）：幕、地图行模板、对手池、tier 强度、起始牌、卡包主题与价格编辑 `src/content/dungeon.js`；所有文字（幕开场、遭遇、台词、战后处置、见闻、阿玛拉、手札页、结局）与选项效果编辑 `src/content/story.js`，配图登记在 `src/content/story-art.js`；规则是纯函数模块 `src/rules/run.js`，跨局进度是 `src/rules/chronicle.js`。不要恢复 `battle/effect/value/death` 字段或重复手写规则文案。
 - 战场角色的动作节奏与特效只编辑 `src/content/moves.js`（招式单：命名阶段、按时刻分组的特效、原型继承），由 `presentation/voxel/movesheet.js` 编译给 `models.js` / `skillfx.js`，不要把角色数值写回运行时代码。格式、审片台（`python3 tools/move-review/serve.py`）与自检（`node tools/move-review/audit.cjs`）见 `docs/design/MOVES.md`。
 - 新效果注册字段校验、执行和文案，补充 AI / 必要预览；纯规则不依赖表现。
 - 生产界面使用只读状态和动作接口；仅本地 `?debug=1` 暴露 `EmberDebug.game` 给测试。
 - 当前完整入口为 `npm run test:release`；旧 Python 浏览器脚本已退役，旧 QA 仅作历史记录。
+- 下井的存档键是 `emberfall.run.v2`（旧的 v1 远征不迁移），跨局进度是 `emberfall.chronicle.v1`。
 - 当前存档必须具备 modifiers 与 devotion（当前公开仪式进度）；临时攻击仅从 modifiers 结算，不再维护 tempAtk。格式不支持或数据损坏时明确失效，不做隐式旧版本转换。

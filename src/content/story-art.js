@@ -1,0 +1,45 @@
+/* The pictures of the descent: the scene behind every act and place, the illustration of every event. Their own art,
+ * painted for the story (assets/story → art/story); the people's faces are EmberPortraits'. */
+const EmberStoryArt = Object.freeze({
+  scenes: Object.freeze({
+    act1: "asset:story/act1.webp",
+    act2: "asset:story/act2.webp",
+    act3: "asset:story/act3.webp",
+    act4: "asset:story/act4.webp",
+    act5: "asset:story/act5.webp",
+    tavern: "asset:story/tavern.webp",
+    chapel: "asset:story/chapel.webp",
+    basket: "asset:story/basket.webp",
+  }),
+  events: Object.freeze({
+    cavein: "asset:story/ev-cavein.webp",
+    ledger: "asset:story/ev-ledger.webp",
+    canary: "asset:story/ev-canary.webp",
+    cardgame: "asset:story/ev-cardgame.webp",
+    cracked: "asset:story/ev-cracked.webp",
+    mural: "asset:story/ev-mural.webp",
+    jetlab: "asset:story/ev-jetlab.webp",
+    sentry: "asset:story/ev-sentry.webp",
+    campfire: "asset:story/ev-campfire.webp",
+    giant: "asset:story/ev-giant.webp",
+    resin: "asset:story/ev-resin.webp",
+    crossing: "asset:story/ev-crossing.webp",
+    letters: "asset:story/ev-letters.webp",
+    lamps: "asset:story/ev-lamps.webp",
+    gathering: "asset:story/ev-gathering.webp",
+    watch: "asset:story/ev-watch.webp",
+    mirrortavern: "asset:story/ev-mirrortavern.webp",
+  }),
+  // the keepsakes an opponent leaves or an event gives (the six older relics are EmberRelicAssets')
+  relics: Object.freeze({
+    whistle: "asset:ui/relics-v3/relic-whistle.webp",
+    scale: "asset:ui/relics-v3/relic-scale.webp",
+    icekey: "asset:ui/relics-v3/relic-icekey.webp",
+    rootsap: "asset:ui/relics-v3/relic-rootsap.webp",
+    lampwick: "asset:ui/relics-v3/relic-lampwick.webp",
+    wrench: "asset:ui/relics-v3/relic-wrench.webp",
+    watch: "asset:ui/relics-v3/relic-watch.webp",
+    canary: "asset:ui/relics-v3/relic-canary.webp",
+  }),
+});
+if (typeof module !== "undefined") module.exports = EmberStoryArt;
