@@ -245,23 +245,18 @@ test("the expedition tavern sells each card once, strikes a card for rising gold
 }) => {
   await page.goto("./?debug=1");
   await ready(page);
-  // a run that has won its first two levels, stored at the tavern after level 2
+  // a run standing at Amara's basket, with marks to spend
   await page.evaluate(() => {
     const D = EmberData,
-      R = EmberRun;
-    let run = R.create(D, "mage", 99);
-    while (run.step !== "tavern") {
-      if (run.step === "route") run = R.choose(D, run, run.offer.foes[0]);
-      else if (run.step === "battle") run = R.resolve(D, run, "p");
-      else if (run.step === "treasure") run = R.takeTreasure(D, run, 0);
-      else run = R.takeBundle(D, run, 0);
-    }
-    localStorage.setItem("emberfall.run.v1", JSON.stringify({ ...run, gold: 200 }));
+      run = EmberRun.begin(D, EmberRun.create(D, "mage", 99));
+    Object.assign(run, { step: "shop", at: { row: 0, col: 0 }, path: [0], gold: 200,
+      offer: { cards: ["fireball", "bolt", "wisdom"].map((id) => ({ id, price: D.dungeon.prices[D.byId[id].rarity], sold: false })), relic: { id: "heart", price: D.dungeon.prices.relic, sold: false }, removePrice: D.dungeon.prices.remove } });
+    localStorage.setItem("emberfall.run.v2", JSON.stringify(run));
   });
   await page.locator("#start-btn").click();
-  await expect(page.locator('#modal .run-box[data-run-step="tavern"]')).toBeVisible();
+  await expect(page.locator('#modal .run-box[data-run-step="shop"]')).toBeVisible();
   const run = () =>
-    page.evaluate(() => JSON.parse(localStorage.getItem("emberfall.run.v1")));
+    page.evaluate(() => JSON.parse(localStorage.getItem("emberfall.run.v2")));
   const before = await run();
   await page.locator('[data-buy="0"]').click();
   let after = await run();
@@ -281,8 +276,8 @@ test("the expedition tavern sells each card once, strikes a card for rising gold
   );
   await expect(page.locator("#run-remove")).toContainText(String(removed.offer.removePrice));
   await page.locator("#run-confirm").click();
-  await expect(page.locator('#modal .run-box[data-run-step="route"]')).toBeVisible();
+  await expect(page.locator('#modal .run-box[data-run-step="map"]')).toBeVisible();
   after = await run();
-  expect(after.level).toBe(3);
+  expect(after.step).toBe("map");
   expect(after.deck).toEqual(removed.deck);
 });

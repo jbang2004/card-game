@@ -238,7 +238,7 @@ const EmberEngine = (() => {
       // an expedition battle (EmberRun): the opponent the run chose at its level — a rival (a preset deck, cut down)
       // or a boss (its health scaled); the run's own deck, relics and covenants
       const runFoe = options.run
-        ? Run.foe(this.data, options.run.level, options.run.foe)
+        ? Run.foe(this.data, options.run.level, options.run.foe, options.run)
         : null;
       if (options.run && !runFoe) return this.reject("未知远征对手");
       if (runFoe?.kind === "boss") bossIndex = runFoe.bossIndex;
@@ -305,6 +305,8 @@ const EmberEngine = (() => {
         // (the player always moves first on an expedition)
         this.s.mode = "run";
         this.s.run = { level: options.run.level, foe: runFoe.id };
+        // (the pawnbroker plays the cards the bearer's last run lost)
+        if (Array.isArray(options.run.pawned)) this.s.run.pawned = [...options.run.pawned];
         this.s.first = "p";
       } else if (opponent) {
         this.s.mode = "practice";
@@ -386,7 +388,7 @@ const EmberEngine = (() => {
       this.relicEffects("onStart");
       this.log(
         runFoe
-          ? "远征第 " + options.run.level + " 层 · 迎战" + runFoe.name + "。"
+          ? "下井 · 迎战" + runFoe.name + "。"
           : opponent
             ? "练习对战 · " + opponent.name
             : "你抵达了" + boss.title + "。",

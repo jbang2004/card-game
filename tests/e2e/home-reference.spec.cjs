@@ -110,7 +110,7 @@ for (const [width, height, touch] of [
     await page.locator("#quick-btn").click();
     await page.waitForFunction(() => Emberfall.inBattle && !EmberFX.busy);
     await page.locator("#home-btn").click();
-    await expect(page.locator("#start-btn")).toContainText("开启远征");
+    await expect(page.locator("#start-btn")).toContainText("下井");
     // Returning to the lobby restores the primary action's own treatment:
     // slate paints it as the blue pill (§5.1), and the retired bitmap button
     // skin is no longer in the DOM at all.
@@ -136,16 +136,17 @@ test("saved expedition labels preserve the skins; cancel new journey preserves t
 }) => {
   await ready(page);
   await page.locator("#adventure-nav").click();
-  await expect(page.locator(".adventure-atlas")).toBeVisible();
-  await page.locator("#map-continue").click();
+  await expect(page.locator('#modal .run-box[data-run-step="notebook"]')).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.locator("#start-btn").click();
   await beginExpedition(page);
   await page.locator("#mulligan-confirm").click();
   await page.waitForFunction(() => !EmberFX.busy);
   await page.locator("#home-btn").click();
   const saved = await page.evaluate(() => localStorage.getItem("emberfall.v1"));
   expect(saved).toBeTruthy();
-  await expect(page.locator("#start-btn")).toContainText("继续远征");
-  await expect(page.locator("#quick-btn")).toContainText("新的旅程");
+  await expect(page.locator("#start-btn")).toContainText("继续下井");
+  await expect(page.locator("#quick-btn")).toContainText("酒馆柜台");
   // Both lobby actions keep their pill treatment once a save exists: the
   // primary carries the blue gradient, the secondary the dark pill, and the
   // retired bitmap skin is gone from both.
@@ -165,7 +166,9 @@ test("saved expedition labels preserve the skins; cancel new journey preserves t
     { pill: true, skins: 0 },
     { pill: true, skins: 0 },
   ]);
+  // the counter: sending someone else down asks first
   await page.locator("#quick-btn").click();
+  await page.locator("#hub-new").click();
   await expect(page.locator("#ok-confirm")).toBeVisible();
   await page.locator("#cancel-confirm").click();
   expect(await page.evaluate(() => localStorage.getItem("emberfall.v1"))).toBe(
@@ -173,7 +176,7 @@ test("saved expedition labels preserve the skins; cancel new journey preserves t
   );
   await page.reload();
   await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
-  await expect(page.locator("#start-btn")).toContainText("继续远征");
+  await expect(page.locator("#start-btn")).toContainText("继续下井");
   await page.locator("#start-btn").click();
   await page.waitForFunction(() => Emberfall.inBattle && !EmberFX.busy);
   await page.locator("#home-btn").click();

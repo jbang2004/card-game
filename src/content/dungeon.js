@@ -1,12 +1,16 @@
-/* The expedition (地下城远征): a run of nine levels. Data only — EmberRun (rules/run.js) plays it.
+/* The descent (下井): a run down the great shaft, act by act. Data only — EmberRun (rules/run.js) plays it, and the
+ * words of every place and person are EmberStory's (content/story.js).
  *
- * A run starts from a small class deck and grows it: after each win the player takes one of three themed bundles of
- * three cards; after levels 1, 3, 5 and 7 one of three treasures (a relic, a covenant, a legendary or epic card); the
- * tavern opens after levels 2, 4, 6 and 8 (buy cards, strike one from the deck). Every battle starts at full health; one
- * loss ends the run. At each level two opponents are offered and the player picks one: a rival (one of the preset
- * decks, cut down and weakened for the early levels) or a boss (its health scaled by the level). */
+ * An act is a small map: rows of two or three places, one of which the player walks into, then one of those it
+ * leads to, down to the act's last row. A place is a fight (a small opponent), an elite (a named one, worth a
+ * keepsake), an event (a choice, no battle), a chapel (rest), the basket (Amara's shop on a rope), a cache (a
+ * treasure) or the act's boss. Battles start at full health; a lost battle costs one ember (火种) and the opponent
+ * stays where it stood. With no embers left the run is over and the god's amber pulls its bearer back to the surface.
+ *
+ * The strength of an opponent comes from the tier its row names (1–9, the nine steps of the old expedition): a
+ * rival (one of the preset decks) is cut down to the tier's health and deck size, a boss's health is scaled. */
 const EmberDungeon = {
-  levels: 9,
+  embers: 3,
   // the class decks a run starts from (ten cards each: cheap, plain, the class's basics)
   starters: {
     mage: ["spark", "spark", "bolt", "bolt", "wisp", "frostbolt", "wisdom", "guard", "sentinel", "cleric"],
@@ -14,25 +18,91 @@ const EmberDungeon = {
     ranger: ["wolf", "wolf", "archer", "archer", "battlecry", "spider", "assassin", "guard", "sentinel", "cleric"],
     morla: ["moonfox", "moonfox", "wolf", "graveoffering", "soultether", "soulguide", "spider", "guard", "sentinel", "cleric"],
   },
-  // who can be met at each level: "rival" = a preset deck (EmberCampaign.archetypes), otherwise a boss id.
   // rival: its health and how many of its deck's cheapest cards it plays with; bossHp: × the boss's own health;
-  // bossCards: a boss met here plays only its cheapest cards (the first levels' bosses are small decks)
-  stages: [
-    { pool: ["rival", "fuse", "gleaner"], rival: { hp: 10, cards: 10 }, bossHp: 0.4, bossCards: 10 },
-    { pool: ["rival", "appraiser", "redscarf", "pawnbroker"], rival: { hp: 14, cards: 14 }, bossHp: 0.5, bossCards: 14 },
-    { pool: ["rival", "warden", "drill", "pawnbroker"], rival: { hp: 18, cards: 18 }, bossHp: 0.6, bossCards: 18 },
-    { pool: ["rival", "warden", "clockmaker", "blacklung", "earlyriser", "amberbody"], rival: { hp: 21, cards: 22 }, bossHp: 0.65, bossCards: 22 },
-    { pool: ["rival", "oracle", "frost", "clockmaker", "blacklung", "earlyriser", "amberbody"], rival: { hp: 24, cards: 26 }, bossHp: 0.7, bossCards: 26 },
-    { pool: ["rival", "frost", "queen", "moonkeeper", "mirrorlegion", "mirrornahira", "mirrorfrederia", "mirrorrowan", "mirrorliol"], rival: { hp: 27, cards: 30 }, bossHp: 0.8 },
-    { pool: ["queen", "moonkeeper", "ada", "mirrorlegion", "mirrornahira", "mirrorfrederia", "mirrorrowan", "mirrorliol"], bossHp: 0.9 },
-    { pool: ["dragon"], bossHp: 1 },
-    { pool: ["eve"], bossHp: 1 },
+  // bossCards: a boss met at this tier plays only its cheapest cards (the first tiers' bosses are small decks)
+  tiers: [
+    { rival: { hp: 10, cards: 10 }, bossHp: 0.4, bossCards: 10 },
+    { rival: { hp: 14, cards: 14 }, bossHp: 0.5, bossCards: 14 },
+    { rival: { hp: 18, cards: 18 }, bossHp: 0.5, bossCards: 16 },
+    { rival: { hp: 24, cards: 22 }, bossHp: 0.85, bossCards: 24 },
+    { rival: { hp: 28, cards: 26 }, bossHp: 1 },
+    { rival: { hp: 30, cards: 30 }, bossHp: 1.05 },
+    { rival: { hp: 32, cards: 30 }, bossHp: 1.2 },
+    { bossHp: 1.4 },
+    { bossHp: 1.15 },
   ],
-  treasureAfter: [1, 3, 5, 7],
-  tavernAfter: [2, 4, 6, 8],
-  // gold for a win: base + perLevel × the level won
-  gold: { base: 10, perLevel: 5 },
-  prices: { common: 20, rare: 30, epic: 45, legendary: 70, remove: 25, removeStep: 10 },
+  /* The acts. rows: top to bottom; a row's slots are shuffled, each becomes one place. fights: the small opponents
+   * ("rival" = any preset deck not yet met); elites: the named ones; bosses: one is drawn for the last row; mirror:
+   * the bearer's own reflection (the boss made for this hero). A row may name the `event` its place holds (the others
+   * are drawn from the act's). epilogue: entered only by a run that carries it (a bearer who has sealed the root
+   * before — see EmberChronicle). */
+  acts: [
+    {
+      id: "mine", scene: "act1",
+      rows: [
+        { tier: 1, slots: ["fight", "fight", "fight"] },
+        { tier: 2, slots: ["fight", "fight", "elite"] },
+        { slots: ["event", "event", "shop"] },
+        { slots: ["chapel", "event"] },
+        { tier: 3, slots: ["boss"] },
+      ],
+      fights: ["rival", "rival", "gleaner"],
+      elites: ["fuse", "appraiser", "redscarf", "pawnbroker"],
+      bosses: ["warden", "drill"],
+      events: ["cavein", "ledger", "canary", "cardgame", "crossing"],
+    },
+    {
+      id: "strata", scene: "act2",
+      rows: [
+        { tier: 4, slots: ["fight", "fight", "event"] },
+        { tier: 4, slots: ["elite", "event", "cache"] },
+        { tier: 5, slots: ["fight", "elite", "event"] },
+        { slots: ["chapel", "shop"] },
+        { tier: 5, slots: ["boss"] },
+      ],
+      fights: ["rival", "blacklung", "amberbody"],
+      elites: ["clockmaker", "earlyriser", "oracle", "warden", "drill"],
+      bosses: ["frost"],
+      events: ["cracked", "mural", "jetlab", "sentry", "letters"],
+    },
+    {
+      id: "roots", scene: "act3",
+      rows: [
+        { tier: 6, slots: ["fight", "fight", "event"] },
+        { tier: 6, slots: ["elite", "event", "cache"] },
+        { tier: 6, slots: ["mirror"] },
+        { slots: ["chapel", "shop"] },
+        { tier: 7, slots: ["boss"] },
+      ],
+      fights: ["rival", "mirrorlegion"],
+      elites: ["queen", "moonkeeper"],
+      bosses: ["ada"],
+      events: ["campfire", "giant", "resin", "lamps"],
+    },
+    {
+      id: "rootsea", scene: "act4",
+      rows: [
+        { slots: ["event"], event: "gathering" },
+        { slots: ["event"], event: "watch" },
+        { slots: ["chapel", "shop"] },
+        { tier: 8, slots: ["boss"] },
+      ],
+      fights: [], elites: [], bosses: ["dragon"],
+      events: ["gathering", "watch"],
+    },
+    {
+      id: "otherside", scene: "act5", epilogue: true,
+      rows: [
+        { slots: ["event"] },
+        { tier: 9, slots: ["boss"] },
+      ],
+      fights: [], elites: [], bosses: ["eve"],
+      events: ["mirrortavern"],
+    },
+  ],
+  // marks for a win: base + perTier × the tier won, more from a named opponent
+  gold: { base: 10, perTier: 5, elite: 15, boss: 30 },
+  prices: { common: 20, rare: 30, epic: 45, legendary: 70, relic: 90, remove: 25, removeStep: 10 },
   // the bundles: three cards that share a theme (a theme is offered only when the class has three cards for it)
   themes: [
     { id: "early", name: "先发制人", text: "低费随从与法术，抢占先机。", maxCost: 2 },
@@ -47,9 +117,11 @@ const EmberDungeon = {
     { id: "pantheon", name: "众神之路", text: "献祭神祇的仪式牌。", set: "pantheon" },
     { id: "giants", name: "巨物来临", text: "五费以上的大家伙。", minCost: 5 },
   ],
-  // rarity weights for bundle cards (legendaries are treasures only); epics grow likelier with the level
+  // rarity weights for bundle cards (legendaries are treasures only); epics grow likelier with the tier
   rarity: { common: 5, rare: 4, epic: 1, epicPerLevel: 0.35 },
   // treasures: weights of the three kinds
   treasure: { relic: 3, contract: 2, card: 2 },
+  // a lost run leaves this many of its best cards down the shaft; the pawnbroker has them the next time
+  pawned: 3,
 };
 if (typeof module !== "undefined") module.exports = EmberDungeon;

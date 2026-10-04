@@ -1,6 +1,6 @@
 const { openCovenantPage } = require("./helpers/covenant.cjs");
 const { test, expect } = require("@playwright/test");
-const { chooseFoe } = require("./helpers/expedition.cjs");
+const { chooseFoe, toBundle } = require("./helpers/expedition.cjs");
 const path = require("node:path");
 
 // Dialog sizes that slate renders as a full-bleed page shell; every other
@@ -100,13 +100,13 @@ const pages = {
     ".wind-time-setting",
   ],
   map: [
-    ".adventure-atlas",
+    ".run-box",
     ".modal-close",
-    ".atlas-stage",
-    ".atlas-node",
-    ".atlas-heading h2",
-    ".atlas-dossier",
-    ".atlas-footer",
+    ".run-notebook",
+    ".run-page-tab",
+    ".run-heading h2",
+    ".run-page",
+    ".run-footer",
   ],
   help: [
     ".help-box",
@@ -364,12 +364,14 @@ async function captureViewport(browser, viewport) {
   await page.locator('[data-hero="morla"]').click();
   result.heroes = await fingerprint(page, pages.heroes);
   await page.locator("#hero-confirm").click();
-  await page.locator("#modal .run-box [data-foe]").first().waitFor();
+  await page.locator("#run-confirm").click();
+  await page.locator("#run-confirm").click();
+  await page.locator("#modal .run-box .run-node[data-foe]").first().waitFor();
   // Morla's covenants as the run's treasures, and the run resumed from the lobby
   await page.evaluate(() => {
-    const run = JSON.parse(localStorage.getItem("emberfall.run.v1"));
+    const run = JSON.parse(localStorage.getItem("emberfall.run.v2"));
     run.contracts = [...EmberData.heroes.find((h) => h.id === "morla").defaultContracts];
-    localStorage.setItem("emberfall.run.v1", JSON.stringify(run));
+    localStorage.setItem("emberfall.run.v2", JSON.stringify(run));
   });
   await page.locator("#run-home").click();
   await page.locator("#start-btn").click();
@@ -428,11 +430,14 @@ async function captureViewport(browser, viewport) {
   await page.locator("#result-next").waitFor();
   result.result = await fingerprint(page, pages.result);
   await page.locator("#result-next").click();
+  // (what the opponent leaves, then the bundle of cards: the run page's shared tiles)
+  await toBundle(page);
   await page.locator("[data-pick]").nth(1).click();
   result.run = await fingerprint(page, pages.run);
-  // an expedition battle is not restarted: the confirm page is the lobby's new-journey prompt
+  // a battle of the descent is not restarted: the confirm page is the counter's "send someone else down" prompt
   await page.locator("#run-home").click();
   await page.locator("#quick-btn").click();
+  await page.locator("#hub-new").click();
   await page.locator("#ok-confirm").waitFor();
   result.confirm = await fingerprint(page, pages.confirm);
   await page.locator("#cancel-confirm").click();

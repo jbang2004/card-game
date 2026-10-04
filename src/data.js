@@ -33,7 +33,11 @@ const EmberData = (() => {
     typeof EmberDungeon !== "undefined"
       ? EmberDungeon
       : require("./content/dungeon.js");
-  function create(input = definitions, world = campaign, dungeonDef = expedition) {
+  const tale =
+    typeof EmberStory !== "undefined"
+      ? EmberStory
+      : require("./content/story.js");
+  function create(input = definitions, world = campaign, dungeonDef = expedition, storyDef = tale) {
     Schema.validate(world);
     const cards = input.map((c) => ({
       tags: [],
@@ -282,6 +286,7 @@ const EmberData = (() => {
         r.onTurn?.length ? "你的每个回合开始时，" + describe(r.onTurn) : "",
         r.onStart?.length ? "每场战斗开始时，" + describe(r.onStart) : "",
         R.triggerText(r.triggers, db),
+        r.bounty ? `远征中每场胜利额外获得 ${r.bounty} 马克。` : "",
       ].join("");
       if (!r.text) throw Error(r.id + ": Relic requires an effect");
     }
@@ -307,8 +312,6 @@ const EmberData = (() => {
     // the expedition (content/dungeon.js): its starter decks are the class's own cards, its stages name real
     // opponents, its prices are whole
     const dungeon = structuredClone(dungeonDef);
-    if (!Array.isArray(dungeon.stages) || dungeon.stages.length !== dungeon.levels)
-      throw Error("dungeon: one stage per level");
     for (const h of heroes) {
       // a hero without a starter of its own sets out with its deck's ten cheapest cards
       dungeon.starters[h.id] ??= [...h.deck].sort((a, b) => byId[a].cost - byId[b].cost || a.localeCompare(b)).slice(0, 10);
@@ -320,14 +323,81 @@ const EmberData = (() => {
       )
         throw Error(h.id + ": Invalid dungeon starter deck");
     }
-    dungeon.stages.forEach((st, i) => {
-      if (!Array.isArray(st.pool) || !st.pool.length || st.pool.some((id) => id !== "rival" && !bosses.some((b) => b.id === id)))
-        throw Error("dungeon stage " + (i + 1) + ": Invalid opponent pool");
-      if (st.pool.includes("rival") && !(Number.isInteger(st.rival?.hp) && Number.isInteger(st.rival?.cards)))
-        throw Error("dungeon stage " + (i + 1) + ": Rival needs hp and cards");
-    });
-    for (const k of ["common", "rare", "epic", "legendary", "remove", "removeStep"])
+    // the acts: every opponent, event and row they name exists, a battle row names a tier with what it needs
+    const story = structuredClone(storyDef), KINDS = ["fight", "elite", "mirror", "boss", "event", "chapel", "shop", "cache"];
+    const isBoss = (id) => bosses.some((b) => b.id === id);
+    if (!Array.isArray(dungeon.tiers) || !dungeon.tiers.length || !Array.isArray(dungeon.acts) || !dungeon.acts.length)
+      throw Error("dungeon: tiers and acts are required");
+    for (const act of dungeon.acts) {
+      if (!story.acts[act.id]) throw Error("dungeon act " + act.id + ": no story");
+      for (const id of [...act.fights, ...act.elites, ...act.bosses])
+        if (id !== "rival" && !isBoss(id)) throw Error("dungeon act " + act.id + ": unknown opponent " + id);
+      for (const id of act.events) if (!story.events[id]) throw Error("dungeon act " + act.id + ": unknown event " + id);
+      for (const row of act.rows) if (row.event && !(act.events.includes(row.event) && row.slots.join() === "event")) throw Error("dungeon act " + act.id + ": a row's event is one of the act's, alone on its row");
+      if (!act.bosses.length) throw Error("dungeon act " + act.id + ": no boss");
+      act.rows.forEach((row, i) => {
+        if (!Array.isArray(row.slots) || !row.slots.length || row.slots.some((k) => !KINDS.includes(k)))
+          throw Error("dungeon act " + act.id + " row " + i + ": Invalid slots");
+        const battle = row.slots.some((k) => ["fight", "elite", "mirror", "boss"].includes(k));
+        if (battle && !dungeon.tiers[row.tier - 1]) throw Error("dungeon act " + act.id + " row " + i + ": a battle row names a tier");
+        if (row.slots.includes("fight") && act.fights.includes("rival") && !dungeon.tiers[row.tier - 1].rival)
+          throw Error("dungeon act " + act.id + " row " + i + ": the tier has no rival");
+      });
+      if (act.rows[act.rows.length - 1].slots.join() !== "boss") throw Error("dungeon act " + act.id + ": the last row is the boss");
+    }
+    for (const k of ["common", "rare", "epic", "legendary", "relic", "remove", "removeStep"])
       if (!Number.isInteger(dungeon.prices[k]) || dungeon.prices[k] < 0) throw Error("dungeon: Invalid price " + k);
+    // the story (content/story.js): its opponents, cards, relics, pages and choices are real
+    const pageIds = new Set(story.pages.map((p) => p.id));
+    if (pageIds.size !== story.pages.length) throw Error("story: Duplicate page");
+    const EFFECTS = ["gold", "ember", "card", "cards", "trophy", "relic", "boon", "forget", "copy", "redeem", "flag", "page", "gamble"];
+    const checkChoice = (c, owner, trophy) => {
+      if (typeof c.label !== "string" || !c.label || !Array.isArray(c.effects) || !c.say) throw Error(owner + ": Invalid choice");
+      for (const e of c.effects) {
+        const keys = Object.keys(e);
+        if (keys.length !== 1 || !EFFECTS.includes(keys[0])) throw Error(owner + ": Unknown effect " + keys.join());
+        const [k] = keys, v = e[k];
+        if (k === "card" && (!byId[v] || byId[v].token)) throw Error(owner + ": Unknown card " + v);
+        if (k === "relic" && v !== "random" && !relics.some((r) => r.id === v && !r.boon)) throw Error(owner + ": Unknown relic " + v);
+        if (k === "boon" && !relics.some((r) => r.id === v && r.boon)) throw Error(owner + ": Unknown blessing " + v);
+        if (k === "page" && !pageIds.has(v)) throw Error(owner + ": Unknown page " + v);
+        if (k === "trophy" && !trophy) throw Error(owner + ": no trophy to give");
+        if (k === "cards" && !(["common", "rare", "epic"].includes(v.rarity) && Number.isInteger(v.count) && v.count > 0)) throw Error(owner + ": Invalid cards");
+        if (["gold", "ember", "forget", "copy", "redeem"].includes(k) && !Number.isInteger(v)) throw Error(owner + ": Invalid " + k);
+        if (k === "gamble" && !(Number.isInteger(v.stake) && Number.isInteger(v.prize) && c.say.win && c.say.lose)) throw Error(owner + ": Invalid gamble");
+      }
+      for (const k of ["hero", "not"]) if (c.needs?.[k] && !heroes.some((h) => h.id === c.needs[k])) throw Error(owner + ": needs an unknown hero");
+    };
+    // every hero is left a real choice (an option may be another bearer's alone, or hidden from one)
+    const checkOptions = (list, owner) => {
+      if (!Array.isArray(list)) throw Error(owner + ": Invalid options");
+      for (const c of list) checkChoice(c, owner, null);
+      for (const h of heroes)
+        if (list.filter((c) => (!c.needs?.hero || c.needs.hero === h.id) && c.needs?.not !== h.id).length < 2) throw Error(owner + ": fewer than two options for " + h.id);
+    };
+    const isHero = (id) => heroes.some((h) => h.id === id);
+    for (const b of bosses) {
+      // (an opponent the story does not tell of yet is met without words)
+      const f = story.foes[b.id];
+      if (!f) continue;
+      if (!Array.isArray(f.setup) || !f.fall || !f.taunt) throw Error("story: " + b.id + " has no encounter");
+      if (f.trophy && (!byId[f.trophy] || byId[f.trophy].token)) throw Error("story: " + b.id + " trophy is no card");
+      if (f.page && !pageIds.has(f.page)) throw Error("story: " + b.id + " page is unknown");
+      for (const c of [...(f.approach || []), ...(f.aftermath || []), ...(f.again?.aftermath || [])]) checkChoice(c, "story." + b.id, f.trophy);
+      for (const h of [...Object.keys(f.vs || {}), ...Object.keys(f.again?.vs || {})]) if (!isHero(h)) throw Error("story: " + b.id + ".vs names no hero");
+    }
+    for (const c of story.mirrorAftermath) checkChoice(c, "story.mirrorAftermath", null);
+    for (const [id, r] of Object.entries(story.rivals)) if (!Array.isArray(r.setup) || !r.fall) throw Error("story: rival " + id + " has no encounter");
+    for (const [id, ev] of Object.entries(story.events)) {
+      if (!ev.title || !Array.isArray(ev.text)) throw Error("story: Invalid event " + id);
+      checkOptions(ev.options, "story.events." + id);
+      if (ev.again?.options) checkOptions(ev.again.options, "story.events." + id + ".again");
+      for (const [h, mine] of Object.entries(ev.vs || {})) if (!isHero(h) || !Array.isArray(mine.text)) throw Error("story: event " + id + ".vs is invalid");
+    }
+    for (const [id, act] of Object.entries(story.acts)) {
+      if (act.page && !pageIds.has(act.page)) throw Error("story: act page is unknown");
+      for (const h of Object.keys(act.voice || {})) if (h !== "all" && !isHero(h)) throw Error("story: act " + id + ".voice names no hero");
+    }
     return R.freeze({
       cards,
       classes,
@@ -342,6 +412,7 @@ const EmberData = (() => {
       classNames,
       tribeNames,
       dungeon,
+      story,
     });
   }
   return Object.freeze({ ...create(), create });

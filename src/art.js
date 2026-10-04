@@ -18,11 +18,14 @@ const EmberArt = (() => {
     return { ...hero, ...(archetype.person ? { name: archetype.person } : {}), ...(archetype.portraitId ? { portraitId: archetype.portraitId } : {}) };
   }
   function relic(id) {
+    // a blessing wears the picture of the relic it is like
+    const like = typeof EmberData !== "undefined" && EmberData.relics.find((r) => r.id === id)?.like;
+    if (like) id = like;
     const role = "relic" + id[0].toUpperCase() + id.slice(1);
     const image =
       typeof EmberTheme !== "undefined" && EmberTheme.hasArt(role)
         ? EmberTheme.art(role)
-        : EmberRelicAssets[id];
+        : (EmberRelicAssets[id] ?? (typeof EmberStoryArt !== "undefined" ? EmberStoryArt.relics[id] : undefined));
     if (!image) throw Error("Missing relic artwork: " + id);
     return image;
   }

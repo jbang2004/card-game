@@ -104,7 +104,7 @@ test("long mobile views scroll vertically without a pager", async ({
   const page = await context.newPage();
   await page.goto("./?debug=1");
   await page.waitForFunction(() => window.Emberfall && !AtelierWorld.loading);
-  for (const show of ["showMap", "showHelp"]) {
+  for (const show of ["showNotebook", "showHelp"]) {
     await page.evaluate((name) => Emberfall[name](), show);
     const box = page.locator("#modal .folio-dialog");
     await expect(box.locator(":scope > .folio-pane")).toHaveCount(1);

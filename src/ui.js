@@ -7,7 +7,8 @@
     app = $("app");
   const STORE = "emberfall.v1",
     SETTINGS = "emberfall.settings.v1",
-    RUN_STORE = "emberfall.run.v1";                    // the expedition in progress (EmberRun)
+    RUN_STORE = "emberfall.run.v2",                    // the descent in progress (EmberRun)
+    CHRONICLE = "emberfall.chronicle.v1";              // what the bearer's descents have left (EmberChronicle)
   const {
     escape,
     formatText,
@@ -93,7 +94,7 @@
       if (inBattle && !isDemo)
         showConfirm(
           "离开当前战斗",
-          "用这套牌组开始练习对战。远征的进度已保存，可从营地继续。",
+          "用这套牌组开始练习对战。下井的进度已保存，可从酒馆继续。",
           () => {
             save();
             showHeroes("practice");
@@ -123,10 +124,16 @@
     keywords,
     showHeroes,
     showHelp,
+    preview: (...a) => preview(...a),
+    hidePreview: (...a) => hidePreview(...a),
     startRun,
     startRunBattle,
     saveRun,
     clearRun,
+    activeRun,
+    resumeRun,
+    chronicle,
+    saveChronicle,
     get chosenHero() {
       return chosenHero;
     },
@@ -146,11 +153,20 @@
     run: EmberRunScreens.create(screenContext),
     preferences: EmberPreferenceScreens.create(screenContext),
   });
-  // ------------------------------------------------------------------ the expedition (EmberRun)
-  /** the stored run, when it is whole and still going */
+  // ------------------------------------------------------------------ the descent (EmberRun, EmberChronicle)
+  /** what the bearer's descents have left: the stored chronicle, or a blank one */
+  function chronicle() {
+    const c = readStore(CHRONICLE);
+    return EmberChronicle.valid(c, D) ? c : EmberChronicle.fresh();
+  }
+  function saveChronicle(c) {
+    writeStore(CHRONICLE, c);
+  }
+  /** the stored run, when it is whole (a run that has ended stays until its ending has been read: the ending page
+   *  closes it into the chronicle and removes it) */
   function activeRun() {
     const run = readStore(RUN_STORE);
-    return EmberRun.valid(run, D) && run.step !== "won" && run.step !== "lost" ? run : null;
+    return EmberRun.valid(run, D) ? run : null;
   }
   function saveRun(run) {
     writeStore(RUN_STORE, run);
@@ -159,20 +175,21 @@
     removeStore(RUN_STORE);
     if (readStore(STORE)?.mode === "run") removeStore(STORE);
   }
-  /** a new expedition with this hero (it replaces any stored run and the match it was fighting) */
+  /** a new descent with this hero (it replaces any stored run and the match it was fighting) */
   function startRun(heroId) {
-    const run = EmberRun.create(D, heroId, Date.now());
+    const run = EmberRun.create(D, heroId, Date.now(), EmberChronicle.carry(chronicle(), heroId));
     if (run.error) { toast(run.error); return; }
     saveRun(run);
     removeStore(STORE);
     chosenHero = heroId;
     closeModal(false);
-    screens.run.show(run);
+    screens.run.sendoff(run);
   }
   /** the battle the run chose */
   function startRunBattle(run) {
-    startGame(run.heroId, 0, run.relics, run.deck, {
-      run: { level: run.level, foe: run.foe, devotion: run.devotion },
+    // (the blessings gathered for this battle fight beside the keepsakes, and are spent by it)
+    startGame(run.heroId, 0, [...run.relics, ...run.boons], run.deck, {
+      run: { level: run.tier, foe: run.foe, devotion: run.devotion, pawned: run.pawned },
       contracts: run.contracts,
     });
   }
@@ -180,7 +197,7 @@
   function resumeRun(run) {
     if (run.step !== "battle") { screens.run.show(run); return; }
     const s = validSave();
-    if (s?.mode === "run" && s.run.level === run.level && s.run.foe === run.foe) continueGame();
+    if (s?.mode === "run" && s.run.level === run.tier && s.run.foe === run.foe) continueGame();
     else startRunBattle(run);
   }
   /** a run battle is over and the player moves on: the run takes the result */
@@ -633,7 +650,7 @@
   function save() {
     if (!game.s || isDemo || game.s.mode !== "run") return;
     const run = activeRun();
-    if (run?.step === "battle" && run.level === game.s.run.level && run.foe === game.s.run.foe)
+    if (run?.step === "battle" && run.tier === game.s.run.level && run.foe === game.s.run.foe)
       writeStore(STORE, game.s);
     else removeStore(STORE);
   }
@@ -649,40 +666,45 @@
       (readStore(RUN_STORE) && !EmberRun.valid(readStore(RUN_STORE), D));
     document.querySelector(".local-status").textContent = discarded
       ? "测试存档已失效，请重新开始"
-      : "地下城远征";
+      : "大竖井";
     $("start-btn").querySelector(".home-action-label").textContent = run
-      ? "继续远征"
-      : "开启远征";
+      ? "继续下井"
+      : "下井";
     $("quick-btn").querySelector(".home-action-label").textContent = run
-      ? "新的旅程"
+      ? "酒馆柜台"
       : "战斗试玩";
     $("lobby-save-status").textContent = discarded
       ? "测试存档已失效，请重新开始"
       : run
-        ? `远征第 ${run.level} 层 · 牌组 ${run.deck.length} 张，等待你归来。`
+        ? `${D.heroes.find((h) => h.id === run.heroId).name}停在${D.story.acts[D.dungeon.acts[run.act].id].name} · 火种 ${run.embers} 格，牌组 ${run.deck.length} 张。`
         : "";
     $("quick-btn").title = run
-      ? "开始新的远征（确认后覆盖当前进度）"
-      : "从第 6 回合开始的示范战斗，不影响远征存档";
+      ? "回到阿玛拉的柜台：换人下井，或翻看手札"
+      : "从第 6 回合开始的示范战斗，不影响下井的存档";
     // A run fighting a battle already knows its opponent while the player is
     // still looking at the lobby: start that request now, not on the click.
-    const foe = run?.step === "battle" && EmberRun.foe(D, run.level, run.foe);
-    if (foe) preloadEncounter(foe.bossIndex ?? 0, foe.kind === "rival" ? "practice" : null);
+    const foe = run?.step === "battle" && EmberRun.foe(D, run.tier, run.foe);
+    if (foe) preloadEncounter(foe.bossIndex ?? 0, foe.kind === "rival" ? "practice" : null, run.tier);
   }
   /* The battle arena is rendered live (presentation/arena-3d.js); its material
    * maps are separate HTTP assets in the web build. The boss is known well
    * before the board is on screen, so the context and texture decodes are
    * started here and overlap the mulligan instead of the match. */
-  function preloadEncounter(bossIndex, mode) {
+  function preloadEncounter(bossIndex, mode, tier = 0) {
     if (typeof EmberArena3D === "undefined") return;
     EmberArena3D.setEncounter(
-      mode === "practice" ? "practice" : D.bosses[bossIndex]?.id,
+      mode === "practice" ? fieldOf(tier) : D.bosses[bossIndex]?.id,
     );
     EmberArena3D.preload();
   }
+  /** where a small opponent of the descent is fought: the field of the act its tier belongs to (the pit-head, the
+   *  boiler hall, the black mirror between the worlds); a practice duel keeps the tavern's own court */
+  function fieldOf(tier) {
+    return !tier ? "practice" : tier <= 3 ? "warden" : tier <= 5 ? "clockmaker" : "mirrorlegion";
+  }
   function startGame(hero, boss = 0, relics = [], deck = null, options = {}) {
-    const runFoe = options.run && EmberRun.foe(D, options.run.level, options.run.foe);
-    preloadEncounter(runFoe?.kind === "boss" ? runFoe.bossIndex : boss, options.opponent || runFoe?.kind === "rival" ? "practice" : null);
+    const runFoe = options.run && EmberRun.foe(D, options.run.level, options.run.foe, options.run);
+    preloadEncounter(runFoe?.kind === "boss" ? runFoe.bossIndex : boss, options.opponent || runFoe?.kind === "rival" ? "practice" : null, runFoe?.kind === "rival" ? options.run.level : 0);
     EmberFX.cancel();
     runToken++;
     clearTimeout(aiTimer);
@@ -707,7 +729,7 @@
       showHeroes();
       return;
     }
-    preloadEncounter(s.bossIndex, s.opponentHero ? "practice" : null);
+    preloadEncounter(s.bossIndex, s.opponentHero ? "practice" : null, s.mode === "run" && s.opponentHero ? s.run.level : 0);
     runToken++;
     isDemo = false;
     inBattle = true;
@@ -763,16 +785,6 @@
     inBattle = false;
     closeModal(false);
     setView(false);
-  }
-  function newJourney() {
-    if (activeRun())
-      showConfirm(
-        "重燃一段新的旅程",
-        "开启新的远征后，当前远征的本地进度将被覆盖。卡组和设置不会受到影响。",
-        () => showHeroes("campaign"),
-        "选择英雄",
-      );
-    else showHeroes("campaign");
   }
   function demo() {
     // `Game.demo` always stages the first boss.
@@ -1089,18 +1101,19 @@
     EmberFX.setTheme(s.bossIndex, s.phase2);
     // the opponent: a hero (a practice duel, an expedition's rival — its preset's name leads) or a boss
     const hero = D.heroes.find((h) => h.id === s.heroId),
-      rival = s.mode === "run" && s.opponentHero ? EmberRun.foe(D, s.run.level, s.run.foe) : null,
+      rival = s.mode === "run" && s.opponentHero ? EmberRun.foe(D, s.run.level, s.run.foe, s.run) : null,
       boss = s.opponentHero
         ? {
             ...A.rivalFace(D.heroes.find((h) => h.id === s.opponentHero), D.archetypes.find((a) => a.id === s.opponent)),
             en: rival ? "RIVAL" : "PRACTICE DUEL",
-            phaseText: rival ? `劲敌「${rival.name}」，没有觉醒阶段。` : "双方 30 血，无遗物与首领觉醒。",
+            phaseText: rival ? `「${rival.name}」，没有觉醒阶段。` : "双方 30 血，无遗物与首领觉醒。",
           }
         : D.bosses[s.bossIndex];
     if (typeof EmberArena3D !== "undefined")
-      EmberArena3D.setEncounter(s.opponentHero ? "practice" : boss.id);
+      EmberArena3D.setEncounter(s.opponentHero ? fieldOf(rival ? s.run.level : 0) : boss.id);
+    EmberBarks.update(s, activeRun);
     $("chapter-name").textContent =
-      s.mode === "practice" ? "酒馆练习" : s.mode === "run" ? `远征第 ${s.run.level} 层 · ${rival ? rival.name : boss.title}` : boss.title;
+      s.mode === "practice" ? "酒馆练习" : s.mode === "run" ? `${D.story.acts[D.dungeon.acts.find((a) => a.rows.some((r) => r.tier === s.run.level))?.id]?.name ?? "大竖井"} · ${rival ? rival.name : boss.name}` : boss.title;
     $("relic-slots").innerHTML = s.relics
       .map((id) => {
         const r = D.relics.find((x) => x.id === id);
@@ -1109,7 +1122,7 @@
       .join("");
     $("relic-slots").hidden = !s.relics.length;
     $("boss-order").textContent =
-      s.mode === "practice" ? "对手情报" : rival ? "劲敌情报" : "首领情报";
+      s.mode === "practice" || rival ? "对手情报" : "首领情报";
     $("boss-name").textContent = boss.name;
     $("boss-power-info").innerHTML =
       `<strong>${boss.power}</strong><p>${boss.powerText || "双方使用英雄技能，无首领觉醒。"}</p>`;
@@ -2604,7 +2617,7 @@
   };
   $("quick-btn").onclick = () => {
     EmberAudio.unlock();
-    activeRun() ? newJourney() : demo();
+    activeRun() ? screens.run.hub() : demo();
   };
   $("home-btn").onclick = () => {
     if (inBattle) home();
@@ -2612,8 +2625,7 @@
   $("adventure-nav").onclick = () => {
     if (modalType) closeModal();
     if (inBattle) return;
-    const run = activeRun();
-    if (run) resumeRun(run);
+    screens.run.notebook();
   };
   $("collection-nav").onclick = showLibrary;
   $("guide-nav").onclick = showHelp;
@@ -2772,6 +2784,7 @@
     showLibrary,
     showHelp,
     showSettings,
+    showNotebook: () => screens.run.notebook(),
     showModal,
     closeModal,
     cardHTML,
