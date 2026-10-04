@@ -58,10 +58,6 @@ body.mobile-portrait #modal.folio-host .hero-profile-heading h3 {
   font-size: 28px;
   line-height: 1.25;
 }
-body.mobile-portrait #modal.folio-host .atlas-dossier p {
-  line-height: 1.65;
-  font-size: 13px;
-}
 body.mobile-landscape #modal.folio-host[data-type="heroes"] .hero-single-sheet {
   display: grid;
   grid-template-columns: 150px minmax(0, 1fr);

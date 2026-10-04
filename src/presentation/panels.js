@@ -7,7 +7,7 @@
  * §1 rule 2), so the injection and the rules that hid it are gone. */
 const EmberPanels = (() => {
   // Full-page dialogs own their own shell; only floating ones are labelled.
-  const pages = new Set(["heroes", "library", "map", "contracts", "run"]);
+  const pages = new Set(["heroes", "library", "contracts", "run"]);
   function mount(box, type) {
     if (pages.has(type)) return;
     box.classList.add("crafted-panel");

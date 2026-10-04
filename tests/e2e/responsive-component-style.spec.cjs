@@ -9,7 +9,6 @@ const PAGE_SHELL_SIZES = [
   "heroes",
   "library",
   "settings",
-  "route",
   "covenant",
   "help",
   "run",

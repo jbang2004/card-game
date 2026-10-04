@@ -81,9 +81,6 @@ body #modal.folio-host > [data-dialog-size="help"] {
 body #modal.folio-host > [data-dialog-size="atelier"] {
   --dialog-width: 1100px;
 }
-body #modal.folio-host > [data-dialog-size="route"] {
-  --dialog-width: 1280px;
-}
 body #modal.folio-host > [data-dialog-size="library"] {
   --dialog-width: 1240px;
 }

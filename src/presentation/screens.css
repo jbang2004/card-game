@@ -152,14 +152,13 @@ body #atelier-open small {
 /* Dedicated large workspaces; popovers retain compact geometry. */
 body #modal.folio-host[data-type="heroes"],
 body #modal.folio-host[data-type="library"],
-body #modal.folio-host[data-type="map"],
 body #modal.folio-host[data-type="contracts"] {
   padding: 0;
   backdrop-filter: none;
 }
 body
   #modal.folio-host
-  > :is(.hero-chooser, .library-box, .adventure-atlas, .covenant-box) {
+  > :is(.hero-chooser, .library-box, .covenant-box) {
   --dialog-width: 100vw;
   max-width: 100vw;
   width: 100%;
@@ -174,7 +173,7 @@ body
 }
 body
   #modal.folio-host
-  > :is(.hero-chooser, .library-box, .adventure-atlas, .covenant-box)::before {
+  > :is(.hero-chooser, .library-box, .covenant-box)::before {
   display: none;
 }
 body #modal.folio-host > .hero-chooser {
@@ -519,252 +518,6 @@ body #modal.folio-host .result-stats strong {
   line-height: 1.2;
 }
 
-/* Map: painterly terrain, live anchors and a readable dossier. */
-body #modal.folio-host > .adventure-atlas {
-  padding: 25px 35px;
-  gap: 12px;
-  background: var(--surface);
-}
-body #modal.folio-host .adventure-atlas > .modal-heading {
-  border: 0;
-}
-body #modal.folio-host .adventure-atlas .folio-pane {
-  flex: 1;
-}
-body #modal.folio-host .adventure-atlas .folio-viewport {
-  flex: 1;
-  overflow: hidden;
-}
-body #modal.folio-host .adventure-atlas .modal-scroll {
-  height: 100%;
-  display: flex;
-  gap: 24px;
-}
-body .atlas-stage {
-  position: relative;
-  flex: 1;
-  min-height: 360px;
-  aspect-ratio: auto;
-  background-image: var(--scene-art);
-  background-size: cover;
-  background-position: center;
-  border: 0;
-  overflow: hidden;
-  border-radius: 0;
-  box-shadow: none;
-}
-body .atlas-stage::before,
-body .atlas-stage::after,
-.atlas-cartography,
-.atlas-corners {
-  display: none;
-}
-body .atlas-location {
-  position: absolute;
-  width: 160px;
-  transform: translate(-50%, -50%);
-  margin: 0;
-  padding: 0;
-}
-body .atlas-location:nth-of-type(1) {
-  left: 16%;
-  top: 63%;
-}
-body .atlas-location:nth-of-type(2) {
-  left: 33%;
-  top: 34%;
-}
-body .atlas-location:nth-of-type(3) {
-  left: 56%;
-  top: 18%;
-}
-body .atlas-location:nth-of-type(4) {
-  left: 82%;
-  top: 30%;
-}
-body .atlas-location:nth-of-type(5) {
-  left: 81%;
-  top: 62%;
-}
-body .atlas-location:nth-of-type(6) {
-  left: 58%;
-  top: 83%;
-}
-body .atlas-node {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 65px;
-  width: 100%;
-  padding: 8px;
-  background: var(--surface-soft);
-  border: 1px solid var(--line);
-  border-radius: 3px;
-  box-shadow: none;
-  color: var(--ink);
-  transform: none;
-}
-body .atlas-node[aria-pressed="true"] {
-  background: var(--surface-glass);
-  border-color: var(--accent);
-  box-shadow: 0 0 20px var(--selection-glow);
-}
-body .atlas-node .atlas-landmark {
-  position: relative;
-  width: 45px;
-  height: 45px;
-  flex: none;
-  background: var(--surface);
-  border: 1px solid var(--line-bright);
-  border-radius: 50%;
-  box-shadow: none;
-  clip-path: none;
-}
-body .atlas-node .atlas-portrait {
-  display: none;
-}
-body .atlas-pennant {
-  display: none;
-}
-body .atlas-number {
-  position: static;
-  width: 100%;
-  height: 100%;
-  display: grid;
-  place-items: center;
-  font: 400 20px var(--ui-display);
-  color: var(--ink);
-  background: none;
-  border: 0;
-  transform: none;
-  box-shadow: none;
-}
-body .atlas-location-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  text-align: left;
-  padding: 0;
-  background: none;
-  border: 0;
-}
-body .atlas-name {
-  font: 400 15px var(--ui-display);
-  color: var(--ink);
-  text-shadow: none;
-}
-body .atlas-boss {
-  display: none;
-}
-body .atlas-status {
-  font-size: 10px;
-  color: var(--ink-secondary);
-}
-body .atlas-paths {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  filter: drop-shadow(0 0 3px var(--accent));
-  z-index: 0;
-}
-body .atlas-paths path {
-  stroke: var(--accent);
-  stroke-width: 1.5;
-  fill: none;
-}
-body .atlas-location {
-  z-index: 1;
-}
-.atlas-dossier {
-  width: 280px;
-  flex: none;
-  display: flex;
-  flex-direction: column;
-
-  overflow: auto;
-}
-.atlas-dossier > img {
-  width: 100%;
-  height: 240px;
-  object-fit: cover;
-  object-position: 50% 30%;
-  border: 1px solid var(--line);
-}
-.atlas-dossier h3 {
-  font: 400 30px var(--ui-display);
-  margin: 0;
-}
-.atlas-dossier p {
-  font-size: 14px;
-  line-height: 1.8;
-  margin: 0;
-}
-.atlas-dossier dl {
-  margin: 0;
-  display: grid;
-  grid-template-columns: 80px 1fr;
-  gap: 12px;
-  border-block: 1px solid var(--line);
-  padding: 18px 0;
-  font-size: 13px;
-}
-.atlas-dossier dd {
-  margin: 0;
-  color: var(--ink);
-}
-.atlas-dossier dt {
-  color: var(--ink-secondary);
-}
-body .atlas-footer {
-  position: static;
-  background: none;
-  border-color: var(--line);
-  min-height: 60px;
-}
-body .atlas-footer::before {
-  display: none;
-}
-body .atlas-heading {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-body .atlas-emblem {
-  width: 54px;
-  height: 54px;
-  color: var(--accent);
-}
-body .atlas-emblem svg {
-  width: 100%;
-  height: 100%;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1;
-}
-body .atlas-kicker {
-  color: var(--ink-secondary);
-}
-body .atlas-chapter {
-  margin-left: auto;
-  color: var(--ink);
-}
-body .atlas-chapter strong {
-  color: var(--accent);
-}
-body .atlas-loading {
-  background: var(--surface);
-  color: var(--ink);
-}
-body .atlas-focus {
-  color: var(--ink);
-}
-body .atlas-focus span,
-body .atlas-relic-empty {
-  color: var(--ink-secondary);
-}
-
 /* Utility pages are functional information layouts, not picture backgrounds. */
 body #modal.folio-host > .settings-box {
   --dialog-width: 1080px;
@@ -978,14 +731,11 @@ body:not(.touch-layout) .board-empty {
   body #modal.folio-host .covenant-box .modal-scroll {
     grid-template-columns: 1fr;
   }
-  .atlas-dossier {
-    width: 230px;
-  }
 }
 @media (max-width: 850px) {
   body
     #modal.folio-host
-    > :is(.hero-chooser, .library-box, .adventure-atlas, .covenant-box) {
+    > :is(.hero-chooser, .library-box, .covenant-box) {
     padding: 18px 20px;
   }
   body #modal.folio-host .library-layout {
@@ -1028,44 +778,6 @@ body:not(.touch-layout) .board-empty {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
-  }
-  body #modal.folio-host .adventure-atlas .modal-scroll {
-    flex-direction: column;
-  }
-  .atlas-dossier {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 80px 1fr;
-
-    max-height: 160px;
-  }
-  .atlas-dossier > img {
-    width: 80px;
-    height: 100px;
-    grid-row: 1/4;
-  }
-  .atlas-dossier h3 {
-    font-size: 21px;
-  }
-  .atlas-dossier p {
-    font-size: 12px;
-  }
-  .atlas-dossier dl {
-    display: none;
-  }
-  body .atlas-location {
-    width: 125px;
-  }
-  body .atlas-node {
-    padding: 5px;
-    gap: 5px;
-  }
-  body .atlas-name {
-    font-size: 12px;
-  }
-  body .atlas-node .atlas-landmark {
-    width: 33px;
-    height: 33px;
   }
 }
 @media (max-width: 600px) {
@@ -1190,63 +902,6 @@ body:not(.touch-layout) .board-empty {
   }
   body #modal.folio-host .covenant-copy p {
     font-size: 12px;
-  }
-  body .atlas-stage {
-    min-height: 350px;
-  }
-  body .atlas-location {
-    width: 108px;
-  }
-  body .atlas-status {
-    font-size: 9px;
-  }
-  body .atlas-node {
-    flex-direction: column;
-    gap: 2px;
-    padding: 4px;
-    min-height: 75px;
-  }
-  body .atlas-location-copy {
-    text-align: center;
-    gap: 2px;
-  }
-  body .atlas-location:nth-of-type(1) {
-    left: 18%;
-    top: 65%;
-  }
-  body .atlas-location:nth-of-type(2) {
-    left: 22%;
-    top: 30%;
-  }
-  body .atlas-location:nth-of-type(3) {
-    left: 58%;
-    top: 15%;
-  }
-  body .atlas-location:nth-of-type(4) {
-    left: 82%;
-    top: 40%;
-  }
-  body .atlas-location:nth-of-type(5) {
-    left: 80%;
-    top: 72%;
-  }
-  body .atlas-location:nth-of-type(6) {
-    left: 48%;
-    top: 85%;
-  }
-  body .atlas-focus {
-    display: none;
-  }
-  body .atlas-footer .gold-btn {
-    min-height: 44px;
-    font-size: 14px;
-  }
-  body .atlas-emblem {
-    width: 35px;
-    height: 35px;
-  }
-  body .atlas-kicker {
-    font-size: 10px;
   }
 }
 body.touch-layout .topbar {
@@ -1420,47 +1075,9 @@ body.mobile-landscape .lobby-actions :is(.gold-btn, .ghost-btn) {
   body #modal.folio-host .result-stats strong {
     font-size: 35px;
   }
-
-  body .atlas-stage {
-    min-height: 250px;
-  }
-  body .atlas-dossier {
-    display: none;
-  }
 }
 
 /* Reset both opposing edges when moving legacy absolute-positioned controls. */
-
-body .atlas-location {
-  right: auto;
-  bottom: auto;
-  height: auto;
-}
-body .atlas-node {
-  flex-direction: row;
-  height: auto;
-  aspect-ratio: auto;
-}
-body .atlas-location-copy {
-  flex: 1;
-  min-width: 0;
-  align-items: flex-start;
-}
-body .atlas-name {
-  display: block;
-  width: auto;
-  min-width: 0;
-  height: auto;
-  padding: 0;
-  white-space: normal;
-}
-body .atlas-status {
-  padding: 0;
-  margin: 0;
-}
-body .atlas-number {
-  inset: auto;
-}
 body #modal.folio-host .hero-configuration select {
   width: 100%;
   max-width: none;
@@ -1540,23 +1157,6 @@ body #modal.folio-host .covenant-progress {
 body #modal.folio-host .covenant-card .gold-btn {
   min-height: 48px;
 }
-@media (max-width: 600px) and (orientation: portrait) {
-  body .atlas-node {
-    flex-direction: column;
-  }
-  body .atlas-location-copy {
-    align-items: center;
-  }
-}
-body .atlas-stage {
-  display: block;
-  padding: 0;
-  grid-template-columns: none;
-  grid-template-rows: none;
-}
-body .atlas-location:nth-of-type(n) {
-  grid-area: auto;
-}
 body #modal.folio-host .help-columns > div {
   width: 100%;
   max-width: none;
@@ -1567,44 +1167,6 @@ body #modal.folio-host .help-section {
   max-width: none;
   padding: 0 0 25px;
   box-sizing: border-box;
-}
-
-@media (max-width: 850px) {
-  .atlas-dossier-rule {
-    grid-column: 2;
-    margin: 0;
-    padding: 8px 0;
-    font-size: 12px;
-  }
-  .atlas-dossier {
-    max-height: 200px;
-    overflow: auto;
-    min-height: 160px;
-  }
-  body .atlas-chapter {
-    margin-right: 35px;
-  }
-}
-body .atlas-stage.atlas-extended {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 28px;
-  padding: 28px;
-  align-content: space-around;
-}
-body .atlas-extended .atlas-location:nth-of-type(n) {
-  position: relative;
-  inset: auto;
-  transform: none;
-  width: 100%;
-  grid-area: auto;
-}
-@media (max-width: 600px) {
-  body .atlas-stage.atlas-extended {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px;
-    padding: 18px;
-  }
 }
 @media (orientation: portrait) and (max-height: 680px) {
   
@@ -1714,46 +1276,6 @@ body .atlas-extended .atlas-location:nth-of-type(n) {
   body #modal.folio-host .deck-editor:has(.deck-tools[open]) #deck-status {
     display: none;
   }
-  body #modal.folio-host .adventure-atlas .modal-scroll {
-    flex-direction: row;
-  }
-  body .atlas-stage {
-    min-height: 0;
-  }
-  body #modal.folio-host .atlas-dossier {
-    display: flex;
-    width: 170px;
-    min-height: 0;
-    max-height: none;
-  }
-  body #modal.folio-host .atlas-dossier > img {
-    display: none;
-  }
-  body .atlas-location {
-    width: 110px;
-  }
-  body .atlas-node {
-    min-height: 40px;
-    padding: 4px;
-    gap: 5px;
-    flex-direction: row;
-  }
-  body .atlas-node .atlas-landmark {
-    width: 25px;
-    height: 25px;
-  }
-  body .atlas-status {
-    display: none;
-  }
-  body .atlas-name {
-    font-size: 11px;
-  }
-  body .atlas-footer {
-    min-height: 44px;
-  }
-  body .atlas-footer .atlas-relics {
-    display: none;
-  }
 }
 @media (orientation: landscape) and (max-height: 500px) {
   body #modal.folio-host .deck-editor > .folio-pane {
@@ -1777,72 +1299,6 @@ body .atlas-extended .atlas-location:nth-of-type(n) {
   }
   body #modal.folio-host .library-heading > div {
     flex: none;
-  }
-}
-@media (max-width: 850px) and (orientation: portrait) {
-  body #modal.folio-host .adventure-atlas .folio-viewport {
-    overflow-y: auto;
-  }
-  body #modal.folio-host .adventure-atlas .modal-scroll {
-    height: auto;
-    min-height: 100%;
-  }
-  body .atlas-stage {
-    flex: none;
-    height: clamp(350px, 53dvh, 540px);
-  }
-  body .atlas-dossier {
-    max-height: none;
-    overflow: visible;
-  }
-  body .atlas-chapter {
-    font-size: 11px;
-    margin-right: 45px;
-  }
-  body .atlas-chapter > span {
-    display: none;
-  }
-  body .atlas-chapter strong {
-    font-size: 19px;
-  }
-}
-@media (orientation: landscape) and (max-height: 500px) {
-  body .atlas-stage {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-    padding: 10px;
-    align-content: center;
-  }
-  body .atlas-location:nth-of-type(n) {
-    position: relative;
-    inset: auto;
-    transform: none;
-    width: 100%;
-    grid-area: auto;
-  }
-  body .atlas-node {
-    width: 100%;
-    min-height: 44px;
-  }
-  body .atlas-node .atlas-landmark {
-    width: 22px;
-    height: 22px;
-  }
-  body .atlas-number {
-    font-size: 13px;
-  }
-  body .atlas-name {
-    font-size: 10px;
-  }
-  body #modal.folio-host .atlas-dossier {
-    width: 145px;
-  }
-  body #modal.folio-host .atlas-dossier h3 {
-    font-size: 19px;
-  }
-  body .atlas-heading h2 {
-    font-size: 25px;
   }
 }
 

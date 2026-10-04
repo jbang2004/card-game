@@ -20,13 +20,6 @@ body #modal.folio-host .covenant-grid > p {
   background: var(--surface-soft);
   border: 1px solid var(--line);
 }
-body #modal.folio-host .atlas-stage {
-  border: 1px solid var(--line);
-}
-
-body #modal.folio-host .atlas-footer {
-  border-top: 1px solid var(--line);
-}
 
 body #modal.folio-host .card-detail-rule {
   background: #0e1929bb;
